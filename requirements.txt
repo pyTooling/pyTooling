@@ -1,0 +1,3 @@
+argcomplete>=1.12.3
+py-flags>=1.1.4
+SphinxExtensions>=0.2.0
