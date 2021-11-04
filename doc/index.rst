@@ -152,10 +152,11 @@ License
    Dependencies
 
 .. toctree::
-   :caption: CallBy
+   :caption: Common
    :hidden:
 
    CallBy/index
+   Versioning/Version
 
 .. toctree::
    :caption: Decorators
@@ -167,20 +168,15 @@ License
    :caption: Exceptions
    :hidden:
 
-   Exceptions/index
+   Exceptions/ExceptionBase
+   Exceptions/Predefined
 
 .. toctree::
    :caption: Meta Classes
    :hidden:
 
-   MetaClasses/Singleton
    MetaClasses/Overloading
-
-.. toctree::
-   :caption: Versioning
-   :hidden:
-
-   Versioning/index
+   MetaClasses/Singleton
 
 .. toctree::
    :caption: Appendix
