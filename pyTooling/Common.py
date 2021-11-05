@@ -8,7 +8,7 @@
 # ==============================================================================
 # Authors:            Patrick Lehmann
 #
-# Python package:     This package contains exception base classes and common exceptions.
+# Python package:     This module contains common classes.
 #
 # License:
 # ==============================================================================
@@ -31,55 +31,4 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 #
-from SphinxExtensions import DocumentMemberAttribute
-
-from ..Decorators import export
-
-
-@export
-class ExceptionBase(Exception):
-	"""
-	Base exception derived from :py:exc:`Exception <python:Exception>` for all
-	custom exceptions.
-	"""
-
-	@DocumentMemberAttribute()
-	def __init__(self, message : str =""):
-		"""pyExceptions initializer
-		:param message:   The exception message.
-		"""
-		super().__init__()
-		self.message = message
-
-	@DocumentMemberAttribute()
-	def __str__(self):
-		"""Returns the exception's message text."""
-		return self.message
-
-	@DocumentMemberAttribute(False)
-	def with_traceback(self, tb):
-		super().with_traceback(tb)
-
-	# @DocumentMemberAttribute(False)
-	# @MethodAlias(pyExceptions.with_traceback)
-	# def with_traceback(self): pass
-
-
-@export
-class EnvironmentException(ExceptionBase):
-	"""``EnvironmentException`` is raised when an expected environment variable is
-	missing.
-	"""
-
-
-@export
-class PlatformNotSupportedException(ExceptionBase):
-	"""``PlatformNotSupportedException`` is raise if the platform is not supported.
-	"""
-
-
-@export
-class NotConfiguredException(ExceptionBase):
-	"""``NotConfiguredException`` is raise if the requested setting is not
-	configured.
-	"""
+__version__ = "1.4.0"

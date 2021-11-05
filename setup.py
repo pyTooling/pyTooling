@@ -79,7 +79,7 @@ setuptools_setup(
 		'Issue Tracker': f"{sourceCodeURL}/issues"
 	},
 
-	packages=setuptools_find_namespace_packages(exclude=["tests", "tests.*",]),
+	packages=setuptools_find_namespace_packages(exclude=["doc", "doc.*", "tests", "tests.*",]),
 	classifiers=[
 		"License :: OSI Approved :: Apache Software License",
 		"Operating System :: OS Independent",

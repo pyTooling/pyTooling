@@ -35,9 +35,6 @@ from types    import MethodType
 from ..Decorators import export
 
 
-__version__ = "1.3.2"
-
-
 @export
 class Singleton(type):
 	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""

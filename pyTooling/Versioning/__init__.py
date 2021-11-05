@@ -37,11 +37,12 @@ from ..Decorators import export
 from ..MetaClasses import Overloading
 
 
-__version__ = "0.2.4"
-
-
 @export
 class Version(metaclass=Overloading):
+	"""
+	Representation of a version number.
+	"""
+
 	class Parts(Flags):
 		Major = 1
 		Minor = 2
