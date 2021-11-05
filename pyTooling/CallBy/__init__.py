@@ -121,11 +121,11 @@ class CallByRefIntParam(CallByRefParam):
 		self.value &= other
 		return self
 	def __ior__(self, other):
-		"""Inplace or: self \|= other."""
+		"""Inplace or: self |= other."""
 		self.value |= other
 		return self
 	def __ixor__(self, other):
-		"""Inplace or: self \|= other."""
+		"""Inplace or: self |= other."""
 		self.value ^= other
 		return self
 
