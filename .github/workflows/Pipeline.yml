@@ -382,12 +382,12 @@ jobs:
     needs:
       - BuildTheDocs
       - Coverage
-      - StaticTypeCheck
+#      - StaticTypeCheck
 
     env:
       DOC:      ${{ needs.BuildTheDocs.outputs.artifact }}
       COVERAGE: ${{ needs.Coverage.outputs.artifact }}
-      TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
+#      TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
     outputs:
       artifact: ${{ env.ARTIFACT }}
 
@@ -407,11 +407,11 @@ jobs:
           name: ${{ env.COVERAGE }}
           path: public/coverage
 
-      - name: 📥 Download artifacts '${{ env.TYPING }}' from 'StaticTypeCheck' job
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.TYPING }}
-          path: public/typing
+#      - name: 📥 Download artifacts '${{ env.TYPING }}' from 'StaticTypeCheck' job
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: ${{ env.TYPING }}
+#          path: public/typing
 
       - name: '📓 Publish site to GitHub Pages'
         if: github.event_name != 'pull_request'
@@ -431,13 +431,13 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - Coverage
-      - StaticTypeCheck
+#      - StaticTypeCheck
       - BuildTheDocs
       - PublishToGitHubPages
 
     env:
       COVERAGE: ${{ needs.Coverage.outputs.artifact }}
-      TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
+#      TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
       DOC:      ${{ needs.BuildTheDocs.outputs.artifact }}
 
     steps:
@@ -446,5 +446,5 @@ jobs:
         with:
           name: |
             ${{ env.COVERAGE }}
-            ${{ env.TYPING }}
             ${{ env.DOC }}
+#            ${{ env.TYPING }}
