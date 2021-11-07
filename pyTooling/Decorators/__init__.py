@@ -29,23 +29,23 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 #
-
 """
 Decorators controlling visibility of entities in a Python module.
 """
+import sys
+from typing import TypeVar, Callable
+
 
 __all__ = ("export",)
 __api__ = __all__
 
-import sys
-import typing as t
 
-
-T = t.TypeVar("T", bound=t.Callable)
+T = TypeVar("T", bound=Callable)
 
 
 def export(entity: T) -> T:
-    """Register the given function or class as publicly accessible in a module.
+    """\
+    Register the given function or class as publicly accessible in a module.
 
     Creates or updates the `__all__` attribute in the module in which the
     decorated entity is defined to include the name of the decorated

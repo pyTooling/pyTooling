@@ -29,11 +29,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 #
+from enum          import IntEnum
 from typing        import Optional as Nullable
 
-from flags         import Flags
-
-from ..Decorators import export
+from ..Decorators  import export
 from ..MetaClasses import Overloading
 
 
@@ -43,7 +42,7 @@ class Version(metaclass=Overloading):
 	Representation of a version number.
 	"""
 
-	class Parts(Flags):
+	class Parts(IntEnum):
 		Major = 1
 		Minor = 2
 		Patch = 4
@@ -54,7 +53,7 @@ class Version(metaclass=Overloading):
 		Postfix = 128
 		AHead   = 256
 
-	class Flags(Flags):
+	class Flags(IntEnum):
 		Clean = 1
 		Dirty = 2
 

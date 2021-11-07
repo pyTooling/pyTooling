@@ -38,9 +38,9 @@ from setuptools import (
 )
 
 gitHubNamespace =       "pyTooling"
-projectName =           gitHubNamespace #"Common"
-projectNameWithPrefix = "pyTooling" #." + projectName
-version =               "0.1.0"
+projectName =           gitHubNamespace
+projectNameWithPrefix = "pyTooling"
+version =               "1.4.0"
 
 # Read README for upload to PyPI
 readmeFile = Path("README.md")
@@ -88,11 +88,12 @@ setuptools_setup(
 		"Programming Language :: Python :: 3.7",
 		"Programming Language :: Python :: 3.8",
 		"Programming Language :: Python :: 3.9",
+		"Programming Language :: Python :: 3.10",
 		"Development Status :: 5 - Production/Stable",
 		"Intended Audience :: Developers",
 		"Topic :: Utilities"
 	],
-	keywords="Python3 MetaClass Collection",
+	keywords="Python3 Exceptions Decorators MetaClasses Versioning Collection",
 
 	python_requires='>=3.6',
 	install_requires=requirements,
