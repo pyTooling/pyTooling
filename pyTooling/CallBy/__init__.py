@@ -33,9 +33,6 @@
 from ..Decorators import export
 
 
-__version__ = "1.2.2"
-
-
 @export
 class CallByRefParam:
 	"""Implements a *call-by-reference* parameter.

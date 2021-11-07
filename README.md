@@ -1,30 +1,65 @@
-[![Sourcecode on GitHub](https://img.shields.io/badge/Paebbels-pyMetaClasses-323131.svg?logo=github&longCache=true)](https://github.com/Paebbels/pyMetaClasses)
-[![Sourcecode License](https://img.shields.io/pypi/l/pyMetaClasses?logo=GitHub&label=code%20license)](LICENSE.md)
-[![GitHub tag (latest SemVer incl. pre-release)](https://img.shields.io/github/v/tag/Paebbels/pyMetaClasses?logo=GitHub&include_prereleases)](https://github.com/Paebbels/pyMetaClasses/tags)
-[![GitHub release (latest SemVer incl. including pre-releases)](https://img.shields.io/github/v/release/Paebbels/pyMetaClasses?logo=GitHub&include_prereleases)](https://github.com/Paebbels/pyMetaClasses/releases/latest)
-[![GitHub release date](https://img.shields.io/github/release-date/Paebbels/pyMetaClasses?logo=GitHub)](https://github.com/Paebbels/pyMetaClasses/releases)
-[![Dependents (via libraries.io)](https://img.shields.io/librariesio/dependents/pypi/pyMetaClasses?logo=librariesdotio)](https://github.com/Paebbels/pyMetaClasses/network/dependents)  
-[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/workflow/status/Paebbels/pyMetaClasses/Unit%20Testing,%20Coverage%20Collection,%20Package,%20Release,%20Documentation%20and%20Publish?label=Pipeline&logo=GitHub%20Actions&logoColor=FFFFFF)](https://github.com/Paebbels/pyMetaClasses/actions/workflows/Pipeline.yml)
-[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/Paebbels/pyMetaClasses)
-[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/Paebbels/pyMetaClasses)
-[![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/Paebbels/pyMetaClasses?logo=Codecov)](https://codecov.io/gh/Paebbels/pyMetaClasses)
-[![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyMetaClasses?logo=librariesdotio)](https://libraries.io/github/Paebbels/pyMetaClasses/sourcerank)  
-[![PyPI](https://img.shields.io/pypi/v/pyMetaClasses?logo=PyPI&logoColor=FBE072)](https://pypi.org/project/pyMetaClasses/)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyMetaClasses?logo=PyPI&logoColor=FBE072)
-![PyPI - Status](https://img.shields.io/pypi/status/pyMetaClasses?logo=PyPI&logoColor=FBE072)
-[![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyMetaClasses?logo=librariesdotio)](https://libraries.io/github/Paebbels/pyMetaClasses)
-[![Requires.io](https://img.shields.io/requires/github/Paebbels/pyMetaClasses)](https://requires.io/github/Paebbels/pyMetaClasses/requirements/?branch=main)  
-[![Read the Docs](https://img.shields.io/readthedocs/pymetaclasses?label=ReadTheDocs&logo=readthedocs)](https://pyMetaClasses.readthedocs.io/)
+[![Sourcecode on GitHub](https://img.shields.io/badge/PyTooling-pyTooling-323131.svg?logo=github&longCache=true)](https://github.com/PyTooling/pyTooling)
+[![Sourcecode License](https://img.shields.io/pypi/l/pyTooling?logo=GitHub&label=code%20license)](LICENSE.md)
+[![GitHub tag (latest SemVer incl. pre-release)](https://img.shields.io/github/v/tag/PyTooling/pyTooling?logo=GitHub&include_prereleases)](https://github.com/PyTooling/pyTooling/tags)
+[![GitHub release (latest SemVer incl. including pre-releases)](https://img.shields.io/github/v/release/PyTooling/pyTooling?logo=GitHub&include_prereleases)](https://github.com/PyTooling/pyTooling/releases/latest)
+[![GitHub release date](https://img.shields.io/github/release-date/PyTooling/pyTooling?logo=GitHub)](https://github.com/PyTooling/pyTooling/releases)
+[![Dependents (via libraries.io)](https://img.shields.io/librariesio/dependents/pypi/pyTooling?logo=librariesdotio)](https://github.com/PyTooling/pyTooling/network/dependents)  
+[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/workflow/status/PyTooling/pyTooling/Unit%20Testing,%20Coverage%20Collection,%20Package,%20Release,%20Documentation%20and%20Publish?label=Pipeline&logo=GitHub%20Actions&logoColor=FFFFFF)](https://github.com/PyTooling/pyTooling/actions/workflows/Pipeline.yml)
+[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/PyTooling/pyTooling)
+[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/PyTooling/pyTooling)
+[![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/PyTooling/pyTooling?logo=Codecov)](https://codecov.io/gh/PyTooling/pyTooling)
+[![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/PyTooling/pyTooling/sourcerank)  
+[![PyPI](https://img.shields.io/pypi/v/pyTooling?logo=PyPI&logoColor=FBE072)](https://pypi.org/project/pyTooling/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyTooling?logo=PyPI&logoColor=FBE072)
+![PyPI - Status](https://img.shields.io/pypi/status/pyTooling?logo=PyPI&logoColor=FBE072)
+[![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/PyTooling/pyTooling)
+[![Requires.io](https://img.shields.io/requires/github/PyTooling/pyTooling)](https://requires.io/github/PyTooling/pyTooling/requirements/?branch=main)  
 [![Documentation License](https://img.shields.io/badge/doc%20license-CC--BY%204.0-green?logo=readthedocs)](LICENSE.md)
-[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%94-blueviolet?logo=readthedocs)](https://pyMetaClasses.readthedocs.io/)
+[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%94-blueviolet?logo=readthedocs)](https://pyTooling.github.io/pyTooling)
 
 # pyTooling
 
-A collection of MetaClasses for Python.
+A collection of classes, meta-classes and decorators for Python.
 
 ## Classes
 
-### CallBy
+### Exceptions
+
+* An exception base-class to derive more powerful exceptions.
+  * `ExceptionBase`
+* Common exception classes:
+  * `EnvironmentException`
+  * `PlatformNotSupportedException`
+  * `NotConfiguredException`
+
+
+### Decorators
+
+* `export`  
+  Add a class defined in a module to the `__all__` array of a module.
+
+  **Example**
+
+  ```Python
+  @export
+  class MyClass:
+    pass
+  ```
+
+
+### Metaclasses
+* `Singleton`  
+  Allow only a single instance of a class.  
+  &rArr; See documentation of [pyTooling.Singleton](https://pyTooling.readthedocs.io/en/latest/Singleton.html)
+* `Overloading`
+  Allow method overloading in Python classes. Dispatch method calls based on
+  method signatures (type annotations).  
+  &rArr; See documentation of [pyTooling.Overloading](https://pyTooling.readthedocs.io/en/latest/Overloading.html)
+
+
+### Common Classes
+
+#### CallBy
 
 Auxilary classes to implement call by reference.
 
@@ -38,7 +73,7 @@ passed by-reference. In addition, derived classes can offer additional methods
 and operators for standard types like `int` or `bool`.
 
 
-#### Example
+**Example**
 
 ```Python
 # define a call-by-reference parameter for integer values
@@ -54,43 +89,18 @@ func(myInt)
 print(myInt.value)
 ```
 
-### Decorators
 
-* `export`  
-  Add a class defined in a module to the `__all__` array of a module.
-
-#### Example
-
-```Python
-@export
-class MyClass:
-	pass
-```
-
-
-
-### Exceptions
-
-An exception base-class to derive more powerful exceptions.
-
-### Metaclasses
-* `Singleton`  
-  Allow only a single instance of a class.  
-  &rArr; See documentation of [pyMetaClasses.Singleton](https://pymetaclasses.readthedocs.io/en/latest/Singleton.html)
-* `Overloading`
-  Allow method overloading in Python classes. Dispatch method calls based on
-  method signatures (type annotations).  
-  &rArr; See documentation of [pyMetaClasses.Overloading](https://pymetaclasses.readthedocs.io/en/latest/Overloading.html)
-
-### Versioning
+#### Versioning
 
 * `Version`  
   Representation of a version number.
 
+
+
 ## Contributors
 
-* [Patrick Lehmann](https://github.com/Paebbels) (Maintainer)
-* [and more...](https://github.com/Paebbels/pyMetaClasses/graphs/contributors)
+* [Patrick Lehmann](https://github.com/PyTooling) (Maintainer)
+* [and more...](https://github.com/PyTooling/pyTooling/graphs/contributors)
 
 
 ## License
