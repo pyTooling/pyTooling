@@ -1,7 +1,7 @@
 Predefined Exceptions
 #####################
 
-A list of predefined exceptions.
+Predefined exceptions of ``pyTooling.Exceptions``.
 
 .. rubric:: Inheritance diagram:
 

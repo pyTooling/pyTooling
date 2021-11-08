@@ -40,7 +40,7 @@ from setuptools import (
 gitHubNamespace =       "pyTooling"
 projectName =           gitHubNamespace
 projectNameWithPrefix = "pyTooling"
-version =               "1.4.0"
+version =               "1.4.1"
 
 # Read README for upload to PyPI
 readmeFile = Path("README.md")

@@ -35,6 +35,39 @@ Introduction
 Package Details
 ***************
 
+
+Common Classes
+==============
+
+
+Decorators
+==========
+
+
+Exceptions
+==========
+
+An exception base-class to derive more powerful exceptions.
+
+.. inheritance-diagram:: pyTooling.Exceptions
+   :parts: 1
+
+.. rubric:: Predefined Exceptions
+
+* :exc:`~pyTooling.Exceptions.EnvironmentException`
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException`
+* :exc:`~pyTooling.Exceptions.NotConfiguredException`
+
+
+Meta-Classes
+============
+
+* :class:`pyTooling.MetaClasses.Singleton`
+* :class:`pyTooling.MetaClasses.Overloading`
+
+
+
+
 Common
 ======
 
@@ -56,8 +89,7 @@ addition to a list of classes for inheritance.
 List of meta classes
 ********************
 
-* :py:class:`pyTooling.Singleton`
-* :py:class:`pyTooling.Overloading`
+
 
 
 Contributors
@@ -96,6 +128,7 @@ License
 
    Installation
    Dependencies
+   Tutorials/index
 
 .. toctree::
    :caption: Common
