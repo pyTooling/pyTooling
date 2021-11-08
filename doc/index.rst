@@ -35,60 +35,40 @@ Introduction
 Package Details
 ***************
 
-
 Common Classes
 ==============
+
+* :mod:`~pyTooling.CallByRef` |br|
+  Emulation of *call-by-reference* parameters.
+* :mod:`~pyTooling.Versioning` |br|
+  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
 Decorators
 ==========
 
+* :class:`~pyTooling.Decorators.export` |br|
+  Register the given function or class as publicly accessible in a module.
+
 
 Exceptions
 ==========
 
-An exception base-class to derive more powerful exceptions.
-
-.. inheritance-diagram:: pyTooling.Exceptions
-   :parts: 1
-
-.. rubric:: Predefined Exceptions
-
-* :exc:`~pyTooling.Exceptions.EnvironmentException`
-* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException`
-* :exc:`~pyTooling.Exceptions.NotConfiguredException`
+* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+  ... is raised when an expected environment variable is missing.
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+  ... is raise if the platform is not supported.
+* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+  ... is raise if the requested setting is not configured.
 
 
 Meta-Classes
 ============
 
-* :class:`pyTooling.MetaClasses.Singleton`
-* :class:`pyTooling.MetaClasses.Overloading`
-
-
-
-
-Common
-======
-
-* :ref:`Common:CallByRef` - Handover any data as call-by reference.
-
-A Python meta class is a class used to construct instances of other classes.
-Python has one default meta class called :py:class:`type`. It's possible to
-write new meta classes from scratch or to derive subclasses from :py:class:`type`.
-
-Meta classes are used by passing a named parameter to a class definition in
-addition to a list of classes for inheritance.
-
-.. code-block:: Python
-
-   class Foo(Bar, metaclass=type):
-     pass
-
-
-List of meta classes
-********************
-
+* :class:`~pyTooling.MetaClasses.Singleton` |br|
+  Allow only a single instance of a class.
+* :class:`~pyTooling.MetaClasses.Overloading` |br|
+  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
 
 
 
@@ -161,8 +141,8 @@ License
    :caption: Appendix
    :hidden:
 
-   coverage/index
-   typing/index
+   Coverage Report ➚ <https://pyTooling.github.io/pyTooling/coverage/>
+   Static Type Check Report ➚ <https://pyTooling.github.io/pyTooling/typing/>
    ChangeLog/index
    License
    Doc-License

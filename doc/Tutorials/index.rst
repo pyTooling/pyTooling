@@ -11,3 +11,5 @@ Tutorials
    :hidden:
 
    ExceptionHierarchy
+   Decorators
+   MetaClasses

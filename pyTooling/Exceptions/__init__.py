@@ -38,14 +38,16 @@ from ..Decorators import export
 
 @export
 class ExceptionBase(Exception):
-	"""
+	"""\
 	Base exception derived from :py:exc:`Exception <python:Exception>` for all
 	custom exceptions.
 	"""
 
 	@DocumentMemberAttribute()
-	def __init__(self, message : str =""):
-		"""pyExceptions initializer
+	def __init__(self, message: str = ""):
+		"""\
+		pyExceptions initializer
+
 		:param message:   The exception message.
 		"""
 		super().__init__()
@@ -67,19 +69,20 @@ class ExceptionBase(Exception):
 
 @export
 class EnvironmentException(ExceptionBase):
-	"""``EnvironmentException`` is raised when an expected environment variable is
-	missing.
+	"""\
+	``EnvironmentException`` is raised when an expected environment variable is missing.
 	"""
 
 
 @export
 class PlatformNotSupportedException(ExceptionBase):
-	"""``PlatformNotSupportedException`` is raise if the platform is not supported.
+	"""\
+	``PlatformNotSupportedException`` is raise if the platform is not supported.
 	"""
 
 
 @export
 class NotConfiguredException(ExceptionBase):
-	"""``NotConfiguredException`` is raise if the requested setting is not
-	configured.
+	"""\
+	``NotConfiguredException`` is raise if the requested setting is not configured.
 	"""
