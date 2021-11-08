@@ -47,13 +47,12 @@ def export(entity: T) -> T:
 	"""\
 	Register the given function or class as publicly accessible in a module.
 
-	Creates or updates the `__all__` attribute in the module in which the
-	decorated entity is defined to include the name of the decorated
-	entity.
+	Creates or updates the ``__all__`` attribute in the module in which the
+	decorated entity is defined to include the name of the decorated entity.
 
-	Example:
+	**Example:**
 
-	`to_export.py`:
+	``to_export.py``:
 
 	.. code:: python
 
@@ -67,7 +66,7 @@ def export(entity: T) -> T:
 	     pass
 
 
-	`another_file.py`
+	``another_file.py``
 
 	.. code:: python
 

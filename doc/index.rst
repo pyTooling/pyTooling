@@ -108,14 +108,14 @@ License
    :caption: Decorators
    :hidden:
 
-   Decorators/index
+   Decorators/Visibility
 
 .. toctree::
    :caption: Exceptions
    :hidden:
 
-   Exceptions/ExceptionBase
-   Exceptions/Predefined
+   Exceptions/BaseExceptions
+   Exceptions/PredefinedExceptions
 
 .. toctree::
    :caption: Meta Classes
