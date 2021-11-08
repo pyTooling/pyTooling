@@ -92,9 +92,10 @@ print(myInt.value)
 
 #### Versioning
 
-* `Version`  
-  Representation of a version number.
-
+* `SemVersion`  
+  Representation of a semantic version number like `3.7.12`.
+* `CalVersion`  
+  Representation of a calendar version number like `2021.10`.
 
 
 ## Contributors

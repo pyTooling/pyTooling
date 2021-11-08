@@ -102,7 +102,7 @@ License
    :hidden:
 
    CallByRef/index
-   Versioning/Version
+   Versioning/index
 
 .. toctree::
    :caption: Decorators

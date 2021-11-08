@@ -31,7 +31,7 @@
 #
 from unittest     import TestCase
 
-from pyTooling.Versioning import Version as UUT
+from pyTooling.Versioning import SemVersion as UUT
 
 
 if __name__ == "__main__":
