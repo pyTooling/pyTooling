@@ -76,7 +76,7 @@ Contributors
 ************
 
 * `Patrick Lehmann <https://github.com/PyTooling>`_ (Maintainer)
-* `and more... <https://github.com/pyTooling/pyCallBy/graphs/contributors>`__
+* `and more... <https://github.com/pyTooling/pyTooling/graphs/contributors>`__
 
 
 

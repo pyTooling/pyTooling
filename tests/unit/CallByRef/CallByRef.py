@@ -8,7 +8,7 @@
 # =============================================================================
 # Authors:            Patrick Lehmann
 #
-# Python unittest:    Testing the pyCallBy module
+# Python unittest:    Testing the CallByRef module
 #
 # License:
 # ============================================================================
@@ -31,15 +31,15 @@
 # ============================================================================
 #
 """
-pyTooling.CallBy
-################
+pyTooling.CallByRef
+###################
 
 :copyright: Copyright 2007-2021 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
 from unittest     import TestCase
 
-from pyTooling.CallBy import CallByRefParam, CallByRefBoolParam, CallByRefIntParam
+from pyTooling.CallByRef import CallByRefParam, CallByRefBoolParam, CallByRefIntParam
 
 
 if __name__ == "__main__":
@@ -47,14 +47,18 @@ if __name__ == "__main__":
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
 
+
 def func1(param : CallByRefParam):
 	param <<= (3, 4)
+
 
 def func2(param : CallByRefBoolParam, value : bool = True):
 	param <<= value
 
+
 def assign_42(param : CallByRefIntParam, value : int = 42):
 	param <<= value
+
 
 class CallByReference_AnyParam(TestCase):
 	ref : CallByRefParam = CallByRefParam()
@@ -87,7 +91,6 @@ class CallByReference_BoolParam(TestCase):
 	def test_Unequal(self):
 		self.assertTrue(self.ref != False)
 
-
 	def test_TypeConvertToBool(self):
 		self.assertTrue(bool(self.ref))
 
@@ -114,7 +117,6 @@ class CallByReference_IntParam(TestCase):
 		assign_42(self.ref, 1)
 		self.assertEqual(~self.ref, -2)
 
-
 	def test_GeaterThanOrEqual(self):
 		assign_42(self.ref)
 		self.assertTrue(self.ref >= 40)
@@ -138,7 +140,6 @@ class CallByReference_IntParam(TestCase):
 	def test_LessThanOrEqual(self):
 		assign_42(self.ref)
 		self.assertTrue(self.ref <= 45)
-
 
 	def test_Addition(self):
 		assign_42(self.ref)
@@ -167,7 +168,6 @@ class CallByReference_IntParam(TestCase):
 	def test_Modulo(self):
 		assign_42(self.ref)
 		self.assertEqual(self.ref % 2, 0)
-
 
 	def test_Increment(self):
 		assign_42(self.ref)
@@ -203,7 +203,6 @@ class CallByReference_IntParam(TestCase):
 		assign_42(self.ref)
 		self.ref %= 2
 		self.assertEqual(self.ref, 0)
-
 
 	def test_TypeConvertToBool(self):
 		self.assertTrue(bool(self.ref))
