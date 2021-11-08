@@ -23,36 +23,60 @@
 pyTooling Documentation
 #######################
 
-A collection of MetaClasses for Python.
+**pyTooling** is a powerful collection of arbitrary useful classes, decorators,
+meta-classes and exceptions. It's useful for any Python-base project independent
+if it's a library, framework or CLI tool.
+
 
 Introduction
 ************
 
-A Python meta class is a class used to construct instances of other classes.
-Python has one default meta class called :py:class:`type`. It's possible to
-write new meta classes from scratch or to derive subclasses from :py:class:`type`.
 
-Meta classes are used by passing a named parameter to a class definition in
-addition to a list of classes for inheritance.
+Package Details
+***************
 
-.. code-block:: Python
+Common Classes
+==============
 
-   class Foo(Bar, metaclass=type):
-     pass
+* :mod:`~pyTooling.CallByRef` |br|
+  Emulation of *call-by-reference* parameters.
+* :mod:`~pyTooling.Versioning` |br|
+  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
-List of meta classes
-********************
+Decorators
+==========
 
-* :py:class:`pyTooling.Singleton`
-* :py:class:`pyTooling.Overloading`
+* :class:`~pyTooling.Decorators.export` |br|
+  Register the given function or class as publicly accessible in a module.
+
+
+Exceptions
+==========
+
+* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+  ... is raised when an expected environment variable is missing.
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+  ... is raise if the platform is not supported.
+* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+  ... is raise if the requested setting is not configured.
+
+
+Meta-Classes
+============
+
+* :class:`~pyTooling.MetaClasses.Singleton` |br|
+  Allow only a single instance of a class.
+* :class:`~pyTooling.MetaClasses.Overloading` |br|
+  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
+
 
 
 Contributors
 ************
 
 * `Patrick Lehmann <https://github.com/PyTooling>`_ (Maintainer)
-* `and more... <https://github.com/pyTooling/pyCallBy/graphs/contributors>`__
+* `and more... <https://github.com/pyTooling/pyTooling/graphs/contributors>`__
 
 
 
@@ -84,26 +108,27 @@ License
 
    Installation
    Dependencies
+   Tutorials/index
 
 .. toctree::
    :caption: Common
    :hidden:
 
-   CallBy/index
-   Versioning/Version
+   CallByRef/index
+   Versioning/index
 
 .. toctree::
    :caption: Decorators
    :hidden:
 
-   Decorators/index
+   Decorators/Visibility
 
 .. toctree::
    :caption: Exceptions
    :hidden:
 
-   Exceptions/ExceptionBase
-   Exceptions/Predefined
+   Exceptions/BaseExceptions
+   Exceptions/PredefinedExceptions
 
 .. toctree::
    :caption: Meta Classes
@@ -116,8 +141,8 @@ License
    :caption: Appendix
    :hidden:
 
-   coverage/index
-   typing/index
+   Coverage Report ➚ <https://pyTooling.github.io/pyTooling/coverage/>
+   Static Type Check Report ➚ <https://pyTooling.github.io/pyTooling/typing/>
    ChangeLog/index
    License
    Doc-License

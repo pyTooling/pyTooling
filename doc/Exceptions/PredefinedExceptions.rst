@@ -1,18 +1,18 @@
 Predefined Exceptions
 #####################
 
-A list of predefined exceptions.
+Predefined exceptions of ``pyTooling.Exceptions``.
 
 .. rubric:: Inheritance diagram:
 
-.. inheritance-diagram:: pyExceptions
+.. inheritance-diagram:: pyTooling.Exceptions
    :parts: 1
 
 
 EnvironmentException
 ********************
 
-.. autoexception:: pyExceptions.EnvironmentException
+.. autoexception:: pyTooling.Exceptions.EnvironmentException
    :show-inheritance:
    :members:
    :private-members:
@@ -21,7 +21,7 @@ EnvironmentException
 PlatformNotSupportedException
 *****************************
 
-.. autoexception:: pyExceptions.PlatformNotSupportedException
+.. autoexception:: pyTooling.Exceptions.PlatformNotSupportedException
    :show-inheritance:
    :members:
    :private-members:
@@ -30,7 +30,7 @@ PlatformNotSupportedException
 NotConfiguredException
 **********************
 
-.. autoexception:: pyExceptions.NotConfiguredException
+.. autoexception:: pyTooling.Exceptions.NotConfiguredException
    :show-inheritance:
    :members:
    :private-members:

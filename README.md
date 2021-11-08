@@ -14,87 +14,81 @@
 ![PyPI - Status](https://img.shields.io/pypi/status/pyTooling?logo=PyPI&logoColor=FBE072)
 [![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/PyTooling/pyTooling)
 [![Requires.io](https://img.shields.io/requires/github/PyTooling/pyTooling)](https://requires.io/github/PyTooling/pyTooling/requirements/?branch=main)  
-[![Documentation License](https://img.shields.io/badge/doc%20license-CC--BY%204.0-green?logo=readthedocs)](LICENSE.md)
+[![Documentation License](https://img.shields.io/badge/doc%20license-CC--BY%204.0-green?logo=readthedocs)](doc/Doc-License.rst)
 [![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%94-blueviolet?logo=readthedocs)](https://pyTooling.github.io/pyTooling)
 
 # pyTooling
 
-A collection of classes, meta-classes and decorators for Python.
+**pyTooling** is a powerful collection of arbitrary useful classes, decorators,
+meta-classes and exceptions. It's useful for any Python-base project independent
+if it's a library, framework or CLI tool.
 
-## Classes
+## Introduction
 
-### Exceptions
+*TODO*
 
-* An exception base-class to derive more powerful exceptions.
-  * `ExceptionBase`
-* Common exception classes:
-  * `EnvironmentException`
-  * `PlatformNotSupportedException`
-  * `NotConfiguredException`
+## Package Details
+
+### Common Classes
+
+* [pyTooling.CallByRef.*](https://pytooling.github.io/pyTooling/CallByRef/)  
+  Emulation of *call-by-reference* parameters.
+* [pyTooling.Versioning.*](https://pytooling.github.io/pyTooling/Versioning/)  
+  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
 ### Decorators
 
-* `export`  
-  Add a class defined in a module to the `__all__` array of a module.
-
-  **Example**
-
-  ```Python
-  @export
-  class MyClass:
-    pass
-  ```
+* [export](https://pytooling.github.io/pyTooling/Decorators/Visibility.html#export)    
+  Register the given function or class as publicly accessible in a module.
 
 
-### Metaclasses
-* `Singleton`  
-  Allow only a single instance of a class.  
-  &rArr; See documentation of [pyTooling.Singleton](https://pyTooling.readthedocs.io/en/latest/Singleton.html)
-* `Overloading`
-  Allow method overloading in Python classes. Dispatch method calls based on
-  method signatures (type annotations).  
-  &rArr; See documentation of [pyTooling.Overloading](https://pyTooling.readthedocs.io/en/latest/Overloading.html)
+### Exceptions
+
+* [EnvironmentException](https://pytooling.github.io/pyTooling/Exceptions/PredefinedExceptions.html#environmentexception)  
+  ... is raised when an expected environment variable is missing.
+* [PlatformNotSupportedException](https://pytooling.github.io/pyTooling/Exceptions/PredefinedExceptions.html#platformnotsupportedexception)  
+  ... is raise if the platform is not supported.
+* [NotConfiguredException](https://pytooling.github.io/pyTooling/Exceptions/PredefinedExceptions.html#notconfiguredexception)  
+  ... is raise if the requested setting is not configured.
 
 
-### Common Classes
+### Meta-Classes
 
-#### CallBy
+* [Singleton](https://pytooling.github.io/pyTooling/MetaClasses/Singleton.html)  
+  Allow only a single instance of a class.
+* [Overloading](https://pytooling.github.io/pyTooling/MetaClasses/Overloading.html)  
+  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
 
-Auxilary classes to implement call by reference.
+## Examples
 
-Python does not allow a user to distinguish between *call-by-value* and *call-by-reference*
-parameter passing. Python's standard types are passed by-value to a function or
-method. Instances of a class are passed by-reference (pointer) to a function or
-method.
-
-By implementing a wrapper-class `CallByRefParam`, any type's value can be
-passed by-reference. In addition, derived classes can offer additional methods
-and operators for standard types like `int` or `bool`.
-
-
-**Example**
+### `@export` Decorator
 
 ```Python
+from pyTooling.Decorators import export 
+
+@export
+class MyClass:
+  pass
+```
+
+### `CallByRefIntParam`
+
+```Python
+from pyTooling.CallByRef import CallByRefIntParam
+
 # define a call-by-reference parameter for integer values
-myInt = CallByRefIntParam()
+myInt = CallByRefIntParam(3)
 
 # a function using a call-by-reference parameter
 def func(param : CallByRefIntParam):
-  param <<= 3
+  param <<= param * 4
 
 # call the function and pass the wrapper object
 func(myInt)
 
 print(myInt.value)
 ```
-
-
-#### Versioning
-
-* `Version`  
-  Representation of a version number.
-
 
 
 ## Contributors

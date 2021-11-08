@@ -37,9 +37,9 @@ from ..MetaClasses import Overloading
 
 
 @export
-class Version(metaclass=Overloading):
+class SemVersion(metaclass=Overloading):
 	"""
-	Representation of a version number.
+	Representation of a semantic version number like ``3.7.12``.
 	"""
 
 	class Parts(IntEnum):
@@ -97,7 +97,8 @@ class Version(metaclass=Overloading):
 		self.build = build
 		self.flags = self.Flags.Clean
 
-	def __eq__(self, other: 'Version'):
+	def __eq__(self, other: 'SemVersion'):
+		"""Compare two Version instances (version numbers) for equality."""
 		return (
 			(self.major == other.major) and
 			(self.minor == other.minor) and
@@ -106,10 +107,11 @@ class Version(metaclass=Overloading):
 		)
 
 	def __ne__(self, other):
+		"""Compare two Version instances (version numbers) for inequality."""
 		return not self.__eq__(other)
 
 	@staticmethod
-	def __compare(left: 'Version', right: 'Version') -> Nullable[bool]:
+	def __compare(left: 'SemVersion', right: 'SemVersion') -> Nullable[bool]:
 		if (left.major < right.major):
 			return True
 		if (left.major > right.major):
@@ -134,19 +136,11 @@ class Version(metaclass=Overloading):
 
 	def __lt__(self, other):
 		result = self.__compare(self, other)
-
-		if result is not None:
-			return result
-		else:
-			return False
+		return result if result is not None else False
 
 	def __le__(self, other):
 		result = self.__compare(self, other)
-
-		if result is not None:
-			return result
-		else:
-			return True
+		return result if result is not None else True
 
 	def __gt__(self, other):
 		return not self.__le__(other)
@@ -155,7 +149,17 @@ class Version(metaclass=Overloading):
 		return not self.__lt__(other)
 
 	def __str__(self):
+		"""Return a string representation of this version number with prefix ``v``."""
 		return f"v{self.major}.{self.minor}.{self.patch}"
 
 	def __repr__(self):
+		"""Return a string representation of this version number without prefix ``v``."""
 		return f"{self.major}.{self.minor}.{self.patch}"
+
+
+@export
+class CalVersion(metaclass=Overloading):
+	"""
+	Representation of a calendar version number like ``2021.10``.
+	"""
+
