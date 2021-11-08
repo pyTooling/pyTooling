@@ -22,6 +22,24 @@ by derived wrapper-classes.
 .. inheritance-diagram:: pyTooling.CallByRef
    :parts: 1
 
+.. rubric:: Example
+
+.. code-block:: Python
+
+   from pyTooling.CallByRef import CallByRefIntParam
+
+   # define a call-by-reference parameter for integer values
+   myInt = CallByRefIntParam(3)
+
+   # a function using a call-by-reference parameter
+   def func(param : CallByRefIntParam):
+     param <<= param * 4
+
+   # call the function and pass the wrapper object
+   func(myInt)
+
+   print(myInt.value)
+
 
 CallByRefParam
 **************

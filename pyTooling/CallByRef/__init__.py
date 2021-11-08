@@ -110,7 +110,7 @@ class CallByRefIntParam(CallByRefParam):
 		return self.value | other
 	def __xor__(self, other):
 		"""Xor: self ^ other."""
-		return self.value ^   other
+		return self.value ^ other
 
 	# binary inplace operators
 	def __iand__(self, other):
@@ -129,22 +129,22 @@ class CallByRefIntParam(CallByRefParam):
 	# binary operators - arithmetic
 	def __add__(self, other):
 		"""Addition: self + other."""
-		return self.value +  other
+		return self.value + other
 	def __sub__(self, other):
 		"""Substraction: self - other."""
-		return self.value -  other
+		return self.value - other
 	def __truediv__(self, other):
 		"""Division: self / other."""
-		return self.value /  other
+		return self.value / other
 	def __floordiv__(self, other):
 		"""Floor division: self // other."""
-		return self.value //  other
+		return self.value // other
 	def __mul__(self, other):
 		"""Multiplication: self * other."""
-		return self.value *  other
+		return self.value * other
 	def __mod__(self, other):
 		"""Modulo: self % other."""
-		return self.value %  other
+		return self.value % other
 	def __pow__(self, other):
 		"""Power: self ** other."""
 		return self.value ** other
@@ -156,7 +156,7 @@ class CallByRefIntParam(CallByRefParam):
 		return self
 	def __isub__(self, other):
 		"""Substraction: self -= other."""
-		self.value -=  other
+		self.value -= other
 		return self
 	def __idiv__(self, other):
 		"""Division: self /= other."""
@@ -182,13 +182,13 @@ class CallByRefIntParam(CallByRefParam):
 	# binary operators - comparison
 	def __lt__(self, other):
 		"""Less-than: self < other."""
-		return self.value <  other
+		return self.value < other
 	def __le__(self, other):
 		"""Less-equal: self <= other."""
 		return self.value <= other
 	def __gt__(self, other):
 		"""Greater-than: self > other."""
-		return self.value >  other
+		return self.value > other
 	def __ge__(self, other):
 		"""Greater-equal: self >= other."""
 		return self.value >= other

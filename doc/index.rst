@@ -23,9 +23,9 @@
 pyTooling Documentation
 #######################
 
-pyTooling is a powerfull collection of decorators, meta-classes, exceptions and
-common classes useful for any Python-base project independent if it's a library,
-framework or CLI tool.
+**pyTooling** is a powerful collection of arbitrary useful classes, decorators,
+meta-classes and exceptions. It's useful for any Python-base project independent
+if it's a library, framework or CLI tool.
 
 
 Introduction
