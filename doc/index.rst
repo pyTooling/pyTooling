@@ -23,10 +23,22 @@
 pyTooling Documentation
 #######################
 
-A collection of MetaClasses for Python.
+pyTooling is a powerfull collection of decorators, meta-classes, exceptions and
+common classes useful for any Python-base project independent if it's a library,
+framework or CLI tool.
+
 
 Introduction
 ************
+
+
+Package Details
+***************
+
+Common
+======
+
+* :ref:`Common:CallByRef` - Handover any data as call-by reference.
 
 A Python meta class is a class used to construct instances of other classes.
 Python has one default meta class called :py:class:`type`. It's possible to
@@ -89,7 +101,7 @@ License
    :caption: Common
    :hidden:
 
-   CallBy/index
+   CallByRef/index
    Versioning/Version
 
 .. toctree::
