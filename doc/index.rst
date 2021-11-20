@@ -6,17 +6,17 @@
 
 .. only:: html
 
-   |  |SHIELD:svg:PyTooling-github| |SHIELD:svg:PyTooling-src-license| |SHIELD:svg:PyTooling-tag| |SHIELD:svg:PyTooling-release| |SHIELD:svg:PyTooling-date| |SHIELD:svg:PyTooling-lib-dep|
-   |  |SHIELD:svg:PyTooling-gha-test| |SHIELD:svg:PyTooling-codacy-quality| |SHIELD:svg:PyTooling-codacy-coverage| |SHIELD:svg:PyTooling-codecov-coverage| |SHIELD:svg:PyTooling-lib-rank|
-   |  |SHIELD:svg:PyTooling-pypi-tag| |SHIELD:svg:PyTooling-pypi-status| |SHIELD:svg:PyTooling-pypi-python| |SHIELD:svg:PyTooling-lib-status| |SHIELD:svg:PyTooling-req-status|
-   |  |SHIELD:svg:PyTooling-doc-license| |SHIELD:svg:PyTooling-ghp-doc|
+   |  |SHIELD:svg:pyTooling-github| |SHIELD:svg:pyTooling-src-license| |SHIELD:svg:pyTooling-tag| |SHIELD:svg:pyTooling-release| |SHIELD:svg:pyTooling-date| |SHIELD:svg:pyTooling-lib-dep|
+   |  |SHIELD:svg:pyTooling-gha-test| |SHIELD:svg:pyTooling-codacy-quality| |SHIELD:svg:pyTooling-codacy-coverage| |SHIELD:svg:pyTooling-codecov-coverage| |SHIELD:svg:pyTooling-lib-rank|
+   |  |SHIELD:svg:pyTooling-pypi-tag| |SHIELD:svg:pyTooling-pypi-status| |SHIELD:svg:pyTooling-pypi-python| |SHIELD:svg:pyTooling-lib-status| |SHIELD:svg:pyTooling-req-status|
+   |  |SHIELD:svg:pyTooling-doc-license| |SHIELD:svg:pyTooling-ghp-doc|
 
 .. only:: latex
 
-   |SHIELD:png:PyTooling-github| |SHIELD:png:PyTooling-src-license| |SHIELD:png:PyTooling-tag| |SHIELD:png:PyTooling-release| |SHIELD:png:PyTooling-date| |SHIELD:png:PyTooling-lib-dep|
-   |SHIELD:png:PyTooling-gha-test| |SHIELD:png:PyTooling-codacy-quality| |SHIELD:png:PyTooling-codacy-coverage| |SHIELD:png:PyTooling-codecov-coverage| |SHIELD:png:PyTooling-lib-rank|
-   |SHIELD:png:PyTooling-pypi-tag| |SHIELD:png:PyTooling-pypi-status| |SHIELD:png:PyTooling-pypi-python| |SHIELD:png:PyTooling-lib-status| |SHIELD:png:PyTooling-req-status|
-   |SHIELD:png:PyTooling-doc-license| |SHIELD:png:PyTooling-ghp-doc|
+   |SHIELD:png:pyTooling-github| |SHIELD:png:pyTooling-src-license| |SHIELD:png:pyTooling-tag| |SHIELD:png:pyTooling-release| |SHIELD:png:pyTooling-date| |SHIELD:png:pyTooling-lib-dep|
+   |SHIELD:png:pyTooling-gha-test| |SHIELD:png:pyTooling-codacy-quality| |SHIELD:png:pyTooling-codacy-coverage| |SHIELD:png:pyTooling-codecov-coverage| |SHIELD:png:pyTooling-lib-rank|
+   |SHIELD:png:pyTooling-pypi-tag| |SHIELD:png:pyTooling-pypi-status| |SHIELD:png:pyTooling-pypi-python| |SHIELD:png:pyTooling-lib-status| |SHIELD:png:pyTooling-req-status|
+   |SHIELD:png:pyTooling-doc-license| |SHIELD:png:pyTooling-ghp-doc|
 
 --------------------------------------------------------------------------------
 

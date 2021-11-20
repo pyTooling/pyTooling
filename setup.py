@@ -40,7 +40,7 @@ from setuptools import (
 gitHubNamespace =       "pyTooling"
 projectName =           gitHubNamespace
 projectNameWithPrefix = "pyTooling"
-version =               "1.4.1"
+version =               "1.4.2"
 
 # Read README for upload to PyPI
 readmeFile = Path("README.md")
@@ -54,8 +54,7 @@ with requirementsFile.open("r") as file:
 
 # Derive URLs
 sourceCodeURL =     f"https://github.com/{gitHubNamespace}/{projectName}"
-#documentationURL =  f"https://{gitHubNamespace}.github.io/{projectName}"
-documentationURL =  f"https://{projectName}.readthedocs.io/en/latest/"
+documentationURL =  f"https://{gitHubNamespace}.github.io/{projectName}"
 
 # Assemble all package information
 setuptools_setup(
@@ -68,7 +67,7 @@ setuptools_setup(
 	# maintainer_email="Paebbels@gmail.com",
   license='Apache 2.0',
 
-	description="A collection of MetaClasses for Python.",
+	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
 	long_description=long_description,
 	long_description_content_type="text/markdown",
 
