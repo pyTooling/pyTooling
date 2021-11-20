@@ -56,7 +56,7 @@ def export(entity: T) -> T:
 
 	.. code:: python
 
-	   from pydecor import export
+	   from pyTooling.Decorators import export
 
 	   @export
 	   def exported():

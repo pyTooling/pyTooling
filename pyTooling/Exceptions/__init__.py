@@ -31,7 +31,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 #
-from SphinxExtensions import DocumentMemberAttribute
+#from SphinxExtensions import DocumentMemberAttribute
 
 from ..Decorators import export
 
@@ -43,7 +43,7 @@ class ExceptionBase(Exception):
 	custom exceptions.
 	"""
 
-	@DocumentMemberAttribute()
+#	@DocumentMemberAttribute()
 	def __init__(self, message: str = ""):
 		"""\
 		pyExceptions initializer
@@ -53,12 +53,12 @@ class ExceptionBase(Exception):
 		super().__init__()
 		self.message = message
 
-	@DocumentMemberAttribute()
+#	@DocumentMemberAttribute()
 	def __str__(self):
 		"""Returns the exception's message text."""
 		return self.message
 
-	@DocumentMemberAttribute(False)
+#	@DocumentMemberAttribute(False)
 	def with_traceback(self, tb):
 		super().with_traceback(tb)
 
