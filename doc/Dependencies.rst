@@ -72,9 +72,13 @@ Use the :file:`tests/requirements.txt` file to install all dependencies via
 +===========================================================+=============+========================================================================================+======================+
 | `pytest <https://github.com/pytest-dev/pytest>`__         | ≥6.2.4      | `MIT <https://github.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `pytest-cov <https://github.com/pytest-dev/pytest-cov>`__ | ≥2.12.1     | `MIT <https://github.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
+| `pytest-cov <https://github.com/pytest-dev/pytest-cov>`__ | ≥3.0.0      | `MIT <https://github.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `Coverage <https://github.com/nedbat/coveragepy>`__       | ≥5.5        | `Apache License, 2.0 <https://github.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
+| `Coverage <https://github.com/nedbat/coveragepy>`__       | ≥6.1        | `Apache License, 2.0 <https://github.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
++-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `mypy <https://github.com/python/mypy>`__                 | ≥0.910      | `MIT <https://github.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
++-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `lxml <https://github.com/lxml/lxml>`__                   | ≥4.6.4      | `BSD 3-Clause <https://github.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 
 
