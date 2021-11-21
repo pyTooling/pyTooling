@@ -31,4 +31,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 #
-__version__ = "1.4.2"
+__author__ =    "Patrick Lehmann"
+__copyright__ = "2007-2021, Patrick Lehmann"
+__license__ =   "Apache License, Version 2.0"
+__version__ =   "1.4.3"

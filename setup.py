@@ -31,6 +31,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 #
+from ast        import (
+	parse as ast_parse,
+	iter_child_nodes as ast_iter_child_nodes,
+	Assign as ast_Assign,
+	Constant as ast_Constant,
+	Name as ast_Name
+)
 from pathlib    import Path
 from setuptools import (
 	setup as setuptools_setup,
@@ -38,9 +45,21 @@ from setuptools import (
 )
 
 gitHubNamespace =       "pyTooling"
-projectName =           gitHubNamespace
-projectNameWithPrefix = "pyTooling"
-version =               "1.4.2"
+projectName =           "pyTooling"
+projectNameWithPrefix = projectName
+version =               None
+
+# Read __version__ from source file
+versionFile = Path(f"{projectNameWithPrefix}/Common.py")
+with versionFile.open("r") as file:
+	for item in ast_iter_child_nodes(ast_parse(file.read())):
+		if isinstance(item, ast_Assign) and len(item.targets) == 1:
+			target = item.targets[0]
+			value =  item.value
+			if isinstance(target, ast_Name) and target.id == "__version__" and isinstance(value, ast_Constant) and isinstance(value.value, str):
+				version = value.value
+if version is None:
+	raise AssertionError(f"Could not extract '__version__' from '{versionFile}'.")
 
 # Read README for upload to PyPI
 readmeFile = Path("README.md")
