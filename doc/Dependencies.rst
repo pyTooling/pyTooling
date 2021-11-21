@@ -40,8 +40,8 @@ or install the package directly from PyPI (see :ref:`installation`).
 .. #+-----------------------------------------------------+-------------+---------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
     | **Package**                                         | **Version** | **License**                                                         | **Dependencies**                                                                                                                |
     +=====================================================+=============+=====================================================================+=================================================================================================================================+
-    | `pydecor <https://github.com/mplanchard/pydecor>`__ | ≥2.0.1      | `MIT <https://github.com/mplanchard/pydecor/blob/master/LICENSE>`__ | * `dill <https://github.com/uqfoundation/dill>`__ (`BSD 3-clause <https://github.com/uqfoundation/dill/blob/master/LICENSE>`__) |
-    |                                                     |             |                                                                     | * `six <https://github.com/benjaminp/six>`__ (`MIT <https://github.com/benjaminp/six/blob/master/LICENSE>`__)                   |
+    | `pydecor <https://GitHub.com/mplanchard/pydecor>`__ | ≥2.0.1      | `MIT <https://GitHub.com/mplanchard/pydecor/blob/master/LICENSE>`__ | * `dill <https://GitHub.com/uqfoundation/dill>`__ (`BSD 3-clause <https://GitHub.com/uqfoundation/dill/blob/master/LICENSE>`__) |
+    |                                                     |             |                                                                     | * `six <https://GitHub.com/benjaminp/six>`__ (`MIT <https://GitHub.com/benjaminp/six/blob/master/LICENSE>`__)                   |
     +-----------------------------------------------------+-------------+---------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -70,15 +70,15 @@ Use the :file:`tests/requirements.txt` file to install all dependencies via
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | **Package**                                               | **Version** | **License**                                                                            | **Dependencies**     |
 +===========================================================+=============+========================================================================================+======================+
-| `pytest <https://github.com/pytest-dev/pytest>`__         | ≥6.2.4      | `MIT <https://github.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
+| `pytest <https://GitHub.com/pytest-dev/pytest>`__         | ≥6.2.4      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `pytest-cov <https://github.com/pytest-dev/pytest-cov>`__ | ≥3.0.0      | `MIT <https://github.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
+| `pytest-cov <https://GitHub.com/pytest-dev/pytest-cov>`__ | ≥3.0.0      | `MIT <https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `Coverage <https://github.com/nedbat/coveragepy>`__       | ≥6.1        | `Apache License, 2.0 <https://github.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
+| `Coverage <https://GitHub.com/nedbat/coveragepy>`__       | ≥6.1        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `mypy <https://github.com/python/mypy>`__                 | ≥0.910      | `MIT <https://github.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
+| `mypy <https://GitHub.com/python/mypy>`__                 | ≥0.910      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `lxml <https://github.com/lxml/lxml>`__                   | ≥4.6.4      | `BSD 3-Clause <https://github.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
+| `lxml <https://GitHub.com/lxml/lxml>`__                   | ≥4.6.4      | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
 +-----------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 
 
@@ -107,11 +107,11 @@ Use the :file:`doc/requirements.txt` file to install all dependencies via
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+----------------------+
 | **Package**                                                                                     | **Version**  | **License**                                                                                              | **Dependencies**     |
 +=================================================================================================+==============+==========================================================================================================+======================+
-| `Sphinx <https://github.com/sphinx-doc/sphinx>`__                                               | ≥4.3.0       | `BSD 3-Clause <https://github.com/sphinx-doc/sphinx/blob/master/LICENSE>`__                              | *Not yet evaluated.* |
+| `Sphinx <https://GitHub.com/sphinx-doc/sphinx>`__                                               | ≥4.3.0       | `BSD 3-Clause <https://GitHub.com/sphinx-doc/sphinx/blob/master/LICENSE>`__                              | *Not yet evaluated.* |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+----------------------+
-| `sphinx_btd_theme <https://github.com/buildthedocs/sphinx.theme>`__                             | ≥0.5.2       | `MIT <https://github.com/buildthedocs/sphinx.theme/blob/master/LICENSE>`__                               | *Not yet evaluated.* |
+| `sphinx_btd_theme <https://GitHub.com/buildthedocs/sphinx.theme>`__                             | ≥0.5.2       | `MIT <https://GitHub.com/buildthedocs/sphinx.theme/blob/master/LICENSE>`__                               | *Not yet evaluated.* |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+----------------------+
-| !! `sphinx_fontawesome <https://github.com/fraoustin/sphinx_fontawesome>`__                     | ≥0.0.6       | `GPL 2.0 <https://github.com/fraoustin/sphinx_fontawesome/blob/master/LICENSE>`__                        | *Not yet evaluated.* |
+| !! `sphinx_fontawesome <https://GitHub.com/fraoustin/sphinx_fontawesome>`__                     | ≥0.0.6       | `GPL 2.0 <https://GitHub.com/fraoustin/sphinx_fontawesome/blob/master/LICENSE>`__                        | *Not yet evaluated.* |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+----------------------+
-| `sphinx_autodoc_typehints <https://github.com/agronholm/sphinx-autodoc-typehints>`__            | ≥1.12.0      | `MIT <https://github.com/agronholm/sphinx-autodoc-typehints/blob/master/LICENSE>`__                      | *Not yet evaluated.* |
+| `sphinx_autodoc_typehints <https://GitHub.com/agronholm/sphinx-autodoc-typehints>`__            | ≥1.12.0      | `MIT <https://GitHub.com/agronholm/sphinx-autodoc-typehints/blob/master/LICENSE>`__                      | *Not yet evaluated.* |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+----------------------+

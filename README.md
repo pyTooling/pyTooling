@@ -1,21 +1,21 @@
-[![Sourcecode on GitHub](https://img.shields.io/badge/PyTooling-pyTooling-323131.svg?logo=github&longCache=true)](https://github.com/PyTooling/pyTooling)
+[![Sourcecode on GitHub](https://img.shields.io/badge/pyTooling-pyTooling-323131.svg?logo=github&longCache=true)](https://GitHub.com/pyTooling/pyTooling)
 [![Sourcecode License](https://img.shields.io/pypi/l/pyTooling?logo=GitHub&label=code%20license)](LICENSE.md)
-[![GitHub tag (latest SemVer incl. pre-release)](https://img.shields.io/github/v/tag/PyTooling/pyTooling?logo=GitHub&include_prereleases)](https://github.com/PyTooling/pyTooling/tags)
-[![GitHub release (latest SemVer incl. including pre-releases)](https://img.shields.io/github/v/release/PyTooling/pyTooling?logo=GitHub&include_prereleases)](https://github.com/PyTooling/pyTooling/releases/latest)
-[![GitHub release date](https://img.shields.io/github/release-date/PyTooling/pyTooling?logo=GitHub)](https://github.com/PyTooling/pyTooling/releases)
-[![Dependents (via libraries.io)](https://img.shields.io/librariesio/dependents/pypi/pyTooling?logo=librariesdotio)](https://github.com/PyTooling/pyTooling/network/dependents)  
-[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/workflow/status/PyTooling/pyTooling/Unit%20Testing,%20Coverage%20Collection,%20Package,%20Release,%20Documentation%20and%20Publish?label=Pipeline&logo=GitHub%20Actions&logoColor=FFFFFF)](https://github.com/PyTooling/pyTooling/actions/workflows/Pipeline.yml)
-[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/PyTooling/pyTooling)
-[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/PyTooling/pyTooling)
-[![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/PyTooling/pyTooling?logo=Codecov)](https://codecov.io/gh/PyTooling/pyTooling)
-[![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/PyTooling/pyTooling/sourcerank)  
+[![GitHub tag (latest SemVer incl. pre-release)](https://img.shields.io/github/v/tag/pyTooling/pyTooling?logo=GitHub&include_prereleases)](https://GitHub.com/pyTooling/pyTooling/tags)
+[![GitHub release (latest SemVer incl. including pre-releases)](https://img.shields.io/github/v/release/pyTooling/pyTooling?logo=GitHub&include_prereleases)](https://GitHub.com/pyTooling/pyTooling/releases/latest)
+[![GitHub release date](https://img.shields.io/github/release-date/pyTooling/pyTooling?logo=GitHub)](https://GitHub.com/pyTooling/pyTooling/releases)
+[![Dependents (via libraries.io)](https://img.shields.io/librariesio/dependents/pypi/pyTooling?logo=librariesdotio)](https://GitHub.com/pyTooling/pyTooling/network/dependents)  
+[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/workflow/status/pyTooling/pyTooling/Unit%20Testing,%20Coverage%20Collection,%20Package,%20Release,%20Documentation%20and%20Publish?label=Pipeline&logo=GitHub%20Actions&logoColor=FFFFFF)](https://GitHub.com/pyTooling/pyTooling/actions/workflows/Pipeline.yml)
+[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/pyTooling/pyTooling)
+[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/manual/pyTooling/pyTooling)
+[![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/pyTooling/pyTooling?logo=Codecov)](https://codecov.io/gh/pyTooling/pyTooling)
+[![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/pyTooling/pyTooling/sourcerank)  
 [![PyPI](https://img.shields.io/pypi/v/pyTooling?logo=PyPI&logoColor=FBE072)](https://pypi.org/project/pyTooling/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyTooling?logo=PyPI&logoColor=FBE072)
 ![PyPI - Status](https://img.shields.io/pypi/status/pyTooling?logo=PyPI&logoColor=FBE072)
-[![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/PyTooling/pyTooling)
-[![Requires.io](https://img.shields.io/requires/github/PyTooling/pyTooling)](https://requires.io/github/PyTooling/pyTooling/requirements/?branch=main)  
+[![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/pyTooling/pyTooling)
+[![Requires.io](https://img.shields.io/requires/github/pyTooling/pyTooling)](https://requires.io/github/pyTooling/pyTooling/requirements/?branch=main)  
 [![Documentation License](https://img.shields.io/badge/doc%20license-CC--BY%204.0-green?logo=readthedocs)](doc/Doc-License.rst)
-[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%9A-blueviolet?logo=readthedocs)](https://pyTooling.github.io/pyTooling)
+[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%9A-blueviolet?logo=readthedocs)](https://pyTooling.GitHub.io/pyTooling)
 
 # pyTooling
 
@@ -31,33 +31,33 @@ if it's a library, framework or CLI tool.
 
 ### Common Classes
 
-* [pyTooling.CallByRef.*](https://pytooling.github.io/pyTooling/CallByRef/)  
+* [pyTooling.CallByRef.*](https://pyTooling.GitHub.io/pyTooling/CallByRef/)  
   Emulation of *call-by-reference* parameters.
-* [pyTooling.Versioning.*](https://pytooling.github.io/pyTooling/Versioning/)  
+* [pyTooling.Versioning.*](https://pyTooling.GitHub.io/pyTooling/Versioning/)  
   Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
 ### Decorators
 
-* [export](https://pytooling.github.io/pyTooling/Decorators/Visibility.html#export)    
+* [export](https://pyTooling.GitHub.io/pyTooling/Decorators/Visibility.html#export)    
   Register the given function or class as publicly accessible in a module.
 
 
 ### Exceptions
 
-* [EnvironmentException](https://pytooling.github.io/pyTooling/Exceptions/PredefinedExceptions.html#environmentexception)  
+* [EnvironmentException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#environmentexception)  
   ... is raised when an expected environment variable is missing.
-* [PlatformNotSupportedException](https://pytooling.github.io/pyTooling/Exceptions/PredefinedExceptions.html#platformnotsupportedexception)  
+* [PlatformNotSupportedException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#platformnotsupportedexception)  
   ... is raise if the platform is not supported.
-* [NotConfiguredException](https://pytooling.github.io/pyTooling/Exceptions/PredefinedExceptions.html#notconfiguredexception)  
+* [NotConfiguredException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#notconfiguredexception)  
   ... is raise if the requested setting is not configured.
 
 
 ### Meta-Classes
 
-* [Singleton](https://pytooling.github.io/pyTooling/MetaClasses/Singleton.html)  
+* [Singleton](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Singleton.html)  
   Allow only a single instance of a class.
-* [Overloading](https://pytooling.github.io/pyTooling/MetaClasses/Overloading.html)  
+* [Overloading](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Overloading.html)  
   Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
 
 ## Examples
@@ -93,8 +93,8 @@ print(myInt.value)
 
 ## Contributors
 
-* [Patrick Lehmann](https://github.com/PyTooling) (Maintainer)
-* [and more...](https://github.com/PyTooling/pyTooling/graphs/contributors)
+* [Patrick Lehmann](https://GitHub.com/Paebbels) (Maintainer)
+* [and more...](https://GitHub.com/pyTooling/pyTooling/graphs/contributors)
 
 
 ## License
