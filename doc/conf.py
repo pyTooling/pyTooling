@@ -11,16 +11,16 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 from ast     import parse as ast_parse, iter_child_nodes, Assign, Constant, Name
-import sys
+from json    import loads
 from os.path import abspath
 from pathlib import Path
-from json    import loads
+from sys     import path as sys_path
 
-sys.path.insert(0, abspath('.'))
-sys.path.insert(0, abspath('..'))
-sys.path.insert(0, abspath('../pyTooling'))
-sys.path.insert(0, abspath('_extensions'))
-#sys.path.insert(0, os.path.abspath('_themes/sphinx_rtd_theme'))
+sys_path.insert(0, abspath('.'))
+sys_path.insert(0, abspath('..'))
+sys_path.insert(0, abspath('../pyTooling'))
+sys_path.insert(0, abspath('_extensions'))
+#sys_path.insert(0, os.path.abspath('_themes/sphinx_rtd_theme'))
 
 
 # ==============================================================================
