@@ -58,7 +58,7 @@ class Singleton(type):
 		if t not in cls._instanceCache:
 			cls._instanceCache[t] = instance
 		else:
-			raise KeyError("Type '{type!s}' is already registered.".format(type=t))
+			raise KeyError(f"Type '{t!s}' is already registered.")
 
 
 # https://github.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
@@ -88,9 +88,9 @@ class Overloading(type):
 						continue
 
 					if parameter.annotation is Parameter.empty:
-						raise TypeError("Argument {} must be annotated with a type.".format(name))
+						raise TypeError(f"Argument {name} must be annotated with a type.")
 					if not isinstance(parameter.annotation, type):
-						raise TypeError("Argument {} annotation must be a type.".format(name))
+						raise TypeError(f"Argument {name} annotation must be a type.")
 
 					if parameter.default is not Parameter.empty:
 						self._methods[tuple(types)] = method
@@ -106,7 +106,7 @@ class Overloading(type):
 				if meth:
 					return meth(*args)
 				else:
-					raise TypeError("No matching method for types {}.".format(types))
+					raise TypeError(f"No matching method for types {types}.")
 
 			def __get__(self, instance, cls):
 				"""Descriptor method needed to make calls work in a class."""
