@@ -10,13 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from ast        import (
-	parse as ast_parse,
-	iter_child_nodes as ast_iter_child_nodes,
-	Assign as ast_Assign,
-	Constant as ast_Constant,
-	Name as ast_Name
-)
+from ast     import parse as ast_parse, iter_child_nodes, Assign, Constant, Name
 import sys
 from os.path import abspath
 from pathlib import Path
@@ -44,15 +38,15 @@ __version =   None
 # Read __version__ from source file
 versionFile = Path(f"../{project}/Common.py")
 with versionFile.open("r") as file:
-	for item in ast_iter_child_nodes(ast_parse(file.read())):
-		if isinstance(item, ast_Assign) and len(item.targets) == 1:
+	for item in iter_child_nodes(ast_parse(file.read())):
+		if isinstance(item, Assign) and len(item.targets) == 1:
 			target = item.targets[0]
 			value =  item.value
-			if isinstance(target, ast_Name) and target.id == "__author__" and isinstance(value, ast_Constant) and isinstance(value.value, str):
+			if isinstance(target, Name) and target.id == "__author__" and isinstance(value, Constant) and isinstance(value.value, str):
 				__author = value.value
-			if isinstance(target, ast_Name) and target.id == "__copyright__" and isinstance(value, ast_Constant) and isinstance(value.value, str):
+			if isinstance(target, Name) and target.id == "__copyright__" and isinstance(value, Constant) and isinstance(value.value, str):
 				__copyright = value.value
-			if isinstance(target, ast_Name) and target.id == "__version__" and isinstance(value, ast_Constant) and isinstance(value.value, str):
+			if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):
 				__version = value.value
 if __version is None:
 	raise AssertionError(f"Could not extract '__version__' from '{versionFile}'.")
