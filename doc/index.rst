@@ -75,8 +75,8 @@ Meta-Classes
 Contributors
 ************
 
-* `Patrick Lehmann <https://github.com/PyTooling>`_ (Maintainer)
-* `and more... <https://github.com/pyTooling/pyTooling/graphs/contributors>`__
+* `Patrick Lehmann <https://GitHub.com/pyTooling>`_ (Maintainer)
+* `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
 
 
 
@@ -141,8 +141,8 @@ License
    :caption: Appendix
    :hidden:
 
-   Coverage Report ➚ <https://pyTooling.github.io/pyTooling/coverage/>
-   Static Type Check Report ➚ <https://pyTooling.github.io/pyTooling/typing/>
+   Coverage Report ➚ <https://pyTooling.GitHub.io/pyTooling/coverage/>
+   Static Type Check Report ➚ <https://pyTooling.GitHub.io/pyTooling/typing/>
    ChangeLog/index
    License
    Doc-License

@@ -11,16 +11,16 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 from ast     import parse as ast_parse, iter_child_nodes, Assign, Constant, Name
-import sys
+from json    import loads
 from os.path import abspath
 from pathlib import Path
-from json    import loads
+from sys     import path as sys_path
 
-sys.path.insert(0, abspath('.'))
-sys.path.insert(0, abspath('..'))
-sys.path.insert(0, abspath('../pyTooling'))
-sys.path.insert(0, abspath('_extensions'))
-#sys.path.insert(0, os.path.abspath('_themes/sphinx_rtd_theme'))
+sys_path.insert(0, abspath('.'))
+sys_path.insert(0, abspath('..'))
+sys_path.insert(0, abspath('../pyTooling'))
+sys_path.insert(0, abspath('_extensions'))
+#sys_path.insert(0, os.path.abspath('_themes/sphinx_rtd_theme'))
 
 
 # ==============================================================================
@@ -88,7 +88,7 @@ try:
 	with open(prologPath, "r") as prologFile:
 		rst_prolog = prologFile.read()
 except Exception as ex:
-	print("[ERROR:] While reading '{0!s}'.".format(prologPath))
+	print(f"[ERROR:] While reading '{prologPath}'.")
 	print(ex)
 	rst_prolog = ""
 
@@ -231,10 +231,10 @@ autodoc_member_order = "bysource"       # alphabetical, groupwise, bysource
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-	'issue': ('https://github.com/pyTooling/pyTooling/issues/%s', 'issue #'),
-	'pull':  ('https://github.com/pyTooling/pyTooling/pull/%s', 'pull request #'),
-	'src':   ('https://github.com/pyTooling/pyTooling/blob/master/pyTooling/%s?ts=2', None),
-#	'test':  ('https://github.com/pyTooling/pyTooling/blob/master/test/%s?ts=2', None)
+	'issue': ('https://GitHub.com/pyTooling/pyTooling/issues/%s', 'issue #'),
+	'pull':  ('https://GitHub.com/pyTooling/pyTooling/pull/%s', 'pull request #'),
+	'src':   ('https://GitHub.com/pyTooling/pyTooling/blob/master/pyTooling/%s?ts=2', None),
+#	'test':  ('https://GitHub.com/pyTooling/pyTooling/blob/master/test/%s?ts=2', None)
 }
 
 
