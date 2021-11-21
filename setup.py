@@ -40,7 +40,7 @@ from setuptools import (
 
 gitHubNamespace =       "pyTooling"
 projectName =           "pyTooling"
-projectNameWithPrefix = projectName
+projectNameWithPrefix = f"{projectName}"
 __author =              None
 __email =               None
 __version =             None
@@ -72,8 +72,8 @@ with requirementsFile.open("r") as file:
 	requirements = [line for line in file.readlines()]
 
 # Derive URLs
-sourceCodeURL =     f"https://github.com/{gitHubNamespace}/{projectName}"
-documentationURL =  f"https://{gitHubNamespace}.github.io/{projectName}"
+sourceCodeURL =     f"https://github.com/{gitHubNamespace}/{projectNameWithPrefix}"
+documentationURL =  f"https://{gitHubNamespace}.github.io/{projectNameWithPrefix}"
 
 # Assemble all package information
 setuptools_setup(
