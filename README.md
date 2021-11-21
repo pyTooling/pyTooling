@@ -15,7 +15,7 @@
 [![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/PyTooling/pyTooling)
 [![Requires.io](https://img.shields.io/requires/github/PyTooling/pyTooling)](https://requires.io/github/PyTooling/pyTooling/requirements/?branch=main)  
 [![Documentation License](https://img.shields.io/badge/doc%20license-CC--BY%204.0-green?logo=readthedocs)](doc/Doc-License.rst)
-[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%94-blueviolet?logo=readthedocs)](https://pyTooling.github.io/pyTooling)
+[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%9A-blueviolet?logo=readthedocs)](https://pyTooling.github.io/pyTooling)
 
 # pyTooling
 

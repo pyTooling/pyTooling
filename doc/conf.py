@@ -10,6 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+from ast     import parse as ast_parse, iter_child_nodes, Assign, Constant, Name
 import sys
 from os.path import abspath
 from pathlib import Path
@@ -23,40 +24,37 @@ sys.path.insert(0, abspath('_extensions'))
 
 
 # ==============================================================================
-# Project information
-# ==============================================================================
-project =   "pyTooling"
-copyright = "2007-2021, Patrick Lehmann"
-author =    "Patrick Lehmann"
-
-# ==============================================================================
-# Versioning
+# Project information and versioning
 # ==============================================================================
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-from subprocess import check_output
+project =     "pyTooling"
 
-def _IsUnderGitControl():
-	return (check_output(["git", "rev-parse", "--is-inside-work-tree"], universal_newlines=True).strip() == "true")
+__author =    None
+__copyright = None
+__version =   None
 
-def _LatestTagName():
-	return check_output(["git", "describe", "--abbrev=0", "--tags"], universal_newlines=True).strip()
+# Read __version__ from source file
+versionFile = Path(f"../{project}/Common.py")
+with versionFile.open("r") as file:
+	for item in iter_child_nodes(ast_parse(file.read())):
+		if isinstance(item, Assign) and len(item.targets) == 1:
+			target = item.targets[0]
+			value =  item.value
+			if isinstance(target, Name) and target.id == "__author__" and isinstance(value, Constant) and isinstance(value.value, str):
+				__author = value.value
+			if isinstance(target, Name) and target.id == "__copyright__" and isinstance(value, Constant) and isinstance(value.value, str):
+				__copyright = value.value
+			if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):
+				__version = value.value
+if __version is None:
+	raise AssertionError(f"Could not extract '__version__' from '{versionFile}'.")
 
-# The full version, including alpha/beta/rc tags
-version = "1.4"     # The short X.Y version.
-release = "1.4.2"   # The full version, including alpha/beta/rc tags.
-try:
-	if _IsUnderGitControl:
-		latestTagName = _LatestTagName()[1:]		# remove prefix "v"
-		versionParts =  latestTagName.split("-")[0].split(".")
-
-		version = ".".join(versionParts[:2])
-		release = latestTagName   # ".".join(versionParts[:3])
-except:
-	pass
-
-
+author =    __author
+copyright = __copyright
+version =   ".".join(__version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
+release =   __version
 
 
 # ==============================================================================
