@@ -30,7 +30,7 @@
 # ============================================================================
 #
 from enum          import IntEnum
-from typing        import Optional as Nullable
+from typing import Optional as Nullable, Any
 
 from ..Decorators  import export
 from ..MetaClasses import Overloading
@@ -69,7 +69,7 @@ class SemVersion(metaclass=Overloading):
 	postfix : str = ""
 	ahead   : int = 0
 
-	def __init__(self, versionString : str):
+	def __init__(self, versionString : str) -> None:
 		if versionString == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 		elif versionString is None:
@@ -90,15 +90,18 @@ class SemVersion(metaclass=Overloading):
 			self.build = int(split[3])
 		self.flags = self.Flags.Clean
 
-	def __init__(self, major : int, minor : int, patch : int = 0, build : int = 0):
+	def __init__(self, major : int, minor : int, patch : int = 0, build : int = 0) -> None:
 		self.major = major
 		self.minor = minor
 		self.patch = patch
 		self.build = build
 		self.flags = self.Flags.Clean
 
-	def __eq__(self, other: 'SemVersion'):
+	def __eq__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) for equality."""
+		if not isinstance(other, SemVersion):
+			return NotImplemented
+
 		return (
 			(self.major == other.major) and
 			(self.minor == other.minor) and
@@ -106,7 +109,7 @@ class SemVersion(metaclass=Overloading):
 			(self.build == other.build)
 		)
 
-	def __ne__(self, other):
+	def __ne__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) for inequality."""
 		return not self.__eq__(other)
 
@@ -134,25 +137,25 @@ class SemVersion(metaclass=Overloading):
 
 		return None
 
-	def __lt__(self, other):
+	def __lt__(self, other: Any) -> bool:
 		result = self.__compare(self, other)
 		return result if result is not None else False
 
-	def __le__(self, other):
+	def __le__(self, other: Any) -> bool:
 		result = self.__compare(self, other)
 		return result if result is not None else True
 
-	def __gt__(self, other):
+	def __gt__(self, other: Any) -> bool:
 		return not self.__le__(other)
 
-	def __ge__(self, other):
+	def __ge__(self, other: Any) -> bool:
 		return not self.__lt__(other)
 
-	def __str__(self):
+	def __str__(self) -> str:
 		"""Return a string representation of this version number with prefix ``v``."""
 		return f"v{self.major}.{self.minor}.{self.patch}"
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		"""Return a string representation of this version number without prefix ``v``."""
 		return f"{self.major}.{self.minor}.{self.patch}"
 
