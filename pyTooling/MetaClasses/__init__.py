@@ -31,7 +31,7 @@
 #
 from inspect  import signature, Parameter
 from types    import MethodType
-from typing   import Dict, Any
+from typing   import Any, Tuple, List, Dict, Callable, Type
 
 from ..Decorators import export
 
@@ -53,7 +53,7 @@ class Singleton(type):
 		return cls._instanceCache[cls]
 
 	@classmethod
-	def Register(cls, t, instance):
+	def Register(cls, t, instance) -> None:
 		"""Register a type,instance pair in :attr:`_instanceCache`."""
 
 		if t not in cls._instanceCache:
@@ -75,7 +75,7 @@ class Overloading(type):
 			"""Represents a single multimethod."""
 
 			def __init__(self, name) -> None:
-				self._methods = {}
+				self._methods: Dict[Tuple, Callable] = {}
 				self.__name__ = name
 
 			def register(self, method) -> None:
@@ -83,7 +83,7 @@ class Overloading(type):
 
 				# Build a signature from the method's type annotations
 				sig = signature(method)
-				types = []
+				types: List[Type] = []
 				for name, parameter in sig.parameters.items():
 					if name == "self":
 						continue
