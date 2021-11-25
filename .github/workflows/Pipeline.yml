@@ -23,8 +23,10 @@ jobs:
 
     env:
       PYTHON: ${{ matrix.python }}
+      ARTIFACT: pyTooling-TestReport
     outputs:
       python: ${{ env.PYTHON }}
+      artifact: ${{ env.ARTIFACT }}
 
     steps:
       - name: ⏬ Checkout repository
@@ -45,9 +47,10 @@ jobs:
           python -m pytest -rA --junitxml=TestReport.xml tests/unit --color=yes
 
       - name: 📤 Upload 'TestReport.xml' artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v2
         with:
-          name: TestReport-${{ env.PYTHON }}
+          name: ${{ env.ARTIFACT }}-${{ env.PYTHON }}
           path: TestReport.xml
           if-no-files-found: error
           retention-days: 1
@@ -424,8 +427,6 @@ jobs:
       DOC:      ${{ needs.BuildTheDocs.outputs.artifact }}
       COVERAGE: ${{ needs.Coverage.outputs.artifact }}
       TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
-    outputs:
-      artifact: ${{ env.ARTIFACT }}
 
     steps:
       - name: Checkout repository
@@ -485,6 +486,11 @@ jobs:
         uses: geekyeggo/delete-artifact@v1
         with:
           name: |
+            pyTooling-TestReport-3.6
+            pyTooling-TestReport-3.7
+            pyTooling-TestReport-3.8
+            pyTooling-TestReport-3.9
+            pyTooling-TestReport-3.10
             ${{ env.UNITTEST }}
             ${{ env.COVERAGE }}
             ${{ env.DOC }}
