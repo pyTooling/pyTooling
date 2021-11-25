@@ -27,6 +27,7 @@ jobs:
     outputs:
       python: ${{ env.PYTHON }}
       artifact: ${{ env.ARTIFACT }}
+      versions: ${{ join(matrix.python) }}
 
     steps:
       - name: ⏬ Checkout repository
@@ -476,7 +477,7 @@ jobs:
       - PublishToGitHubPages
 
     env:
-      UNITTEST: ${{ needs.UnitTesting.outputs.artifact }}
+      UNITTEST: ${{ join(needs.UnitTesting.outputs.versions, '\n') }}
       COVERAGE: ${{ needs.Coverage.outputs.artifact }}
       TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
       DOC:      ${{ needs.BuildTheDocs.outputs.artifact }}
@@ -492,6 +493,7 @@ jobs:
             pyTooling-TestReport-3.9
             pyTooling-TestReport-3.10
             ${{ env.UNITTEST }}
+            ${{ needs.UnitTesting.outputs.versions }}
             ${{ env.COVERAGE }}
             ${{ env.DOC }}
             ${{ env.TYPING }}
