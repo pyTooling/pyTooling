@@ -51,7 +51,7 @@ if __name__ == "__main__":
 class Application1(metaclass=Singleton):
 	X = 0
 
-	def __init__(self):
+	def __init__(self) -> None:
 		print("Instance created")
 
 		self.X = 1
@@ -74,7 +74,7 @@ class Application1(metaclass=Singleton):
 
 
 class Singleton(TestCase):
-	def test_1(self):
+	def test_1(self) -> None:
 		self.assertEqual(Application1.X, 0)
 
 		app = Application1()

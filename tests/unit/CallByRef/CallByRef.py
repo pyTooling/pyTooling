@@ -48,15 +48,15 @@ if __name__ == "__main__":
 	exit(1)
 
 
-def func1(param : CallByRefParam):
+def func1(param : CallByRefParam) -> None:
 	param <<= (3, 4)
 
 
-def func2(param : CallByRefBoolParam, value : bool = True):
+def func2(param : CallByRefBoolParam, value : bool = True) -> None:
 	param <<= value
 
 
-def assign_42(param : CallByRefIntParam, value : int = 42):
+def assign_42(param : CallByRefIntParam, value : int = 42) -> None:
 	param <<= value
 
 
@@ -66,13 +66,13 @@ class CallByReference_AnyParam(TestCase):
 	def setUp(self) -> None:
 		func1(self.ref)
 
-	def test_Value(self):
+	def test_Value(self) -> None:
 		self.assertTupleEqual(self.ref.value, (3, 4))
 
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		self.assertTrue(self.ref == (3, 4))
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		self.assertTrue(self.ref != (4, 3))
 
 
@@ -82,130 +82,130 @@ class CallByReference_BoolParam(TestCase):
 	def setUp(self) -> None:
 		func2(self.ref)
 
-	def test_Value(self):
+	def test_Value(self) -> None:
 		self.assertTrue(self.ref.value)
 
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		self.assertTrue(self.ref == True)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		self.assertTrue(self.ref != False)
 
-	def test_TypeConvertToBool(self):
+	def test_TypeConvertToBool(self) -> None:
 		self.assertTrue(bool(self.ref))
 
-	def test_TypeConvertToInt(self):
+	def test_TypeConvertToInt(self) -> None:
 		self.assertEqual(int(self.ref), 1)
 
 
 class CallByReference_IntParam(TestCase):
 	ref : CallByRefIntParam = CallByRefIntParam()
 
-	def test_Value(self):
+	def test_Value(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref.value, 42)
 
-	def test_Negate(self):
+	def test_Negate(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(-self.ref, -42)
 
-	def test_Positive(self):
+	def test_Positive(self) -> None:
 		assign_42(self.ref, -42)
 		self.assertEqual(+self.ref, -42)
 
-	def test_Invert(self):
+	def test_Invert(self) -> None:
 		assign_42(self.ref, 1)
 		self.assertEqual(~self.ref, -2)
 
-	def test_GeaterThanOrEqual(self):
+	def test_GeaterThanOrEqual(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref >= 40)
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref >  41)
 
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref == 42)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref != 43)
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref <  44)
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref <= 45)
 
-	def test_Addition(self):
+	def test_Addition(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref + 1, 43)
 
-	def test_Subtraction(self):
+	def test_Subtraction(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref - 1, 41)
 
-	def test_Multiplication(self):
+	def test_Multiplication(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref * 1, 42)
 
-	def test_Power(self):
+	def test_Power(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref ** 1, 42)
 
-	def test_Division(self):
+	def test_Division(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref / 1, 42)
 
-	def test_FloorDivision(self):
+	def test_FloorDivision(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref // 1, 42)
 
-	def test_Modulo(self):
+	def test_Modulo(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref % 2, 0)
 
-	def test_Increment(self):
+	def test_Increment(self) -> None:
 		assign_42(self.ref)
 		self.ref += 1
 		self.assertEqual(self.ref, 43)
 
-	def test_Decrement(self):
+	def test_Decrement(self) -> None:
 		assign_42(self.ref)
 		self.ref -= 1
 		self.assertEqual(self.ref, 41)
 
-	def test_InplaceMultiplication(self):
+	def test_InplaceMultiplication(self) -> None:
 		assign_42(self.ref)
 		self.ref *= 1
 		self.assertEqual(self.ref, 42)
 
-	def test_InplacePower(self):
+	def test_InplacePower(self) -> None:
 		assign_42(self.ref)
 		self.ref **= 1
 		self.assertEqual(self.ref, 42)
 
-	def test_InplaceDivision(self):
+	def test_InplaceDivision(self) -> None:
 		assign_42(self.ref)
 		self.ref /= 1
 		self.assertEqual(self.ref, 42)
 
-	def test_InplaceFloorDivision(self):
+	def test_InplaceFloorDivision(self) -> None:
 		assign_42(self.ref)
 		self.ref //= 1
 		self.assertEqual(self.ref, 42)
 
-	def test_InplaceModulo(self):
+	def test_InplaceModulo(self) -> None:
 		assign_42(self.ref)
 		self.ref %= 2
 		self.assertEqual(self.ref, 0)
 
-	def test_TypeConvertToBool(self):
+	def test_TypeConvertToBool(self) -> None:
 		self.assertTrue(bool(self.ref))
 
-	def test_TypeConvertToInt(self):
+	def test_TypeConvertToInt(self) -> None:
 		self.assertEqual(int(self.ref), 42)

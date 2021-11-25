@@ -47,15 +47,15 @@ class Version(TestCase):
 	# 	with self.assertRaises(ValueError):
 	# 		version = Version(versionString=None)
 
-	def test_CreateFromEmptyString(self):
+	def test_CreateFromEmptyString(self) -> None:
 		with self.assertRaises(ValueError):
 			UUT("")
 
-	def test_CreateFromSomeString(self):
+	def test_CreateFromSomeString(self) -> None:
 		with self.assertRaises(ValueError):
 			UUT("None")
 
-	def test_CreateFromString1(self):
+	def test_CreateFromString1(self) -> None:
 		version = UUT("0.0.0")
 
 		self.assertEqual(version.major, 0, "Major number is not 0.")
@@ -63,7 +63,7 @@ class Version(TestCase):
 		self.assertEqual(version.patch, 0, "Patch number is not 0.")
 		self.assertEqual(version.build, 0, "Build number is not 0.")
 
-	def test_CreateFromIntegers1(self):
+	def test_CreateFromIntegers1(self) -> None:
 		version = UUT(0, 0, 0)
 
 		self.assertEqual(version.major, 0, "Major number is not 0.")
@@ -71,7 +71,7 @@ class Version(TestCase):
 		self.assertEqual(version.patch, 0, "Patch number is not 0.")
 		self.assertEqual(version.build, 0, "Build number is not 0.")
 
-	def test_CreateFromIntegers2(self):
+	def test_CreateFromIntegers2(self) -> None:
 		version = UUT(1, 2, 3, 4)
 
 		self.assertEqual(version.major, 1, "Major number is not 1.")
@@ -79,7 +79,7 @@ class Version(TestCase):
 		self.assertEqual(version.patch, 3, "Patch number is not 3.")
 		self.assertEqual(version.build, 4, "Build number is not 4.")
 
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		l = [
 			("0.0.0", "0.0.0"),
 			("0.0.1", "0.0.1"),
@@ -96,7 +96,7 @@ class Version(TestCase):
 				v2 = UUT(t[1])
 				self.assertEqual(v1, v2)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		l = [
 			("0.0.0", "0.0.1"),
 			("0.0.1", "0.0.0"),
@@ -114,7 +114,7 @@ class Version(TestCase):
 				v2 = UUT(t[1])
 				self.assertNotEqual(v1, v2)
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		l = [
 			("0.0.0", "0.0.1"),
 			("0.0.0", "0.1.0"),
@@ -129,7 +129,7 @@ class Version(TestCase):
 				v2 = UUT(t[1])
 				self.assertLess(v1, v2)
 
-	def test_LessEqual(self):
+	def test_LessEqual(self) -> None:
 		l = [
 			("0.0.0", "0.0.0"),
 			("0.0.0", "0.0.1"),
@@ -145,7 +145,7 @@ class Version(TestCase):
 				v2 = UUT(t[1])
 				self.assertLessEqual(v1, v2)
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		l = [
 			("0.0.1", "0.0.0"),
 			("0.1.0", "0.0.0"),
@@ -160,7 +160,7 @@ class Version(TestCase):
 				v2 = UUT(t[1])
 				self.assertGreater(v1, v2)
 
-	def test_GreaterEqual(self):
+	def test_GreaterEqual(self) -> None:
 		l = [
 			("0.0.0", "0.0.0"),
 			("0.0.1", "0.0.0"),

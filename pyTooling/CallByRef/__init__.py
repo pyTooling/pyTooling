@@ -47,7 +47,7 @@ class CallByRefParam:
 
 	value = None    #: internal value
 
-	def __init__(self, value=None):
+	def __init__(self, value=None) -> None:
 		"""Constructs a *call-by-reference* object for any type."""
 		self.value = value
 
@@ -65,10 +65,11 @@ class CallByRefParam:
 		return self.value != other
 
 	# type conversion operators
-	def __repr__(self):
+	def __repr__(self) -> str:
 		"""Returns the wrapped object's string representation."""
 		return repr(self.value)
-	def __str__(self):
+
+	def __str__(self) -> str:
 		"""Returns the wrapped object's string equivalent."""
 		return str(self.value)
 

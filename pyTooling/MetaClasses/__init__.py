@@ -31,6 +31,7 @@
 #
 from inspect  import signature, Parameter
 from types    import MethodType
+from typing   import Dict, Any
 
 from ..Decorators import export
 
@@ -39,7 +40,7 @@ from ..Decorators import export
 class Singleton(type):
 	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
 
-	_instanceCache = {}       #: Cache of all created singleton instances.
+	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
 
 	def __call__(cls, *args, **kwargs):
 		"""
@@ -61,7 +62,7 @@ class Singleton(type):
 			raise KeyError(f"Type '{t!s}' is already registered.")
 
 
-# https://github.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
+# https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
 
 @export
 class Overloading(type):
@@ -73,11 +74,11 @@ class Overloading(type):
 		class DispatchableMethod:
 			"""Represents a single multimethod."""
 
-			def __init__(self, name):
+			def __init__(self, name) -> None:
 				self._methods = {}
 				self.__name__ = name
 
-			def register(self, method):
+			def register(self, method) -> None:
 				"""Register a new method as a dispatchable."""
 
 				# Build a signature from the method's type annotations
