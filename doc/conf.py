@@ -10,11 +10,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from ast     import parse as ast_parse, iter_child_nodes, Assign, Constant, Name
 from json    import loads
 from os.path import abspath
 from pathlib import Path
 from sys     import path as sys_path
+
+from pyTooling.Packaging import extractVersionInformation
 
 sys_path.insert(0, abspath('.'))
 sys_path.insert(0, abspath('..'))
@@ -29,32 +30,12 @@ sys_path.insert(0, abspath('_extensions'))
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-project =     "pyTooling"
+project = "pyTooling"
 
-__author =    None
-__copyright = None
-__version =   None
-
-# Read __version__ from source file
-versionFile = Path(f"../{project}/Common.py")
-with versionFile.open("r") as file:
-	for item in iter_child_nodes(ast_parse(file.read())):
-		if isinstance(item, Assign) and len(item.targets) == 1:
-			target = item.targets[0]
-			value =  item.value
-			if isinstance(target, Name) and target.id == "__author__" and isinstance(value, Constant) and isinstance(value.value, str):
-				__author = value.value
-			if isinstance(target, Name) and target.id == "__copyright__" and isinstance(value, Constant) and isinstance(value.value, str):
-				__copyright = value.value
-			if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):
-				__version = value.value
-if __version is None:
-	raise AssertionError(f"Could not extract '__version__' from '{versionFile}'.")
-
-author =    __author
-copyright = __copyright
-version =   ".".join(__version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
-release =   __version
+packageInformationFile = Path(f"../{project}/Common/__init__.py")
+(author, _, copyright, _version) = extractVersionInformation(packageInformationFile)
+version = ".".join(_version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
+release = _version
 
 
 # ==============================================================================
