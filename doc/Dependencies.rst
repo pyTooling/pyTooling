@@ -128,12 +128,12 @@ on a CI server, thus sub-dependencies are not evaluated further.
 
 .. rubric:: Manually Installing Documentation Requirements
 
-Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
-the mandatory dependencies too.
+Use the :file:`build/requirements.package.txt` file to install all dependencies via ``pip3``. The file will recursively
+install the mandatory dependencies too.
 
 .. code-block:: shell
 
-   pip3 install -U -r build/requirements.txt
+   pip3 install -U -r build/requirements.package.txt
 
 
 .. rubric:: Dependency List
@@ -159,12 +159,12 @@ further.
 
 .. rubric:: Manually Installing Documentation Requirements
 
-Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
-the mandatory dependencies too.
+Use the :file:`build/requirements.publish.txt` file to install all dependencies via ``pip3``. The file will recursively
+install the mandatory dependencies too.
 
 .. code-block:: shell
 
-   pip3 install -U -r dist/requirements.txt
+   pip3 install -U -r build/requirements.publish.txt
 
 
 .. rubric:: Dependency List

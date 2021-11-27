@@ -191,7 +191,7 @@ jobs:
       - name: 🔧 Install dependencies for packaging and release
         run: |
           python -m pip install --upgrade pip
-          pip install -r build/requirements.txt
+          pip install -r build/requirements.package.txt
 
 #      - name: 🔨 Build Python package (source distribution)
 #        run: |
@@ -296,7 +296,7 @@ jobs:
       - name: ⚙ Install dependencies for packaging and release
         run: |
           python -m pip install --upgrade pip
-          pip install -r dist/requirements.txt
+          pip install -r build/requirements.publish.txt
 
       - name: ⤴ Release Python package to PyPI
         env:
