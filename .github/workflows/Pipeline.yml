@@ -421,7 +421,7 @@ jobs:
       - name: 📊 Publish Unit Test Results
         uses: dorny/test-reporter@v1
         with:
-          name: pyTooling Test Results
+          name: Test Results
           path: artifacts/**/*.xml
           reporter: java-junit
 
