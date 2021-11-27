@@ -163,6 +163,53 @@ jobs:
           retention-days: 1
 
 
+  Package:
+    name: 📦 Package in Wheel Format
+    runs-on: ubuntu-latest
+
+#    if: startsWith(github.ref, 'refs/tags')
+    needs:
+      - UnitTesting
+      - Coverage
+
+    env:
+      PYTHON:   ${{ needs.Coverage.outputs.python }}
+      ARTIFACT: pyTooling.Packaging-wheel
+    outputs:
+      python:   ${{ env.PYTHON }}
+      artifact: ${{ env.ARTIFACT }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v2
+
+      - name: 🐍 Setup Python ${{ env.PYTHON }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+
+      - name: 🔧 Install dependencies for packaging and release
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r build/requirements.txt
+
+#      - name: 🔨 Build Python package (source distribution)
+#        run: |
+#          python setup.py sdist
+
+      - name: 🔨 Build Python package (binary distribution - wheel)
+        run: |
+          python setup.py bdist_wheel
+
+      - name: 📤 Upload 'pyTooling.Packaging' artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+
   Release:
     name: 📝 Create 'Release Page' on GitHub
     runs-on: ubuntu-latest
@@ -172,6 +219,7 @@ jobs:
       - UnitTesting
       - Coverage
       - StaticTypeCheck
+      - Package
 
     env:
       PYTHON: ${{ needs.Coverage.outputs.python }}
@@ -217,52 +265,6 @@ jobs:
           prerelease: false
 
 
-  Package:
-    name: 📦 Package in Wheel Format
-    runs-on: ubuntu-latest
-
-    if: startsWith(github.ref, 'refs/tags')
-    needs:
-      - Coverage
-
-    env:
-      PYTHON:   ${{ needs.Coverage.outputs.python }}
-      ARTIFACT: pyTooling-wheel
-    outputs:
-      python:   ${{ env.PYTHON }}
-      artifact: ${{ env.ARTIFACT }}
-
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v2
-
-      - name: 🐍 Setup Python ${{ env.PYTHON }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PYTHON }}
-
-      - name: 🔧 Install dependencies for packaging and release
-        run: |
-          python -m pip install --upgrade pip
-          pip install wheel pyTooling.Packaging
-
-      - name: 🔨 Build Python package (source distribution)
-        run: |
-          python setup.py sdist
-
-      - name: 🔨 Build Python package (binary distribution - wheel)
-        run: |
-          python setup.py bdist_wheel
-
-      - name: 📤 Upload 'pyTooling' artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ARTIFACT }}
-          path: dist/
-          if-no-files-found: error
-          retention-days: 1
-
-
   PublishOnPyPI:
     name: 🚀 Publish to PyPI
     runs-on: ubuntu-latest
@@ -294,7 +296,7 @@ jobs:
       - name: ⚙ Install dependencies for packaging and release
         run: |
           python -m pip install --upgrade pip
-          pip install wheel twine
+          pip install -r dist/requirements.txt
 
       - name: ⤴ Release Python package to PyPI
         env:
@@ -483,6 +485,7 @@ jobs:
       - Coverage
       - StaticTypeCheck
       - BuildTheDocs
+      - Package
       - PublishTestResults
       - PublishToGitHubPages
 
@@ -491,9 +494,17 @@ jobs:
       COVERAGE: ${{ needs.Coverage.outputs.artifact }}
       TYPING:   ${{ needs.StaticTypeCheck.outputs.artifact }}
       DOC:      ${{ needs.BuildTheDocs.outputs.artifact }}
+      PACKAGE:  ${{ needs.Package.outputs.artifact }}
 
     steps:
-      - name: 🗑️ Delete all Artifacts
+      - name: 🗑️ Delete package Artifacts
+        if: ${{ ! startsWith(github.ref, 'refs/tags') }}
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            ${{ env.PACKAGE }}
+
+      - name: 🗑️ Delete remaining Artifacts
         uses: geekyeggo/delete-artifact@v1
         with:
           name: |
