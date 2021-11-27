@@ -44,7 +44,7 @@ class ExceptionBase(Exception):
 	"""
 
 #	@DocumentMemberAttribute()
-	def __init__(self, message: str = ""):
+	def __init__(self, message: str = "") -> None:
 		"""\
 		pyExceptions initializer
 
@@ -54,7 +54,7 @@ class ExceptionBase(Exception):
 		self.message = message
 
 #	@DocumentMemberAttribute()
-	def __str__(self):
+	def __str__(self) -> str:
 		"""Returns the exception's message text."""
 		return self.message
 

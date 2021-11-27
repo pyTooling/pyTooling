@@ -49,15 +49,15 @@ if __name__ == "__main__":
 
 
 class Application(metaclass=Overloading):
-	def __init__(self, x : int):
+	def __init__(self, x : int) -> None:
 		self.x = x
 
-	def __init__(self, x : str):
+	def __init__(self, x : str) -> None:
 		self.x = x
 
 
 class Overloading(TestCase):
-	def test_OverloadingByTypeSignature(self):
+	def test_OverloadingByTypeSignature(self) -> None:
 		app1 = Application(1)
 		self.assertEqual(app1.x, 1)
 

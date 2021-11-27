@@ -31,6 +31,7 @@
 #
 from inspect  import signature, Parameter
 from types    import MethodType
+from typing   import Any, Tuple, List, Dict, Callable, Type
 
 from ..Decorators import export
 
@@ -39,7 +40,7 @@ from ..Decorators import export
 class Singleton(type):
 	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
 
-	_instanceCache = {}       #: Cache of all created singleton instances.
+	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
 
 	def __call__(cls, *args, **kwargs):
 		"""
@@ -52,7 +53,7 @@ class Singleton(type):
 		return cls._instanceCache[cls]
 
 	@classmethod
-	def Register(cls, t, instance):
+	def Register(cls, t, instance) -> None:
 		"""Register a type,instance pair in :attr:`_instanceCache`."""
 
 		if t not in cls._instanceCache:
@@ -61,7 +62,7 @@ class Singleton(type):
 			raise KeyError(f"Type '{t!s}' is already registered.")
 
 
-# https://github.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
+# https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
 
 @export
 class Overloading(type):
@@ -73,16 +74,16 @@ class Overloading(type):
 		class DispatchableMethod:
 			"""Represents a single multimethod."""
 
-			def __init__(self, name):
-				self._methods = {}
+			def __init__(self, name) -> None:
+				self._methods: Dict[Tuple, Callable] = {}
 				self.__name__ = name
 
-			def register(self, method):
+			def register(self, method) -> None:
 				"""Register a new method as a dispatchable."""
 
 				# Build a signature from the method's type annotations
 				sig = signature(method)
-				types = []
+				types: List[Type] = []
 				for name, parameter in sig.parameters.items():
 					if name == "self":
 						continue
