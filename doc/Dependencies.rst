@@ -10,7 +10,7 @@ Dependencies
 .. |img-pyMetaClasses-req-status| image:: https://img.shields.io/requires/github/pyTooling/pyTooling
    :alt: Requires.io
    :height: 22
-   :target: https://requires.io/github/pyTooling/pyTooling/requirements/?branch=master
+   :target: https://requires.io/github/pyTooling/pyTooling/requirements/?branch=main
 
 +------------------------------------------+------------------------------------------+
 | `Libraries.io <https://libraries.io/>`_  | `Requires.io <https://requires.io/>`_    |
@@ -105,7 +105,7 @@ the mandatory dependencies too.
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                                     | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +=================================================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling.Packaging <https://GitHub.com/pyTooling/pyTooling.Packaging>`__                      | ≥0.2.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling.Packaging/blob/main/LICENSE.md>`__          | * `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__ (`Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/master/LICENSE.txt>`__)  |
+| `pyTooling.Packaging <https://GitHub.com/pyTooling/pyTooling.Packaging>`__                      | ≥0.2.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling.Packaging/blob/main/LICENSE.md>`__          | * `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__ (`Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.txt>`__)    |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `Sphinx <https://GitHub.com/sphinx-doc/sphinx>`__                                               | ≥4.3.0       | `BSD 3-Clause <https://GitHub.com/sphinx-doc/sphinx/blob/master/LICENSE>`__                              | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -128,12 +128,12 @@ on a CI server, thus sub-dependencies are not evaluated further.
 
 .. rubric:: Manually Installing Documentation Requirements
 
-Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
-the mandatory dependencies too.
+Use the :file:`build/requirements.package.txt` file to install all dependencies via ``pip3``. The file will recursively
+install the mandatory dependencies too.
 
 .. code-block:: shell
 
-   pip3 install -U -r build/requirements.txt
+   pip3 install -U -r build/requirements.package.txt
 
 
 .. rubric:: Dependency List
@@ -141,7 +141,7 @@ the mandatory dependencies too.
 +----------------------------------------------------------+--------------+-------------------------------------------------------------------------------------------+----------------------+
 | **Package**                                              | **Version**  | **License**                                                                               | **Dependencies**     |
 +==========================================================+==============+===========================================================================================+======================+
-| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__   | ≥1.4.5       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/master/LICENSE.txt>`__  | *None*               |
+| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__   | ≥1.4.6       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.txt>`__    | *None*               |
 +----------------------------------------------------------+--------------+-------------------------------------------------------------------------------------------+----------------------+
 | `wheel <https://GitHub.com/pypa/wheel>`__                | any          | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                             | *Not yet evaluated.* |
 +----------------------------------------------------------+--------------+-------------------------------------------------------------------------------------------+----------------------+
@@ -159,12 +159,12 @@ further.
 
 .. rubric:: Manually Installing Documentation Requirements
 
-Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
-the mandatory dependencies too.
+Use the :file:`build/requirements.publish.txt` file to install all dependencies via ``pip3``. The file will recursively
+install the mandatory dependencies too.
 
 .. code-block:: shell
 
-   pip3 install -U -r dist/requirements.txt
+   pip3 install -U -r build/requirements.publish.txt
 
 
 .. rubric:: Dependency List

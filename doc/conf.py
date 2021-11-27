@@ -214,8 +214,8 @@ autodoc_member_order = "bysource"       # alphabetical, groupwise, bysource
 extlinks = {
 	'issue': ('https://GitHub.com/pyTooling/pyTooling/issues/%s', 'issue #'),
 	'pull':  ('https://GitHub.com/pyTooling/pyTooling/pull/%s', 'pull request #'),
-	'src':   ('https://GitHub.com/pyTooling/pyTooling/blob/master/pyTooling/%s?ts=2', None),
-#	'test':  ('https://GitHub.com/pyTooling/pyTooling/blob/master/test/%s?ts=2', None)
+	'src':   ('https://GitHub.com/pyTooling/pyTooling/blob/main/pyTooling/%s?ts=2', None),
+#	'test':  ('https://GitHub.com/pyTooling/pyTooling/blob/main/test/%s?ts=2', None)
 }
 
 

@@ -194,12 +194,10 @@ jobs:
           pip install -r build/requirements.txt
 
 #      - name: 🔨 Build Python package (source distribution)
-#        run: |
-#          python setup.py sdist
+#        run: python setup.py sdist
 
       - name: 🔨 Build Python package (binary distribution - wheel)
-        run: |
-          python setup.py bdist_wheel
+        run: python setup.py bdist_wheel
 
       - name: 📤 Upload 'pyTooling.Packaging' artifact
         uses: actions/upload-artifact@v2
@@ -302,8 +300,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          twine upload dist/*
+        run: twine upload dist/*.whl
 
       - name: 🗑️ Delete packaging Artifacts
         uses: geekyeggo/delete-artifact@v1
