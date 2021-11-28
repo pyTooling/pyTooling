@@ -33,9 +33,12 @@ sys_path.insert(0, abspath('_extensions'))
 project = "pyTooling"
 
 packageInformationFile = Path(f"../{project}/Common/__init__.py")
-(author, _, copyright, _version) = extractVersionInformation(packageInformationFile)
-version = ".".join(_version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
-release = _version
+versionInformation = extractVersionInformation(packageInformationFile)
+
+author =    versionInformation.Author
+copyright = versionInformation.Copyright
+version =   ".".join(versionInformation.Version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
+release =   versionInformation.Version
 
 
 # ==============================================================================
