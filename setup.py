@@ -35,8 +35,8 @@ from pathlib             import Path
 from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
 gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling"
-packageDirectory =       packageName
+packageName =            "pyTooling.*"
+packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 #pythonVersions =         ["3.8", "3.9", "3.10"]
 
