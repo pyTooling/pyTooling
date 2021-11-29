@@ -38,7 +38,6 @@ gitHubNamespace =        "pyTooling"
 packageName =            "pyTooling.*"
 packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
-#pythonVersions =         ["3.8", "3.9", "3.10"]
 
 DescribePythonPackageHostedOnGitHub(
 	packageName=packageName,
@@ -46,6 +45,4 @@ DescribePythonPackageHostedOnGitHub(
 	gitHubNamespace=gitHubNamespace,
 	keywords="Python3 Exceptions Decorators MetaClasses Versioning Collection",
 	sourceFileWithVersion=packageInformationFile,
-#	developmentStatus="stable",
-#	pythonVersions=pythonVersions
 )

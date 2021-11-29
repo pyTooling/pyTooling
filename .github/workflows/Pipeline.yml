@@ -193,8 +193,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r build/requirements.txt
 
-#      - name: 🔨 Build Python package (source distribution)
-#        run: python setup.py sdist
+      - name: 🔨 Build Python package (source distribution)
+        run: python setup.py sdist
 
       - name: 🔨 Build Python package (binary distribution - wheel)
         run: python setup.py bdist_wheel
@@ -296,7 +296,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r dist/requirements.txt
 
-      - name: ⤴ Release Python package to PyPI
+      - name: ⤴ Release Python package (sources) to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: twine upload dist/*.tar.gz
+
+      - name: ⤴ Release Python package (wheel) to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
