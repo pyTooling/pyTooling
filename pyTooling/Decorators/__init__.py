@@ -33,14 +33,15 @@
 Decorators controlling visibility of entities in a Python module.
 """
 import sys
-from typing import TypeVar, Callable
+from types import FunctionType
+from typing import Union, Type, TypeVar
 
 
 __all__ = ("export",)
 __api__ = __all__
 
 
-T = TypeVar("T", bound=Callable)
+T = TypeVar("T", bound=Union[Type, FunctionType])
 
 
 def export(entity: T) -> T:
@@ -76,7 +77,7 @@ def export(entity: T) -> T:
 	   assert "not_exported" not in globals()
 
 
-	:param Union[Type, types.FunctionType] entity: the function or class to include in `__all__`
+	:param entity: the function or class to include in `__all__`
 	"""
 	# * Based on an idea by Duncan Booth:
 	#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a
