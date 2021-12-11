@@ -31,8 +31,12 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 #
+"""\
+.NET-like Attributes implemented as Python decorators.
+"""
 __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2007-2021, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "1.5.1"
+__version__ =   "1.5.2"
+__keywords__ =  "Python3 Decorators Attributes"

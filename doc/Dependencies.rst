@@ -105,7 +105,7 @@ the mandatory dependencies too.
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                                     | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +=================================================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling.Packaging <https://GitHub.com/pyTooling/pyTooling.Packaging>`__                      | ≥0.2.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling.Packaging/blob/main/LICENSE.md>`__          | * `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__ (`Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.txt>`__)    |
+| `pyTooling.Packaging <https://GitHub.com/pyTooling/pyTooling.Packaging>`__                      | ≥0.3.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling.Packaging/blob/main/LICENSE.md>`__          | * `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__ (`Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.txt>`__)    |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `Sphinx <https://GitHub.com/sphinx-doc/sphinx>`__                                               | ≥4.3.0       | `BSD 3-Clause <https://GitHub.com/sphinx-doc/sphinx/blob/master/LICENSE>`__                              | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -126,7 +126,7 @@ Additional Python packages needed for installation package generation. These pac
 on a CI server, thus sub-dependencies are not evaluated further.
 
 
-.. rubric:: Manually Installing Documentation Requirements
+.. rubric:: Manually Installing Packaging Requirements
 
 Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
@@ -141,7 +141,7 @@ install the mandatory dependencies too.
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +============================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling.Packaging <https://GitHub.com/pyTooling/pyTooling.Packaging>`__ | ≥0.2.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling.Packaging/blob/main/LICENSE.md>`__          | * `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__ (`Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.txt>`__)    |
+| `pyTooling.Packaging <https://GitHub.com/pyTooling/pyTooling.Packaging>`__ | ≥0.3.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling.Packaging/blob/main/LICENSE.md>`__          | * `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__ (`Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.txt>`__)    |
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `wheel <https://GitHub.com/pypa/wheel>`__                                  | any          | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                                            | *Not yet evaluated.*                                                                                                                                 |
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -157,7 +157,7 @@ services. These packages are only needed for maintainers or on a CI server, thus
 further.
 
 
-.. rubric:: Manually Installing Documentation Requirements
+.. rubric:: Manually Installing Publishing Requirements
 
 Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
