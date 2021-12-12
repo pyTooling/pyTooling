@@ -37,15 +37,13 @@ List of SPDX identifiers:
 * https://github.com/spdx/license-list-XML
 
 """
-from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, NamedTuple
 
 from ..Decorators  import export
 
 
 @export
-@dataclass
-class PythonLicenseNames:
+class PythonLicenseNames(NamedTuple):
 	ShortName:       str
 	Classifier: str
 
