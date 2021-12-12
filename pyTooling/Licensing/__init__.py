@@ -40,6 +40,8 @@ List of Python classifiers:
 
 * https://pypi.org/classifiers/
 """
+from typing import Any
+
 from ..Decorators  import export
 
 
@@ -87,22 +89,22 @@ class License:
 		except KeyError:
 			raise ValueError(f"License has no known Python classifier.")
 
-	def __eq__(self, other):
+	def __eq__(self, other: Any) -> bool:
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
 
-	def __ne__(self, other: "License"):
+	def __ne__(self, other: Any) -> bool:
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
 
-	def __le__(self, other: "License"):
+	def __le__(self, other: Any) -> bool:
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
-	def __ge__(self, other: "License"):
+	def __ge__(self, other: Any) -> bool:
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
