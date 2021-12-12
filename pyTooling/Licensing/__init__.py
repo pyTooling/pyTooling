@@ -96,6 +96,13 @@ class License:
 
 	@property
 	def PythonLicenseName(self) -> str:
+		"""\
+		Returns the Python license name for this license if it's defined.
+
+		.. seealso::
+
+		   List of `Python classifiers <https://pypi.org/classifiers/>`__
+		"""
 		try:
 			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError:
