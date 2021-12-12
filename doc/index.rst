@@ -42,6 +42,8 @@ Common Classes
   Emulation of *call-by-reference* parameters.
 * :mod:`~pyTooling.Versioning` |br|
   Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
+* :mod:`~pyTooling.Licensing` |br|
+  Class representations of licenses and conversions to various structured license names.
 
 
 Decorators
@@ -116,6 +118,7 @@ License
 
    CallByRef/index
    Versioning/index
+   Licensing/index
 
 .. toctree::
    :caption: Decorators
