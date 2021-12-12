@@ -31,7 +31,7 @@
 #
 from unittest     import TestCase
 
-from pyTooling.Licensing import PYTHON_CLASSIFIERS, SPDX_INDEX, License
+from pyTooling.Licensing import PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -88,11 +88,11 @@ class LicenseDataClass(TestCase):
 class SPDXLicenses(TestCase):
 	def test_Apache(self) -> None:
 		self.assertIn("Apache-2.0", SPDX_INDEX)
-		self.assertIn("Apache-2.0", PYTHON_CLASSIFIERS)
+		self.assertIn("Apache-2.0", PYTHON_LICENSE_NAMES)
 
 
-class PythonClassifiers(TestCase):
-	def test_OSIApproved(self) -> None:
-		for spdxId, classifier in PYTHON_CLASSIFIERS.items():
-			license = SPDX_INDEX[spdxId]
-			self.assertEqual("OSI Approved" in classifier, license.OSIApproved)
+# class PythonClassifiers(TestCase):
+# 	def test_OSIApproved(self) -> None:
+# 		for spdxId, item in PYTHON_LICENSE_NAMES.items():
+# 			license = SPDX_INDEX[spdxId]
+# 			self.assertEqual("OSI Approved" in item.Classifier, license.OSIApproved)

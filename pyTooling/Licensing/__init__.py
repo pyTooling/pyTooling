@@ -37,16 +37,25 @@ List of SPDX identifiers:
 * https://github.com/spdx/license-list-XML
 
 """
-from typing import Any
+from typing import Any, Dict, NamedTuple
 
 from ..Decorators  import export
 
 
-PYTHON_CLASSIFIERS = {
-	"Apache-2.0":       "License :: OSI Approved :: Apache Software License",
-	"BSD-3-Clause":     "License :: OSI Approved :: BSD License",
-	"MIT":              "License :: OSI Approved :: MIT License",
-	"GPL-2.0-or-later": "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+@export
+class PythonLicenseNames(NamedTuple):
+	ShortName:       str
+	Classifier: str
+
+	def __repr__(self) -> str:
+		return self.ShortName
+
+
+PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
+	"Apache-2.0":       PythonLicenseNames("Apache 2.0",       "Apache Software License"),
+	"BSD-3-Clause":     PythonLicenseNames("BSD",              "BSD License"),
+	"MIT":              PythonLicenseNames("MIT",              "MIT License"),
+	"GPL-2.0-or-later": PythonLicenseNames("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
 }
 
 
@@ -86,6 +95,22 @@ class License:
 		return self._fsfApproved
 
 	@property
+	def PythonLicenseName(self) -> str:
+		"""\
+		Returns the Python license name for this license if it's defined.
+
+		.. seealso::
+
+		   List of `Python classifiers <https://pypi.org/classifiers/>`__
+		"""
+		try:
+			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+		except KeyError:
+			raise ValueError(f"License has no Python specify information.")
+
+		return item.ShortName
+
+	@property
 	def PythonClassifier(self) -> str:
 		"""\
 		Returns the Python classifier for this license if it's defined.
@@ -95,9 +120,12 @@ class License:
 		   List of `Python classifiers <https://pypi.org/classifiers/>`__
 		"""
 		try:
-			return PYTHON_CLASSIFIERS[self._spdxIdentifier]
+			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError:
-			raise ValueError(f"License has no known Python classifier.")
+			raise ValueError(f"License has no Python specify information.")
+
+		osi = "OSI Approved :: " if self._osiApproved else ""
+		return f"License :: {osi}{item.Classifier}"
 
 	def __eq__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are identical (comparison based on SPDX identifiers)."""
@@ -140,7 +168,7 @@ GPL_2_0_or_later =     License("GPL-2.0-or-later", "GNU General Public License v
 MIT_License =          License("MIT", "MIT License", True, True)
 
 
-SPDX_INDEX = {
+SPDX_INDEX: Dict[str, License] = {
 	"Apache-2.0":       Apache_2_0_License,
 	"BSD-3-Clause":     BSD_3_Clause_License,
 	"GPL-2.0-or-later": GPL_2_0_or_later,
