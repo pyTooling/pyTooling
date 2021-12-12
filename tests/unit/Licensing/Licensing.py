@@ -42,10 +42,10 @@ if __name__ == "__main__": # pragma: no cover
 
 class LicenseDataClass(TestCase):
 	def test_Properies(self):
-		license = License("spdx", "License Name", True, False)
+		license = License("spdx", "License Name", False, False)
 		self.assertEqual("spdx", license.SPDXIdentifier)
 		self.assertEqual("License Name", license.Name)
-		self.assertEqual(True, license.OSIApproved)
+		self.assertEqual(False, license.OSIApproved)
 		self.assertEqual(False, license.FSFApproved)
 
 	def test_ClassifierConversion(self):
@@ -53,9 +53,32 @@ class LicenseDataClass(TestCase):
 		self.assertEqual("License :: OSI Approved :: Apache Software License", license.PythonClassifier)
 
 	def test_ClassifierConversionException(self):
-		license = License("spdx", "License Name", True, False)
+		license = License("spdx", "License Name", False, False)
 		with self.assertRaises(ValueError):
 			_ = license.PythonClassifier
+
+	def test_Equalality(self):
+		license1 = License("spdx", "License Name", False, False)
+		license2 = License("spdx", "License Name", False, False)
+		license3 = License("SPDX", "License Name", False, False)
+
+		self.assertEqual(license1, license2)
+		self.assertNotEqual(license1, license3)
+
+	def test_Compatibility(self):
+		license1 = License("spdx", "License Name", False, False)
+		license2 = License("spdx", "License Name", False, False)
+		with self.assertRaises(NotImplementedError):
+			_ = license1 <= license2
+
+		with self.assertRaises(NotImplementedError):
+			_ = license1 >= license2
+
+	def test_ToString(self):
+		license = License("spdx", "License Name", False, False)
+
+		self.assertEqual("spdx", f"{license!r}")
+		self.assertEqual("License Name", f"{license!s}")
 
 
 class SPDXLicenses(TestCase):

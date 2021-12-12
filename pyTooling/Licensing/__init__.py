@@ -29,6 +29,17 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 #
+"""
+
+List of SPDX identifiers:
+
+* https://spdx.org/licenses/
+* https://github.com/spdx/license-list-XML
+
+List of Python classifiers:
+
+* https://pypi.org/classifiers/
+"""
 from ..Decorators  import export
 
 
@@ -75,6 +86,30 @@ class License:
 			return PYTHON_CLASSIFIERS[self._spdxIdentifier]
 		except KeyError:
 			raise ValueError(f"License has no known Python classifier.")
+
+	def __eq__(self, other):
+		if isinstance(other, License):
+			return self._spdxIdentifier == other._spdxIdentifier
+		else:
+			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+
+	def __ne__(self, other: "License"):
+		if isinstance(other, License):
+			return self._spdxIdentifier != other._spdxIdentifier
+		else:
+			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+
+	def __le__(self, other: "License"):
+		raise NotImplementedError("License compatibility check is not yet implemented.")
+
+	def __ge__(self, other: "License"):
+		raise NotImplementedError("License compatibility check is not yet implemented.")
+
+	def __repr__(self) -> str:
+		return self._spdxIdentifier
+
+	def __str__(self) -> str:
+		return self._name
 
 
 Apache_2_0_License =   License("Apache-2.0", "Apache License 2.0", True, True)
