@@ -36,9 +36,6 @@ List of SPDX identifiers:
 * https://spdx.org/licenses/
 * https://github.com/spdx/license-list-XML
 
-List of Python classifiers:
-
-* https://pypi.org/classifiers/
 """
 from typing import Any
 
@@ -55,6 +52,8 @@ PYTHON_CLASSIFIERS = {
 
 @export
 class License:
+	"""Representation of a license."""
+
 	_name: str
 	_spdxIdentifier: str
 	_osiApproved: bool
@@ -68,49 +67,70 @@ class License:
 
 	@property
 	def Name(self) -> str:
+		"""Returns the license' name."""
 		return self._name
 
 	@property
 	def SPDXIdentifier(self) -> str:
+		"""Returns the license' unique identifier."""
 		return self._spdxIdentifier
 
 	@property
 	def OSIApproved(self) -> bool:
+		"""Returns true if the license is approved by OSI (Open Source Initiative)."""
 		return self._osiApproved
 
 	@property
 	def FSFApproved(self) -> bool:
+		"""Returns true if the license is approved by FSF (Free Software Foundation)."""
 		return self._fsfApproved
 
 	@property
 	def PythonClassifier(self) -> str:
+		"""\
+		Returns the Python classifier for this license if it's defined.
+
+		.. seealso::
+
+		   List of `Python classifiers <https://pypi.org/classifiers/>`__
+		"""
 		try:
 			return PYTHON_CLASSIFIERS[self._spdxIdentifier]
 		except KeyError:
 			raise ValueError(f"License has no known Python classifier.")
 
 	def __eq__(self, other: Any) -> bool:
+		"""Returns true, if both licenses are identical (comparison based on SPDX identifiers)."""
+
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
 
 	def __ne__(self, other: Any) -> bool:
+		"""Returns true, if both licenses are not identical (comparison based on SPDX identifiers)."""
+
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
 
 	def __le__(self, other: Any) -> bool:
+		"""Returns true, if both licenses are compatible."""
+
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __ge__(self, other: Any) -> bool:
+		"""Returns true, if both licenses are compatible."""
+
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
+		"""Returns the internal unique representation (a.k.a SPDX identifier)."""
 		return self._spdxIdentifier
 
 	def __str__(self) -> str:
+		"""Returns the license' name."""
 		return self._name
 
 
