@@ -62,8 +62,12 @@ class LicenseDataClass(TestCase):
 		license2 = License("spdx", "License Name", False, False)
 		license3 = License("SPDX", "License Name", False, False)
 
-		self.assertEqual(license1, license2)
-		self.assertNotEqual(license1, license3)
+		self.assertTrue(license1 == license2)
+		self.assertTrue(license1 != license3)
+		with self.assertRaises(TypeError):
+			_ = license1 == "spdx"
+		with self.assertRaises(TypeError):
+			_ = license1 != "spdx"
 
 	def test_Compatibility(self):
 		license1 = License("spdx", "License Name", False, False)
