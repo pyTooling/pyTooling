@@ -46,11 +46,11 @@ from ..Decorators  import export
 @export
 @dataclass
 class PythonLicenseNames:
-	Name:       str
+	ShortName:       str
 	Classifier: str
 
 	def __repr__(self) -> str:
-		return self.Name
+		return self.ShortName
 
 
 PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
@@ -103,7 +103,7 @@ class License:
 		except KeyError:
 			raise ValueError(f"License has no Python specify information.")
 
-		return item.Name
+		return item.ShortName
 
 	@property
 	def PythonClassifier(self) -> str:
