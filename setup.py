@@ -31,8 +31,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 #
-from pathlib             import Path
-from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
+from os.path import abspath
+from sys     import path as sys_path
+
+sys_path.insert(0, abspath('./pyTooling'))
+
+from pathlib    import Path
+from Packaging  import DescribePythonPackageHostedOnGitHub
 
 gitHubNamespace =        "pyTooling"
 packageName =            "pyTooling.*"
