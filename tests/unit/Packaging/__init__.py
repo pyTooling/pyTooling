@@ -38,8 +38,8 @@ pyTooling.Packaging
 """
 from pathlib  import Path
 from unittest import TestCase
-
-from pyTooling.Packaging import loadReadmeFile, loadRequirementsFile, extractVersionInformation
+from pytest   import mark
+from sys      import version_info
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -49,13 +49,22 @@ if __name__ == "__main__": # pragma: no cover
 
 
 class HelperFunctions(TestCase):
+	@mark.skipif(version_info < (3, 8), reason="Not supported on Python 3.6 and 3.7, due to Python AST.")
 	def test_VersionInformation(self) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
 		versionInformation =extractVersionInformation(Path("pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(11, len(versionInformation.Keywords))
 
+	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	def test_loadReadme(self) -> None:
+		from pyTooling.Packaging import loadReadmeFile
+
 		_ = loadReadmeFile(Path("README.md"))
 
+	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	def test_loadRequirements(self) -> None:
+		from pyTooling.Packaging import loadRequirementsFile
+
 		_ = loadRequirementsFile(Path("requirements.txt"))
