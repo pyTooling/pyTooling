@@ -73,13 +73,33 @@ Meta-Classes
   Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
 
 
+Packaging
+=========
+
+A set of helper functions to describe a Python package for setuptools.
+
+* Helper Functions:
+
+  * :py:func:`pyTooling.Packaging.loadReadmeFile` |br|
+    tbd
+  * :py:func:`pyTooling.Packaging.loadRequirementsFile` |br|
+    tbd
+  * :py:func:`pyTooling.Packaging.extractVersionInformation` |br|
+    tbd
+
+* Package Descriptions
+
+  * :py:func:`pyTooling.Packaging.DescribePythonPackage` |br|
+    tbd
+  * :py:func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
+    tbd
+
 
 Contributors
 ************
 
 * `Patrick Lehmann <https://GitHub.com/pyTooling>`_ (Maintainer)
 * `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
-
 
 
 License
@@ -139,6 +159,13 @@ License
 
    MetaClasses/Overloading
    MetaClasses/Singleton
+
+.. toctree::
+   :caption: Packaging
+   :hidden:
+
+   Packaging/HelperFunctions
+   Packaging/PackageDescriptions
 
 .. toctree::
    :caption: Appendix
