@@ -28,7 +28,7 @@ exclude_lines = [
 ]
 
 [tool.coverage.html]
-directory = ".cov"
+directory = "report/coverage/html"
 
 [tool.coverage.xml]
-output = "coverage.xml"
+output = "report/coverage/coverage.xml"

@@ -17,7 +17,7 @@ jobs:
 
 
   UnitTesting:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@toml
     needs:
       - Params
     with:
@@ -25,7 +25,7 @@ jobs:
       artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
 
   Coverage:
-    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
+    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@toml
     needs:
       - Params
     with:
