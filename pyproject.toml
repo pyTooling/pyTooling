@@ -17,7 +17,8 @@ python_functions = "test_*"
 [tool.coverage.run]
 branch = true
 omit = [
-	"*site-packages*"
+	"*site-packages*",
+	"setup.py"
 ]
 
 [tool.coverage.report]
