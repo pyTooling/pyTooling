@@ -68,3 +68,26 @@ class HelperFunctions(TestCase):
 		from pyTooling.Packaging import loadRequirementsFile
 
 		_ = loadRequirementsFile(Path("requirements.txt"))
+
+
+class VersionInformation(TestCase):
+	def test_VersionInformation(self):
+		from pyTooling.Packaging import VersionInformation
+
+		versionInfo = VersionInformation(
+			author="Author",
+			email="email",
+			copyright="copyright",
+			license="license",
+			version="0.0.1",
+			description="description",
+			keywords=["keyword1", "keyword2"]
+		)
+
+		self.assertEqual("Author", versionInfo.Author)
+		self.assertEqual("email", versionInfo.Email)
+		self.assertEqual("copyright", versionInfo.Copyright)
+		self.assertEqual("license", versionInfo.License)
+		self.assertEqual("0.0.1", versionInfo.Version)
+		self.assertEqual("description", versionInfo.Description)
+		self.assertListEqual(["keyword1", "keyword2"], versionInfo.Keywords)
