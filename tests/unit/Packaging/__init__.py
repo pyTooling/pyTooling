@@ -71,6 +71,7 @@ class HelperFunctions(TestCase):
 
 
 class VersionInformation(TestCase):
+	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	def test_VersionInformation(self):
 		from pyTooling.Packaging import VersionInformation
 
