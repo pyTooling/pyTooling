@@ -34,8 +34,6 @@ A set of helper functions to describe a Python package for setuptools.
 from dataclasses  import dataclass
 from ast          import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from pathlib      import Path
-from textwrap import dedent
-
 from setuptools   import (
 	setup as setuptools_setup,
 	find_packages as setuptools_find_packages,

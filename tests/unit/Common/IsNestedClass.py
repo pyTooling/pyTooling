@@ -50,6 +50,10 @@ class Class_1:
 			pass
 
 
+class Class_1_1(Class_1):
+	pass
+
+
 class Class_2:
 	pass
 
@@ -60,6 +64,10 @@ class IsNestedClass(TestCase):
 
 	def test_NestedClass(self) -> None:
 		self.assertTrue(isnestedclass(Class_1.Class_11, Class_1))
+
+	def test_DerivedClass(self) -> None:
+		self.assertTrue(isnestedclass(Class_1_1.Class_11, Class_1))
+		self.assertTrue(isnestedclass(Class_1_1.Class_11, Class_1_1))
 
 	def test_DoubleNestedClass(self) -> None:
 		self.assertFalse(isnestedclass(Class_1.Class_11.Class_111, Class_1))

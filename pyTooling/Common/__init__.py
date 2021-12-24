@@ -57,10 +57,11 @@ except ModuleNotFoundError:
 
 @export
 def isnestedclass(cls: Type, scope: Type):
-	for cv in scope.__dict__:
-		member = getattr(scope, cv)
-		if type(member) is type:
-			if cls is member:
-				return True
+	for mroClass in scope.mro():
+		for memberName in mroClass.__dict__:
+			member = getattr(mroClass, memberName)
+			if type(member) is type:
+				if cls is member:
+					return True
 
 	return False

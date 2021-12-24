@@ -30,9 +30,6 @@
 # ============================================================================
 #
 """\
-pyTooling.Packaging
-###################
-
 :copyright: Copyright 2021-2021 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
