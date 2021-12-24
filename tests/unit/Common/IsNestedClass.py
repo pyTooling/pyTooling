@@ -35,7 +35,7 @@
 """
 from unittest import TestCase
 
-from Common import isnestedclass
+from pyTooling.Common import isnestedclass
 
 
 if __name__ == "__main__": # pragma: no cover
