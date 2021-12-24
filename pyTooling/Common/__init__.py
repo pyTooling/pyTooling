@@ -40,3 +40,27 @@ __copyright__ = "2007-2021, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
 __version__ =   "1.7.1"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "versioning", "licensing", "overloading", "singleton", "setuptools", "wheel", "installation", "packaging"]
+
+from typing import Type
+
+try:
+	from pyTooling.Decorators import export
+except ModuleNotFoundError:
+	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators import export
+	except ModuleNotFoundError as ex:
+		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
+		raise ex
+
+
+@export
+def isnestedclass(cls: Type, scope: Type):
+	for cv in scope.__dict__:
+		member = getattr(scope, cv)
+		if type(member) is type:
+			if cls is member:
+				return True
+
+	return False
