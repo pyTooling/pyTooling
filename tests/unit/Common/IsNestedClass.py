@@ -8,13 +8,11 @@
 # =============================================================================
 # Authors:            Patrick Lehmann
 #
-# Package installer:  A collection of MetaClasses for Python.
+# Python unittest:    Testing the pyTooling.Common module
 #
 # License:
 # ============================================================================
-# Copyright 2017-2021 Patrick Lehmann - Bötzingen, Germany
-# Copyright 2007-2016 Technische Universität Dresden - Germany
-#                     Chair of VLSI-Design, Diagnostics and Architecture
+# Copyright 2021-2021 Patrick Lehmann - Bötzingen, Germany
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,22 +29,48 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 #
-from os.path import abspath
-from sys     import path as sys_path
+"""\
+:copyright: Copyright 2021-2021 Patrick Lehmann - Bötzingen, Germany
+:license: Apache License, Version 2.0
+"""
+from unittest import TestCase
 
-sys_path.insert(0, abspath('./pyTooling'))
+from pyTooling.Common import isnestedclass
 
-from pathlib    import Path
-from Packaging  import DescribePythonPackageHostedOnGitHub
 
-gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling.*"
-packageDirectory =       packageName[:-2]
-packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
+if __name__ == "__main__": # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unitest <testcase module>'")
+	exit(1)
 
-DescribePythonPackageHostedOnGitHub(
-	packageName=packageName,
-	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-	gitHubNamespace=gitHubNamespace,
-	sourceFileWithVersion=packageInformationFile,
-)
+
+class Class_1:
+	class Class_11:
+		class Class_111:
+			pass
+
+
+class Class_1_1(Class_1):
+	pass
+
+
+class Class_2:
+	pass
+
+
+class IsNestedClass(TestCase):
+	def test_SameClass(self) -> None:
+		self.assertFalse(isnestedclass(Class_1, Class_1))
+
+	def test_NestedClass(self) -> None:
+		self.assertTrue(isnestedclass(Class_1.Class_11, Class_1))
+
+	def test_DerivedClass(self) -> None:
+		self.assertTrue(isnestedclass(Class_1_1.Class_11, Class_1))
+		self.assertTrue(isnestedclass(Class_1_1.Class_11, Class_1_1))
+
+	def test_DoubleNestedClass(self) -> None:
+		self.assertFalse(isnestedclass(Class_1.Class_11.Class_111, Class_1))
+
+	def test_ParallelClass(self) -> None:
+		self.assertFalse(isnestedclass(Class_2, Class_1))
