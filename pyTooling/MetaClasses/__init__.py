@@ -38,17 +38,12 @@ from ..Decorators import export
 
 @export
 class Singleton(type):
-
 	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
 
 	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
 
 	def __call__(cls, *args, **kwargs):
-		"""
-		Overwrites the ``__call__`` method of parent class :py:class:`type` to return
-		an object instance from an instances cache (see :attr:`_instanceCache`) if
-		the class was already constructed before.
-		"""
+		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an instances cache (see :attr:`_instanceCache`) if the class was already constructed before."""
 		if cls not in cls._instanceCache:
 			cls._instanceCache[cls] = super(Singleton, cls).__call__(*args, **kwargs)
 		return cls._instanceCache[cls]
@@ -66,15 +61,12 @@ class Singleton(type):
 
 @export
 class Overloading(type):
-
 	"""Metaclass that allows multiple dispatch of methods based on method signatures."""
 
 	class DispatchDictionary(dict):
-
 		"""Special dictionary to build dispatchable methods in a metaclass."""
 
 		class DispatchableMethod:
-
 			"""Represents a single multimethod."""
 
 			def __init__(self, name) -> None:
@@ -104,7 +96,6 @@ class Overloading(type):
 
 			def __call__(self, *args):
 				"""Call a method based on type signature of the arguments."""
-
 				types = tuple(type(arg) for arg in args[1:])
 				meth = self._methods.get(types, None)
 				if meth:
@@ -114,7 +105,6 @@ class Overloading(type):
 
 			def __get__(self, instance, cls):
 				"""Descriptor method needed to make calls work in a class."""
-
 				if instance is not None:
 					return MethodType(self, instance)
 				else:

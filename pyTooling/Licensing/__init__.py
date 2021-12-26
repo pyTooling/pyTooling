@@ -105,7 +105,7 @@ class License:
 		try:
 			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError:
-			raise ValueError(f"License has no Python specify information.")
+			raise ValueError("License has no Python specify information.")
 
 		return item.ShortName
 
