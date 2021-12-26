@@ -60,16 +60,16 @@ def raise_NotConfiguredException() -> None:
 
 class Exceptions(TestCase):
 	def test_EnvironmentException(self) -> None:
-		with self.assertRaises(EnvironmentException) as context:
+		with self.assertRaises(EnvironmentException):
 			raise_EnvironmentExecption()
 		# self.assertEqual(context.exception.message, "Environment does not provide 'PATH'.")
 
 	def test_PlatformNotSupportedException(self) -> None:
-		with self.assertRaises(PlatformNotSupportedException) as context:
+		with self.assertRaises(PlatformNotSupportedException):
 			raise_PlatformNotSupportedException()
 		# self.assertEqual(context.exception.message, "Platform 'OSX' is not supported.")
 
 	def test_NotConfiguredException(self) -> None:
-		with self.assertRaises(NotConfiguredException) as context:
+		with self.assertRaises(NotConfiguredException):
 			raise_NotConfiguredException()
 		# self.assertEqual(context.exception.message, "Option 'WorkingDirectory' is not specified in the configuration file.")

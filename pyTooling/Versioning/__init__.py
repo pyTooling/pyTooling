@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
-Implementation of semantic and date versioning version-numbers.
-"""
+"""Implementation of semantic and date versioning version-numbers."""
 from enum          import IntEnum
 from typing import Optional as Nullable, Any
 
@@ -40,9 +38,7 @@ from ..MetaClasses import Overloading
 
 @export
 class SemVersion(metaclass=Overloading):
-	"""
-	Representation of a semantic version number like ``3.7.12``.
-	"""
+	"""Representation of a semantic version number like ``3.7.12``."""
 
 	class Parts(IntEnum):
 		Major = 1
@@ -164,7 +160,4 @@ class SemVersion(metaclass=Overloading):
 
 @export
 class CalVersion(metaclass=Overloading):
-	"""
-	Representation of a calendar version number like ``2021.10``.
-	"""
-
+	"""Representation of a calendar version number like ``2021.10``."""
