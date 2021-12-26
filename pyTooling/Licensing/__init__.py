@@ -29,21 +29,21 @@
 # ==================================================================================================================== #
 #
 """
+The Licensing module implements translation tables for various license names and identifiers.
 
 List of SPDX identifiers:
 
 * https://spdx.org/licenses/
 * https://github.com/spdx/license-list-XML
-
 """
-from typing import Any, Dict, NamedTuple
+from typing       import Any, Dict, NamedTuple
 
-from ..Decorators  import export
+from ..Decorators import export
 
 
 @export
 class PythonLicenseNames(NamedTuple):
-	ShortName:       str
+	ShortName:  str
 	Classifier: str
 
 	def __repr__(self) -> str:
@@ -128,7 +128,6 @@ class License:
 
 	def __eq__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are identical (comparison based on SPDX identifiers)."""
-
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
@@ -136,7 +135,6 @@ class License:
 
 	def __ne__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are not identical (comparison based on SPDX identifiers)."""
-
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
@@ -144,12 +142,10 @@ class License:
 
 	def __le__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are compatible."""
-
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __ge__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are compatible."""
-
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
