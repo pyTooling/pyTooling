@@ -310,7 +310,7 @@ def DescribePythonPackage(
 
 	# Translate status to classifier
 	try:
-		classifiers.append(f"Development Status :: {STATUS[developmentStatus]}")
+		classifiers.append(f"Development Status :: {STATUS[developmentStatus.lower()]}")
 	except KeyError:
 		raise ValueError(f"Unsupported development status '{developmentStatus}'.")
 
