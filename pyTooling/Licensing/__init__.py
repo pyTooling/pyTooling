@@ -95,7 +95,7 @@ class License:
 
 	@property
 	def PythonLicenseName(self) -> str:
-		"""\
+		"""
 		Returns the Python license name for this license if it's defined.
 
 		.. seealso::
@@ -111,7 +111,7 @@ class License:
 
 	@property
 	def PythonClassifier(self) -> str:
-		"""\
+		"""
 		Returns the Python classifier for this license if it's defined.
 
 		.. seealso::

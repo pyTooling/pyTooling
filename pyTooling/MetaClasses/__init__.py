@@ -28,6 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""The MetaClasses package implements Python meta-classes (classes to construct other classes in Python)."""
 from inspect  import signature, Parameter
 from types    import MethodType
 from typing   import Any, Tuple, List, Dict, Callable, Type
@@ -37,6 +38,7 @@ from ..Decorators import export
 
 @export
 class Singleton(type):
+
 	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
 
 	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
@@ -54,7 +56,6 @@ class Singleton(type):
 	@classmethod
 	def Register(cls, t, instance) -> None:
 		"""Register a type,instance pair in :attr:`_instanceCache`."""
-
 		if t not in cls._instanceCache:
 			cls._instanceCache[t] = instance
 		else:
@@ -65,12 +66,15 @@ class Singleton(type):
 
 @export
 class Overloading(type):
+
 	"""Metaclass that allows multiple dispatch of methods based on method signatures."""
 
 	class DispatchDictionary(dict):
+
 		"""Special dictionary to build dispatchable methods in a metaclass."""
 
 		class DispatchableMethod:
+
 			"""Represents a single multimethod."""
 
 			def __init__(self, name) -> None:

@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
-Auxiliary classes to implement call by reference.
-"""
+"""Auxiliary classes to implement call by reference."""
 from ..Decorators import export
 
 
@@ -53,16 +51,17 @@ class CallByRefParam:
 		self.value = value
 
 	def __ilshift__(self, other):
-		"""Assigns a value to the *call-by-reference* object"""
+		"""Assigns a value to the *call-by-reference* object."""
 		self.value = other
 		return self
 
 	# binary operators - comparison
-	def __eq__(self, other):
-		"""Equality: self = other"""
+	def __eq__(self, other) -> bool:
+		"""Equality: self = other."""
 		return self.value == other
-	def __ne__(self, other):
-		"""Inequality: self != other"""
+
+	def __ne__(self, other) -> bool:
+		"""Inequality: self != other."""
 		return self.value != other
 
 	# type conversion operators
@@ -80,10 +79,11 @@ class CallByRefBoolParam(CallByRefParam):
 	"""A special *call-by-reference* implementation for boolean reference types."""
 
 	# type conversion operators
-	def __bool__(self):
+	def __bool__(self) -> bool:
 		"""Type conversion to :class:`bool`."""
 		return self.value
-	def __int__(self):
+
+	def __int__(self) -> int:
 		"""Type conversion to :class:`int`."""
 		return int(self.value)
 
@@ -93,112 +93,134 @@ class CallByRefIntParam(CallByRefParam):
 	"""A special *call-by-reference* implementation for integer reference types."""
 
 	# unary operators
-	def __neg__(self):
+	def __neg__(self) -> int:
 		"""Negate: -self."""
 		return -self.value
-	def __pos__(self):
+
+	def __pos__(self) -> int:
 		"""Positive: +self."""
 		return +self.value
-	def __invert__(self):
+
+	def __invert__(self) -> int:
 		"""Invert: ~self."""
 		return ~self.value
 
 	# binary operators - logical
-	def __and__(self, other):
+	def __and__(self, other) -> int:
 		"""And: self & other."""
 		return self.value & other
-	def __or__(self, other):
+
+	def __or__(self, other) -> int:
 		"""Or: self | other."""
 		return self.value | other
-	def __xor__(self, other):
+
+	def __xor__(self, other) -> int:
 		"""Xor: self ^ other."""
 		return self.value ^ other
 
 	# binary inplace operators
-	def __iand__(self, other):
+	def __iand__(self, other) -> 'CallByRefIntParam':
 		"""Inplace and: self &= other."""
 		self.value &= other
 		return self
-	def __ior__(self, other):
+
+	def __ior__(self, other) -> 'CallByRefIntParam':
 		"""Inplace or: self |= other."""
 		self.value |= other
 		return self
-	def __ixor__(self, other):
+
+	def __ixor__(self, other) -> 'CallByRefIntParam':
 		"""Inplace or: self |= other."""
 		self.value ^= other
 		return self
 
 	# binary operators - arithmetic
-	def __add__(self, other):
+	def __add__(self, other) -> int:
 		"""Addition: self + other."""
 		return self.value + other
-	def __sub__(self, other):
+
+	def __sub__(self, other) -> int:
 		"""Substraction: self - other."""
 		return self.value - other
-	def __truediv__(self, other):
+
+	def __truediv__(self, other) -> int:
 		"""Division: self / other."""
 		return self.value / other
-	def __floordiv__(self, other):
+
+	def __floordiv__(self, other) -> int:
 		"""Floor division: self // other."""
 		return self.value // other
-	def __mul__(self, other):
+
+	def __mul__(self, other) -> int:
 		"""Multiplication: self * other."""
 		return self.value * other
-	def __mod__(self, other):
+
+	def __mod__(self, other) -> int:
 		"""Modulo: self % other."""
 		return self.value % other
-	def __pow__(self, other):
+
+	def __pow__(self, other) -> int:
 		"""Power: self ** other."""
 		return self.value ** other
 
 	# binary inplace operators - arithmetic
-	def __iadd__(self, other):
+	def __iadd__(self, other) -> 'CallByRefIntParam':
 		"""Addition: self += other."""
 		self.value += other
 		return self
-	def __isub__(self, other):
+
+	def __isub__(self, other) -> 'CallByRefIntParam':
 		"""Substraction: self -= other."""
 		self.value -= other
 		return self
-	def __idiv__(self, other):
+
+	def __idiv__(self, other) -> 'CallByRefIntParam':
 		"""Division: self /= other."""
 		self.value /= other
 		return self
-	def __ifloordiv__(self, other):
+
+	def __ifloordiv__(self, other) -> 'CallByRefIntParam':
 		"""Floor division: self // other."""
 		self.value //= other
 		return self
-	def __imul__(self, other):
+
+	def __imul__(self, other) -> 'CallByRefIntParam':
 		"""Multiplication: self *= other."""
 		self.value *= other
 		return self
-	def __imod__(self, other):
+
+	def __imod__(self, other) -> 'CallByRefIntParam':
 		"""Modulo: self %= other."""
 		self.value %= other
 		return self
-	def __ipow__(self, other):
+
+	def __ipow__(self, other) -> 'CallByRefIntParam':
 		"""Power: self **= other."""
 		self.value **= other
 		return self
 
 	# binary operators - comparison
-	def __lt__(self, other):
+	def __lt__(self, other) -> bool:
 		"""Less-than: self < other."""
 		return self.value < other
-	def __le__(self, other):
+
+	def __le__(self, other) -> bool:
 		"""Less-equal: self <= other."""
 		return self.value <= other
-	def __gt__(self, other):
+
+	def __gt__(self, other) -> bool:
 		"""Greater-than: self > other."""
 		return self.value > other
-	def __ge__(self, other):
+
+	def __ge__(self, other) -> bool:
 		"""Greater-equal: self >= other."""
 		return self.value >= other
 
 	# type conversion operators
-	def __bool__(self):
+	def __bool__(self) -> bool:
 		"""Type conversion to :class:`bool`."""
 		return bool(self.value)
-	def __int__(self):
+
+	def __int__(self) -> int:
 		"""Type conversion to :class:`int`."""
 		return self.value
