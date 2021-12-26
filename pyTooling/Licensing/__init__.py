@@ -1,50 +1,49 @@
-# =============================================================================
-#             _____           _ _
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |
-# |_|    |___/                          |___/
-# =============================================================================
-# Authors:            Patrick Lehmann
-#
-# Python package:     Translation of license names.
-#
-# License:
-# ============================================================================
-# Copyright 2020-2021 Patrick Lehmann - Bötzingen, Germany
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# SPDX-License-Identifier: Apache-2.0
-# ============================================================================
+# ==================================================================================================================== #
+#             _____           _ _               _     _                    _                                           #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | |   (_) ___ ___ _ __  ___(_)_ __   __ _                               #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |   | |/ __/ _ \ '_ \/ __| | '_ \ / _` |                              #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___| | (_|  __/ | | \__ \ | | | | (_| |                              #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____|_|\___\___|_| |_|___/_|_| |_|\__, |                              #
+# |_|    |___/                          |___/                                      |___/                               #
+# ==================================================================================================================== #
+# Authors:                                                                                                             #
+#   Patrick Lehmann                                                                                                    #
+#                                                                                                                      #
+# License:                                                                                                             #
+# ==================================================================================================================== #
+# Copyright 2017-2021 Patrick Lehmann - Bötzingen, Germany                                                             #
+#                                                                                                                      #
+# Licensed under the Apache License, Version 2.0 (the "License");                                                      #
+# you may not use this file except in compliance with the License.                                                     #
+# You may obtain a copy of the License at                                                                              #
+#                                                                                                                      #
+#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
+#                                                                                                                      #
+# Unless required by applicable law or agreed to in writing, software                                                  #
+# distributed under the License is distributed on an "AS IS" BASIS,                                                    #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #
+# See the License for the specific language governing permissions and                                                  #
+# limitations under the License.                                                                                       #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
 #
 """
+The Licensing module implements translation tables for various license names and identifiers.
 
 List of SPDX identifiers:
 
 * https://spdx.org/licenses/
 * https://github.com/spdx/license-list-XML
-
 """
-from typing import Any, Dict, NamedTuple
+from typing       import Any, Dict, NamedTuple
 
-from ..Decorators  import export
+from ..Decorators import export
 
 
 @export
 class PythonLicenseNames(NamedTuple):
-	ShortName:       str
+	ShortName:  str
 	Classifier: str
 
 	def __repr__(self) -> str:
@@ -96,7 +95,7 @@ class License:
 
 	@property
 	def PythonLicenseName(self) -> str:
-		"""\
+		"""
 		Returns the Python license name for this license if it's defined.
 
 		.. seealso::
@@ -106,13 +105,13 @@ class License:
 		try:
 			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError:
-			raise ValueError(f"License has no Python specify information.")
+			raise ValueError("License has no Python specify information.")
 
 		return item.ShortName
 
 	@property
 	def PythonClassifier(self) -> str:
-		"""\
+		"""
 		Returns the Python classifier for this license if it's defined.
 
 		.. seealso::
@@ -129,7 +128,6 @@ class License:
 
 	def __eq__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are identical (comparison based on SPDX identifiers)."""
-
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
@@ -137,7 +135,6 @@ class License:
 
 	def __ne__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are not identical (comparison based on SPDX identifiers)."""
-
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
@@ -145,12 +142,10 @@ class License:
 
 	def __le__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are compatible."""
-
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __ge__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are compatible."""
-
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
