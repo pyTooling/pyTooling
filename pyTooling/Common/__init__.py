@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
-Common types, helper functions and classes.
-"""
+"""Common types, helper functions and classes."""
 __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2021, Patrick Lehmann"
@@ -58,7 +56,7 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 	for mroClass in scope.mro():
 		for memberName in mroClass.__dict__:
 			member = getattr(mroClass, memberName)
-			if type(member) is type:
+			if isinstance(member, Type):
 				if cls is member:
 					return True
 

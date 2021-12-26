@@ -29,20 +29,18 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""A common set of missing exceptions in Python."""
 from ..Decorators import export
 
 
 @export
 class ExceptionBase(Exception):
-	"""\
-	Base exception derived from :py:exc:`Exception <python:Exception>` for all
-	custom exceptions.
-	"""
+	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
 
 #	@DocumentMemberAttribute()
 	def __init__(self, message: str = "") -> None:
-		"""\
-		pyExceptions initializer
+		"""
+		pyExceptions initializer.
 
 		:param message:   The exception message.
 		"""
@@ -55,7 +53,7 @@ class ExceptionBase(Exception):
 		return self.message
 
 #	@DocumentMemberAttribute(False)
-	def with_traceback(self, tb):
+	def with_traceback(self, tb) -> None:
 		super().with_traceback(tb)
 
 	# @DocumentMemberAttribute(False)
@@ -65,20 +63,14 @@ class ExceptionBase(Exception):
 
 @export
 class EnvironmentException(ExceptionBase):
-	"""\
-	``EnvironmentException`` is raised when an expected environment variable is missing.
-	"""
+	"""``EnvironmentException`` is raised when an expected environment variable is missing."""
 
 
 @export
 class PlatformNotSupportedException(ExceptionBase):
-	"""\
-	``PlatformNotSupportedException`` is raise if the platform is not supported.
-	"""
+	"""``PlatformNotSupportedException`` is raise if the platform is not supported."""
 
 
 @export
 class NotConfiguredException(ExceptionBase):
-	"""\
-	``NotConfiguredException`` is raise if the requested setting is not configured.
-	"""
+	"""``NotConfiguredException`` is raise if the requested setting is not configured."""

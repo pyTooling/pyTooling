@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-Decorators controlling visibility of entities in a Python module.
-"""
+"""Decorators controlling visibility of entities in a Python module."""
 import sys
 from types import FunctionType
 from typing import Union, Type, TypeVar
@@ -44,7 +42,7 @@ T = TypeVar("T", bound=Union[Type, FunctionType])
 
 
 def export(entity: T) -> T:
-	"""\
+	"""
 	Register the given function or class as publicly accessible in a module.
 
 	Creates or updates the ``__all__`` attribute in the module in which the
