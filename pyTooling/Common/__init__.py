@@ -56,7 +56,8 @@ except ModuleNotFoundError:
 
 
 @export
-def isnestedclass(cls: Type, scope: Type):
+def isnestedclass(cls: Type, scope: Type) -> bool:
+	"""Returns true, if the given class ``cls`` is a member on an outer class ``scope``."""
 	for mroClass in scope.mro():
 		for memberName in mroClass.__dict__:
 			member = getattr(mroClass, memberName)
