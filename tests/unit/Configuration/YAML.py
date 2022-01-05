@@ -18,8 +18,19 @@ class ReadingValues(TestCase):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 
 		node_2 = config["node_2"]
-		for item in node_2:
-			print(item)
+		self.assertEqual(2, len(node_2))
+
+		iterator = iter(node_2)
+		first = next(iterator)
+		self.assertEqual("string_2111", node_2[0]["list_211"]["key_2111"])
+		self.assertEqual("string_2111", first["list_211"]["key_2111"])
+
+		second = next(iterator)
+		self.assertEqual("string_2211", node_2[1]["list_221"]["key_2211"])
+		self.assertEqual("string_2211", second["list_221"]["key_2211"])
+
+		with self.assertRaises(StopIteration):
+			_ = next(iterator)
 
 	def test_PathExpressionToNode(self):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))

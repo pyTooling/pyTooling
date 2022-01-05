@@ -131,17 +131,37 @@ class Dictionary(Abstract_Dict, Node):
 
 
 class Sequence(Abstract_Seq, Node):
+	_length: int
+
 	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: CommentedSeq):
 		Node.__init__(self, root, parent, yamlNode)
+		self._length = len(yamlNode)
 
 	def __getitem__(self, key: int) -> ValueT:
-		return "None"
+		value = self._yamlNode[key]
+		return value
+
+	def __len__(self) -> int:
+		return self._length
 
 	def __iter__(self):
-		pass
+		class iterator:
+			def __init__(self, obj: Sequence):
+				self._i = 0
+				self._obj = obj
 
-	def __next__(self):
-		pass
+			def __iter__(self):
+				return self
+
+			def __next__(self):
+				try:
+					result = self._obj[self._i]
+					self._i += 1
+					return result
+				except IndexError:
+					raise StopIteration
+
+		return iterator(self)
 
 
 setattr(Abstract_Node, "DICT_TYPE", Dictionary)

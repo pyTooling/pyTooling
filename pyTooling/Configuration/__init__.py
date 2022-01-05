@@ -18,10 +18,19 @@ class Node:
 		self._root = root
 		self._parent = parent
 
+	def __len__(self) -> int:
+		raise NotImplementedError()
+
 	def __getitem__(self, key: KeyT) -> ValueT:
 		raise NotImplementedError()
 
 	def __setitem__(self, key: KeyT, value: ValueT) -> None:
+		raise NotImplementedError()
+
+	def __iter__(self):
+		raise NotImplementedError()
+
+	def __next__(self):
 		raise NotImplementedError()
 
 	def QueryPath(self, query: str) -> ValueT:

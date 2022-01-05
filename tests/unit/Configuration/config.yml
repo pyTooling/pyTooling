@@ -5,12 +5,13 @@ node_1:
   value_12: string_12
 
 node_2:
-  - list_21:
-      key_211: string_211
-      key_212: string_212
-  - list_22:
-      key_221: string_221
-      key_222: string_222
+  - list_211:
+      key_2111: string_2111
+      key_2112: string_2112
+    list_212:   string_212
+  - list_221:
+      key_2211: string_2211
+      key_2212: string_2212
 
 Install:
   VendorA:
