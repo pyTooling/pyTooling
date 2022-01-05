@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
+"""
 Unit tests for :func:`isnestedclass`.
 
 :copyright: Copyright 2021-2021 Patrick Lehmann - Bötzingen, Germany

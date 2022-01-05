@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
-Unit tests for package :mod:`pyTooling.Versioning`.
-"""
+"""Unit tests for package :mod:`pyTooling.Versioning`."""
 from unittest     import TestCase
 
 from pyTooling.Versioning import SemVersion as UUT
