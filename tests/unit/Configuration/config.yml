@@ -1,0 +1,26 @@
+value_1: string_1
+
+node_1:
+  value_11: string_11
+  value_12: string_12
+
+node_2:
+  - list_21:
+      key_211: string_211
+      key_212: string_212
+  - list_22:
+      key_221: string_221
+      key_222: string_222
+
+Install:
+  VendorA:
+    InstallDir: 'C:\VendorA'
+
+    ToolA:
+      InstallDir: '${..:InstallDir}\ToolA'
+
+      2020:
+        InstallDir: '${..:InstallDir}\2020'
+
+      2021:
+        InstallDir: '${..:..:InstallDir}\Tool_A\2021'
