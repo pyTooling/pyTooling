@@ -134,6 +134,9 @@ class Dictionary(Abstract_Dict, Node):
 		Node.__init__(self, root, parent, yamlNode)
 		self._keys = [k for k in yamlNode.keys()]
 
+	def __contains__(self, key: KeyT) -> bool:
+		return key in self._keys
+
 	def __getitem__(self, key: KeyT) -> ValueT:
 		return self._GetNodeOrValue(key)
 

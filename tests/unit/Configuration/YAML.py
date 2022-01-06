@@ -14,6 +14,12 @@ class ReadingValues(TestCase):
 		self.assertEqual("string_11", node_1["value_11"])
 		self.assertEqual("string_12", config["node_1"]["value_12"])
 
+	def test_Root(self):
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(4, len(config))
+		self.assertTrue("Install" in config)
+
 	def test_Dictionary(self):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 

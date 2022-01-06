@@ -1,4 +1,4 @@
-from typing import TypeVar, Union, ClassVar
+from typing import TypeVar, Union, ClassVar, Generic
 
 from pyTooling.Decorators import export
 
@@ -8,7 +8,7 @@ ValueT = TypeVar("ValueT", bound=Union[NodeT, str, int, float])
 
 
 @export
-class Node:
+class Node(Generic[KeyT, ValueT]):
 	DICT_TYPE: ClassVar["Dictionary"]
 	SEQ_TYPE: ClassVar["Sequence"]
 	_parent: "Dictionary"
@@ -39,6 +39,9 @@ class Node:
 
 @export
 class Dictionary(Node):
+	def __contains__(self, key: KeyT) -> bool:
+		raise NotImplementedError()
+
 	def __iter__(self):
 		raise NotImplementedError()
 

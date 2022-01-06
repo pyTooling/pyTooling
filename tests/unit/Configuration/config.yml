@@ -25,3 +25,6 @@ Install:
 
       2021:
         InstallDir: '${..:..:InstallDir}\Tool_A\2021'
+
+  VendorB:
+    InstallDir: 'C:\VendorB'
