@@ -17,11 +17,16 @@ from . import (
 class Node(Abstract_Node):
 	_yamlNode: Union[CommentedMap, CommentedSeq]
 	_cache: Dict[KeyT, ValueT]
+	_length: int
 
 	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: Union[CommentedMap, CommentedSeq]):
 		super().__init__(root, parent)
 		self._yamlNode = yamlNode
 		self._cache = {}
+		self._length = len(yamlNode)
+
+	def __len__(self) -> int:
+		return self._length
 
 	def QueryPath(self, query: str) -> ValueT:
 		path = self._ToPath(query)
@@ -123,16 +128,32 @@ class Node(Abstract_Node):
 
 @export
 class Dictionary(Abstract_Dict, Node):
+	_keys: List[KeyT]
+
 	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: CommentedMap):
 		Node.__init__(self, root, parent, yamlNode)
+		self._keys = [k for k in yamlNode.keys()]
 
 	def __getitem__(self, key: KeyT) -> ValueT:
 		return self._GetNodeOrValue(key)
 
+	def __iter__(self):
+		class iterator:
+			def __init__(self, obj: Dictionary):
+				self._iter = iter(obj._keys)
+				self._obj = obj
+
+			def __iter__(self):
+				return self
+
+			def __next__(self):
+				key = next(self._iter)
+				return self._obj[key]
+
+		return iterator(self)
+
 
 class Sequence(Abstract_Seq, Node):
-	_length: int
-
 	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: CommentedSeq):
 		Node.__init__(self, root, parent, yamlNode)
 		self._length = len(yamlNode)
@@ -140,9 +161,6 @@ class Sequence(Abstract_Seq, Node):
 	def __getitem__(self, key: int) -> ValueT:
 		value = self._yamlNode[key]
 		return value
-
-	def __len__(self) -> int:
-		return self._length
 
 	def __iter__(self):
 		class iterator:

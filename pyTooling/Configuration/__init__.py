@@ -39,7 +39,11 @@ class Node:
 
 @export
 class Dictionary(Node):
-	pass
+	def __iter__(self):
+		raise NotImplementedError()
+
+	def __next__(self):
+		raise NotImplementedError()
 
 
 @export

@@ -14,7 +14,20 @@ class ReadingValues(TestCase):
 		self.assertEqual("string_11", node_1["value_11"])
 		self.assertEqual("string_12", config["node_1"]["value_12"])
 
-	def test_List(self):
+	def test_Dictionary(self):
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		node_1 = config["node_1"]
+		self.assertEqual(2, len(node_1))
+
+		iterator = iter(node_1)
+		first = next(iterator)
+		self.assertEqual("string_11", first)
+
+		second = next(iterator)
+		self.assertEqual("string_12", second)
+
+	def test_Sequence(self):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 
 		node_2 = config["node_2"]
