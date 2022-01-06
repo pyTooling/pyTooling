@@ -2,13 +2,13 @@ from typing import TypeVar, Union, ClassVar, Generic
 
 from pyTooling.Decorators import export
 
-KeyT = TypeVar("KeyT", bound=Union[str, int])
+KeyT = Union[str, int]
 NodeT = Union["Dictionary", "Sequence"]
-ValueT = TypeVar("ValueT", bound=Union[NodeT, str, int, float])
+ValueT = Union[NodeT, str, int, float]
 
 
 @export
-class Node(Generic[KeyT, ValueT]):
+class Node:
 	DICT_TYPE: ClassVar["Dictionary"]
 	SEQ_TYPE: ClassVar["Sequence"]
 	_parent: "Dictionary"
