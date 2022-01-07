@@ -49,5 +49,6 @@ DescribePythonPackageHostedOnGitHub(
 	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
 	gitHubNamespace=gitHubNamespace,
 	unittestRequirementsFile=Path("tests/requirements.txt"),
+	additionalRequirements={"yaml": ["ruamel.yaml>=0.17.20"]},
 	sourceFileWithVersion=packageInformationFile,
 )

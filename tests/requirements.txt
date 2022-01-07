@@ -10,3 +10,6 @@ pytest-cov>=3.0.0
 # Static Type Checking
 mypy>=0.930
 lxml>=4.6.4
+
+# For pyTooling.Configuration.YAML testing
+ruamel.yaml>=0.17.20
