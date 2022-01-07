@@ -51,7 +51,7 @@ from . import (
 @export
 class Node(Abstract_Node):
 	_yamlNode: Union[CommentedMap, CommentedSeq]
-	_cache: Dict[KeyT, ValueT]
+	_cache: Dict[str, ValueT]
 	_key: KeyT
 	_length: int
 
@@ -64,6 +64,9 @@ class Node(Abstract_Node):
 
 	def __len__(self) -> int:
 		return self._length
+
+	def __getitem__(self, key: KeyT) -> ValueT:
+		return self._GetNodeOrValue(str(key))
 
 	@property
 	def Key(self) -> KeyT:
@@ -78,20 +81,14 @@ class Node(Abstract_Node):
 		return self._GetNodeOrValueByPathExpression(path)
 
 	def _ToPath(self, query: str) -> List[Union[str, int]]:
-		path: List[Union[str, int]] = []
-		for p in query.split(":"):
-			if p.isnumeric():
-				path.append(int(p))
-			else:
-				path.append(p)
+		return query.split(":")
 
-		return path
-
-	def _GetNodeOrValue(self, key: KeyT) -> ValueT:
+	def _GetNodeOrValue(self, key: str) -> ValueT:
 		try:
 			value = self._cache[key]
 		except KeyError:
-			value = self._yamlNode[key]
+			key2 = int(key) if key.isnumeric() else key
+			value = self._yamlNode[key2]
 
 			if isinstance(value, str):
 				value = self._ResolveVariables(value)
@@ -136,14 +133,14 @@ class Node(Abstract_Node):
 					if ((nextPos > 0) and (nextPos < endPos)):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
 						print(f"_ResolveVariables: path='{path}'")
-						innervalue = self._GetValueByPathExpression(path.split(":"))
+						innervalue = self._GetValueByPathExpression(self._ToPath(path))
 						print(f"_ResolveVariables: innervalue='{innervalue}'")
 						rawValue = rawValue[beginPos:nextPos] + str(innervalue) + rawValue[endPos + 1:]
 						print(f"_ResolveVariables: new rawValue='{rawValue}'")
 					else:
 						path = rawValue[beginPos+2:endPos]
 						rawValue = rawValue[endPos+1:]
-						result  += str(self._GetValueByPathExpression(path.split(":")))
+						result  += str(self._GetValueByPathExpression(self._ToPath(path)))
 
 		return result
 
@@ -176,13 +173,10 @@ class Dictionary(Abstract_Dict, Node):
 
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap):
 		Node.__init__(self, root, parent, key, yamlNode)
-		self._keys = [k for k in yamlNode.keys()]
+		self._keys = [str(k) for k in yamlNode.keys()]
 
 	def __contains__(self, key: KeyT) -> bool:
 		return key in self._keys
-
-	def __getitem__(self, key: KeyT) -> ValueT:
-		return self._GetNodeOrValue(key)
 
 	def __iter__(self) -> Iterator[ValueT]:
 		class iterator:
@@ -205,9 +199,7 @@ class Sequence(Abstract_Seq, Node):
 		Node.__init__(self, root, parent, key, yamlNode)
 		self._length = len(yamlNode)
 
-	def __getitem__(self, key: int) -> ValueT:
-		value = self._yamlNode[key]
-		return value
+	__getitem__ = Node.__getitem__
 
 	def __iter__(self) -> Iterator[ValueT]:
 		class iterator:
@@ -220,7 +212,7 @@ class Sequence(Abstract_Seq, Node):
 
 			def __next__(self):
 				try:
-					result = self._obj[self._i]
+					result = self._obj[str(self._i)]
 					self._i += 1
 					return result
 				except IndexError:
@@ -245,8 +237,8 @@ class Configuration(Abstract_Configuration, Dictionary):
 
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 
-	def __getitem__(self, key: KeyT) -> ValueT:
-		return self._GetNodeOrValue(key)
+	def __getitem__(self, key: str) -> ValueT:
+		return self._GetNodeOrValue(str(key))
 
-	def __setitem__(self, key: KeyT, value: ValueT) -> None:
+	def __setitem__(self, key: str, value: ValueT) -> None:
 		raise NotImplementedError()

@@ -21,16 +21,18 @@ Install:
       InstallDir: '${..:InstallDir}\ToolA'
 
       Defaults:
-        Version:    "2020"
+        Version:    2020
         InstallDir: '${..:${Version}:InstallDir}'
         BinaryDir:  '${..:${Version}:BinaryDir}'
 
       2020:
-        InstallDir: '${..:InstallDir}\2020'
+        Version:    2020
+        InstallDir: '${..:InstallDir}\${Version}'
         BinaryDir:  '${InstallDir}\bin'
 
       2021:
-        InstallDir: '${..:..:InstallDir}\Tool_A\2021'
+        Version:    2021
+        InstallDir: '${..:..:InstallDir}\Tool_A\${Version}'
         BinaryDir:  '${InstallDir}\bin'
 
   VendorB:
