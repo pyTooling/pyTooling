@@ -1,4 +1,4 @@
-from typing import TypeVar, Union, ClassVar, Generic
+from typing import TypeVar, Union, ClassVar, Generic, Iterator
 
 from pyTooling.Decorators import export
 
@@ -27,10 +27,15 @@ class Node:
 	def __setitem__(self, key: KeyT, value: ValueT) -> None:
 		raise NotImplementedError()
 
-	def __iter__(self):
+	def __iter__(self) -> Iterator[ValueT]:
 		raise NotImplementedError()
 
-	def __next__(self):
+	@property
+	def Key(self) -> KeyT:
+		raise NotImplementedError()
+
+	@Key.setter
+	def Key(self, value: KeyT):
 		raise NotImplementedError()
 
 	def QueryPath(self, query: str) -> ValueT:
@@ -42,12 +47,6 @@ class Dictionary(Node):
 	def __contains__(self, key: KeyT) -> bool:
 		raise NotImplementedError()
 
-	def __iter__(self):
-		raise NotImplementedError()
-
-	def __next__(self):
-		raise NotImplementedError()
-
 
 @export
 class Sequence(Node):
@@ -55,12 +54,6 @@ class Sequence(Node):
 		raise NotImplementedError()
 
 	def __setitem__(self, index: int, value: ValueT) -> None:
-		raise NotImplementedError()
-
-	def __iter__(self):
-		raise NotImplementedError()
-
-	def __next__(self):
 		raise NotImplementedError()
 
 

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import ClassVar, Dict, List, Union
+from typing import Dict, List, Union, Iterator
 
 from pyTooling.Decorators import export
 from ruamel.yaml import YAML, CommentedMap, CommentedSeq
@@ -63,7 +63,7 @@ class Node(Abstract_Node):
 
 		return value
 
-	def _ResolveVariables(self, value: str):
+	def _ResolveVariables(self, value: str) -> str:
 		if value == "":
 			return ""
 		elif "$" not in value:
@@ -140,7 +140,7 @@ class Dictionary(Abstract_Dict, Node):
 	def __getitem__(self, key: KeyT) -> ValueT:
 		return self._GetNodeOrValue(key)
 
-	def __iter__(self):
+	def __iter__(self) -> Iterator[ValueT]:
 		class iterator:
 			def __init__(self, obj: Dictionary):
 				self._iter = iter(obj._keys)
@@ -165,7 +165,7 @@ class Sequence(Abstract_Seq, Node):
 		value = self._yamlNode[key]
 		return value
 
-	def __iter__(self):
+	def __iter__(self) -> Iterator[ValueT]:
 		class iterator:
 			def __init__(self, obj: Sequence):
 				self._i = 0
@@ -205,4 +205,4 @@ class Configuration(Abstract_Configuration, Dictionary):
 		return self._GetNodeOrValue(key)
 
 	def __setitem__(self, key: KeyT, value: ValueT) -> None:
-		pass
+		raise NotImplementedError()
