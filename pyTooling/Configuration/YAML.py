@@ -17,16 +17,26 @@ from . import (
 class Node(Abstract_Node):
 	_yamlNode: Union[CommentedMap, CommentedSeq]
 	_cache: Dict[KeyT, ValueT]
+	_key: KeyT
 	_length: int
 
-	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: Union[CommentedMap, CommentedSeq]):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]) -> None:
 		super().__init__(root, parent)
 		self._yamlNode = yamlNode
 		self._cache = {}
+		self._key = key
 		self._length = len(yamlNode)
 
 	def __len__(self) -> int:
 		return self._length
+
+	@property
+	def Key(self) -> KeyT:
+		return self._key
+
+	@Key.setter
+	def Key(self, value: KeyT) -> None:
+		raise NotImplementedError()
 
 	def QueryPath(self, query: str) -> ValueT:
 		path = self._ToPath(query)
@@ -51,11 +61,11 @@ class Node(Abstract_Node):
 			if isinstance(value, str):
 				value = self._ResolveVariables(value)
 			elif isinstance(value, int):
-				pass
+				value = str(value)
 			elif isinstance(value, CommentedMap):
-				value = self.DICT_TYPE(self, self, value)
+				value = self.DICT_TYPE(self, self, key, value)
 			elif isinstance(value, CommentedSeq):
-				value = self.SEQ_TYPE(self, self, value)
+				value = self.SEQ_TYPE(self, self, key, value)
 			else:
 				raise Exception(f"") from TypeError(f"Unknown type '{value.__class__.__name__}' returned from ruamel.yaml.") # XXX: error message
 
@@ -73,7 +83,7 @@ class Node(Abstract_Node):
 		result = ""
 
 		while (len(rawValue) > 0):
-#			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
+			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
 			beginPos = rawValue.find("$")
 			if (beginPos < 0):
 				result  += rawValue
@@ -87,19 +97,18 @@ class Node(Abstract_Node):
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
 					if (endPos < 0):
-						raise Exception()  # InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
+						raise Exception(f"")  # XXX: InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
 					if ((nextPos > 0) and (nextPos < endPos)):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
-#						print(f"_ResolveVariables: path='{path}'")
+						print(f"_ResolveVariables: path='{path}'")
 						innervalue = self._GetValueByPathExpression(path.split(":"))
-						# innervalue = self.interpolate(parser, section, option, path, map, depth + 1)
-#						print(f"_ResolveVariables: innervalue='{innervalue}'")
-						rawValue = rawValue[beginPos:nextPos] + innervalue + rawValue[endPos + 1:]
-#						print(f"_ResolveVariables: new rawValue='{rawValue}'")
+						print(f"_ResolveVariables: innervalue='{innervalue}'")
+						rawValue = rawValue[beginPos:nextPos] + str(innervalue) + rawValue[endPos + 1:]
+						print(f"_ResolveVariables: new rawValue='{rawValue}'")
 					else:
 						path = rawValue[beginPos+2:endPos]
 						rawValue = rawValue[endPos+1:]
-						result  += self._GetValueByPathExpression(path.split(":"))
+						result  += str(self._GetValueByPathExpression(path.split(":")))
 
 		return result
 
@@ -130,8 +139,8 @@ class Node(Abstract_Node):
 class Dictionary(Abstract_Dict, Node):
 	_keys: List[KeyT]
 
-	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: CommentedMap):
-		Node.__init__(self, root, parent, yamlNode)
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap):
+		Node.__init__(self, root, parent, key, yamlNode)
 		self._keys = [k for k in yamlNode.keys()]
 
 	def __contains__(self, key: KeyT) -> bool:
@@ -157,8 +166,8 @@ class Dictionary(Abstract_Dict, Node):
 
 
 class Sequence(Abstract_Seq, Node):
-	def __init__(self, root: "Configuration", parent: NodeT, yamlNode: CommentedSeq):
-		Node.__init__(self, root, parent, yamlNode)
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq):
+		Node.__init__(self, root, parent, key, yamlNode)
 		self._length = len(yamlNode)
 
 	def __getitem__(self, key: int) -> ValueT:
@@ -199,7 +208,7 @@ class Configuration(Abstract_Configuration, Dictionary):
 		with configFile.open() as file:
 			self._yamlConfig = YAML().load(file)
 
-		Dictionary.__init__(self, self, self, self._yamlConfig)
+		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 
 	def __getitem__(self, key: KeyT) -> ValueT:
 		return self._GetNodeOrValue(key)
