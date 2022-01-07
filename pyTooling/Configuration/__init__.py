@@ -1,17 +1,17 @@
 # ==================================================================================================================== #
-#             _____           _ _               ____                                                                   #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|___  _ __ ___  _ __ ___   ___  _ __                               #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \                              #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_) | | | | | | | | | | | (_) | | | |                             #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\___/|_| |_| |_|_| |_| |_|\___/|_| |_|                             #
-# |_|    |___/                          |___/                                                                          #
+#             _____           _ _               ____             __ _                       _   _                      #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __           #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \          #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |         #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|         #
+# |_|    |___/                          |___/                         |___/                                            #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2021 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2021 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,36 +28,71 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common types, helper functions and classes."""
-__author__ =    "Patrick Lehmann"
-__email__ =     "Paebbels@gmail.com"
-__copyright__ = "2017-2021, Patrick Lehmann"
-__license__ =   "Apache License, Version 2.0"
-__version__ =   "1.9.0"
-__keywords__ =  ["decorators", "meta classes", "exceptions", "versioning", "licensing", "overloading", "singleton", "setuptools", "wheel", "installation", "packaging"]
+"""Abstract configuration reader."""
+from typing import Union, ClassVar, Iterator
 
-from typing import Type
+from pyTooling.Decorators import export
 
-try:
-	from pyTooling.Decorators import export
-except ModuleNotFoundError:
-	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators import export
-	except ModuleNotFoundError as ex:
-		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
-		raise ex
+KeyT = Union[str, int]
+NodeT = Union["Dictionary", "Sequence"]
+ValueT = Union[NodeT, str, int, float]
 
 
 @export
-def isnestedclass(cls: Type, scope: Type) -> bool:
-	"""Returns true, if the given class ``cls`` is a member on an outer class ``scope``."""
-	for mroClass in scope.mro():
-		for memberName in mroClass.__dict__:
-			member = getattr(mroClass, memberName)
-			if isinstance(member, Type):
-				if cls is member:
-					return True
+class Node:
+	DICT_TYPE: ClassVar["Dictionary"]
+	SEQ_TYPE: ClassVar["Sequence"]
+	_parent: "Dictionary"
+	_root: "Configuration"
 
-	return False
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		self._root = root
+		self._parent = parent
+
+	def __len__(self) -> int:
+		raise NotImplementedError()
+
+	def __getitem__(self, key: KeyT) -> ValueT:
+		raise NotImplementedError()
+
+	def __setitem__(self, key: KeyT, value: ValueT) -> None:
+		raise NotImplementedError()
+
+	def __iter__(self) -> Iterator[ValueT]:
+		raise NotImplementedError()
+
+	@property
+	def Key(self) -> KeyT:
+		raise NotImplementedError()
+
+	@Key.setter
+	def Key(self, value: KeyT):
+		raise NotImplementedError()
+
+	def QueryPath(self, query: str) -> ValueT:
+		raise NotImplementedError()
+
+
+@export
+class Dictionary(Node):
+	def __contains__(self, key: KeyT) -> bool:
+		raise NotImplementedError()
+
+
+@export
+class Sequence(Node):
+	def __getitem__(self, index: int) -> ValueT:
+		raise NotImplementedError()
+
+	def __setitem__(self, index: int, value: ValueT) -> None:
+		raise NotImplementedError()
+
+
+setattr(Node, "DICT_TYPE", Dictionary)
+setattr(Node, "SEQ_TYPE", Sequence)
+
+
+@export
+class Configuration(Node):
+	def __init__(self):
+		Node.__init__(self)

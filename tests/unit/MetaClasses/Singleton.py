@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
+"""
 Unit tests for package :cls:`pyTooling.MetaClasses.Singleton`.
 
 :copyright: Copyright 2007-2021 Patrick Lehmann - Bötzingen, Germany
