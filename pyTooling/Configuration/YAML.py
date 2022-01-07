@@ -87,12 +87,20 @@ class Node(Abstract_Node):
 		try:
 			value = self._cache[key]
 		except KeyError:
-			key2 = int(key) if key.isnumeric() else key
-			value = self._yamlNode[key2]
+			try:
+				value = self._yamlNode[key]
+			except (KeyError, TypeError):
+				try:
+					value = self._yamlNode[int(key)]
+				except KeyError:
+					try:
+						value = self._yamlNode[float(key)]
+					except KeyError as ex:
+						raise Exception(f"") from ex         # XXX: needs error message
 
 			if isinstance(value, str):
 				value = self._ResolveVariables(value)
-			elif isinstance(value, int):
+			elif isinstance(value, (int, float)):
 				value = str(value)
 			elif isinstance(value, CommentedMap):
 				value = self.DICT_TYPE(self, self, key, value)
