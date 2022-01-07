@@ -268,6 +268,10 @@ def DescribePythonPackage(
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = Path("README.md"),
 	requirementsFile: Path = Path("requirements.txt"),
+	documentationRequirementsFile: Path = Path("doc/requirements.txt"),
+	unittestRequirementsFile: Path = Path("test/requirements.txt"),
+	packagingRequirementsFile: Path = Path("build/requirements.txt"),
+	additionalRequirements: Dict[str, List[str]] = None,
 	sourceFileWithVersion: Path = Path("__init__.py"),
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
@@ -279,6 +283,19 @@ def DescribePythonPackage(
 
 	# Read requirements file and add them to package dependency list (remove duplicates)
 	requirements = list(set(loadRequirementsFile(requirementsFile, debug=True)))
+
+	extraRequirements: Dict[str, List[str]] = {}
+	if (documentationRequirementsFile is not None) and documentationRequirementsFile.exists():
+		extraRequirements["doc"] = list(set(loadRequirementsFile(documentationRequirementsFile, debug=True)))
+	if (unittestRequirementsFile is not None) and unittestRequirementsFile.exists():
+		extraRequirements["test"] = list(set(loadRequirementsFile(unittestRequirementsFile, debug=True)))
+	if (packagingRequirementsFile is not None) and packagingRequirementsFile.exists():
+		extraRequirements["build"] = list(set(loadRequirementsFile(packagingRequirementsFile, debug=True)))
+	if additionalRequirements is not None:
+		for key, value in additionalRequirements.items():
+			extraRequirements[key] = value
+	if len(extraRequirements) > 0:
+		extraRequirements["all"] = list(set([dep for deps in extraRequirements.values() for dep in deps]))
 
 	# Read __author__, __email__, __version__ from source file
 	versionInformation = extractVersionInformation(sourceFileWithVersion)
@@ -335,6 +352,9 @@ def DescribePythonPackage(
 	  "install_requires": requirements,
 	}
 
+	if len(extraRequirements) > 0:
+		parameters["extras_require"] = extraRequirements
+
 	if consoleScripts is not None:
 		scripts = []
 		for scriptName, entryPoint in consoleScripts.items():
@@ -357,6 +377,10 @@ def DescribePythonPackageHostedOnGitHub(
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = Path("README.md"),
 	requirementsFile: Path = Path("requirements.txt"),
+	documentationRequirementsFile: Path = Path("doc/requirements.txt"),
+	unittestRequirementsFile: Path = Path("test/requirements.txt"),
+	packagingRequirementsFile: Path = Path("build/requirements.txt"),
+	additionalRequirements: Dict[str, List[str]] = None,
 	sourceFileWithVersion: Path = Path("__init__.py"),
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
@@ -383,6 +407,10 @@ def DescribePythonPackageHostedOnGitHub(
 		license=license,
 		readmeFile=readmeFile,
 		requirementsFile=requirementsFile,
+		documentationRequirementsFile=documentationRequirementsFile,
+		unittestRequirementsFile=unittestRequirementsFile,
+		packagingRequirementsFile=packagingRequirementsFile,
+		additionalRequirements=additionalRequirements,
 		sourceFileWithVersion=sourceFileWithVersion,
 		classifiers=classifiers,
 		developmentStatus=developmentStatus,

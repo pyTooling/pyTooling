@@ -48,5 +48,6 @@ DescribePythonPackageHostedOnGitHub(
 	packageName=packageName,
 	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
 	gitHubNamespace=gitHubNamespace,
+	unittestRequirementsFile=Path("tests/requirements.txt"),
 	sourceFileWithVersion=packageInformationFile,
 )
