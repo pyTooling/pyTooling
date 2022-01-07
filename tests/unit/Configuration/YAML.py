@@ -32,8 +32,6 @@
 from pathlib import Path
 from unittest import TestCase
 
-from pytest import mark
-
 from pyTooling.Configuration.YAML import Configuration
 
 
@@ -99,12 +97,11 @@ class ReadingValues(TestCase):
 	def test_Variables(self):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 
-		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"][2020]["InstallDir"])
-		self.assertEqual(r"C:\VendorA\Tool_A\2021", config["Install"]["VendorA"]["ToolA"][2021]["InstallDir"])
+		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["2020"]["InstallDir"])
+		self.assertEqual(r"C:\VendorA\Tool_A\2021", config["Install"]["VendorA"]["ToolA"]["2021"]["InstallDir"])
 
-		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"][2020]["BinaryDir"])
+		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["2020"]["BinaryDir"])
 
-	@mark.xfail
 	def test_NestedVariables(self):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 
