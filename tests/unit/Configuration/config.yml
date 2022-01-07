@@ -30,8 +30,8 @@ Install:
         InstallDir: '${..:InstallDir}\${Version}'
         BinaryDir:  '${InstallDir}\bin'
 
-      2021:
-        Version:    2021
+      '2021.10':
+        Version:    '2021.10'
         InstallDir: '${..:..:InstallDir}\Tool_A\${Version}'
         BinaryDir:  '${InstallDir}\bin'
 

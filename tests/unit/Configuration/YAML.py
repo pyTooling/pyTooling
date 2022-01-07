@@ -98,7 +98,7 @@ class ReadingValues(TestCase):
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["2020"]["InstallDir"])
-		self.assertEqual(r"C:\VendorA\Tool_A\2021", config["Install"]["VendorA"]["ToolA"]["2021"]["InstallDir"])
+		self.assertEqual(r"C:\VendorA\Tool_A\2021.10", config["Install"]["VendorA"]["ToolA"]["2021.10"]["InstallDir"])
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["2020"]["BinaryDir"])
 
