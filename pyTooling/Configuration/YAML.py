@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2021-2021 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2021 Patrick Lehmann - BÃ¶tzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,7 +33,11 @@ from pathlib import Path
 from typing import Dict, List, Union, Iterator
 
 from pyTooling.Decorators import export
-from ruamel.yaml import YAML, CommentedMap, CommentedSeq
+
+try:
+	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
+except ImportError as ex:
+	raise Exception(f"Optional dependency 'ruamel.yaml' not installed. Either install pyTooling with extra dependencies 'pyTooling[yaml]' or install 'ruamel.yaml' directly.") from ex
 
 from . import (
 	Node as Abstract_Node,
