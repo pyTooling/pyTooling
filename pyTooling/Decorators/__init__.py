@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2021 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -30,11 +30,11 @@
 #
 """Decorators controlling visibility of entities in a Python module."""
 import sys
-from types import FunctionType
+from types  import FunctionType
 from typing import Union, Type, TypeVar
 
 
-__all__ = ("export",)
+__all__ = ["export"]
 __api__ = __all__
 
 
