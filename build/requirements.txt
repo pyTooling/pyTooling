@@ -1,3 +1,0 @@
-pyTooling>=1.9.4
-
-wheel
