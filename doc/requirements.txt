@@ -2,7 +2,7 @@
 
 # Enforce latest version on ReadTheDocs
 sphinx>=4.3.0
-pyTooling>=1.9.2
+pyTooling>=1.9.4
 
 # Sphinx Extenstions
 #sphinx.ext.coverage

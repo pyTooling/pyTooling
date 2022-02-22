@@ -123,7 +123,7 @@ class Node(Abstract_Node):
 		result = ""
 
 		while (len(rawValue) > 0):
-			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
+#			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
 			beginPos = rawValue.find("$")
 			if (beginPos < 0):
 				result  += rawValue
@@ -140,11 +140,11 @@ class Node(Abstract_Node):
 						raise Exception(f"")  # XXX: InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
 					if ((nextPos > 0) and (nextPos < endPos)):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
-						print(f"_ResolveVariables: path='{path}'")
+#						print(f"_ResolveVariables: path='{path}'")
 						innervalue = self._GetValueByPathExpression(self._ToPath(path))
-						print(f"_ResolveVariables: innervalue='{innervalue}'")
+#						print(f"_ResolveVariables: innervalue='{innervalue}'")
 						rawValue = rawValue[beginPos:nextPos] + str(innervalue) + rawValue[endPos + 1:]
-						print(f"_ResolveVariables: new rawValue='{rawValue}'")
+#						print(f"_ResolveVariables: new rawValue='{rawValue}'")
 					else:
 						path = rawValue[beginPos+2:endPos]
 						rawValue = rawValue[endPos+1:]
