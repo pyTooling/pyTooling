@@ -33,7 +33,7 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "1.9.5"
+__version__ =   "1.9.6"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "versioning", "licensing", "overloading", "singleton", "setuptools", "wheel", "installation", "packaging"]
 
 from typing import Type
