@@ -46,11 +46,11 @@ if it's a library, framework or CLI tool.
 
 ### Exceptions
 
-* [EnvironmentException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#environmentexception)
+* [EnvironmentException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#environmentexception)  
   ... is raised when an expected environment variable is missing.
-* [PlatformNotSupportedException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#platformnotsupportedexception)
+* [PlatformNotSupportedException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#platformnotsupportedexception)  
   ... is raise if the platform is not supported.
-* [NotConfiguredException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#notconfiguredexception)
+* [NotConfiguredException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#notconfiguredexception)  
   ... is raise if the requested setting is not configured.
 
 
