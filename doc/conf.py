@@ -14,8 +14,11 @@ from json    import loads
 from os.path import abspath
 from pathlib import Path
 from sys     import path as sys_path
+from json import loads
 
 from pyTooling.Packaging import extractVersionInformation
+
+ROOT = Path(__file__).resolve().parent
 
 sys_path.insert(0, abspath('.'))
 sys_path.insert(0, abspath('..'))
@@ -80,23 +83,29 @@ except Exception as ex:
 # ==============================================================================
 # Options for HTML output
 # ==============================================================================
-html_theme_options = {
-    'home_breadcrumbs': True,
-    'vcs_pageview_mode': 'blob',
-}
-
 html_context = {}
-ctx = Path(__file__).resolve().parent / 'context.json'
+ctx = ROOT / 'context.json'
 if ctx.is_file():
 	html_context.update(loads(ctx.open('r').read()))
 
-html_theme_path = ["."]
-html_theme = "_theme"
+if (ROOT / "_theme").is_dir():
+	html_theme_path = ["."]
+	html_theme = "_theme"
+	html_theme_options = {
+		'logo_only': True,
+		'home_breadcrumbs': False,
+		'vcs_pageview_mode': 'blob',
+	}
+else:
+	html_theme = "alabaster"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_logo = str(Path(html_static_path[0]) / "logo.png")
+html_favicon = str(Path(html_static_path[0]) / "icon.png")
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pyToolingDoc'
