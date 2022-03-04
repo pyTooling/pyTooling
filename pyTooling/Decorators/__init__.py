@@ -30,15 +30,15 @@
 #
 """Decorators controlling visibility of entities in a Python module."""
 import sys
-from types  import FunctionType
+from types  import FunctionType, MethodType
 from typing import Union, Type, TypeVar
 
 
 __all__ = ["export"]
-__api__ = __all__
 
 
 T = TypeVar("T", bound=Union[Type, FunctionType])
+M = TypeVar("M", bound=MethodType)
 
 
 def export(entity: T) -> T:
@@ -103,3 +103,17 @@ def export(entity: T) -> T:
 		module.__all__ = [entity.__name__]	      # type: ignore
 
 	return entity
+
+
+@export
+def InheritDocString(baseClass: type):
+	"""Copy the doc-string from given base-class.
+
+	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
+	:return
+	"""
+	def inner(f: M) -> M:
+		f.__doc__ = getattr(baseClass, f.__name__).__doc__
+		return f
+
+	return inner

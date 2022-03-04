@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               ____                                                                   #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|___  _ __ ___  _ __ ___   ___  _ __                               #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \                              #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_) | | | | | | | | | | | (_) | | | |                             #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\___/|_| |_| |_|_| |_| |_|\___/|_| |_|                             #
+#             _____           _ _               ____                           _                                       #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  ___  ___ ___  _ __ __ _| |_ ___  _ __ ___                       #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | | | |/ _ \/ __/ _ \| '__/ _` | __/ _ \| '__/ __|                      #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| |  __/ (_| (_) | | | (_| | || (_) | |  \__ \                      #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \___|\___\___/|_|  \__,_|\__\___/|_|  |___/                      #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -28,25 +28,28 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for TBD."""
-from os       import getenv as os_getenv
-from pytest   import mark
+"""Unit tests for Decorators."""
 from unittest import TestCase
 
-from pyTooling.Common import Platform
+from pyTooling.Decorators import InheritDocString
 
-
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
 
 
-class AnyPlatform(TestCase):
-	expected = os_getenv("EXPECTED", default="Windows (x86-64)")
+class Class1:
+	def method(self):
+		"""Method's doc-string."""
 
-	@mark.skipif(os_getenv("EXPECTED", "skip") == "skip", reason="Skipped when environment variable 'EXPECTED' isn't set.")
-	def test_PlatformString(self) -> None:
-		platform = Platform()
 
-		self.assertEqual(self.expected, str(platform))
+class Class2(Class1):
+	@InheritDocString(Class1)
+	def method(self):
+		pass
+
+
+class InheritDocStrings(TestCase):
+	def test_InheritDocString(self) -> None:
+		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)
