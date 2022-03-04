@@ -36,9 +36,8 @@ __license__ =   "Apache License, Version 2.0"
 __version__ =   "1.9.6"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "versioning", "licensing", "overloading", "singleton", "setuptools", "wheel", "installation", "packaging"]
 
-from typing     import Type
-
-from flags      import Flags
+from enum     import Flag, auto
+from typing   import Type
 
 
 try:
@@ -67,48 +66,54 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 
 
 @export
-class Platforms(Flags):
-	__no_flags_name__ =   "Unknown"
-
-	OS_Linux =     2**0
-	OS_MacOS =     2**1
-	OS_Windows =   2**2
-
-	ENV_Native =   2**5
-	ENV_WSL =      2**6
-	ENV_MSYS2 =    2**7
-	ENV_Cygwin =   2**8
-
-	Arch_x86_32 =  2**10
-	Arch_x86_64 =  2**11
-	Arch_AArch64 = 2**12
-
-	Linux =   OS_Linux +   ENV_Native + Arch_x86_64
-	MacOS =   OS_MacOS +   ENV_Native + Arch_x86_64
-	Windows = OS_Windows + ENV_Native + Arch_x86_64
-
-	MSYS =         2**20
-	MinGW32 =      2**21
-	MinGW64 =      2**22
-	UCRT64 =       2**23
-	Clang32 =      2**24
-	Clang64 =      2**25
-
-	Windows_MSYS2_MSYS =    Windows + ENV_MSYS2 + Arch_x86_64 + MSYS
-	Windows_MSYS2_MinGW32 = Windows + ENV_MSYS2 + Arch_x86_64 + MinGW32
-	Windows_MSYS2_MinGW64 = Windows + ENV_MSYS2 + Arch_x86_64 + MinGW64
-	Windows_MSYS2_UCRT64 =  Windows + ENV_MSYS2 + Arch_x86_64 + UCRT64
-	Windows_MSYS2_Clang32 = Windows + ENV_MSYS2 + Arch_x86_64 + Clang32
-	Windows_MSYS2_Clang64 = Windows + ENV_MSYS2 + Arch_x86_64 + Clang64
-
-
-@export
 class Platform:
 	"""
 
 
 	.. seealso:: https://stackoverflow.com/a/54837707/3719459
 	"""
+
+	class Platforms(Flag):
+		Unknown = 0
+
+		OS_Linux = auto()
+		OS_MacOS = auto()
+		OS_Windows = auto()
+
+		OperatingSystem = OS_Linux | OS_MacOS | OS_Windows
+
+		ENV_Native = auto()
+		ENV_WSL = auto()
+		ENV_MSYS2 = auto()
+		ENV_Cygwin = auto()
+
+		Environment = ENV_Native | ENV_WSL | ENV_MSYS2 | ENV_Cygwin
+
+		ARCH_x86_32 = auto()
+		ARCH_x86_64 = auto()
+		ARCH_AArch64 = auto()
+
+		Arch_x86 = ARCH_x86_32 | ARCH_x86_64
+		Arch_Arm = ARCH_AArch64
+		Architecture = Arch_x86 | Arch_Arm
+
+		Linux = OS_Linux + ENV_Native + ARCH_x86_64
+		MacOS = OS_MacOS + ENV_Native + ARCH_x86_64
+		Windows = OS_Windows + ENV_Native + ARCH_x86_64
+
+		MSYS = auto()
+		MinGW32 = auto()
+		MinGW64 = auto()
+		UCRT64 = auto()
+		Clang32 = auto()
+		Clang64 = auto()
+
+		Windows_MSYS2_MSYS = Windows + ENV_MSYS2 + ARCH_x86_64 + MSYS
+		Windows_MSYS2_MinGW32 = Windows + ENV_MSYS2 + ARCH_x86_64 + MinGW32
+		Windows_MSYS2_MinGW64 = Windows + ENV_MSYS2 + ARCH_x86_64 + MinGW64
+		Windows_MSYS2_UCRT64 = Windows + ENV_MSYS2 + ARCH_x86_64 + UCRT64
+		Windows_MSYS2_Clang32 = Windows + ENV_MSYS2 + ARCH_x86_64 + Clang32
+		Windows_MSYS2_Clang64 = Windows + ENV_MSYS2 + ARCH_x86_64 + Clang64
 
 	_platform: Platforms
 
@@ -118,7 +123,7 @@ class Platform:
 		import platform
 		import sysconfig
 
-		self._platform = Platforms.Unknown
+		self._platform = self.Platforms.Unknown
 
 		# system = platform.system()
 		machine = platform.machine()
@@ -135,26 +140,26 @@ class Platform:
 		# print(sysconfig_platform)
 
 		if os.name == "nt":
-			self._platform |= Platforms.OS_Windows
+			self._platform |= self.Platforms.OS_Windows
 
 			if sysconfig_platform == "win32":
-				self._platform |= Platforms.ENV_Native | Platforms.Arch_x86_32
+				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_32
 			elif sysconfig_platform == "win-amd64":
-				self._platform |= Platforms.ENV_Native | Platforms.Arch_x86_64
+				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_64
 			elif sysconfig_platform.startswith("mingw"):
 				if machine == "AMD64":
-					self._platform |= Platforms.Arch_x86_64
+					self._platform |= self.Platforms.ARCH_x86_64
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for Windows.")
 
 				if sysconfig_platform == "mingw_i686":
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
+					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MinGW32
 				elif sysconfig_platform == "mingw_x86_64":
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64
+					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MinGW64
 				elif sysconfig_platform == "mingw_x86_64_ucrt":
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
+					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.UCRT64
 				elif sysconfig_platform == "mingw_x86_64_clang":
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
+					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.Clang64
 				else:
 					raise Exception(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
 			else:
@@ -162,40 +167,40 @@ class Platform:
 
 		elif os.name == "posix":
 			if sys_platform == "linux":
-				self._platform |= Platforms.OS_Linux | Platforms.ENV_Native
+				self._platform |= self.Platforms.OS_Linux | self.Platforms.ENV_Native
 
 				if sysconfig_platform == "linux-x86_64":            # native Linux x86_64; Windows 64 + WSL
-					self._platform |= Platforms.Arch_x86_64
+					self._platform |= self.Platforms.ARCH_x86_64
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
-					self._platform |= Platforms.Arch_x86_32
+					self._platform |= self.Platforms.ARCH_x86_32
 				else:
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
 			elif sys_platform == "msys":
-				self._platform |= Platforms.OS_Windows | Platforms.ENV_MSYS2 | Platforms.MSYS
+				self._platform |= self.Platforms.OS_Windows | self.Platforms.ENV_MSYS2 | self.Platforms.MSYS
 
 				if machine == "i686":
-					self._platform |= Platforms.Arch_x86_32
+					self._platform |= self.Platforms.ARCH_x86_32
 				elif machine == "x86_64":
-					self._platform |= Platforms.Arch_x86_64
+					self._platform |= self.Platforms.ARCH_x86_64
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
 
 			elif sys_platform == "cygwin":
-				self._platform |= Platforms.OS_Windows
+				self._platform |= self.Platforms.OS_Windows
 
 				if sysconfig_platform.startswith("msys"):
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MSYS
+					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MSYS
 
 					if machine == "i686":
-						self._platform |= Platforms.Arch_x86_32
+						self._platform |= self.Platforms.ARCH_x86_32
 					elif machine == "x86_64":
-						self._platform |= Platforms.Arch_x86_64
+						self._platform |= self.Platforms.ARCH_x86_64
 					else:
 						raise Exception(f"Unknown architecture '{machine}' for MSYS2 on Windows.")
 
 				elif sysconfig_platform.startswith("mingw64"):
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64 | Platforms.Arch_x86_64
+					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MinGW64 | self.Platforms.ARCH_x86_64
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
@@ -204,75 +209,87 @@ class Platform:
 		else:
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
-		print(self._platform)
+		# print(self._platform)
 
 		# if system == "Darwin":
-		# 	self._platform |= Platforms.MacOS
-
-
+		# 	self._platform |= self.Platforms.MacOS
 		# sys.version_info => 3.10.1
 
 	@property
 	def IsNativePlatform(self) -> bool:
-		return self._platform & Platforms.ENV_Native
+		return self.Platforms.ENV_Native in self._platform
 
 	@property
-	def HostPlatform(self):
-		pass
+	def HostOperatingSystem(self) -> Platforms:
+		return self._platform & self.Platforms.OperatingSystem
 
 	@property
-	def ExecutableExtension(self):
-		return "exe"
+	def ExecutableExtension(self) -> str:
+		if self.Platforms.OS_Windows in self._platform:
+			return "exe"
+		elif self.Platforms.OS_Linux in self._platform:
+			return ""
+		elif self.Platforms.OS_MacOS in self._platform:
+			return ""
+		else:
+			raise Exception(f"Unknown operating system.")
 
 	@property
-	def SharedLibraryExtension(self):
-		return "dll" # so
+	def SharedLibraryExtension(self) -> str:
+		if self.Platforms.OS_Windows in self._platform:
+			return "dll"
+		elif self.Platforms.OS_Linux in self._platform:
+			return "so"
+		elif self.Platforms.OS_MacOS in self._platform:
+			return "lib"
+		else:
+			raise Exception(f"Unknown operating system.")
 
 	def __repr__(self) -> str:
-		pass
+		return str(self._platform)
 
 	def __str__(self) -> str:
 		runtime = ""
 
-		if self._platform.OS_MacOS:
+		if self.Platforms.OS_MacOS in self._platform:
 			platform = "macOS"
-		elif self._platform.OS_Linux:
+		elif self.Platforms.OS_Linux in self._platform:
 			platform = "Linux"
-		elif self._platform.OS_Windows:
+		elif self.Platforms.OS_Windows in self._platform:
 			platform = "Windows"
 		else:
 			platform = "plat:dec-err"
 
-		if self._platform.ENV_Native:
+		if self.Platforms.ENV_Native in self._platform:
 			environment = ""
-		elif self._platform.ENV_WSL:
+		elif self.Platforms.ENV_WSL in self._platform:
 			environment = "+WSL"
-		elif self._platform.ENV_MSYS2:
+		elif self.Platforms.ENV_MSYS2 in self._platform:
 			environment = "+MSYS2"
 
-			if self._platform.MSYS:
+			if self.Platforms.MSYS in self._platform:
 				runtime = " - MSYS"
-			elif self._platform.MinGW32:
+			elif self.Platforms.MinGW32 in self._platform:
 				runtime = " - MinGW32"
-			elif self._platform.MinGW64:
+			elif self.Platforms.MinGW64 in self._platform:
 				runtime = " - MinGW64"
-			elif self._platform.UCRT64:
+			elif self.Platforms.UCRT64 in self._platform:
 				runtime = " - UCRT64"
-			elif self._platform.Clang64:
+			elif self.Platforms.Clang64 in self._platform:
 				runtime = " - CLANG64"
 			else:
 				runtime = "rt:dec-err"
 
-		elif self._platform.ENV_Cygwin:
+		elif self.Platforms.ENV_Cygwin in self._platform:
 			environment = "+Cygwin"
 		else:
 			environment = "env:dec-err"
 
-		if self._platform.Arch_x86_32:
+		if self.Platforms.ARCH_x86_32 in self._platform:
 			architecture = "x86-32"
-		elif self._platform.Arch_x86_64:
+		elif self.Platforms.ARCH_x86_64 in self._platform:
 			architecture = "x86-64"
-		elif self._platform.Arch_AArch64:
+		elif self.Platforms.ARCH_AArch64 in self._platform:
 			architecture = "amd64"
 		else:
 			architecture = "arch:dec-err"
