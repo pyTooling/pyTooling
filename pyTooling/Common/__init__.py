@@ -132,15 +132,16 @@ class Platform:
 				self._platform |= Platforms.Native | Platforms.Arch_x86_32
 			elif sysconfig_platform == "win-amd64":
 				self._platform |= Platforms.Native | Platforms.Arch_x86_64
-			elif sysconfig_platform == "mingw":
-				self._platform |= Platforms.MSYS2
-
-				if architecture[0] == "32bit":
-					self._platform |= Platforms.MinGW32
-				elif architecture[0] == "64bit":
-					self._platform |= Platforms.MinGW64
-				else:
-					raise Exception(f"Unknown MSYS2 MinGW architecture '{architecture[0]}'.")
+			elif sysconfig_platform == "mingw_i686":
+				self._platform |= Platforms.MSYS2 | Platforms.MinGW32
+			elif sysconfig_platform == "mingw_x86_64":
+				self._platform |= Platforms.MSYS2 | Platforms.MinGW64
+			elif sysconfig_platform == "mingw_x86_64_ucrt":
+				self._platform |= Platforms.MSYS2 | Platforms.UCRT64
+			elif sysconfig_platform == "mingw_x86_64_clang":
+				self._platform |= Platforms.MSYS2 | Platforms.Clang64
+			elif sysconfig_platform.startswith("mingw"):
+				raise Exception(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
 			else:
 				raise Exception(f"Unknown platform '{sysconfig_platform}' running on Windows.")
 
@@ -175,7 +176,7 @@ class Platform:
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 			else:
-				raise Exception(f"Unknown POSIX platform '{platform}'.")
+				raise Exception(f"Unknown POSIX platform '{sys_platform}'.")
 		else:
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
@@ -205,6 +206,8 @@ class Platform:
 		pass
 
 	def __str__(self) -> str:
+		runtime = ""
+
 		if Platforms.OS_MacOS & self._platform:
 			platform = "macOS"
 		elif Platforms.OS_Linux & self._platform:
@@ -218,17 +221,7 @@ class Platform:
 			environment = "+WSL"
 		elif Platforms.MSYS2 & self._platform:
 			environment = "+MSYS2"
-		elif Platforms.Cygwin & self._platform:
-			environment = "+Cygwin"
 
-		if Platforms.Arch_x86_32 & self._platform:
-			architecture = "x86-32"
-		elif Platforms.Arch_x86_64 & self._platform:
-			architecture = "x86-64"
-		elif Platforms.Arch_AArch64 & self._platform:
-			architecture = "amd64"
-
-		if not (Platforms.Native & self._platform):
 			if Platforms.MSYS & self._platform:
 				runtime = " - MSYS"
 			elif Platforms.MinGW32 & self._platform:
@@ -239,7 +232,15 @@ class Platform:
 				runtime = " - UCRT64"
 			elif Platforms.Clang64 & self._platform:
 				runtime = " - CLANG64"
-		else:
-			runtime = ""
+
+		elif Platforms.Cygwin & self._platform:
+			environment = "+Cygwin"
+
+		if Platforms.Arch_x86_32 & self._platform:
+			architecture = "x86-32"
+		elif Platforms.Arch_x86_64 & self._platform:
+			architecture = "x86-64"
+		elif Platforms.Arch_AArch64 & self._platform:
+			architecture = "amd64"
 
 		return f"{platform}{environment} ({architecture}){runtime}"
