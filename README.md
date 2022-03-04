@@ -32,15 +32,15 @@ if it's a library, framework or CLI tool.
 
 ### Common Classes
 
-* [pyTooling.CallByRef.*](https://pyTooling.GitHub.io/pyTooling/CallByRef/)
+* [pyTooling.CallByRef.*](https://pyTooling.GitHub.io/pyTooling/CallByRef/)  
   Emulation of *call-by-reference* parameters.
-* [pyTooling.Versioning.*](https://pyTooling.GitHub.io/pyTooling/Versioning/)
+* [pyTooling.Versioning.*](https://pyTooling.GitHub.io/pyTooling/Versioning/)  
   Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
 ### Decorators
 
-* [export](https://pyTooling.GitHub.io/pyTooling/Decorators/Visibility.html#export)
+* [export](https://pyTooling.GitHub.io/pyTooling/Decorators/Visibility.html#export)  
   Register the given function or class as publicly accessible in a module.
 
 
@@ -56,9 +56,9 @@ if it's a library, framework or CLI tool.
 
 ### Meta-Classes
 
-* [Singleton](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Singleton.html)
+* [Singleton](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Singleton.html)  
   Allow only a single instance of a class.
-* [Overloading](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Overloading.html)
+* [Overloading](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Overloading.html)  
   Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
 
 ## Examples
@@ -100,7 +100,7 @@ print(myInt.value)
 
 ## License
 
-This Python package (source code) licensed under [Apache License 2.0](LICENSE.md).
+This Python package (source code) licensed under [Apache License 2.0](LICENSE.md).  
 The accompanying documentation is licensed under [Creative Commons - Attribution 4.0 (CC-BY 4.0)](doc/Doc-License.rst).
 
 
