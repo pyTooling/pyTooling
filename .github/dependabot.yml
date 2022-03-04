@@ -8,8 +8,6 @@ updates:
       prefix: "[Dependabot]"
     labels:
       - Dependencies
-    assignees:
-      - Paebbels
     reviewers:
       - Paebbels
     schedule:
@@ -23,8 +21,6 @@ updates:
       prefix: "[Dependabot]"
     labels:
       - Dependencies
-    assignees:
-      - Paebbels
     reviewers:
       - Paebbels
     schedule:
