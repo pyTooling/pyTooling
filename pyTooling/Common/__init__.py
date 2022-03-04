@@ -125,6 +125,12 @@ class Platform:
 		architecture = platform.architecture()
 		sys_platform = sys.platform
 		sysconfig_platform = sysconfig.get_platform()
+
+		print()
+		print(machine)
+		print(sys_platform)
+		print(sysconfig_platform)
+
 		if os.name == "nt":
 			self._platform |= Platforms.Windows
 
@@ -180,6 +186,8 @@ class Platform:
 		else:
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
+		print(self._platform)
+
 		# if system == "Darwin":
 		# 	self._platform |= Platforms.MacOS
 
@@ -208,39 +216,47 @@ class Platform:
 	def __str__(self) -> str:
 		runtime = ""
 
-		if Platforms.OS_MacOS & self._platform:
+		if self._platform.OS_MacOS:
 			platform = "macOS"
-		elif Platforms.OS_Linux & self._platform:
+		elif self._platform.OS_Linux:
 			platform = "Linux"
-		elif Platforms.OS_Windows & self._platform:
+		elif self._platform.OS_Windows:
 			platform = "Windows"
+		else:
+			platform = "plat:dec-err"
 
-		if Platforms.Native & self._platform:
+		if self._platform.Native:
 			environment = ""
-		elif Platforms.WSL & self._platform:
+		elif self._platform.WSL:
 			environment = "+WSL"
-		elif Platforms.MSYS2 & self._platform:
+		elif self._platform.MSYS2:
 			environment = "+MSYS2"
 
-			if Platforms.MSYS & self._platform:
+			if self._platform.MSYS:
 				runtime = " - MSYS"
-			elif Platforms.MinGW32 & self._platform:
+			elif self._platform.MinGW32:
 				runtime = " - MinGW32"
-			elif Platforms.MinGW64 & self._platform:
+			elif self._platform.MinGW64:
 				runtime = " - MinGW64"
-			elif Platforms.UCRT64 & self._platform:
+			elif self._platform.UCRT64:
 				runtime = " - UCRT64"
-			elif Platforms.Clang64 & self._platform:
+			elif self._platform.Clang64:
 				runtime = " - CLANG64"
+			else:
+				runtime = "rt:dec-err"
 
-		elif Platforms.Cygwin & self._platform:
+		elif self._platform.Cygwin:
 			environment = "+Cygwin"
+		else:
+			environment = "env:dec-err"
 
-		if Platforms.Arch_x86_32 & self._platform:
+		if self._platform.Arch_x86_32:
 			architecture = "x86-32"
-		elif Platforms.Arch_x86_64 & self._platform:
+		elif self._platform.Arch_x86_64:
 			architecture = "x86-64"
-		elif Platforms.Arch_AArch64 & self._platform:
+		elif self._platform.Arch_AArch64:
 			architecture = "amd64"
+		else:
+			architecture = "arch:dec-err"
 
 		return f"{platform}{environment} ({architecture}){runtime}"
