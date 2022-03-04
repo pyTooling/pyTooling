@@ -120,19 +120,19 @@ class Platform:
 
 		self._platform = Platforms.Unknown
 
-		system = platform.system()
+		# system = platform.system()
 		machine = platform.machine()
-		architecture = platform.architecture()
+		# architecture = platform.architecture()
 		sys_platform = sys.platform
 		sysconfig_platform = sysconfig.get_platform()
 
-		print()
-		print(os.name)
-		print(system)
-		print(machine)
-		print(architecture)
-		print(sys_platform)
-		print(sysconfig_platform)
+		# print()
+		# print(os.name)
+		# print(system)
+		# print(machine)
+		# print(architecture)
+		# print(sys_platform)
+		# print(sysconfig_platform)
 
 		if os.name == "nt":
 			self._platform |= Platforms.OS_Windows

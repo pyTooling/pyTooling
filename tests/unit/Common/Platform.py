@@ -30,6 +30,7 @@
 #
 """Unit tests for TBD."""
 from os       import getenv as os_getenv
+from pytest   import mark
 from unittest import TestCase
 
 from pyTooling.Common import Platform
@@ -44,6 +45,7 @@ if __name__ == "__main__": # pragma: no cover
 class AnyPlatform(TestCase):
 	expected = os_getenv("EXPECTED", default="Windows (x86-64)")
 
+	@mark.skipif(os_getenv("EXPECTED", "skip") == "skip", reason="Skipped when environment variable 'EXPECTED' isn't set.")
 	def test_PlatformString(self) -> None:
 		platform = Platform()
 
