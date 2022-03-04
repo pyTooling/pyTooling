@@ -44,7 +44,7 @@ if __name__ == "__main__": # pragma: no cover
 class AnyPlatform(TestCase):
 	expected = os_getenv("EXPECTED", default="Windows (x86-64)")
 
-	def test_Native(self) -> None:
+	def test_PlatformString(self) -> None:
 		platform = Platform()
 
 		print(f"\nPlatform: {platform}")
