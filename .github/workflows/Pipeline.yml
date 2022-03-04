@@ -11,7 +11,6 @@ jobs:
     with:
       name: pyTooling
 
-
   UnitTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
     needs:
@@ -49,6 +48,77 @@ jobs:
       report: 'htmlmypy'
       artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.typing }}
 
+  PlatformTests:
+    name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
+    runs-on: ${{ matrix.runs-on }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {system: "ubuntu",  runs-on: "ubuntu-latest",  runtime: "",        shell: "bash",      sysicon: "🐧", pyicon: "🟢", python: "3.10", expected: "Linux (x86-64)"}
+          - {system: "windows", runs-on: "windows-latest", runtime: "",        shell: "pwsh",      sysicon: "🧊", pyicon: "🟢", python: "3.10", expected: "Windows (x86-64)"}
+          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW32", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢", python: "3.10", expected: "Windows+MSYS2 (x86-64) - MinGW32"}
+          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW64", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢", python: "3.10", expected: "Windows+MSYS2 (x86-64) - MinGW64"}
+          - {system: "msys2",   runs-on: "windows-latest", runtime: "UCRT64",  shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢", python: "3.10", expected: "Windows+MSYS2 (x86-64) - UCRT64"}
+#          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG32", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢", python: "3.10", expected: "Windows+MSYS2 (x86-64) - CLANG32"}
+          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG64", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢", python: "3.10", expected: "Windows+MSYS2 (x86-64) - CLANG64"}
+          - {system: "macos",   runs-on: "macos-latest",   runtime: "",        shell: "bash",      sysicon: "🍎", pyicon: "🟢", python: "3.10", expected: "macOS (x86-64)"}
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v2
+
+      - name: '🟦 Setup MSYS2'
+        if: matrix.system == 'msys2'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.runtime }}
+          update: true
+          pacboy: >-
+            python-pip:p
+            python-wheel:p
+            python-coverage:p
+            python-lxml:p
+            python-ruamel-yaml:p
+            python-ruamel.yaml.clib:p
+
+      - name: 🐍 Setup Python ${{ matrix.python }}
+        if: matrix.system != 'msys2'
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: ⚙️ Update pip
+        run: python -m pip install -U pip
+
+      - name: 🔧 Install wheel and pip dependencies
+        if: matrix.system != 'msys2'
+        run: |
+          python -m pip install -U wheel
+          python -m pip install -r tests/requirements.txt
+
+      - name: 🔧 Install pip dependencies
+        if: matrix.system == 'msys2'
+        run: |
+          python -m pip install -r tests/requirements.txt
+
+      - name: ☑ Run unit tests
+        if: matrix.shell != 'pwsh'
+        run: |
+          export EXPECTED="${{ matrix.expected }}"
+          python -m pytest -rA tests/unit/Common/Platform.py --color=yes
+
+      - name: ☑ Run unit tests
+        if: matrix.shell == 'pwsh'
+        run: |
+          $env:EXPECTED = "${{ matrix.expected }}"
+          python -m pytest -rA tests/unit/Common/Platform.py --color=yes
+
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r0
     needs:
@@ -59,6 +129,7 @@ jobs:
     needs:
       - Params
       - Coverage
+      - PlatformTests
     with:
       python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
       requirements: -r build/requirements.txt
