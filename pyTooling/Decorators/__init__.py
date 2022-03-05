@@ -31,14 +31,14 @@
 """Decorators controlling visibility of entities in a Python module."""
 import sys
 from types  import FunctionType, MethodType
-from typing import Union, Type, TypeVar
+from typing import Union, Type, TypeVar, Callable, ParamSpec
 
 
-__all__ = ["export"]
+__all__ = ["export", "T", "M"]
 
 
-T = TypeVar("T", bound=Union[Type, FunctionType])
-M = TypeVar("M", bound=MethodType)
+T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class or function
+M = TypeVar("M", bound=MethodType)                 #: Type variable for methods.
 
 
 def export(entity: T) -> T:
@@ -105,14 +105,18 @@ def export(entity: T) -> T:
 	return entity
 
 
+Param = ParamSpec("Param")
+RetType = TypeVar("RetType")
+Func = Callable[Param, RetType]
+
 @export
-def InheritDocString(baseClass: type):
+def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
 	"""Copy the doc-string from given base-class.
 
 	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
-	:return
+	:returns: Decorator function that copies the doc-string.
 	"""
-	def inner(f: M) -> M:
+	def inner(f: Func) -> Func:
 		f.__doc__ = getattr(baseClass, f.__name__).__doc__
 		return f
 

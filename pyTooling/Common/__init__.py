@@ -221,6 +221,10 @@ class Platform:
 
 	@property
 	def IsNativePlatform(self) -> bool:
+		"""Returns true, if the platform is a :term:`native` platform.
+
+		:return: ``True``, if the platform is a native platform.
+		"""
 		return self.Platforms.ENV_Native in self._platform
 
 	@property
