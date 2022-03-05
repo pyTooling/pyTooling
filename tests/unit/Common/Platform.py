@@ -50,3 +50,66 @@ class AnyPlatform(TestCase):
 		platform = Platform()
 
 		self.assertEqual(self.expected, str(platform))
+
+	@mark.skipif("Linux (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_NativeLinux(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeLinux)
+
+	@mark.skipif("MacOS (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_NativeMacOS(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeMacOS)
+
+	@mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_NativeWindows(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_MSYS2(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsMSYSOnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_MinGW32(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsMinGW32OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_MinGW64(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsMinGW64OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_UCRT64(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsUCRT64OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_Clang32(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsClang32OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_Clang64(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsClang64OnWindows)

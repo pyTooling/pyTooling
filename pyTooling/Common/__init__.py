@@ -209,19 +209,59 @@ class Platform:
 		else:
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
-		# print(self._platform)
+		print(self._platform)
 
 		# if system == "Darwin":
 		# 	self._platform |= self.Platforms.MacOS
 		# sys.version_info => 3.10.1
 
 	@property
+	def HostOperatingSystem(self) -> Platforms:
+		return self._platform & self.Platforms.OperatingSystem
+
+	@property
 	def IsNativePlatform(self) -> bool:
 		return self.Platforms.ENV_Native in self._platform
 
 	@property
-	def HostOperatingSystem(self) -> Platforms:
-		return self._platform & self.Platforms.OperatingSystem
+	def IsNativeWindows(self) -> bool:
+		return self.Platforms.Windows in self._platform
+
+	@property
+	def IsNativeLinux(self) -> bool:
+		return self.Platforms.Linux
+
+	@property
+	def IsNativeMacOS(self) -> bool:
+		return self.Platforms.MacOS in self._platform
+
+	@property
+	def IsMSYS2Environment(self) -> bool:
+		return self.Platforms.ENV_MSYS2 in self._platform
+
+	@property
+	def IsMSYSOnWindows(self) -> bool:
+		return self.Platforms.Windows_MSYS2_MSYS in self._platform
+
+	@property
+	def IsMinGW32OnWindows(self) -> bool:
+		return self.Platforms.Windows_MSYS2_MinGW32 in self._platform
+
+	@property
+	def IsMinGW64OnWindows(self) -> bool:
+		return self.Platforms.Windows_MSYS2_MinGW64 in self._platform
+
+	@property
+	def IsUCRT64OnWindows(self) -> bool:
+		return self.Platforms.Windows_MSYS2_UCRT64 in self._platform
+
+	@property
+	def IsClang32OnWindows(self) -> bool:
+		return self.Platforms.Windows_MSYS2_Clang32 in self._platform
+
+	@property
+	def IsClang64OnWindows(self) -> bool:
+		return self.Platforms.Windows_MSYS2_Clang64 in self._platform
 
 	@property
 	def ExecutableExtension(self) -> str:
@@ -275,8 +315,10 @@ class Platform:
 				runtime = " - MinGW64"
 			elif self.Platforms.UCRT64 in self._platform:
 				runtime = " - UCRT64"
+			elif self.Platforms.Clang32 in self._platform:
+				runtime = " - Clang32"
 			elif self.Platforms.Clang64 in self._platform:
-				runtime = " - CLANG64"
+				runtime = " - Clang64"
 			else:
 				runtime = "rt:dec-err"
 
