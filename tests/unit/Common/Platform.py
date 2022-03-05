@@ -33,8 +33,8 @@ from os       import getenv as os_getenv
 from pytest   import mark
 from unittest import TestCase
 
-from pyTooling.Common import Platform
-
+from pyTooling.Common import CurrentPlatform
+from pyTooling.Common.Platform import Platform
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -47,7 +47,7 @@ class AnyPlatform(TestCase):
 
 	@mark.skipif(os_getenv("EXPECTED", "skip") == "skip", reason="Skipped when environment variable 'EXPECTED' isn't set.")
 	def test_PlatformString(self) -> None:
-		platform = Platform()
+		platform = CurrentPlatform
 
 		self.assertEqual(self.expected, str(platform))
 
