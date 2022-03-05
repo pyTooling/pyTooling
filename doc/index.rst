@@ -131,21 +131,27 @@ License
    :hidden:
 
    Installation
-   Dependencies
+   Dependency
    Tutorials/index
+
+.. raw:: latex
+
+   \part{Main Documentation}
 
 .. toctree::
    :caption: Common
    :hidden:
 
-   CallByRef/index
-   Versioning/index
-   Licensing/index
+   CallByRef
+   Platform
+   Versioning
+   Licensing
 
 .. toctree::
    :caption: Decorators
    :hidden:
 
+   Decorators/Documentation
    Decorators/Visibility
 
 .. toctree::
@@ -169,13 +175,26 @@ License
    Packaging/HelperFunctions
    Packaging/PackageDescriptions
 
+.. raw:: latex
+
+   \part{References}
+
+.. toctree::
+   :caption: References
+   :hidden:
+
+   pyTooling/index
+
+.. raw:: latex
+
+   \part{Appendix}
+
 .. toctree::
    :caption: Appendix
    :hidden:
 
-   Coverage Report ➚ <https://pyTooling.GitHub.io/pyTooling/coverage/>
-   Static Type Check Report ➚ <https://pyTooling.GitHub.io/pyTooling/typing/>
-   ChangeLog/index
+   Coverage Report ➚ <coverage/index>
+   Static Type Check Report ➚ <typing/index>
    License
    Doc-License
    Glossary

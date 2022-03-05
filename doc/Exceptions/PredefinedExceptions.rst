@@ -12,28 +12,13 @@ Predefined exceptions of ``pyTooling.Exceptions``.
 EnvironmentException
 ********************
 
-.. autoexception:: pyTooling.Exceptions.EnvironmentException
-   :show-inheritance:
-   :members:
-   :private-members:
-
 
 PlatformNotSupportedException
 *****************************
 
-.. autoexception:: pyTooling.Exceptions.PlatformNotSupportedException
-   :show-inheritance:
-   :members:
-   :private-members:
-
 
 NotConfiguredException
 **********************
-
-.. autoexception:: pyTooling.Exceptions.NotConfiguredException
-   :show-inheritance:
-   :members:
-   :private-members:
 
 .. seealso::
 

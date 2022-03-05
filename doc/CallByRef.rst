@@ -3,9 +3,9 @@
 CallByRef
 #########
 
-The ``pyTooling.CallByRef`` package contains auxilary classes to implement call by
-reference emulation for function parameter handover. The callee get enabled to return
-out-parameters for simple types like ``bool`` and ``int`` to the caller.
+The ``pyTooling.CallByRef`` package contains auxilary classes to implement call by reference emulation for function
+parameter handover. The callee gets enabled to return out-parameters for simple types like ``bool`` and ``int`` to the
+caller.
 
 .. admonition:: Python Background
 
@@ -56,12 +56,6 @@ wrapper. Calls to ``__repr__`` and ``__str__`` are passed to the internal value.
 
 The internal value can be used via ``obj.value``.
 
-.. autoclass:: pyTooling.CallByRef.CallByRefParam
-   :show-inheritance:
-   :members:
-   :private-members:
-   :special-members: __init__, __ilshift__, __eq__, __ne__, __repr__, __str__
-
 
 Type-Specific *call-by-reference* Classes
 *****************************************
@@ -71,21 +65,8 @@ CallByRefBoolParam
 
 This is an implementation for the boolean type (:class:`bool`).
 
-.. autoclass:: pyTooling.CallByRef.CallByRefBoolParam
-   :show-inheritance:
-   :members:
-   :private-members:
-   :special-members: __init__, __ilshift__, __eq__, __ne__, __neg__, __and__, __or__, __iand__, __ior__, __bool__, __int__, __repr__, __str__
-
-
 
 CallByRefIntParam
 =================
 
 This is an implementation for the integer type (:class:`int`).
-
-.. autoclass:: pyTooling.CallByRef.CallByRefIntParam
-   :show-inheritance:
-   :members:
-   :private-members:
-   :special-members: __init__, __ilshift__, __neg__, __add__, __sub__, __truediv__, __mul__, __mod__, __pow__, __lt__, __le__, __gt__, __ge__, __bool__, __int__, __repr__, __str__

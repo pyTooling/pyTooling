@@ -82,13 +82,13 @@ from pyTooling.CallByRef import CallByRefIntParam
 myInt = CallByRefIntParam(3)
 
 # a function using a call-by-reference parameter
-def func(param : CallByRefIntParam):
+def func(param: CallByRefIntParam):
   param <<= param * 4
 
 # call the function and pass the wrapper object
 func(myInt)
 
-print(myInt.value)
+print(myInt._value)
 ```
 
 
