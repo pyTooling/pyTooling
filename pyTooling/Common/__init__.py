@@ -33,7 +33,7 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "1.9.6"
+__version__ =   "1.10.0"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "versioning", "licensing", "overloading", "singleton", "setuptools", "wheel", "installation", "packaging"]
 
 from enum     import Flag, auto
@@ -97,9 +97,9 @@ class Platform:
 		Arch_Arm = ARCH_AArch64
 		Architecture = Arch_x86 | Arch_Arm
 
-		Linux = OS_Linux + ENV_Native + ARCH_x86_64
-		MacOS = OS_MacOS + ENV_Native + ARCH_x86_64
-		Windows = OS_Windows + ENV_Native + ARCH_x86_64
+		Linux = OS_Linux | ENV_Native | ARCH_x86_64
+		MacOS = OS_MacOS | ENV_Native | ARCH_x86_64
+		Windows = OS_Windows | ENV_Native | ARCH_x86_64
 
 		MSYS = auto()
 		MinGW32 = auto()
@@ -108,12 +108,12 @@ class Platform:
 		Clang32 = auto()
 		Clang64 = auto()
 
-		Windows_MSYS2_MSYS = Windows + ENV_MSYS2 + ARCH_x86_64 + MSYS
-		Windows_MSYS2_MinGW32 = Windows + ENV_MSYS2 + ARCH_x86_64 + MinGW32
-		Windows_MSYS2_MinGW64 = Windows + ENV_MSYS2 + ARCH_x86_64 + MinGW64
-		Windows_MSYS2_UCRT64 = Windows + ENV_MSYS2 + ARCH_x86_64 + UCRT64
-		Windows_MSYS2_Clang32 = Windows + ENV_MSYS2 + ARCH_x86_64 + Clang32
-		Windows_MSYS2_Clang64 = Windows + ENV_MSYS2 + ARCH_x86_64 + Clang64
+		Windows_MSYS2_MSYS =    OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MSYS
+		Windows_MSYS2_MinGW32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW32
+		Windows_MSYS2_MinGW64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW64
+		Windows_MSYS2_UCRT64 =  OS_Windows | ENV_MSYS2 | ARCH_x86_64 | UCRT64
+		Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32
+		Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64
 
 	_platform: Platforms
 
@@ -209,7 +209,7 @@ class Platform:
 		else:
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
-		print(self._platform)
+		# print(self._platform)
 
 		# if system == "Darwin":
 		# 	self._platform |= self.Platforms.MacOS
