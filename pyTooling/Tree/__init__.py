@@ -1,3 +1,4 @@
+from collections import deque
 from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, ClassVar, Any
 
 IDT = TypeVar("IDT", bound=Hashable)
@@ -86,14 +87,15 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def Path(self) -> List['Node']:
-		path: List['Node'] = []
+		path: deque['Node'] = deque()
+
 		def walkup(node: 'Node'):
 			if node._parent is not None:
 				walkup(node._parent)
 			path.append(node)
 
 		walkup(self)
-		return path
+		return tuple(path)
 
 	@property
 	def IsRoot(self) -> bool:
@@ -131,7 +133,9 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 			yield child
 
 	def GetSiblings(self) -> Generator['Node', None, None]:
-		pass
+		for child in self._children:
+			yield child
+			yield from child.GetSiblings()
 
 	def __str__(self):
 		if self._value is not None:
