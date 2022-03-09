@@ -1,5 +1,6 @@
 from collections import deque
-from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, ClassVar, Any
+from types import NoneType
+from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union
 
 IDT = TypeVar("IDT", bound=Hashable)
 ValueT = TypeVar("ValueT")
@@ -7,11 +8,11 @@ DictKeyT = TypeVar("DictKeyT")
 DictValueT = TypeVar("DictValueT")
 
 
-class Node(Generic[ValueT, DictKeyT, DictValueT]):
+class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	_id: IDT
-	_ids: ClassVar[Dict[Nullable[IDT], 'Node']] = {}
+	_ids: Nullable[Dict[Nullable[IDT], Union['Node', List['Node']]]]
 	_root: 'Node'
-	_parent: 'Node'
+	_parent: Nullable['Node']
 	_children: List['Node']
 	_links: List['Node']
 
@@ -28,15 +29,24 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 		if parent is None:
 			self._root = self
 			self._parent = None
+
+			self._ids = {None: []}
+			if id is None:
+				self._ids[None].append(self)
+			else:
+				self._ids[id] = self
 		else:
 			self._root = parent._root
 			self._parent = parent
+			self._ids = None
+
+			if id is None:
+				self._root._ids[None].append(self)
+			else:
+				self._root._ids[id] = self
+
 			parent._children.append(self)
 
-		if id is None:
-			self._ids[None] = [self]
-		else:
-			self._ids[id] = self
 		self._children = []
 
 		if children is not None:
@@ -68,10 +78,6 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 	def Root(self) -> 'Node':
 		return self._root
 
-	@Root.setter
-	def Root(self, root: 'Node') -> None:
-		self._root = root
-
 	@property
 	def Parent(self) -> 'Node':
 		return self._parent
@@ -79,14 +85,36 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 	@Parent.setter
 	def Parent(self, parent: 'Node') -> None:
 		if parent is None:
+			self._ids = {None: []}
+			for sibling in self._parent.GetSiblings():
+				if sibling._id is None:
+					self._ids[None].append(sibling)
+				else:
+					self._ids[sibling._id] = sibling
+
 			self._parent._children.remove(self)
+
+			self._root = self
 			self._parent = None
 		else:
+			if parent._root is self._root:
+				raise Exception(f"Parent '{parent}' is already a child node in this tree.")
+
+			self._root = parent._root
 			self._parent = parent
+			self._ids = self._SetNewRoot(self._ids)
 			parent._children.append(self)
 
 	@property
-	def Path(self) -> List['Node']:
+	def LeftSibling(self) -> 'Node':
+		pass
+
+	@property
+	def RightSibling(self) -> 'Node':
+		pass
+
+	@property
+	def Path(self) -> Tuple['Node']:
 		path: deque['Node'] = deque()
 
 		def walkup(node: 'Node'):
@@ -98,8 +126,12 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 		return tuple(path)
 
 	@property
+	def Level(self) -> int:
+		pass
+
+	@property
 	def IsRoot(self) -> bool:
-		return self._root is self
+		return self._parent is None
 
 	@property
 	def IsLeaf(self) -> bool:
@@ -109,10 +141,29 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 	def HasChildren(self) -> bool:
 		return len(self._children) > 0
 
+	def _SetNewRoot(self, ids: Dict[Nullable['Node'], Union['Node', List['Node']]]) -> NoneType:
+		for id, node in ids.items():
+			if id is not None:
+				self._root._ids[id] = node
+				node._root = self._root
+			else:
+				nodeList: List[Node] = node
+				for node in nodeList:
+					self._root._ids[None].append(node)
+					node._root = self._root
+
+		return None
+
 	def AddChild(self, child: 'Node') -> None:
 		if not isinstance(child, Node):
 			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
 
+		if child._root is self._root:
+			raise Exception(f"Child '{child}' is already a node in this tree.")
+
+		child._root = self._root
+		child._parent = self
+		child._ids = self._SetNewRoot(child._ids)
 		self._children.append(child)
 
 	def AddChildren(self, children: Iterable['Node']):
@@ -120,6 +171,9 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 			if not isinstance(child, Node):
 				raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
 
+			child._root = self._root
+			child._parent = self
+			child._ids = self._SetNewRoot(child._ids)
 			self._children.append(child)
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
@@ -127,6 +181,9 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 		while node is not None:
 			yield node
 			node = node._parent
+
+	def GetCommonAncestors(self):
+		pass
 
 	def GetChildren(self) -> Generator['Node', None, None]:
 		for child in self._children:
@@ -136,6 +193,27 @@ class Node(Generic[ValueT, DictKeyT, DictValueT]):
 		for child in self._children:
 			yield child
 			yield from child.GetSiblings()
+
+	def GetLeftSiblings(self):
+		pass
+
+	def GetRightSiblings(self):
+		pass
+
+	def InterateLevelOrder(self):
+		pass
+
+	def IteratePreOrder(self):
+		pass
+
+	def IteratePostOrder(self):
+		pass
+
+	def GetNodeByID(self, id: IDT) -> Union['Node', List['Node']]:
+		return self._ids[id]
+
+	def Find(self, filter: Callable) -> Generator['Node', None, None]:
+		pass
 
 	def __str__(self):
 		if self._value is not None:

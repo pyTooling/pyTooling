@@ -29,6 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for Tree."""
+from typing import Any, Optional as Nullable
 from unittest import TestCase
 
 from pyTooling.Tree import Node
@@ -41,12 +42,13 @@ if __name__ == "__main__": # pragma: no cover
 
 class Tree(TestCase):
 	def test_SingleNode(self):
-		node = Node(1)
+		root: Node[Nullable[Any], int, str, Any] = Node(1)
 
-		self.assertIs(node, node.Root)
-		self.assertIsNone(node.Parent)
-		self.assertTrue(node.IsRoot)
-		self.assertTrue(node.IsLeaf)
+		self.assertIs(root, root.Root)
+		self.assertIsNone(root.Parent)
+		self.assertTrue(root.IsRoot)
+		self.assertTrue(root.IsLeaf)
+		self.assertIs(root, root.GetNodeByID(1))
 
 	def test_Children(self):
 		root = Node(1)
@@ -59,6 +61,7 @@ class Tree(TestCase):
 		self.assertTrue(root.HasChildren)
 
 		for child in children:
+			self.assertIs(root, child.Root)
 			self.assertFalse(child.IsRoot)
 			self.assertTrue(child.IsLeaf)
 			self.assertFalse(child.HasChildren)
@@ -80,6 +83,7 @@ class Tree(TestCase):
 		self.assertTrue(root.HasChildren)
 
 		for child in children:
+			self.assertIs(root, child.Root)
 			self.assertFalse(child.IsRoot)
 			self.assertFalse(child.IsLeaf)
 			self.assertTrue(child.HasChildren)
@@ -89,10 +93,116 @@ class Tree(TestCase):
 		self.assertListEqual(children, [child for child in root.GetChildren()])
 
 		for grandChild in grandChildren:
+			self.assertIs(root, grandChild.Root)
 			self.assertFalse(grandChild.IsRoot)
 			self.assertTrue(grandChild.IsLeaf)
 			self.assertFalse(grandChild.HasChildren)
 			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.Path))
 			self.assertListEqual([grandChild.Parent, root], [ancestor for ancestor in grandChild.GetAncestors()])
 
-		self.assertListEqual([children[0], grandChildren[0], grandChildren[1], children[1], grandChildren[2], grandChildren[3]], [child for child in root.GetSiblings()])
+		self.assertListEqual(
+			[children[0], grandChildren[0], grandChildren[1], children[1], grandChildren[2], grandChildren[3]],
+			[child for child in root.GetSiblings()]
+		)
+
+	def test_SelfLoop(self):
+		root = Node(1)
+
+		with self.assertRaises(Exception):
+			root.AddChild(root)
+
+		with self.assertRaises(Exception):
+			root.Parent = root
+
+	def test_MinimalLoop(self):
+		root = Node(1)
+		child = Node(2, parent=root)
+
+		with self.assertRaises(Exception):
+			child.AddChild(root)
+
+		with self.assertRaises(Exception):
+			root.Parent = child
+
+	def test_InternalLoop(self):
+		root = Node(1)
+		child = Node(2, parent=root)
+		grandchild = Node(3, parent=child)
+
+		with self.assertRaises(Exception):
+			grandchild.AddChild(root)
+
+		with self.assertRaises(Exception):
+			grandchild.AddChild(child)
+
+		with self.assertRaises(Exception):
+			root.Parent = grandchild
+
+		with self.assertRaises(Exception):
+			child.Parent = grandchild
+
+	def test_SideLoop(self):
+		root = Node(1)
+		child = Node(2, parent=root)
+		grandchild = [Node(3, parent=child), Node(4, parent=child)]
+
+		with self.assertRaises(Exception):
+			grandchild[1].AddChild(grandchild[0])
+
+		with self.assertRaises(Exception):
+			grandchild[0].Parent = grandchild[1]
+
+	def test_AddChild(self):
+		root = Node(1)
+		child = Node(2)
+
+		root.AddChild(child)
+
+		self.assertIs(root, root.Root)
+		self.assertTrue(root.IsRoot)
+		self.assertTrue(root.HasChildren)
+		self.assertFalse(root.IsLeaf)
+		self.assertListEqual([child], [child for child in root.GetChildren()])
+
+		self.assertIs(root, child.Root)
+		self.assertFalse(child.IsRoot)
+		self.assertTrue(child.IsLeaf)
+		self.assertFalse(child.HasChildren)
+		self.assertIs(root, child.Parent)
+
+	def test_AddChildren(self):
+		root = Node(1)
+		children = [Node(2), Node(3)]
+
+		root.AddChildren(children)
+
+		self.assertIs(root, root.Root)
+		self.assertTrue(root.IsRoot)
+		self.assertTrue(root.HasChildren)
+		self.assertFalse(root.IsLeaf)
+		self.assertListEqual(children, [child for child in root.GetChildren()])
+
+		for child in children:
+			self.assertIs(root, child.Root)
+			self.assertFalse(child.IsRoot)
+			self.assertTrue(child.IsLeaf)
+			self.assertFalse(child.HasChildren)
+			self.assertIs(root, child.Parent)
+
+	def test_SetParent(self):
+		root = Node(1)
+		child = Node(2)
+
+		child.Parent = root
+
+		self.assertIs(root, root.Root)
+		self.assertTrue(root.IsRoot)
+		self.assertTrue(root.HasChildren)
+		self.assertFalse(root.IsLeaf)
+		self.assertListEqual([child], [child for child in root.GetChildren()])
+
+		self.assertIs(root, child.Root)
+		self.assertFalse(child.IsRoot)
+		self.assertTrue(child.IsLeaf)
+		self.assertFalse(child.HasChildren)
+		self.assertIs(root, child.Parent)
