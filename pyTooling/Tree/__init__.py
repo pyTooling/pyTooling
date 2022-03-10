@@ -1,5 +1,4 @@
 from collections import deque
-from types import NoneType
 from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union
 
 IDT = TypeVar("IDT", bound=Hashable)
@@ -143,7 +142,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def HasChildren(self) -> bool:
 		return len(self._children) > 0
 
-	def _SetNewRoot(self, ids: Dict[Nullable['Node'], Union['Node', List['Node']]]) -> NoneType:
+	def _SetNewRoot(self, ids: Dict[Nullable['Node'], Union['Node', List['Node']]]) -> type(None):
 		for id, node in ids.items():
 			if id is not None:
 				self._root._ids[id] = node
