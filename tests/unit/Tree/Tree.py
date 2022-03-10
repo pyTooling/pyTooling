@@ -206,3 +206,37 @@ class Tree(TestCase):
 		self.assertTrue(child.IsLeaf)
 		self.assertFalse(child.HasChildren)
 		self.assertIs(root, child.Parent)
+
+	def test_NodeWithValue(self):
+		root = Node(1, "1")
+
+		self.assertIs(1, root.ID)
+		self.assertIs("1", root.Value)
+
+		root.Value = "2"
+
+		self.assertIs("2", root.Value)
+
+	def test_NodeWithDictionary(self):
+		root = Node(1)
+
+		root["key1"] = "value1"
+
+		self.assertIs("value1", root["key1"])
+
+	def test_Iterate(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+		grandChildren = [
+			Node(4, parent=children[0]), Node(5, parent=children[0]),
+			Node(6, parent=children[1]), Node(7, parent=children[1])
+		]
+		grandGrandChildren = [
+			Node(8, parent=grandChildren[0]),
+			Node(9, parent=grandChildren[1]), Node(10, parent=grandChildren[1]),
+			Node(11, parent=grandChildren[3])
+		]
+
+		self.assertListEqual([1, 2, 4, 8, 5, 9, 10, 3, 6, 7, 11], [node.ID for node in root.IteratePreOrder()])
+		self.assertListEqual([8, 4, 9, 10, 5, 2, 6, 11, 7, 3, 1], [node.ID for node in root.IteratePostOrder()])
+		self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [node.ID for node in root.InterateLevelOrder()])

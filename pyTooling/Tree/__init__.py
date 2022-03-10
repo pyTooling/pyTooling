@@ -22,6 +22,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def __init__(self, id: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
 		self._id = id
 		self._value = value
+		self._dict = {}
 
 		if parent is not None and not isinstance(parent, Node):
 			raise TypeError(f"Parameter 'parent' is not of type 'Node'.")
@@ -201,16 +202,25 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		pass
 
 	def InterateLevelOrder(self):
-		pass
+		queue = deque([self])
+		while queue:
+			currentNode = queue.pop()
+			yield currentNode
+			for node in currentNode._children:
+				queue.appendleft(node)
 
 	def IteratePreOrder(self):
-		pass
+		yield self
+		for child in self._children:
+			yield from child.IteratePreOrder()
 
 	def IteratePostOrder(self):
-		pass
+		for child in self._children:
+			yield from child.IteratePostOrder()
+		yield self
 
 	def GetNodeByID(self, id: IDT) -> Union['Node', List['Node']]:
-		return self._ids[id]
+		return self._root._ids[id]
 
 	def Find(self, filter: Callable) -> Generator['Node', None, None]:
 		pass
