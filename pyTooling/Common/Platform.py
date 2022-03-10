@@ -97,9 +97,9 @@ class Platform(metaclass=Singleton):
 
 		self._platform = self.Platforms.Unknown
 
-		system = platform.system()
+		# system = platform.system()
 		machine = platform.machine()
-		architecture = platform.architecture()
+		# architecture = platform.architecture()
 		sys_platform = sys.platform
 		sysconfig_platform = sysconfig.get_platform()
 
@@ -192,10 +192,6 @@ class Platform(metaclass=Singleton):
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
 		# print(self._platform)
-
-		# if system == "Darwin":
-		# 	self._platform |= self.Platforms.MacOS
-		# sys.version_info => 3.10.1
 
 	@property
 	def HostOperatingSystem(self) -> Platforms:
