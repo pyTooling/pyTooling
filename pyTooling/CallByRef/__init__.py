@@ -97,14 +97,14 @@ class CallByRefBoolParam(CallByRefParam):
 		if isinstance(other, bool):
 			return self._value == other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
 
 	def __ne__(self, other) -> bool:
 		"""Inequality: self != other."""
 		if isinstance(other, bool):
 			return self._value != other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
 
 	# Type conversion operators
 	def __bool__(self) -> bool:
@@ -293,14 +293,14 @@ class CallByRefIntParam(CallByRefParam):
 		if isinstance(other, int):
 			return self._value == other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
 
 	def __ne__(self, other) -> bool:
 		"""Inequality: self != other."""
 		if isinstance(other, int):
 			return self._value != other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
 
 	def __lt__(self, other: Any) -> bool:
 		"""Less-than: self < other."""
