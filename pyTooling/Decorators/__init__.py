@@ -106,6 +106,7 @@ def export(entity: T) -> T:
 
 
 try:
+	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
 	from typing import ParamSpec    # exists since Python 3.10
 	Param = ParamSpec("Param")
 	RetType = TypeVar("RetType")
@@ -113,7 +114,7 @@ try:
 except ImportError:
 	Param = ...
 	RetType = TypeVar("RetType")
-	Func = Callable[Param, RetType]
+	Func = Callable[..., RetType]
 
 
 @export

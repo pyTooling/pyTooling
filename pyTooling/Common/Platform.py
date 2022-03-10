@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2022 Patrick Lehmann - BÃ¶tzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -97,9 +97,9 @@ class Platform(metaclass=Singleton):
 
 		self._platform = self.Platforms.Unknown
 
-		# system = platform.system()
+		system = platform.system()
 		machine = platform.machine()
-		# architecture = platform.architecture()
+		architecture = platform.architecture()
 		sys_platform = sys.platform
 		sysconfig_platform = sysconfig.get_platform()
 
@@ -148,6 +148,16 @@ class Platform(metaclass=Singleton):
 				else:
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
+			elif sys_platform == "darwin":
+				self._platform |= self.Platforms.OS_MacOS | self.Platforms.ENV_Native | self.Platforms.ARCH_x86_64
+
+				# print()
+				# print(os.name)
+				# print(system)
+				# print(machine)
+				# print(architecture)
+				# print(sys_platform)
+				# print(sysconfig_platform)
 			elif sys_platform == "msys":
 				self._platform |= self.Platforms.OS_Windows | self.Platforms.ENV_MSYS2 | self.Platforms.MSYS
 
@@ -308,7 +318,7 @@ class Platform(metaclass=Singleton):
 		runtime = ""
 
 		if self.Platforms.OS_MacOS in self._platform:
-			platform = "macOS"
+			platform = "MacOS"
 		elif self.Platforms.OS_Linux in self._platform:
 			platform = "Linux"
 		elif self.Platforms.OS_Windows in self._platform:
