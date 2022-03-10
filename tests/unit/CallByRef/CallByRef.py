@@ -64,7 +64,7 @@ class CallByReference_AnyParam(TestCase):
 		func1(self.ref)
 
 	def test_Value(self) -> None:
-		self.assertTupleEqual(self.ref.value, (3, 4))
+		self.assertTupleEqual(self.ref.Value, (3, 4))
 
 	def test_Equal(self) -> None:
 		self.assertTrue(self.ref == (3, 4))
@@ -80,7 +80,7 @@ class CallByReference_BoolParam(TestCase):
 		func2(self.ref)
 
 	def test_Value(self) -> None:
-		self.assertTrue(self.ref.value)
+		self.assertTrue(self.ref.Value)
 
 	def test_Equal(self) -> None:
 		self.assertTrue(self.ref == True)
@@ -100,7 +100,7 @@ class CallByReference_IntParam(TestCase):
 
 	def test_Value(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref.value, 42)
+		self.assertEqual(self.ref.Value, 42)
 
 	def test_Negate(self) -> None:
 		assign_42(self.ref)

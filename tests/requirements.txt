@@ -1,15 +1,15 @@
 -r ../requirements.txt
 
 # Coverage collection
-Coverage>=6.0
+Coverage>=6.3
 
 # Test Runner
-pytest>=6.2.4
+pytest>=7.0.1
 pytest-cov>=3.0.0
 
 # Static Type Checking
 mypy>=0.931
-lxml>=4.6
+lxml>=4.8
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml>=0.17

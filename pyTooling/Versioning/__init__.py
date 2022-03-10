@@ -67,7 +67,7 @@ class SemVersion(metaclass=Overloading):
 	postfix : str = ""
 	ahead   : int = 0
 
-	def __init__(self, versionString : str) -> None:
+	def __init__(self, versionString : str):
 		if versionString == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 		elif versionString is None:
@@ -88,7 +88,7 @@ class SemVersion(metaclass=Overloading):
 			self.build = int(split[3])
 		self.flags = self.Flags.Clean
 
-	def __init__(self, major : int, minor : int, patch : int = 0, build : int = 0) -> None:  # type: ignore[no-redef]
+	def __init__(self, major : int, minor : int, patch : int = 0, build : int = 0):  # type: ignore[no-redef]
 		self.major = major
 		self.minor = minor
 		self.patch = patch

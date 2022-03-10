@@ -28,42 +28,88 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common types, helper functions and classes."""
-__author__ =    "Patrick Lehmann"
-__email__ =     "Paebbels@gmail.com"
-__copyright__ = "2017-2022, Patrick Lehmann"
-__license__ =   "Apache License, Version 2.0"
-__version__ =   "1.10.0"
-__keywords__ =  ["decorators", "meta classes", "exceptions", "versioning", "licensing", "overloading", "singleton", "setuptools", "wheel", "installation", "packaging"]
+"""Unit tests for TBD."""
+from os       import getenv as os_getenv
+from pytest   import mark
+from unittest import TestCase
 
-from typing   import Type
-
-try:
-	from pyTooling.Decorators import export
-except ModuleNotFoundError:
-	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators import export
-	except ModuleNotFoundError as ex:
-		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
-		raise ex
-
+from pyTooling.Common import CurrentPlatform
 from pyTooling.Common.Platform import Platform
 
-__all__ = ["CurrentPlatform"]
+if __name__ == "__main__": # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unitest <testcase module>'")
+	exit(1)
 
-CurrentPlatform = Platform()     #: Gathered information for the current platform.
 
+class AnyPlatform(TestCase):
+	expected = os_getenv("EXPECTED", default="Windows (x86-64)")
 
-@export
-def isnestedclass(cls: Type, scope: Type) -> bool:
-	"""Returns true, if the given class ``cls`` is a member on an outer class ``scope``."""
-	for mroClass in scope.mro():
-		for memberName in mroClass.__dict__:
-			member = getattr(mroClass, memberName)
-			if isinstance(member, Type):
-				if cls is member:
-					return True
+	@mark.skipif(os_getenv("EXPECTED", "skip") == "skip", reason="Skipped when environment variable 'EXPECTED' isn't set.")
+	def test_PlatformString(self) -> None:
+		platform = CurrentPlatform
 
-	return False
+		self.assertEqual(self.expected, str(platform))
+
+	@mark.skipif("Linux (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_NativeLinux(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeLinux)
+
+	@mark.skipif("MacOS (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_NativeMacOS(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeMacOS)
+
+	@mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_NativeWindows(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_MSYS2(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsMSYSOnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_MinGW32(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsMinGW32OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_MinGW64(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsMinGW64OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_UCRT64(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsUCRT64OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_Clang32(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsClang32OnWindows)
+
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	def test_Clang64(self) -> None:
+		platform = Platform()
+
+		self.assertTrue(platform.IsMSYS2Environment)
+		self.assertTrue(platform.IsClang64OnWindows)

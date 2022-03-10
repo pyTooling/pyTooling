@@ -55,7 +55,7 @@ class Node(Abstract_Node):
 	_key: KeyT
 	_length: int
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]) -> None:
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]):
 		super().__init__(root, parent)
 		self._yamlNode = yamlNode
 		self._cache = {}

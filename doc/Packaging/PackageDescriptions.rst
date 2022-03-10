@@ -26,7 +26,6 @@ DescribePythonPackage
 
 .. TODO:: Write documentation here!
 
-.. autofunction:: pyTooling.Packaging.DescribePythonPackage
 
 
 DescribePythonPackageHostedOnGitHub
@@ -34,4 +33,3 @@ DescribePythonPackageHostedOnGitHub
 
 .. TODO:: Write documentation here!
 
-.. autofunction:: pyTooling.Packaging.DescribePythonPackageHostedOnGitHub

@@ -4,12 +4,6 @@ Singleton
 This class implements the `singleton design pattern <https://en.wikipedia.org/wiki/Singleton_pattern>`_
 as a Python meta class.
 
-.. autoclass:: pyTooling.MetaClasses.Singleton
-   :show-inheritance:
-   :members:
-   :private-members:
-   :special-members:
-
 
 Example Usage
 *************

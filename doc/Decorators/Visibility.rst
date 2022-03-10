@@ -7,5 +7,3 @@ export
 ******
 
 The :func:`export <export>` decorator makes Python module entities publicly visible.
-
-.. autofunction:: pyTooling.Decorators.export

@@ -1,11 +1,10 @@
 # ==================================================================================================================== #
-#                                                                                                                      #
-#             _____           _ _               _____                    _   _                                         #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | ____|_  _____ ___ _ __ | |_(_) ___  _ __  ___                         #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | |  _| \ \/ / __/ _ \ '_ \| __| |/ _ \| '_ \/ __|                        #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___ >  < (_|  __/ |_) | |_| | (_) | | | \__ \                        #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____/_/\_\___\___| .__/ \__|_|\___/|_| |_|___/                        #
-# |_|    |___/                          |___/                     |_|                                                  #
+#             _____           _ _               ____                           _                                       #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  ___  ___ ___  _ __ __ _| |_ ___  _ __ ___                       #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | | | |/ _ \/ __/ _ \| '__/ _` | __/ _ \| '__/ __|                      #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| |  __/ (_| (_) | | | (_| | || (_) | |  \__ \                      #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \___|\___\___/|_|  \__,_|\__\___/|_|  |___/                      #
+# |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
@@ -29,48 +28,28 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A common set of missing exceptions in Python."""
-from ..Decorators import export
+"""Unit tests for Decorators."""
+from unittest import TestCase
+
+from pyTooling.Decorators import InheritDocString
+
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unitest <testcase module>'")
+	exit(1)
 
 
-@export
-class ExceptionBase(Exception):
-	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
-
-#	@DocumentMemberAttribute()
-	def __init__(self, message: str = ""):
-		"""
-		pyExceptions initializer.
-
-		:param message:   The exception message.
-		"""
-		super().__init__()
-		self.message = message
-
-#	@DocumentMemberAttribute()
-	def __str__(self) -> str:
-		"""Returns the exception's message text."""
-		return self.message
-
-#	@DocumentMemberAttribute(False)
-	def with_traceback(self, tb) -> None:
-		super().with_traceback(tb)
-
-	# @DocumentMemberAttribute(False)
-	# @MethodAlias(pyExceptions.with_traceback)
-	# def with_traceback(self): pass
+class Class1:
+	def method(self):
+		"""Method's doc-string."""
 
 
-@export
-class EnvironmentException(ExceptionBase):
-	"""``EnvironmentException`` is raised when an expected environment variable is missing."""
+class Class2(Class1):
+	@InheritDocString(Class1)
+	def method(self):
+		pass
 
 
-@export
-class PlatformNotSupportedException(ExceptionBase):
-	"""``PlatformNotSupportedException`` is raise if the platform is not supported."""
-
-
-@export
-class NotConfiguredException(ExceptionBase):
-	"""``NotConfiguredException`` is raise if the requested setting is not configured."""
+class InheritDocStrings(TestCase):
+	def test_InheritDocString(self) -> None:
+		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)

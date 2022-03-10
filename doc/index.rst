@@ -6,17 +6,19 @@
 
 .. only:: html
 
-   |  |SHIELD:svg:pyTooling-github| |SHIELD:svg:pyTooling-src-license| |SHIELD:svg:pyTooling-tag| |SHIELD:svg:pyTooling-release| |SHIELD:svg:pyTooling-date| |SHIELD:svg:pyTooling-lib-dep|
-   |  |SHIELD:svg:pyTooling-gha-test| |SHIELD:svg:pyTooling-codacy-quality| |SHIELD:svg:pyTooling-codacy-coverage| |SHIELD:svg:pyTooling-codecov-coverage| |SHIELD:svg:pyTooling-lib-rank|
-   |  |SHIELD:svg:pyTooling-pypi-tag| |SHIELD:svg:pyTooling-pypi-status| |SHIELD:svg:pyTooling-pypi-python| |SHIELD:svg:pyTooling-lib-status| |SHIELD:svg:pyTooling-req-status|
-   |  |SHIELD:svg:pyTooling-doc-license| |SHIELD:svg:pyTooling-ghp-doc|
+   |  |SHIELD:svg:pyTooling-github| |SHIELD:svg:pyTooling-src-license| |SHIELD:svg:pyTooling-ghp-doc| |SHIELD:svg:pyTooling-doc-license|
+   |  |SHIELD:svg:pyTooling-pypi-tag| |SHIELD:svg:pyTooling-pypi-status| |SHIELD:svg:pyTooling-pypi-python|
+   |  |SHIELD:svg:pyTooling-gha-test| |SHIELD:svg:pyTooling-lib-status| |SHIELD:svg:pyTooling-codacy-quality| |SHIELD:svg:pyTooling-codacy-coverage| |SHIELD:svg:pyTooling-codecov-coverage|
+
+.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:svg:pyTooling-lib-dep| |SHIELD:svg:pyTooling-req-status| |SHIELD:svg:pyTooling-lib-rank|
 
 .. only:: latex
 
-   |SHIELD:png:pyTooling-github| |SHIELD:png:pyTooling-src-license| |SHIELD:png:pyTooling-tag| |SHIELD:png:pyTooling-release| |SHIELD:png:pyTooling-date| |SHIELD:png:pyTooling-lib-dep|
-   |SHIELD:png:pyTooling-gha-test| |SHIELD:png:pyTooling-codacy-quality| |SHIELD:png:pyTooling-codacy-coverage| |SHIELD:png:pyTooling-codecov-coverage| |SHIELD:png:pyTooling-lib-rank|
-   |SHIELD:png:pyTooling-pypi-tag| |SHIELD:png:pyTooling-pypi-status| |SHIELD:png:pyTooling-pypi-python| |SHIELD:png:pyTooling-lib-status| |SHIELD:png:pyTooling-req-status|
-   |SHIELD:png:pyTooling-doc-license| |SHIELD:png:pyTooling-ghp-doc|
+   |SHIELD:png:pyTooling-github| |SHIELD:png:pyTooling-src-license| |SHIELD:png:pyTooling-ghp-doc| |SHIELD:png:pyTooling-doc-license|
+   |SHIELD:png:pyTooling-pypi-tag| |SHIELD:png:pyTooling-pypi-status| |SHIELD:png:pyTooling-pypi-python|
+   |SHIELD:png:pyTooling-gha-test| |SHIELD:png:pyTooling-lib-status| |SHIELD:png:pyTooling-codacy-quality| |SHIELD:png:pyTooling-codacy-coverage| |SHIELD:png:pyTooling-codecov-coverage|
+
+.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:png:pyTooling-lib-dep| |SHIELD:png:pyTooling-req-status| |SHIELD:png:pyTooling-lib-rank|
 
 --------------------------------------------------------------------------------
 
@@ -129,21 +131,27 @@ License
    :hidden:
 
    Installation
-   Dependencies
+   Dependency
    Tutorials/index
+
+.. raw:: latex
+
+   \part{Main Documentation}
 
 .. toctree::
    :caption: Common
    :hidden:
 
-   CallByRef/index
-   Versioning/index
-   Licensing/index
+   CallByRef
+   Platform
+   Versioning
+   Licensing
 
 .. toctree::
    :caption: Decorators
    :hidden:
 
+   Decorators/Documentation
    Decorators/Visibility
 
 .. toctree::
@@ -167,13 +175,26 @@ License
    Packaging/HelperFunctions
    Packaging/PackageDescriptions
 
+.. raw:: latex
+
+   \part{References}
+
+.. toctree::
+   :caption: References
+   :hidden:
+
+   pyTooling/index
+
+.. raw:: latex
+
+   \part{Appendix}
+
 .. toctree::
    :caption: Appendix
    :hidden:
 
-   Coverage Report ➚ <https://pyTooling.GitHub.io/pyTooling/coverage/>
-   Static Type Check Report ➚ <https://pyTooling.GitHub.io/pyTooling/typing/>
-   ChangeLog/index
+   Coverage Report ➚ <coverage/index>
+   Static Type Check Report ➚ <typing/index>
    License
    Doc-License
    Glossary

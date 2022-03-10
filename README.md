@@ -1,21 +1,22 @@
-[![Sourcecode on GitHub](https://img.shields.io/badge/pyTooling-pyTooling-323131.svg?logo=github&longCache=true)](https://GitHub.com/pyTooling/pyTooling)
-[![Sourcecode License](https://img.shields.io/pypi/l/pyTooling?logo=GitHub&label=code%20license)](LICENSE.md)
-[![GitHub tag (latest SemVer incl. pre-release)](https://img.shields.io/github/v/tag/pyTooling/pyTooling?logo=GitHub&include_prereleases)](https://GitHub.com/pyTooling/pyTooling/tags)
-[![GitHub release (latest SemVer incl. including pre-releases)](https://img.shields.io/github/v/release/pyTooling/pyTooling?logo=GitHub&include_prereleases)](https://GitHub.com/pyTooling/pyTooling/releases/latest)
-[![GitHub release date](https://img.shields.io/github/release-date/pyTooling/pyTooling?logo=GitHub)](https://GitHub.com/pyTooling/pyTooling/releases)
-[![Dependents (via libraries.io)](https://img.shields.io/librariesio/dependents/pypi/pyTooling?logo=librariesdotio)](https://GitHub.com/pyTooling/pyTooling/network/dependents)  
-[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/workflow/status/pyTooling/pyTooling/Unit%20Testing,%20Coverage%20Collection,%20Package,%20Release,%20Documentation%20and%20Publish?label=Pipeline&logo=GitHub%20Actions&logoColor=FFFFFF)](https://GitHub.com/pyTooling/pyTooling/actions/workflows/Pipeline.yml)
-[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
-[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
-[![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/pyTooling/pyTooling?logo=Codecov)](https://codecov.io/gh/pyTooling/pyTooling)
-[![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/pyTooling/pyTooling/sourcerank)  
-[![PyPI](https://img.shields.io/pypi/v/pyTooling?logo=PyPI&logoColor=FBE072)](https://pypi.org/project/pyTooling/)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyTooling?logo=PyPI&logoColor=FBE072)
-![PyPI - Status](https://img.shields.io/pypi/status/pyTooling?logo=PyPI&logoColor=FBE072)
-[![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?logo=librariesdotio)](https://libraries.io/github/pyTooling/pyTooling)
-[![Requires.io](https://img.shields.io/requires/github/pyTooling/pyTooling)](https://requires.io/github/pyTooling/pyTooling/requirements/?branch=main)  
-[![Documentation License](https://img.shields.io/badge/doc%20license-CC--BY%204.0-green?logo=readthedocs)](doc/Doc-License.rst)
-[![Documentation - Read Now!](https://img.shields.io/badge/doc-read%20now%20%E2%9E%9A-blueviolet?logo=readthedocs)](https://pyTooling.GitHub.io/pyTooling)
+[![Sourcecode on GitHub](https://img.shields.io/badge/pyTooling-pyTooling-63bf7f.svg?longCache=true&style=flat-square&longCache=true&logo=GitHub)](https://GitHub.com/pyTooling/pyTooling)
+[![Sourcecode License](https://img.shields.io/pypi/l/pyTooling?longCache=true&style=flat-square&logo=Apache&label=code)](LICENSE.md)
+[![Documentation](https://img.shields.io/website?longCache=true&style=flat-square&label=pyTooling.github.io%2FpyTooling&logo=GitHub&logoColor=fff&up_color=blueviolet&up_message=Read%20now%20%E2%9E%9A&url=https%3A%2F%2FpyTooling.github.io%2FpyTooling%2Findex.html)](https://pyTooling.github.io/pyTooling/)
+[![Documentation License](https://img.shields.io/badge/doc-CC--BY%204.0-green?longCache=true&style=flat-square&logo=CreativeCommons&logoColor=fff)](LICENSE.md)  
+[![PyPI](https://img.shields.io/pypi/v/pyTooling?longCache=true&style=flat-square&logo=PyPI&logoColor=FBE072)](https://pypi.org/project/pyTooling/)
+![PyPI - Status](https://img.shields.io/pypi/status/pyTooling?longCache=true&style=flat-square&logo=PyPI&logoColor=FBE072)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyTooling?longCache=true&style=flat-square&logo=PyPI&logoColor=FBE072)  
+[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/workflow/status/pyTooling/pyTooling/Pipeline/main?longCache=true&style=flat-square&label=Build%20and%20test&logo=GitHub%20Actions&logoColor=FFFFFF)](https://GitHub.com/pyTooling/pyTooling/actions/workflows/Pipeline.yml)
+[![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?longCache=true&style=flat-square&logo=Libraries.io&logoColor=fff)](https://libraries.io/github/pyTooling/pyTooling)
+[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
+[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
+[![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/pyTooling/pyTooling?longCache=true&style=flat-square&logo=Codecov)](https://codecov.io/gh/pyTooling/pyTooling)
+
+<!--
+[![Gitter](https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef)](https://gitter.im/hdl/community)
+[![Dependent repos (via libraries.io)](https://img.shields.io/librariesio/dependent-repos/pypi/pyTooling?longCache=true&style=flat-square&logo=GitHub)](https://github.com/pyTooling/pyTooling/network/dependents)
+[![Requires.io](https://img.shields.io/requires/github/pyTooling/pyTooling?longCache=true&style=flat-square)](https://requires.io/github/pyTooling/pyTooling/requirements/?branch=main)
+[![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyTooling)](https://libraries.io/github/pyTooling/pyTooling/sourcerank)
+-->
 
 # pyTooling
 
@@ -39,7 +40,7 @@ if it's a library, framework or CLI tool.
 
 ### Decorators
 
-* [export](https://pyTooling.GitHub.io/pyTooling/Decorators/Visibility.html#export)    
+* [export](https://pyTooling.GitHub.io/pyTooling/Decorators/Visibility.html#export)  
   Register the given function or class as publicly accessible in a module.
 
 
@@ -65,7 +66,7 @@ if it's a library, framework or CLI tool.
 ### `@export` Decorator
 
 ```Python
-from pyTooling.Decorators import export 
+from pyTooling.Decorators import export
 
 @export
 class MyClass:
@@ -81,13 +82,13 @@ from pyTooling.CallByRef import CallByRefIntParam
 myInt = CallByRefIntParam(3)
 
 # a function using a call-by-reference parameter
-def func(param : CallByRefIntParam):
+def func(param: CallByRefIntParam):
   param <<= param * 4
 
 # call the function and pass the wrapper object
 func(myInt)
 
-print(myInt.value)
+print(myInt.Value)
 ```
 
 

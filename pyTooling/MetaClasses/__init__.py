@@ -69,7 +69,7 @@ class Overloading(type):
 		class DispatchableMethod:
 			"""Represents a single multimethod."""
 
-			def __init__(self, name) -> None:
+			def __init__(self, name):
 				self._methods: Dict[Tuple, Callable] = {}
 				self.__name__ = name
 

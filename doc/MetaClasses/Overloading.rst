@@ -4,12 +4,6 @@ Overloading
 This class provides a method dispatcher based on method signature's type
 annotations.
 
-.. autoclass:: pyTooling.MetaClasses.Overloading
-   :show-inheritance:
-   :members:
-   :private-members:
-   :special-members:
-
 
 Example Usage
 *************
