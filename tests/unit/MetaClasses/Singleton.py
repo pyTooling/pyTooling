@@ -48,7 +48,7 @@ if __name__ == "__main__": # pragma: no cover
 class Application1(metaclass=Singleton):
 	X = 0
 
-	def __init__(self) -> None:
+	def __init__(self):
 		print("Instance created")
 
 		self.X = 1

@@ -38,7 +38,7 @@ class ExceptionBase(Exception):
 	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
 
 #	@DocumentMemberAttribute()
-	def __init__(self, message: str = "") -> None:
+	def __init__(self, message: str = ""):
 		"""
 		pyExceptions initializer.
 

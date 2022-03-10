@@ -52,7 +52,7 @@ class CallByRefParam(Generic[T]):
 
 	_value: T    #: internal value
 
-	def __init__(self, value: T = None) -> None:
+	def __init__(self, value: T = None):
 		"""Constructs a *call-by-reference* object for any type.
 
 		:param value: The value to be set as an initial value.

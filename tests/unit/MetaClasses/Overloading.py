@@ -46,10 +46,10 @@ if __name__ == "__main__": # pragma: no cover
 
 
 class Application(metaclass=Overloading):
-	def __init__(self, x : int) -> None:
+	def __init__(self, x : int):
 		self.x = x
 
-	def __init__(self, x : str) -> None:
+	def __init__(self, x : str):
 		self.x = x
 
 
