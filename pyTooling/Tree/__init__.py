@@ -88,6 +88,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		if parent is None:
 			self._ids = {None: []}
 			for sibling in self._parent.GetSiblings():
+				sibling._root = self
 				if sibling._id is None:
 					self._ids[None].append(sibling)
 				else:

@@ -240,3 +240,43 @@ class Tree(TestCase):
 		self.assertListEqual([1, 2, 4, 8, 5, 9, 10, 3, 6, 7, 11], [node.ID for node in root.IteratePreOrder()])
 		self.assertListEqual([8, 4, 9, 10, 5, 2, 6, 11, 7, 3, 1], [node.ID for node in root.IteratePostOrder()])
 		self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [node.ID for node in root.InterateLevelOrder()])
+
+	def test_AddTree(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+
+		root1 = Node(11)
+		children1 = [Node(12, parent=root1), Node(13, parent=root1)]
+
+		root2 = Node(21)
+		children2 = [Node(22, parent=root2), Node(23, parent=root2)]
+
+		root1.Parent = children[0]
+		children[1].AddChild(root2)
+
+		nodes = [root1, root2] + children1 + children2
+		for child in children:
+			self.assertFalse(child.IsLeaf)
+
+		for node in nodes:
+			self.assertFalse(node.IsRoot)
+			self.assertIs(root, node.Root)
+
+		# check if sub trees IDs are now in main tree
+
+	def test_SplitTree(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+
+		root1 = Node(11, parent=children[0])
+		children1 = [Node(12, parent=root1), Node(13, parent=root1)]
+
+		root1.Parent = None
+
+		nodes = [root1] + children1
+
+		self.assertTrue(root1.IsRoot)
+		for node in nodes:
+			self.assertIs(root1, node.Root)
+
+		# check if subtree's IDs are not in main tree anymore
