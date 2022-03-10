@@ -88,7 +88,7 @@ def func(param: CallByRefIntParam):
 # call the function and pass the wrapper object
 func(myInt)
 
-print(myInt._value)
+print(myInt.Value)
 ```
 
 

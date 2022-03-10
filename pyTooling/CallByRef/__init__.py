@@ -50,14 +50,14 @@ class CallByRefParam(Generic[T]):
 	     |rarr| A special *call-by-reference* implementation for integer reference types.
 	"""
 
-	_value: T    #: internal value
+	Value: T    #: internal value
 
 	def __init__(self, value: T = None):
 		"""Constructs a *call-by-reference* object for any type.
 
 		:param value: The value to be set as an initial value.
 		"""
-		self._value = value
+		self.Value = value
 
 	def __ilshift__(self, other: T) -> 'CallByRefParam[T]':
 		"""Assigns a value to the *call-by-reference* object.
@@ -65,26 +65,26 @@ class CallByRefParam(Generic[T]):
 		:param other: The value to be assigned to this *call-by-reference* object.
 		:returns: Itself.
 		"""
-		self._value = other
+		self.Value = other
 		return self
 
 	# binary operators - comparison
 	def __eq__(self, other: Any) -> bool:
 		"""Equality: self == other."""
-		return self._value == other
+		return self.Value == other
 
 	def __ne__(self, other) -> bool:
 		"""Inequality: self != other."""
-		return self._value != other
+		return self.Value != other
 
 	# Type conversion operators
 	def __repr__(self) -> str:
 		"""Returns the wrapped object's string representation."""
-		return repr(self._value)
+		return repr(self.Value)
 
 	def __str__(self) -> str:
 		"""Returns the wrapped object's string equivalent."""
-		return str(self._value)
+		return str(self.Value)
 
 
 @export
@@ -95,25 +95,25 @@ class CallByRefBoolParam(CallByRefParam):
 	def __eq__(self, other: Any) -> bool:
 		"""Equality: self == other."""
 		if isinstance(other, bool):
-			return self._value == other
+			return self.Value == other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
 
 	def __ne__(self, other) -> bool:
 		"""Inequality: self != other."""
 		if isinstance(other, bool):
-			return self._value != other
+			return self.Value != other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
 
 	# Type conversion operators
 	def __bool__(self) -> bool:
 		"""Type conversion to :class:`bool`."""
-		return self._value
+		return self.Value
 
 	def __int__(self) -> int:
 		"""Type conversion to :class:`int`."""
-		return int(self._value)
+		return int(self.Value)
 
 
 @export
@@ -123,35 +123,35 @@ class CallByRefIntParam(CallByRefParam):
 	# Unary operators
 	def __neg__(self) -> int:
 		"""Negate: -self."""
-		return -self._value
+		return -self.Value
 
 	def __pos__(self) -> int:
 		"""Positive: +self."""
-		return +self._value
+		return +self.Value
 
 	def __invert__(self) -> int:
 		"""Invert: ~self."""
-		return ~self._value
+		return ~self.Value
 
 	# Binary operators - logical
 	def __and__(self, other: Any) -> int:
 		"""And: self & other."""
 		if isinstance(other, int):
-			return self._value & other
+			return self.Value & other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by and operator.")
 
 	def __or__(self, other: Any) -> int:
 		"""Or: self | other."""
 		if isinstance(other, int):
-			return self._value | other
+			return self.Value | other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by or operator.")
 
 	def __xor__(self, other: Any) -> int:
 		"""Xor: self ^ other."""
 		if isinstance(other, int):
-			return self._value ^ other
+			return self.Value ^ other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
 
@@ -159,7 +159,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __iand__(self, other: Any) -> 'CallByRefIntParam':
 		"""Inplace and: self &= other."""
 		if isinstance(other, int):
-			self._value &= other
+			self.Value &= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by &= operator.")
@@ -167,7 +167,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __ior__(self, other: Any) -> 'CallByRefIntParam':
 		"""Inplace or: self \|= other."""
 		if isinstance(other, int):
-			self._value |= other
+			self.Value |= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by |= operator.")
@@ -175,7 +175,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __ixor__(self, other: Any) -> 'CallByRefIntParam':
 		"""Inplace or: self \|= other."""
 		if isinstance(other, int):
-			self._value ^= other
+			self.Value ^= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ^= operator.")
@@ -184,49 +184,49 @@ class CallByRefIntParam(CallByRefParam):
 	def __add__(self, other: Any) -> int:
 		"""Addition: self + other."""
 		if isinstance(other, int):
-			return self._value + other
+			return self.Value + other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by + operator.")
 
 	def __sub__(self, other: Any) -> int:
 		"""Substraction: self - other."""
 		if isinstance(other, int):
-			return self._value - other
+			return self.Value - other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by - operator.")
 
 	def __truediv__(self, other: Any) -> int:
 		"""Division: self / other."""
 		if isinstance(other, int):
-			return self._value / other
+			return self.Value / other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by / operator.")
 
 	def __floordiv__(self, other: Any) -> int:
 		"""Floor division: self // other."""
 		if isinstance(other, int):
-			return self._value // other
+			return self.Value // other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by // operator.")
 
 	def __mul__(self, other: Any) -> int:
 		"""Multiplication: self * other."""
 		if isinstance(other, int):
-			return self._value * other
+			return self.Value * other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by * operator.")
 
 	def __mod__(self, other: Any) -> int:
 		"""Modulo: self % other."""
 		if isinstance(other, int):
-			return self._value % other
+			return self.Value % other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by % operator.")
 
 	def __pow__(self, other: Any) -> int:
 		"""Power: self ** other."""
 		if isinstance(other, int):
-			return self._value ** other
+			return self.Value ** other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ** operator.")
 
@@ -234,7 +234,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __iadd__(self, other: Any) -> 'CallByRefIntParam':
 		"""Addition: self += other."""
 		if isinstance(other, int):
-			self._value += other
+			self.Value += other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -242,7 +242,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __isub__(self, other: Any) -> 'CallByRefIntParam':
 		"""Substraction: self -= other."""
 		if isinstance(other, int):
-			self._value -= other
+			self.Value -= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -250,7 +250,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __idiv__(self, other: Any) -> 'CallByRefIntParam':
 		"""Division: self /= other."""
 		if isinstance(other, int):
-			self._value /= other
+			self.Value /= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -258,7 +258,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __ifloordiv__(self, other: Any) -> 'CallByRefIntParam':
 		"""Floor division: self // other."""
 		if isinstance(other, int):
-			self._value //= other
+			self.Value //= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -266,7 +266,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __imul__(self, other: Any) -> 'CallByRefIntParam':
 		"""Multiplication: self \*= other."""
 		if isinstance(other, int):
-			self._value *= other
+			self.Value *= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -274,7 +274,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __imod__(self, other: Any) -> 'CallByRefIntParam':
 		"""Modulo: self %= other."""
 		if isinstance(other, int):
-			self._value %= other
+			self.Value %= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -282,7 +282,7 @@ class CallByRefIntParam(CallByRefParam):
 	def __ipow__(self, other: Any) -> 'CallByRefIntParam':
 		"""Power: self \*\*= other."""
 		if isinstance(other, int):
-			self._value **= other
+			self.Value **= other
 			return self
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
@@ -291,50 +291,50 @@ class CallByRefIntParam(CallByRefParam):
 	def __eq__(self, other: Any) -> bool:
 		"""Equality: self == other."""
 		if isinstance(other, int):
-			return self._value == other
+			return self.Value == other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
 
 	def __ne__(self, other) -> bool:
 		"""Inequality: self != other."""
 		if isinstance(other, int):
-			return self._value != other
+			return self.Value != other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
 
 	def __lt__(self, other: Any) -> bool:
 		"""Less-than: self < other."""
 		if isinstance(other, int):
-			return self._value < other
+			return self.Value < other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
 
 	def __le__(self, other: Any) -> bool:
 		"""Less-equal: self <= other."""
 		if isinstance(other, int):
-			return self._value <= other
+			return self.Value <= other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
 
 	def __gt__(self, other: Any) -> bool:
 		"""Greater-than: self > other."""
 		if isinstance(other, int):
-			return self._value > other
+			return self.Value > other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
 
 	def __ge__(self, other: Any) -> bool:
 		"""Greater-equal: self >= other."""
 		if isinstance(other, int):
-			return self._value >= other
+			return self.Value >= other
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
 
 	# Type conversion operators
 	def __bool__(self) -> bool:
 		"""Type conversion to :class:`bool`."""
-		return bool(self._value)
+		return bool(self.Value)
 
 	def __int__(self) -> int:
 		"""Type conversion to :class:`int`."""
-		return self._value
+		return self.Value
