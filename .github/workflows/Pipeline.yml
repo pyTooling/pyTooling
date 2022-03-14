@@ -58,7 +58,7 @@ jobs:
         include:
           - {system: "ubuntu",  runs-on: "ubuntu-latest",                      shell: "bash",      sysicon: "🐧", pyicon: "🟢", python: "3.10", expected: "Linux (x86-64)"}
           - {system: "windows", runs-on: "windows-latest",                     shell: "pwsh",      sysicon: "🧊", pyicon: "🟢", python: "3.10", expected: "Windows (x86-64)"}
-          - {system: "msys2",   runs-on: "windows-latest", runtime: "MSYS",    shell: "msys2 {0}", sysicon: "🟪", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MSYS"}
+#          - {system: "msys2",   runs-on: "windows-latest", runtime: "MSYS",    shell: "msys2 {0}", sysicon: "🟪", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MSYS"}
           - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW32", shell: "msys2 {0}", sysicon: "⬛", pyicon: "🟢",                  expected: "Windows+MSYS2 (x86-64) - MinGW32"}
           - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW64", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MinGW64"}
           - {system: "msys2",   runs-on: "windows-latest", runtime: "UCRT64",  shell: "msys2 {0}", sysicon: "🟨", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - UCRT64"}
