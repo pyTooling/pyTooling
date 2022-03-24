@@ -214,8 +214,26 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			yield node
 			node = node._parent
 
-	def GetCommonAncestors(self):
-		pass
+	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator["Node", None, None]:
+		if isinstance(others, Node):
+			# Check for trivial case
+			if others is self:
+				for node in self.Path:		# TODO: Path generates a list and a tuple. Provide a generator for such a walk.
+					yield node
+				return
+
+			# Check if both are in the same tree.
+			if self._root is not others._root:
+				raise Exception(f"Node 'others' is not in the same tree.")
+
+			# Compute paths top-down and walk both paths until they deviate
+			for left, right in zip(self.Path, others.Path):
+				if left is right:
+					yield left
+				else:
+					return
+		elif isinstance(others, Iterable):
+			raise NotImplemented(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
 
 	def GetChildren(self) -> Generator['Node', None, None]:
 		for child in self._children:
