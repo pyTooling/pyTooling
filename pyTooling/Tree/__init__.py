@@ -268,6 +268,30 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			yield from child.IteratePostOrder()
 		yield self
 
+	def WalkTo(self, other: 'Node') -> Generator['Node', None, None]:
+		# Check for trivial case
+		if other is self:
+			yield from ()
+
+		# Check if both are in the same tree.
+		if self._root is not other._root:
+			raise Exception(f"Node 'other' is not in the same tree.")
+
+		# Compute both paths to the root.
+		# 1. Walk from self to root, until a first common ancestor is found.
+		# 2. Walk from there to other (reverse paths)
+		otherPath = other.Path		# TODO: Path generates a list and a tuple. Provide a generator for such a walk.
+		index = len(otherPath)
+		for node in self.GetAncestors():
+			try:
+				index = otherPath.index(node)
+				break
+			except ValueError:
+				yield node
+
+		for i in range(index, len(otherPath)):
+			yield otherPath[i]
+
 	def GetNodeByID(self, id: IDT) -> Union['Node', List['Node']]:
 		return self._root._ids[id]
 
