@@ -44,7 +44,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	_root: 'Node'
 	_parent: Nullable['Node']
 	_children: List['Node']
-	_links: List['Node']
+#	_links: List['Node']
 
 	_value: Nullable[ValueT]
 	_dict: Dict[DictKeyT, DictValueT]
@@ -139,11 +139,11 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def LeftSibling(self) -> 'Node':
-		pass
+		raise NotImplementedError(f"Property 'LeftSibling' is not yet implemented.")
 
 	@property
 	def RightSibling(self) -> 'Node':
-		pass
+		raise NotImplementedError(f"Property 'RightSibling' is not yet implemented.")
 
 	@property
 	def Path(self) -> Tuple['Node']:
@@ -159,7 +159,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def Level(self) -> int:
-		pass
+		raise NotImplementedError(f"Property 'Level' is not yet implemented.")
 
 	@property
 	def IsRoot(self) -> bool:
@@ -208,6 +208,11 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			child._ids = self._SetNewRoot(child._ids)
 			self._children.append(child)
 
+	def GetPath(self) -> Generator['Node', None, None]:
+		if self._parent is not None:
+			yield from self._parent.GetPath()
+		yield self
+
 	def GetAncestors(self) -> Generator['Node', None, None]:
 		node = self._parent
 		while node is not None:
@@ -245,10 +250,10 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			yield from child.GetSiblings()
 
 	def GetLeftSiblings(self):
-		pass
+		raise NotImplementedError(f"Method 'GetLeftSiblings' is not yet implemented.")
 
 	def GetRightSiblings(self):
-		pass
+		raise NotImplementedError(f"Method 'GetRightSiblings' is not yet implemented.")
 
 	def InterateLevelOrder(self):
 		queue = deque([self])
@@ -296,7 +301,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		return self._root._ids[id]
 
 	def Find(self, filter: Callable) -> Generator['Node', None, None]:
-		pass
+		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
 	def __str__(self):
 		if self._value is not None:
