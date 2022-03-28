@@ -34,6 +34,7 @@ from unittest import TestCase
 
 from pyTooling.Tree import Node
 
+
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
@@ -66,6 +67,7 @@ class Tree(TestCase):
 			self.assertTrue(child.IsLeaf)
 			self.assertFalse(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
+			self.assertListEqual([root, child], list(child.GetPath()))
 			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
 
 		self.assertListEqual(children, [child for child in root.GetChildren()])
