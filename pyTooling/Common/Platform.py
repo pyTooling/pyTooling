@@ -39,7 +39,6 @@ from pyTooling.MetaClasses import Singleton
 class Platform(metaclass=Singleton):
 	"""An instance of this class contains all gathered information available from various sources.
 
-
 	.. seealso:: https://stackoverflow.com/a/54837707/3719459
 	"""
 
@@ -287,6 +286,12 @@ class Platform(metaclass=Singleton):
 
 	@property
 	def ExecutableExtension(self) -> str:
+		"""Returns the file extension for an executable.
+
+		* Linux: ``""`` (empty string)
+		* macOS: ``""`` (empty string)
+		* Windows: ``"exe"``
+		"""
 		if self.Platforms.OS_Windows in self._platform:
 			return "exe"
 		elif self.Platforms.OS_Linux in self._platform:
@@ -298,6 +303,12 @@ class Platform(metaclass=Singleton):
 
 	@property
 	def SharedLibraryExtension(self) -> str:
+		"""Returns the file extension for a shared library.
+
+		* Linux: ``"so"``
+		* macOS: ``"lib"``
+		* Windows: ``"dll"``
+		"""
 		if self.Platforms.OS_Windows in self._platform:
 			return "dll"
 		elif self.Platforms.OS_Linux in self._platform:
