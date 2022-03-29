@@ -145,17 +145,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def RightSibling(self) -> 'Node':
 		raise NotImplementedError(f"Property 'RightSibling' is not yet implemented.")
 
-	@property
-	def Path(self) -> Tuple['Node']:
+	def _GetPathAsLinkedList(self) -> deque["Node"]:
 		path: deque['Node'] = deque()
 
-		def walkup(node: 'Node'):
-			if node._parent is not None:
-				walkup(node._parent)
-			path.append(node)
+		node = self
+		while node is not None:
+			path.appendleft(node)
+			node = node._parent
 
-		walkup(self)
-		return tuple(path)
+		return path
+
+	@property
+	def Path(self) -> Tuple['Node']:
+		return tuple(self._GetPathAsLinkedList())
 
 	@property
 	def Level(self) -> int:
@@ -209,9 +211,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
-		if self._parent is not None:
-			yield from self._parent.GetPath()
-		yield self
+		for node in self._GetPathAsLinkedList():
+			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
 		node = self._parent
