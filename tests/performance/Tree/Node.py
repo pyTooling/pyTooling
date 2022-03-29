@@ -29,7 +29,6 @@
 # ==================================================================================================================== #
 #
 """Unit tests for Tree."""
-import sys
 import timeit
 from statistics import mean
 from unittest import TestCase
@@ -40,7 +39,7 @@ from itertree import iTree
 from pyTooling.Tree import Node
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
@@ -63,14 +62,19 @@ class Tree(TestCase):
 		def func1000():
 			func(1000)
 
+		def func10000():
+			func(10000)
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results) / 1000:.6f} s    {mean(results) / 1000:.6f} s    {max(results) / 1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_SetParent(self):
 		def func(count: int):
@@ -88,14 +92,19 @@ class Tree(TestCase):
 		def func1000():
 			func(1000)
 
+		def func10000():
+			func(10000)
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results) / 1000:.6f} s    {mean(results) / 1000:.6f} s    {max(results) / 1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_AddLongAncestorChain(self):
 		def func(count: int):
@@ -112,14 +121,19 @@ class Tree(TestCase):
 		def func1000():
 			func(1000)
 
+		def func10000():
+			func(10000)
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_AddLongChildBranch(self):
 		def func(count: int):
@@ -138,17 +152,21 @@ class Tree(TestCase):
 		def func1000():
 			func(1000)
 
+		def func10000():
+			func(10000)
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_Path(self):
-		sys.setrecursionlimit(1100)
 		def func(count: int):
 			parentNode = Node(0)
 			for i in range(count - 1):
@@ -168,17 +186,22 @@ class Tree(TestCase):
 			leaf = func(1000)
 			self.assertEqual(1000, len(leaf.Path))
 
+		def func10000():
+			leaf = func(10000)
+			self.assertEqual(10000, len(leaf.Path))
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results)/990:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_GetPath(self):
-		sys.setrecursionlimit(1100)
 		def func(count: int):
 			parentNode = Node(0)
 			for i in range(count - 1):
@@ -198,14 +221,20 @@ class Tree(TestCase):
 			leaf = func(1000)
 			self.assertEqual(1000, len(list(leaf.GetPath())))
 
+		def func10000():
+			leaf = func(10000)
+			self.assertEqual(10000, len(list(leaf.GetPath())))
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results)/990:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_ManyChildren2(self):
 		def func(count: int):
@@ -223,14 +252,19 @@ class Tree(TestCase):
 		def func1000():
 			func(1000)
 
+		def func10000():
+			func(10000)
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
 
 	def test_ManyChildren3(self):
 		def func(count: int):
@@ -248,11 +282,16 @@ class Tree(TestCase):
 		def func1000():
 			func(1000)
 
+		def func10000():
+			func(10000)
+
 		print()
-		print(f"       min          avg           max")
+		print(f"         min          avg           max")
 		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"10x:   {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
+		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
 		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"100x:  {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
+		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
 		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f"1000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
+		results = timeit.repeat(func10000, repeat=5, number=100)
+		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
