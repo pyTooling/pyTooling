@@ -49,6 +49,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	_value: Nullable[ValueT]
 	_dict: Dict[DictKeyT, DictValueT]
 
+	__slots__ = ("_id", "_ids", "_root", "_parent", "_children", "_value", "_dict")
+
 	def __init__(self, id: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
 		self._id = id
 		self._value = value
