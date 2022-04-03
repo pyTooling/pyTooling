@@ -28,10 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for Tree."""
+"""Performance tests for Tree."""
 import timeit
 from statistics import mean
+from typing import Callable, Iterable
 from unittest import TestCase
+
 
 from pyTooling.Tree import Node
 
@@ -43,192 +45,88 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Tree(TestCase):
-	def test_AddChildren(self):
-		def func(count: int):
-			rootNode = Node(0)
+	counts: Iterable[int] = (10, 100, 1000, 10000)
 
-			for i in range(1, count):
-				rootNode.AddChild(Node(i))
-
-		def func10():
-			func(10)
-
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
-
+	def runTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
 		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		for count in counts:
+			results = timeit.repeat(func(count), repeat=20, number=50)
+			norm = count / 10
+			print(f"{count:>5}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s")
+
+	def test_AddChildren(self):
+		def wrapper(count: int):
+			def func():
+				rootNode = Node(0)
+
+				for i in range(count):
+					rootNode.AddChild(Node(i))
+
+			return func
+
+		self.runTests(wrapper, self.counts)
 
 	def test_SetParent(self):
-		def func(count: int):
-			rootNode = Node(0)
+		def wrapper(count: int):
+			def func():
+				rootNode = Node(0)
 
-			for i in range(1, count):
-				Node(i, parent=rootNode)
+				for i in range(count):
+					Node(i, parent=rootNode)
 
-		def func10():
-			func(10)
+			return func
 
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		self.runTests(wrapper, self.counts)
 
 	def test_AddLongAncestorChain(self):
-		def func(count: int):
-			parentNode = Node(0)
-			for i in range(1, count):
-				parentNode = Node(i, parent=parentNode)
+		def wrapper(count: int):
+			def func():
+				parentNode = Node(0)
+				for i in range(count - 1):
+					parentNode = Node(i, parent=parentNode)
 
-		def func10():
-			func(10)
+			return func
 
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		self.runTests(wrapper, self.counts)
 
 	def test_AddLongChildBranch(self):
-		def func(count: int):
-			parentNode = Node(0)
-			for i in range(1, count):
-				node = Node(i)
-				parentNode.AddChild(node)
-				parentNode = node
+		def wrapper(count: int):
+			def func():
+				parentNode = Node(0)
+				for i in range(count):
+					node = Node(i)
+					parentNode.AddChild(node)
+					parentNode = node
 
-		def func10():
-			func(10)
+			return func
 
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		self.runTests(wrapper, self.counts)
 
 	def test_Path(self):
-		def func(count: int):
-			parentNode = Node(0)
-			for i in range(1, count):
-				parentNode = Node(i, parent=parentNode)
+		def wrapper(count: int):
+			def func():
+				parentNode = Node(0)
+				for i in range(count - 1):
+					parentNode = Node(i, parent=parentNode)
 
-			return parentNode
+				leaf = parentNode
+				_ = leaf.Path
 
-		def func10():
-			leaf = func(10)
-			self.assertEqual(10, len(leaf.Path))
+			return func
 
-		def func100():
-			leaf = func(100)
-			self.assertEqual(100, len(leaf.Path))
-
-		def func1000():
-			leaf = func(1000)
-			self.assertEqual(1000, len(leaf.Path))
-
-		def func10000():
-			leaf = func(10000)
-			self.assertEqual(10000, len(leaf.Path))
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		self.runTests(wrapper, self.counts)
 
 	def test_GetPath(self):
-		def func(count: int):
-			parentNode = Node(0)
-			for i in range(1, count):
-				parentNode = Node(i, parent=parentNode)
+		def wrapper(count: int):
+			def func():
+				parentNode = Node(0)
+				for i in range(count - 1):
+					parentNode = Node(i, parent=parentNode)
 
-			return parentNode
+				leaf = parentNode
+				_ = [node for node in leaf.GetPath()]
 
-		def func10():
-			leaf = func(10)
-			self.assertEqual(10, len(list(leaf.GetPath())))
+			return func
 
-		def func100():
-			leaf = func(100)
-			self.assertEqual(100, len(list(leaf.GetPath())))
-
-		def func1000():
-			leaf = func(1000)
-			self.assertEqual(1000, len(list(leaf.GetPath())))
-
-		def func10000():
-			leaf = func(10000)
-			self.assertEqual(10000, len(list(leaf.GetPath())))
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		self.runTests(wrapper, self.counts)

@@ -90,6 +90,7 @@ class Tree(TestCase):
 			self.assertFalse(child.IsLeaf)
 			self.assertTrue(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
+			self.assertListEqual([root, child], list(child.GetPath()))
 			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
 
 		self.assertListEqual(children, [child for child in root.GetChildren()])
@@ -100,6 +101,7 @@ class Tree(TestCase):
 			self.assertTrue(grandChild.IsLeaf)
 			self.assertFalse(grandChild.HasChildren)
 			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.Path))
+			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.GetPath()))
 			self.assertListEqual([grandChild.Parent, root], [ancestor for ancestor in grandChild.GetAncestors()])
 
 		self.assertListEqual(
