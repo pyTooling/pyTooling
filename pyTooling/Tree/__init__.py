@@ -73,6 +73,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 			if id is None:
 				self._root._ids[None].append(self)
+			elif id in self._root._ids:
+				raise ValueError(f"ID '{id}' already exists in this tree.")
 			else:
 				self._root._ids[id] = self
 
@@ -177,14 +179,16 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	def _SetNewRoot(self, ids: Dict[Nullable['Node'], Union['Node', List['Node']]]) -> type(None):
 		for id, node in ids.items():
-			if id is not None:
-				self._root._ids[id] = node
-				node._root = self._root
-			else:
+			if id is None:
 				nodeList: List[Node] = node
 				for node in nodeList:
 					self._root._ids[None].append(node)
 					node._root = self._root
+			elif id in self._root._ids:
+				raise ValueError(f"ID '{id}' already exists in this tree.")
+			else:
+				self._root._ids[id] = node
+				node._root = self._root
 
 		return None
 
