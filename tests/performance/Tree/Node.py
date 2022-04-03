@@ -33,9 +33,6 @@ import timeit
 from statistics import mean
 from unittest import TestCase
 
-from anytree import Node as AnyNode
-from itertree import iTree
-
 from pyTooling.Tree import Node
 
 
@@ -50,7 +47,7 @@ class Tree(TestCase):
 		def func(count: int):
 			rootNode = Node(0)
 
-			for i in range(count):
+			for i in range(1, count):
 				rootNode.AddChild(Node(i))
 
 		def func10():
@@ -80,7 +77,7 @@ class Tree(TestCase):
 		def func(count: int):
 			rootNode = Node(0)
 
-			for i in range(count):
+			for i in range(1, count):
 				Node(i, parent=rootNode)
 
 		def func10():
@@ -109,7 +106,7 @@ class Tree(TestCase):
 	def test_AddLongAncestorChain(self):
 		def func(count: int):
 			parentNode = Node(0)
-			for i in range(count - 1):
+			for i in range(1, count):
 				parentNode = Node(i, parent=parentNode)
 
 		def func10():
@@ -138,7 +135,7 @@ class Tree(TestCase):
 	def test_AddLongChildBranch(self):
 		def func(count: int):
 			parentNode = Node(0)
-			for i in range(count):
+			for i in range(1, count):
 				node = Node(i)
 				parentNode.AddChild(node)
 				parentNode = node
@@ -169,7 +166,7 @@ class Tree(TestCase):
 	def test_Path(self):
 		def func(count: int):
 			parentNode = Node(0)
-			for i in range(count - 1):
+			for i in range(1, count):
 				parentNode = Node(i, parent=parentNode)
 
 			return parentNode
@@ -204,7 +201,7 @@ class Tree(TestCase):
 	def test_GetPath(self):
 		def func(count: int):
 			parentNode = Node(0)
-			for i in range(count - 1):
+			for i in range(1, count):
 				parentNode = Node(i, parent=parentNode)
 
 			return parentNode
@@ -224,66 +221,6 @@ class Tree(TestCase):
 		def func10000():
 			leaf = func(10000)
 			self.assertEqual(10000, len(list(leaf.GetPath())))
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
-
-	def test_ManyChildren2(self):
-		def func(count: int):
-			rootNode = AnyNode(0)
-
-			for i in range(count):
-				AnyNode(i, parent=rootNode)
-
-		def func10():
-			func(10)
-
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
-
-	def test_ManyChildren3(self):
-		def func(count: int):
-			rootNode = iTree("root", data=0)
-
-			for i in range(count):
-				rootNode+=iTree("child", data=i)
-
-		def func10():
-			func(10)
-
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
 
 		print()
 		print(f"         min          avg           max")
