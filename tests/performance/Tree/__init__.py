@@ -29,8 +29,10 @@
 # ==================================================================================================================== #
 #
 """Performance tests for Tree."""
-from pyTooling.Tree import Node
-from . import PerformanceTest
+import timeit
+from statistics import mean
+from typing import Callable, Iterable
+from unittest import TestCase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -39,79 +41,13 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Tree(PerformanceTest):
-	def test_AddChildren(self):
-		def wrapper(count: int):
-			def func():
-				rootNode = Node(0)
+class PerformanceTest(TestCase):
+	counts: Iterable[int] = (10, 100, 1000, 10000)
 
-				for i in range(1, count):
-					rootNode.AddChild(Node(i))
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_SetParent(self):
-		def wrapper(count: int):
-			def func():
-				rootNode = Node(0)
-
-				for i in range(1, count):
-					Node(i, parent=rootNode)
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_AddLongAncestorChain(self):
-		def wrapper(count: int):
-			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					parentNode = Node(i, parent=parentNode)
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_AddLongChildBranch(self):
-		def wrapper(count: int):
-			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					node = Node(i)
-					parentNode.AddChild(node)
-					parentNode = node
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_Path(self):
-		def wrapper(count: int):
-			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					parentNode = Node(i, parent=parentNode)
-
-				leaf = parentNode
-				_ = leaf.Path
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_GetPath(self):
-		def wrapper(count: int):
-			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					parentNode = Node(i, parent=parentNode)
-
-				leaf = parentNode
-				_ = [node for node in leaf.GetPath()]
-
-			return func
-
-		self.runTests(wrapper, self.counts)
+	def runTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
+		print()
+		print(f"         min          avg           max")
+		for count in counts:
+			results = timeit.repeat(func(count), repeat=20, number=50)
+			norm = count / 10
+			print(f"{count:>5}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s")

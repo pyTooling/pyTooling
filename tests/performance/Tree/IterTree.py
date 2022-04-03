@@ -28,12 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for Tree."""
-import timeit
-from statistics import mean
+"""Performance tests for iterTree."""
 from unittest import TestCase
 
 from itertree import iTree
+
+from . import PerformanceTest
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -42,33 +42,15 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Tree(TestCase):
+class Tree(PerformanceTest):
 	def test_AddChildren(self):
-		def func(count: int):
-			rootNode = iTree("root", data=0)
+		def wrapper(count: int):
+			def func():
+				rootNode = iTree("root", data=0)
 
-			for i in range(1, count):
-				rootNode+=iTree("child", data=i)
+				for i in range(1, count):
+					rootNode+=iTree("child", data=i)
 
-		def func10():
-			func(10)
+			return func
 
-		def func100():
-			func(100)
-
-		def func1000():
-			func(1000)
-
-		def func10000():
-			func(10000)
-
-		print()
-		print(f"         min          avg           max")
-		results = timeit.repeat(func10, repeat=5, number=100)
-		print(f"    10x: {min(results)/10:.6f} s    {mean(results)/10:.6f} s    {max(results)/10:.6f} s")
-		results = timeit.repeat(func100, repeat=5, number=100)
-		print(f"   100x: {min(results)/100:.6f} s    {mean(results)/100:.6f} s    {max(results)/100:.6f} s")
-		results = timeit.repeat(func1000, repeat=5, number=100)
-		print(f" 1,000x: {min(results)/1000:.6f} s    {mean(results)/1000:.6f} s    {max(results)/1000:.6f} s")
-		results = timeit.repeat(func10000, repeat=5, number=100)
-		print(f"10,000x: {min(results)/10000:.6f} s    {mean(results)/10000:.6f} s    {max(results)/10000:.6f} s")
+		self.runTests(wrapper, self.counts)
