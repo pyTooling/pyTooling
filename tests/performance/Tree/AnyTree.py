@@ -29,8 +29,6 @@
 # ==================================================================================================================== #
 #
 """Performance tests for anytree."""
-from unittest import TestCase
-
 from anytree import Node
 
 from . import PerformanceTest
