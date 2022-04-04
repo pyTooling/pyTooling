@@ -59,6 +59,17 @@ Common Classes
   Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
+Data Structures
+===============
+
+Fast data structures.
+
+* Trees:
+
+  * :py:class:`pyTooling.Tree.Node` |br|
+    A fast tree data structure.
+
+
 Decorators
 ==========
 
@@ -108,18 +119,6 @@ A set of helper functions to describe a Python package for setuptools.
     tbd
 
 
-Data Structures
-===============
-
-Fast data structures.
-
-* Trees:
-
-  * :py:class:`pyTooling.Tree.Node` |br|
-    A fast tree data structure.
-
-
-
 Contributors
 ************
 
@@ -166,9 +165,9 @@ License
    :hidden:
 
    CallByRef
+   Licensing
    Platform
    Versioning
-   Licensing
 
 .. toctree::
    :caption: Data Structures
