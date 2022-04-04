@@ -211,6 +211,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			if not isinstance(child, Node):
 				raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
 
+			if child._root is self._root:
+				raise Exception(f"Child '{child}' is already a node in this tree.")
+
 			child._root = self._root
 			child._parent = self
 			child._ids = self._SetNewRoot(child._ids)
