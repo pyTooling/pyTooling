@@ -52,3 +52,21 @@ class Tree(PerformanceTest):
 			return func
 
 		self.runTests(wrapper, self.counts[:-1])
+
+	def test_AddFlatTree(self):
+		def run(count: int):
+			def func():
+				trees = []
+				for i in range(1, 10):
+					parentNode = Node(count * i)
+					for j in range(1, count):
+						_ = Node(count * i + j, parent=parentNode)
+
+					trees.append(parentNode)
+
+				rootNode = Node(0)
+				rootNode.children(trees)
+
+			return func
+
+		self.runTests(run, self.counts[:-1])
