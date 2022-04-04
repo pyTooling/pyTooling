@@ -171,6 +171,15 @@ License
    Licensing
 
 .. toctree::
+   :caption: Data Structures
+   :hidden:
+
+   DataStructures/Tree
+
+.. #
+   DataStructures/Graph
+
+.. toctree::
    :caption: Decorators
    :hidden:
 
