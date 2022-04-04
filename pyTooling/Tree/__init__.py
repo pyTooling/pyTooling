@@ -32,13 +32,48 @@
 from collections import deque
 from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union
 
+from ..Decorators import export
+
 IDT = TypeVar("IDT", bound=Hashable)
 ValueT = TypeVar("ValueT")
 DictKeyT = TypeVar("DictKeyT")
 DictValueT = TypeVar("DictValueT")
 
 
+@export
 class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
+	"""A **tree** data structure can be constructed of ``Node`` instances.
+
+	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
+	tree top-down or bottom-up.
+
+	.. hint:: The top-down construction should be preferred, because it's slightly faster.
+
+	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
+	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the
+	root node (``_root``). In case of adding a tree to an existing tree, such data structures get merged and all added
+	nodes get assigned with new root references. Use the read-only property :py:attr:`Root` to access the root reference.
+
+	The reference to the parent node (``_parent``) can be access via property :py:attr:`Parent`. If the property's setter
+	is used, a node and all its siblings are added to another tree or to a new position in the same tree.
+
+	The references to all node's children is stored in a list (``_children``). Children, siblings, ancestors, can be
+	accessed via various generators:
+
+	* :py:meth:`GetChildren` |rarr| iterate all direct children.
+
+	Each node can have a **unique ID** or no ID at all (``id=None``). The root node is used to store all IDs in a
+	dictionary (``_ids``). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
+	list of nodes. An ID can be modified after the Node was created. Use the read-only property :py:attr:`ID` to access
+	the ID.
+
+	Each node can have a **value** (``_value``), which can be given at node creation time, or it can be assigned and/or
+	modified later. Use the property :py:attr:`Value` to get or set the value.
+
+	Moreover, each node can store various key-value pairs (``_dict``). Use the dictionary syntax to get and set
+	key-value-pairs.
+	"""
+
 	_id: IDT
 	_ids: Nullable[Dict[Nullable[IDT], Union['Node', List['Node']]]]
 	_root: 'Node'
@@ -93,10 +128,12 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def ID(self) -> IDT:
+		"""Read-only property to access the unique ID of a node. If no ID was given at node construction time, ID is None."""
 		return self._id
 
 	@property
 	def Value(self) -> ValueT:
+		"""Property to get and set the value (``_value``) of a node."""
 		return self._value
 
 	@Value.setter
@@ -109,8 +146,12 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def __setitem__(self, key: DictKeyT, value: DictValueT) -> None:
 		self._dict[key] = value
 
+	def __delitem__(self, key: DictKeyT) -> None:
+		del self._dict[key]
+
 	@property
 	def Root(self) -> 'Node':
+		"""Read-only property to access the tree's root node (representative node)."""
 		return self._root
 
 	@property
@@ -119,6 +160,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@Parent.setter
 	def Parent(self, parent: 'Node') -> None:
+		# TODO: is moved inside the same tree, don't move nodes in _ids and don't change _root
+
 		if parent is None:
 			self._ids = {None: []}
 			for sibling in self._parent.GetSiblings():
@@ -251,10 +294,23 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			raise NotImplemented(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
 
 	def GetChildren(self) -> Generator['Node', None, None]:
+		"""A generator to iterate all direct children of the current node."""
 		for child in self._children:
 			yield child
 
 	def GetSiblings(self) -> Generator['Node', None, None]:
+		"""A generator to iterate all siblings of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
+		it doesn't include the node itself.
+
+		.. seealso::
+
+		   :py:meth:`GetChildren` |br|
+		      |rarr| Iterate all children, but no grand-children.
+		   :py:meth:`IteratePreOrder` |br|
+		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
+		   :py:meth:`IteratePostOrder` |br|
+		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
+		"""
 		for child in self._children:
 			yield child
 			yield from child.GetSiblings()
@@ -274,11 +330,17 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 				queue.appendleft(node)
 
 	def IteratePreOrder(self):
+		"""A generator to iterate all siblings of the current node in pre-order. In contrast to `GetSiblings`, this includes
+		also the node itself as the first returned node.
+		"""
 		yield self
 		for child in self._children:
 			yield from child.IteratePreOrder()
 
 	def IteratePostOrder(self):
+		"""A generator to iterate all siblings of the current node in post-order. In contrast to `GetSiblings`, this
+		includes also the node itself as the last returned node.
+		"""
 		for child in self._children:
 			yield from child.IteratePostOrder()
 		yield self
