@@ -25,13 +25,22 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful classes, decorators,
-meta-classes and exceptions. It's useful for any Python-base project independent
-if it's a library, framework or CLI tool.
+**pyTooling** is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions. |br|
+It's useful for any Python-base project independent if it's a library, framework or CLI tool.
 
 
 Introduction
 ************
+
+**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. These are commonly used
+classes, decorators meta-classes or exceptions. More specialized helpers can be found in sub-namespaces like:
+
+* pyTooling.CLIAbstraction
+* pyTooling.GenericPath
+* pyTooling.TerminalUI
+
+In addition, pyTooling provides a collection of CI job templates for GitHub Actions. This drastically simplifies
+GHA-based CI pipelines for Python projects.
 
 
 Package Details
@@ -40,38 +49,40 @@ Package Details
 Common Classes
 ==============
 
-* :mod:`~pyTooling.CallByRef` |br|
+* :py:mod:`~pyTooling.CallByRef` |br|
   Emulation of *call-by-reference* parameters.
-* :mod:`~pyTooling.Versioning` |br|
-  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
-* :mod:`~pyTooling.Licensing` |br|
+* :py:mod:`~pyTooling.Licensing` |br|
   Class representations of licenses and conversions to various structured license names.
+* :py:class:`~pyTooling.Common.Platform.Platform` |br|
+  A class representing the current platform/environment.
+* :py:mod:`~pyTooling.Versioning` |br|
+  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
 Decorators
 ==========
 
-* :class:`~pyTooling.Decorators.export` |br|
+* :py:class:`~pyTooling.Decorators.export` |br|
   Register the given function or class as publicly accessible in a module.
 
 
 Exceptions
 ==========
 
-* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+* :py:exc:`~pyTooling.Exceptions.EnvironmentException` |br|
   ... is raised when an expected environment variable is missing.
-* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+* :py:exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
   ... is raise if the platform is not supported.
-* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+* :py:exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
   ... is raise if the requested setting is not configured.
 
 
 Meta-Classes
 ============
 
-* :class:`~pyTooling.MetaClasses.Singleton` |br|
+* :py:class:`~pyTooling.MetaClasses.Singleton` |br|
   Allow only a single instance of a class.
-* :class:`~pyTooling.MetaClasses.Overloading` |br|
+* :py:class:`~pyTooling.MetaClasses.Overloading` |br|
   Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
 
 
@@ -83,11 +94,11 @@ A set of helper functions to describe a Python package for setuptools.
 * Helper Functions:
 
   * :py:func:`pyTooling.Packaging.loadReadmeFile` |br|
-    tbd
+    Load a ``README.md`` file from disk and provide the content as long description for setuptools.
   * :py:func:`pyTooling.Packaging.loadRequirementsFile` |br|
-    tbd
+    Load a ``requirements.txt`` file from disk and provide the content for setuptools.
   * :py:func:`pyTooling.Packaging.extractVersionInformation` |br|
-    tbd
+    Extract version information from Python source files and provide the data to setuptools.
 
 * Package Descriptions
 
@@ -95,6 +106,18 @@ A set of helper functions to describe a Python package for setuptools.
     tbd
   * :py:func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
     tbd
+
+
+Data Structures
+===============
+
+Fast data structures.
+
+* Trees:
+
+  * :py:class:`pyTooling.Tree.Node` |br|
+    A fast tree data structure.
+
 
 
 Contributors
