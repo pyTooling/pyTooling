@@ -239,6 +239,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			node._root = self._root
 
 	def AddChild(self, child: 'Node') -> None:
+		"""Add a child node to the current node of the tree.
+
+		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new ``_root`` assigned and all IDs
+		are merged into the node's root's ID lists.
+
+		:param child: The child node to be added to the tree.
+		:raises TypeError: If parameter ``child`` is not a ``Node``.
+		:raises Exception: If child is already a node in the tree.
+		"""
 		if not isinstance(child, Node):
 			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
 
