@@ -13,3 +13,7 @@ lxml>=4.8
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml>=0.17
+
+# For performance testing
+anytree>=2.8.0
+itertree>=0.7.3
