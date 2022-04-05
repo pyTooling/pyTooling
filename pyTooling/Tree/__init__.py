@@ -30,7 +30,8 @@
 #
 """A powerful tree data structure for Python."""
 from collections import deque
-from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union
+from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, \
+	Union, Deque
 
 from ..Decorators import export
 
@@ -196,8 +197,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def RightSibling(self) -> 'Node':
 		raise NotImplementedError(f"Property 'RightSibling' is not yet implemented.")
 
-	def _GetPathAsLinkedList(self) -> deque["Node"]:
-		path: deque['Node'] = deque()
+	def _GetPathAsLinkedList(self) -> Deque["Node"]:
+		path: Deque['Node'] = deque()
 
 		node = self
 		while node is not None:
