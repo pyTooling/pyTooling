@@ -61,7 +61,12 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	The references to all node's children is stored in a list (:py:attr:`_children`). Children, siblings, ancestors, can be
 	accessed via various generators:
 
+	* :py:meth:`GetAncestors` |rarr| iterate all ancestors bottom-up.
 	* :py:meth:`GetChildren` |rarr| iterate all direct children.
+	* :py:meth:`GetSiblings` |rarr| iterate all siblings.
+	* :py:meth:`IterateLevelOrder` |rarr| IterateLevelOrder.
+	* :py:meth:`IteratePreOrder` |rarr| iterate siblings in pre-order.
+	* :py:meth:`IteratePostOrder` |rarr| iterate siblings in post-order.
 
 	Each node can have a **unique ID** or no ID at all (``id=None``). The root node is used to store all IDs in a
 	dictionary (:py:attr:`_nodesWithID`). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
@@ -89,6 +94,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	__slots__ = ("_id", "_nodesWithID", "_nodesWithoutID", "_root", "_parent", "_children", "_value", "_dict")
 
 	def __init__(self, id: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
+		""".. todo:: Needs documentation!"""
 		self._id = id
 		self._value = value
 		self._dict = {}
@@ -151,12 +157,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		self._value = value
 
 	def __getitem__(self, key: DictKeyT) -> DictValueT:
+		""".. todo:: Needs documentation!"""
 		return self._dict[key]
 
 	def __setitem__(self, key: DictKeyT, value: DictValueT) -> None:
+		""".. todo:: Needs documentation!"""
 		self._dict[key] = value
 
 	def __delitem__(self, key: DictKeyT) -> None:
+		""".. todo:: Needs documentation!"""
 		del self._dict[key]
 
 	@property
@@ -338,16 +347,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
+		""".. todo:: Needs documentation!"""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
+		""".. todo:: Needs documentation!"""
 		node = self._parent
 		while node is not None:
 			yield node
 			node = node._parent
 
-	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator["Node", None, None]:
+	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
+		""".. todo:: Needs documentation!"""
 		if isinstance(others, Node):
 			# Check for trivial case
 			if others is self:
@@ -375,6 +387,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 		   :py:meth:`GetSiblings` |br|
 		      |rarr| Iterate all siblings.
+		   :py:meth:`IterateLevelOrder` |br|
+		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
@@ -393,6 +407,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 		   :py:meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
+		   :py:meth:`IterateLevelOrder` |br|
+		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
@@ -410,7 +426,23 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def GetRightSiblings(self):
 		raise NotImplementedError(f"Method 'GetRightSiblings' is not yet implemented.")
 
-	def InterateLevelOrder(self) -> Generator['Node', None, None]:
+	def IterateLevelOrder(self) -> Generator['Node', None, None]:
+		"""A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetSiblings`,
+		this includes also the node itself as the first returned node.
+
+		.. seealso::
+
+		   :py:meth:`GetChildren` |br|
+		      |rarr| Iterate all children, but no grand-children.
+		   :py:meth:`GetSiblings` |br|
+		      |rarr| Iterate all siblings.
+		   :py:meth:`IteratePreOrder` |br|
+		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
+		   :py:meth:`IteratePostOrder` |br|
+		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
+
+		:returns: A generator to iterate all siblings level-by-level.
+		"""
 		queue = deque([self])
 		while queue:
 			currentNode = queue.pop()
@@ -428,6 +460,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		      |rarr| Iterate all children, but no grand-children.
 		   :py:meth:`GetSiblings` |br|
 		      |rarr| Iterate all siblings.
+		   :py:meth:`IterateLevelOrder` |br|
+		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 
@@ -447,6 +481,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		      |rarr| Iterate all children, but no grand-children.
 		   :py:meth:`GetSiblings` |br|
 		      |rarr| Iterate all siblings.
+		   :py:meth:`IterateLevelOrder` |br|
+		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 
@@ -457,6 +493,12 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		yield self
 
 	def WalkTo(self, other: 'Node') -> Generator['Node', None, None]:
+		"""Returns a generator to iterate the path from node to another node.
+
+		:param other:      Node to walk to.
+		:returns:          Generator to iterate the path from node to other node.
+		:raises Exception: If parameter ``other`` is not part of the same tree.
+		"""
 		# Check for trivial case
 		if other is self:
 			yield from ()
