@@ -63,7 +63,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	* :py:meth:`GetChildren` |rarr| iterate all direct children.
 
 	Each node can have a **unique ID** or no ID at all (``id=None``). The root node is used to store all IDs in a
-	dictionary (``_ids``). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
+	dictionary (``_nodesWithID``). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
 	list of nodes. An ID can be modified after the Node was created. Use the read-only property :py:attr:`ID` to access
 	the ID.
 
@@ -74,17 +74,18 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	key-value-pairs.
 	"""
 
-	_id: IDT
-	_ids: Nullable[Dict[Nullable[IDT], Union['Node', List['Node']]]]
-	_root: 'Node'
-	_parent: Nullable['Node']
-	_children: List['Node']
+	_id: Nullable[IDT]                         #: Unique identifier of a node. ``None`` if not used.
+	_nodesWithID: Nullable[Dict[IDT, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
+	_nodesWithoutID: Nullable[List['Node']]    #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
+	_root: 'Node'                              #: Reference to the root of a tree. ``self`` if it's the root node.
+	_parent: Nullable['Node']                  #: Reference to the parent node. ``None`` if it's the root node.
+	_children: List['Node']                    #: List of all children
 #	_links: List['Node']
 
-	_value: Nullable[ValueT]
-	_dict: Dict[DictKeyT, DictValueT]
+	_value: Nullable[ValueT]                   #: Field to store the node's value.
+	_dict: Dict[DictKeyT, DictValueT]          #: Dictionary to store key-value-pairs attached to the node.
 
-	__slots__ = ("_id", "_ids", "_root", "_parent", "_children", "_value", "_dict")
+	__slots__ = ("_id", "_nodesWithID", "_nodesWithoutID", "_root", "_parent", "_children", "_value", "_dict")
 
 	def __init__(self, id: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
 		self._id = id
@@ -98,22 +99,23 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			self._root = self
 			self._parent = None
 
-			self._ids = {None: []}
+			self._nodesWithID = {}
+			self._nodesWithoutID = []
 			if id is None:
-				self._ids[None].append(self)
+				self._nodesWithoutID.append(self)
 			else:
-				self._ids[id] = self
+				self._nodesWithID[id] = self
 		else:
 			self._root = parent._root
 			self._parent = parent
-			self._ids = None
+			self._nodesWithID = None
 
 			if id is None:
-				self._root._ids[None].append(self)
-			elif id in self._root._ids:
+				self._root._nodesWithoutID.append(self)
+			elif id in self._root._nodesWithID:
 				raise ValueError(f"ID '{id}' already exists in this tree.")
 			else:
-				self._root._ids[id] = self
+				self._root._nodesWithID[id] = self
 
 			parent._children.append(self)
 
@@ -160,16 +162,17 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@Parent.setter
 	def Parent(self, parent: 'Node') -> None:
-		# TODO: is moved inside the same tree, don't move nodes in _ids and don't change _root
+		# TODO: is moved inside the same tree, don't move nodes in _nodesWithID and don't change _root
 
 		if parent is None:
-			self._ids = {None: []}
+			self._nodesWithID = {}
+			self._nodesWithoutID = []
 			for sibling in self._parent.GetSiblings():
 				sibling._root = self
 				if sibling._id is None:
-					self._ids[None].append(sibling)
+					self._nodesWithoutID.append(sibling)
 				else:
-					self._ids[sibling._id] = sibling
+					self._nodesWithID[sibling._id] = sibling
 
 			self._parent._children.remove(self)
 
@@ -181,7 +184,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 			self._root = parent._root
 			self._parent = parent
-			self._ids = self._SetNewRoot(self._ids)
+			self._SetNewRoot(self._nodesWithID, self._nodesWithoutID)
+			self._nodesWithID = self._nodesWithoutID = None
 			parent._children.append(self)
 
 	@property
@@ -222,20 +226,17 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def HasChildren(self) -> bool:
 		return len(self._children) > 0
 
-	def _SetNewRoot(self, ids: Dict[Nullable['Node'], Union['Node', List['Node']]]) -> type(None):
-		for id, node in ids.items():
-			if id is None:
-				nodeList: List[Node] = node
-				for node in nodeList:
-					self._root._ids[None].append(node)
-					node._root = self._root
-			elif id in self._root._ids:
+	def _SetNewRoot(self, nodesWithIDs: Dict['Node', 'Node'], nodesWithoutIDs: List['Node']) -> None:
+		for id, node in nodesWithIDs.items():
+			if id in self._root._nodesWithID:
 				raise ValueError(f"ID '{id}' already exists in this tree.")
 			else:
-				self._root._ids[id] = node
+				self._root._nodesWithID[id] = node
 				node._root = self._root
 
-		return None
+		for node in nodesWithoutIDs:
+			self._root._nodesWithoutID.append(node)
+			node._root = self._root
 
 	def AddChild(self, child: 'Node') -> None:
 		if not isinstance(child, Node):
@@ -246,7 +247,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 		child._root = self._root
 		child._parent = self
-		child._ids = self._SetNewRoot(child._ids)
+		self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
+		child._nodesWithID = child._nodesWithoutID = None
 		self._children.append(child)
 
 	def AddChildren(self, children: Iterable['Node']):
@@ -259,7 +261,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 			child._root = self._root
 			child._parent = self
-			child._ids = self._SetNewRoot(child._ids)
+			self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
+			child._nodesWithID = child._nodesWithoutID = None
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
@@ -369,13 +372,17 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		for i in range(index, len(otherPath)):
 			yield otherPath[i]
 
-	def GetNodeByID(self, id: IDT) -> Union['Node', List['Node']]:
-		return self._root._ids[id]
+	def GetNodeByID(self, id: IDT) -> 'Node':
+		"""Lookup a node by its unique ID."""
+		if id is None:
+			raise ValueError(f"'None' is not supported as an ID value.")
+
+		return self._root._nodesWithID[id]
 
 	def Find(self, filter: Callable) -> Generator['Node', None, None]:
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
-	def __str__(self):
+	def __str__(self) -> str:
 		if self._value is not None:
 			return str(self._value)
 		elif self._id is not None:
