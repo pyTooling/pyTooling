@@ -42,31 +42,11 @@ jobs:
         python-ruamel-yaml:p
         python-ruamel.yaml.clib:p
 
-  Coverage:
-    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
-    needs:
-      - Params
-    with:
-      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
-      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
-    secrets:
-      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-
-  StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r0
-    needs:
-      - Params
-    with:
-      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
-      commands: |
-        touch pyTooling/__init__.py
-        mypy --html-report htmlmypy -p pyTooling
-      report: 'htmlmypy'
-      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.typing }}
-
   PlatformTests:
     name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
     runs-on: ${{ matrix.runs-on }}
+    needs:
+      - Params
 
     strategy:
       fail-fast: false
@@ -135,6 +115,28 @@ jobs:
         run: |
           $env:EXPECTED = "${{ matrix.expected }}"
           python -m pytest -rA tests/unit/Common/Platform.py --color=yes
+
+  Coverage:
+    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
+    needs:
+      - Params
+    with:
+      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
+      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
+    secrets:
+      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  StaticTypeCheck:
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r0
+    needs:
+      - Params
+    with:
+      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
+      commands: |
+        touch pyTooling/__init__.py
+        mypy --html-report htmlmypy -p pyTooling
+      report: 'htmlmypy'
+      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.typing }}
 
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r0
