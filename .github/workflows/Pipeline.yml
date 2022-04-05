@@ -26,6 +26,22 @@ jobs:
         python-ruamel-yaml:p
         python-ruamel.yaml.clib:p
 
+  PerformaceTesting:
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
+    needs:
+      - Params
+    with:
+      jobs: ${{ needs.Params.outputs.python_jobs }}
+#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
+      unittest_directory: 'tests/performance'
+      pacboy: >-
+        python-pip:p
+        python-wheel:p
+        python-coverage:p
+        python-lxml:p
+        python-ruamel-yaml:p
+        python-ruamel.yaml.clib:p
+
   Coverage:
     uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
     needs:
@@ -124,6 +140,7 @@ jobs:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r0
     needs:
       - UnitTesting
+      - PerformaceTesting
 
   Package:
     uses: pyTooling/Actions/.github/workflows/Package.yml@r0
@@ -191,6 +208,8 @@ jobs:
     needs:
       - Params
       - UnitTesting
+      - PerformaceTesting
+      - PlatformTests
       - Coverage
       - StaticTypeCheck
       - BuildTheDocs
