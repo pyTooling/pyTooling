@@ -25,32 +25,30 @@ jobs:
         python-lxml:p
         python-ruamel-yaml:p
         python-ruamel.yaml.clib:p
+        python-numpy:p
 
-  Coverage:
-    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
+  PerformaceTesting:
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
     needs:
       - Params
     with:
-      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
-      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
-    secrets:
-      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-
-  StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r0
-    needs:
-      - Params
-    with:
-      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
-      commands: |
-        touch pyTooling/__init__.py
-        mypy --html-report htmlmypy -p pyTooling
-      report: 'htmlmypy'
-      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.typing }}
+      jobs: ${{ needs.Params.outputs.python_jobs }}
+#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
+      unittest_directory: 'tests/performance'
+      pacboy: >-
+        python-pip:p
+        python-wheel:p
+        python-coverage:p
+        python-lxml:p
+        python-ruamel-yaml:p
+        python-ruamel.yaml.clib:p
+        python-numpy:p
 
   PlatformTests:
     name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
     runs-on: ${{ matrix.runs-on }}
+    needs:
+      - Params
 
     strategy:
       fail-fast: false
@@ -87,6 +85,7 @@ jobs:
             python-lxml:p
             python-ruamel-yaml:p
             python-ruamel.yaml.clib:p
+            python-numpy:p
 
       - name: 🐍 Setup Python ${{ matrix.python }}
         if: matrix.system != 'msys2'
@@ -120,10 +119,33 @@ jobs:
           $env:EXPECTED = "${{ matrix.expected }}"
           python -m pytest -rA tests/unit/Common/Platform.py --color=yes
 
+  Coverage:
+    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
+    needs:
+      - Params
+    with:
+      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
+      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
+    secrets:
+      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  StaticTypeCheck:
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r0
+    needs:
+      - Params
+    with:
+      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
+      commands: |
+        touch pyTooling/__init__.py
+        mypy --html-report htmlmypy -p pyTooling
+      report: 'htmlmypy'
+      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.typing }}
+
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r0
     needs:
       - UnitTesting
+      - PerformaceTesting
 
   Package:
     uses: pyTooling/Actions/.github/workflows/Package.yml@r0
@@ -191,6 +213,8 @@ jobs:
     needs:
       - Params
       - UnitTesting
+      - PerformaceTesting
+      - PlatformTests
       - Coverage
       - StaticTypeCheck
       - BuildTheDocs
