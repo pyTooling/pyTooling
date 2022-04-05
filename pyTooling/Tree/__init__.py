@@ -52,26 +52,26 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
 	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the
-	root node (``_root``). In case of adding a tree to an existing tree, such data structures get merged and all added
+	root node (:py:attr:`_root`). In case of adding a tree to an existing tree, such data structures get merged and all added
 	nodes get assigned with new root references. Use the read-only property :py:attr:`Root` to access the root reference.
 
-	The reference to the parent node (``_parent``) can be access via property :py:attr:`Parent`. If the property's setter
+	The reference to the parent node (:py:attr:`_parent`) can be access via property :py:attr:`Parent`. If the property's setter
 	is used, a node and all its siblings are added to another tree or to a new position in the same tree.
 
-	The references to all node's children is stored in a list (``_children``). Children, siblings, ancestors, can be
+	The references to all node's children is stored in a list (:py:attr:`_children`). Children, siblings, ancestors, can be
 	accessed via various generators:
 
 	* :py:meth:`GetChildren` |rarr| iterate all direct children.
 
 	Each node can have a **unique ID** or no ID at all (``id=None``). The root node is used to store all IDs in a
-	dictionary (``_nodesWithID``). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
+	dictionary (:py:attr:`_nodesWithID`). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
 	list of nodes. An ID can be modified after the Node was created. Use the read-only property :py:attr:`ID` to access
 	the ID.
 
-	Each node can have a **value** (``_value``), which can be given at node creation time, or it can be assigned and/or
+	Each node can have a **value** (:py:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
 	modified later. Use the property :py:attr:`Value` to get or set the value.
 
-	Moreover, each node can store various key-value pairs (``_dict``). Use the dictionary syntax to get and set
+	Moreover, each node can store various key-value pairs (:py:attr:`_dict`). Use the dictionary syntax to get and set
 	key-value-pairs.
 	"""
 
@@ -130,17 +130,24 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 				child.Parent = self
 
 	@property
-	def ID(self) -> IDT:
-		"""Read-only property to access the unique ID of a node. If no ID was given at node construction time, ID is None."""
+	def ID(self) -> Nullable[IDT]:
+		"""Read-only property to access the unique ID of a node (:py:attr:`_id`). If no ID was given at node construction
+		time, ID return None.
+
+		:returns: Unique ID of a node, if ID was given at node creation time, else None.
+		"""
 		return self._id
 
 	@property
-	def Value(self) -> ValueT:
-		"""Property to get and set the value (``_value``) of a node."""
+	def Value(self) -> Nullable[ValueT]:
+		"""Property to get and set the value (:py:attr:`_value`) of a node.
+
+		:returns: The value of a node.
+		"""
 		return self._value
 
 	@Value.setter
-	def Value(self, value: ValueT) -> None:
+	def Value(self, value: Nullable[ValueT]) -> None:
 		self._value = value
 
 	def __getitem__(self, key: DictKeyT) -> DictValueT:
@@ -154,15 +161,27 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def Root(self) -> 'Node':
-		"""Read-only property to access the tree's root node (representative node)."""
+		"""Read-only property to access the tree's root node (:py:attr:`_root`).
+
+		:returns: The root node (representative node) of a tree.
+		"""
 		return self._root
 
 	@property
-	def Parent(self) -> 'Node':
+	def Parent(self) -> Nullable['Node']:
+		"""Property to get and set the parent (:py:attr:`_parent`) of a node.
+
+		.. note::
+
+		   As the current node might be a tree itself, appending this node to a tree can lead to a merge of trees and
+		   especially to a merge of IDs. As IDs are unique, it might raise an :py:exc:`Exception`.
+
+		:returns: The parent of a node.
+		"""
 		return self._parent
 
 	@Parent.setter
-	def Parent(self, parent: 'Node') -> None:
+	def Parent(self, parent: Nullable['Node']) -> None:
 		# TODO: is moved inside the same tree, don't move nodes in _nodesWithID and don't change _root
 
 		if parent is None:
@@ -179,6 +198,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 			self._root = self
 			self._parent = None
+		elif not isinstance(parent, Node):
+			raise TypeError(f"Parameter 'parent' is not of type 'Node'.")
 		else:
 			if parent._root is self._root:
 				raise Exception(f"Parent '{parent}' is already a child node in this tree.")
@@ -198,6 +219,11 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		raise NotImplementedError(f"Property 'RightSibling' is not yet implemented.")
 
 	def _GetPathAsLinkedList(self) -> Deque["Node"]:
+		"""Compute the path from current node to root node by using a linked list (:py:class:`deque`).
+
+		:meta private:
+		:returns: Path from node to root node as double-ended queue (deque).
+		"""
 		path: Deque['Node'] = deque()
 
 		node = self
@@ -209,6 +235,10 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def Path(self) -> Tuple['Node']:
+		"""Read-only property to return the path from root node to the node as a tuple of nodes.
+
+		:returns: A tuple of nodes describing the path from root node to the node.
+		"""
 		return tuple(self._GetPathAsLinkedList())
 
 	@property
@@ -217,14 +247,26 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	@property
 	def IsRoot(self) -> bool:
+		"""Returns true, if the node is the root node (representative node of the tree).
+
+		:returns: True, if node is the root node.
+		"""
 		return self._parent is None
 
 	@property
 	def IsLeaf(self) -> bool:
+		"""Returns true, if the node is a leaf node (has no children).
+
+		:returns: True, if node has no children.
+		"""
 		return len(self._children) == 0
 
 	@property
 	def HasChildren(self) -> bool:
+		"""Returns true, if the node has child nodes.
+
+		:returns: True, if node has children.
+		"""
 		return len(self._children) > 0
 
 	def _SetNewRoot(self, nodesWithIDs: Dict['Node', 'Node'], nodesWithoutIDs: List['Node']) -> None:
@@ -239,15 +281,22 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			self._root._nodesWithoutID.append(node)
 			node._root = self._root
 
-	def AddChild(self, child: 'Node') -> None:
+	def AddChild(self, child: 'Node'):
 		"""Add a child node to the current node of the tree.
 
-		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new ``_root`` assigned and all IDs
-		are merged into the node's root's ID lists.
+		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :py:attr:`_root` assigned and
+		all IDs are merged into the node's root's ID lists (:py:attr:`_nodesWithID`).
+
+		.. seealso::
+
+		   :py:attr:`Parent` |br|
+		      |rarr| Set the parent of a node.
+		   :py:meth:`AddChildren` |br|
+		      |rarr| Add multiple children at once.
 
 		:param child: The child node to be added to the tree.
-		:raises TypeError: If parameter ``child`` is not a ``Node``.
-		:raises Exception: If child is already a node in the tree.
+		:raises TypeError: If parameter ``child`` is not a :py:class:`Node`.
+		:raises Exception: If parameter ``child`` is already a node in the tree.
 		"""
 		if not isinstance(child, Node):
 			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
@@ -262,6 +311,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		self._children.append(child)
 
 	def AddChildren(self, children: Iterable['Node']):
+		"""Add multiple children nodes to the current node of the tree.
+
+		.. seealso::
+
+		   :py:attr:`Parent` |br|
+		      |rarr| Set the parent of a node.
+		   :py:meth:`AddChild` |br|
+		      |rarr| Add a child node to the tree.
+
+		:param children: The list of children nodes to be added to the tree.
+		:raises TypeError: If parameter ``children`` contains an item, which is not a :py:class:`Node`.
+		:raises Exception: If parameter ``children`` contains an item, which is already a node in the tree.
+		"""
 		for child in children:
 			if not isinstance(child, Node):
 				raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
@@ -289,7 +351,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		if isinstance(others, Node):
 			# Check for trivial case
 			if others is self:
-				for node in self.Path:		# TODO: Path generates a list and a tuple. Provide a generator for such a walk.
+				for node in self._GetPathAsLinkedList():
 					yield node
 				return
 
@@ -307,7 +369,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			raise NotImplemented(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
 
 	def GetChildren(self) -> Generator['Node', None, None]:
-		"""A generator to iterate all direct children of the current node."""
+		"""A generator to iterate all direct children of the current node.
+
+		.. seealso::
+
+		   :py:meth:`GetSiblings` |br|
+		      |rarr| Iterate all siblings.
+		   :py:meth:`IteratePreOrder` |br|
+		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
+		   :py:meth:`IteratePostOrder` |br|
+		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
+
+		:returns: A generator to iterate all children.
+		"""
 		for child in self._children:
 			yield child
 
@@ -323,6 +397,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
+
+		:returns: A generator to iterate all siblings.
 		"""
 		for child in self._children:
 			yield child
@@ -334,7 +410,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def GetRightSiblings(self):
 		raise NotImplementedError(f"Method 'GetRightSiblings' is not yet implemented.")
 
-	def InterateLevelOrder(self):
+	def InterateLevelOrder(self) -> Generator['Node', None, None]:
 		queue = deque([self])
 		while queue:
 			currentNode = queue.pop()
@@ -342,17 +418,39 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			for node in currentNode._children:
 				queue.appendleft(node)
 
-	def IteratePreOrder(self):
+	def IteratePreOrder(self) -> Generator['Node', None, None]:
 		"""A generator to iterate all siblings of the current node in pre-order. In contrast to `GetSiblings`, this includes
 		also the node itself as the first returned node.
+
+		.. seealso::
+
+		   :py:meth:`GetChildren` |br|
+		      |rarr| Iterate all children, but no grand-children.
+		   :py:meth:`GetSiblings` |br|
+		      |rarr| Iterate all siblings.
+		   :py:meth:`IteratePostOrder` |br|
+		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
+
+		:returns: A generator to iterate all siblings in pre-order.
 		"""
 		yield self
 		for child in self._children:
 			yield from child.IteratePreOrder()
 
-	def IteratePostOrder(self):
+	def IteratePostOrder(self) -> Generator['Node', None, None]:
 		"""A generator to iterate all siblings of the current node in post-order. In contrast to `GetSiblings`, this
 		includes also the node itself as the last returned node.
+
+		.. seealso::
+
+		   :py:meth:`GetChildren` |br|
+		      |rarr| Iterate all children, but no grand-children.
+		   :py:meth:`GetSiblings` |br|
+		      |rarr| Iterate all siblings.
+		   :py:meth:`IteratePreOrder` |br|
+		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
+
+		:returns: A generator to iterate all siblings in post-order.
 		"""
 		for child in self._children:
 			yield from child.IteratePostOrder()
@@ -383,7 +481,13 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 			yield otherPath[i]
 
 	def GetNodeByID(self, id: IDT) -> 'Node':
-		"""Lookup a node by its unique ID."""
+		"""Lookup a node by its unique ID.
+
+		:param id:          ID of a node to lookup in the tree.
+		:returns:           Node for the given ID.
+		:raises ValueError: If parameter ``id`` is None.
+		:raises KeyError:   If parameter ``id`` is not found in the tree.
+		"""
 		if id is None:
 			raise ValueError(f"'None' is not supported as an ID value.")
 
@@ -392,7 +496,32 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def Find(self, filter: Callable) -> Generator['Node', None, None]:
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
+	def __repr__(self) -> str:
+		"""Returns a detailed string representation of the node.
+
+		:returns: The detailed string representation of the node.
+		"""
+		id = parent = value = ""
+		if self._id is not None:
+			id = f"; id='{self._id}'"
+		if (self._parent is not None) and (self._parent._id is not None):
+			parent = f"; parent='{self._parent._id}'"
+		if self._value is not None:
+			value = f"; value='{self._value}'"
+
+		return f"<node{id}{parent}{value}>"
+
 	def __str__(self) -> str:
+		"""Return a string representation of the node.
+
+		Order of resolution:
+
+		1. If :py:attr:`_value` is not None, return the string representation of :py:attr:`_value`.
+		2. If :py:attr:`_id` is not None, return the string representation of :py:attr:`_id`.
+		3. Else, return :py:meth:`__repr__`.
+
+		:returns: The resolved string representation of the node.
+		"""
 		if self._value is not None:
 			return str(self._value)
 		elif self._id is not None:
