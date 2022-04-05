@@ -65,7 +65,7 @@ class Tree(PerformanceTest):
 					trees.append(parentNode)
 
 				rootNode = Node(0)
-				rootNode.children(trees)
+				rootNode.children = trees
 
 			return func
 
