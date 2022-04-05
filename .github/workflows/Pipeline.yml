@@ -25,6 +25,7 @@ jobs:
         python-lxml:p
         python-ruamel-yaml:p
         python-ruamel.yaml.clib:p
+        python-numpy:p
 
   PerformaceTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
@@ -41,6 +42,7 @@ jobs:
         python-lxml:p
         python-ruamel-yaml:p
         python-ruamel.yaml.clib:p
+        python-numpy:p
 
   PlatformTests:
     name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
@@ -83,6 +85,7 @@ jobs:
             python-lxml:p
             python-ruamel-yaml:p
             python-ruamel.yaml.clib:p
+            python-numpy:p
 
       - name: 🐍 Setup Python ${{ matrix.python }}
         if: matrix.system != 'msys2'
