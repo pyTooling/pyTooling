@@ -89,7 +89,7 @@ assigned a parent relationship.
 
 .. code:: python
 
-   # Create node with unique ID
+   # Create a tree with a single node
    root = Node(id=0)
 
    # Create a second minimalistic tree
@@ -102,12 +102,42 @@ assigned a parent relationship.
 Root Reference
 ==============
 
-.. todo:: TREE: setting / getting a node's root
+Each node has a reference to the tree's root node. The root node can also be considered the representative node of a
+tree and can be accessed via read-only property :py:attr:`~pyTooling.Tree.Node.Root`.
+
+When a node is assigned a new parent relation and this parent a node in another tree, the root reference will change.
+
+The root node of a tree contains tree-wide data structures like the list of unique IDs
+(:py:attr:`~pyTooling.Tree.Node._nodesWithID`, :py:attr:`~pyTooling.Tree.Node._nodesWithoutID`). By utilizing the root
+reference, each node can access these data structures by just one additional hop.
+
+.. code:: python
+
+   # Create a simple tree
+   root = Node()
+   nodeA = Node(parent=root)
+   nodeB = Node(parent=root)
+
+   # Check if nodeA and nodeB are in same tree
+   inSameTree = nodeA is nodeB
+
 
 Path
 ====
 
-.. todo:: TREE: path
+The property :py:attr:`~pyTooling.Tree.Node.Path` returns a tuple describing the path top-down from root node to the
+current node.
+
+.. code:: python
+
+   # Create a simple tree representing directories
+   root = Node(value="C:")
+   dir = Node(value="temp", parent=root)
+   file = Node(value="test.log", parent=dir)
+
+   # Get path as string
+   path = "\".join(file.Path)
+
 
 Ancestors
 =========
