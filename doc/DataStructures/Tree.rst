@@ -93,8 +93,8 @@ Planned Features
 
 .. _STRUCT:Tree:RejectedFeatures:
 
-Rejected Features
-=================
+Out of Scope
+============
 
 * Preserve or recover the tree data structure before an erroneous operation caused an exception and aborted a tree
   modification, which might leave the tree in a corrupted state.
@@ -102,13 +102,6 @@ Rejected Features
 * Import a tree data structure from various file formats like JSON, YAML, TOML, ...
 * Tree visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, ...
 
-
-.. _STRUCT:Tree:Examples:
-
-Examples
-********
-
-.. todo:: TREE: Add examples
 
 .. _STRUCT:Tree:ByFeature:
 

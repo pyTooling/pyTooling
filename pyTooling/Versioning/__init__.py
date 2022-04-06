@@ -88,7 +88,7 @@ class SemVersion(metaclass=Overloading):
 			self.build = int(split[3])
 		self.flags = self.Flags.Clean
 
-	def __init__(self, major : int, minor : int, patch : int = 0, build : int = 0):  # type: ignore[no-redef]
+	def __init__(self, major: int, minor: int, patch: int = 0, build: int = 0):  # type: ignore[no-redef]
 		self.major = major
 		self.minor = minor
 		self.patch = patch
@@ -149,13 +149,13 @@ class SemVersion(metaclass=Overloading):
 	def __ge__(self, other: Any) -> bool:
 		return not self.__lt__(other)
 
-	def __str__(self) -> str:
-		"""Return a string representation of this version number with prefix ``v``."""
-		return f"v{self.major}.{self.minor}.{self.patch}"
-
 	def __repr__(self) -> str:
 		"""Return a string representation of this version number without prefix ``v``."""
 		return f"{self.major}.{self.minor}.{self.patch}"
+
+	def __str__(self) -> str:
+		"""Return a string representation of this version number with prefix ``v``."""
+		return f"v{self.major}.{self.minor}.{self.patch}"
 
 
 @export
