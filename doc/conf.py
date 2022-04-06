@@ -106,6 +106,8 @@ htmlhelp_basename = 'pyToolingDoc'
 html_last_updated_fmt = "%d.%m.%Y"
 
 
+pygments_style = "manni"
+
 # ==============================================================================
 # Options for LaTeX / PDF output
 # ==============================================================================
