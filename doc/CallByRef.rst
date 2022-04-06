@@ -3,9 +3,9 @@
 CallByRef
 #########
 
-The ``pyTooling.CallByRef`` package contains auxilary classes to implement call by reference emulation for function
-parameter handover. The callee gets enabled to return out-parameters for simple types like ``bool`` and ``int`` to the
-caller.
+The :py:mod:`pyTooling.CallByRef` package contains auxiliary classes to implement call by reference emulation for
+function parameter handover. The callee gets enabled to return out-parameters for simple types like :py:class:`bool` and
+:py:class:`int` to the caller.
 
 .. admonition:: Python Background
 
@@ -13,8 +13,8 @@ caller.
    parameter passing. Python's standard types are passed by-value to a function or method.
    Instances of a class are passed by-reference (pointer) to a function or method.
 
-By implementing a wrapper-class :class:`CallByRefParam`, any type's value can be passed
-by-reference. In addition, standard types like :class:`int` or :class:`bool` can be handled
+By implementing a wrapper-class :py:class:`~pyTooling.CallByRef.CallByRefParam`, any type's value can be passed
+by-reference. In addition, standard types like :py:class:`int` or :py:class:`bool` can be handled
 by derived wrapper-classes.
 
 .. rubric:: Inheritance diagram:
@@ -44,7 +44,7 @@ by derived wrapper-classes.
 CallByRefParam
 **************
 
-``CallByRefParam`` implements a wrapper class for an arbitrary *call-by-reference*
+:py:class:`~pyTooling.CallByRef.CallByRefParam` implements a wrapper class for an arbitrary *call-by-reference*
 parameter that can be passed to a function or method.
 
 The parameter can be initialized via the constructor. If no init-value was given,

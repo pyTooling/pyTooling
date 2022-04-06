@@ -14,18 +14,18 @@ Semantic Versioning
 
 The :py:class:`~pyTooling.Versioning.SemVersion` class represents of a version number like ``v3.7.12``.
 
-.. rubric:: Example
+.. admonition:: Example
 
-.. code:: python
+   .. code:: python
 
-   # Construct from string
-   version1 = SemVersion("0.22.8")
+      # Construct from string
+      version1 = SemVersion("0.22.8")
 
-   # Construct from numbers
-   version2 = SemVersion(1, 3, 0)
+      # Construct from numbers
+      version2 = SemVersion(1, 3, 0)
 
-   # Compare versions
-   isNewer = version2 > version1
+      # Compare versions
+      isNewer = version2 > version1
 
 
 .. hint::
@@ -38,7 +38,7 @@ The :py:class:`~pyTooling.Versioning.SemVersion` class represents of a version n
    * Additional labels for pre-release and build metadata are available as extensions to the ``MAJOR.MINOR.PATCH``
      format.
 
-   Summary taken from `semver.org <https://semver.org/>`__:
+   Summary taken from `semver.org <https://semver.org/>`__.
 
 
 
@@ -68,9 +68,9 @@ Calendar Versioning
 
 The :py:class:`~pyTooling.Versioning.CalVersion` class represents of a version number like ``2021.10``.
 
-.. rubric:: Example
+.. admonition:: Example
 
-.. code:: python
+   .. code:: python
 
-   # Construct from string
-   version1 = CalVersion("2018.3")
+      # Construct from string
+      version1 = CalVersion("2018.3")
