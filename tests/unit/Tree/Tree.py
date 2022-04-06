@@ -243,7 +243,7 @@ class Tree(TestCase):
 
 		self.assertListEqual([1, 2, 4, 8, 5, 9, 10, 3, 6, 7, 11], [node.ID for node in root.IteratePreOrder()])
 		self.assertListEqual([8, 4, 9, 10, 5, 2, 6, 11, 7, 3, 1], [node.ID for node in root.IteratePostOrder()])
-		self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [node.ID for node in root.InterateLevelOrder()])
+		self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [node.ID for node in root.IterateLevelOrder()])
 
 	def test_AddTree(self):
 		root = Node(1)
