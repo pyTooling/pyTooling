@@ -206,6 +206,7 @@ autodoc_typehints = "both"
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
+	"gh":      ("https://GitHub.com/%s", "gh:"),
 	"ghissue": ("https://GitHub.com/pyTooling/pyTooling/issues/%s", "issue #"),
 	"ghpull":  ("https://GitHub.com/pyTooling/pyTooling/pull/%s", "pull request #"),
 	"ghsrc":   ("https://GitHub.com/pyTooling/pyTooling/blob/main/%s", ""),
@@ -218,14 +219,12 @@ extlinks = {
 graphviz_output_format = "svg"
 
 
-
 # ==============================================================================
 # Sphinx.Ext.ToDo
 # ==============================================================================
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 todo_link_only = True
-
 
 
 # ==============================================================================
