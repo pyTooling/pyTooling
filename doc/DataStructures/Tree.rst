@@ -1,8 +1,62 @@
+.. _STRUCT:Tree:
+
 Tree
 ####
 
-:py:class:`~pyTooling.Tree.Node` implements a fast and simple tree data structure, which outperforms `anytree` and
-`itertree`.
+:py:class:`~pyTooling.Tree.Node` implements a fast and simple tree data structure, which outperforms
+:gh:`anytree <c0fec0de/anytree>` and :gh:`itertree <BR1py/itertree>`.
+
+The following example code demonstrates a few features in a compact form:
+
+.. code:: python
+
+   # Create a new tree by creating a root node (no parent reference)
+   root = Node(value="OSVVM Regression Tests")
+
+   # Construct the tree top-down
+   lib = Node(value="Utility Library", parent=root)
+
+   # Another standalone node with unique ID (actually an independent tree)
+   common = Node(id=5, value="Common")
+
+   # Construct bottom-up
+   axi = Node(value="AXI")
+   axiCommon = Node(value="AXI4 Common")
+   axi.AddChild(axiCommon)
+
+   # Group nodes and handover children at node creation time
+   vcList = [common, axi]
+   vcs = Node(value="Verification Components", parent=root, children=vcList)
+
+   # Add multiple nodes at once
+   axiProtocols = (
+     Node(value="AXI4-Stream")
+     Node(value="AXI4-Lite")
+     Node(value="AXI4")
+   )
+   axi.AddChildren(axiProtocols)
+
+   # Create another standalone node and attache it later to a tree.
+   uart = Node(value="UART")
+   uart.Parent = vcs
+
+The presented code will generate this tree:
+
+.. code::
+
+   OSVVM Regression Tests
+   ├── Utility Library
+   ├── Verification Components
+       ├── Common
+       ├── AXI
+       │   ├── AXI4 Common
+       │   ├── AXI4-Stream
+       │   ├── AXI4-Lite
+       │   ├── AXI4
+       ├── UART
+
+
+.. _STRUCT:Tree:Features:
 
 Features
 ********
@@ -15,22 +69,60 @@ Features
 * A node has a reference to its parent node.
 * Each node has a reference to the root node in a tree (representative node).
 
+.. _STRUCT:Tree:MissingFeatures:
+
+Missing Features
+================
+
+* Insert a node (currently, only add/append is supported).
+* Move a node in same hierarchy level.
+* Move node to a different level/node in the same tree in a single operation.
+* Allow node deletion.
+
+
+.. _STRUCT:Tree:PlannedFeatures:
+
+Planned Features
+================
+
+* Rendering to simple ASCII art for debugging purposes.
+* Allow filters (predicates) in generators to allow node filtering.
+* Allow nodes to have tags and group nodes by tags.
+* Allow nodes to link to other nodes (implement proxy behavior?)
+
+
+.. _STRUCT:Tree:RejectedFeatures:
+
+Rejected Features
+=================
+
+* Preserve or recover the tree data structure before an erroneous operation caused an exception and aborted a tree
+  modification, which might leave the tree in a corrupted state.
+* Export the tree data structure to various file formats like JSON, YAML, TOML, ...
+* Import a tree data structure from various file formats like JSON, YAML, TOML, ...
+* Tree visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, ...
+
+
+.. _STRUCT:Tree:Examples:
 
 Examples
 ********
 
 .. todo:: TREE: Add examples
 
+.. _STRUCT:Tree:ByFeature:
 
 By Feature
 **********
 
+.. _STRUCT:Tree:ID:
+
 Unique ID
 =========
 
-A node can be created with a unique ID when the object is created. Afterwards, the :py:attr:`ID` is a readonly property.
-Any hashable object can be used as an ID. The ID must be unique per tree. If trees are merged or nodes are added to an
-existing tree, the newly added node's ID(s) are checked and might cause an exception.
+A node can be created with a unique ID when the object is created. Afterwards, the :py:attr:`~pyTooling.Tree.Node.ID` is
+a readonly property. Any hashable object can be used as an ID. The ID must be unique per tree. If trees are merged or
+nodes are added to an existing tree, the newly added node's ID(s) are checked and might cause an exception.
 
 .. code:: python
 
@@ -41,13 +133,15 @@ existing tree, the newly added node's ID(s) are checked and might cause an excep
    id = node.ID
 
 
+.. _STRUCT:Tree:Value:
+
 Value
 =====
 
-A node's value can be given at node creating time or it can be set ant any later time via property :py:attr:`Value`. Any
-data type is accepted. The internally stored value can be retrieved via the same property. If a node's string
-representation is requested via :py:meth:`__str__` and a node's value isn't None, then the value's string representation
-is returned.
+A node's value can be given at node creating time or it can be set ant any later time via property
+:py:attr:`~pyTooling.Tree.Node.Value`. Any data type is accepted. The internally stored value can be retrieved via the
+same property. If a node's string representation is requested via :py:meth:`~pyTooling.Tree.Node.__str__` and a node's
+value isn't None, then the value's string representation is returned.
 
 .. code:: python
 
@@ -61,17 +155,21 @@ is returned.
    value = node.Value
 
 
+.. _STRUCT:Tree:KeyValuePairs:
+
 Key-Value-Pairs
 ===============
 
 .. todo:: TREE: setting / getting a node's KVPs
+
+.. _STRUCT:Tree:Parent:
 
 Parent Reference
 ================
 
 Each node has a reference to its parent node. In case, the node is the root node, the parent reference is None. The
 parent-child relation can be set at node creation time, or a parent can be assigned to a node at any later time via
-property :py:attr:`Parent`. The same property can be used to retrieve the current parent reference.
+property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used to retrieve the current parent reference.
 
 .. code:: python
 
@@ -99,6 +197,8 @@ assigned a parent relationship.
    otherTree.Parent = root
 
 
+.. _STRUCT:Tree:Root:
+
 Root Reference
 ==============
 
@@ -119,8 +219,10 @@ reference, each node can access these data structures by just one additional hop
    nodeB = Node(parent=root)
 
    # Check if nodeA and nodeB are in same tree
-   inSameTree = nodeA is nodeB
+   isSameTree = nodeA is nodeB
 
+
+.. _STRUCT:Tree:Path:
 
 Path
 ====
@@ -138,31 +240,70 @@ current node.
    # Get path as string
    path = "\".join(file.Path)
 
+While the tuple returned by :py:attr:`~pyTooling.Tree.Node.Path` can be used in an iteration (e.g. a for-loop), also a
+generator is provided by method :py:meth:`~pyTooling.Tree.Node.GetPath` for iterations.
+
+.. code:: python
+
+   # Create a simple tree representing directories
+   root = Node(value="C:")
+   dir = Node(value="temp", parent=root)
+   file = Node(value="test.log", parent=dir)
+
+   # Print tree structure with indentations
+   for level, node in enumerate(file.GetPath()):
+     print(f"{'| '*level}{'o-'*level*1}{node}")
+
+   # o-C:
+   # | o-temp
+   # | | o-test.log
+
+
+.. _STRUCT:Tree:Ancestors:
 
 Ancestors
 =========
 
-.. todo:: TREE: ancestors
+The method :py:meth:`~pyTooling.Tree.Node.GetAncestors` returns a generator to traverse bottom-up from current node to
+the root node. If the top-down direction is needed, see :ref:`STRUCT:Tree:Path` for more details.
+
+.. todo:: TREE: ancestors example
+
+If needed, method :py:meth:`~pyTooling.Tree.Node.GetCommonAncestors` provides a generator to iterate the common
+ancestors of two nodes in a tree.
+
+.. todo:: TREE: common ancestors example
+
+
+.. _STRUCT:Tree:Children:
 
 Children
 ========
 
 .. todo:: TREE: children
 
+.. _STRUCT:Tree:Siblings:
+
 Siblings
 ========
 
 .. todo:: TREE: siblings
+
+.. _STRUCT:Tree:Iterating:
 
 Iterating a Tree
 ================
 
 .. todo:: TREE: iterating a tree
 
+.. _STRUCT:Tree:Merging:
+
 Merging Trees
 =============
 
 .. todo:: TREE: merging a tree
+
+.. _STRUCT:Tree:Splitting:
 
 Splitting Trees
 ===============
