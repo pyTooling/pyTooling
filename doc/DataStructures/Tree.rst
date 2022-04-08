@@ -1,4 +1,4 @@
-.. _STRUCT:Tree:
+.. _STRUCT/Tree/
 
 Tree
 ####
@@ -56,7 +56,7 @@ The presented code will generate this tree:
        ├── UART
 
 
-.. _STRUCT:Tree:Features:
+.. _STRUCT/Tree/Features:
 
 Features
 ********
@@ -69,7 +69,7 @@ Features
 * A node has a reference to its parent node.
 * Each node has a reference to the root node in a tree (representative node).
 
-.. _STRUCT:Tree:MissingFeatures:
+.. _STRUCT/Tree/MissingFeatures:
 
 Missing Features
 ================
@@ -80,7 +80,7 @@ Missing Features
 * Allow node deletion.
 
 
-.. _STRUCT:Tree:PlannedFeatures:
+.. _STRUCT/Tree/PlannedFeatures:
 
 Planned Features
 ================
@@ -91,7 +91,7 @@ Planned Features
 * Allow nodes to link to other nodes (implement proxy behavior?)
 
 
-.. _STRUCT:Tree:RejectedFeatures:
+.. _STRUCT/Tree/RejectedFeatures:
 
 Out of Scope
 ============
@@ -103,12 +103,19 @@ Out of Scope
 * Tree visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, ...
 
 
-.. _STRUCT:Tree:ByFeature:
+.. _STRUCT/Tree/ByFeature:
 
 By Feature
 **********
 
-.. _STRUCT:Tree:ID:
+.. danger::
+
+   Accessing internal fields of a node is strongly not recommended for users, as it might lead to a corrupted tree data
+   structure. If a power-user wants to access these fields, feel free to use them for achieving a higher performance,
+   but you got warned 😉.
+
+
+.. _STRUCT/Tree/ID:
 
 Unique ID
 =========
@@ -126,7 +133,7 @@ nodes are added to an existing tree, the newly added node's ID(s) are checked an
    id = node.ID
 
 
-.. _STRUCT:Tree:Value:
+.. _STRUCT/Tree/Value:
 
 Value
 =====
@@ -144,18 +151,18 @@ value isn't None, then the value's string representation is returned.
    # Set or change a node's value
    node.Value = 10
 
-   # Read a node's Value
+   # Access a node's Value
    value = node.Value
 
 
-.. _STRUCT:Tree:KeyValuePairs:
+.. _STRUCT/Tree/KeyValuePairs:
 
 Key-Value-Pairs
 ===============
 
 .. todo:: TREE: setting / getting a node's KVPs
 
-.. _STRUCT:Tree:Parent:
+.. _STRUCT/Tree/Parent:
 
 Parent Reference
 ================
@@ -172,7 +179,7 @@ property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used t
    # Create a node add directly attach it to an existing tree
    node = Node(id=1, parent=root)
 
-   # Read a node's rarent
+   # Access a node's parent
    parent = node.Parent
 
 In case, two trees were created (a single node is already a minimal tree), trees get merged if one tree's root node is
@@ -190,7 +197,7 @@ assigned a parent relationship.
    otherTree.Parent = root
 
 
-.. _STRUCT:Tree:Root:
+.. _STRUCT/Tree/Root:
 
 Root Reference
 ==============
@@ -215,7 +222,7 @@ reference, each node can access these data structures by just one additional hop
    isSameTree = nodeA is nodeB
 
 
-.. _STRUCT:Tree:Path:
+.. _STRUCT/Tree/Path:
 
 Path
 ====
@@ -230,7 +237,7 @@ current node.
    dir = Node(value="temp", parent=root)
    file = Node(value="test.log", parent=dir)
 
-   # Get path as string
+   # Convert a path to string
    path = "\".join(file.Path)
 
 While the tuple returned by :py:attr:`~pyTooling.Tree.Node.Path` can be used in an iteration (e.g. a for-loop), also a
@@ -243,22 +250,22 @@ generator is provided by method :py:meth:`~pyTooling.Tree.Node.GetPath` for iter
    dir = Node(value="temp", parent=root)
    file = Node(value="test.log", parent=dir)
 
-   # Print tree structure with indentations
+   # Render path from root to node with indentations to ASCII art
    for level, node in enumerate(file.GetPath()):
-     print(f"{'| '*level}{'o-'*level*1}{node}")
+     print(f"{'  '*level}{'\-'*level*1}{node}")
 
-   # o-C:
-   # | o-temp
-   # | | o-test.log
+   # \-C:
+   #   \-temp
+   #     \-test.log
 
 
-.. _STRUCT:Tree:Ancestors:
+.. _STRUCT/Tree/Ancestors:
 
 Ancestors
 =========
 
 The method :py:meth:`~pyTooling.Tree.Node.GetAncestors` returns a generator to traverse bottom-up from current node to
-the root node. If the top-down direction is needed, see :ref:`STRUCT:Tree:Path` for more details.
+the root node. If the top-down direction is needed, see :ref:`STRUCT/Tree/Path` for more details.
 
 .. todo:: TREE: ancestors example
 
@@ -268,35 +275,35 @@ ancestors of two nodes in a tree.
 .. todo:: TREE: common ancestors example
 
 
-.. _STRUCT:Tree:Children:
+.. _STRUCT/Tree/Children:
 
 Children
 ========
 
 .. todo:: TREE: children
 
-.. _STRUCT:Tree:Siblings:
+.. _STRUCT/Tree/Siblings:
 
 Siblings
 ========
 
 .. todo:: TREE: siblings
 
-.. _STRUCT:Tree:Iterating:
+.. _STRUCT/Tree/Iterating:
 
 Iterating a Tree
 ================
 
 .. todo:: TREE: iterating a tree
 
-.. _STRUCT:Tree:Merging:
+.. _STRUCT/Tree/Merging:
 
 Merging Trees
 =============
 
 .. todo:: TREE: merging a tree
 
-.. _STRUCT:Tree:Splitting:
+.. _STRUCT/Tree/Splitting:
 
 Splitting Trees
 ===============

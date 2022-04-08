@@ -1,4 +1,4 @@
-.. _Common:CallByRef:
+.. _Common/CallByRef:
 
 CallByRef
 #########

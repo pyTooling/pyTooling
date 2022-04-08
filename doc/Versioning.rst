@@ -7,7 +7,7 @@ The :py:mod:`pyTooling.Versioning` package provides auxiliary classes to impleme
 `semantic <https://semver.org/>`__ and `calendar <https://calver.org/>`__ versioning.
 
 
-.. _VER:SemVer:
+.. _VER/SemVer:
 
 Semantic Versioning
 *******************
@@ -61,7 +61,7 @@ Missing Features
 
 
 
-.. _VER:CalVer:
+.. _VER/CalVer:
 
 Calendar Versioning
 *******************
