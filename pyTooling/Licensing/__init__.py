@@ -36,6 +36,7 @@ List of SPDX identifiers:
 * https://spdx.org/licenses/
 * https://github.com/spdx/license-list-XML
 """
+from dataclasses  import dataclass
 from typing       import Any, Dict, NamedTuple
 
 from ..Decorators import export
@@ -54,8 +55,9 @@ __all__ = [
 
 
 @export
-class PythonLicenseNames(NamedTuple):
-	"""A *named tuple* to represent the license's short name and the package classifier for a license.
+@dataclass
+class PythonLicenseNames:
+	"""A *data class* to represent the license's short name and the package classifier for a license.
 
 	.. seealso::
 
@@ -70,6 +72,7 @@ class PythonLicenseNames(NamedTuple):
 		:returns: Short name of the license.
 		"""
 		return self.ShortName
+
 
 #: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
