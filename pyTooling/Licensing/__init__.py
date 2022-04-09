@@ -41,15 +41,37 @@ from typing       import Any, Dict, NamedTuple
 from ..Decorators import export
 
 
+__all__ = [
+	"PYTHON_LICENSE_NAMES",
+
+	"Apache_2_0_License",
+	"BSD_3_Clause_License",
+	"GPL_2_0_or_later",
+	"MIT_License",
+
+	"SPDX_INDEX"
+]
+
+
 @export
 class PythonLicenseNames(NamedTuple):
-	ShortName:  str
-	Classifier: str
+	"""A *named tuple* to represent the license's short name and the package classifier for a license.
 
-	def __repr__(self) -> str:
+	.. seealso::
+
+	   List of `Python classifiers <https://pypi.org/classifiers/>`__
+	"""
+	ShortName: str    #: License's short name
+	Classifier: str   #: Package classifier for a license.
+
+	def __str__(self) -> str:
+		"""The string representation of this name tuple returns the short name of the license.
+
+		:returns: Short name of the license.
+		"""
 		return self.ShortName
 
-
+#: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 	"Apache-2.0":       PythonLicenseNames("Apache 2.0",       "Apache Software License"),
 	"BSD-3-Clause":     PythonLicenseNames("BSD",              "BSD License"),
@@ -62,8 +84,8 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 class License:
 	"""Representation of a license."""
 
-	_name: str
 	_spdxIdentifier: str
+	_name: str
 	_osiApproved: bool
 	_fsfApproved: bool
 
@@ -163,6 +185,7 @@ GPL_2_0_or_later =     License("GPL-2.0-or-later", "GNU General Public License v
 MIT_License =          License("MIT", "MIT License", True, True)
 
 
+#: Mapping of predefined licenses
 SPDX_INDEX: Dict[str, License] = {
 	"Apache-2.0":       Apache_2_0_License,
 	"BSD-3-Clause":     BSD_3_Clause_License,
