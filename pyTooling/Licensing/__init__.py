@@ -87,10 +87,10 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 class License:
 	"""Representation of a license."""
 
-	_spdxIdentifier: str
-	_name: str
-	_osiApproved: bool
-	_fsfApproved: bool
+	_spdxIdentifier: str  #: Unique SPDX identifier.
+	_name: str            #: Name of the license.
+	_osiApproved: bool    #: OSI approval status
+	_fsfApproved: bool    #: FSF approval status
 
 	def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False):
 		self._spdxIdentifier = spdxIdentifier
