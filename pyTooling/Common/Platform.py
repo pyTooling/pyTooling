@@ -39,7 +39,9 @@ from pyTooling.MetaClasses import Singleton
 class Platform(metaclass=Singleton):
 	"""An instance of this class contains all gathered information available from various sources.
 
-	.. seealso:: https://stackoverflow.com/a/54837707/3719459
+	.. seealso::
+
+	   StackOverflow question: `Python: What OS am I running on? <https://stackoverflow.com/a/54837707/3719459>`__
 	"""
 
 	class Platforms(Flag):
