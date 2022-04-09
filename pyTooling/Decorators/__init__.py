@@ -42,39 +42,38 @@ M = TypeVar("M", bound=MethodType)                 #: Type variable for methods.
 
 
 def export(entity: T) -> T:
-	"""
-	Register the given function or class as publicly accessible in a module.
+	"""Register the given function or class as publicly accessible in a module.
 
-	Creates or updates the ``__all__`` attribute in the module in which the
-	decorated entity is defined to include the name of the decorated entity.
+	Creates or updates the ``__all__`` attribute in the module in which the decorated entity is defined to include the
+	name of the decorated entity.
 
-	**Example:**
+	.. admonition:: ``to_export.py``
 
-	``to_export.py``:
+	    .. code:: python
 
-	.. code:: python
+	      from pyTooling.Decorators import export
 
-	   from pyTooling.Decorators import export
+	      @export
+	      def exported():
+	        pass
 
-	   @export
-	   def exported():
-	     pass
+	      def not_exported():
+	        pass
 
-	   def not_exported():
-	     pass
+	.. admonition:: ``another_file.py``
 
+	   .. code:: python
 
-	``another_file.py``
+	      from .to_export import *
 
-	.. code:: python
+	      assert "exported" in globals()
+	      assert "not_exported" not in globals()
 
-	   from .to_export import *
-
-	   assert "exported" in globals()
-	   assert "not_exported" not in globals()
-
-
-	:param entity: the function or class to include in `__all__`
+	:param entity: The function or class to include in `__all__`.
+	:returns:      The unmodified function or class.
+	:raises TypeError: If parameter ``entity`` has no ``__module__`` member.
+	:raises TypeError: If parameter ``entity`` is not a top-level entity in a module.
+	:raises TypeError: If parameter ``entity`` has no ``__name__``.
 	"""
 	# * Based on an idea by Duncan Booth:
 	#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a
