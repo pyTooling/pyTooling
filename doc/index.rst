@@ -67,7 +67,7 @@ Fast data structures.
 * Trees:
 
   * :py:class:`pyTooling.Tree.Node` |br|
-    A fast tree data structure.
+    A fast and simple tree data structure.
 
 
 Decorators
@@ -75,6 +75,8 @@ Decorators
 
 * :py:class:`~pyTooling.Decorators.export` |br|
   Register the given function or class as publicly accessible in a module.
+* :py:class:`~pyTooling.Decorators.InheritDocString` |br|
+  Copy the doc-string from given base-class.
 
 
 Exceptions
