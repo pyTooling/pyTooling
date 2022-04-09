@@ -13,7 +13,7 @@ Therefore, these entities get registered in the module's variable ``__all__``.
 Besides making these entities accessible via ``from foo import *``, Sphinx extensions like autoapi are reading
 ``__all__`` to infer what entities from a module should be auto documented.
 
-.. admonition:: Example
+.. admonition:: ``module.py``
 
    .. code:: python
 
@@ -32,3 +32,11 @@ Besides making these entities accessible via ``from foo import *``, Sphinx exten
         """This is a public function."""
 
       # Each application of "@export" will append an entry to __all__
+
+.. admonition:: ``application.py``
+
+   .. code:: python
+
+      from .module import *
+
+      inst = MyClass()
