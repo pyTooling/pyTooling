@@ -170,11 +170,7 @@ License
    :caption: Common
    :hidden:
 
-   Common/index
-   CallByRef
-   Licensing
-   Common/Platform
-   Versioning
+   Common
 
 .. toctree::
    :caption: Configuration
@@ -189,6 +185,7 @@ License
 
    DataStructures/index
    DataStructures/Tree
+   DataStructures/Graph
 
 .. #
    DataStructures/Graph
