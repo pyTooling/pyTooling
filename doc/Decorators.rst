@@ -1,8 +1,51 @@
+.. _DECO:
+
+Overview
+########
+
+The :py:mod:`pyTooling.Decorators` package provides decorators to:
+
+* help with copying doc-strings from base-classes
+* control the visibility of classes and functions defined in a module
+
+
+.. _DECO/Documentation:
+
+Documentation
+#############
+
+
+.. _DECO/Documentation/InheritDocString:
+
+InheritDocString
+****************
+
+When a method in a derived class shall have the same doc-string as the doc-string of the base-class, then the decorator
+:py:func:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class' method to the
+method in the derived class.
+
+.. admonition:: Example
+
+   .. code:: python
+
+      class BaseClass:
+        def method(self):
+          """Method's doc-string."""
+
+
+      class DerivedClass(BaseClass):
+        @InheritDocString(BaseClass)
+        def method(self):
+          pass
+
+
+.. _DECO/Visibility:
+
 Visibility
 ##########
 
-The :py:mod:`pyTooling.Decorators` package provides decorators to control the visibility of classes and functions
-defined in a module.
+
+.. _DECO/Visibility/export:
 
 export
 ******

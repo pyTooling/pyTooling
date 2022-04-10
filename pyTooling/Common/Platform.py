@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common platform information gathered from various sources."""
+"""Common platform information gathered from various sources.
+
+.. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
+"""
 from enum import Flag, auto
 
 from pyTooling.Decorators import export

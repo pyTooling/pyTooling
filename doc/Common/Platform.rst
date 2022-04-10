@@ -1,3 +1,5 @@
+.. _COMMON/Platform:
+
 Platform
 ########
 

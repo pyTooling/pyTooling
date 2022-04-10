@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common types, helper functions and classes."""
+"""Common types, helper functions and classes.
+
+.. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
+"""
 __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"

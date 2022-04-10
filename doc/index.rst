@@ -49,14 +49,13 @@ Package Details
 Common Classes
 ==============
 
-* :py:mod:`~pyTooling.CallByRef` |br|
-  Emulation of *call-by-reference* parameters.
-* :py:mod:`~pyTooling.Licensing` |br|
-  Class representations of licenses and conversions to various structured license names.
-* :py:class:`~pyTooling.Common.Platform.Platform` |br|
-  A class representing the current platform/environment.
-* :py:mod:`~pyTooling.Versioning` |br|
-  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
+* Emulations of :ref:`Call-by-reference parameters <COMMON/CallByRef>` are provided by the :py:mod:`pyTooling.CallByRef` module.
+* Classes representing :ref:`unifyed license names <LICENSING>` and mappings are provided by the :py:mod:`pyTooling.Licensing` module.
+* The :ref:`current platform/environment <COMMON/Platform>` Python is running in, can be access unifying multiple platform APIs
+  provided by Python and summarizing the information in a single class instance.
+* :ref:`Representations of version numbers <VERSIONING>` |br|
+  |rarr| Class representations of semantic version (SemVer) and calendar version (CalVer) numbers are provided by the
+  :py:mod:`pyTooling.Versioning` module.
 
 
 Data Structures
@@ -64,19 +63,24 @@ Data Structures
 
 Fast data structures.
 
-* Trees:
+.. #* Trees:
 
-  * :py:class:`pyTooling.Tree.Node` |br|
-    A fast and simple tree data structure.
+* :ref:`Tree data structure <STRUCT/Tree>` |br|
+  |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
 
 
 Decorators
 ==========
 
-* :py:class:`~pyTooling.Decorators.export` |br|
-  Register the given function or class as publicly accessible in a module.
-* :py:class:`~pyTooling.Decorators.InheritDocString` |br|
-  Copy the doc-string from given base-class.
+* :ref:`Documentation <DECO/Documentation>`
+
+  * Copy the doc-string from given base-class via :py:class:`~pyTooling.Decorators.InheritDocString`.
+
+
+* :ref:`Visibility <DECO/Visibility>`
+
+  * Register the given function or class as publicly accessible in a module via :py:class:`~pyTooling.Decorators.export`.
+
 
 
 Exceptions
@@ -166,15 +170,24 @@ License
    :caption: Common
    :hidden:
 
+   Common/index
    CallByRef
    Licensing
-   Platform
+   Common/Platform
    Versioning
+
+.. toctree::
+   :caption: Configuration
+   :hidden:
+
+   Configuration/index
+   Configuration/YAML
 
 .. toctree::
    :caption: Data Structures
    :hidden:
 
+   DataStructures/index
    DataStructures/Tree
 
 .. #
@@ -184,29 +197,25 @@ License
    :caption: Decorators
    :hidden:
 
-   Decorators/Documentation
-   Decorators/Visibility
+   Decorators
 
 .. toctree::
    :caption: Exceptions
    :hidden:
 
-   Exceptions/BaseExceptions
-   Exceptions/PredefinedExceptions
+   Exceptions
 
 .. toctree::
    :caption: Meta Classes
    :hidden:
 
-   MetaClasses/Overloading
-   MetaClasses/Singleton
+   MetaClasses
 
 .. toctree::
    :caption: Packaging
    :hidden:
 
-   Packaging/HelperFunctions
-   Packaging/PackageDescriptions
+   Packaging
 
 .. raw:: latex
 

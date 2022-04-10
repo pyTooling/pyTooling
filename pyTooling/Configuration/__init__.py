@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Abstract configuration reader."""
+"""Abstract configuration reader.
+
+.. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
+"""
 from typing import Union, ClassVar, Iterator
 
 from pyTooling.Decorators import export

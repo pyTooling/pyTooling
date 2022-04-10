@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Configuration reader for YAML files."""
+"""Configuration reader for YAML files.
+
+.. hint:: See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
+"""
 from pathlib import Path
 from typing import Dict, List, Union, Iterator
 

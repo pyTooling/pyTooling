@@ -29,12 +29,18 @@
 # ==================================================================================================================== #
 #
 """
-The Licensing module implements translation tables for various license names and identifiers.
+The Licensing module implements mapping tables for various license names and identifiers.
 
-List of SPDX identifiers:
+.. seealso::
 
-* https://spdx.org/licenses/
-* https://github.com/spdx/license-list-XML
+   List of SPDX identifiers:
+
+   * https://spdx.org/licenses/
+   * https://github.com/spdx/license-list-XML
+
+   List of `Python classifiers <https://pypi.org/classifiers/>`__
+
+.. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
 from typing       import Any, Dict, NamedTuple
@@ -57,12 +63,7 @@ __all__ = [
 @export
 @dataclass
 class PythonLicenseNames:
-	"""A *data class* to represent the license's short name and the package classifier for a license.
-
-	.. seealso::
-
-	   List of `Python classifiers <https://pypi.org/classifiers/>`__
-	"""
+	"""A *data class* to represent the license's short name and the package classifier for a license."""
 	ShortName: str    #: License's short name
 	Classifier: str   #: Package classifier for a license.
 

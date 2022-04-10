@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""The MetaClasses package implements Python meta-classes (classes to construct other classes in Python)."""
+"""The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).
+
+.. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
+"""
 from inspect  import signature, Parameter
 from types    import MethodType
 from typing   import Any, Tuple, List, Dict, Callable, Type

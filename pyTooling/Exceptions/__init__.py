@@ -29,7 +29,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A common set of missing exceptions in Python."""
+"""A common set of missing exceptions in Python.
+
+.. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
+"""
 from ..Decorators import export
 
 

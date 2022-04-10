@@ -6,7 +6,7 @@
 ``{{ node.name }}``
 =={{ '=' * node.name|length }}==
 
-.. py:module:: {{ node.name }}
+.. automodule:: {{ node.name }}
 
 {##}
 {%- block modules -%}
@@ -57,6 +57,10 @@
 {% for item in node.classes %}
 .. autoclass:: {{ item }}
    :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
 
    .. rubric:: Inheritance
    .. inheritance-diagram:: {{ item }}

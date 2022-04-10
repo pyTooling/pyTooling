@@ -1,4 +1,4 @@
-.. _STRUCT/Tree/
+.. _STRUCT/Tree:
 
 Tree
 ####

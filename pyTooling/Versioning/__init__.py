@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Implementation of semantic and date versioning version-numbers."""
+"""Implementation of semantic and date versioning version-numbers.
+
+.. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
+"""
 from enum          import IntEnum
 from typing import Optional as Nullable, Any
 

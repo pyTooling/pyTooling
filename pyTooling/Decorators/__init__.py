@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Decorators controlling visibility of entities in a Python module."""
+"""Decorators controlling visibility of entities in a Python module.
+
+.. hint:: See :ref:`high-level help <DECO>` for explanations and usage examples.
+"""
 import sys
 from types     import FunctionType, MethodType
 from typing    import Union, Type, TypeVar, Callable

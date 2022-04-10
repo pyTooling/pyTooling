@@ -1,4 +1,4 @@
-.. _VER:
+.. _VERSIONING:
 
 Versioning
 ##########
@@ -7,7 +7,7 @@ The :py:mod:`pyTooling.Versioning` package provides auxiliary classes to impleme
 `semantic <https://semver.org/>`__ and `calendar <https://calver.org/>`__ versioning.
 
 
-.. _VER/SemVer:
+.. _VERSIONING/SemVer:
 
 Semantic Versioning
 *******************
@@ -41,6 +41,7 @@ The :py:class:`~pyTooling.Versioning.SemVersion` class represents of a version n
    Summary taken from `semver.org <https://semver.org/>`__.
 
 
+.. _VERSIONING/SemVer/Features:
 
 Features
 ========
@@ -49,6 +50,8 @@ Features
 * Comparison operators
 * Construct version number object from string or numbers.
 
+
+.. _VERSIONING/SemVer/MissingFeatures:
 
 Missing Features
 ----------------
@@ -59,9 +62,7 @@ Missing Features
 
 
 
-
-
-.. _VER/CalVer:
+.. _VERSIONING/CalVer:
 
 Calendar Versioning
 *******************
