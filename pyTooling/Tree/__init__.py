@@ -426,6 +426,13 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 	def GetRightSiblings(self):
 		raise NotImplementedError(f"Method 'GetRightSiblings' is not yet implemented.")
 
+	def IterateLeafs(self) -> Generator['Node', None, None]:
+		for child in self._children:
+			if child.IsLeaf:
+				yield child
+			else:
+				yield from child.IterateLeafs()
+
 	def IterateLevelOrder(self) -> Generator['Node', None, None]:
 		"""A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetSiblings`,
 		this includes also the node itself as the first returned node.
