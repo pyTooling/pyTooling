@@ -205,6 +205,7 @@ class Dictionary(Abstract_Dict, Node):
 		return iterator(self)
 
 
+@export
 class Sequence(Abstract_Seq, Node):
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq):
 		Node.__init__(self, root, parent, key, yamlNode)
@@ -232,8 +233,8 @@ class Sequence(Abstract_Seq, Node):
 		return iterator(self)
 
 
-setattr(Abstract_Node, "DICT_TYPE", Dictionary)
-setattr(Abstract_Node, "SEQ_TYPE", Sequence)
+setattr(Node, "DICT_TYPE", Dictionary)
+setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
