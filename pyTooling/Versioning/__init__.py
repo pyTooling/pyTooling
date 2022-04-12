@@ -99,9 +99,13 @@ class SemVersion(metaclass=Overloading):
 		self.flags = self.Flags.Clean
 
 	def __eq__(self, other: Any) -> bool:
-		"""Compare two Version instances (version numbers) for equality."""
+		"""Compare two Version instances (version numbers) for equality.
+
+		:returns: True, if both version numbers are equal.
+		raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+		"""
 		if not isinstance(other, SemVersion):
-			return NotImplemented
+			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		return (
 			(self.major == other.major) and
@@ -111,7 +115,14 @@ class SemVersion(metaclass=Overloading):
 		)
 
 	def __ne__(self, other: Any) -> bool:
-		"""Compare two Version instances (version numbers) for inequality."""
+		"""Compare two Version instances (version numbers) for inequality.
+
+		:returns: True, if both version numbers are not equal.
+		raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+		"""
+		if not isinstance(other, SemVersion):
+			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+
 		return not self.__eq__(other)
 
 	@staticmethod
@@ -139,25 +150,63 @@ class SemVersion(metaclass=Overloading):
 		return None
 
 	def __lt__(self, other: Any) -> bool:
+		"""Compare two Version instances (version numbers) if the version is less than the second operand.
+
+		:returns: True if version is less than the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		"""
+		if not isinstance(other, SemVersion):
+			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+
 		result = self.__compare(self, other)
 		return result if result is not None else False
 
 	def __le__(self, other: Any) -> bool:
+		"""Compare two Version instances (version numbers) if the version is less than or equal to the second operand.
+
+		:returns: True if version is less than or equal to the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		"""
+		if not isinstance(other, SemVersion):
+			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+
 		result = self.__compare(self, other)
 		return result if result is not None else True
 
 	def __gt__(self, other: Any) -> bool:
+		"""Compare two Version instances (version numbers) if the version is greater than the second operand.
+
+		:returns: True if version is greater than the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		"""
+		if not isinstance(other, SemVersion):
+			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+
 		return not self.__le__(other)
 
 	def __ge__(self, other: Any) -> bool:
+		"""Compare two Version instances (version numbers) if the version is greater than or equal to the second operand.
+
+		:returns: True if version is greater than or equal to the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		"""
+		if not isinstance(other, SemVersion):
+			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+
 		return not self.__lt__(other)
 
 	def __repr__(self) -> str:
-		"""Return a string representation of this version number without prefix ``v``."""
+		"""Return a string representation of this version number without prefix ``v``.
+
+		:returns: Raw version number representation without a prefix.
+		"""
 		return f"{self.major}.{self.minor}.{self.patch}"
 
 	def __str__(self) -> str:
-		"""Return a string representation of this version number with prefix ``v``."""
+		"""Return a string representation of this version number with prefix ``v``.
+
+		:returns: Version number representation including a prefix.
+		"""
 		return f"v{self.major}.{self.minor}.{self.patch}"
 
 
