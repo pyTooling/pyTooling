@@ -43,6 +43,8 @@ ValueT = Union[NodeT, str, int, float]
 
 @export
 class Node:
+	"""Abstract node in a configuration data structure."""
+
 	DICT_TYPE: ClassVar["Dictionary"]
 	SEQ_TYPE: ClassVar["Sequence"]
 	_parent: "Dictionary"
@@ -78,12 +80,16 @@ class Node:
 
 @export
 class Dictionary(Node):
+	"""Abstract dictionary node in a configuration."""
+
 	def __contains__(self, key: KeyT) -> bool:
 		raise NotImplementedError()
 
 
 @export
 class Sequence(Node):
+	"""Abstract sequence node in a configuration."""
+
 	def __getitem__(self, index: int) -> ValueT:
 		raise NotImplementedError()
 
@@ -97,5 +103,6 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 @export
 class Configuration(Node):
+	"""Abstract root node in a configuration."""
 	def __init__(self):
 		Node.__init__(self)

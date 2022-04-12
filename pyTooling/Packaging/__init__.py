@@ -129,13 +129,14 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 @export
 class VersionInformation:
 	"""Encapsulates version information extracted from a Python source file."""
-	_author:      str
-	_copyright:   str
-	_email:       str
-	_keywords:    List[str]
-	_license:     str
-	_description: str
-	_version:     str
+
+	_author: str          #: Author name(s).
+	_copyright: str       #: Copyright information.
+	_email: str           #: Author's email address.
+	_keywords: List[str]  #: Keywords.
+	_license: str         #: License name.
+	_description: str     #: Description of the package.
+	_version: str         #: Version number.
 
 	def __init__(self, author: str, email: str, copyright: str, license: str, version: str, description: str, keywords: List[str]):
 		self._author =      author
@@ -148,30 +149,37 @@ class VersionInformation:
 
 	@property
 	def Author(self) -> str:
+		"""Name(s) of the package author(s)."""
 		return self._author
 
 	@property
 	def Copyright(self) -> str:
+		"""Copyright information."""
 		return self._copyright
 
 	@property
 	def Description(self) -> str:
+		"""Package description text."""
 		return self._description
 
 	@property
 	def Email(self) -> str:
+		"""Email address of the author."""
 		return self._email
 
 	@property
 	def Keywords(self) -> List[str]:
+		"""List of keywords."""
 		return self._keywords
 
 	@property
 	def License(self) -> str:
+		"""License name."""
 		return self._license
 
 	@property
 	def Version(self) -> str:
+		"""Version number."""
 		return self._version
 
 
