@@ -72,8 +72,8 @@ def export(entity: T) -> T:
 	      assert "exported" in globals()
 	      assert "not_exported" not in globals()
 
-	:param entity: The function or class to include in `__all__`.
-	:returns:      The unmodified function or class.
+	:param entity:     The function or class to include in `__all__`.
+	:returns:          The unmodified function or class.
 	:raises TypeError: If parameter ``entity`` has no ``__module__`` member.
 	:raises TypeError: If parameter ``entity`` is not a top-level entity in a module.
 	:raises TypeError: If parameter ``entity`` has no ``__name__``.
@@ -121,13 +121,18 @@ except ImportError:
 
 @export
 def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
-	"""Copy the doc-string from given base-class.
+	"""Copy the doc-string from given base-class to the method this decorator is applied to.
 
 	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
-	:returns: Decorator function that copies the doc-string.
+	:returns:         Decorator function that copies the doc-string.
 	"""
-	def decorator(f: Func) -> Func:
-		f.__doc__ = getattr(baseClass, f.__name__).__doc__
-		return f
+	def decorator(m: Func) -> Func:
+		"""Decorator function, which copies the doc-string from base-class' method to method ``m``.
+
+		:param m: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
+		:returns: Same method, but with overwritten doc-string field (``__doc__``).
+		"""
+		m.__doc__ = getattr(baseClass, m.__name__).__doc__
+		return m
 
 	return decorator

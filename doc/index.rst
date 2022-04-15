@@ -97,10 +97,14 @@ Exceptions
 Meta-Classes
 ============
 
+* :py:class:`~pyTooling.MetaClasses.Overloading` |br|
+  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type
+  annotations).
 * :py:class:`~pyTooling.MetaClasses.Singleton` |br|
   Allow only a single instance of a class.
-* :py:class:`~pyTooling.MetaClasses.Overloading` |br|
-  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
+* :py:class:`~pyTooling.MetaClasses.SlottedType` |br|
+  All type-annotated fields in a class get converted into a slot for improving the memory footprint and performance of a
+  class instance.
 
 
 Packaging
@@ -125,10 +129,12 @@ A set of helper functions to describe a Python package for setuptools.
     tbd
 
 
+
 Contributors
 ************
 
-* `Patrick Lehmann <https://GitHub.com/pyTooling>`_ (Maintainer)
+* `Patrick Lehmann <https://GitHub.com/Paebbels>`__ (Maintainer)
+* `Sven Köhler <https://GitHub.com/skoehler>`__
 * `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
 
 

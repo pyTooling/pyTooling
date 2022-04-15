@@ -7,7 +7,13 @@ Currently, the following meta-classes are provided:
 
 * :ref:`META/Overloading`
 * :ref:`META/Singleton`
+* :ref:`META/SlottedType`
 
+
+.. seealso::
+
+   Understanding Python metaclasses
+     https://blog.ionelmc.ro/2015/02/09/understanding-python-metaclasses/
 
 
 .. _META/Overloading:
@@ -60,3 +66,25 @@ as a Python meta class.
 
         def WriteLine(self, message):
           print(message)
+
+
+
+.. _META/SlottedType:
+
+SlottedType
+###########
+
+
+
+.. admonition:: Example Usage
+
+   .. code-block:: python
+
+      class Node(metaclass=SlottedType):
+        _parent: "Node"
+
+        def __init__(self, parent: "Node" = None):
+          self._parent = parent
+
+      root = Node()
+      node = Node(root)

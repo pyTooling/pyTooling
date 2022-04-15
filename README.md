@@ -95,6 +95,7 @@ print(myInt.Value)
 ## Contributors
 
 * [Patrick Lehmann](https://GitHub.com/Paebbels) (Maintainer)
+* [Sven Köhler](https://GitHub.com/skoehler)
 * [and more...](https://GitHub.com/pyTooling/pyTooling/graphs/contributors)
 
 

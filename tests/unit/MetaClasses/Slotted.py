@@ -29,14 +29,15 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for class :metacls:`pyTooling.MetaClasses.SlottedType`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
+import sys
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import Overloading
+from pyTooling.MetaClasses import SlottedType
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -45,18 +46,51 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Application(metaclass=Overloading):
-	def __init__(self, x : int):
-		self.x = x
+class Slotted(TestCase):
+	def test_Data(self):
+		class Data:
+			_data: int
 
-	def __init__(self, x : str):
-		self.x = x
+		data = Data()
+
+		print()
+		print(f"size: {sys.getsizeof(data)}")
 
 
-class Overloading(TestCase):
-	def test_OverloadingByTypeSignature(self) -> None:
-		app1 = Application(1)
-		self.assertEqual(app1.x, 1)
+	def test_SlottedData(self):
+		class SlottedData(metaclass=SlottedType):
+			_data: int
 
-		app2 = Application("2")
-		self.assertEqual(app2.x, "2")
+			def __init__(self, data: int):
+				self._data = data
+
+			def raiseError(self):
+				self._x = 5
+
+		data = SlottedData(data=5)
+
+		self.assertListEqual(["_data"], list(data.__slots__))
+		self.assertEqual(5, data._data)
+		with self.assertRaises(AttributeError):
+			data.raiseError()
+		with self.assertRaises(AttributeError):
+			data._y = 2
+		with self.assertRaises(AttributeError):
+			_ = data._z
+
+		print()
+		print(f"size: {sys.getsizeof(data)}")
+
+	def test_NonSlottedBaseClass(self):
+		class Base:
+			_baseData: int
+
+		with self.assertRaises(TypeError):
+			class SlottedData(Base, metaclass=SlottedType):
+				_data: int
+
+				def __init__(self, data: int):
+					self._data = data
+
+				def raiseError(self):
+					self._x = 5

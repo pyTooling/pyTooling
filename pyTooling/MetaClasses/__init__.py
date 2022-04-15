@@ -8,6 +8,7 @@
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
+#   Sven Köhler                                                                                                        #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
@@ -46,7 +47,9 @@ class Singleton(type):
 	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
 
 	def __call__(cls, *args, **kwargs):
-		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an instances cache (see :attr:`_instanceCache`) if the class was already constructed before."""
+		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
+		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
+		"""
 		if cls not in cls._instanceCache:
 			cls._instanceCache[cls] = super(Singleton, cls).__call__(*args, **kwargs)
 		return cls._instanceCache[cls]
@@ -60,11 +63,14 @@ class Singleton(type):
 			raise KeyError(f"Type '{t!s}' is already registered.")
 
 
-# https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
-
 @export
 class Overloading(type):
-	"""Metaclass that allows multiple dispatch of methods based on method signatures."""
+	"""Metaclass that allows multiple dispatch of methods based on method signatures.
+
+	.. seealso:
+
+	   `Python Cookbook - Multiple dispatch with function annotations <https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2>`__
+	"""
 
 	class DispatchDictionary(dict):
 		"""Special dictionary to build dispatchable methods in a metaclass."""
@@ -133,3 +139,24 @@ class Overloading(type):
 	@classmethod
 	def __prepare__(cls, classname, bases):
 		return cls.DispatchDictionary()
+
+
+@export
+class SlottedType(type):
+	def __new__(metacls, className, baseClasses, members):
+		annotatedFields = {}
+		for baseClass in baseClasses:
+			for base in reversed(baseClass.mro()[:-1]):
+				if not hasattr(base, "__slots__"):
+					raise TypeError(f"Base-class '{base.__name__}' has no '__slots__'.")
+
+				for annotation in base.__slots__:
+					annotatedFields[annotation] = base
+
+		annotations = members.get("__annotations__", {})
+		for annotation in annotations:
+			if annotation in annotatedFields:
+				raise TypeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
+
+		members['__slots__'] = (*members.get('__slots__', []), *annotations)
+		return type.__new__(metacls, className, baseClasses, members)

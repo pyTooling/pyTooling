@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for package :cls:`pyTooling.MetaClasses.Singleton`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
