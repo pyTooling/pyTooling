@@ -98,13 +98,15 @@ Meta-Classes
 ============
 
 * :py:class:`~pyTooling.MetaClasses.Overloading` |br|
-  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type
-  annotations).
+  ``Overloading`` allows method overloading in Python classes. It dispatches method calls based on method signatures
+  (type annotations).
 * :py:class:`~pyTooling.MetaClasses.Singleton` |br|
-  Allow only a single instance of a class.
+  A class created from meta-class ``Singleton`` allows only a single instance to exist. If a further instance is tried
+  to be created, a cached instance will be returned.
 * :py:class:`~pyTooling.MetaClasses.SlottedType` |br|
-  All type-annotated fields in a class get converted into a slot for improving the memory footprint and performance of a
-  class instance.
+  All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
+  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
+  all derived classes.
 
 
 Packaging

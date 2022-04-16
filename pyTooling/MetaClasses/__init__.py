@@ -143,7 +143,14 @@ class Overloading(type):
 
 @export
 class SlottedType(type):
-	def __new__(metacls, className, baseClasses, members):
+	"""
+
+	.. seealso::
+
+		`Python data model - __slots__ <https://docs.python.org/3/reference/datamodel.html#slots>`__
+	"""
+
+	def __new__(metacls, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
 		annotatedFields = {}
 		for baseClass in baseClasses:
 			for base in reversed(baseClass.mro()[:-1]):

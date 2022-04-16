@@ -74,7 +74,9 @@ as a Python meta class.
 SlottedType
 ###########
 
-
+All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
+  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
+  all derived classes.
 
 .. admonition:: Example Usage
 
