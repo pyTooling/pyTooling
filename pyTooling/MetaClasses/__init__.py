@@ -160,7 +160,9 @@ class SlottedType(type):
 				for annotation in base.__slots__:
 					annotatedFields[annotation] = base
 
-		annotations = members.get("__annotations__", {})
+		# Typehint the annotations variable, as long as TypedDict isn't supported by all supported versions.
+		# (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
+		annotations: Dict[str, Any] = members.get("__annotations__", {})
 		for annotation in annotations:
 			if annotation in annotatedFields:
 				raise TypeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
