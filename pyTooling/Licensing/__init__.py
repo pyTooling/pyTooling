@@ -43,9 +43,21 @@ The Licensing module implements mapping tables for various license names and ide
 .. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
-from typing       import Any, Dict, NamedTuple
+from typing       import Any, Dict
 
-from ..Decorators import export
+
+try:
+	from ..Decorators import export
+	from ..MetaClasses import SlottedType
+except (ImportError, ModuleNotFoundError):
+	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators import export
+		from MetaClasses import SlottedType
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
+		raise ex
 
 
 __all__ = [
@@ -58,8 +70,6 @@ __all__ = [
 
 	"SPDX_INDEX"
 ]
-
-from ..MetaClasses import SlottedType
 
 
 @export

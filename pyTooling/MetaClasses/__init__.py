@@ -37,7 +37,17 @@ from inspect  import signature, Parameter
 from types    import MethodType
 from typing   import Any, Tuple, List, Dict, Callable, Type
 
-from ..Decorators import export
+
+try:
+	from ..Decorators import export
+except (ImportError, ModuleNotFoundError):
+	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators import export
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
+		raise ex
 
 
 @export

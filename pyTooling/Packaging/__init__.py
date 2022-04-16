@@ -47,15 +47,15 @@ try:
 	from ..Decorators import export
 	from ..MetaClasses import SlottedType
 	from ..Licensing  import License, Apache_2_0_License
-except ModuleNotFoundError:
+except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
 		from MetaClasses import SlottedType
 		from Licensing import License, Apache_2_0_License
-	except ModuleNotFoundError as ex:
-		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
 		raise ex
 
 
