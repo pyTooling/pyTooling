@@ -61,7 +61,12 @@ CurrentPlatform = Platform()     #: Gathered information for the current platfor
 
 @export
 def isnestedclass(cls: Type, scope: Type) -> bool:
-	"""Returns true, if the given class ``cls`` is a member on an outer class ``scope``."""
+	"""Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
+
+	:param cls:   Class to check, if it's a nested class.
+	:param scope: Outer class which is the outer scope of ``cls``.
+	:returns:     True, if ``cls`` is a nested class within ``scope``.
+	"""
 	for mroClass in scope.mro():
 		for memberName in mroClass.__dict__:
 			member = getattr(mroClass, memberName)

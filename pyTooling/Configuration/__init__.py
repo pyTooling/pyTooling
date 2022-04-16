@@ -34,7 +34,9 @@
 """
 from typing import Union, ClassVar, Iterator
 
-from pyTooling.Decorators import export
+from ..Decorators import export
+from ..MetaClasses import SlottedType
+
 
 KeyT = Union[str, int]
 NodeT = Union["Dictionary", "Sequence"]
@@ -42,7 +44,7 @@ ValueT = Union[NodeT, str, int, float]
 
 
 @export
-class Node:
+class Node(metaclass=SlottedType):
 	"""Abstract node in a configuration data structure."""
 
 	DICT_TYPE: ClassVar["Dictionary"]

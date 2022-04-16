@@ -35,13 +35,13 @@
 from typing import Any, Generic, TypeVar
 
 from ..Decorators import export
-
+from ..MetaClasses import SlottedType
 
 T = TypeVar("T")
 
 
 @export
-class CallByRefParam(Generic[T]):
+class CallByRefParam(Generic[T], metaclass=SlottedType):
 	"""
 	Implements a *call-by-reference* parameter.
 

@@ -42,14 +42,17 @@ from setuptools   import (
 )
 from typing       import List, Iterable, Dict, Sequence
 
+
 try:
-	from pyTooling.Decorators import export
-	from pyTooling.Licensing  import License, Apache_2_0_License
+	from ..Decorators import export
+	from ..MetaClasses import SlottedType
+	from ..Licensing  import License, Apache_2_0_License
 except ModuleNotFoundError:
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
+		from MetaClasses import SlottedType
 		from Licensing import License, Apache_2_0_License
 	except ModuleNotFoundError as ex:
 		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
@@ -127,7 +130,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation:
+class VersionInformation(metaclass=SlottedType):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).

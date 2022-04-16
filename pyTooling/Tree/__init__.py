@@ -34,6 +34,7 @@ from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional a
 	Union, Deque
 
 from ..Decorators import export
+from ..MetaClasses import SlottedType
 
 IDT = TypeVar("IDT", bound=Hashable)
 ValueT = TypeVar("ValueT")
@@ -42,7 +43,7 @@ DictValueT = TypeVar("DictValueT")
 
 
 @export
-class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
+class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SlottedType):
 	"""A **tree** data structure can be constructed of ``Node`` instances.
 
 	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
@@ -90,8 +91,6 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT]):
 
 	_value: Nullable[ValueT]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyT, DictValueT]          #: Dictionary to store key-value-pairs attached to the node.
-
-	__slots__ = ("_id", "_nodesWithID", "_nodesWithoutID", "_root", "_parent", "_children", "_value", "_dict")
 
 	def __init__(self, id: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
 		""".. todo:: Needs documentation!"""

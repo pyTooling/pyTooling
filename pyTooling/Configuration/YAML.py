@@ -35,7 +35,8 @@
 from pathlib import Path
 from typing import Dict, List, Union, Iterator as typing_Iterator
 
-from pyTooling.Decorators import export
+from ..Decorators import export
+from ..MetaClasses import SlottedType
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
@@ -193,11 +194,9 @@ class Dictionary(Abstract_Dict, Node):
 		return key in self._keys
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
-		class Iterator:
+		class Iterator(metaclass=SlottedType):
 			_iter: typing_Iterator
 			_obj: Dictionary
-
-			__slots__ = ("_iter", "_obj")
 
 			def __init__(self, obj: Dictionary):
 				self._iter = iter(obj._keys)
@@ -236,13 +235,11 @@ class Sequence(Abstract_Seq, Node):
 
 		:returns: Iterator to iterate items in a sequence.
 		"""
-		class Iterator:
+		class Iterator(metaclass=SlottedType):
 			"""Iterator to iterate sequence items."""
 
 			_i: int         #: internal iterator position
 			_obj: Sequence  #: Sequence object to iterate
-
-			__slots__ = ("_i", "_obj")
 
 			def __init__(self, obj: Sequence):
 				self._i = 0
