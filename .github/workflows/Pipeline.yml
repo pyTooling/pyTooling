@@ -44,6 +44,23 @@ jobs:
         python-ruamel.yaml.clib:p
         python-numpy:p
 
+  Benchmarking:
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
+    needs:
+      - Params
+    with:
+      jobs: ${{ needs.Params.outputs.python_jobs }}
+#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
+      unittest_directory: 'tests/benchmark'
+      pacboy: >-
+        python-pip:p
+        python-wheel:p
+        python-coverage:p
+        python-lxml:p
+        python-ruamel-yaml:p
+        python-ruamel.yaml.clib:p
+        python-numpy:p
+
   PlatformTests:
     name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
     runs-on: ${{ matrix.runs-on }}
@@ -146,6 +163,7 @@ jobs:
     needs:
       - UnitTesting
       - PerformaceTesting
+      - Benchmarking
 
   Package:
     uses: pyTooling/Actions/.github/workflows/Package.yml@r0
@@ -214,6 +232,7 @@ jobs:
       - Params
       - UnitTesting
       - PerformaceTesting
+      - Benchmarking
       - PlatformTests
       - Coverage
       - StaticTypeCheck
