@@ -6,6 +6,7 @@ Coverage>=6.3
 # Test Runner
 pytest>=7.0.1
 pytest-cov>=3.0.0
+pytest-benchmark>=3.4.1
 
 # Static Type Checking
 mypy>=0.931

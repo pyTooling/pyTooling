@@ -29,8 +29,6 @@
 # ==================================================================================================================== #
 #
 """Performance tests for Tree."""
-from typing import List
-
 from pyTooling.Tree import Node
 from . import PerformanceTest
 
