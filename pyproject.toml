@@ -18,13 +18,15 @@ python_functions = "test_*"
 branch = true
 omit = [
 	"*site-packages*",
-	"setup.py"
+	"setup.py",
+	"tests/*"
 ]
 
 [tool.coverage.report]
 skip_covered = true
 skip_empty = true
 exclude_lines = [
+	"pragma: no cover",
 	"raise NotImplementedError"
 ]
 
