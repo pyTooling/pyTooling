@@ -28,9 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for SlottedType."""
-from pyTooling.MetaClasses import SlottedType
-from . import PerformanceTest
+"""Performance tests for MetaClasses."""
+import timeit
+from statistics import mean
+from typing import Callable, Iterable
+from unittest import TestCase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -39,122 +41,22 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Node_1:
-	_data_0: int
+class PerformanceTest(TestCase):
+	counts: Iterable[int] = (100, 1000, 10000)
 
-	def __init__(self, data):
-		self._data_0 = data
+	def runTests(
+		self,
+		funcNormal: Callable[[int], Callable[[], None]],
+		funcSlotted: Callable[[int], Callable[[], None]],
+		counts: Iterable[int]
+	):
+		print()
+		print(f"        normal                                    | slotted                                   |")
+		print(f"        min           avg           max           | min           avg           max           | improvemnt")
+		print(f"----------------------------------------------------------------------------------------------------------")
+		for count in counts:
+			norm = count / 10
 
-	def inc(self, add: int):
-		self._data_0 = self._data_0 + add
-
-
-class SlottedNode_1(metaclass=SlottedType):
-	_data_0: int
-
-	def __init__(self, data):
-		self._data_0 = data
-
-	def inc(self, add: int):
-		self._data_0 = self._data_0 + add
-
-
-class Node_10:
-	_data_0: int
-	_data_1: int
-	_data_2: int
-	_data_3: int
-	_data_4: int
-	_data_5: int
-	_data_6: int
-	_data_7: int
-	_data_8: int
-	_data_9: int
-
-	def __init__(self, data):
-		self._data_0 = data
-		self._data_1 = data
-		self._data_2 = data
-		self._data_3 = data
-		self._data_4 = data
-		self._data_5 = data
-		self._data_6 = data
-		self._data_7 = data
-		self._data_8 = data
-		self._data_9 = data
-
-
-class SlottedNode_10(metaclass=SlottedType):
-	_data_0: int
-	_data_1: int
-	_data_2: int
-	_data_3: int
-	_data_4: int
-	_data_5: int
-	_data_6: int
-	_data_7: int
-	_data_8: int
-	_data_9: int
-
-	def __init__(self, data):
-		self._data_0 = data
-		self._data_1 = data
-		self._data_2 = data
-		self._data_3 = data
-		self._data_4 = data
-		self._data_5 = data
-		self._data_6 = data
-		self._data_7 = data
-		self._data_8 = data
-		self._data_9 = data
-
-
-class Tree(PerformanceTest):
-	def test_CreateObjects_1(self):
-		def wrapperNormal(count: int):
-			def func():
-				nodes = [Node_1(i) for i in range(count)]
-
-			return func
-
-		def wrapperSlotted(count: int):
-			def func():
-				nodes = [SlottedNode_1(i) for i in range(count)]
-
-			return func
-
-		self.runTests(wrapperNormal, wrapperSlotted, self.counts)
-
-	def test_CreateObjects_10(self):
-		def wrapperNormal(count: int):
-			def func():
-				nodes = [Node_10(i) for i in range(count)]
-
-			return func
-
-		def wrapperSlotted(count: int):
-			def func():
-				nodes = [SlottedNode_10(i) for i in range(count)]
-
-			return func
-
-		self.runTests(wrapperNormal, wrapperSlotted, self.counts)
-
-	def test_Accumulate_1(self):
-		def wrapperNormal(count: int):
-			def func():
-				node = Node_1(1)
-				for i in range(count):
-					node.inc(1)
-
-			return func
-
-		def wrapperSlotted(count: int):
-			def func():
-				node = SlottedNode_1(1)
-				for i in range(count):
-					node.inc(1)
-
-			return func
-
-		self.runTests(wrapperNormal, wrapperSlotted, self.counts)
+			resultsNormal = timeit.repeat(funcNormal(count), repeat=20, number=100)
+			resultsSlotted = timeit.repeat(funcSlotted(count), repeat=20, number=100)
+			print(f"{count:>5}x: {min(resultsNormal)/norm:.6f} s    {mean(resultsNormal)/norm:.6f} s    {max(resultsNormal)/norm:.6f} s    | {min(resultsSlotted)/norm:.6f} s    {mean(resultsSlotted)/norm:.6f} s    {max(resultsSlotted)/norm:.6f} s    | {(1-mean(resultsSlotted)/mean(resultsNormal))*100:.0f} %")

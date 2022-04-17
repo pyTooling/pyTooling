@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`isnestedclass`.
+Unit tests for :py:func:`isnestedclass`.
 
 :copyright: Copyright 2021-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0

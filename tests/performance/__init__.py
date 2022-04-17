@@ -28,27 +28,4 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for iterTree."""
-from itertree import iTree
-
-from . import PerformanceTest
-
-
-if __name__ == "__main__":  # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
-	exit(1)
-
-
-class Tree(PerformanceTest):
-	def test_AddChildren(self):
-		def wrapper(count: int):
-			def func():
-				rootNode = iTree("root", data=0)
-
-				for i in range(1, count):
-					rootNode+=iTree("child", data=i)
-
-			return func
-
-		self.runTests(wrapper, self.counts)
+"""Performance tests."""
