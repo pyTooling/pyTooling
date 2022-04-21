@@ -39,7 +39,10 @@ __license__ =   "Apache License, Version 2.0"
 __version__ =   "1.10.1"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "data structure", "setuptools", "wheel", "installation", "packaging"]
 
-from typing   import Type
+from collections import deque
+from collections.abc import Set, Mapping
+from numbers import Number
+from typing import Type, Any
 
 try:
 	from pyTooling.Decorators import export
@@ -75,3 +78,66 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 					return True
 
 	return False
+
+
+@export
+def getsizeof(obj: Any) -> int:
+	"""Recursively calculate the "true" size of an object including complex members like ``__dict__``.
+
+	.. admonition:: Background Information
+
+	   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
+	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
+
+	.. seealso::
+
+	   `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__
+
+	:param obj: Object to calculate the size of.
+	:return:    True size of an object in bytes.
+	"""
+	from sys import getsizeof as sys_getsizeof
+
+	visitedIDs = set()  #: A set to track visited objects, so memory consumption isn't counted multiple times.
+
+	def inner(obj: Any) -> int:
+		"""Nested function for recursion.
+
+		:param obj: Subobject to calculate the size of.
+		:return:    Size of a subobject in bytes.
+		"""
+		# If already visited, return 0 bytes, so no additional bytes are accumulated
+		objectID = id(obj)
+		if objectID in visitedIDs:
+			return 0
+		else:
+			visitedIDs.add(objectID)
+
+		# Get objects raw size
+		size: int = sys_getsizeof(obj)
+
+		# Skip elementary types
+		if isinstance(obj, (str, bytes, bytearray, range, Number)):
+			pass
+		# Handle iterables
+		elif isinstance(obj, (tuple, list, Set, deque)):      # TODO: What about builtin "set", "frozenset" and "dict"?
+			for item in obj:
+				size += inner(item)
+		# Handle mappings
+		elif isinstance(obj, Mapping) or hasattr(obj, 'items'):
+			for key, value in getattr(obj, 'items')():
+				size += inner(key) + inner(value)
+
+		# Accumulate members from __dict__
+		if hasattr(obj, '__dict__'):
+			size += inner(vars(obj))
+
+		# Accumulate members from __slots__
+		if hasattr(obj, '__slots__'):
+			for slot in obj.__slots__:
+				if hasattr(obj, slot):
+					size += inner(getattr(obj, slot))
+
+		return size
+
+	return inner(obj)
