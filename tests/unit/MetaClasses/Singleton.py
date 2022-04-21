@@ -49,7 +49,7 @@ class Application1(metaclass=Singleton):
 	X = 0
 
 	def __init__(self):
-		print("Instance created")
+		print("Instance of 'Application1' was created")
 
 		self.X = 1
 

@@ -90,8 +90,11 @@ def getsizeof(obj: Any) -> int:
 	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 	.. seealso::
+	   The code ise based on code snippets and ideas from:
 
-	   `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__
+	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT Lizense)
+	   * `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__ (CC BY-SA 4.0)
+	   * `Python __slots__, slots, and object layout <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>`__ (MIT Lizense)
 
 	:param obj: Object to calculate the size of.
 	:return:    True size of an object in bytes.
@@ -100,7 +103,7 @@ def getsizeof(obj: Any) -> int:
 
 	visitedIDs = set()  #: A set to track visited objects, so memory consumption isn't counted multiple times.
 
-	def inner(obj: Any) -> int:
+	def recurse(obj: Any) -> int:
 		"""Nested function for recursion.
 
 		:param obj: Subobject to calculate the size of.
@@ -122,22 +125,22 @@ def getsizeof(obj: Any) -> int:
 		# Handle iterables
 		elif isinstance(obj, (tuple, list, Set, deque)):      # TODO: What about builtin "set", "frozenset" and "dict"?
 			for item in obj:
-				size += inner(item)
+				size += recurse(item)
 		# Handle mappings
 		elif isinstance(obj, Mapping) or hasattr(obj, 'items'):
 			for key, value in getattr(obj, 'items')():
-				size += inner(key) + inner(value)
+				size += recurse(key) + recurse(value)
 
 		# Accumulate members from __dict__
 		if hasattr(obj, '__dict__'):
-			size += inner(vars(obj))
+			size += recurse(vars(obj))
 
 		# Accumulate members from __slots__
 		if hasattr(obj, '__slots__'):
 			for slot in obj.__slots__:
 				if hasattr(obj, slot):
-					size += inner(getattr(obj, slot))
+					size += recurse(getattr(obj, slot))
 
 		return size
 
-	return inner(obj)
+	return recurse(obj)

@@ -18,7 +18,10 @@ single class instance.
 Helper Functions
 ****************
 
-* The :py:func:`~pyTooling.Common.isnestedclass` functions returns true if a class is a nested class.
+* The :py:func:`~pyTooling.Common.isnestedclass` functions returns true, if a class is a nested class inside another
+  class.
+* The :py:func:`~pyTooling.Common.getsizeof` functions returns the "true" size of a Python object including auxillary
+  data structures like ``_dict__``.
 
 
 .. # ===================================================================================================================
