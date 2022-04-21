@@ -35,8 +35,7 @@
 """
 from inspect  import signature, Parameter
 from types    import MethodType
-from typing   import Any, Tuple, List, Dict, Callable, Type
-
+from typing import Any, Tuple, List, Dict, Callable, Type, TypeVar
 
 try:
 	from ..Decorators import export
@@ -48,29 +47,6 @@ except (ImportError, ModuleNotFoundError):
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
-
-
-@export
-class Singleton(type):
-	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
-
-	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
-
-	def __call__(cls, *args, **kwargs):
-		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
-		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
-		"""
-		if cls not in cls._instanceCache:
-			cls._instanceCache[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-		return cls._instanceCache[cls]
-
-	@classmethod
-	def Register(cls, t, instance) -> None:
-		"""Register a type,instance pair in :attr:`_instanceCache`."""
-		if t not in cls._instanceCache:
-			cls._instanceCache[t] = instance
-		else:
-			raise KeyError(f"Type '{t!s}' is already registered.")
 
 
 @export
@@ -151,16 +127,80 @@ class Overloading(type):
 		return cls.DispatchDictionary()
 
 
+M = TypeVar("M", bound=Callable)
+
+
+def abstract(method: M) -> M:
+	method.__isAbstract__ = True
+
+	return method
+
+
+def overload(method: M) -> M:
+	method.__isOverloadable__ = True
+
+	return method
+
+
 @export
-class SlottedType(type):
+class SuperType(type):
 	"""
+
+	Features:
+
+	* Store object members more effectively in slots instead of ``_dict__``.
+	* Allow only a single instance to be created (singleton).
+	* Define methods as abstract and prohibit instantiation of abstract classes.
+	* Allow method overloading and dispatch overloads based on argument signatures.
 
 	.. seealso::
 
 		`Python data model - __slots__ <https://docs.python.org/3/reference/datamodel.html#slots>`__
 	"""
 
-	def __new__(metacls, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
+	_isAbstract: bool
+
+	def __new__(
+		self,
+		className: str,
+		baseClasses: Tuple[type],
+		members: Dict[str, Any],
+		singleton: bool = False,
+		useSlots: bool = False
+	) -> type:
+		self._isAbstract = self.__checkForAbstractMethods(baseClasses, members)
+
+		if useSlots:
+			members['__slots__'] = self.__getSlots(baseClasses, members)
+
+		newClass = type.__new__(self, className, baseClasses, members)
+		newClass._isSingleton = singleton
+		newClass._instanceCache = None
+
+		return newClass
+
+	def __call__(metacls, *args, **kwargs) -> type:
+		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
+		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
+		"""
+		if metacls._isSingleton:
+			if metacls._instanceCache is None:
+				newClass = type.__call__(metacls, *args, **kwargs)
+				metacls._instanceCache = newClass
+			else:
+				newClass = metacls._instanceCache
+		else:
+			newClass = type.__call__(metacls, *args, **kwargs)
+
+		return newClass
+
+	@staticmethod
+	def __checkForAbstractMethods(baseClasses: Tuple[type], members: Dict[str, Any]) -> bool:
+
+		return False
+
+	@staticmethod
+	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]):
 		annotatedFields = {}
 		for baseClass in baseClasses:
 			for base in reversed(baseClass.mro()[:-1]):
@@ -170,12 +210,11 @@ class SlottedType(type):
 				for annotation in base.__slots__:
 					annotatedFields[annotation] = base
 
-		# Typehint the annotations variable, as long as TypedDict isn't supported by all supported versions.
+		# Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
 		# (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
 		annotations: Dict[str, Any] = members.get("__annotations__", {})
 		for annotation in annotations:
 			if annotation in annotatedFields:
 				raise TypeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
 
-		members['__slots__'] = (*members.get('__slots__', []), *annotations)
-		return type.__new__(metacls, className, baseClasses, members)
+		return (*members.get('__slots__', []), *annotations)

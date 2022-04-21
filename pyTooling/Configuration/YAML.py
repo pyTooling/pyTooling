@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Dict, List, Union, Iterator as typing_Iterator
 
 from ..Decorators import export
-from ..MetaClasses import SlottedType
+from ..MetaClasses import SuperType
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
@@ -194,7 +194,7 @@ class Dictionary(Abstract_Dict, Node):
 		return key in self._keys
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
-		class Iterator(metaclass=SlottedType):
+		class Iterator(metaclass=SuperType):
 			_iter: typing_Iterator
 			_obj: Dictionary
 
@@ -235,7 +235,7 @@ class Sequence(Abstract_Seq, Node):
 
 		:returns: Iterator to iterate items in a sequence.
 		"""
-		class Iterator(metaclass=SlottedType):
+		class Iterator(metaclass=SuperType):
 			"""Iterator to iterate sequence items."""
 
 			_i: int         #: internal iterator position

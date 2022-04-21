@@ -45,7 +45,7 @@ from typing       import List, Iterable, Dict, Sequence
 
 try:
 	from ..Decorators import export
-	from ..MetaClasses import SlottedType
+	from ..MetaClasses import SuperType
 	from ..Licensing  import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
@@ -130,7 +130,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation(metaclass=SlottedType):
+class VersionInformation(metaclass=SuperType):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).

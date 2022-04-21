@@ -35,11 +35,11 @@
 from enum import Flag, auto
 
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import Singleton
+from pyTooling.MetaClasses import SuperType
 
 
 @export
-class Platform(metaclass=Singleton):
+class Platform(metaclass=SuperType, singleton=True):
 	"""An instance of this class contains all gathered information available from various sources.
 
 	.. seealso::

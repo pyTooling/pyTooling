@@ -48,7 +48,7 @@ from typing       import Any, Dict
 
 try:
 	from ..Decorators import export
-	from ..MetaClasses import SlottedType
+	from ..MetaClasses import SuperType
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
 
@@ -74,7 +74,7 @@ __all__ = [
 
 @export
 @dataclass
-class PythonLicenseNames(metaclass=SlottedType):
+class PythonLicenseNames(metaclass=SuperType):
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
 	ShortName: str    #: License's short name
 	Classifier: str   #: Package classifier for a license.
@@ -97,7 +97,7 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 
 
 @export
-class License(metaclass=SlottedType):
+class License(metaclass=SuperType):
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.

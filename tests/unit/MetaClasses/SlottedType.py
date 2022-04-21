@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :metacls:`pyTooling.MetaClasses.SlottedType`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.SuperType`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
@@ -37,7 +37,7 @@ Unit tests for class :metacls:`pyTooling.MetaClasses.SlottedType`.
 import sys
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import SlottedType
+from pyTooling.MetaClasses import SuperType
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -58,7 +58,7 @@ class Slotted(TestCase):
 
 
 	def test_SlottedData(self):
-		class SlottedData(metaclass=SlottedType):
+		class SlottedData(metaclass=SuperType, useSlots=True):
 			_data: int
 
 			def __init__(self, data: int):
@@ -86,7 +86,7 @@ class Slotted(TestCase):
 			_baseData: int
 
 		with self.assertRaises(TypeError):
-			class SlottedData(Base, metaclass=SlottedType):
+			class SlottedData(Base, metaclass=SuperType, useSlots=True):
 				_data: int
 
 				def __init__(self, data: int):

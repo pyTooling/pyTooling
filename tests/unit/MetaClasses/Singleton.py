@@ -36,7 +36,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
 """
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import Singleton
+from pyTooling.MetaClasses import SuperType
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -45,7 +45,7 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Application1(metaclass=Singleton):
+class Application1(metaclass=SuperType, singleton=True):
 	X = 0
 
 	def __init__(self):
@@ -53,6 +53,14 @@ class Application1(metaclass=Singleton):
 
 		self.X = 1
 
+
+class Application2(metaclass=SuperType, singleton=True):
+	X = 10
+
+	def __init__(self):
+		print("Instance of 'Application2' was created")
+
+		self.X = 11
 
 # class Application2(metaclass=Singleton, includeDerivedVariants=True):
 # 	X = 0
@@ -72,18 +80,29 @@ class Application1(metaclass=Singleton):
 
 class Singleton(TestCase):
 	def test_1(self) -> None:
-		self.assertEqual(Application1.X, 0)
+		self.assertEqual(0, Application1.X)
+		self.assertEqual(10, Application2.X)
 
-		app = Application1()
-		self.assertEqual(app.X, 1)
+		app_1 = Application1()
+		self.assertEqual(1, app_1.X)
 
-		app.X = 2
-		self.assertEqual(app.X, 2)
+		app_1.X = 2
+		self.assertEqual(2, app_1.X)
 
-		app2 = Application1()
-		self.assertEqual(app2.X, 2)
+		app_1same = Application1()
+		self.assertIs(app_1, app_1same)
+		self.assertEqual(2, app_1same.X)
 
-		self.assertEqual(Application1.X, 0)
+		self.assertEqual(0, Application1.X)
+
+		app_2 = Application2()
+		self.assertIsNot(app_1, app_2)
+		self.assertEqual(2, app_1.X)
+		self.assertEqual(11, app_2.X)
+
+		app_2.X = 12
+		self.assertEqual(2, app_1.X)
+		self.assertEqual(12, app_2.X)
 
 	# def test_2(self):
 	# 	self.assertEqual(Application3.X, 0)

@@ -34,7 +34,7 @@ from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional a
 	Union, Deque
 
 from ..Decorators import export
-from ..MetaClasses import SlottedType
+from ..MetaClasses import SuperType
 
 IDT = TypeVar("IDT", bound=Hashable)
 ValueT = TypeVar("ValueT")
@@ -43,7 +43,7 @@ DictValueT = TypeVar("DictValueT")
 
 
 @export
-class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SlottedType):
+class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType):
 	"""A **tree** data structure can be constructed of ``Node`` instances.
 
 	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
