@@ -43,7 +43,7 @@ DictValueT = TypeVar("DictValueT")
 
 
 @export
-class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType):
+class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useSlots=True):
 	"""A **tree** data structure can be constructed of ``Node`` instances.
 
 	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a

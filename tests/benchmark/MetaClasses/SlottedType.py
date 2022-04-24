@@ -50,7 +50,7 @@ class Node_1:
 		self._data_0 = self._data_0 + add
 
 
-class SlottedNode_1(metaclass=SuperType):
+class SlottedNode_1(metaclass=SuperType, useSlots=True):
 	_data_0: int
 
 	def __init__(self, data):
@@ -96,7 +96,7 @@ class Node_10:
 		self._data_9 = self._data_8 + add
 
 
-class SlottedNode_10(metaclass=SuperType):
+class SlottedNode_10(metaclass=SuperType, useSlots=True):
 	_data_0: int
 	_data_1: int
 	_data_2: int

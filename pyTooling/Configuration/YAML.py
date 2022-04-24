@@ -194,7 +194,7 @@ class Dictionary(Abstract_Dict, Node):
 		return key in self._keys
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
-		class Iterator(metaclass=SuperType):
+		class Iterator(metaclass=SuperType, useSlots=True):
 			_iter: typing_Iterator
 			_obj: Dictionary
 
@@ -235,7 +235,7 @@ class Sequence(Abstract_Seq, Node):
 
 		:returns: Iterator to iterate items in a sequence.
 		"""
-		class Iterator(metaclass=SuperType):
+		class Iterator(metaclass=SuperType, useSlots=True):
 			"""Iterator to iterate sequence items."""
 
 			_i: int         #: internal iterator position

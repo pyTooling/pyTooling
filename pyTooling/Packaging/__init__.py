@@ -52,7 +52,7 @@ except (ImportError, ModuleNotFoundError):
 
 	try:
 		from Decorators import export
-		from MetaClasses import SlottedType
+		from MetaClasses import SuperType
 		from Licensing import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
@@ -130,7 +130,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation(metaclass=SuperType):
+class VersionInformation(metaclass=SuperType, useSlots=True):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).
