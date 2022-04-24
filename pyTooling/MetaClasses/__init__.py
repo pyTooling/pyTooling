@@ -33,6 +33,7 @@
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
+from functools import wraps
 from inspect  import signature, Parameter
 from types    import MethodType
 from typing import Any, Tuple, List, Dict, Callable, Type, TypeVar
@@ -130,15 +131,22 @@ class Overloading(type):
 M = TypeVar("M", bound=Callable)
 
 
-def abstract(method: M) -> M:
-	method.__isAbstract__ = True
+def abstractmethod(method: M) -> M:
+	@wraps(method)
+	def func(self):
+		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
 
+	func.__abstract__ = True
+	return func
+
+
+def mustoverride(method: M) -> M:
+	method.__mustOverride__ = True
 	return method
 
 
-def overload(method: M) -> M:
-	method.__isOverloadable__ = True
-
+def overloadable(method: M) -> M:
+	method.__overloadable__ = True
 	return method
 
 
@@ -158,8 +166,6 @@ class SuperType(type):
 		`Python data model - __slots__ <https://docs.python.org/3/reference/datamodel.html#slots>`__
 	"""
 
-	_isAbstract: bool
-
 	def __new__(
 		self,
 		className: str,
@@ -168,8 +174,6 @@ class SuperType(type):
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
-		self._isAbstract = self.__checkForAbstractMethods(baseClasses, members)
-
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)
 
@@ -177,12 +181,18 @@ class SuperType(type):
 		newClass._isSingleton = singleton
 		newClass._instanceCache = None
 
+		newClass._abstractMethods = self.__checkForAbstractMethods(baseClasses, members)
+
 		return newClass
 
 	def __call__(metacls, *args, **kwargs) -> type:
 		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
 		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
 		"""
+		if metacls._abstractMethods:
+			formattedMethodNames = "', '".join(metacls._abstractMethods)
+			raise TypeError(f"Class '{metacls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+
 		if metacls._isSingleton:
 			if metacls._instanceCache is None:
 				newClass = type.__call__(metacls, *args, **kwargs)
@@ -194,10 +204,21 @@ class SuperType(type):
 
 		return newClass
 
-	@staticmethod
-	def __checkForAbstractMethods(baseClasses: Tuple[type], members: Dict[str, Any]) -> bool:
+	@classmethod
+	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+		result = set()
+		for base in baseClasses:
+			for cls in base.__mro__:
+				if hasattr(cls, "_abstractMethods"):
+					result = result.union(cls._abstractMethods)
 
-		return False
+		for memberName, member in members.items():
+			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
+				result.add(memberName)
+			elif memberName in result:
+				result.remove(memberName)
+
+		return tuple(result)
 
 	@staticmethod
 	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]):

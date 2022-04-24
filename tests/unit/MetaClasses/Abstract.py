@@ -29,16 +29,14 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.SuperType`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.Abstract`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
 from unittest       import TestCase
 
-from pyTooling.Common import getsizeof
-from pyTooling.MetaClasses import SuperType
-
+from pyTooling.MetaClasses import SuperType, abstractmethod, mustoverride
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -46,57 +44,87 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Slotted(TestCase):
-	def test_Data(self):
-		class Data:
-			_data: int
+class NormalBase(metaclass=SuperType):
+	def NormalMethod(self):
+		pass
 
-		data = Data()
 
-		print()
-		print()
-		try:
-			print(f"size: {getsizeof(data)}")
-		except TypeError:
-			print(f"size: not supported on PyPy")
+class NormalClass(NormalBase):
+	pass
 
-	def test_SlottedData(self):
-		class SlottedData(metaclass=SuperType, useSlots=True):
-			_data: int
 
-			def __init__(self, data: int):
-				self._data = data
+class AbstractBase(metaclass=SuperType):
+	@abstractmethod
+	def AbstractMethod(self):
+		pass
 
-			def raiseError(self):
-				self._x = 5
 
-		data = SlottedData(data=5)
+class AbstractClass(AbstractBase):
+	pass
 
-		self.assertListEqual(["_data"], list(data.__slots__))
-		self.assertEqual(5, data._data)
-		with self.assertRaises(AttributeError):
-			data.raiseError()
-		with self.assertRaises(AttributeError):
-			data._y = 2
-		with self.assertRaises(AttributeError):
-			_ = data._z
 
-		print()
-		try:
-			print(f"size: {getsizeof(data)}")
-		except TypeError:
-			print(f"size: not supported on PyPy")
+class DerivedAbstractClass(AbstractBase):
+	def AbstractMethod(self):
+		super().AbstractMethod()
 
-	def test_NonSlottedBaseClass(self):
-		class Base:
-			_baseData: int
 
-		with self.assertRaises(TypeError):
-			class SlottedData(Base, metaclass=SuperType, useSlots=True):
-				_data: int
+class MustOverrideBase(metaclass=SuperType):
+	@mustoverride
+	def MustOverrideMethod(self):
+		pass
 
-				def __init__(self, data: int):
-					self._data = data
 
-				def raiseError(self):
-					self._x = 5
+class MustOverrideClass(MustOverrideBase):
+	pass
+
+
+class DerivedMustOverrideClass(MustOverrideBase):
+	def MustOverrideMethod(self):
+		super().MustOverrideMethod()
+
+
+class Abstract(TestCase):
+	def test_NormalBase(self) -> None:
+		cls = NormalBase()
+
+	def test_NormalClass(self) -> None:
+		cls = NormalClass()
+
+	def test_AbstractBase(self) -> None:
+		with self.assertRaises(TypeError) as ExceptionCapture:
+			base = AbstractBase()
+
+		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_AbstractClass(self) -> None:
+		with self.assertRaises(TypeError) as ExceptionCapture:
+			base = AbstractClass()
+
+		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedAbstractClass(self) -> None:
+		derived = DerivedAbstractClass()
+
+		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+			derived.AbstractMethod()
+
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+
+	def test_MustOverrideBase(self) -> None:
+		with self.assertRaises(TypeError) as ExceptionCapture:
+			base = MustOverrideBase()
+
+		self.assertIn("MustOverrideBase", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+
+	def test_MustOverrideClass(self) -> None:
+		with self.assertRaises(TypeError) as ExceptionCapture:
+			base = MustOverrideClass()
+
+		self.assertIn("MustOverrideClass", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedMustOverride(self) -> None:
+		derived = DerivedMustOverrideClass()
