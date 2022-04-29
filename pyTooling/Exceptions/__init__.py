@@ -37,25 +37,26 @@ from ..Decorators import export
 
 
 @export
+class AbstractClassError(Exception):
+	"""The exception ``AbstractClassError`` is raised, when a class contains *abstract* or *must-override* marked methods.
+	"""
+
+
 class ExceptionBase(Exception):
 	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
 
-#	@DocumentMemberAttribute()
 	def __init__(self, message: str = ""):
-		"""
-		pyExceptions initializer.
+		"""pyExceptions initializer.
 
 		:param message:   The exception message.
 		"""
 		super().__init__()
 		self.message = message
 
-#	@DocumentMemberAttribute()
 	def __str__(self) -> str:
 		"""Returns the exception's message text."""
 		return self.message
 
-#	@DocumentMemberAttribute(False)
 	def with_traceback(self, tb) -> None:
 		super().with_traceback(tb)
 
