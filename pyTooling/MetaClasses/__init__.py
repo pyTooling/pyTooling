@@ -33,18 +33,21 @@
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
-from functools import wraps
-from inspect  import signature, Parameter
-from types    import MethodType
-from typing import Any, Tuple, List, Dict, Callable, Type, TypeVar
+from functools  import wraps
+from inspect    import signature, Parameter
+from types      import MethodType
+from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
+
 
 try:
-	from ..Decorators import export
+	from ..Exceptions import AbstractClassError
+	from ..Decorators import export, OriginalFunction
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
+		from Exceptions import AbstractClassError
+		from Decorators import export, OriginalFunction
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
@@ -183,16 +186,27 @@ class SuperType(type):
 
 		newClass._abstractMethods = self.__checkForAbstractMethods(baseClasses, members)
 
+		if newClass._abstractMethods:
+			@OriginalFunction(newClass.__new__)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				if cls.__isAbstract__:
+					formattedMethodNames = "', '".join(newClass._abstractMethods)
+					raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+
+				return newClass.__new__(cls, *args, **kwargs)
+
+			newClass.__new__ = new
+			newClass.__isAbstract__ = True
+		else:
+			newClass.__isAbstract__ = False
+
 		return newClass
 
 	def __call__(metacls, *args, **kwargs) -> type:
 		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
 		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
 		"""
-		if metacls._abstractMethods:
-			formattedMethodNames = "', '".join(metacls._abstractMethods)
-			raise TypeError(f"Class '{metacls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
-
 		if metacls._isSingleton:
 			if metacls._instanceCache is None:
 				newClass = type.__call__(metacls, *args, **kwargs)

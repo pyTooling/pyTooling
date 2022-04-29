@@ -36,6 +36,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.Abstract`.
 """
 from unittest       import TestCase
 
+from pyTooling.Exceptions import AbstractClassError
 from pyTooling.MetaClasses import SuperType, abstractmethod, mustoverride
 
 if __name__ == "__main__": # pragma: no cover
@@ -91,14 +92,14 @@ class Abstract(TestCase):
 		cls = NormalClass()
 
 	def test_AbstractBase(self) -> None:
-		with self.assertRaises(TypeError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
 			base = AbstractBase()
 
 		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
 
 	def test_AbstractClass(self) -> None:
-		with self.assertRaises(TypeError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
 			base = AbstractClass()
 
 		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
@@ -113,14 +114,14 @@ class Abstract(TestCase):
 		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
 
 	def test_MustOverrideBase(self) -> None:
-		with self.assertRaises(TypeError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
 			base = MustOverrideBase()
 
 		self.assertIn("MustOverrideBase", str(ExceptionCapture.exception))
 		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
 
 	def test_MustOverrideClass(self) -> None:
-		with self.assertRaises(TypeError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
 			base = MustOverrideClass()
 
 		self.assertIn("MustOverrideClass", str(ExceptionCapture.exception))
