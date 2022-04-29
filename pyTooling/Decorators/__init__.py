@@ -37,11 +37,22 @@ from types     import FunctionType, MethodType
 from typing    import Union, Type, TypeVar, Callable
 
 
-__all__ = ["export", "T", "M", "Param", "RetType", "Func"]
+__all__ = ["export", "Param", "RetType", "Func", "T"]
+
+
+try:
+	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
+	from typing import ParamSpec    # exists since Python 3.10
+	Param = ParamSpec("Param")
+	RetType = TypeVar("RetType")
+	Func = Callable[Param, RetType]
+except ImportError:
+	Param = ...
+	RetType = TypeVar("RetType")
+	Func = Callable[..., RetType]
 
 
 T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class or function
-M = TypeVar("M", bound=MethodType)                 #: Type variable for methods.
 
 
 def export(entity: T) -> T:
@@ -107,16 +118,13 @@ def export(entity: T) -> T:
 	return entity
 
 
-try:
-	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
-	from typing import ParamSpec    # exists since Python 3.10
-	Param = ParamSpec("Param")
-	RetType = TypeVar("RetType")
-	Func = Callable[Param, RetType]
-except ImportError:
-	Param = ...
-	RetType = TypeVar("RetType")
-	Func = Callable[..., RetType]
+@export
+def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
+	def decorator(f: Func) -> Func:
+		f.__orig_func__ = func
+		return f
+
+	return decorator
 
 
 @export
