@@ -38,7 +38,29 @@ from ..Decorators import export
 
 @export
 class AbstractClassError(Exception):
-	"""The exception ``AbstractClassError`` is raised, when a class contains *abstract* or *must-override* marked methods.
+	"""The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
+
+	.. seealso::
+	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	      |rarr| Mark a method as *abstract*.
+	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	      |rarr| Mark a method as *must overrride*.
+	   :py:exc:`~MustOverrideClassError`
+	      |rarr| Exception raised, if a method is marked as *must-override*.
+	"""
+
+
+@export
+class MustOverrideClassError(AbstractClassError):
+	"""The exception is raised, when a class contains methods marked with *must-override*.
+
+	.. seealso::
+	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	      |rarr| Mark a method as *abstract*.
+	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	      |rarr| Mark a method as *must overrride*.
+	   :py:exc:`~AbstractClassError`
+	      |rarr| Exception raised, if a method is marked as *abstract*.
 	"""
 
 
@@ -67,14 +89,14 @@ class ExceptionBase(Exception):
 
 @export
 class EnvironmentException(ExceptionBase):
-	"""``EnvironmentException`` is raised when an expected environment variable is missing."""
+	"""The exception is raised when an expected environment variable is missing."""
 
 
 @export
 class PlatformNotSupportedException(ExceptionBase):
-	"""``PlatformNotSupportedException`` is raise if the platform is not supported."""
+	"""The exception is raise if the platform is not supported."""
 
 
 @export
 class NotConfiguredException(ExceptionBase):
-	"""``NotConfiguredException`` is raise if the requested setting is not configured."""
+	"""The exception is raise if the requested setting is not configured."""
