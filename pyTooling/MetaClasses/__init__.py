@@ -187,57 +187,44 @@ class SuperType(type):
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)
 
-		# Create a new class and set new fields on that class
+		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
-		newClass.__isSingleton__ = singleton
-		newClass.__singletonInstanceCache__ = None
+		# Search in inheritance tree for abstract methods
+		newClass.__abstractMethods__ = self.__checkForAbstractMethods(baseClasses, members)
+		newClass.__isAbstract__ = self.__wrapNewMethod(newClass)
+		newClass.__isSingleton__ = self.__wrapCallMethod(newClass, singleton)
 
-		newClass._abstractMethods = self.__checkForAbstractMethods(baseClasses, members)
-
-		# Replace '__new__' by a variant to through an error on not overridden methods
-		if newClass._abstractMethods:
-			@OriginalFunction(newClass.__new__)
-			@wraps(newClass.__new__)
-			def new(cls, *args, **kwargs):
-				formattedMethodNames = "', '".join(newClass._abstractMethods)
-				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
-
-			newClass.__new__ = new
-			newClass.__isAbstract__ = True
-
-		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
-		else:
-			# skip intermediate 'new' function if class isn't abstract anymore
-			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
-			if newClass.__new__ is not object.__new__:
-				newClass.__new__ = newClass.__new__.__orig_func__
-
-			newClass.__isAbstract__ = False
+			# if hasattr(newClass, "__new__"):
+			# 	new = getattr(newClass, "__new__")
+			# 	isFromObject = new is object.__new__
+			# 	print(f"__new__ of '{className}': {new} ({isFromObject})")
+			# else:
+			# 	print(f"Class '{className}' has no __new__.")
 
 		return newClass
 
-	def __call__(metacls, *args, **kwargs) -> type:
-		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
-		instances cache (see :py:attr:`__singletonInstanceCache__`) if the class was already constructed before.
-		"""
-		if metacls.__isSingleton__:
-			if metacls._instanceCache is None:
-				newClass = type.__call__(metacls, *args, **kwargs)
-				metacls.__singletonInstanceCache__ = newClass
-			else:
-				newClass = metacls.__singletonInstanceCache__
-		else:
-			newClass = type.__call__(metacls, *args, **kwargs)
-
-		return newClass
+	# def __call__(metacls, *args, **kwargs) -> type:
+	# 	"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
+	# 	instances cache (see :py:attr:`__singletonInstanceCache__`) if the class was already constructed before.
+	# 	"""
+	# 	if metacls.__isSingleton__:
+	# 		if metacls._instanceCache is None:
+	# 			newClass = type.__call__(metacls, *args, **kwargs)
+	# 			metacls.__singletonInstanceCache__ = newClass
+	# 		else:
+	# 			newClass = metacls.__singletonInstanceCache__
+	# 	else:
+	# 		newClass = type.__call__(metacls, *args, **kwargs)
+	#
+	# 	return newClass
 
 	@classmethod
 	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
 		result = set()
 		for base in baseClasses:
 			for cls in base.__mro__:
-				if hasattr(cls, "_abstractMethods"):
-					result = result.union(cls._abstractMethods)
+				if hasattr(cls, "__abstractMethods__"):
+					result = result.union(cls.__abstractMethods__)
 
 		for memberName, member in members.items():
 			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
@@ -246,6 +233,48 @@ class SuperType(type):
 				result.remove(memberName)
 
 		return tuple(result)
+
+	@staticmethod
+	def __wrapNewMethod(newClass) -> bool:
+		# Replace '__new__' by a variant to through an error on not overridden methods
+		if newClass.__abstractMethods__:
+			@OriginalFunction(newClass.__new__)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				formattedMethodNames = "', '".join(newClass.__abstractMethods__)
+				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+
+			newClass.__new__ = new
+			return True
+
+		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
+		else:
+			# skip intermediate 'new' function if class isn't abstract anymore
+			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
+			if newClass.__new__ is not object.__new__:
+				newClass.__new__ = newClass.__new__.__orig_func__
+
+			return False
+
+	@staticmethod
+	def __wrapCallMethod(newClass, singleton: bool) -> bool:
+		if singleton:
+			@OriginalFunction(newClass.__call__)
+			@wraps(newClass.__call__)
+			def call(cls, *args, **kwargs):
+				if cls.__singletonInstanceCache__ is None:
+					obj = newClass.__call__(*args, **kwargs)
+					cls.__singletonInstanceCache__ = obj
+				else:
+					obj = cls.__singletonInstanceCache__
+
+				return obj
+
+			newClass.__call__ = call
+			newClass.__singletonInstanceCache__ = None
+			return True
+
+		return False
 
 	@staticmethod
 	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]):
