@@ -53,6 +53,9 @@ except (ImportError, ModuleNotFoundError):
 		raise ex
 
 
+__all__ = ["M"]
+
+
 @export
 class Overloading(type):
 	"""Metaclass that allows multiple dispatch of methods based on method signatures.
@@ -131,9 +134,10 @@ class Overloading(type):
 		return cls.DispatchDictionary()
 
 
-M = TypeVar("M", bound=Callable)
+M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
+@export
 def abstractmethod(method: M) -> M:
 	@wraps(method)
 	def func(self):
@@ -143,11 +147,13 @@ def abstractmethod(method: M) -> M:
 	return func
 
 
+@export
 def mustoverride(method: M) -> M:
 	method.__mustOverride__ = True
 	return method
 
 
+@export
 def overloadable(method: M) -> M:
 	method.__overloadable__ = True
 	return method
@@ -177,42 +183,49 @@ class SuperType(type):
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
+		# Check if members should be stored in slots. If so get these members from type annotated fields
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)
 
+		# Create a new class and set new fields on that class
 		newClass = type.__new__(self, className, baseClasses, members)
-		newClass._isSingleton = singleton
-		newClass._instanceCache = None
+		newClass.__isSingleton__ = singleton
+		newClass.__singletonInstanceCache__ = None
 
 		newClass._abstractMethods = self.__checkForAbstractMethods(baseClasses, members)
 
+		# Replace '__new__' by a variant to through an error on not overridden methods
 		if newClass._abstractMethods:
 			@OriginalFunction(newClass.__new__)
 			@wraps(newClass.__new__)
 			def new(cls, *args, **kwargs):
-				if cls.__isAbstract__:
-					formattedMethodNames = "', '".join(newClass._abstractMethods)
-					raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
-
-				return newClass.__new__(cls, *args, **kwargs)
+				formattedMethodNames = "', '".join(newClass._abstractMethods)
+				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
 
 			newClass.__new__ = new
 			newClass.__isAbstract__ = True
+
+		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
 		else:
+			# skip intermediate 'new' function if class isn't abstract anymore
+			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
+			if newClass.__new__ is not object.__new__:
+				newClass.__new__ = newClass.__new__.__orig_func__
+
 			newClass.__isAbstract__ = False
 
 		return newClass
 
 	def __call__(metacls, *args, **kwargs) -> type:
 		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
-		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
+		instances cache (see :py:attr:`__singletonInstanceCache__`) if the class was already constructed before.
 		"""
-		if metacls._isSingleton:
+		if metacls.__isSingleton__:
 			if metacls._instanceCache is None:
 				newClass = type.__call__(metacls, *args, **kwargs)
-				metacls._instanceCache = newClass
+				metacls.__singletonInstanceCache__ = newClass
 			else:
-				newClass = metacls._instanceCache
+				newClass = metacls.__singletonInstanceCache__
 		else:
 			newClass = type.__call__(metacls, *args, **kwargs)
 
