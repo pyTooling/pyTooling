@@ -121,7 +121,47 @@ def export(entity: T) -> T:
 
 @export
 def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
+	"""Store a reference to the original function/method on a new, wrapper or replacement function/method.
+
+	The function or method reference is stored in ``__orig_func__``.
+
+	.. admonition:: ``metaclass.py``
+
+	   .. code:: python
+
+	      from functools import wraps
+	      from pyTooling.Decorators import OriginalFunction
+
+	      class Meta(type):
+	        def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
+	          # Create a new class
+	          newClass = type.__new__(self, className, baseClasses, members)
+
+	          @OriginalFunction(newClass.__new__)
+	          @wraps(newClass.__new__)
+	          def new(cls, *args, **kwargs):
+	            # ...
+	            obj = newClass.__new__(*args, **kwargs)
+	            # ...
+	            return obj
+
+	          newClass.__new__ = new
+
+	          return newClass
+
+	:param func: Function or method reference to be store on the decorated function or method.
+	:returns:    Decorator function that stores the function or method reference on the decorated object.
+	"""
 	def decorator(f: Func) -> Func:
+		"""Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
+
+		:param f:          Function or method, where the original function or method reference is attached to.
+		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.
+		:raises TypeError: If decorated object is not callable.
+		"""
+		if not isinstance(f, Callable):
+			raise TypeError(f"Decorated object is not callable.")
+
 		f.__orig_func__ = func
 		return f
 
@@ -131,6 +171,21 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 @export
 def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
 	"""Copy the doc-string from given base-class to the method this decorator is applied to.
+
+	.. admonition:: ``example.py``
+
+	    .. code:: python
+
+	      from pyTooling.Decorators import InheritDocString
+
+	      class Class1:
+	        def method(self):
+	          '''Method's doc-string.'''
+
+	      class Class2(Class1):
+	        @InheritDocString(Class1)
+	        def method(self):
+	          super().method()
 
 	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
 	:returns:         Decorator function that copies the doc-string.
