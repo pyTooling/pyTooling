@@ -45,32 +45,33 @@ class SemVersion(metaclass=Overloading):
 
 	class Parts(IntEnum):
 		"""Enumeration of parts in a version number that can be presents."""
-		Major = 1       #: Major number (e.g. X in ``vX.0.0``).
-		Minor = 2       #: Minor number (e.g. Y in ``v0.Y.0``).
-		Patch = 4       #: Patch number (e.g. Z in ``v0.0.Z``).
-		Build = 8       #: Build number (e.g. bbbb in ``v0.0.0.bbbb``)
-		Pre   = 16      #: Pre-release number
-		Post  = 32      #: Post-release number
-		Prefix = 64     #: Prefix
-		Postfix = 128   #: Postfix
-		AHead   = 256
+		Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
+		Minor = 2       #: Minor number is present. (e.g. Y in ``v0.Y.0``).
+		Patch = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
+		Build = 8       #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
+		Pre   = 16      #: Pre-release number is present.
+		Post  = 32      #: Post-release number is present.
+		Prefix = 64     #: Prefix is present.
+		Postfix = 128   #: Postfix is present.
+#		AHead   = 256
 
 	class Flags(IntEnum):
 		"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
 		Clean = 1       #: A versioned build was created from a *clean* working directory.
 		Dirty = 2       #: A versioned build was created from a *dirty* working directory.
 
-	parts   : Parts
-	flags   : int = Flags.Clean
-	major   : int = 0
-	minor   : int = 0
-	patch   : int = 0
-	build   : int = 0
-	pre     : int = 0
-	post    : int = 0
-	prefix  : str = ""
-	postfix : str = ""
-	ahead   : int = 0
+	parts   : Parts                #: Integer flag enumeration of present parts in a version number.
+	flags   : int = Flags.Clean    #: State if the version in a working directory is clean or dirty compared to a tagged version.
+	major   : int = 0              #: Major number part of the version number.
+	minor   : int = 0              #: Minor number part of the version number.
+	patch   : int = 0              #: Patch number part of the version number.
+	build   : int = 0              #: Build number part of the version number.
+	pre     : int = 0              #: Pre-release version number part.
+	post    : int = 0              #: Post-release version number part.
+	prefix  : str = ""             #: Prefix string
+	postfix : str = ""             #: Postfix string
+# QUESTION: was this how many commits a version is ahead of the last tagged version?
+#	ahead   : int = 0
 
 	def __init__(self, versionString : str):
 		if versionString == "":
