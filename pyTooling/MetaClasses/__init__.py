@@ -191,8 +191,8 @@ class SuperType(type):
 		newClass = type.__new__(self, className, baseClasses, members)
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = self.__checkForAbstractMethods(baseClasses, members)
-		newClass.__isAbstract__ = self.__wrapNewMethod(newClass)
-		newClass.__isSingleton__ = self.__wrapCallMethod(newClass, singleton)
+		newClass.__isSingleton__ = self.__wrapNewMethodIfSingleton(newClass, singleton)
+		newClass.__isAbstract__ = self.__wrapNewMethodIfAbstract(newClass)
 
 			# if hasattr(newClass, "__new__"):
 			# 	new = getattr(newClass, "__new__")
@@ -208,7 +208,7 @@ class SuperType(type):
 	# 	instances cache (see :py:attr:`__singletonInstanceCache__`) if the class was already constructed before.
 	# 	"""
 	# 	if metacls.__isSingleton__:
-	# 		if metacls._instanceCache is None:
+	# 		if metacls.__singletonInstanceCache__ is None:
 	# 			newClass = type.__call__(metacls, *args, **kwargs)
 	# 			metacls.__singletonInstanceCache__ = newClass
 	# 		else:
@@ -235,7 +235,27 @@ class SuperType(type):
 		return tuple(result)
 
 	@staticmethod
-	def __wrapNewMethod(newClass) -> bool:
+	def __wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+		if singleton:
+			@OriginalFunction(newClass.__new__)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				if cls.__singletonInstanceCache__ is None:
+					obj = newClass.__new__(*args, **kwargs)
+					cls.__singletonInstanceCache__ = obj
+				else:
+					obj = cls.__singletonInstanceCache__
+
+				return obj
+
+			newClass.__new__ = new
+			newClass.__singletonInstanceCache__ = None
+			return True
+
+		return False
+
+	@staticmethod
+	def __wrapNewMethodIfAbstract(newClass) -> bool:
 		# Replace '__new__' by a variant to through an error on not overridden methods
 		if newClass.__abstractMethods__:
 			@OriginalFunction(newClass.__new__)
@@ -255,26 +275,6 @@ class SuperType(type):
 				newClass.__new__ = newClass.__new__.__orig_func__
 
 			return False
-
-	@staticmethod
-	def __wrapCallMethod(newClass, singleton: bool) -> bool:
-		if singleton:
-			@OriginalFunction(newClass.__call__)
-			@wraps(newClass.__call__)
-			def call(cls, *args, **kwargs):
-				if cls.__singletonInstanceCache__ is None:
-					obj = newClass.__call__(*args, **kwargs)
-					cls.__singletonInstanceCache__ = obj
-				else:
-					obj = cls.__singletonInstanceCache__
-
-				return obj
-
-			newClass.__call__ = call
-			newClass.__singletonInstanceCache__ = None
-			return True
-
-		return False
 
 	@staticmethod
 	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]):
