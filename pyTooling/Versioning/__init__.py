@@ -33,7 +33,7 @@
 .. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
 from enum          import IntEnum
-from typing import Optional as Nullable, Any
+from typing        import Optional as Nullable, Any
 
 from ..Decorators  import export
 from ..MetaClasses import Overloading
@@ -44,19 +44,21 @@ class SemVersion(metaclass=Overloading):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
 	class Parts(IntEnum):
-		Major = 1
-		Minor = 2
-		Patch = 4
-		Build = 8
-		Pre   = 16
-		Post  = 32
-		Prefix = 64
-		Postfix = 128
+		"""Enumeration of parts in a version number that can be presents."""
+		Major = 1       #: Major number (e.g. X in ``vX.0.0``).
+		Minor = 2       #: Minor number (e.g. Y in ``v0.Y.0``).
+		Patch = 4       #: Patch number (e.g. Z in ``v0.0.Z``).
+		Build = 8       #: Build number (e.g. bbbb in ``v0.0.0.bbbb``)
+		Pre   = 16      #: Pre-release number
+		Post  = 32      #: Post-release number
+		Prefix = 64     #: Prefix
+		Postfix = 128   #: Postfix
 		AHead   = 256
 
 	class Flags(IntEnum):
-		Clean = 1
-		Dirty = 2
+		"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
+		Clean = 1       #: A versioned build was created from a *clean* working directory.
+		Dirty = 2       #: A versioned build was created from a *dirty* working directory.
 
 	parts   : Parts
 	flags   : int = Flags.Clean
@@ -101,8 +103,9 @@ class SemVersion(metaclass=Overloading):
 	def __eq__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) for equality.
 
-		:returns: True, if both version numbers are equal.
-		raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+		:param other:      Parameter to compare against.
+		:returns:          True, if both version numbers are equal.
+		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -117,8 +120,9 @@ class SemVersion(metaclass=Overloading):
 	def __ne__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) for inequality.
 
-		:returns: True, if both version numbers are not equal.
-		raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+		:param other:      Parameter to compare against.
+		:returns:          True, if both version numbers are not equal.
+		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -127,6 +131,14 @@ class SemVersion(metaclass=Overloading):
 
 	@staticmethod
 	def __compare(left: 'SemVersion', right: 'SemVersion') -> Nullable[bool]:
+		"""Private helper method to compute the comparison of two :py:class:`SemVersion` instances.
+
+		:param left:  Left parameter.
+		:param right: Right parameter.
+		:returns:     True, if ``left`` is smaller than ``right``. |br|
+		              False if ``left`` is greater than ``right``. |br|
+		              Otherwise it's None (both parameters are equal).
+		"""
 		if (left.major < right.major):
 			return True
 		if (left.major > right.major):
@@ -152,7 +164,8 @@ class SemVersion(metaclass=Overloading):
 	def __lt__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) if the version is less than the second operand.
 
-		:returns: True if version is less than the second operand.
+		:param other:      Parameter to compare against.
+		:returns:          True if version is less than the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -164,7 +177,8 @@ class SemVersion(metaclass=Overloading):
 	def __le__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) if the version is less than or equal to the second operand.
 
-		:returns: True if version is less than or equal to the second operand.
+		:param other:      Parameter to compare against.
+		:returns:          True if version is less than or equal to the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -176,7 +190,8 @@ class SemVersion(metaclass=Overloading):
 	def __gt__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) if the version is greater than the second operand.
 
-		:returns: True if version is greater than the second operand.
+		:param other:      Parameter to compare against.
+		:returns:          True if version is greater than the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -187,7 +202,8 @@ class SemVersion(metaclass=Overloading):
 	def __ge__(self, other: Any) -> bool:
 		"""Compare two Version instances (version numbers) if the version is greater than or equal to the second operand.
 
-		:returns: True if version is greater than or equal to the second operand.
+		:param other:      Parameter to compare against.
+		:returns:          True if version is greater than or equal to the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):

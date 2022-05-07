@@ -43,13 +43,14 @@ __all__ = ["export", "Param", "RetType", "Func", "T"]
 try:
 	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
 	from typing import ParamSpec    # exists since Python 3.10
-	Param = ParamSpec("Param")
-	RetType = TypeVar("RetType")
-	Func = Callable[Param, RetType]
+
+	Param = ParamSpec("Param")                       #: A parameter specification for function or method
+	RetType = TypeVar("RetType")                     #: Type variable for a return type
+	Func = Callable[Param, RetType]                  #: Type specification for a function
 except ImportError:
-	Param = ...
-	RetType = TypeVar("RetType")
-	Func = Callable[..., RetType]
+	Param = ...                                      #: A parameter specification for function or method
+	RetType = TypeVar("RetType")                     #: Type variable for a return type
+	Func = Callable[..., RetType]                    #: Type specification for a function
 
 
 T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class or function
