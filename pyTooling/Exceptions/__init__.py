@@ -64,6 +64,17 @@ class MustOverrideClassError(AbstractClassError):
 	"""
 
 
+@export
+class OverloadResolutionError(Exception):
+	"""The exception is raised, when no matching overloaded method was found.
+
+	.. seealso::
+	   :py:func:`@overloadable <pyTooling.MetaClasses.overloadable>`
+	      |rarr| Mark a method as *overloadable*.
+	"""
+
+
+@export
 class ExceptionBase(Exception):
 	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
 
