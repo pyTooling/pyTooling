@@ -33,6 +33,7 @@
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
+import threading
 from functools  import wraps
 from inspect    import signature, Parameter
 from types      import MethodType
@@ -205,29 +206,7 @@ class SuperType(type):
 		newClass.__isAbstract__ = self.__wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self.__wrapNewMethodIfSingleton(newClass, singleton)
 
-			# if hasattr(newClass, "__new__"):
-			# 	new = getattr(newClass, "__new__")
-			# 	isFromObject = new is object.__new__
-			# 	print(f"__new__ of '{className}': {new} ({isFromObject})")
-			# else:
-			# 	print(f"Class '{className}' has no __new__.")
-
 		return newClass
-
-	# def __call__(metacls, *args, **kwargs) -> type:
-	# 	"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
-	# 	instances cache (see :py:attr:`__singletonInstanceCache__`) if the class was already constructed before.
-	# 	"""
-	# 	if metacls.__isSingleton__:
-	# 		if metacls.__singletonInstanceCache__ is None:
-	# 			newClass = type.__call__(metacls, *args, **kwargs)
-	# 			metacls.__singletonInstanceCache__ = newClass
-	# 		else:
-	# 			newClass = metacls.__singletonInstanceCache__
-	# 	else:
-	# 		newClass = type.__call__(metacls, *args, **kwargs)
-	#
-	# 	return newClass
 
 	@classmethod
 	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
@@ -254,21 +233,32 @@ class SuperType(type):
 			@OriginalFunction(oldnew)
 			@wraps(newClass.__new__)
 			def new(cls, *args, **kwargs):
-				if cls.__singletonInstanceCache__ is None:
-					obj = oldnew(cls, *args, **kwargs)
-				else:
-					obj = cls.__singletonInstanceCache__
+				with cls.__singletonInstanceCond__:
+					if cls.__singletonInstanceCache__ is None:
+						obj = oldnew(cls, *args, **kwargs)
+						cls.__singletonInstanceCache__ = obj
+					else:
+						obj = cls.__singletonInstanceCache__
 
 				return obj
 
 			@wraps(newClass.__init__)
 			def init(self, *args, **kwargs):
-				if self.__class__.__singletonInstanceCache__ is None:
-					oldinit(self, *args, **kwargs)
-					self.__class__.__singletonInstanceCache__ = self
+				cls = self.__class__
+				cv = cls.__singletonInstanceCond__
+				with cv:
+					if cls.__singletonInstanceInit__:
+						oldinit(self, *args, **kwargs)
+						cls.__singletonInstanceInit__ = False
+						cv.notify_all()
+					else:
+						while cls.__singletonInstanceInit__:
+							cv.wait()
 
 			newClass.__new__ = new
 			newClass.__init__ = init
+			newClass.__singletonInstanceCond__ = threading.Condition()
+			newClass.__singletonInstanceInit__ = True
 			newClass.__singletonInstanceCache__ = None
 			return True
 
@@ -295,11 +285,11 @@ class SuperType(type):
 				# WORKAROUND:
 				#   Python version: 3.7, 3.8
 				#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
-				#try:
-				newClass.__new__ = newClass.__new__.__orig_func__
-				#except AttributeError:
-				#	print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
-				#	pass
+				try:
+					newClass.__new__ = newClass.__new__.__orig_func__
+				except AttributeError:
+					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
+					pass
 
 			return False
 
