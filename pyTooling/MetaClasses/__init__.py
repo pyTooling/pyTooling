@@ -202,8 +202,8 @@ class SuperType(type):
 		newClass = type.__new__(self, className, baseClasses, members)
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = self.__checkForAbstractMethods(baseClasses, members)
-		newClass.__isSingleton__ = self.__wrapNewMethodIfSingleton(newClass, singleton)
 		newClass.__isAbstract__ = self.__wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ = self.__wrapNewMethodIfSingleton(newClass, singleton)
 
 			# if hasattr(newClass, "__new__"):
 			# 	new = getattr(newClass, "__new__")
@@ -248,18 +248,27 @@ class SuperType(type):
 	@staticmethod
 	def __wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
 		if singleton:
-			@OriginalFunction(newClass.__new__)
+			oldnew = newClass.__new__
+			oldinit = newClass.__init__
+
+			@OriginalFunction(oldnew)
 			@wraps(newClass.__new__)
 			def new(cls, *args, **kwargs):
 				if cls.__singletonInstanceCache__ is None:
-					obj = newClass.__new__(*args, **kwargs)
-					cls.__singletonInstanceCache__ = obj
+					obj = oldnew(cls, *args, **kwargs)
 				else:
 					obj = cls.__singletonInstanceCache__
 
 				return obj
 
+			@wraps(newClass.__init__)
+			def init(self, *args, **kwargs):
+				if self.__class__.__singletonInstanceCache__ is None:
+					oldinit(self, *args, **kwargs)
+					self.__class__.__singletonInstanceCache__ = self
+
 			newClass.__new__ = new
+			newClass.__init__ = init
 			newClass.__singletonInstanceCache__ = None
 			return True
 
@@ -283,6 +292,9 @@ class SuperType(type):
 			# skip intermediate 'new' function if class isn't abstract anymore
 			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
 			if newClass.__new__ is not object.__new__:
+				# WORKAROUND:
+				#   Python version: 3.7, 3.8
+				#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
 				try:
 					newClass.__new__ = newClass.__new__.__orig_func__
 				except AttributeError:
