@@ -69,7 +69,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 	* :py:meth:`IteratePreOrder` |rarr| iterate siblings in pre-order.
 	* :py:meth:`IteratePostOrder` |rarr| iterate siblings in post-order.
 
-	Each node can have a **unique ID** or no ID at all (``id=None``). The root node is used to store all IDs in a
+	Each node can have a **unique ID** or no ID at all (``nodeID=None``). The root node is used to store all IDs in a
 	dictionary (:py:attr:`_nodesWithID`). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
 	list of nodes. An ID can be modified after the Node was created. Use the read-only property :py:attr:`ID` to access
 	the ID.
@@ -92,9 +92,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 	_value: Nullable[ValueT]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyT, DictValueT]          #: Dictionary to store key-value-pairs attached to the node.
 
-	def __init__(self, id: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
+	def __init__(self, nodeID: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
 		""".. todo:: Needs documentation!"""
-		self._id = id
+		self._id = nodeID
 		self._value = value
 		self._dict = {}
 
@@ -107,21 +107,21 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 			self._nodesWithID = {}
 			self._nodesWithoutID = []
-			if id is None:
+			if nodeID is None:
 				self._nodesWithoutID.append(self)
 			else:
-				self._nodesWithID[id] = self
+				self._nodesWithID[nodeID] = self
 		else:
 			self._root = parent._root
 			self._parent = parent
 			self._nodesWithID = None
 
-			if id is None:
+			if nodeID is None:
 				self._root._nodesWithoutID.append(self)
-			elif id in self._root._nodesWithID:
-				raise ValueError(f"ID '{id}' already exists in this tree.")
+			elif nodeID in self._root._nodesWithID:
+				raise ValueError(f"ID '{nodeID}' already exists in this tree.")
 			else:
-				self._root._nodesWithID[id] = self
+				self._root._nodesWithID[nodeID] = self
 
 			parent._children.append(self)
 
@@ -278,11 +278,11 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		return len(self._children) > 0
 
 	def _SetNewRoot(self, nodesWithIDs: Dict['Node', 'Node'], nodesWithoutIDs: List['Node']) -> None:
-		for id, node in nodesWithIDs.items():
-			if id in self._root._nodesWithID:
-				raise ValueError(f"ID '{id}' already exists in this tree.")
+		for nodeID, node in nodesWithIDs.items():
+			if nodeID in self._root._nodesWithID:
+				raise ValueError(f"ID '{nodeID}' already exists in this tree.")
 			else:
-				self._root._nodesWithID[id] = node
+				self._root._nodesWithID[nodeID] = node
 				node._root = self._root
 
 		for node in nodesWithoutIDs:
@@ -377,7 +377,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 				else:
 					return
 		elif isinstance(others, Iterable):
-			raise NotImplemented(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
+			raise NotImplementedError(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
 
 	def GetChildren(self) -> Generator['Node', None, None]:
 		"""A generator to iterate all direct children of the current node.
@@ -528,20 +528,20 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		for i in range(index, len(otherPath)):
 			yield otherPath[i]
 
-	def GetNodeByID(self, id: IDT) -> 'Node':
+	def GetNodeByID(self, nodeID: IDT) -> 'Node':
 		"""Lookup a node by its unique ID.
 
-		:param id:          ID of a node to lookup in the tree.
+		:param nodeID:      ID of a node to lookup in the tree.
 		:returns:           Node for the given ID.
-		:raises ValueError: If parameter ``id`` is None.
-		:raises KeyError:   If parameter ``id`` is not found in the tree.
+		:raises ValueError: If parameter ``nodeID`` is None.
+		:raises KeyError:   If parameter ``nodeID`` is not found in the tree.
 		"""
-		if id is None:
+		if nodeID is None:
 			raise ValueError(f"'None' is not supported as an ID value.")
 
-		return self._root._nodesWithID[id]
+		return self._root._nodesWithID[nodeID]
 
-	def Find(self, filter: Callable) -> Generator['Node', None, None]:
+	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
 	def __repr__(self) -> str:
@@ -549,15 +549,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 		:returns: The detailed string representation of the node.
 		"""
-		id = parent = value = ""
+		nodeID = parent = value = ""
 		if self._id is not None:
-			id = f"; id='{self._id}'"
+			nodeID = f"; nodeID='{self._id}'"
 		if (self._parent is not None) and (self._parent._id is not None):
 			parent = f"; parent='{self._parent._id}'"
 		if self._value is not None:
 			value = f"; value='{self._value}'"
 
-		return f"<node{id}{parent}{value}>"
+		return f"<node{nodeID}{parent}{value}>"
 
 	def __str__(self) -> str:
 		"""Return a string representation of the node.

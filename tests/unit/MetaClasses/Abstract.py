@@ -86,21 +86,21 @@ class DerivedMustOverrideClass(MustOverrideBase):
 
 class Abstract(TestCase):
 	def test_NormalBase(self) -> None:
-		cls = NormalBase()
+		NormalBase()
 
 	def test_NormalClass(self) -> None:
-		cls = NormalClass()
+		NormalClass()
 
 	def test_AbstractBase(self) -> None:
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:
-			base = AbstractBase()
+			AbstractBase()
 
 		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
 
 	def test_AbstractClass(self) -> None:
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:
-			base = AbstractClass()
+			AbstractClass()
 
 		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
@@ -115,17 +115,17 @@ class Abstract(TestCase):
 
 	def test_MustOverrideBase(self) -> None:
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:
-			base = MustOverrideBase()
+			MustOverrideBase()
 
 		self.assertIn("MustOverrideBase", str(ExceptionCapture.exception))
 		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
 
 	def test_MustOverrideClass(self) -> None:
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:
-			base = MustOverrideClass()
+			MustOverrideClass()
 
 		self.assertIn("MustOverrideClass", str(ExceptionCapture.exception))
 		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
 
 	def test_DerivedMustOverride(self) -> None:
-		derived = DerivedMustOverrideClass()
+		DerivedMustOverrideClass()
