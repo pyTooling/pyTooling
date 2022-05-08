@@ -35,7 +35,7 @@
 from typing import Union, ClassVar, Iterator
 
 from ..Decorators import export
-from ..MetaClasses import SlottedType
+from ..MetaClasses import SuperType
 
 
 KeyT = Union[str, int]
@@ -44,7 +44,7 @@ ValueT = Union[NodeT, str, int, float]
 
 
 @export
-class Node(metaclass=SlottedType):
+class Node(metaclass=SuperType, useSlots=True):
 	"""Abstract node in a configuration data structure."""
 
 	DICT_TYPE: ClassVar["Dictionary"]

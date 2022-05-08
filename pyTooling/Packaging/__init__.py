@@ -45,14 +45,14 @@ from typing       import List, Iterable, Dict, Sequence
 
 try:
 	from ..Decorators import export
-	from ..MetaClasses import SlottedType
+	from ..MetaClasses import SuperType
 	from ..Licensing  import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
-		from MetaClasses import SlottedType
+		from MetaClasses import SuperType
 		from Licensing import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
@@ -130,7 +130,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation(metaclass=SlottedType):
+class VersionInformation(metaclass=SuperType, useSlots=True):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).
@@ -230,9 +230,9 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 							if isinstance(const, Constant) and isinstance(const.value, str):
 								_keywords.append(const.value)
 							else:
-								raise TypeError
+								raise TypeError  # TODO: add error message
 					else:
-						raise TypeError
+						raise TypeError  # TODO: add error message
 				if isinstance(target, Name) and target.id == "__license__" and isinstance(value, Constant) and isinstance(value.value, str):
 					_license = value.value
 				if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):

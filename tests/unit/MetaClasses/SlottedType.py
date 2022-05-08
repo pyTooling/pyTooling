@@ -29,15 +29,15 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :metacls:`pyTooling.MetaClasses.SlottedType`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.SuperType`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
-import sys
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import SlottedType
+from pyTooling.Common import getsizeof
+from pyTooling.MetaClasses import SuperType
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -54,11 +54,14 @@ class Slotted(TestCase):
 		data = Data()
 
 		print()
-		print(f"size: {sys.getsizeof(data)}")
-
+		print()
+		try:
+			print(f"size: {getsizeof(data)}")
+		except TypeError:
+			print(f"size: not supported on PyPy")
 
 	def test_SlottedData(self):
-		class SlottedData(metaclass=SlottedType):
+		class SlottedData(metaclass=SuperType, useSlots=True):
 			_data: int
 
 			def __init__(self, data: int):
@@ -79,14 +82,17 @@ class Slotted(TestCase):
 			_ = data._z
 
 		print()
-		print(f"size: {sys.getsizeof(data)}")
+		try:
+			print(f"size: {getsizeof(data)}")
+		except TypeError:
+			print(f"size: not supported on PyPy")
 
 	def test_NonSlottedBaseClass(self):
 		class Base:
 			_baseData: int
 
-		with self.assertRaises(TypeError):
-			class SlottedData(Base, metaclass=SlottedType):
+		with self.assertRaises(AttributeError):
+			class SlottedData(Base, metaclass=SuperType, useSlots=True):
 				_data: int
 
 				def __init__(self, data: int):

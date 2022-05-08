@@ -29,15 +29,15 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.Abstract`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import SuperType
-
+from pyTooling.Exceptions import AbstractClassError
+from pyTooling.MetaClasses import SuperType, abstractmethod, mustoverride
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -45,84 +45,87 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Application1(metaclass=SuperType, singleton=True):
-	X = 0
-
-	def __init__(self):
-		print("Instance of 'Application1' was created")
-
-		self.X = 1
+class NormalBase(metaclass=SuperType):
+	def NormalMethod(self):
+		pass
 
 
-class Application2(metaclass=SuperType, singleton=True):
-	X = 10
-
-	def __init__(self):
-		print("Instance of 'Application2' was created")
-
-		self.X = 11
-
-# class Application2(metaclass=Singleton, includeDerivedVariants=True):
-# 	X = 0
-#
-# 	def __init__(self, x=5):
-# 		print("setting X")
-#
-# 		self.X = x
+class NormalClass(NormalBase):
+	pass
 
 
-# class Application3(Application2):
-#
-# 	def __init__(self, x):
-# 		super().__init__(x)
-# 		print("Instance created")
+class AbstractBase(metaclass=SuperType):
+	@abstractmethod
+	def AbstractMethod(self):
+		pass
 
 
-class Singleton(TestCase):
-	def test_1(self) -> None:
-		self.assertEqual(0, Application1.X)
-		self.assertEqual(10, Application2.X)
+class AbstractClass(AbstractBase):
+	pass
 
-		app_1 = Application1()
-		self.assertEqual(1, app_1.X)
 
-		app_1.X = 2
-		self.assertEqual(2, app_1.X)
+class DerivedAbstractClass(AbstractBase):
+	def AbstractMethod(self):
+		super().AbstractMethod()
 
-		app_1same = Application1()
-		self.assertIs(app_1, app_1same)
-		self.assertEqual(2, app_1same.X)
 
-		self.assertEqual(0, Application1.X)
+class MustOverrideBase(metaclass=SuperType):
+	@mustoverride
+	def MustOverrideMethod(self):
+		pass
 
-		app_2 = Application2()
-		self.assertIsNot(app_1, app_2)
-		self.assertEqual(2, app_1.X)
-		self.assertEqual(11, app_2.X)
 
-		app_2.X = 12
-		self.assertEqual(2, app_1.X)
-		self.assertEqual(12, app_2.X)
+class MustOverrideClass(MustOverrideBase):
+	pass
 
-	def test_2(self):
-		# ensure at least one instance was created
-		Application1()
 
-		with self.assertRaises(ValueError) as ExceptionCapture:
-			Application1(x = 35)
+class DerivedMustOverrideClass(MustOverrideBase):
+	def MustOverrideMethod(self):
+		super().MustOverrideMethod()
 
-		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
 
-	# def test_2(self):
-	# 	self.assertEqual(Application3.X, 0)
-	#
-	# 	app = Application3(1)
-	# 	self.assertEqual(app.X, 1)
-	#
-	# 	app.X = 2
-	# 	self.assertEqual(app.X, 2)
-	#
-	# 	app2 = Application3(3)
-	# 	self.assertEqual(app2.X, 2)
-	#
-	# 	self.assertEqual(Application3.X, 0)
+class Abstract(TestCase):
+	def test_NormalBase(self) -> None:
+		cls = NormalBase()
+
+	def test_NormalClass(self) -> None:
+		cls = NormalClass()
+
+	def test_AbstractBase(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			base = AbstractBase()
+
+		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_AbstractClass(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			base = AbstractClass()
+
+		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedAbstractClass(self) -> None:
+		derived = DerivedAbstractClass()
+
+		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+			derived.AbstractMethod()
+
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+
+	def test_MustOverrideBase(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			base = MustOverrideBase()
+
+		self.assertIn("MustOverrideBase", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+
+	def test_MustOverrideClass(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			base = MustOverrideClass()
+
+		self.assertIn("MustOverrideClass", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedMustOverride(self) -> None:
+		derived = DerivedMustOverrideClass()

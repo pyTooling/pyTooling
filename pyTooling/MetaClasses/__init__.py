@@ -33,44 +33,28 @@
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
-from inspect  import signature, Parameter
-from types    import MethodType
-from typing   import Any, Tuple, List, Dict, Callable, Type
+import threading
+from functools  import wraps
+from inspect    import signature, Parameter
+from types      import MethodType
+from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
 
 
 try:
-	from ..Decorators import export
+	from ..Exceptions import AbstractClassError
+	from ..Decorators import export, OriginalFunction
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
+		from Exceptions import AbstractClassError
+		from Decorators import export, OriginalFunction
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
 
 
-@export
-class Singleton(type):
-	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
-
-	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
-
-	def __call__(cls, *args, **kwargs):
-		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an
-		instances cache (see :py:attr:`_instanceCache`) if the class was already constructed before.
-		"""
-		if cls not in cls._instanceCache:
-			cls._instanceCache[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-		return cls._instanceCache[cls]
-
-	@classmethod
-	def Register(cls, t, instance) -> None:
-		"""Register a type,instance pair in :attr:`_instanceCache`."""
-		if t not in cls._instanceCache:
-			cls._instanceCache[t] = instance
-		else:
-			raise KeyError(f"Type '{t!s}' is already registered.")
+__all__ = ["M"]
 
 
 @export
@@ -151,31 +135,181 @@ class Overloading(type):
 		return cls.DispatchDictionary()
 
 
+M = TypeVar("M", bound=Callable)   #: A type variable for methods.
+
+
 @export
-class SlottedType(type):
+def abstractmethod(method: M) -> M:
+	@wraps(method)
+	def func(self):
+		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
+
+	func.__abstract__ = True
+	return func
+
+
+@export
+def mustoverride(method: M) -> M:
+	method.__mustOverride__ = True
+	return method
+
+
+@export
+def overloadable(method: M) -> M:
+	method.__overloadable__ = True
+	return method
+
+
+@export
+class SuperType(type):
 	"""
+
+	Features:
+
+	* Store object members more effectively in slots instead of ``_dict__``.
+	* Allow only a single instance to be created (singleton).
+	* Define methods as abstract and prohibit instantiation of abstract classes.
+	* Allow method overloading and dispatch overloads based on argument signatures.
 
 	.. seealso::
 
 		`Python data model - __slots__ <https://docs.python.org/3/reference/datamodel.html#slots>`__
 	"""
 
-	def __new__(metacls, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
+	def __new__(
+		self,
+		className: str,
+		baseClasses: Tuple[type],
+		members: Dict[str, Any],
+		singleton: bool = False,
+		useSlots: bool = False
+	) -> type:
+		"""
+
+		:param className:
+		:param baseClasses:
+		:param members:
+		:param singleton:
+		:param useSlots:
+		:raises AttributeError: If base-class has no '__slots__' attribute.
+		:raises AttributeError: If slot already exists in base-class.
+		"""
+
+		# Check if members should be stored in slots. If so get these members from type annotated fields
+		if useSlots:
+			members['__slots__'] = self.__getSlots(baseClasses, members)
+
+		# Create a new class
+		newClass = type.__new__(self, className, baseClasses, members)
+		# Search in inheritance tree for abstract methods
+		newClass.__abstractMethods__ = self.__checkForAbstractMethods(baseClasses, members)
+		newClass.__isAbstract__ = self.__wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ = self.__wrapNewMethodIfSingleton(newClass, singleton)
+
+		return newClass
+
+	@classmethod
+	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+		result = set()
+		for base in baseClasses:
+			for cls in base.__mro__:
+				if hasattr(cls, "__abstractMethods__"):
+					result = result.union(cls.__abstractMethods__)
+
+		for memberName, member in members.items():
+			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
+				result.add(memberName)
+			elif memberName in result:
+				result.remove(memberName)
+
+		return tuple(result)
+
+	@staticmethod
+	def __wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+		if singleton:
+			oldnew = newClass.__new__
+			oldinit = newClass.__init__
+
+			@OriginalFunction(oldnew)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				with cls.__singletonInstanceCond__:
+					if cls.__singletonInstanceCache__ is None:
+						obj = oldnew(cls, *args, **kwargs)
+						cls.__singletonInstanceCache__ = obj
+					else:
+						obj = cls.__singletonInstanceCache__
+
+				return obj
+
+			@wraps(newClass.__init__)
+			def init(self, *args, **kwargs):
+				cls = self.__class__
+				cv = cls.__singletonInstanceCond__
+				with cv:
+					if cls.__singletonInstanceInit__:
+						oldinit(self, *args, **kwargs)
+						cls.__singletonInstanceInit__ = False
+						cv.notify_all()
+					elif args or kwargs:
+						raise ValueError(f"A further instance of a singleton can't be reinitialized with parameters.")
+					else:
+						while cls.__singletonInstanceInit__:
+							cv.wait()
+
+			newClass.__new__ = new
+			newClass.__init__ = init
+			newClass.__singletonInstanceCond__ = threading.Condition()
+			newClass.__singletonInstanceInit__ = True
+			newClass.__singletonInstanceCache__ = None
+			return True
+
+		return False
+
+	@staticmethod
+	def __wrapNewMethodIfAbstract(newClass) -> bool:
+		# Replace '__new__' by a variant to through an error on not overridden methods
+		if newClass.__abstractMethods__:
+			@OriginalFunction(newClass.__new__)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				formattedMethodNames = "', '".join(newClass.__abstractMethods__)
+				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+
+			newClass.__new__ = new
+			return True
+
+		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
+		else:
+			# skip intermediate 'new' function if class isn't abstract anymore
+			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
+			if newClass.__new__ is not object.__new__:
+				# WORKAROUND:
+				#   Python version: 3.7, 3.8
+				#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
+				try:
+					newClass.__new__ = newClass.__new__.__orig_func__
+				except AttributeError:
+					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
+
+			return False
+
+	@staticmethod
+	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]):
 		annotatedFields = {}
 		for baseClass in baseClasses:
 			for base in reversed(baseClass.mro()[:-1]):
 				if not hasattr(base, "__slots__"):
-					raise TypeError(f"Base-class '{base.__name__}' has no '__slots__'.")
+					raise AttributeError(f"Base-class '{base.__name__}' has no '__slots__'.")
 
 				for annotation in base.__slots__:
 					annotatedFields[annotation] = base
 
-		# Typehint the annotations variable, as long as TypedDict isn't supported by all supported versions.
+		# Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
 		# (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
 		annotations: Dict[str, Any] = members.get("__annotations__", {})
 		for annotation in annotations:
 			if annotation in annotatedFields:
-				raise TypeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
+				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
 
-		members['__slots__'] = (*members.get('__slots__', []), *annotations)
-		return type.__new__(metacls, className, baseClasses, members)
+		return (*members.get('__slots__', []), *annotations)
