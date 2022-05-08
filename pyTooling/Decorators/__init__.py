@@ -162,7 +162,12 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 		if not isinstance(f, Callable):
 			raise TypeError(f"Decorated object is not callable.")
 
-		f.__orig_func__ = func
+		# WORKAROUND:
+		#   Python version: 3.7, 3.8
+		#   Problem:        f.__orig_func__ doesn't work
+		setattr(f, "__orig_func__", func)
+		_ = f.__orig_func__
+#		f.__orig_func__ = func
 		return f
 
 	return decorator
