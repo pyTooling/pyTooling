@@ -33,7 +33,16 @@
 
 .. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-from ..Decorators import export
+try:
+	from ..Decorators import export
+except (ImportError, ModuleNotFoundError):
+	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators import export
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
+		raise ex
 
 
 @export

@@ -289,7 +289,6 @@ class SuperType(type):
 					newClass.__new__ = newClass.__new__.__orig_func__
 				except AttributeError:
 					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
-					pass
 
 			return False
 
