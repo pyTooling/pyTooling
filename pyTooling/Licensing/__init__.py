@@ -54,7 +54,7 @@ except (ImportError, ModuleNotFoundError):
 
 	try:
 		from Decorators import export
-		from MetaClasses import SlottedType
+		from MetaClasses import SuperType
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
 		raise ex
