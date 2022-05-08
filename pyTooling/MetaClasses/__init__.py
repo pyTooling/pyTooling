@@ -295,11 +295,11 @@ class SuperType(type):
 				# WORKAROUND:
 				#   Python version: 3.7, 3.8
 				#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
-				try:
-					newClass.__new__ = newClass.__new__.__orig_func__
-				except AttributeError:
-					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
-					pass
+				#try:
+				newClass.__new__ = newClass.__new__.__orig_func__
+				#except AttributeError:
+				#	print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
+				#	pass
 
 			return False
 
