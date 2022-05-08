@@ -251,6 +251,8 @@ class SuperType(type):
 						oldinit(self, *args, **kwargs)
 						cls.__singletonInstanceInit__ = False
 						cv.notify_all()
+					elif args or kwargs:
+						raise ValueError(f"A further instance of a singleton can't be reinitialized with parameters.")
 					else:
 						while cls.__singletonInstanceInit__:
 							cv.wait()
