@@ -104,6 +104,15 @@ class Singleton(TestCase):
 		self.assertEqual(2, app_1.X)
 		self.assertEqual(12, app_2.X)
 
+	def test_2(self):
+		# ensure at least one instance was created
+		Application1()
+
+		with self.assertRaises(ValueError) as ExceptionCapture:
+			Application1(x = 35)
+
+		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
+
 	# def test_2(self):
 	# 	self.assertEqual(Application3.X, 0)
 	#
