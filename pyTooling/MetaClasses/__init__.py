@@ -140,6 +140,30 @@ M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 @export
 def abstractmethod(method: M) -> M:
+	"""Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
+
+	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacement method.
+
+	.. warning::
+
+	   This decorator should be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.SuperType`.
+	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.AbstractClassError` at
+	   instantiation.
+
+	.. admonition:: ``example.py``
+
+	   .. code:: python
+
+	      class Data(mataclass=SuperType):
+	        @abstractmethod
+	        def method:
+	          '''This method needs to be implemented'''
+
+	:param method: Method that is marked as *abstract*.
+	:returns:      Replacement method, which raises a :py:exc:`NotImplementedError`. In additional field ``__abstract__``
+	               is added.
+	"""
+	@OriginalFunction(method)
 	@wraps(method)
 	def func(self):
 		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
@@ -150,6 +174,26 @@ def abstractmethod(method: M) -> M:
 
 @export
 def mustoverride(method: M) -> M:
+	"""Mark a method as *must-override*.
+
+	.. warning::
+
+	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.SuperType`.
+	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` at
+	   instantiation.
+
+	.. admonition:: ``example.py``
+
+	   .. code:: python
+
+	      class Data(mataclass=SuperType):
+	        @mustoverride
+	        def method:
+	          '''This is a very basic implementation'''
+
+	:param method: Method that is marked as *must-override*.
+	:returns:      Same method, but with additional ``__mustOverride__`` field.
+	"""
 	method.__mustOverride__ = True
 	return method
 
