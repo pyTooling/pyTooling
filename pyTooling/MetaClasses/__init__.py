@@ -283,7 +283,11 @@ class SuperType(type):
 			# skip intermediate 'new' function if class isn't abstract anymore
 			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
 			if newClass.__new__ is not object.__new__:
-				newClass.__new__ = newClass.__new__.__orig_func__
+				try:
+					newClass.__new__ = newClass.__new__.__orig_func__
+				except AttributeError:
+					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
+					pass
 
 			return False
 

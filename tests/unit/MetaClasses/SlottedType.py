@@ -91,7 +91,7 @@ class Slotted(TestCase):
 		class Base:
 			_baseData: int
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(AttributeError):
 			class SlottedData(Base, metaclass=SuperType, useSlots=True):
 				_data: int
 
