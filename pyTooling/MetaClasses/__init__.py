@@ -183,6 +183,17 @@ class SuperType(type):
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
+		"""
+
+		:param className:
+		:param baseClasses:
+		:param members:
+		:param singleton:
+		:param useSlots:
+		:raises AttributeError: If base-class has no '__slots__' attribute.
+		:raises AttributeError: If slot already exists in base-class.
+		"""
+
 		# Check if members should be stored in slots. If so get these members from type annotated fields
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)
@@ -282,7 +293,7 @@ class SuperType(type):
 		for baseClass in baseClasses:
 			for base in reversed(baseClass.mro()[:-1]):
 				if not hasattr(base, "__slots__"):
-					raise TypeError(f"Base-class '{base.__name__}' has no '__slots__'.")
+					raise AttributeError(f"Base-class '{base.__name__}' has no '__slots__'.")
 
 				for annotation in base.__slots__:
 					annotatedFields[annotation] = base
@@ -292,6 +303,6 @@ class SuperType(type):
 		annotations: Dict[str, Any] = members.get("__annotations__", {})
 		for annotation in annotations:
 			if annotation in annotatedFields:
-				raise TypeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
+				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
 
 		return (*members.get('__slots__', []), *annotations)

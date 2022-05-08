@@ -84,11 +84,11 @@ def export(entity: T) -> T:
 	      assert "exported" in globals()
 	      assert "not_exported" not in globals()
 
-	:param entity:     The function or class to include in `__all__`.
-	:returns:          The unmodified function or class.
-	:raises TypeError: If parameter ``entity`` has no ``__module__`` member.
-	:raises TypeError: If parameter ``entity`` is not a top-level entity in a module.
-	:raises TypeError: If parameter ``entity`` has no ``__name__``.
+	:param entity:          The function or class to include in `__all__`.
+	:returns:               The unmodified function or class.
+	:raises AttributeError: If parameter ``entity`` has no ``__module__`` member.
+	:raises TypeError:      If parameter ``entity`` is not a top-level entity in a module.
+	:raises TypeError:      If parameter ``entity`` has no ``__name__``.
 	"""
 	# * Based on an idea by Duncan Booth:
 	#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a
@@ -96,14 +96,14 @@ def export(entity: T) -> T:
 	#	  http://groups.google.com/group/comp.lang.python/msg/3d400fb22d8a42e1
 
 	if not hasattr(entity, "__module__"):
-		raise TypeError(f"{entity} has no __module__ attribute. Please ensure it is a top-level function or class reference defined in a module.")
+		raise AttributeError(f"{entity} has no __module__ attribute. Please ensure it is a top-level function or class reference defined in a module.")
 
 	if hasattr(entity, "__qualname__"):
 		if any(i in entity.__qualname__ for i in (".", "<locals>", "<lambda>")):
 			raise TypeError(f"Only named top-level functions and classes may be exported, not {entity}")
 
 	if not hasattr(entity, "__name__") or entity.__name__ == "<lambda>":
-		raise TypeError(f"Entity must be a named top-level funcion or class, not {entity.__class__}")
+		raise TypeError(f"Entity must be a named top-level function or class, not {entity.__class__}")
 
 	try:
 		module = sys.modules[entity.__module__]

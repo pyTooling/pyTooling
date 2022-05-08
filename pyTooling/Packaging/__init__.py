@@ -230,9 +230,9 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 							if isinstance(const, Constant) and isinstance(const.value, str):
 								_keywords.append(const.value)
 							else:
-								raise TypeError
+								raise TypeError  # TODO: add error message
 					else:
-						raise TypeError
+						raise TypeError  # TODO: add error message
 				if isinstance(target, Name) and target.id == "__license__" and isinstance(value, Constant) and isinstance(value.value, str):
 					_license = value.value
 				if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):
