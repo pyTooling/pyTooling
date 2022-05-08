@@ -48,13 +48,13 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
 	"_build",
-	"_themes",
+	"_theme",
 	"Thumbs.db",
 	".DS_Store"
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'stata-dark'
+pygments_style = "manni"
 
 
 # ==============================================================================
@@ -105,8 +105,6 @@ htmlhelp_basename = 'pyToolingDoc'
 # The empty string is equivalent to '%b %d, %Y'.
 html_last_updated_fmt = "%d.%m.%Y"
 
-
-pygments_style = "manni"
 
 # ==============================================================================
 # Options for LaTeX / PDF output
