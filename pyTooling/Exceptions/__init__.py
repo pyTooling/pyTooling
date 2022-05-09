@@ -47,7 +47,9 @@ except (ImportError, ModuleNotFoundError):
 
 @export
 class AbstractClassError(Exception):
-	"""The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
+
+	"""
+	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
 
 	.. seealso::
 	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
@@ -61,7 +63,9 @@ class AbstractClassError(Exception):
 
 @export
 class MustOverrideClassError(AbstractClassError):
-	"""The exception is raised, when a class contains methods marked with *must-override*.
+
+	"""
+	The exception is raised, when a class contains methods marked with *must-override*.
 
 	.. seealso::
 	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
@@ -75,7 +79,9 @@ class MustOverrideClassError(AbstractClassError):
 
 @export
 class OverloadResolutionError(Exception):
-	"""The exception is raised, when no matching overloaded method was found.
+
+	"""
+	The exception is raised, when no matching overloaded method was found.
 
 	.. seealso::
 	   :py:func:`@overloadable <pyTooling.MetaClasses.overloadable>`
@@ -85,7 +91,9 @@ class OverloadResolutionError(Exception):
 
 @export
 class ExceptionBase(Exception):
-	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
+
+	"""
+	Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
 
 	def __init__(self, message: str = ""):
 		"""pyExceptions initializer.
@@ -109,14 +117,17 @@ class ExceptionBase(Exception):
 
 @export
 class EnvironmentException(ExceptionBase):
+
 	"""The exception is raised when an expected environment variable is missing."""
 
 
 @export
 class PlatformNotSupportedException(ExceptionBase):
+
 	"""The exception is raise if the platform is not supported."""
 
 
 @export
 class NotConfiguredException(ExceptionBase):
+
 	"""The exception is raise if the requested setting is not configured."""
