@@ -1,7 +1,7 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-
+from importlib.util import find_spec
 from sys import path as sys_path
 from os.path import abspath
 from pathlib import Path
@@ -11,10 +11,10 @@ from pyTooling.Packaging import extractVersionInformation
 
 ROOT = Path(__file__).resolve().parent
 
-sys_path.insert(0, abspath('.'))
-sys_path.insert(0, abspath('..'))
-sys_path.insert(0, abspath('../pyTooling'))
-sys_path.insert(0, abspath('_extensions'))
+sys_path.insert(0, abspath("."))
+sys_path.insert(0, abspath(".."))
+sys_path.insert(0, abspath("../pyTooling"))
+sys_path.insert(0, abspath("_extensions"))
 
 
 # ==============================================================================
@@ -38,10 +38,10 @@ release =   versionInformation.Version
 # Miscellaneous settings
 # ==============================================================================
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -74,7 +74,7 @@ except Exception as ex:
 # Options for HTML output
 # ==============================================================================
 html_context = {}
-ctx = ROOT / 'context.json'
+ctx = ROOT / "context.json"
 if ctx.is_file():
 	html_context.update(loads(ctx.open('r').read()))
 
@@ -82,9 +82,18 @@ if (ROOT / "_theme").is_dir():
 	html_theme_path = ["."]
 	html_theme = "_theme"
 	html_theme_options = {
-		'logo_only': True,
-		'home_breadcrumbs': False,
-		'vcs_pageview_mode': 'blob',
+		"logo_only": True,
+		"home_breadcrumbs": False,
+		"vcs_pageview_mode": 'blob',
+#		"body_max_width": None
+#		"navigation_depth": 5,
+	}
+elif find_spec("sphinx_rtd_theme") is not None:
+	html_theme = "sphinx_rtd_theme"
+	html_theme_options = {
+		"logo_only": True,
+		"vcs_pageview_mode": 'blob',
+#		"navigation_depth": 5,
 	}
 else:
 	html_theme = "alabaster"
@@ -92,13 +101,13 @@ else:
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 html_logo = str(Path(html_static_path[0]) / "logo.png")
 html_favicon = str(Path(html_static_path[0]) / "icon.png")
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pyToolingDoc'
+htmlhelp_basename = "pyToolingDoc"
 
 # If not None, a 'Last updated on:' timestamp is inserted at every page
 # bottom, using the given strftime format.
@@ -113,13 +122,13 @@ from textwrap import dedent
 
 latex_elements = {
 	# The paper size ('letterpaper' or 'a4paper').
-	'papersize': 'a4paper',
+	"papersize": "a4paper",
 
 	# The font size ('10pt', '11pt' or '12pt').
 	#'pointsize': '10pt',
 
 	# Additional stuff for the LaTeX preamble.
-	'preamble': dedent(r"""
+	"preamble": dedent(r"""
 		% ================================================================================
 		% User defined additional preamble code
 		% ================================================================================
@@ -145,10 +154,10 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
 	( master_doc,
-		'pyTooling.tex',
-		'The pyTooling Documentation',
-		'Patrick Lehmann',
-		'manual'
+		"pyTooling.tex",
+		"The pyTooling Documentation",
+		"Patrick Lehmann",
+		"manual"
 	),
 ]
 
@@ -159,20 +168,21 @@ latex_documents = [
 extensions = [
 # Standard Sphinx extensions
 	"sphinx.ext.autodoc",
-	'sphinx.ext.extlinks',
-	'sphinx.ext.intersphinx',
-	'sphinx.ext.inheritance_diagram',
-	'sphinx.ext.todo',
-	'sphinx.ext.graphviz',
-	'sphinx.ext.mathjax',
-	'sphinx.ext.ifconfig',
-	'sphinx.ext.viewcode',
+	"sphinx.ext.coverage",
+	"sphinx.ext.extlinks",
+	"sphinx.ext.intersphinx",
+	"sphinx.ext.inheritance_diagram",
+	"sphinx.ext.todo",
+	"sphinx.ext.graphviz",
+	"sphinx.ext.mathjax",
+	"sphinx.ext.ifconfig",
+	"sphinx.ext.viewcode",
 # SphinxContrib extensions
-	'sphinxcontrib.mermaid',
+	"sphinxcontrib.mermaid",
 # Other extensions
-	'sphinx_fontawesome',
-	'sphinx_autodoc_typehints',
-	'autoapi.sphinx',
+	"sphinx_fontawesome",
+	"sphinx_autodoc_typehints",
+	"autoapi.sphinx",
 ]
 
 
@@ -180,7 +190,7 @@ extensions = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-	'python':   ('https://docs.python.org/3', None),
+	"python":   ("https://docs.python.org/3", None),
 }
 
 
@@ -218,6 +228,17 @@ graphviz_output_format = "svg"
 
 
 # ==============================================================================
+# Sphinx.Ext.Inheritance_Diagram
+# ==============================================================================
+inheritance_node_attrs = {
+#	"shape": "ellipse",
+#	"fontsize": 14,
+#	"height": 0.75,
+	"color": "dodgerblue1",
+	"style": "filled"
+}
+
+# ==============================================================================
 # Sphinx.Ext.ToDo
 # ==============================================================================
 # If true, `todo` and `todoList` produce output, else they produce nothing.
@@ -225,9 +246,20 @@ todo_include_todos = True
 todo_link_only = True
 
 
+
+
+# ==============================================================================
+# Sphinx.Ext.Coverage
+# ==============================================================================
+coverage_show_missing_items = True
+
+
 # ==============================================================================
 # AutoAPI.Sphinx
 # ==============================================================================
 autoapi_modules = {
-  'pyTooling':  {'output': "pyTooling", "override": True}
+	"pyTooling":  {
+		"output": "pyTooling",
+		"override": True
+	}
 }
