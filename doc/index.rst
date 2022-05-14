@@ -25,13 +25,22 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful classes, decorators,
-meta-classes and exceptions. It's useful for any Python-base project independent
-if it's a library, framework or CLI tool.
+**pyTooling** is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions. |br|
+It's useful for any Python-base project independent if it's a library, framework or CLI tool.
 
 
 Introduction
 ************
+
+**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. These are commonly used
+classes, decorators meta-classes or exceptions. More specialized helpers can be found in sub-namespaces like:
+
+* pyTooling.CLIAbstraction
+* pyTooling.GenericPath
+* pyTooling.TerminalUI
+
+In addition, pyTooling provides a collection of CI job templates for GitHub Actions. This drastically simplifies
+GHA-based CI pipelines for Python projects.
 
 
 Package Details
@@ -40,39 +49,64 @@ Package Details
 Common Classes
 ==============
 
-* :mod:`~pyTooling.CallByRef` |br|
-  Emulation of *call-by-reference* parameters.
-* :mod:`~pyTooling.Versioning` |br|
-  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
-* :mod:`~pyTooling.Licensing` |br|
-  Class representations of licenses and conversions to various structured license names.
+* Emulations of :ref:`Call-by-reference parameters <COMMON/CallByRef>` are provided by the :py:mod:`pyTooling.CallByRef` module.
+* Classes representing :ref:`unifyed license names <LICENSING>` and mappings are provided by the :py:mod:`pyTooling.Licensing` module.
+* The :ref:`current platform/environment <COMMON/Platform>` Python is running in, can be access unifying multiple platform APIs
+  provided by Python and summarizing the information in a single class instance.
+* :ref:`Representations of version numbers <VERSIONING>` |br|
+  |rarr| Class representations of semantic version (SemVer) and calendar version (CalVer) numbers are provided by the
+  :py:mod:`pyTooling.Versioning` module.
+
+
+Data Structures
+===============
+
+Fast data structures.
+
+.. #* Trees:
+
+* :ref:`Tree data structure <STRUCT/Tree>` |br|
+  |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
 
 
 Decorators
 ==========
 
-* :class:`~pyTooling.Decorators.export` |br|
-  Register the given function or class as publicly accessible in a module.
+* :ref:`Documentation <DECO/Documentation>`
+
+  * Copy the doc-string from given base-class via :py:class:`~pyTooling.Decorators.InheritDocString`.
+
+
+* :ref:`Visibility <DECO/Visibility>`
+
+  * Register the given function or class as publicly accessible in a module via :py:class:`~pyTooling.Decorators.export`.
+
 
 
 Exceptions
 ==========
 
-* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+* :py:exc:`~pyTooling.Exceptions.EnvironmentException` |br|
   ... is raised when an expected environment variable is missing.
-* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+* :py:exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
   ... is raise if the platform is not supported.
-* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+* :py:exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
   ... is raise if the requested setting is not configured.
 
 
 Meta-Classes
 ============
 
-* :class:`~pyTooling.MetaClasses.Singleton` |br|
-  Allow only a single instance of a class.
-* :class:`~pyTooling.MetaClasses.Overloading` |br|
-  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
+* :py:class:`~pyTooling.MetaClasses.Overloading` |br|
+  ``Overloading`` allows method overloading in Python classes. It dispatches method calls based on method signatures
+  (type annotations).
+* :py:class:`~pyTooling.MetaClasses.Singleton` |br|
+  A class created from meta-class ``Singleton`` allows only a single instance to exist. If a further instance is tried
+  to be created, a cached instance will be returned.
+* :py:class:`~pyTooling.MetaClasses.SlottedType` |br|
+  All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
+  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
+  all derived classes.
 
 
 Packaging
@@ -83,11 +117,11 @@ A set of helper functions to describe a Python package for setuptools.
 * Helper Functions:
 
   * :py:func:`pyTooling.Packaging.loadReadmeFile` |br|
-    tbd
+    Load a ``README.md`` file from disk and provide the content as long description for setuptools.
   * :py:func:`pyTooling.Packaging.loadRequirementsFile` |br|
-    tbd
+    Load a ``requirements.txt`` file from disk and provide the content for setuptools.
   * :py:func:`pyTooling.Packaging.extractVersionInformation` |br|
-    tbd
+    Extract version information from Python source files and provide the data to setuptools.
 
 * Package Descriptions
 
@@ -97,10 +131,12 @@ A set of helper functions to describe a Python package for setuptools.
     tbd
 
 
+
 Contributors
 ************
 
-* `Patrick Lehmann <https://GitHub.com/pyTooling>`_ (Maintainer)
+* `Patrick Lehmann <https://GitHub.com/Paebbels>`__ (Maintainer)
+* `Sven Köhler <https://GitHub.com/skoehler>`__
 * `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
 
 
@@ -142,38 +178,49 @@ License
    :caption: Common
    :hidden:
 
-   CallByRef
-   Platform
-   Versioning
-   Licensing
+   Common
+
+.. toctree::
+   :caption: Configuration
+   :hidden:
+
+   Configuration/index
+   Configuration/YAML
+
+.. toctree::
+   :caption: Data Structures
+   :hidden:
+
+   DataStructures/index
+   DataStructures/Tree
+   DataStructures/Graph
+
+.. #
+   DataStructures/Graph
 
 .. toctree::
    :caption: Decorators
    :hidden:
 
-   Decorators/Documentation
-   Decorators/Visibility
+   Decorators
 
 .. toctree::
    :caption: Exceptions
    :hidden:
 
-   Exceptions/BaseExceptions
-   Exceptions/PredefinedExceptions
+   Exceptions
 
 .. toctree::
    :caption: Meta Classes
    :hidden:
 
-   MetaClasses/Overloading
-   MetaClasses/Singleton
+   MetaClasses
 
 .. toctree::
    :caption: Packaging
    :hidden:
 
-   Packaging/HelperFunctions
-   Packaging/PackageDescriptions
+   Packaging
 
 .. raw:: latex
 

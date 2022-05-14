@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               __  __      _         ____ _                                           #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  \/  | ___| |_ __ _ / ___| | __ _ ___ ___  ___  ___                   #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |\/| |/ _ \ __/ _` | |   | |/ _` / __/ __|/ _ \/ __|                  #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  | |  __/ || (_| | |___| | (_| \__ \__ \  __/\__ \                  #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|  |_|\___|\__\__,_|\____|_|\__,_|___/___/\___||___/                  #
+#             _____           _ _             _____                                                                    #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ ___  ___                                                       #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | || '__/ _ \/ _ \                                                      #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | |  __/  __/                                                      #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \___|\___|                                                      #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -28,35 +28,4 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-Unit tests for class :py:class:`pyTooling.MetaClasses.Overloading`.
-
-:copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
-"""
-from unittest       import TestCase
-
-from pyTooling.MetaClasses import Overloading
-
-
-if __name__ == "__main__": # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
-	exit(1)
-
-
-class Application(metaclass=Overloading):
-	def __init__(self, x : int):
-		self.x = x
-
-	def __init__(self, x : str):
-		self.x = x
-
-
-class Overloading(TestCase):
-	def test_OverloadingByTypeSignature(self) -> None:
-		app1 = Application(1)
-		self.assertEqual(app1.x, 1)
-
-		app2 = Application("2")
-		self.assertEqual(app2.x, "2")
+"""Performance tests."""

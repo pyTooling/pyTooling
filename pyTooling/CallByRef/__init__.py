@@ -28,17 +28,21 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Auxiliary classes to implement call-by-reference."""
+"""
+Auxiliary classes to implement call-by-reference.
+
+.. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
+"""
 from typing import Any, Generic, TypeVar
 
 from ..Decorators import export
-
+from ..MetaClasses import ExtendedType
 
 T = TypeVar("T")
 
 
 @export
-class CallByRefParam(Generic[T]):
+class CallByRefParam(Generic[T], metaclass=ExtendedType, useSlots=True):
 	"""
 	Implements a *call-by-reference* parameter.
 
@@ -165,7 +169,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by &= operator.")
 
 	def __ior__(self, other: Any) -> 'CallByRefIntParam':
-		"""Inplace or: self \|= other."""
+		r"""Inplace or: self \|= other."""
 		if isinstance(other, int):
 			self.Value |= other
 			return self
@@ -173,7 +177,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by |= operator.")
 
 	def __ixor__(self, other: Any) -> 'CallByRefIntParam':
-		"""Inplace or: self \|= other."""
+		r"""Inplace or: self \|= other."""
 		if isinstance(other, int):
 			self.Value ^= other
 			return self
@@ -189,7 +193,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by + operator.")
 
 	def __sub__(self, other: Any) -> int:
-		"""Substraction: self - other."""
+		"""Subtraction: self - other."""
 		if isinstance(other, int):
 			return self.Value - other
 		else:
@@ -240,7 +244,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
 
 	def __isub__(self, other: Any) -> 'CallByRefIntParam':
-		"""Substraction: self -= other."""
+		"""Subtraction: self -= other."""
 		if isinstance(other, int):
 			self.Value -= other
 			return self
@@ -264,7 +268,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
 
 	def __imul__(self, other: Any) -> 'CallByRefIntParam':
-		"""Multiplication: self \*= other."""
+		r"""Multiplication: self \*= other."""
 		if isinstance(other, int):
 			self.Value *= other
 			return self
@@ -280,7 +284,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
 
 	def __ipow__(self, other: Any) -> 'CallByRefIntParam':
-		"""Power: self \*\*= other."""
+		r"""Power: self \*\*= other."""
 		if isinstance(other, int):
 			self.Value **= other
 			return self

@@ -38,28 +38,50 @@ if it's a library, framework or CLI tool.
   Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
 
 
+### Data Structures
+
+* Trees
+  * [Tree data structure](https://pyTooling.GitHub.io/pyTooling/DataStructures/Tree.html)  
+    &rarr; A fast and simple implementation using a single `Node` class.
+
+
 ### Decorators
 
-* [export](https://pyTooling.GitHub.io/pyTooling/Decorators/Visibility.html#export)  
-  Register the given function or class as publicly accessible in a module.
+* [Documentation](https://pyTooling.GitHub.io/pyTooling/Decorators.html#documentation)
+  * [`@InheritDocString`](https://pyTooling.GitHub.io/pyTooling/Decorators.html#inheritdocstring)  
+    &rarr; Copy the doc-string from given base-class.
+* [Visibility](https://pyTooling.GitHub.io/pyTooling/Decorators.html#visibility)
+  * [`@export`](https://pyTooling.GitHub.io/pyTooling/Decorators.html#export)  
+    &rarr; Register the given function or class as publicly accessible in a module.
 
 
 ### Exceptions
 
-* [EnvironmentException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#environmentexception)  
+* [EnvironmentException](https://pyTooling.GitHub.io/pyTooling/Exceptions.html#environmentexception)  
   ... is raised when an expected environment variable is missing.
-* [PlatformNotSupportedException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#platformnotsupportedexception)  
+* [PlatformNotSupportedException](https://pyTooling.GitHub.io/pyTooling/Exceptions.html#platformnotsupportedexception)  
   ... is raise if the platform is not supported.
-* [NotConfiguredException](https://pyTooling.GitHub.io/pyTooling/Exceptions/PredefinedExceptions.html#notconfiguredexception)  
+* [NotConfiguredException](https://pyTooling.GitHub.io/pyTooling/Exceptions.html#notconfiguredexception)  
   ... is raise if the requested setting is not configured.
 
 
 ### Meta-Classes
 
-* [Singleton](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Singleton.html)  
-  Allow only a single instance of a class.
 * [Overloading](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Overloading.html)  
-  Overloading Allow method overloading in Python classes. Dispatch method calls based on method signatures (type annotations).
+  &rarr; `Overloading` allows method overloading in Python classes. It dispatches method calls based on method signatures
+  (type annotations).
+* [Singleton](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Singleton.html)  
+  &rarr; A class created from meta-class `Singleton` allows only a single instance to exist. If a further instance is tried to 
+  be created, a cached instance will be returned.
+* [SlottedType](https://pyTooling.GitHub.io/pyTooling/MetaClasses/SlottedType.html)    
+  &rarr; All type-annotated fields in a class get stored in a slot rather than in `__dict__`. This improves the memory
+  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
+  all derived classes.
+
+
+### Packaging
+
+tbd
 
 ## Examples
 
@@ -95,6 +117,7 @@ print(myInt.Value)
 ## Contributors
 
 * [Patrick Lehmann](https://GitHub.com/Paebbels) (Maintainer)
+* [Sven Köhler](https://GitHub.com/skoehler)
 * [and more...](https://GitHub.com/pyTooling/pyTooling/graphs/contributors)
 
 

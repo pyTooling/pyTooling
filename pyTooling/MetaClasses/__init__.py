@@ -8,6 +8,7 @@
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
+#   Sven Köhler                                                                                                        #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
@@ -28,40 +29,44 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""The MetaClasses package implements Python meta-classes (classes to construct other classes in Python)."""
-from inspect  import signature, Parameter
-from types    import MethodType
-from typing   import Any, Tuple, List, Dict, Callable, Type
+"""
+The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).
 
-from ..Decorators import export
-
-
-@export
-class Singleton(type):
-	"""Implements a singleton pattern in form of a Python metaclass (a class constructing classes)."""
-
-	_instanceCache: Dict[type, Any] = {}       #: Cache of all created singleton instances.
-
-	def __call__(cls, *args, **kwargs):
-		"""Overwrites the ``__call__`` method of parent class :py:class:`type` to return an object instance from an instances cache (see :attr:`_instanceCache`) if the class was already constructed before."""
-		if cls not in cls._instanceCache:
-			cls._instanceCache[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-		return cls._instanceCache[cls]
-
-	@classmethod
-	def Register(cls, t, instance) -> None:
-		"""Register a type,instance pair in :attr:`_instanceCache`."""
-		if t not in cls._instanceCache:
-			cls._instanceCache[t] = instance
-		else:
-			raise KeyError(f"Type '{t!s}' is already registered.")
+.. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
+"""
+import threading
+from functools  import wraps
+from inspect    import signature, Parameter
+from types      import MethodType
+from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
 
 
-# https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2
+try:
+	from ..Exceptions import AbstractClassError
+	from ..Decorators import export, OriginalFunction
+except (ImportError, ModuleNotFoundError):
+	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Exceptions import AbstractClassError
+		from Decorators import export, OriginalFunction
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
+		raise ex
+
+
+__all__ = ["M"]
+
 
 @export
 class Overloading(type):
-	"""Metaclass that allows multiple dispatch of methods based on method signatures."""
+	"""
+	Metaclass that allows multiple dispatch of methods based on method signatures.
+
+	.. seealso:
+
+	   `Python Cookbook - Multiple dispatch with function annotations <https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2>`__
+	"""
 
 	class DispatchDictionary(dict):
 		"""Special dictionary to build dispatchable methods in a metaclass."""
@@ -75,7 +80,6 @@ class Overloading(type):
 
 			def register(self, method) -> None:
 				"""Register a new method as a dispatchable."""
-
 				# Build a signature from the method's type annotations
 				sig = signature(method)
 				types: List[Type] = []
@@ -130,3 +134,269 @@ class Overloading(type):
 	@classmethod
 	def __prepare__(cls, classname, bases):
 		return cls.DispatchDictionary()
+
+
+M = TypeVar("M", bound=Callable)   #: A type variable for methods.
+
+
+@export
+def abstractmethod(method: M) -> M:
+	"""
+	Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
+
+	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacement method.
+
+	.. warning::
+
+	   This decorator should be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
+	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.AbstractClassError` at
+	   instantiation.
+
+	.. admonition:: ``example.py``
+
+	   .. code:: python
+
+	      class Data(mataclass=ExtendedType):
+	        @abstractmethod
+	        def method:
+	          '''This method needs to be implemented'''
+
+	:param method: Method that is marked as *abstract*.
+	:returns:      Replacement method, which raises a :py:exc:`NotImplementedError`. In additional field ``__abstract__``
+	               is added.
+	"""
+	@OriginalFunction(method)
+	@wraps(method)
+	def func(self):
+		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
+
+	func.__abstract__ = True
+	return func
+
+
+@export
+def mustoverride(method: M) -> M:
+	"""
+	Mark a method as *must-override*.
+
+	.. warning::
+
+	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
+	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` at
+	   instantiation.
+
+	.. admonition:: ``example.py``
+
+	   .. code:: python
+
+	      class Data(mataclass=ExtendedType):
+	        @mustoverride
+	        def method:
+	          '''This is a very basic implementation'''
+
+	:param method: Method that is marked as *must-override*.
+	:returns:      Same method, but with additional ``__mustOverride__`` field.
+	"""
+	method.__mustOverride__ = True
+	return method
+
+
+@export
+def overloadable(method: M) -> M:
+	method.__overloadable__ = True
+	return method
+
+
+# TODO: allow __dict__ and __weakref__ if slotted is enabled
+
+@export
+class ExtendedType(type):
+	"""
+  .. todo:: Needs documentation.
+
+	Features:
+
+	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
+	* Allow only a single instance to be created (:term:`singleton`).
+	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
+	  instantiation of :term:`abstract classes <abstract class>`.
+
+	.. #* Allow method overloading and dispatch overloads based on argument signatures.
+	"""
+
+	def __new__(
+		self,
+		className: str,
+		baseClasses: Tuple[type],
+		members: Dict[str, Any],
+		singleton: bool = False,
+		useSlots: bool = False
+	) -> type:
+		"""
+		Construct a new class using this :term:`meta-class`.
+
+		:param className:       The name of the class to construct.
+		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:         The dictionary of members for the constructed class.
+		:param singleton:       If true, make the class a :term:`Singleton`.
+		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
+		:returns:               The new class.
+		:raises AttributeError: If base-class has no '__slots__' attribute.
+		:raises AttributeError: If slot already exists in base-class.
+		"""
+		# Check if members should be stored in slots. If so get these members from type annotated fields
+		if useSlots:
+			members['__slots__'] = self.__getSlots(baseClasses, members)
+
+		# Create a new class
+		newClass = type.__new__(self, className, baseClasses, members)
+		# Search in inheritance tree for abstract methods
+		newClass.__abstractMethods__ = self._checkForAbstractMethods(baseClasses, members)
+		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		return newClass
+
+	@classmethod
+	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+		"""
+		Check if the current class contains abstract methods and return a tuple of them.
+
+		These abstract methods might be inherited from any base-class. If there are inherited abstract methods, check if
+		they are now implemented (overridden) by the current class that's right now constructed.
+
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:     The dictionary of members for the constructed class.
+		:returns:           A tuple of abstract method's names.
+		"""
+		result = set()
+		for base in baseClasses:
+			for cls in base.__mro__:
+				if hasattr(cls, "__abstractMethods__"):
+					result = result.union(cls.__abstractMethods__)
+
+		for memberName, member in members.items():
+			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
+				result.add(memberName)
+			elif memberName in result:
+				result.remove(memberName)
+
+		return tuple(result)
+
+	@staticmethod
+	def _wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+		"""
+		If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
+
+		Only the first object creation initializes the object.
+
+		This implementation is threadsafe.
+
+		:param newClass:  The newly constructed class for further modifications.
+		:param singleton: If true, the class allows only a single instance to exist.
+		:returns:         True, if the class is a singleton.
+		"""
+		if singleton:
+			oldnew = newClass.__new__
+			oldinit = newClass.__init__
+
+			@OriginalFunction(oldnew)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				with cls.__singletonInstanceCond__:
+					if cls.__singletonInstanceCache__ is None:
+						obj = oldnew(cls, *args, **kwargs)
+						cls.__singletonInstanceCache__ = obj
+					else:
+						obj = cls.__singletonInstanceCache__
+
+				return obj
+
+			@wraps(newClass.__init__)
+			def init(self, *args, **kwargs):
+				cls = self.__class__
+				cv = cls.__singletonInstanceCond__
+				with cv:
+					if cls.__singletonInstanceInit__:
+						oldinit(self, *args, **kwargs)
+						cls.__singletonInstanceInit__ = False
+						cv.notify_all()
+					elif args or kwargs:
+						raise ValueError(f"A further instance of a singleton can't be reinitialized with parameters.")
+					else:
+						while cls.__singletonInstanceInit__:
+							cv.wait()
+
+			newClass.__new__ = new
+			newClass.__init__ = init
+			newClass.__singletonInstanceCond__ = threading.Condition()
+			newClass.__singletonInstanceInit__ = True
+			newClass.__singletonInstanceCache__ = None
+			return True
+
+		return False
+
+	@staticmethod
+	def _wrapNewMethodIfAbstract(newClass) -> bool:
+		"""
+		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
+
+		:param newClass:            The newly constructed class for further modifications.
+		:returns:                   True, if the class is abstract.
+		:raises AbstractClassError: If the class is abstract and can't be instantiated.
+		"""
+		# Replace '__new__' by a variant to throw an error on not overridden methods
+		if newClass.__abstractMethods__:
+			@OriginalFunction(newClass.__new__)
+			@wraps(newClass.__new__)
+			def new(cls, *args, **kwargs):
+				formattedMethodNames = "', '".join(newClass.__abstractMethods__)
+				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+
+			newClass.__new__ = new
+			return True
+
+		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
+		else:
+			# skip intermediate 'new' function if class isn't abstract anymore
+			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
+			if newClass.__new__ is not object.__new__:
+				# WORKAROUND:
+				#   Python version: 3.7, 3.8
+				#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
+				try:
+					newClass.__new__ = newClass.__new__.__orig_func__
+				except AttributeError:
+					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
+
+			return False
+
+	@staticmethod
+	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+		"""
+		Get all object attributes, that should be stored in a slot.
+
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:     The dictionary of members for the constructed class.
+		:return:            A tuple of member names to be stored in slots.
+		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
+		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
+		"""
+		annotatedFields = {}
+		for baseClass in baseClasses:
+			for base in reversed(baseClass.mro()[:-1]):
+				if not hasattr(base, "__slots__"):
+					raise AttributeError(f"Base-class '{base.__name__}' has no '__slots__'.")
+
+				for annotation in base.__slots__:
+					annotatedFields[annotation] = base
+
+		# WORKAROUND:
+		#   Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
+		#   (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
+		annotations: Dict[str, Any] = members.get("__annotations__", {})
+		for annotation in annotations:
+			if annotation in annotatedFields:
+				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
+
+		return (*members.get('__slots__', []), *annotations)

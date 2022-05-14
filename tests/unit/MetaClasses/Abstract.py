@@ -29,15 +29,15 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.Abstract`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import Overloading
-
+from pyTooling.Exceptions import AbstractClassError
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -45,18 +45,87 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Application(metaclass=Overloading):
-	def __init__(self, x : int):
-		self.x = x
-
-	def __init__(self, x : str):
-		self.x = x
+class NormalBase(metaclass=ExtendedType):
+	def NormalMethod(self):
+		pass
 
 
-class Overloading(TestCase):
-	def test_OverloadingByTypeSignature(self) -> None:
-		app1 = Application(1)
-		self.assertEqual(app1.x, 1)
+class NormalClass(NormalBase):
+	pass
 
-		app2 = Application("2")
-		self.assertEqual(app2.x, "2")
+
+class AbstractBase(metaclass=ExtendedType):
+	@abstractmethod
+	def AbstractMethod(self):
+		pass
+
+
+class AbstractClass(AbstractBase):
+	pass
+
+
+class DerivedAbstractClass(AbstractBase):
+	def AbstractMethod(self):
+		super().AbstractMethod()
+
+
+class MustOverrideBase(metaclass=ExtendedType):
+	@mustoverride
+	def MustOverrideMethod(self):
+		pass
+
+
+class MustOverrideClass(MustOverrideBase):
+	pass
+
+
+class DerivedMustOverrideClass(MustOverrideBase):
+	def MustOverrideMethod(self):
+		super().MustOverrideMethod()
+
+
+class Abstract(TestCase):
+	def test_NormalBase(self) -> None:
+		NormalBase()
+
+	def test_NormalClass(self) -> None:
+		NormalClass()
+
+	def test_AbstractBase(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			AbstractBase()
+
+		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_AbstractClass(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			AbstractClass()
+
+		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedAbstractClass(self) -> None:
+		derived = DerivedAbstractClass()
+
+		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+			derived.AbstractMethod()
+
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+
+	def test_MustOverrideBase(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			MustOverrideBase()
+
+		self.assertIn("MustOverrideBase", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+
+	def test_MustOverrideClass(self) -> None:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+			MustOverrideClass()
+
+		self.assertIn("MustOverrideClass", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedMustOverride(self) -> None:
+		DerivedMustOverrideClass()

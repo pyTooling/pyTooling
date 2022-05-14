@@ -29,27 +29,67 @@
 # ==================================================================================================================== #
 #
 """
-The Licensing module implements translation tables for various license names and identifiers.
+The Licensing module implements mapping tables for various license names and identifiers.
 
-List of SPDX identifiers:
+.. seealso::
 
-* https://spdx.org/licenses/
-* https://github.com/spdx/license-list-XML
+   List of SPDX identifiers:
+
+   * https://spdx.org/licenses/
+   * https://github.com/spdx/license-list-XML
+
+   List of `Python classifiers <https://pypi.org/classifiers/>`__
+
+.. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
-from typing       import Any, Dict, NamedTuple
+from dataclasses  import dataclass
+from typing       import Any, Dict
 
-from ..Decorators import export
+
+try:
+	from ..Decorators import export
+	from ..MetaClasses import ExtendedType
+except (ImportError, ModuleNotFoundError):
+	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators import export
+		from MetaClasses import ExtendedType
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
+		raise ex
+
+
+__all__ = [
+	"PYTHON_LICENSE_NAMES",
+
+	"Apache_2_0_License",
+	"BSD_3_Clause_License",
+	"GPL_2_0_or_later",
+	"MIT_License",
+
+	"SPDX_INDEX"
+]
 
 
 @export
-class PythonLicenseNames(NamedTuple):
-	ShortName:  str
-	Classifier: str
+@dataclass
+class PythonLicenseNames:
+	"""A *data class* to represent the license's short name and the package classifier for a license."""
 
-	def __repr__(self) -> str:
+	ShortName: str    #: License's short name
+	Classifier: str   #: Package classifier for a license.
+
+	def __str__(self) -> str:
+		"""
+		The string representation of this name tuple returns the short name of the license.
+
+		:returns: Short name of the license.
+		"""
 		return self.ShortName
 
 
+#: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 	"Apache-2.0":       PythonLicenseNames("Apache 2.0",       "Apache Software License"),
 	"BSD-3-Clause":     PythonLicenseNames("BSD",              "BSD License"),
@@ -59,13 +99,13 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 
 
 @export
-class License:
+class License(metaclass=ExtendedType, useSlots=True):
 	"""Representation of a license."""
 
-	_name: str
-	_spdxIdentifier: str
-	_osiApproved: bool
-	_fsfApproved: bool
+	_spdxIdentifier: str  #: Unique SPDX identifier.
+	_name: str            #: Name of the license.
+	_osiApproved: bool    #: OSI approval status
+	_fsfApproved: bool    #: FSF approval status
 
 	def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False):
 		self._spdxIdentifier = spdxIdentifier
@@ -75,22 +115,38 @@ class License:
 
 	@property
 	def Name(self) -> str:
-		"""Returns the license' name."""
+		"""
+		Returns the license' name.
+
+		:returns: License name.
+		"""
 		return self._name
 
 	@property
 	def SPDXIdentifier(self) -> str:
-		"""Returns the license' unique identifier."""
+		"""
+		Returns the license' unique `SPDX identifier <https://spdx.org/licenses/>`__.
+
+		:returns: The the unique SPDX identifier.
+		"""
 		return self._spdxIdentifier
 
 	@property
 	def OSIApproved(self) -> bool:
-		"""Returns true if the license is approved by OSI (Open Source Initiative)."""
+		"""
+		Returns true, if the license is approved by OSI (`Open Source Initiative <https://opensource.org/>`__).
+
+		:returns: True, if the license is approved by the Open Source Initiative.
+		"""
 		return self._osiApproved
 
 	@property
 	def FSFApproved(self) -> bool:
-		"""Returns true if the license is approved by FSF (Free Software Foundation)."""
+		"""
+		Returns true, if the license is approved by FSF (`Free Software Foundation <https://www.fsf.org/>`__).
+
+		:returns: True, if the license is approved by the Free Software Foundation.
+		"""
 		return self._fsfApproved
 
 	@property
@@ -98,43 +154,55 @@ class License:
 		"""
 		Returns the Python license name for this license if it's defined.
 
-		.. seealso::
-
-		   List of `Python classifiers <https://pypi.org/classifiers/>`__
+		:returns: The Python license name.
+		:raises ValueError: If there is no license name defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
 			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
-		except KeyError:
-			raise ValueError("License has no Python specify information.")
+		except KeyError as ex:
+			raise ValueError("License has no Python specify information.") from ex
 
 		return item.ShortName
 
 	@property
 	def PythonClassifier(self) -> str:
 		"""
-		Returns the Python classifier for this license if it's defined.
+		Returns the Python package classifier for this license if it's defined.
 
 		.. seealso::
 
 		   List of `Python classifiers <https://pypi.org/classifiers/>`__
+
+		:returns: The Python package classifier.
+		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
 			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
-		except KeyError:
-			raise ValueError(f"License has no Python specify information.")
+		except KeyError as ex:
+			raise ValueError(f"License has no Python specify information.") from ex
 
 		osi = "OSI Approved :: " if self._osiApproved else ""
 		return f"License :: {osi}{item.Classifier}"
 
 	def __eq__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are identical (comparison based on SPDX identifiers)."""
+		"""
+		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
+
+		:returns: True, if both licenses are identical.
+		:raises TypeError: If second operand is not of type :py:class:`License`.
+		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
 
 	def __ne__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are not identical (comparison based on SPDX identifiers)."""
+		"""
+		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
+
+		:returns: True, if both licenses are not identical.
+		:raises TypeError: If second operand is not of type :py:class:`License`.
+		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
@@ -149,11 +217,19 @@ class License:
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
-		"""Returns the internal unique representation (a.k.a SPDX identifier)."""
+		"""
+		Returns the internal unique representation (a.k.a SPDX identifier).
+
+		:returns: SPDX identifier of the license.
+		"""
 		return self._spdxIdentifier
 
 	def __str__(self) -> str:
-		"""Returns the license' name."""
+		"""
+		Returns the license' name.
+
+		:returns: Name of the license.
+		"""
 		return self._name
 
 
@@ -163,6 +239,7 @@ GPL_2_0_or_later =     License("GPL-2.0-or-later", "GNU General Public License v
 MIT_License =          License("MIT", "MIT License", True, True)
 
 
+#: Mapping of predefined licenses
 SPDX_INDEX: Dict[str, License] = {
 	"Apache-2.0":       Apache_2_0_License,
 	"BSD-3-Clause":     BSD_3_Clause_License,

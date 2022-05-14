@@ -28,7 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A set of helper functions to describe a Python package for setuptools."""
+"""
+A set of helper functions to describe a Python package for setuptools.
+
+.. hint:: See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
+"""
 from dataclasses  import dataclass
 from ast          import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from pathlib      import Path
@@ -39,17 +43,20 @@ from setuptools   import (
 )
 from typing       import List, Iterable, Dict, Sequence
 
+
 try:
-	from pyTooling.Decorators import export
-	from pyTooling.Licensing  import License, Apache_2_0_License
-except ModuleNotFoundError:
+	from ..Decorators import export
+	from ..MetaClasses import ExtendedType
+	from ..Licensing  import License, Apache_2_0_License
+except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
+		from MetaClasses import ExtendedType
 		from Licensing import License, Apache_2_0_License
-	except ModuleNotFoundError as ex:
-		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
+	except (ImportError, ModuleNotFoundError) as ex:
+		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
 		raise ex
 
 
@@ -57,6 +64,7 @@ except ModuleNotFoundError:
 @dataclass
 class Readme:
 	"""Encapsulates the READMEs file content and MIME type."""
+
 	Content:  str
 	MimeType: str
 
@@ -93,7 +101,6 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	:param requirementsFile: Path to the `requirements.txt` file as an instance of :class:`Path`.
 	:return:                 A list of dependencies.
 	"""
-
 	indentation = "  " * indent
 	requirements = []
 	with requirementsFile.open("r") as file:
@@ -124,15 +131,16 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation:
+class VersionInformation(metaclass=ExtendedType, useSlots=True):
 	"""Encapsulates version information extracted from a Python source file."""
-	_author:      str
-	_copyright:   str
-	_email:       str
-	_keywords:    List[str]
-	_license:     str
-	_description: str
-	_version:     str
+
+	_author: str          #: Author name(s).
+	_copyright: str       #: Copyright information.
+	_email: str           #: Author's email address.
+	_keywords: List[str]  #: Keywords.
+	_license: str         #: License name.
+	_description: str     #: Description of the package.
+	_version: str         #: Version number.
 
 	def __init__(self, author: str, email: str, copyright: str, license: str, version: str, description: str, keywords: List[str]):
 		self._author =      author
@@ -145,30 +153,37 @@ class VersionInformation:
 
 	@property
 	def Author(self) -> str:
+		"""Name(s) of the package author(s)."""
 		return self._author
 
 	@property
 	def Copyright(self) -> str:
+		"""Copyright information."""
 		return self._copyright
 
 	@property
 	def Description(self) -> str:
+		"""Package description text."""
 		return self._description
 
 	@property
 	def Email(self) -> str:
+		"""Email address of the author."""
 		return self._email
 
 	@property
 	def Keywords(self) -> List[str]:
+		"""List of keywords."""
 		return self._keywords
 
 	@property
 	def License(self) -> str:
+		"""License name."""
 		return self._license
 
 	@property
 	def Version(self) -> str:
+		"""Version number."""
 		return self._version
 
 
@@ -216,9 +231,9 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 							if isinstance(const, Constant) and isinstance(const.value, str):
 								_keywords.append(const.value)
 							else:
-								raise TypeError
+								raise TypeError  # TODO: add error message
 					else:
-						raise TypeError
+						raise TypeError  # TODO: add error message
 				if isinstance(target, Name) and target.id == "__license__" and isinstance(value, Constant) and isinstance(value.value, str):
 					_license = value.value
 				if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):
@@ -256,6 +271,13 @@ DEFAULT_CLASSIFIERS = (
 		"Topic :: Utilities"
 	)
 
+DEFAULT_README = Path("README.md")
+DEFAULT_REQUIREMENTS = Path("requirements.txt")
+DEFAULT_DOCUMENTATION_REQUIREMENTS = Path("doc/requirements.txt")
+DEFAULT_TEST_REQUIREMENTS = Path("test/requirements.txt")
+DEFAULT_PACKAGING_REQUIREMENTS = Path("build/requirements.txt")
+DEFAULT_VERSION_FILE = Path("__init__.py")
+
 @export
 def DescribePythonPackage(
 	packageName: str,
@@ -266,17 +288,18 @@ def DescribePythonPackage(
 	issueTrackerCodeURL: str,
 	keywords: str = None,
 	license: License = DEFAULT_LICENSE,
-	readmeFile: Path = Path("README.md"),
-	requirementsFile: Path = Path("requirements.txt"),
-	documentationRequirementsFile: Path = Path("doc/requirements.txt"),
-	unittestRequirementsFile: Path = Path("test/requirements.txt"),
-	packagingRequirementsFile: Path = Path("build/requirements.txt"),
+	readmeFile: Path = DEFAULT_README,
+	requirementsFile: Path = DEFAULT_REQUIREMENTS,
+	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
+	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
+	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
 	additionalRequirements: Dict[str, List[str]] = None,
-	sourceFileWithVersion: Path = Path("__init__.py"),
+	sourceFileWithVersion: Path = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None
+	consoleScripts: Dict[str, str] = None,
+	dataFiles: Dict[str, List[str]] = None
 ) -> None:
 	# Read README for upload to PyPI
 	readme = loadReadmeFile(readmeFile)
@@ -364,6 +387,9 @@ def DescribePythonPackage(
 			"console_scripts": scripts
 		}
 
+	if dataFiles:
+		parameters["package_data"] = dataFiles
+
 	setuptools_setup(**parameters)
 
 @export
@@ -375,17 +401,18 @@ def DescribePythonPackageHostedOnGitHub(
 	projectURL: str = None,
 	keywords: str = None,
 	license: License = DEFAULT_LICENSE,
-	readmeFile: Path = Path("README.md"),
-	requirementsFile: Path = Path("requirements.txt"),
-	documentationRequirementsFile: Path = Path("doc/requirements.txt"),
-	unittestRequirementsFile: Path = Path("test/requirements.txt"),
-	packagingRequirementsFile: Path = Path("build/requirements.txt"),
+	readmeFile: Path = DEFAULT_README,
+	requirementsFile: Path = DEFAULT_REQUIREMENTS,
+	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
+	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
+	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
 	additionalRequirements: Dict[str, List[str]] = None,
-	sourceFileWithVersion: Path = Path("__init__.py"),
+	sourceFileWithVersion: Path = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None
+	consoleScripts: Dict[str, str] = None,
+	dataFiles: Dict[str, List[str]] = None
 ):
 	gitHubRepository = gitHubRepository if gitHubRepository is not None else packageName
 
@@ -415,5 +442,6 @@ def DescribePythonPackageHostedOnGitHub(
 		classifiers=classifiers,
 		developmentStatus=developmentStatus,
 		pythonVersions=pythonVersions,
-		consoleScripts=consoleScripts
+		consoleScripts=consoleScripts,
+		dataFiles=dataFiles
 	)

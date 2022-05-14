@@ -28,11 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Configuration reader for YAML files."""
-from pathlib import Path
-from typing import Dict, List, Union, Iterator
+"""
+Configuration reader for YAML files.
 
-from pyTooling.Decorators import export
+.. hint:: See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
+"""
+from pathlib import Path
+from typing import Dict, List, Union, Iterator as typing_Iterator
+
+from ..Decorators import export
+from ..MetaClasses import ExtendedType
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
@@ -80,7 +85,8 @@ class Node(Abstract_Node):
 		path = self._ToPath(query)
 		return self._GetNodeOrValueByPathExpression(path)
 
-	def _ToPath(self, query: str) -> List[Union[str, int]]:
+	@staticmethod
+	def _ToPath(query: str) -> List[Union[str, int]]:
 		return query.split(":")
 
 	def _GetNodeOrValue(self, key: str) -> ValueT:
@@ -175,8 +181,11 @@ class Node(Abstract_Node):
 
 		return node
 
+
 @export
 class Dictionary(Abstract_Dict, Node):
+	"""A dictionary node in a YAML data file."""
+
 	_keys: List[KeyT]
 
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap):
@@ -186,39 +195,76 @@ class Dictionary(Abstract_Dict, Node):
 	def __contains__(self, key: KeyT) -> bool:
 		return key in self._keys
 
-	def __iter__(self) -> Iterator[ValueT]:
-		class iterator:
+	def __iter__(self) -> typing_Iterator[ValueT]:
+		class Iterator(metaclass=ExtendedType, useSlots=True):
+			_iter: typing_Iterator
+			_obj: Dictionary
+
 			def __init__(self, obj: Dictionary):
 				self._iter = iter(obj._keys)
 				self._obj = obj
 
-			def __iter__(self):
+			def __iter__(self) -> "Iterator":
+				"""
+				Return itself to fulfil the iterator protocol.
+
+				:returns: Itself.
+				"""
 				return self
 
-			def __next__(self):
+			def __next__(self) -> ValueT:
+				"""
+				Returns the next item in the dictionary.
+
+				:returns:              Next item.
+				"""
 				key = next(self._iter)
 				return self._obj[key]
 
-		return iterator(self)
+		return Iterator(self)
 
 
+@export
 class Sequence(Abstract_Seq, Node):
+	"""A sequence node (ordered list) in a YAML data file."""
+
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq):
 		Node.__init__(self, root, parent, key, yamlNode)
 		self._length = len(yamlNode)
 
 	__getitem__ = Node.__getitem__
 
-	def __iter__(self) -> Iterator[ValueT]:
-		class iterator:
+	def __iter__(self) -> typing_Iterator[ValueT]:
+		"""
+		Returns an iterator to iterate items in the sequence of sub-nodes.
+
+		:returns: Iterator to iterate items in a sequence.
+		"""
+		class Iterator(metaclass=ExtendedType, useSlots=True):
+			"""Iterator to iterate sequence items."""
+
+			_i: int         #: internal iterator position
+			_obj: Sequence  #: Sequence object to iterate
+
 			def __init__(self, obj: Sequence):
 				self._i = 0
 				self._obj = obj
 
-			def __iter__(self):
+			def __iter__(self) -> "Iterator":
+				"""
+				Return itself to fulfil the iterator protocol.
+
+				:returns: Itself.
+				"""
 				return self
 
-			def __next__(self):
+			def __next__(self) -> ValueT:
+				"""
+				Returns the next item in the sequence.
+
+				:returns:              Next item.
+				:raises StopIteration: If end of sequence is reached.
+				"""
 				try:
 					result = self._obj[str(self._i)]
 					self._i += 1
@@ -226,18 +272,27 @@ class Sequence(Abstract_Seq, Node):
 				except IndexError:
 					raise StopIteration
 
-		return iterator(self)
+		return Iterator(self)
 
 
-setattr(Abstract_Node, "DICT_TYPE", Dictionary)
-setattr(Abstract_Node, "SEQ_TYPE", Sequence)
+setattr(Node, "DICT_TYPE", Dictionary)
+setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
 class Configuration(Abstract_Configuration, Dictionary):
+	"""A configuration read from a YAML file."""
+
 	_yamlConfig: YAML
 
 	def __init__(self, configFile: Path):
+		"""
+		Initializes a configuration instance that reads a YAML file as input.
+
+		All sequence items or dictionaries key-value-pairs in the YAML file are accessible via Python's dictionary syntax.
+
+		:param configFile: Configuration file to read and parse.
+		"""
 		Abstract_Configuration.__init__(self)
 
 		with configFile.open() as file:
@@ -246,6 +301,12 @@ class Configuration(Abstract_Configuration, Dictionary):
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 
 	def __getitem__(self, key: str) -> ValueT:
+		"""
+		Access a configuration node by key.
+
+		:param key: The key to look for.
+		:returns:   A node (seuqence or dictionary) or scalar value (int, float, str).
+		"""
 		return self._GetNodeOrValue(str(key))
 
 	def __setitem__(self, key: str, value: ValueT) -> None:

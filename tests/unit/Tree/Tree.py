@@ -34,6 +34,7 @@ from unittest import TestCase
 
 from pyTooling.Tree import Node
 
+
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
@@ -66,6 +67,7 @@ class Tree(TestCase):
 			self.assertTrue(child.IsLeaf)
 			self.assertFalse(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
+			self.assertListEqual([root, child], list(child.GetPath()))
 			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
 
 		self.assertListEqual(children, [child for child in root.GetChildren()])
@@ -88,6 +90,7 @@ class Tree(TestCase):
 			self.assertFalse(child.IsLeaf)
 			self.assertTrue(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
+			self.assertListEqual([root, child], list(child.GetPath()))
 			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
 
 		self.assertListEqual(children, [child for child in root.GetChildren()])
@@ -98,6 +101,7 @@ class Tree(TestCase):
 			self.assertTrue(grandChild.IsLeaf)
 			self.assertFalse(grandChild.HasChildren)
 			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.Path))
+			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.GetPath()))
 			self.assertListEqual([grandChild.Parent, root], [ancestor for ancestor in grandChild.GetAncestors()])
 
 		self.assertListEqual(
@@ -239,7 +243,7 @@ class Tree(TestCase):
 
 		self.assertListEqual([1, 2, 4, 8, 5, 9, 10, 3, 6, 7, 11], [node.ID for node in root.IteratePreOrder()])
 		self.assertListEqual([8, 4, 9, 10, 5, 2, 6, 11, 7, 3, 1], [node.ID for node in root.IteratePostOrder()])
-		self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [node.ID for node in root.InterateLevelOrder()])
+		self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [node.ID for node in root.IterateLevelOrder()])
 
 	def test_AddTree(self):
 		root = Node(1)

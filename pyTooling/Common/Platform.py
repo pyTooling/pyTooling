@@ -28,19 +28,24 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common platform information gathered from various sources."""
+"""
+Common platform information gathered from various sources.
+
+.. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
+"""
 from enum import Flag, auto
 
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import Singleton
+from pyTooling.MetaClasses import ExtendedType
 
 
 @export
-class Platform(metaclass=Singleton):
+class Platform(metaclass=ExtendedType, singleton=True):
 	"""An instance of this class contains all gathered information available from various sources.
 
+	.. seealso::
 
-	.. seealso:: https://stackoverflow.com/a/54837707/3719459
+	   StackOverflow question: `Python: What OS am I running on? <https://stackoverflow.com/a/54837707/3719459>`__
 	"""
 
 	class Platforms(Flag):
@@ -287,6 +292,13 @@ class Platform(metaclass=Singleton):
 
 	@property
 	def ExecutableExtension(self) -> str:
+		"""
+		Returns the file extension for an executable.
+
+		* Linux: ``""`` (empty string)
+		* macOS: ``""`` (empty string)
+		* Windows: ``"exe"``
+		"""
 		if self.Platforms.OS_Windows in self._platform:
 			return "exe"
 		elif self.Platforms.OS_Linux in self._platform:
@@ -298,6 +310,13 @@ class Platform(metaclass=Singleton):
 
 	@property
 	def SharedLibraryExtension(self) -> str:
+		"""
+		Returns the file extension for a shared library.
+
+		* Linux: ``"so"``
+		* macOS: ``"lib"``
+		* Windows: ``"dll"``
+		"""
 		if self.Platforms.OS_Windows in self._platform:
 			return "dll"
 		elif self.Platforms.OS_Linux in self._platform:

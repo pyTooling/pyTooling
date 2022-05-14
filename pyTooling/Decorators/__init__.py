@@ -28,53 +28,68 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Decorators controlling visibility of entities in a Python module."""
+"""Decorators controlling visibility of entities in a Python module.
+
+.. hint:: See :ref:`high-level help <DECO>` for explanations and usage examples.
+"""
 import sys
 from types     import FunctionType, MethodType
 from typing    import Union, Type, TypeVar, Callable
 
 
-__all__ = ["export", "T", "M", "Param", "RetType", "Func"]
+__all__ = ["export", "Param", "RetType", "Func", "T"]
+
+
+try:
+	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
+	from typing import ParamSpec    # exists since Python 3.10
+
+	Param = ParamSpec("Param")                       #: A parameter specification for function or method
+	RetType = TypeVar("RetType")                     #: Type variable for a return type
+	Func = Callable[Param, RetType]                  #: Type specification for a function
+except ImportError:
+	Param = ...                                      #: A parameter specification for function or method
+	RetType = TypeVar("RetType")                     #: Type variable for a return type
+	Func = Callable[..., RetType]                    #: Type specification for a function
 
 
 T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class or function
-M = TypeVar("M", bound=MethodType)                 #: Type variable for methods.
 
 
 def export(entity: T) -> T:
 	"""
 	Register the given function or class as publicly accessible in a module.
 
-	Creates or updates the ``__all__`` attribute in the module in which the
-	decorated entity is defined to include the name of the decorated entity.
+	Creates or updates the ``__all__`` attribute in the module in which the decorated entity is defined to include the
+	name of the decorated entity.
 
-	**Example:**
+	.. admonition:: ``to_export.py``
 
-	``to_export.py``:
+	    .. code:: python
 
-	.. code:: python
+	      from pyTooling.Decorators import export
 
-	   from pyTooling.Decorators import export
+	      @export
+	      def exported():
+	        pass
 
-	   @export
-	   def exported():
-	     pass
+	      def not_exported():
+	        pass
 
-	   def not_exported():
-	     pass
+	.. admonition:: ``another_file.py``
 
+	   .. code:: python
 
-	``another_file.py``
+	      from .to_export import *
 
-	.. code:: python
+	      assert "exported" in globals()
+	      assert "not_exported" not in globals()
 
-	   from .to_export import *
-
-	   assert "exported" in globals()
-	   assert "not_exported" not in globals()
-
-
-	:param entity: the function or class to include in `__all__`
+	:param entity:          The function or class to include in `__all__`.
+	:returns:               The unmodified function or class.
+	:raises AttributeError: If parameter ``entity`` has no ``__module__`` member.
+	:raises TypeError:      If parameter ``entity`` is not a top-level entity in a module.
+	:raises TypeError:      If parameter ``entity`` has no ``__name__``.
 	"""
 	# * Based on an idea by Duncan Booth:
 	#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a
@@ -82,14 +97,14 @@ def export(entity: T) -> T:
 	#	  http://groups.google.com/group/comp.lang.python/msg/3d400fb22d8a42e1
 
 	if not hasattr(entity, "__module__"):
-		raise TypeError(f"{entity} has no __module__ attribute. Please ensure it is a top-level function or class reference defined in a module.")
+		raise AttributeError(f"{entity} has no __module__ attribute. Please ensure it is a top-level function or class reference defined in a module.")
 
 	if hasattr(entity, "__qualname__"):
 		if any(i in entity.__qualname__ for i in (".", "<locals>", "<lambda>")):
 			raise TypeError(f"Only named top-level functions and classes may be exported, not {entity}")
 
 	if not hasattr(entity, "__name__") or entity.__name__ == "<lambda>":
-		raise TypeError(f"Entity must be a named top-level funcion or class, not {entity.__class__}")
+		raise TypeError(f"Entity must be a named top-level function or class, not {entity.__class__}")
 
 	try:
 		module = sys.modules[entity.__module__]
@@ -105,27 +120,88 @@ def export(entity: T) -> T:
 	return entity
 
 
-try:
-	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
-	from typing import ParamSpec    # exists since Python 3.10
-	Param = ParamSpec("Param")
-	RetType = TypeVar("RetType")
-	Func = Callable[Param, RetType]
-except ImportError:
-	Param = ...
-	RetType = TypeVar("RetType")
-	Func = Callable[..., RetType]
+@export
+def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
+	"""
+	Store a reference to the original function/method on a new, wrapper or replacement function/method.
+
+	The function or method reference is stored in ``__orig_func__``.
+
+	.. admonition:: ``metaclass.py``
+
+	   .. code:: python
+
+	      from functools import wraps
+	      from pyTooling.Decorators import OriginalFunction
+
+	      class Meta(type):
+	        def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
+	          # Create a new class
+	          newClass = type.__new__(self, className, baseClasses, members)
+
+	          @OriginalFunction(newClass.__new__)
+	          @wraps(newClass.__new__)
+	          def new(cls, *args, **kwargs):
+	            # ...
+	            obj = newClass.__new__(*args, **kwargs)
+	            # ...
+	            return obj
+
+	          newClass.__new__ = new
+
+	          return newClass
+
+	:param func: Function or method reference to be store on the decorated function or method.
+	:returns:    Decorator function that stores the function or method reference on the decorated object.
+	"""
+	def decorator(f: Func) -> Func:
+		"""
+		Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
+
+		:param f:          Function or method, where the original function or method reference is attached to.
+		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.
+		:raises TypeError: If decorated object is not callable.
+		"""
+		if not isinstance(f, Callable):
+			raise TypeError(f"Decorated object is not callable.")
+
+		f.__orig_func__ = func
+		return f
+
+	return decorator
 
 
 @export
 def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
-	"""Copy the doc-string from given base-class.
+	"""
+	Copy the doc-string from given base-class to the method this decorator is applied to.
+
+	.. admonition:: ``example.py``
+
+	    .. code:: python
+
+	      from pyTooling.Decorators import InheritDocString
+
+	      class Class1:
+	        def method(self):
+	          '''Method's doc-string.'''
+
+	      class Class2(Class1):
+	        @InheritDocString(Class1)
+	        def method(self):
+	          super().method()
 
 	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
-	:returns: Decorator function that copies the doc-string.
+	:returns:         Decorator function that copies the doc-string.
 	"""
-	def decorator(f: Func) -> Func:
-		f.__doc__ = getattr(baseClass, f.__name__).__doc__
-		return f
+	def decorator(m: Func) -> Func:
+		"""
+		Decorator function, which copies the doc-string from base-class' method to method ``m``.
+
+		:param m: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
+		:returns: Same method, but with overwritten doc-string field (``__doc__``).
+		"""
+		m.__doc__ = getattr(baseClass, m.__name__).__doc__
+		return m
 
 	return decorator

@@ -28,10 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Abstract configuration reader."""
+"""\
+Abstract configuration reader.
+
+.. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
+"""
 from typing import Union, ClassVar, Iterator
 
-from pyTooling.Decorators import export
+from ..Decorators import export
+from ..MetaClasses import ExtendedType
+
 
 KeyT = Union[str, int]
 NodeT = Union["Dictionary", "Sequence"]
@@ -39,7 +45,9 @@ ValueT = Union[NodeT, str, int, float]
 
 
 @export
-class Node:
+class Node(metaclass=ExtendedType, useSlots=True):
+	"""Abstract node in a configuration data structure."""
+
 	DICT_TYPE: ClassVar["Dictionary"]
 	SEQ_TYPE: ClassVar["Sequence"]
 	_parent: "Dictionary"
@@ -75,12 +83,16 @@ class Node:
 
 @export
 class Dictionary(Node):
+	"""Abstract dictionary node in a configuration."""
+
 	def __contains__(self, key: KeyT) -> bool:
 		raise NotImplementedError()
 
 
 @export
 class Sequence(Node):
+	"""Abstract sequence node in a configuration."""
+
 	def __getitem__(self, index: int) -> ValueT:
 		raise NotImplementedError()
 
@@ -94,5 +106,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 @export
 class Configuration(Node):
+	"""Abstract root node in a configuration."""
+
 	def __init__(self):
 		Node.__init__(self)
