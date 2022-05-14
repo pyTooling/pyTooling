@@ -6,8 +6,7 @@ Overview
 Currently, the following meta-classes are provided:
 
 * :ref:`META/Overloading`
-* :ref:`META/Singleton`
-* :ref:`META/SlottedType`
+* :ref:`META/ExtendedType`
 
 
 .. seealso::
@@ -50,45 +49,43 @@ annotations.
 
 
 
-.. _META/Singleton:
+.. _META/ExtendedType:
 
-Singleton
-#########
+ExtendedType
+############
 
-This class implements the `singleton design pattern <https://en.wikipedia.org/wiki/Singleton_pattern>`_
-as a Python meta class.
+.. todo::
 
-.. admonition:: Example Usage
+   Document ``ExtendedType`` which replaces ``Singleton`` and ``SlottedType``.
 
-   .. code-block:: python
+   This class implements the `singleton design pattern <https://en.wikipedia.org/wiki/Singleton_pattern>`_
+   as a Python meta class.
 
-      class Terminal(metaclass=Singleton):
-        def __init__(self):
-          pass
+   .. admonition:: Example Usage
 
-        def WriteLine(self, message):
-          print(message)
+      .. code-block:: python
+
+         class Terminal(metaclass=ExtendedType, singleton=True):
+           def __init__(self):
+             pass
+
+           def WriteLine(self, message):
+             print(message)
 
 
+   All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
+   footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
+   all derived classes.
 
-.. _META/SlottedType:
+   .. admonition:: Example Usage
 
-SlottedType
-###########
+      .. code-block:: python
 
-All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
-  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
-  all derived classes.
+         class Node(metaclass=ExtendedType, useSlots=True):
+           _parent: "Node"
 
-.. admonition:: Example Usage
+           def __init__(self, parent: "Node" = None):
+             self._parent = parent
 
-   .. code-block:: python
-
-      class Node(metaclass=SlottedType):
-        _parent: "Node"
-
-        def __init__(self, parent: "Node" = None):
-          self._parent = parent
-
-      root = Node()
-      node = Node(root)
+         root = Node()
+         node = Node(root)
