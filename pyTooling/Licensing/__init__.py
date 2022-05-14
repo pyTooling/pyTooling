@@ -48,13 +48,13 @@ from typing       import Any, Dict
 
 try:
 	from ..Decorators import export
-	from ..MetaClasses import SuperType
+	from ..MetaClasses import ExtendedType
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
-		from MetaClasses import SuperType
+		from MetaClasses import ExtendedType
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
 		raise ex
@@ -99,7 +99,7 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 
 
 @export
-class License(metaclass=SuperType, useSlots=True):
+class License(metaclass=ExtendedType, useSlots=True):
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.

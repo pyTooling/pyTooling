@@ -46,14 +46,14 @@ from typing       import List, Iterable, Dict, Sequence
 
 try:
 	from ..Decorators import export
-	from ..MetaClasses import SuperType
+	from ..MetaClasses import ExtendedType
 	from ..Licensing  import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
-		from MetaClasses import SuperType
+		from MetaClasses import ExtendedType
 		from Licensing import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:
 		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
@@ -131,7 +131,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation(metaclass=SuperType, useSlots=True):
+class VersionInformation(metaclass=ExtendedType, useSlots=True):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).

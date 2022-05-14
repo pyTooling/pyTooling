@@ -36,11 +36,11 @@ Common platform information gathered from various sources.
 from enum import Flag, auto
 
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import SuperType
+from pyTooling.MetaClasses import ExtendedType
 
 
 @export
-class Platform(metaclass=SuperType, singleton=True):
+class Platform(metaclass=ExtendedType, singleton=True):
 	"""An instance of this class contains all gathered information available from various sources.
 
 	.. seealso::

@@ -148,7 +148,7 @@ def abstractmethod(method: M) -> M:
 
 	.. warning::
 
-	   This decorator should be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.SuperType`.
+	   This decorator should be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
 	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.AbstractClassError` at
 	   instantiation.
 
@@ -156,7 +156,7 @@ def abstractmethod(method: M) -> M:
 
 	   .. code:: python
 
-	      class Data(mataclass=SuperType):
+	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
 	        def method:
 	          '''This method needs to be implemented'''
@@ -181,7 +181,7 @@ def mustoverride(method: M) -> M:
 
 	.. warning::
 
-	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.SuperType`.
+	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
 	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` at
 	   instantiation.
 
@@ -189,7 +189,7 @@ def mustoverride(method: M) -> M:
 
 	   .. code:: python
 
-	      class Data(mataclass=SuperType):
+	      class Data(mataclass=ExtendedType):
 	        @mustoverride
 	        def method:
 	          '''This is a very basic implementation'''
@@ -210,7 +210,7 @@ def overloadable(method: M) -> M:
 # TODO: allow __dict__ and __weakref__ if slotted is enabled
 
 @export
-class SuperType(type):
+class ExtendedType(type):
 	"""
   .. todo:: Needs documentation.
 
@@ -251,14 +251,14 @@ class SuperType(type):
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
 		# Search in inheritance tree for abstract methods
-		newClass.__abstractMethods__ = self.__checkForAbstractMethods(baseClasses, members)
-		newClass.__isAbstract__ = self.__wrapNewMethodIfAbstract(newClass)
-		newClass.__isSingleton__ = self.__wrapNewMethodIfSingleton(newClass, singleton)
+		newClass.__abstractMethods__ = self._checkForAbstractMethods(baseClasses, members)
+		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		return newClass
 
 	@classmethod
-	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
 		"""
 		Check if the current class contains abstract methods and return a tuple of them.
 
@@ -284,7 +284,7 @@ class SuperType(type):
 		return tuple(result)
 
 	@staticmethod
-	def __wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+	def _wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
 		"""
 		If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
 
@@ -337,7 +337,7 @@ class SuperType(type):
 		return False
 
 	@staticmethod
-	def __wrapNewMethodIfAbstract(newClass) -> bool:
+	def _wrapNewMethodIfAbstract(newClass) -> bool:
 		"""
 		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
 

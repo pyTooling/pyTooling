@@ -36,7 +36,7 @@ Abstract configuration reader.
 from typing import Union, ClassVar, Iterator
 
 from ..Decorators import export
-from ..MetaClasses import SuperType
+from ..MetaClasses import ExtendedType
 
 
 KeyT = Union[str, int]
@@ -45,8 +45,7 @@ ValueT = Union[NodeT, str, int, float]
 
 
 @export
-class Node(metaclass=SuperType, useSlots=True):
-
+class Node(metaclass=ExtendedType, useSlots=True):
 	"""Abstract node in a configuration data structure."""
 
 	DICT_TYPE: ClassVar["Dictionary"]
@@ -84,7 +83,6 @@ class Node(metaclass=SuperType, useSlots=True):
 
 @export
 class Dictionary(Node):
-
 	"""Abstract dictionary node in a configuration."""
 
 	def __contains__(self, key: KeyT) -> bool:
@@ -93,7 +91,6 @@ class Dictionary(Node):
 
 @export
 class Sequence(Node):
-
 	"""Abstract sequence node in a configuration."""
 
 	def __getitem__(self, index: int) -> ValueT:
@@ -109,7 +106,6 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 @export
 class Configuration(Node):
-
 	"""Abstract root node in a configuration."""
 
 	def __init__(self):

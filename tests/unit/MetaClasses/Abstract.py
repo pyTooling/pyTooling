@@ -37,7 +37,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.Abstract`.
 from unittest       import TestCase
 
 from pyTooling.Exceptions import AbstractClassError
-from pyTooling.MetaClasses import SuperType, abstractmethod, mustoverride
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -45,7 +45,7 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class NormalBase(metaclass=SuperType):
+class NormalBase(metaclass=ExtendedType):
 	def NormalMethod(self):
 		pass
 
@@ -54,7 +54,7 @@ class NormalClass(NormalBase):
 	pass
 
 
-class AbstractBase(metaclass=SuperType):
+class AbstractBase(metaclass=ExtendedType):
 	@abstractmethod
 	def AbstractMethod(self):
 		pass
@@ -69,7 +69,7 @@ class DerivedAbstractClass(AbstractBase):
 		super().AbstractMethod()
 
 
-class MustOverrideBase(metaclass=SuperType):
+class MustOverrideBase(metaclass=ExtendedType):
 	@mustoverride
 	def MustOverrideMethod(self):
 		pass

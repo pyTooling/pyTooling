@@ -36,7 +36,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
 """
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import SuperType
+from pyTooling.MetaClasses import ExtendedType
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -45,7 +45,7 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Application1(metaclass=SuperType, singleton=True):
+class Application1(metaclass=ExtendedType, singleton=True):
 	X = 0
 
 	def __init__(self):
@@ -54,7 +54,7 @@ class Application1(metaclass=SuperType, singleton=True):
 		self.X = 1
 
 
-class Application2(metaclass=SuperType, singleton=True):
+class Application2(metaclass=ExtendedType, singleton=True):
 	X = 10
 
 	def __init__(self):

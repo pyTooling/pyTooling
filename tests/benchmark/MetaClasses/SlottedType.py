@@ -28,10 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for SuperType."""
+"""Performance tests for ExtendedType."""
 from pytest import mark
 
-from pyTooling.MetaClasses import SuperType
+from pyTooling.MetaClasses import ExtendedType
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -50,7 +50,7 @@ class Node_1:
 		self._data_0 = self._data_0 + add
 
 
-class SlottedNode_1(metaclass=SuperType, useSlots=True):
+class SlottedNode_1(metaclass=ExtendedType, useSlots=True):
 	_data_0: int
 
 	def __init__(self, data):
@@ -96,7 +96,7 @@ class Node_10:
 		self._data_9 = self._data_8 + add
 
 
-class SlottedNode_10(metaclass=SuperType, useSlots=True):
+class SlottedNode_10(metaclass=ExtendedType, useSlots=True):
 	_data_0: int
 	_data_1: int
 	_data_2: int

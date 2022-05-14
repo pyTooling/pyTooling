@@ -36,13 +36,13 @@ Auxiliary classes to implement call-by-reference.
 from typing import Any, Generic, TypeVar
 
 from ..Decorators import export
-from ..MetaClasses import SuperType
+from ..MetaClasses import ExtendedType
 
 T = TypeVar("T")
 
 
 @export
-class CallByRefParam(Generic[T], metaclass=SuperType, useSlots=True):
+class CallByRefParam(Generic[T], metaclass=ExtendedType, useSlots=True):
 	"""
 	Implements a *call-by-reference* parameter.
 

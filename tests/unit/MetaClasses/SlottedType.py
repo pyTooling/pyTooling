@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.SuperType`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
@@ -37,7 +37,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.SuperType`.
 from unittest       import TestCase
 
 from pyTooling.Common import getsizeof
-from pyTooling.MetaClasses import SuperType
+from pyTooling.MetaClasses import ExtendedType
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -61,7 +61,7 @@ class Slotted(TestCase):
 			print(f"size: not supported on PyPy")
 
 	def test_SlottedData(self):
-		class SlottedData(metaclass=SuperType, useSlots=True):
+		class SlottedData(metaclass=ExtendedType, useSlots=True):
 			_data: int
 
 			def __init__(self, data: int):
@@ -92,7 +92,7 @@ class Slotted(TestCase):
 			_baseData: int
 
 		with self.assertRaises(AttributeError):
-			class SlottedData(Base, metaclass=SuperType, useSlots=True):
+			class SlottedData(Base, metaclass=ExtendedType, useSlots=True):
 				_data: int
 
 				def __init__(self, data: int):
