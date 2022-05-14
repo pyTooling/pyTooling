@@ -28,7 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common types, helper functions and classes.
+"""
+Common types, helper functions and classes.
 
 .. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
 """
@@ -64,7 +65,8 @@ CurrentPlatform = Platform()     #: Gathered information for the current platfor
 
 @export
 def isnestedclass(cls: Type, scope: Type) -> bool:
-	"""Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
+	"""
+	Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
 
 	:param cls:   Class to check, if it's a nested class.
 	:param scope: Outer class which is the outer scope of ``cls``.
@@ -82,7 +84,8 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 
 @export
 def getsizeof(obj: Any) -> int:
-	"""Recursively calculate the "true" size of an object including complex members like ``__dict__``.
+	"""
+	Recursively calculate the "true" size of an object including complex members like ``__dict__``.
 
 	.. admonition:: Background Information
 
@@ -104,7 +107,8 @@ def getsizeof(obj: Any) -> int:
 	visitedIDs = set()  #: A set to track visited objects, so memory consumption isn't counted multiple times.
 
 	def recurse(obj: Any) -> int:
-		"""Nested function for recursion.
+		"""
+		Nested function for recursion.
 
 		:param obj: Subobject to calculate the size of.
 		:return:    Size of a subobject in bytes.

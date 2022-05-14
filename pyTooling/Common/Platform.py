@@ -28,7 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Common platform information gathered from various sources.
+"""
+Common platform information gathered from various sources.
 
 .. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
 """
@@ -291,7 +292,8 @@ class Platform(metaclass=SuperType, singleton=True):
 
 	@property
 	def ExecutableExtension(self) -> str:
-		"""Returns the file extension for an executable.
+		"""
+		Returns the file extension for an executable.
 
 		* Linux: ``""`` (empty string)
 		* macOS: ``""`` (empty string)
@@ -308,7 +310,8 @@ class Platform(metaclass=SuperType, singleton=True):
 
 	@property
 	def SharedLibraryExtension(self) -> str:
-		"""Returns the file extension for a shared library.
+		"""
+		Returns the file extension for a shared library.
 
 		* Linux: ``"so"``
 		* macOS: ``"lib"``

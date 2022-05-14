@@ -28,7 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Auxiliary classes to implement call-by-reference.
+"""
+Auxiliary classes to implement call-by-reference.
 
 .. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """

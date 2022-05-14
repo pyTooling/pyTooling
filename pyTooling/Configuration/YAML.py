@@ -28,7 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Configuration reader for YAML files.
+"""
+Configuration reader for YAML files.
 
 .. hint:: See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
@@ -182,6 +183,7 @@ class Node(Abstract_Node):
 
 @export
 class Dictionary(Abstract_Dict, Node):
+
 	"""A dictionary node in a YAML data file."""
 
 	_keys: List[KeyT]
@@ -203,14 +205,16 @@ class Dictionary(Abstract_Dict, Node):
 				self._obj = obj
 
 			def __iter__(self) -> "Iterator":
-				"""Return itself to fulfil the iterator protocol.
+				"""
+				Return itself to fulfil the iterator protocol.
 
 				:returns: Itself.
 				"""
 				return self
 
 			def __next__(self) -> ValueT:
-				"""Returns the next item in the dictionary.
+				"""
+				Returns the next item in the dictionary.
 
 				:returns:              Next item.
 				"""
@@ -231,11 +235,13 @@ class Sequence(Abstract_Seq, Node):
 	__getitem__ = Node.__getitem__
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
-		"""Returns an iterator to iterate items in the sequence of sub-nodes.
+		"""
+		Returns an iterator to iterate items in the sequence of sub-nodes.
 
 		:returns: Iterator to iterate items in a sequence.
 		"""
 		class Iterator(metaclass=SuperType, useSlots=True):
+
 			"""Iterator to iterate sequence items."""
 
 			_i: int         #: internal iterator position
@@ -246,14 +252,16 @@ class Sequence(Abstract_Seq, Node):
 				self._obj = obj
 
 			def __iter__(self) -> "Iterator":
-				"""Return itself to fulfil the iterator protocol.
+				"""
+				Return itself to fulfil the iterator protocol.
 
 				:returns: Itself.
 				"""
 				return self
 
 			def __next__(self) -> ValueT:
-				"""Returns the next item in the sequence.
+				"""
+				Returns the next item in the sequence.
 
 				:returns:              Next item.
 				:raises StopIteration: If end of sequence is reached.
@@ -279,7 +287,8 @@ class Configuration(Abstract_Configuration, Dictionary):
 	_yamlConfig: YAML
 
 	def __init__(self, configFile: Path):
-		"""Initializes a configuration instance that reads a YAML file as input.
+		"""
+		Initializes a configuration instance that reads a YAML file as input.
 
 		All sequence items or dictionaries key-value-pairs in the YAML file are accessible via Python's dictionary syntax.
 
@@ -293,7 +302,8 @@ class Configuration(Abstract_Configuration, Dictionary):
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 
 	def __getitem__(self, key: str) -> ValueT:
-		"""Access a configuration node by key.
+		"""
+		Access a configuration node by key.
 
 		:param key: The key to look for.
 		:returns:   A node (seuqence or dictionary) or scalar value (int, float, str).
