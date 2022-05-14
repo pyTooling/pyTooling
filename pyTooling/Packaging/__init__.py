@@ -271,6 +271,13 @@ DEFAULT_CLASSIFIERS = (
 		"Topic :: Utilities"
 	)
 
+DEFAULT_README = Path("README.md")
+DEFAULT_REQUIREMENTS = Path("requirements.txt")
+DEFAULT_DOCUMENTATION_REQUIREMENTS = Path("doc/requirements.txt")
+DEFAULT_TEST_REQUIREMENTS = Path("test/requirements.txt")
+DEFAULT_PACKAGING_REQUIREMENTS = Path("build/requirements.txt")
+DEFAULT_VERSION_FILE = Path("__init__.py")
+
 @export
 def DescribePythonPackage(
 	packageName: str,
@@ -281,17 +288,18 @@ def DescribePythonPackage(
 	issueTrackerCodeURL: str,
 	keywords: str = None,
 	license: License = DEFAULT_LICENSE,
-	readmeFile: Path = Path("README.md"),
-	requirementsFile: Path = Path("requirements.txt"),
-	documentationRequirementsFile: Path = Path("doc/requirements.txt"),
-	unittestRequirementsFile: Path = Path("test/requirements.txt"),
-	packagingRequirementsFile: Path = Path("build/requirements.txt"),
+	readmeFile: Path = DEFAULT_README,
+	requirementsFile: Path = DEFAULT_REQUIREMENTS,
+	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
+	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
+	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
 	additionalRequirements: Dict[str, List[str]] = None,
-	sourceFileWithVersion: Path = Path("__init__.py"),
+	sourceFileWithVersion: Path = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None
+	consoleScripts: Dict[str, str] = None,
+	dataFiles: Dict[str, List[str]] = None
 ) -> None:
 	# Read README for upload to PyPI
 	readme = loadReadmeFile(readmeFile)
@@ -379,6 +387,9 @@ def DescribePythonPackage(
 			"console_scripts": scripts
 		}
 
+	if dataFiles:
+		parameters["package_data"] = dataFiles
+
 	setuptools_setup(**parameters)
 
 @export
@@ -390,17 +401,18 @@ def DescribePythonPackageHostedOnGitHub(
 	projectURL: str = None,
 	keywords: str = None,
 	license: License = DEFAULT_LICENSE,
-	readmeFile: Path = Path("README.md"),
-	requirementsFile: Path = Path("requirements.txt"),
-	documentationRequirementsFile: Path = Path("doc/requirements.txt"),
-	unittestRequirementsFile: Path = Path("test/requirements.txt"),
-	packagingRequirementsFile: Path = Path("build/requirements.txt"),
+	readmeFile: Path = DEFAULT_README,
+	requirementsFile: Path = DEFAULT_REQUIREMENTS,
+	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
+	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
+	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
 	additionalRequirements: Dict[str, List[str]] = None,
-	sourceFileWithVersion: Path = Path("__init__.py"),
+	sourceFileWithVersion: Path = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None
+	consoleScripts: Dict[str, str] = None,
+	dataFiles: Dict[str, List[str]] = None
 ):
 	gitHubRepository = gitHubRepository if gitHubRepository is not None else packageName
 
@@ -430,5 +442,6 @@ def DescribePythonPackageHostedOnGitHub(
 		classifiers=classifiers,
 		developmentStatus=developmentStatus,
 		pythonVersions=pythonVersions,
-		consoleScripts=consoleScripts
+		consoleScripts=consoleScripts,
+		dataFiles=dataFiles
 	)

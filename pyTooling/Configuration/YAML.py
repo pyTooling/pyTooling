@@ -85,7 +85,8 @@ class Node(Abstract_Node):
 		path = self._ToPath(query)
 		return self._GetNodeOrValueByPathExpression(path)
 
-	def _ToPath(self, query: str) -> List[Union[str, int]]:
+	@staticmethod
+	def _ToPath(query: str) -> List[Union[str, int]]:
 		return query.split(":")
 
 	def _GetNodeOrValue(self, key: str) -> ValueT:

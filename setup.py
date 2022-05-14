@@ -51,4 +51,7 @@ DescribePythonPackageHostedOnGitHub(
 	unittestRequirementsFile=Path("tests/requirements.txt"),
 	additionalRequirements={"yaml": ["ruamel.yaml>=0.17"]},
 	sourceFileWithVersion=packageInformationFile,
+	dataFiles={
+		packageDirectory: ["py.typed"]
+	}
 )

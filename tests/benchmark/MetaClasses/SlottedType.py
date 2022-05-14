@@ -136,28 +136,28 @@ class SlottedNode_10(metaclass=SuperType, useSlots=True):
 def test_CreateObjects_1(benchmark):
 	@benchmark
 	def func():
-		nodes = [Node_1(i) for i in range(1000)]
+		[Node_1(i) for i in range(1000)]
 
 
 @mark.benchmark(group="Create Objects with 1 slot")
 def test_CreateSlottedObjects_1(benchmark):
 	@benchmark
 	def func():
-		nodes = [SlottedNode_1(i) for i in range(1000)]
+		[SlottedNode_1(i) for i in range(1000)]
 
 
 @mark.benchmark(group="Create Objects with 10 slots")
 def test_CreateObjects_10(benchmark):
 	@benchmark
 	def func():
-		nodes = [Node_10(i) for i in range(1000)]
+		[Node_10(i) for i in range(1000)]
 
 
 @mark.benchmark(group="Create Objects with 10 slots")
 def test_CreateSlottedObjects_10(benchmark):
 	@benchmark
 	def func():
-		nodes = [SlottedNode_10(i) for i in range(1000)]
+		[SlottedNode_10(i) for i in range(1000)]
 
 
 @mark.benchmark(group="Accumulate a single integer slot")
