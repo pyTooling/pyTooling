@@ -28,7 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Abstract configuration reader.
+"""
+Abstract configuration reader.
 
 .. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
 """
@@ -45,6 +46,7 @@ ValueT = Union[NodeT, str, int, float]
 
 @export
 class Node(metaclass=SuperType, useSlots=True):
+
 	"""Abstract node in a configuration data structure."""
 
 	DICT_TYPE: ClassVar["Dictionary"]
@@ -82,6 +84,7 @@ class Node(metaclass=SuperType, useSlots=True):
 
 @export
 class Dictionary(Node):
+
 	"""Abstract dictionary node in a configuration."""
 
 	def __contains__(self, key: KeyT) -> bool:
@@ -90,6 +93,7 @@ class Dictionary(Node):
 
 @export
 class Sequence(Node):
+
 	"""Abstract sequence node in a configuration."""
 
 	def __getitem__(self, index: int) -> ValueT:
@@ -105,6 +109,8 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 @export
 class Configuration(Node):
+
 	"""Abstract root node in a configuration."""
+
 	def __init__(self):
 		Node.__init__(self)

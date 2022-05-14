@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).
+"""
+The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
@@ -59,7 +60,9 @@ __all__ = ["M"]
 
 @export
 class Overloading(type):
-	"""Metaclass that allows multiple dispatch of methods based on method signatures.
+
+	"""
+	Metaclass that allows multiple dispatch of methods based on method signatures.
 
 	.. seealso:
 
@@ -67,6 +70,7 @@ class Overloading(type):
 	"""
 
 	class DispatchDictionary(dict):
+
 		"""Special dictionary to build dispatchable methods in a metaclass."""
 
 		class DispatchableMethod:
@@ -140,7 +144,8 @@ M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 @export
 def abstractmethod(method: M) -> M:
-	"""Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
+	"""
+	Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
 
 	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacement method.
 
@@ -174,7 +179,8 @@ def abstractmethod(method: M) -> M:
 
 @export
 def mustoverride(method: M) -> M:
-	"""Mark a method as *must-override*.
+	"""
+	Mark a method as *must-override*.
 
 	.. warning::
 
@@ -206,6 +212,7 @@ def overloadable(method: M) -> M:
 
 @export
 class SuperType(type):
+
 	"""
 
 	Features:
@@ -226,7 +233,8 @@ class SuperType(type):
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
-		"""Construct a new class using this :term:`meta-class`.
+		"""
+		Construct a new class using this :term:`meta-class`.
 
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
@@ -253,7 +261,8 @@ class SuperType(type):
 
 	@classmethod
 	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
-		"""Check if the current class contains abstract methods and return a tuple of them.
+		"""
+		Check if the current class contains abstract methods and return a tuple of them.
 
 		These abstract methods might be inherited from any base-class. If there are inherited abstract methods, check if
 		they are now implemented (overridden) by the current class that's right now constructed.
@@ -278,7 +287,8 @@ class SuperType(type):
 
 	@staticmethod
 	def __wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
-		"""If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
+		"""
+		If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
 
 		Only the first object creation initializes the object.
 
@@ -330,7 +340,8 @@ class SuperType(type):
 
 	@staticmethod
 	def __wrapNewMethodIfAbstract(newClass) -> bool:
-		"""If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
+		"""
+		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
 
 		:param newClass:            The newly constructed class for further modifications.
 		:returns:                   True, if the class is abstract.
@@ -364,7 +375,8 @@ class SuperType(type):
 
 	@staticmethod
 	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
-		"""Get all object attributes, that should be stored in a slot.
+		"""
+		Get all object attributes, that should be stored in a slot.
 
 		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:     The dictionary of members for the constructed class.

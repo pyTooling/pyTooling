@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A common set of missing exceptions in Python.
+"""
+A common set of missing exceptions in Python.
 
 .. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
@@ -96,7 +97,8 @@ class ExceptionBase(Exception):
 	Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
 
 	def __init__(self, message: str = ""):
-		"""pyExceptions initializer.
+		"""
+		pyExceptions initializer.
 
 		:param message:   The exception message.
 		"""

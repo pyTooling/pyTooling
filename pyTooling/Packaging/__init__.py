@@ -28,7 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A set of helper functions to describe a Python package for setuptools.
+"""
+A set of helper functions to describe a Python package for setuptools.
 
 .. hint:: See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
 """

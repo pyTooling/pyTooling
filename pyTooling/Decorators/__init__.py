@@ -57,7 +57,8 @@ T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class 
 
 
 def export(entity: T) -> T:
-	"""Register the given function or class as publicly accessible in a module.
+	"""
+	Register the given function or class as publicly accessible in a module.
 
 	Creates or updates the ``__all__`` attribute in the module in which the decorated entity is defined to include the
 	name of the decorated entity.
@@ -121,7 +122,8 @@ def export(entity: T) -> T:
 
 @export
 def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
-	"""Store a reference to the original function/method on a new, wrapper or replacement function/method.
+	"""
+	Store a reference to the original function/method on a new, wrapper or replacement function/method.
 
 	The function or method reference is stored in ``__orig_func__``.
 
@@ -153,7 +155,8 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 	:returns:    Decorator function that stores the function or method reference on the decorated object.
 	"""
 	def decorator(f: Func) -> Func:
-		"""Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
+		"""
+		Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
 
 		:param f:          Function or method, where the original function or method reference is attached to.
 		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.
@@ -170,7 +173,8 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 
 @export
 def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
-	"""Copy the doc-string from given base-class to the method this decorator is applied to.
+	"""
+	Copy the doc-string from given base-class to the method this decorator is applied to.
 
 	.. admonition:: ``example.py``
 
@@ -191,7 +195,8 @@ def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
 	:returns:         Decorator function that copies the doc-string.
 	"""
 	def decorator(m: Func) -> Func:
-		"""Decorator function, which copies the doc-string from base-class' method to method ``m``.
+		"""
+		Decorator function, which copies the doc-string from base-class' method to method ``m``.
 
 		:param m: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
 		:returns: Same method, but with overwritten doc-string field (``__doc__``).

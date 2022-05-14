@@ -75,12 +75,15 @@ __all__ = [
 @export
 @dataclass
 class PythonLicenseNames:
+
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
+
 	ShortName: str    #: License's short name
 	Classifier: str   #: Package classifier for a license.
 
 	def __str__(self) -> str:
-		"""The string representation of this name tuple returns the short name of the license.
+		"""
+		The string representation of this name tuple returns the short name of the license.
 
 		:returns: Short name of the license.
 		"""
@@ -98,6 +101,7 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 
 @export
 class License(metaclass=SuperType, useSlots=True):
+
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.
@@ -113,7 +117,8 @@ class License(metaclass=SuperType, useSlots=True):
 
 	@property
 	def Name(self) -> str:
-		"""Returns the license' name.
+		"""
+		Returns the license' name.
 
 		:returns: License name.
 		"""
@@ -121,7 +126,8 @@ class License(metaclass=SuperType, useSlots=True):
 
 	@property
 	def SPDXIdentifier(self) -> str:
-		"""Returns the license' unique `SPDX identifier <https://spdx.org/licenses/>`__.
+		"""
+		Returns the license' unique `SPDX identifier <https://spdx.org/licenses/>`__.
 
 		:returns: The the unique SPDX identifier.
 		"""
@@ -129,7 +135,8 @@ class License(metaclass=SuperType, useSlots=True):
 
 	@property
 	def OSIApproved(self) -> bool:
-		"""Returns true, if the license is approved by OSI (`Open Source Initiative <https://opensource.org/>`__).
+		"""
+		Returns true, if the license is approved by OSI (`Open Source Initiative <https://opensource.org/>`__).
 
 		:returns: True, if the license is approved by the Open Source Initiative.
 		"""
@@ -137,7 +144,8 @@ class License(metaclass=SuperType, useSlots=True):
 
 	@property
 	def FSFApproved(self) -> bool:
-		"""Returns true, if the license is approved by FSF (`Free Software Foundation <https://www.fsf.org/>`__).
+		"""
+		Returns true, if the license is approved by FSF (`Free Software Foundation <https://www.fsf.org/>`__).
 
 		:returns: True, if the license is approved by the Free Software Foundation.
 		"""
@@ -145,7 +153,8 @@ class License(metaclass=SuperType, useSlots=True):
 
 	@property
 	def PythonLicenseName(self) -> str:
-		"""Returns the Python license name for this license if it's defined.
+		"""
+		Returns the Python license name for this license if it's defined.
 
 		:returns: The Python license name.
 		:raises ValueError: If there is no license name defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
@@ -159,7 +168,8 @@ class License(metaclass=SuperType, useSlots=True):
 
 	@property
 	def PythonClassifier(self) -> str:
-		"""Returns the Python package classifier for this license if it's defined.
+		"""
+		Returns the Python package classifier for this license if it's defined.
 
 		.. seealso::
 
@@ -177,7 +187,8 @@ class License(metaclass=SuperType, useSlots=True):
 		return f"License :: {osi}{item.Classifier}"
 
 	def __eq__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are identical (comparison based on SPDX identifiers).
+		"""
+		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
 		:returns: True, if both licenses are identical.
 		:raises TypeError: If second operand is not of type :py:class:`License`.
@@ -188,7 +199,8 @@ class License(metaclass=SuperType, useSlots=True):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
 
 	def __ne__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
+		"""
+		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
 		:returns: True, if both licenses are not identical.
 		:raises TypeError: If second operand is not of type :py:class:`License`.
@@ -207,14 +219,16 @@ class License(metaclass=SuperType, useSlots=True):
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
-		"""Returns the internal unique representation (a.k.a SPDX identifier).
+		"""
+		Returns the internal unique representation (a.k.a SPDX identifier).
 
 		:returns: SPDX identifier of the license.
 		"""
 		return self._spdxIdentifier
 
 	def __str__(self) -> str:
-		"""Returns the license' name.
+		"""
+		Returns the license' name.
 
 		:returns: Name of the license.
 		"""

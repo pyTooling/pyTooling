@@ -44,7 +44,8 @@ DictValueT = TypeVar("DictValueT")
 
 @export
 class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useSlots=True):
-	"""A **tree** data structure can be constructed of ``Node`` instances.
+	"""
+	A **tree** data structure can be constructed of ``Node`` instances.
 
 	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
 	tree top-down or bottom-up.
@@ -136,7 +137,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def ID(self) -> Nullable[IDT]:
-		"""Read-only property to access the unique ID of a node (:py:attr:`_id`). If no ID was given at node construction
+		"""
+		Read-only property to access the unique ID of a node (:py:attr:`_id`). If no ID was given at node construction
 		time, ID return None.
 
 		:returns: Unique ID of a node, if ID was given at node creation time, else None.
@@ -145,7 +147,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def Value(self) -> Nullable[ValueT]:
-		"""Property to get and set the value (:py:attr:`_value`) of a node.
+		"""
+		Property to get and set the value (:py:attr:`_value`) of a node.
 
 		:returns: The value of a node.
 		"""
@@ -169,7 +172,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def Root(self) -> 'Node':
-		"""Read-only property to access the tree's root node (:py:attr:`_root`).
+		"""
+		Read-only property to access the tree's root node (:py:attr:`_root`).
 
 		:returns: The root node (representative node) of a tree.
 		"""
@@ -177,7 +181,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def Parent(self) -> Nullable['Node']:
-		"""Property to get and set the parent (:py:attr:`_parent`) of a node.
+		"""
+		Property to get and set the parent (:py:attr:`_parent`) of a node.
 
 		.. note::
 
@@ -227,7 +232,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		raise NotImplementedError(f"Property 'RightSibling' is not yet implemented.")
 
 	def _GetPathAsLinkedList(self) -> Deque["Node"]:
-		"""Compute the path from current node to root node by using a linked list (:py:class:`deque`).
+		"""
+		Compute the path from current node to root node by using a linked list (:py:class:`deque`).
 
 		:meta private:
 		:returns: Path from node to root node as double-ended queue (deque).
@@ -243,7 +249,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def Path(self) -> Tuple['Node']:
-		"""Read-only property to return the path from root node to the node as a tuple of nodes.
+		"""
+		Read-only property to return the path from root node to the node as a tuple of nodes.
 
 		:returns: A tuple of nodes describing the path from root node to the node.
 		"""
@@ -255,7 +262,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def IsRoot(self) -> bool:
-		"""Returns true, if the node is the root node (representative node of the tree).
+		"""
+		Returns true, if the node is the root node (representative node of the tree).
 
 		:returns: True, if node is the root node.
 		"""
@@ -263,7 +271,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def IsLeaf(self) -> bool:
-		"""Returns true, if the node is a leaf node (has no children).
+		"""
+		Returns true, if the node is a leaf node (has no children).
 
 		:returns: True, if node has no children.
 		"""
@@ -271,7 +280,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 
 	@property
 	def HasChildren(self) -> bool:
-		"""Returns true, if the node has child nodes.
+		"""
+		Returns true, if the node has child nodes.
 
 		:returns: True, if node has children.
 		"""
@@ -290,7 +300,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 			node._root = self._root
 
 	def AddChild(self, child: 'Node'):
-		"""Add a child node to the current node of the tree.
+		"""
+		Add a child node to the current node of the tree.
 
 		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :py:attr:`_root` assigned and
 		all IDs are merged into the node's root's ID lists (:py:attr:`_nodesWithID`).
@@ -319,7 +330,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		self._children.append(child)
 
 	def AddChildren(self, children: Iterable['Node']):
-		"""Add multiple children nodes to the current node of the tree.
+		"""
+		Add multiple children nodes to the current node of the tree.
 
 		.. seealso::
 
@@ -380,7 +392,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 			raise NotImplementedError(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
 
 	def GetChildren(self) -> Generator['Node', None, None]:
-		"""A generator to iterate all direct children of the current node.
+		"""
+		A generator to iterate all direct children of the current node.
 
 		.. seealso::
 
@@ -399,7 +412,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 			yield child
 
 	def GetSiblings(self) -> Generator['Node', None, None]:
-		"""A generator to iterate all siblings of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
+		"""
+		A generator to iterate all siblings of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
 		it doesn't include the node itself.
 
 		.. seealso::
@@ -433,7 +447,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 				yield from child.IterateLeafs()
 
 	def IterateLevelOrder(self) -> Generator['Node', None, None]:
-		"""A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetSiblings`,
+		"""
+		A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetSiblings`,
 		this includes also the node itself as the first returned node.
 
 		.. seealso::
@@ -457,7 +472,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 				queue.appendleft(node)
 
 	def IteratePreOrder(self) -> Generator['Node', None, None]:
-		"""A generator to iterate all siblings of the current node in pre-order. In contrast to `GetSiblings`, this includes
+		"""
+		A generator to iterate all siblings of the current node in pre-order. In contrast to `GetSiblings`, this includes
 		also the node itself as the first returned node.
 
 		.. seealso::
@@ -478,7 +494,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 			yield from child.IteratePreOrder()
 
 	def IteratePostOrder(self) -> Generator['Node', None, None]:
-		"""A generator to iterate all siblings of the current node in post-order. In contrast to `GetSiblings`, this
+		"""
+		A generator to iterate all siblings of the current node in post-order. In contrast to `GetSiblings`, this
 		includes also the node itself as the last returned node.
 
 		.. seealso::
@@ -499,7 +516,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		yield self
 
 	def WalkTo(self, other: 'Node') -> Generator['Node', None, None]:
-		"""Returns a generator to iterate the path from node to another node.
+		"""
+		Returns a generator to iterate the path from node to another node.
 
 		:param other:      Node to walk to.
 		:returns:          Generator to iterate the path from node to other node.
@@ -529,7 +547,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 			yield otherPath[i]
 
 	def GetNodeByID(self, nodeID: IDT) -> 'Node':
-		"""Lookup a node by its unique ID.
+		"""
+		Lookup a node by its unique ID.
 
 		:param nodeID:      ID of a node to lookup in the tree.
 		:returns:           Node for the given ID.
@@ -545,7 +564,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
 	def __repr__(self) -> str:
-		"""Returns a detailed string representation of the node.
+		"""
+		Returns a detailed string representation of the node.
 
 		:returns: The detailed string representation of the node.
 		"""
@@ -560,7 +580,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		return f"<node{nodeID}{parent}{value}>"
 
 	def __str__(self) -> str:
-		"""Return a string representation of the node.
+		"""
+		Return a string representation of the node.
 
 		Order of resolution:
 
