@@ -15,6 +15,8 @@ Currently, the following meta-classes are provided:
    Understanding Python metaclasses
      https://blog.ionelmc.ro/2015/02/09/understanding-python-metaclasses/
 
+   Python data model for :ref:`__slots__ <slots>`.
+
 
 .. _META/Overloading:
 

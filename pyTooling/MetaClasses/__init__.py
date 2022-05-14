@@ -210,14 +210,12 @@ class SuperType(type):
 
 	Features:
 
-	* Store object members more effectively in slots instead of ``_dict__``.
-	* Allow only a single instance to be created (singleton).
-	* Define methods as abstract and prohibit instantiation of abstract classes.
-	* Allow method overloading and dispatch overloads based on argument signatures.
+	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
+	* Allow only a single instance to be created (:term:`singleton`).
+	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
+	  instantiation of :term:`abstract classes <abstract class>`.
 
-	.. seealso::
-
-		`Python data model - __slots__ <https://docs.python.org/3/reference/datamodel.html#slots>`__
+	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 	"""
 
 	def __new__(
@@ -228,13 +226,14 @@ class SuperType(type):
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
-		"""
+		"""Construct a new class using this :term:`meta-class`.
 
-		:param className:
-		:param baseClasses:
-		:param members:
-		:param singleton:
-		:param useSlots:
+		:param className:       The name of the class to construct.
+		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:         The dictionary of members for the constructed class.
+		:param singleton:       If true, make the class a :term:`Singleton`.
+		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
+		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
@@ -254,6 +253,15 @@ class SuperType(type):
 
 	@classmethod
 	def __checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+		"""Check if the current class contains abstract methods and return a tuple of them.
+
+		These abstract methods might be inherited from any base-class. If there are inherited abstract methods, check if
+		they are now implemented (overridden) by the current class that's right now constructed.
+
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:     The dictionary of members for the constructed class.
+		:returns:           A tuple of abstract method's names.
+		"""
 		result = set()
 		for base in baseClasses:
 			for cls in base.__mro__:
@@ -270,6 +278,16 @@ class SuperType(type):
 
 	@staticmethod
 	def __wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+		"""If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
+
+		Only the first object creation initializes the object.
+
+		This implementation is threadsafe.
+
+		:param newClass:  The newly constructed class for further modifications.
+		:param singleton: If true, the class allows only a single instance to exist.
+		:returns:         True, if the class is a singleton.
+		"""
 		if singleton:
 			oldnew = newClass.__new__
 			oldinit = newClass.__init__
@@ -312,7 +330,13 @@ class SuperType(type):
 
 	@staticmethod
 	def __wrapNewMethodIfAbstract(newClass) -> bool:
-		# Replace '__new__' by a variant to through an error on not overridden methods
+		"""If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
+
+		:param newClass:            The newly constructed class for further modifications.
+		:returns:                   True, if the class is abstract.
+		:raises AbstractClassError: If the class is abstract and can't be instantiated.
+		"""
+		# Replace '__new__' by a variant to throw an error on not overridden methods
 		if newClass.__abstractMethods__:
 			@OriginalFunction(newClass.__new__)
 			@wraps(newClass.__new__)
@@ -339,7 +363,15 @@ class SuperType(type):
 			return False
 
 	@staticmethod
-	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]):
+	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+		"""Get all object attributes, that should be stored in a slot.
+
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:     The dictionary of members for the constructed class.
+		:return:            A tuple of member names to be stored in slots.
+		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
+		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
+		"""
 		annotatedFields = {}
 		for baseClass in baseClasses:
 			for base in reversed(baseClass.mro()[:-1]):
@@ -349,8 +381,9 @@ class SuperType(type):
 				for annotation in base.__slots__:
 					annotatedFields[annotation] = base
 
-		# Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
-		# (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
+		# WORKAROUND:
+		#   Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
+		#   (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
 		annotations: Dict[str, Any] = members.get("__annotations__", {})
 		for annotation in annotations:
 			if annotation in annotatedFields:

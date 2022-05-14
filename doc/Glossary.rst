@@ -3,6 +3,12 @@ Glossary
 
 .. glossary::
 
+   Abstract Class
+     ...
+
+   Abstract Method
+     ...
+
    Base-Class
      An ancestor class for other derived classes.
 
@@ -24,6 +30,9 @@ Glossary
    MSYS2
      ...
 
+   Mustoverride Method
+     ...
+
    native
      A *native environment* is a platform just with the operating system. There is no additional environment layer like
      MSYS2.
@@ -32,6 +41,9 @@ Glossary
      ...
 
    Singleton
+     ...
+
+   Slots
      ...
 
    UCRT
