@@ -60,7 +60,6 @@ __all__ = ["M"]
 
 @export
 class Overloading(type):
-
 	"""
 	Metaclass that allows multiple dispatch of methods based on method signatures.
 
@@ -70,7 +69,6 @@ class Overloading(type):
 	"""
 
 	class DispatchDictionary(dict):
-
 		"""Special dictionary to build dispatchable methods in a metaclass."""
 
 		class DispatchableMethod:
@@ -82,7 +80,6 @@ class Overloading(type):
 
 			def register(self, method) -> None:
 				"""Register a new method as a dispatchable."""
-
 				# Build a signature from the method's type annotations
 				sig = signature(method)
 				types: List[Type] = []
@@ -210,10 +207,12 @@ def overloadable(method: M) -> M:
 	return method
 
 
+# TODO: allow __dict__ and __weakref__ if slotted is enabled
+
 @export
 class SuperType(type):
-
 	"""
+  .. todo:: Needs documentation.
 
 	Features:
 
@@ -245,7 +244,6 @@ class SuperType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-
 		# Check if members should be stored in slots. If so get these members from type annotated fields
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)

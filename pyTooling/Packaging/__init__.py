@@ -64,6 +64,7 @@ except (ImportError, ModuleNotFoundError):
 @dataclass
 class Readme:
 	"""Encapsulates the READMEs file content and MIME type."""
+
 	Content:  str
 	MimeType: str
 
@@ -100,7 +101,6 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	:param requirementsFile: Path to the `requirements.txt` file as an instance of :class:`Path`.
 	:return:                 A list of dependencies.
 	"""
-
 	indentation = "  " * indent
 	requirements = []
 	with requirementsFile.open("r") as file:

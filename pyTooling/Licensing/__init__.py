@@ -75,7 +75,6 @@ __all__ = [
 @export
 @dataclass
 class PythonLicenseNames:
-
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
 
 	ShortName: str    #: License's short name
@@ -101,7 +100,6 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
 
 @export
 class License(metaclass=SuperType, useSlots=True):
-
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.

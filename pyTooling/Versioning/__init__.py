@@ -42,11 +42,9 @@ from ..MetaClasses import Overloading
 
 @export
 class SemVersion(metaclass=Overloading):
-
 	"""Representation of a semantic version number like ``3.7.12``."""
 
 	class Parts(IntEnum):
-
 		"""Enumeration of parts in a version number that can be presents."""
 
 		Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
@@ -60,7 +58,6 @@ class SemVersion(metaclass=Overloading):
 #		AHead   = 256
 
 	class Flags(IntEnum):
-
 		"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
 
 		Clean = 1       #: A versioned build was created from a *clean* working directory.
@@ -244,5 +241,4 @@ class SemVersion(metaclass=Overloading):
 
 @export
 class CalVersion(metaclass=Overloading):
-
 	"""Representation of a calendar version number like ``2021.10``."""

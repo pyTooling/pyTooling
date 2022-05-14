@@ -94,7 +94,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 	_dict: Dict[DictKeyT, DictValueT]          #: Dictionary to store key-value-pairs attached to the node.
 
 	def __init__(self, nodeID: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		self._id = nodeID
 		self._value = value
 		self._dict = {}
@@ -138,8 +138,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 	@property
 	def ID(self) -> Nullable[IDT]:
 		"""
-		Read-only property to access the unique ID of a node (:py:attr:`_id`). If no ID was given at node construction
-		time, ID return None.
+		Read-only property to access the unique ID of a node (:py:attr:`_id`).
+
+		If no ID was given at node construction time, ID return None.
 
 		:returns: Unique ID of a node, if ID was given at node creation time, else None.
 		"""
@@ -159,15 +160,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 		self._value = value
 
 	def __getitem__(self, key: DictKeyT) -> DictValueT:
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		return self._dict[key]
 
 	def __setitem__(self, key: DictKeyT, value: DictValueT) -> None:
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		self._dict[key] = value
 
 	def __delitem__(self, key: DictKeyT) -> None:
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		del self._dict[key]
 
 	@property
@@ -358,19 +359,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=SuperType, useS
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		node = self._parent
 		while node is not None:
 			yield node
 			node = node._parent
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation!"""
+		""".. todo:: Needs documentation."""
 		if isinstance(others, Node):
 			# Check for trivial case
 			if others is self:
