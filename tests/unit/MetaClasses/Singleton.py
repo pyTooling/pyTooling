@@ -62,20 +62,13 @@ class Application2(metaclass=ExtendedType, singleton=True):
 
 		self.X = 11
 
-# class Application2(metaclass=Singleton, includeDerivedVariants=True):
-# 	X = 0
-#
-# 	def __init__(self, x=5):
-# 		print("setting X")
-#
-# 		self.X = x
 
+class Application21(Application2):
+	X = 100
 
-# class Application3(Application2):
-#
-# 	def __init__(self, x):
-# 		super().__init__(x)
-# 		print("Instance created")
+	def __init__(self):
+		super().__init__()
+		print("Instance of 'Application21' was created")
 
 
 class Singleton(TestCase):
@@ -113,16 +106,17 @@ class Singleton(TestCase):
 
 		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
 
-	# def test_2(self):
-	# 	self.assertEqual(Application3.X, 0)
-	#
-	# 	app = Application3(1)
-	# 	self.assertEqual(app.X, 1)
-	#
-	# 	app.X = 2
-	# 	self.assertEqual(app.X, 2)
-	#
-	# 	app2 = Application3(3)
-	# 	self.assertEqual(app2.X, 2)
-	#
-	# 	self.assertEqual(Application3.X, 0)
+	def test_21(self):
+		self.assertEqual(100, Application21.X)
+
+		app = Application21()
+		self.assertEqual(11, app.X)
+
+		app.X = 2
+		self.assertEqual(2, app.X)
+
+		app2 = Application21()
+		self.assertIs(app, app2)
+		self.assertEqual(2, app2.X)
+
+		self.assertEqual(100, Application21.X)
