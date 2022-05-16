@@ -52,6 +52,6 @@ DescribePythonPackageHostedOnGitHub(
 	additionalRequirements={"yaml": ["ruamel.yaml>=0.17"]},
 	sourceFileWithVersion=packageInformationFile,
 	dataFiles={
-		packageDirectory: ["py.typed"]
+		packageName[:-2]: ["py.typed"]
 	}
 )
