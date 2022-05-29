@@ -382,8 +382,14 @@ class ExtendedType(type):
 				elif newClass.__new__.__isSingleton__:
 					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
 			except AttributeError as ex:
-				if ex.name != "__raises_abstract_class_error__":
-					raise ex
+				# WORKAROUND:
+				#   AttributeError.name was added in Python 3.10. For version <3.10 use a string contains operation.
+				try:
+					if ex.name != "__raises_abstract_class_error__":
+						raise ex
+				except AttributeError:
+					if "__raises_abstract_class_error__" not in str(ex):
+						raise ex
 
 			return False
 
