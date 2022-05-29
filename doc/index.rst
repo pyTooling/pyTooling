@@ -192,11 +192,9 @@ License
    :hidden:
 
    DataStructures/index
+   DataStructures/Graph
+   DataStructures/Path/index
    DataStructures/Tree
-   DataStructures/Graph
-
-.. #
-   DataStructures/Graph
 
 .. toctree::
    :caption: Decorators
