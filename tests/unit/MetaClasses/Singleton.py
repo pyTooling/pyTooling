@@ -34,7 +34,9 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
-from unittest       import TestCase
+from unittest import TestCase
+
+from pytest   import mark
 
 from pyTooling.MetaClasses import ExtendedType
 
@@ -153,6 +155,7 @@ class Singleton(TestCase):
 		appSame = DerivedApp3WithInnerParameters()
 		self.assertIs(app, appSame)
 
+	@mark.xfail(reason="This case is not yet supported.")
 	def test_DerivedClassWithOuterParameters(self):
 		app = DerivedApp3WithOuterParameters(x=137)
 		self.assertEqual(137, app.X)

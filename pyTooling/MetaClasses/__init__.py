@@ -302,22 +302,16 @@ class ExtendedType(type):
 		if singleton:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__singleton_wrapper__"):
-				print(f"No double wrapping of __new__")
 				oldnew = oldnew.__orig_func__
 
 			oldinit = newClass.__init__
 			if hasattr(oldinit, "__singleton_wrapper__"):
-				print(f"No double wrapping of __init__")
 				oldinit = oldinit.__orig_func__
-
-			print(f"\noldnew:  {oldnew} (0x{id(oldnew):016X})")
-			print(f"oldinit: {oldinit} (0x{id(oldinit):016X})")
 
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
 			def new(cls, *args, **kwargs):
 				frame = currentframe()
-				print(f"\nCalled new 0x{id(frame.f_code):016X}")
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
 						obj = oldnew(cls, *args, **kwargs)
@@ -331,7 +325,6 @@ class ExtendedType(type):
 			@wraps(oldinit)
 			def init(self, *args, **kwargs):
 				frame = currentframe()
-				print(f"Called init 0x{id(frame.f_code):016X}")
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
 				with cv:
@@ -347,9 +340,6 @@ class ExtendedType(type):
 
 			new.__singleton_wrapper__ = True
 			init.__singleton_wrapper__ = True
-
-			print(f"__new__:  {new} (0x{id(new):016X})")
-			print(f"__init__: {init} (0x{id(init):016X})")
 
 			newClass.__new__ = new
 			newClass.__init__ = init
@@ -379,9 +369,6 @@ class ExtendedType(type):
 				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
 
 			new.__raises_abstract_class_error__ = True
-			print(f"Replace __new__ with AbstractClassError causer")
-
-			print(f"__new__:  {new} (0x{id(new):016X})")
 
 			newClass.__new__ = new
 			return True
@@ -390,25 +377,13 @@ class ExtendedType(type):
 		else:
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
-				if newClass.__raises_abstract_class_error__:
-					print(f"Resubstitute __new__ with original __new__ method")
+				if newClass.__new__.__raises_abstract_class_error__:
 					newClass.__new__ = newClass.__new__.__orig_func__
+				elif newClass.__new__.__isSingleton__:
+					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
 			except AttributeError as ex:
 				if ex.name != "__raises_abstract_class_error__":
 					raise ex
-
-			# if newClass.__new__ is not object.__new__:
-			# 	print(f"found a new: {newClass.__new__}")
-
-			# # if '__new__' is identical to the one from object, it was never wrapped -> no action needed
-			# if newClass.__new__ is not object.__new__:
-			# 	# WORKAROUND:
-			# 	#   Python version: 3.7, 3.8
-			# 	#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
-			# 	try:
-			# 		newClass.__new__ = newClass.__new__.__orig_func__
-			# 	except AttributeError:
-			# 		print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
 
 			return False
 
@@ -417,9 +392,9 @@ class ExtendedType(type):
 		"""
 		Get all object attributes, that should be stored in a slot.
 
-		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param members:     The dictionary of members for the constructed class.
-		:return:            A tuple of member names to be stored in slots.
+		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:         The dictionary of members for the constructed class.
+		:return:                A tuple of member names to be stored in slots.
 		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
 		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
 		"""
@@ -441,3 +416,8 @@ class ExtendedType(type):
 				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
 
 		return (*members.get('__slots__', []), *annotations)
+
+
+@export
+class ObjectWithSlots(metaclass=ExtendedType, useSlots=True):
+	"""Classes derived from this class will store all members in ``__slots__``."""
