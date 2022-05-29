@@ -28,10 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+from enum     import IntFlag
 from re       import compile as re_compile
 from typing   import Dict, Optional as Nullable
 
-from flags    import Flags
 from pyTooling.Decorators import export
 
 from .        import RootMixIn, ElementMixIn, PathMixIn
@@ -41,7 +41,7 @@ regExp = re_compile(r"^(?:(?P<scheme>\w+)://)?(?:(?P<host>(?:\w+|\.)+)(?:\:(?P<p
 
 
 @export
-class Protocols(Flags):
+class Protocols(IntFlag):
 	"""Enumeration of supported URL schemes."""
 
 	TLS =   1   #: Transport Layer Security
@@ -133,7 +133,7 @@ class URL:
 				result = f"{self._user}@{result}"
 
 		if self._scheme is not None:
-			result = self._scheme.to_simple_str().lower() + "://" + result
+			result = self._scheme.name.lower() + "://" + result
 
 		if len(self._query) != 0:
 			result = result + "?" + "&".join([f"{key}={value}" for key, value in self._query.items()])
@@ -188,7 +188,7 @@ class URL:
 			query =     matches.group("query")
 			fragment =  matches.group("fragment")
 
-			scheme =    None if (scheme is None) else Protocols.from_str(scheme.upper())
+			scheme =    None if (scheme is None) else Protocols[scheme.upper()]
 			hostObj =   None if (host is None)   else Host(host, port)
 
 			pathObj =   Path.Parse(path, hostObj)
