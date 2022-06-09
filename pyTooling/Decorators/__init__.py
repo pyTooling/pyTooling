@@ -65,7 +65,7 @@ def export(entity: T) -> T:
 
 	.. admonition:: ``to_export.py``
 
-	    .. code:: python
+	   .. code:: python
 
 	      from pyTooling.Decorators import export
 
@@ -178,7 +178,7 @@ def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
 
 	.. admonition:: ``example.py``
 
-	    .. code:: python
+	   .. code:: python
 
 	      from pyTooling.Decorators import InheritDocString
 

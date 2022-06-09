@@ -93,6 +93,7 @@ def getsizeof(obj: Any) -> int:
 	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 	.. seealso::
+
 	   The code ise based on code snippets and ideas from:
 
 	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT Lizense)

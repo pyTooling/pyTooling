@@ -1,21 +1,20 @@
 -r ../requirements.txt
 
 # Coverage collection
-Coverage>=6.3
+Coverage>=6.4
 
 # Test Runner
-pytest>=7.1.1
+pytest>=7.1.2
 pytest-cov>=3.0.0
 pytest-benchmark>=3.4.1
 
 # Static Type Checking
-mypy>=0.931
-lxml>=4.8
+mypy>=0.961
+lxml>=4.9
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml>=0.17
 
 # For performance testing
 anytree>=2.8.0
-itertree>=0.7.3
-numpy>=1.21
+itertree>=0.8.2
