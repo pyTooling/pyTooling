@@ -3,9 +3,13 @@
 Configuration
 #############
 
-Module :py:mod:`~pyTooling.Configuration` provides an abstract configuration reader. It supports any configuration file
-syntax, which provides scalar elements (integer, string, ...), sequences (ordered lists) and dictionaries
-(key-value-pairs).
+Module :py:mod:`~pyTooling.Configuration` provides an abstract configuration reader.
+
+It supports any configuration file syntax, which provides:
+
+* scalar elements (integer, string, ...),
+* sequences (ordered lists), and
+* dictionaries (key-value-pairs).
 
 The abstracted data model is based on a common :py:class:`~pyTooling.Configuration.Node` class, which is derived to a
 :py:class:`~pyTooling.Configuration.Sequence`, :py:class:`~pyTooling.Configuration.Dictionary` and
@@ -16,7 +20,26 @@ The abstracted data model is based on a common :py:class:`~pyTooling.Configurati
 .. inheritance-diagram:: pyTooling.Configuration
    :parts: 1
 
-.. rubric:: Data model
+Sequences
+*********
+
+A :py:class:`~pyTooling.Configuration.Sequence` represents ordered information items.
+
+Dictionary
+**********
+
+A :py:class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of information.
+
+Configuration
+*************
+
+A :py:class:`~pyTooling.Configuration.Configuration` represents the whole configuration (file) made of sequences,
+dictionaries and scalar information items.
+
+Data Model
+**********
+
+.. #rubric:: Data model
 
 .. mermaid::
 
@@ -28,6 +51,11 @@ The abstracted data model is based on a common :py:class:`~pyTooling.Configurati
      Dictionary --> Sequence
      Sequence --> Dictionary
 
+
+Creating a Concrete Implementation
+**********************************
+
+Follow these steps to derive a concrete implementation of the abstract configuration data model.
 
 1. Import classes from abstract data model
 

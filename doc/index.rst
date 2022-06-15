@@ -185,7 +185,7 @@ License
    :hidden:
 
    Configuration/index
-   Configuration/YAML
+   Configuration/FileFormats
 
 .. toctree::
    :caption: Data Structures
