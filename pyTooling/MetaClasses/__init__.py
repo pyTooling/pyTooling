@@ -36,7 +36,7 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 """
 import threading
 from functools  import wraps
-from inspect    import signature, Parameter, currentframe
+from inspect    import signature, Parameter
 from types      import MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
 
@@ -311,7 +311,6 @@ class ExtendedType(type):
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
 			def new(cls, *args, **kwargs):
-				frame = currentframe()
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
 						obj = oldnew(cls, *args, **kwargs)
@@ -324,7 +323,6 @@ class ExtendedType(type):
 			@OriginalFunction(oldinit)
 			@wraps(oldinit)
 			def init(self, *args, **kwargs):
-				frame = currentframe()
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
 				with cv:
