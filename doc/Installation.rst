@@ -13,7 +13,11 @@ Installation from PyPI using PIP
 
 .. code-block:: bash
 
+   # Basic pyTooling package
    pip3 install pyTooling
+
+   # With YAML support for pyTooling.Configuration.YAML
+   pip3 install pyTooling[yaml]
 
 
 Updating from PyPI using PIP

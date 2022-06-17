@@ -25,18 +25,19 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions. |br|
-It's useful for any Python-base project independent if it's a library, framework or CLI tool.
+**pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
+exceptions. It also provides helper functions to ease the handling of package descriptions.
+
+It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
 
 
 Introduction
 ************
 
-**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. These are commonly used
-classes, decorators meta-classes or exceptions. More specialized helpers can be found in sub-namespaces like:
+**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. More specialized helpers
+can be found in sub-namespaces like:
 
 * pyTooling.CLIAbstraction
-* pyTooling.GenericPath
 * pyTooling.TerminalUI
 
 In addition, pyTooling provides a collection of CI job templates for GitHub Actions. This drastically simplifies
@@ -57,6 +58,11 @@ Common Classes
   |rarr| Class representations of semantic version (SemVer) and calendar version (CalVer) numbers are provided by the
   :py:mod:`pyTooling.Versioning` module.
 
+
+Configuration
+=============
+
+TBD
 
 Data Structures
 ===============
@@ -178,7 +184,11 @@ License
    :caption: Common
    :hidden:
 
-   Common
+   Common/index
+   Common/CallByRef
+   Common/Licensing
+   Common/Platform
+   Common/Versioning
 
 .. toctree::
    :caption: Configuration
