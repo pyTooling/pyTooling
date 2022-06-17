@@ -301,10 +301,15 @@ class ExtendedType(type):
 
 		if singleton:
 			oldnew = newClass.__new__
+			if hasattr(oldnew, "__singleton_wrapper__"):
+				oldnew = oldnew.__orig_func__
+
 			oldinit = newClass.__init__
+			if hasattr(oldinit, "__singleton_wrapper__"):
+				oldinit = oldinit.__orig_func__
 
 			@OriginalFunction(oldnew)
-			@wraps(newClass.__new__)
+			@wraps(oldnew)
 			def new(cls, *args, **kwargs):
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
@@ -315,7 +320,8 @@ class ExtendedType(type):
 
 				return obj
 
-			@wraps(newClass.__init__)
+			@OriginalFunction(oldinit)
+			@wraps(oldinit)
 			def init(self, *args, **kwargs):
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
@@ -329,6 +335,9 @@ class ExtendedType(type):
 					else:
 						while cls.__singletonInstanceInit__:
 							cv.wait()
+
+			new.__singleton_wrapper__ = True
+			init.__singleton_wrapper__ = True
 
 			newClass.__new__ = new
 			newClass.__init__ = init
@@ -350,11 +359,14 @@ class ExtendedType(type):
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
 		if newClass.__abstractMethods__:
-			@OriginalFunction(newClass.__new__)
-			@wraps(newClass.__new__)
+			oldnew = newClass.__new__
+			@OriginalFunction(oldnew)
+			@wraps(oldnew)
 			def new(cls, *args, **kwargs):
 				formattedMethodNames = "', '".join(newClass.__abstractMethods__)
 				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+
+			new.__raises_abstract_class_error__ = True
 
 			newClass.__new__ = new
 			return True
@@ -362,15 +374,20 @@ class ExtendedType(type):
 		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
 		else:
 			# skip intermediate 'new' function if class isn't abstract anymore
-			# if '__new__' is identical to the one from object, it was never wrapped -> no action needed
-			if newClass.__new__ is not object.__new__:
-				# WORKAROUND:
-				#   Python version: 3.7, 3.8
-				#   Problem:        __orig_func__ doesn't exist, if __new__ is not from object
-				try:
+			try:
+				if newClass.__new__.__raises_abstract_class_error__:
 					newClass.__new__ = newClass.__new__.__orig_func__
+				elif newClass.__new__.__isSingleton__:
+					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
+			except AttributeError as ex:
+				# WORKAROUND:
+				#   AttributeError.name was added in Python 3.10. For version <3.10 use a string contains operation.
+				try:
+					if ex.name != "__raises_abstract_class_error__":
+						raise ex
 				except AttributeError:
-					print(f"AttributeError for newClass.__new__.__orig_func__ caused by '{newClass.__new__.__name__}'")
+					if "__raises_abstract_class_error__" not in str(ex):
+						raise ex
 
 			return False
 
@@ -379,9 +396,9 @@ class ExtendedType(type):
 		"""
 		Get all object attributes, that should be stored in a slot.
 
-		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param members:     The dictionary of members for the constructed class.
-		:return:            A tuple of member names to be stored in slots.
+		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:         The dictionary of members for the constructed class.
+		:return:                A tuple of member names to be stored in slots.
 		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
 		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
 		"""
@@ -403,3 +420,8 @@ class ExtendedType(type):
 				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
 
 		return (*members.get('__slots__', []), *annotations)
+
+
+@export
+class ObjectWithSlots(metaclass=ExtendedType, useSlots=True):
+	"""Classes derived from this class will store all members in ``__slots__``."""

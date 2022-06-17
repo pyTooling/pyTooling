@@ -37,8 +37,8 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "2.0.1"
-__keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "data structure", "setuptools", "wheel", "installation", "packaging"]
+__version__ =   "2.1.0"
+__keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "data structure", "setuptools", "wheel", "installation", "packaging", "path", "generic path", "generic library", "url"]
 
 from collections import deque
 from collections.abc import Set, Mapping
@@ -93,6 +93,7 @@ def getsizeof(obj: Any) -> int:
 	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 	.. seealso::
+
 	   The code ise based on code snippets and ideas from:
 
 	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT Lizense)

@@ -34,7 +34,9 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
 :copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
-from unittest       import TestCase
+from unittest import TestCase
+
+from pytest   import mark
 
 from pyTooling.MetaClasses import ExtendedType
 
@@ -45,78 +47,118 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Application1(metaclass=ExtendedType, singleton=True):
-	X = 0
-
-	def __init__(self):
-		print("Instance of 'Application1' was created")
-
-		self.X = 1
-
-
-class Application2(metaclass=ExtendedType, singleton=True):
+class App1WithoutParameters(metaclass=ExtendedType, singleton=True):
 	X = 10
 
 	def __init__(self):
-		print("Instance of 'Application2' was created")
+		print("Instance of 'App1WithoutParameters' was created")
 
 		self.X = 11
 
 
-class Application21(Application2):
-	X = 100
+class App2WithoutParameters(metaclass=ExtendedType, singleton=True):
+	X = 20
+
+	def __init__(self):
+		print("Instance of 'App2WithoutParameters' was created")
+
+		self.X = 21
+
+
+class App3WithParameters(metaclass=ExtendedType, singleton=True):
+	X = 30
+
+	def __init__(self, x: int = 31):
+		print("Instance of 'App1WithParameters' was created")
+
+		self.X = x
+
+
+class DerivedApp2WithoutParameters(App2WithoutParameters):
+	X = 120
 
 	def __init__(self):
 		super().__init__()
-		print("Instance of 'Application21' was created")
+		print("Instance of 'DerivedApp2WithoutParameters' was created")
+
+
+class DerivedApp3WithInnerParameters(App3WithParameters):
+	X = 130
+
+	def __init__(self):
+		super().__init__(x=131)
+		print("Instance of 'DerivedApp3WithInnerParameters' was created")
+
+
+class DerivedApp3WithOuterParameters(App3WithParameters):
+	X = 135
+
+	def __init__(self, x: int = 136):
+		super().__init__(x)
+		print("Instance of 'DerivedApp3WithOuterParameters' was created")
 
 
 class Singleton(TestCase):
-	def test_1(self) -> None:
-		self.assertEqual(0, Application1.X)
-		self.assertEqual(10, Application2.X)
+	def test_CrossRelations(self) -> None:
+		self.assertEqual(10, App1WithoutParameters.X)
+		self.assertEqual(20, App2WithoutParameters.X)
 
-		app_1 = Application1()
-		self.assertEqual(1, app_1.X)
+		app_1 = App1WithoutParameters()
+		self.assertEqual(11, app_1.X)
 
-		app_1.X = 2
-		self.assertEqual(2, app_1.X)
+		app_1.X = 12
+		self.assertEqual(12, app_1.X)
 
-		app_1same = Application1()
+		app_1same = App1WithoutParameters()
 		self.assertIs(app_1, app_1same)
-		self.assertEqual(2, app_1same.X)
+		self.assertEqual(12, app_1same.X)
 
-		self.assertEqual(0, Application1.X)
+		self.assertEqual(10, App1WithoutParameters.X)
 
-		app_2 = Application2()
+		app_2 = App2WithoutParameters()
 		self.assertIsNot(app_1, app_2)
-		self.assertEqual(2, app_1.X)
-		self.assertEqual(11, app_2.X)
+		self.assertEqual(12, app_1.X)
+		self.assertEqual(21, app_2.X)
 
-		app_2.X = 12
-		self.assertEqual(2, app_1.X)
-		self.assertEqual(12, app_2.X)
+		app_2.X = 22
+		self.assertEqual(12, app_1.X)
+		self.assertEqual(22, app_2.X)
 
-	def test_2(self):
+	def test_SecondInstanceWithParameters(self):
 		# ensure at least one instance was created
-		Application1()
+		App1WithoutParameters()
 
 		with self.assertRaises(ValueError) as ExceptionCapture:
-			Application1(x = 35)
+			App1WithoutParameters(x = 35)
 
 		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
 
-	def test_21(self):
-		self.assertEqual(100, Application21.X)
+	def test_DerivedClassNoParameters(self):
+		self.assertEqual(120, DerivedApp2WithoutParameters.X)
 
-		app = Application21()
-		self.assertEqual(11, app.X)
+		app = DerivedApp2WithoutParameters()
+		self.assertEqual(21, app.X)
 
-		app.X = 2
-		self.assertEqual(2, app.X)
+		app.X = 22
+		self.assertEqual(22, app.X)
 
-		app2 = Application21()
+		app2 = DerivedApp2WithoutParameters()
 		self.assertIs(app, app2)
-		self.assertEqual(2, app2.X)
+		self.assertEqual(22, app2.X)
 
-		self.assertEqual(100, Application21.X)
+		self.assertEqual(120, DerivedApp2WithoutParameters.X)
+
+	def test_DerivedClassWithInnerParameters(self):
+		app = DerivedApp3WithInnerParameters()
+		self.assertEqual(131, app.X)
+
+		appSame = DerivedApp3WithInnerParameters()
+		self.assertIs(app, appSame)
+
+	@mark.xfail(reason="This case is not yet supported.")
+	def test_DerivedClassWithOuterParameters(self):
+		app = DerivedApp3WithOuterParameters(x=137)
+		self.assertEqual(137, app.X)
+
+		appSame = DerivedApp3WithOuterParameters()
+		self.assertIs(app, appSame)

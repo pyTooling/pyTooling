@@ -52,6 +52,7 @@ class AbstractClassError(Exception):
 	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
 
 	.. seealso::
+
 	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
 	      |rarr| Mark a method as *abstract*.
 	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
@@ -67,6 +68,7 @@ class MustOverrideClassError(AbstractClassError):
 	The exception is raised, when a class contains methods marked with *must-override*.
 
 	.. seealso::
+
 	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
 	      |rarr| Mark a method as *abstract*.
 	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
@@ -82,6 +84,7 @@ class OverloadResolutionError(Exception):
 	The exception is raised, when no matching overloaded method was found.
 
 	.. seealso::
+
 	   :py:func:`@overloadable <pyTooling.MetaClasses.overloadable>`
 	      |rarr| Mark a method as *overloadable*.
 	"""

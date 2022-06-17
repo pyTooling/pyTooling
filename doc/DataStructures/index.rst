@@ -5,6 +5,10 @@ Overview
 
 Currently, the following data structures are implemented:
 
+* :ref:`STRUCT/Path/Generic`
+
+  * :ref:`STRUCT/Path/URL`
+
 * :ref:`STRUCT/Tree`
 
   +--------------------------------------------+-------------------------+
