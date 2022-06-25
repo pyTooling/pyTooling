@@ -91,7 +91,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	# @mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
 	def test_NativeWindows(self) -> None:
 		platform = Platform()
 
