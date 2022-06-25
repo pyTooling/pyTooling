@@ -31,7 +31,7 @@
 """Unit tests for Decorators."""
 from unittest import TestCase
 
-from pyTooling.Decorators import InheritDocString
+from pyTooling.Decorators import InheritDocString, OriginalFunction
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -53,3 +53,19 @@ class Class2(Class1):
 class InheritDocStrings(TestCase):
 	def test_InheritDocString(self) -> None:
 		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)
+
+
+class Original(TestCase):
+	def test_OriginalFunction(self) -> None:
+		def func():
+			return 0
+
+		oldfunc = func
+		@OriginalFunction(oldfunc)
+		def wrapper():
+			return oldfunc() + 1
+
+		func = wrapper
+
+		self.assertEqual(1, func())
+		self.assertEqual(0, func.__orig_func__())
