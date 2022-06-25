@@ -115,7 +115,7 @@ class AnyPlatform(TestCase):
 	def test_MSYS(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.MSYS), repr(platform))
+		self.assertEqual(str(platform.Platforms.Windows_MSYS2_MSYS), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -134,7 +134,7 @@ class AnyPlatform(TestCase):
 	def test_MinGW32(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.MinGW32), repr(platform))
+		self.assertEqual(str(platform.Platforms.Windows_MSYS2_MinGW32), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -153,7 +153,7 @@ class AnyPlatform(TestCase):
 	def test_MinGW64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.MinGW64), repr(platform))
+		self.assertEqual(str(platform.Platforms.Windows_MSYS2_MinGW64), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -172,7 +172,7 @@ class AnyPlatform(TestCase):
 	def test_UCRT64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.UCRT64), repr(platform))
+		self.assertEqual(str(platform.Platforms.Windows_MSYS2_UCRT64), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -191,7 +191,7 @@ class AnyPlatform(TestCase):
 	def test_Clang32(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Clang32), repr(platform))
+		self.assertEqual(str(platform.Platforms.Windows_MSYS2_Clang32), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -210,7 +210,7 @@ class AnyPlatform(TestCase):
 	def test_Clang64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Clang64), repr(platform))
+		self.assertEqual(str(platform.Platforms.Windows_MSYS2_Clang64), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
