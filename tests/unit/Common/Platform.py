@@ -67,8 +67,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsUCRT64OnWindows)
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
-		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("", platform.ExecutableExtension)
+		self.assertEqual("so", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("MacOS (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
@@ -87,8 +87,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsUCRT64OnWindows)
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
-		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("", platform.ExecutableExtension)
+		self.assertEqual("lib", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
