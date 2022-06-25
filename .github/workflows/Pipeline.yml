@@ -10,6 +10,8 @@ jobs:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@r0
     with:
       name: pyTooling
+      python_version_list: "3.10"
+      system_list: "ubuntu windows macos"
 
   UnitTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
@@ -27,39 +29,39 @@ jobs:
         python-ruamel.yaml.clib:p
         python-numpy:p
 
-  PerformaceTesting:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
-    needs:
-      - Params
-    with:
-      jobs: ${{ needs.Params.outputs.python_jobs }}
-#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
-      unittest_directory: 'tests/performance'
-      pacboy: >-
-        python-pip:p
-        python-wheel:p
-        python-coverage:p
-        python-lxml:p
-        python-ruamel-yaml:p
-        python-ruamel.yaml.clib:p
-        python-numpy:p
+#  PerformaceTesting:
+#    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
+#    needs:
+#      - Params
+#    with:
+#      jobs: ${{ needs.Params.outputs.python_jobs }}
+##      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
+#      unittest_directory: 'tests/performance'
+#      pacboy: >-
+#        python-pip:p
+#        python-wheel:p
+#        python-coverage:p
+#        python-lxml:p
+#        python-ruamel-yaml:p
+#        python-ruamel.yaml.clib:p
+#        python-numpy:p
 
-  Benchmarking:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
-    needs:
-      - Params
-    with:
-      jobs: ${{ needs.Params.outputs.python_jobs }}
-#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
-      unittest_directory: 'tests/benchmark'
-      pacboy: >-
-        python-pip:p
-        python-wheel:p
-        python-coverage:p
-        python-lxml:p
-        python-ruamel-yaml:p
-        python-ruamel.yaml.clib:p
-        python-numpy:p
+#  Benchmarking:
+#    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
+#    needs:
+#      - Params
+#    with:
+#      jobs: ${{ needs.Params.outputs.python_jobs }}
+##      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
+#      unittest_directory: 'tests/benchmark'
+#      pacboy: >-
+#        python-pip:p
+#        python-wheel:p
+#        python-coverage:p
+#        python-lxml:p
+#        python-ruamel-yaml:p
+#        python-ruamel.yaml.clib:p
+#        python-numpy:p
 
   PlatformTests:
     name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
@@ -73,12 +75,12 @@ jobs:
         include:
           - {system: "ubuntu",  runs-on: "ubuntu-latest",                      shell: "bash",      sysicon: "🐧", pyicon: "🟢", python: "3.10", expected: "Linux (x86-64)"}
           - {system: "windows", runs-on: "windows-latest",                     shell: "pwsh",      sysicon: "🧊", pyicon: "🟢", python: "3.10", expected: "Windows (x86-64)"}
-#          - {system: "msys2",   runs-on: "windows-latest", runtime: "MSYS",    shell: "msys2 {0}", sysicon: "🟪", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MSYS"}
-          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW32", shell: "msys2 {0}", sysicon: "⬛", pyicon: "🟢",                  expected: "Windows+MSYS2 (x86-64) - MinGW32"}
-          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW64", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MinGW64"}
-          - {system: "msys2",   runs-on: "windows-latest", runtime: "UCRT64",  shell: "msys2 {0}", sysicon: "🟨", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - UCRT64"}
-#          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG32", shell: "msys2 {0}", sysicon: "🟫", pyicon: "🟢",                expected: "Windows+MSYS2 (x86-64) - Clang32"}
-          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG64", shell: "msys2 {0}", sysicon: "🟧", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - Clang64"}
+##          - {system: "msys2",   runs-on: "windows-latest", runtime: "MSYS",    shell: "msys2 {0}", sysicon: "🟪", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MSYS"}
+#          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW32", shell: "msys2 {0}", sysicon: "⬛", pyicon: "🟢",                  expected: "Windows+MSYS2 (x86-64) - MinGW32"}
+#          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW64", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MinGW64"}
+#          - {system: "msys2",   runs-on: "windows-latest", runtime: "UCRT64",  shell: "msys2 {0}", sysicon: "🟨", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - UCRT64"}
+##          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG32", shell: "msys2 {0}", sysicon: "🟫", pyicon: "🟢",                expected: "Windows+MSYS2 (x86-64) - Clang32"}
+#          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG64", shell: "msys2 {0}", sysicon: "🟧", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - Clang64"}
           - {system: "macos",   runs-on: "macos-latest",                       shell: "bash",      sysicon: "🍎", pyicon: "🟢", python: "3.10", expected: "MacOS (x86-64)"}
 
     defaults:
@@ -124,27 +126,62 @@ jobs:
         run: |
           python -m pip install -r tests/requirements.txt
 
-      - name: ☑ Run unit tests
+      - name: ☑ Run unit tests (Bash)
         if: matrix.shell != 'pwsh'
         run: |
           export EXPECTED="${{ matrix.expected }}"
-          python -m pytest -rA tests/unit/Common/Platform.py --color=yes
+          python -m pytest -rA tests/unit/Common/Platform.py --cov=. --color=yes
 
-      - name: ☑ Run unit tests
+      - name: ☑ Run unit tests (PowerShell)
         if: matrix.shell == 'pwsh'
         run: |
           $env:EXPECTED = "${{ matrix.expected }}"
-          python -m pytest -rA tests/unit/Common/Platform.py --color=yes
+          python -m pytest -rA tests/unit/Common/Platform.py --cov=. --color=yes
 
   Coverage:
-    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@r0
+    uses: pyTooling/Actions/.github/workflows/CodeCoverage.yml@codecoverage
     needs:
       - Params
     with:
       python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
       artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
-    secrets:
-      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+      publish_to_codecov: 'false'
+      publish_to_codacy: 'false'
+
+#    secrets:
+#      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  MergeCodeCoverage:
+    name: Merge Coverage Reports from Platforms
+    runs-on: ubuntu-latest
+    needs:
+      - Coverage
+      - PlatformTests
+
+    steps:
+      - name: 🗂 Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install cobertura tree
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      - name: Merge code coverage reports from platform tests
+        run: |
+          tree artifacts
+
+#  PublishCoverage:
+#    uses: pyTooling/Actions/.github/workflows/PublishCodeCoverage.yml@codecoverage
+#    needs:
+#      - MergeCodeCoverage
+#    with:
+##      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
+#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
+#    secrets:
+#      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   StaticTypeCheck:
     uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r0
@@ -162,8 +199,8 @@ jobs:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r0
     needs:
       - UnitTesting
-      - PerformaceTesting
-      - Benchmarking
+#      - PerformaceTesting
+#      - Benchmarking
 
   Package:
     uses: pyTooling/Actions/.github/workflows/Package.yml@r0
@@ -231,10 +268,11 @@ jobs:
     needs:
       - Params
       - UnitTesting
-      - PerformaceTesting
-      - Benchmarking
+#      - PerformaceTesting
+#      - Benchmarking
       - PlatformTests
       - Coverage
+#      - MergeCodeCoverage
       - StaticTypeCheck
       - BuildTheDocs
       - PublishToGitHubPages
