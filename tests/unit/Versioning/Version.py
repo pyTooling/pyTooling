@@ -34,7 +34,7 @@ from unittest     import TestCase
 from pyTooling.Versioning import SemVersion as UUT
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)

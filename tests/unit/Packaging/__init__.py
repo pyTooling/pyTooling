@@ -40,7 +40,7 @@ from pytest   import mark
 from sys      import version_info
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
@@ -56,16 +56,25 @@ class HelperFunctions(TestCase):
 		self.assertEqual(18, len(versionInformation.Keywords))
 
 	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
-	def test_loadReadme(self) -> None:
+	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
-		_ = loadReadmeFile(Path("README.md"))
+		readme = loadReadmeFile(Path("README.md"))
+		self.assertIn("# pyTooling", readme.Content)
+		self.assertEqual("text/markdown", readme.MimeType)
+
+	def test_loadReadmeReST(self) -> None:
+		from pyTooling.Packaging import loadReadmeFile
+
+		with self.assertRaises(ValueError):
+			_ = loadReadmeFile(Path("README.rst"))
 
 	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		_ = loadRequirementsFile(Path("requirements.txt"))
+		requirements = loadRequirementsFile(Path("doc/requirements.txt"), debug=True)
+		self.assertEqual(6, len(requirements))
 
 
 class VersionInformation(TestCase):
