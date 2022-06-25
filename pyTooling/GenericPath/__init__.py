@@ -28,12 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-A generic path to derive domain specific path libraries.
-
-:copyright: Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
-"""
+"""A generic path to derive domain specific path libraries."""
 from typing import List, Optional as Nullable
 
 from pyTooling.Decorators import export
