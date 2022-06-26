@@ -206,8 +206,18 @@ jobs:
 
       - name: Merge code coverage reports from platform tests
         run: |
-          tree -L 2 -d artifacts
-          tree -P "*.xml" --prune artifacts
+          tree -P "coverage.xml" --prune .
+          cobertura-merge -o coverage.xml artifacts/*/coverage.xml
+          tree -P "coverage.xml" --prune .
+
+      - name: 📤 Upload 'Coverage XML Report' artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: MergeCodeCoverage
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 1
 
 #  PublishCoverage:
 #    uses: pyTooling/Actions/.github/workflows/PublishCodeCoverage.yml@codecoverage
