@@ -73,15 +73,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {system: "ubuntu",  runs-on: "ubuntu-latest",                      shell: "bash",      sysicon: "🐧", pyicon: "🟢", python: "3.10", expected: "Linux (x86-64)"}
-          - {system: "windows", runs-on: "windows-latest",                     shell: "pwsh",      sysicon: "🧊", pyicon: "🟢", python: "3.10", expected: "Windows (x86-64)"}
+          - {system: "ubuntu",  runs-on: "ubuntu-latest",  runtime: "native",  shell: "bash",      sysicon: "🐧", pyicon: "🟢", python: "3.10", expected: "Linux (x86-64)"}
+          - {system: "windows", runs-on: "windows-latest", runtime: "native",  shell: "pwsh",      sysicon: "🧊", pyicon: "🟢", python: "3.10", expected: "Windows (x86-64)"}
 ##          - {system: "msys2",   runs-on: "windows-latest", runtime: "MSYS",    shell: "msys2 {0}", sysicon: "🟪", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MSYS"}
 #          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW32", shell: "msys2 {0}", sysicon: "⬛", pyicon: "🟢",                  expected: "Windows+MSYS2 (x86-64) - MinGW32"}
 #          - {system: "msys2",   runs-on: "windows-latest", runtime: "MINGW64", shell: "msys2 {0}", sysicon: "🟦", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - MinGW64"}
 #          - {system: "msys2",   runs-on: "windows-latest", runtime: "UCRT64",  shell: "msys2 {0}", sysicon: "🟨", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - UCRT64"}
 ##          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG32", shell: "msys2 {0}", sysicon: "🟫", pyicon: "🟢",                expected: "Windows+MSYS2 (x86-64) - Clang32"}
 #          - {system: "msys2",   runs-on: "windows-latest", runtime: "CLANG64", shell: "msys2 {0}", sysicon: "🟧", pyicon: "🟢",                 expected: "Windows+MSYS2 (x86-64) - Clang64"}
-          - {system: "macos",   runs-on: "macos-latest",                       shell: "bash",      sysicon: "🍎", pyicon: "🟢", python: "3.10", expected: "MacOS (x86-64)"}
+          - {system: "macos",   runs-on: "macos-latest",   runtime: "native",  shell: "bash",      sysicon: "🍎", pyicon: "🟢", python: "3.10", expected: "MacOS (x86-64)"}
 
     defaults:
       run:
@@ -126,6 +126,41 @@ jobs:
         run: |
           python -m pip install -r tests/requirements.txt
 
+      - name: 🔁 Extract configurations from pyproject.toml
+        id: getVariables
+        shell: python
+        run: |
+          from pathlib import Path
+          from tomli   import load as tomli_load
+
+          xmlFile = './coverage.xml'
+          coverageRC = "${{ inputs.coverage_config }}".strip()
+
+          # Read output paths from 'pyproject.toml' file
+          if coverageRC == "pyproject.toml":
+              pyProjectFile =  Path("pyproject.toml")
+              if pyProjectFile.exists():
+                  with pyProjectFile.open("rb") as file:
+                      pyProjectSettings = tomli_load(file)
+
+                  xmlFile       = pyProjectSettings["tool"]["coverage"]["xml"]["output"]
+              else:
+                  print(f"File '{pyProjectFile}' not found and no '.coveragerc' file specified.")
+
+          # Read output paths from '.coveragerc' file
+          elif len(coverageRC) > 0:
+              coverageRCFile = Path(coverageRC)
+              if coverageRCFile.exists():
+                  with coverageRCFile.open("rb") as file:
+                      coverageRCSettings = tomli_load(file)
+
+                  xmlFile       = coverageRCSettings["xml"]["output"]
+              else:
+                  print(f"File '{coverageRCFile}' not found.")
+
+          print(f"::set-output name=coverage_report_xml::{xmlFile}")
+          print(f"DEBUG:\n  xml={xmlFile}")
+
       - name: ☑ Run unit tests (Bash)
         if: matrix.shell != 'pwsh'
         run: |
@@ -137,6 +172,15 @@ jobs:
         run: |
           $env:EXPECTED = "${{ matrix.expected }}"
           python -m pytest -rA tests/unit/Common/Platform.py --cov=. --color=yes
+
+      - name: 📤 Upload 'Coverage XML Report' artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: Platform-${{ matrix.system }}-${{ matrix.runtime }}-xml
+          path: ${{ steps.getVariables.outputs.coverage_report_xml }}
+          if-no-files-found: error
+          retention-days: 1
 
   Coverage:
     uses: pyTooling/Actions/.github/workflows/CodeCoverage.yml@codecoverage
@@ -171,7 +215,8 @@ jobs:
 
       - name: Merge code coverage reports from platform tests
         run: |
-          tree artifacts
+          tree -L 2 -d artifacts
+          tree -P "*.xml" --prune artifacts
 
 #  PublishCoverage:
 #    uses: pyTooling/Actions/.github/workflows/PublishCodeCoverage.yml@codecoverage
