@@ -224,7 +224,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 
 		:return: ``True``, if the platform is a native Linux x86-64 platform.
 		"""
-		return self.Platforms.Linux
+		return self.Platforms.Linux in self._platform
 
 	@property
 	def IsNativeMacOS(self) -> bool:
