@@ -47,7 +47,6 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class HelperFunctions(TestCase):
-	@mark.skipif(version_info < (3, 8), reason="Not supported on Python 3.6 and 3.7, due to Python AST.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 

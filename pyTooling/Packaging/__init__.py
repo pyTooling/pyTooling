@@ -34,13 +34,14 @@ A set of helper functions to describe a Python package for setuptools.
 .. hint:: See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
-from ast          import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
+from ast import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List, Str
 from pathlib      import Path
 from setuptools   import (
 	setup as setuptools_setup,
 	find_packages as setuptools_find_packages,
 	find_namespace_packages as setuptools_find_namespace_packages
 )
+from sys          import version_info
 from typing       import List, Iterable, Dict, Sequence
 
 
@@ -217,27 +218,46 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 			if isinstance(item, Assign) and len(item.targets) == 1:
 				target = item.targets[0]
 				value = item.value
-				if isinstance(target, Name) and target.id == "__author__" and isinstance(value, Constant) and isinstance(value.value, str):
-					_author = value.value
-				if isinstance(target, Name) and target.id == "__copyright__" and isinstance(value, Constant) and isinstance(value.value, str):
-					_copyright = value.value
-				if isinstance(target, Name) and target.id == "__email__" and isinstance(value, Constant) and isinstance(value.value, str):
-					_email = value.value
+				if isinstance(target, Name) and target.id == "__author__":
+					if isinstance(value, Constant) and isinstance(value.value, str):
+						_author = value.value
+					elif (version_info < (3, 8)) and isinstance(value, Str):
+						_author = value.s
+				if isinstance(target, Name) and target.id == "__copyright__":
+					if isinstance(value, Constant) and isinstance(value.value, str):
+						_copyright = value.value
+					elif (version_info < (3, 8)) and isinstance(value, Str):
+						_copyright = value.s
+				if isinstance(target, Name) and target.id == "__email__":
+					if isinstance(value, Constant) and isinstance(value.value, str):
+						_email = value.value
+					elif (version_info < (3, 8)) and isinstance(value, Str):
+						_email = value.s
 				if isinstance(target, Name) and target.id == "__keywords__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
-						raise TypeError(f"Variable '__keywords__' shouldn't be a string.")
+						raise TypeError(f"Variable '__keywords__' should be a list of strings.")
+					elif (version_info < (3, 8)) and isinstance(value, Str):
+						raise TypeError(f"Variable '__keywords__' should be a list of strings.")
 					elif isinstance(value, ast_List):
 						for const in value.elts:
 							if isinstance(const, Constant) and isinstance(const.value, str):
 								_keywords.append(const.value)
+							elif (version_info < (3, 8)) and isinstance(const, Str):
+								_keywords.append(const.s)
 							else:
-								raise TypeError  # TODO: add error message
+								raise TypeError(f"List elements in '__keywords__' should be strings.")
 					else:
-						raise TypeError  # TODO: add error message
-				if isinstance(target, Name) and target.id == "__license__" and isinstance(value, Constant) and isinstance(value.value, str):
-					_license = value.value
-				if isinstance(target, Name) and target.id == "__version__" and isinstance(value, Constant) and isinstance(value.value, str):
-					_version = value.value
+						raise TypeError(f"Used unsupported type for variable '__keywords__'.")
+				if isinstance(target, Name) and target.id == "__license__":
+					if isinstance(value, Constant) and isinstance(value.value, str):
+						_license = value.value
+					elif (version_info < (3, 8)) and isinstance(value, Str):
+						_license = value.s
+				if isinstance(target, Name) and target.id == "__version__":
+					if isinstance(value, Constant) and isinstance(value.value, str):
+						_version = value.value
+					elif (version_info < (3, 8)) and isinstance(value, Str):
+						_version = value.s
 
 	if _author is None:
 		raise AssertionError(f"Could not extract '__author__' from '{sourceFile}'.")
