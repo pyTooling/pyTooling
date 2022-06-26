@@ -209,6 +209,7 @@ jobs:
           tree -P "coverage.xml" --prune .
           cobertura-merge -o coverage.xml artifacts/*/coverage.xml
           tree -P "coverage.xml" --prune .
+          cp artifacts/Coverage-xml/coverage.xml coverage.xml
 
       - name: 📤 Upload 'Coverage XML Report' artifact
         continue-on-error: true
@@ -219,15 +220,16 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-#  PublishCoverage:
-#    uses: pyTooling/Actions/.github/workflows/PublishCodeCoverage.yml@codecoverage
-#    needs:
-#      - MergeCodeCoverage
-#    with:
-##      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
+  PublishCoverage:
+    uses: pyTooling/Actions/.github/workflows/PublishCodeCoverage.yml@codecoverage
+    needs:
+      - MergeCodeCoverage
+    with:
+#      python_version: ${{ fromJson(needs.Params.outputs.params).python_version }}
 #      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
-#    secrets:
-#      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+      artifact: MergeCodeCoverage
+    secrets:
+      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   StaticTypeCheck:
     uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r0
@@ -318,7 +320,7 @@ jobs:
 #      - Benchmarking
       - PlatformTests
       - Coverage
-#      - MergeCodeCoverage
+      - MergeCodeCoverage
       - StaticTypeCheck
       - BuildTheDocs
       - PublishToGitHubPages
@@ -339,6 +341,14 @@ jobs:
         ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}-macos-3.8
         ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}-macos-3.9
         ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}-macos-3.10
+        Platform-windows-native-xml
+        Platform-windows-MSYS-xml
+        Platform-windows-MINGW32-xml
+        Platform-windows-MINGW64-xml
+        Platform-windows-UCRT64-xml
+        Platform-windows-CLANG64-xml
+        Platform-linux-native-xml
+        Platform-macos-native-xml
         ${{ fromJson(needs.Params.outputs.params).artifacts.coverage }}
         ${{ fromJson(needs.Params.outputs.params).artifacts.typing }}
         ${{ fromJson(needs.Params.outputs.params).artifacts.doc }}
