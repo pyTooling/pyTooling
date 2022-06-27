@@ -74,7 +74,7 @@ class CallByReference_AnyParam(TestCase):
 
 
 class CallByReference_BoolParam(TestCase):
-	ref : CallByRefBoolParam = CallByRefBoolParam()
+	ref: CallByRefBoolParam = CallByRefBoolParam()
 
 	def setUp(self) -> None:
 		func2(self.ref)
@@ -85,8 +85,14 @@ class CallByReference_BoolParam(TestCase):
 	def test_Equal(self) -> None:
 		self.assertTrue(self.ref == True)
 
+		with self.assertRaises(TypeError):
+			self.ref == "str"
+
 	def test_Unequal(self) -> None:
 		self.assertTrue(self.ref != False)
+
+		with self.assertRaises(TypeError):
+			self.ref != "str"
 
 	def test_TypeConvertToBool(self) -> None:
 		self.assertTrue(bool(self.ref))
@@ -96,7 +102,7 @@ class CallByReference_BoolParam(TestCase):
 
 
 class CallByReference_IntParam(TestCase):
-	ref : CallByRefIntParam = CallByRefIntParam()
+	ref: CallByRefIntParam = CallByRefIntParam()
 
 	def test_Value(self) -> None:
 		assign_42(self.ref)
@@ -118,88 +124,193 @@ class CallByReference_IntParam(TestCase):
 		assign_42(self.ref)
 		self.assertTrue(self.ref >= 40)
 
+		with self.assertRaises(TypeError):
+			self.ref >= "str"
+
 	def test_GreaterThan(self) -> None:
 		assign_42(self.ref)
-		self.assertTrue(self.ref >  41)
+		self.assertTrue(self.ref > 41)
+
+		with self.assertRaises(TypeError):
+			self.ref > "str"
 
 	def test_Equal(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref == 42)
 
+		with self.assertRaises(TypeError):
+			self.ref == "str"
+
 	def test_Unequal(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref != 43)
 
+		with self.assertRaises(TypeError):
+			self.ref != "str"
+
 	def test_LessThan(self) -> None:
 		assign_42(self.ref)
-		self.assertTrue(self.ref <  44)
+		self.assertTrue(self.ref < 44)
+
+		with self.assertRaises(TypeError):
+			self.ref < "str"
 
 	def test_LessThanOrEqual(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref <= 45)
 
+		with self.assertRaises(TypeError):
+			self.ref <= "str"
+
 	def test_Addition(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref + 1, 43)
+
+		with self.assertRaises(TypeError):
+			self.ref + "str"
 
 	def test_Subtraction(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref - 1, 41)
 
+		with self.assertRaises(TypeError):
+			self.ref - "str"
+
 	def test_Multiplication(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref * 1, 42)
+
+		with self.assertRaises(TypeError):
+			self.ref * "str"
 
 	def test_Power(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref ** 1, 42)
 
+		with self.assertRaises(TypeError):
+			self.ref ** "str"
+
 	def test_Division(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref / 1, 42)
+
+		with self.assertRaises(TypeError):
+			self.ref / "str"
 
 	def test_FloorDivision(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref // 1, 42)
 
+		with self.assertRaises(TypeError):
+			self.ref // "str"
+
 	def test_Modulo(self) -> None:
 		assign_42(self.ref)
 		self.assertEqual(self.ref % 2, 0)
+
+		with self.assertRaises(TypeError):
+			self.ref % "str"
+
+	def test_And(self) -> None:
+		assign_42(self.ref)
+		self.assertEqual(self.ref & 2, 2)
+
+		with self.assertRaises(TypeError):
+			self.ref & "str"
+
+	def test_Or(self) -> None:
+		assign_42(self.ref)
+		self.assertEqual(self.ref | 1, 43)
+
+		with self.assertRaises(TypeError):
+			self.ref | "str"
+
+	def test_Xor(self) -> None:
+		assign_42(self.ref)
+		self.assertEqual(self.ref ^ 2, 40)
+
+		with self.assertRaises(TypeError):
+			self.ref ^ "str"
 
 	def test_Increment(self) -> None:
 		assign_42(self.ref)
 		self.ref += 1
 		self.assertEqual(self.ref, 43)
 
+		with self.assertRaises(TypeError):
+			self.ref += "str"
+
 	def test_Decrement(self) -> None:
 		assign_42(self.ref)
 		self.ref -= 1
 		self.assertEqual(self.ref, 41)
+
+		with self.assertRaises(TypeError):
+			self.ref -= "str"
 
 	def test_InplaceMultiplication(self) -> None:
 		assign_42(self.ref)
 		self.ref *= 1
 		self.assertEqual(self.ref, 42)
 
+		with self.assertRaises(TypeError):
+			self.ref *= "str"
+
 	def test_InplacePower(self) -> None:
 		assign_42(self.ref)
 		self.ref **= 1
 		self.assertEqual(self.ref, 42)
+
+		with self.assertRaises(TypeError):
+			self.ref **= "str"
 
 	def test_InplaceDivision(self) -> None:
 		assign_42(self.ref)
 		self.ref /= 1
 		self.assertEqual(self.ref, 42)
 
+		with self.assertRaises(TypeError):
+			self.ref /= "str"
+
 	def test_InplaceFloorDivision(self) -> None:
 		assign_42(self.ref)
 		self.ref //= 1
 		self.assertEqual(self.ref, 42)
 
+		with self.assertRaises(TypeError):
+			self.ref //= "str"
+
 	def test_InplaceModulo(self) -> None:
 		assign_42(self.ref)
 		self.ref %= 2
 		self.assertEqual(self.ref, 0)
+
+		with self.assertRaises(TypeError):
+			self.ref %= "str"
+
+	def test_InplaceAnd(self) -> None:
+		assign_42(self.ref)
+		self.ref &= 2
+		self.assertEqual(self.ref, 2)
+
+		with self.assertRaises(TypeError):
+			self.ref &= "str"
+
+	def test_InplaceOr(self) -> None:
+		assign_42(self.ref)
+		self.ref |= 1
+		self.assertEqual(self.ref, 43)
+
+		with self.assertRaises(TypeError):
+			self.ref |= "str"
+
+	def test_InplaceXor(self) -> None:
+		assign_42(self.ref)
+		self.ref ^= 2
+		self.assertEqual(self.ref, 40)
+
+		with self.assertRaises(TypeError):
+			self.ref ^= "str"
 
 	def test_TypeConvertToBool(self) -> None:
 		self.assertTrue(bool(self.ref))

@@ -33,7 +33,7 @@
 .. hint:: See :ref:`high-level help <DECO>` for explanations and usage examples.
 """
 import sys
-from types     import FunctionType, MethodType
+from types     import FunctionType
 from typing import Union, Type, TypeVar, Callable, Any
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
@@ -121,6 +121,8 @@ def export(entity: T) -> T:
 
 @export
 def ClassProperty(method):
+	"""A decorator adding properties to classes."""
+
 	class Descriptor:
 		_getter: Callable
 		_setter: Callable
