@@ -72,6 +72,10 @@ class Descriptors(TestCase):
 			def Member(cls):
 				return cls._member
 
+			@Member.setter
+			def Member(cls, value):
+				cls._member = value
+
 		class Class_2:
 			_member = Content(2)
 
@@ -79,8 +83,18 @@ class Descriptors(TestCase):
 			def Member(cls):
 				return cls._member
 
+			@Member.setter
+			def Member(cls, value):
+				cls._member = value
+
 		self.assertEqual(1, Class_1.Member.Value)
 		self.assertEqual(2, Class_2.Member.Value)
+
+		Class_1.Member = 11
+		Class_2.Member = 12
+
+		self.assertEqual(11, Class_1.Member)
+		self.assertEqual(12, Class_2.Member)
 
 
 class Original(TestCase):

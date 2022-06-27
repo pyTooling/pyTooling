@@ -122,20 +122,21 @@ def export(entity: T) -> T:
 @export
 def ClassProperty(method):
 	class Descriptor:
-		_method: Callable
-		_name: str
+		_getter: Callable
+		_setter: Callable
 
-		def __init__(self, method: Callable):
-			self._method = method
-			self._name = method.__name__
+		def __init__(self, method: Callable = None):
+			self._getter = method
 
 		def __get__(self, instance: Any, owner: type = None) -> Any:
-			m = self._method(owner)
+			return self._getter(owner)
 
-			return m
+		def __set__(self, instance: Any, value: Any) -> None:
+			self._setter(instance.__class__, value)
 
-		def __set__(self, instance, value):
-			pass
+		def setter(self, method: Callable):
+			self._setter = method
+			return self
 
 	return Descriptor(method)
 
