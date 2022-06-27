@@ -36,12 +36,12 @@ A common set of missing exceptions in Python.
 """
 try:
 	from ..Decorators import export
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
-	except (ImportError, ModuleNotFoundError) as ex:
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
 

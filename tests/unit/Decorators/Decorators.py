@@ -31,7 +31,7 @@
 """Unit tests for Decorators."""
 from unittest import TestCase
 
-from pyTooling.Decorators import InheritDocString, OriginalFunction
+from pyTooling.Decorators import InheritDocString, OriginalFunction, ClassProperty
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -39,20 +39,62 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Class1:
-	def method(self):
-		"""Method's doc-string."""
-
-
-class Class2(Class1):
-	@InheritDocString(Class1)
-	def method(self):
-		pass
-
-
 class InheritDocStrings(TestCase):
 	def test_InheritDocString(self) -> None:
+		class Class1:
+			def method(self):
+				"""Method's doc-string."""
+
+		class Class2(Class1):
+			@InheritDocString(Class1)
+			def method(self):
+				pass
+
 		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)
+
+
+class Descriptors(TestCase):
+	def test_ClassProperty(self):
+		class Content:
+			_value: int
+
+			def __init__(self, value: int):
+				self._value = value
+
+			@property
+			def Value(self):
+				return self._value
+
+		class Class_1:
+			_member = Content(1)
+
+			@ClassProperty
+			def Member(cls):
+				return cls._member
+
+			@Member.setter
+			def Member(cls, value):
+				cls._member = value
+
+		class Class_2:
+			_member = Content(2)
+
+			@ClassProperty
+			def Member(cls):
+				return cls._member
+
+			@Member.setter
+			def Member(cls, value):
+				cls._member = value
+
+		self.assertEqual(1, Class_1.Member.Value)
+		self.assertEqual(2, Class_2.Member.Value)
+
+		Class_1.Member = 11
+		Class_2.Member = 12
+
+		self.assertEqual(11, Class_1.Member)
+		self.assertEqual(12, Class_2.Member)
 
 
 class Original(TestCase):

@@ -49,14 +49,14 @@ try:
 	from ..Decorators import export
 	from ..MetaClasses import ExtendedType
 	from ..Licensing  import License, Apache_2_0_License
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
 		from MetaClasses import ExtendedType
 		from Licensing import License, Apache_2_0_License
-	except (ImportError, ModuleNotFoundError) as ex:
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
 		raise ex
 

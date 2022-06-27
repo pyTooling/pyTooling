@@ -44,13 +44,13 @@ from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
 try:
 	from ..Exceptions import AbstractClassError
 	from ..Decorators import export, OriginalFunction
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Exceptions import AbstractClassError
 		from Decorators import export, OriginalFunction
-	except (ImportError, ModuleNotFoundError) as ex:
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
 

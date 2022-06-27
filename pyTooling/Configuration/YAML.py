@@ -41,7 +41,7 @@ from ..MetaClasses import ExtendedType
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
-except ImportError as ex:
+except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'ruamel.yaml' not installed. Either install pyTooling with extra dependencies 'pyTooling[yaml]' or install 'ruamel.yaml' directly.") from ex
 
 from . import (

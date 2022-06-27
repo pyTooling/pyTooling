@@ -37,7 +37,7 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "2.1.1"
+__version__ =   "2.2.0"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "data structure", "setuptools", "wheel", "installation", "packaging", "path", "generic path", "generic library", "url"]
 
 from collections import deque
@@ -47,12 +47,12 @@ from typing import Type, Any
 
 try:
 	from pyTooling.Decorators import export
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
-	except ModuleNotFoundError as ex:
+	except ModuleNotFoundError as ex:  # pragma: no cover
 		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
 		raise ex
 

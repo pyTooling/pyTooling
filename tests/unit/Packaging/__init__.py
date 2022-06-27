@@ -50,7 +50,7 @@ class HelperFunctions(TestCase):
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
-		versionInformation =extractVersionInformation(Path("pyTooling/Common/__init__.py"))
+		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(18, len(versionInformation.Keywords))
 

@@ -34,8 +34,7 @@
 """
 import sys
 from types     import FunctionType, MethodType
-from typing    import Union, Type, TypeVar, Callable
-
+from typing import Union, Type, TypeVar, Callable, Any
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
@@ -47,7 +46,7 @@ try:
 	Param = ParamSpec("Param")                       #: A parameter specification for function or method
 	RetType = TypeVar("RetType")                     #: Type variable for a return type
 	Func = Callable[Param, RetType]                  #: Type specification for a function
-except ImportError:
+except ImportError:  # pragma: no cover
 	Param = ...                                      #: A parameter specification for function or method
 	RetType = TypeVar("RetType")                     #: Type variable for a return type
 	Func = Callable[..., RetType]                    #: Type specification for a function
@@ -118,6 +117,28 @@ def export(entity: T) -> T:
 		module.__all__ = [entity.__name__]	      # type: ignore
 
 	return entity
+
+
+@export
+def ClassProperty(method):
+	class Descriptor:
+		_getter: Callable
+		_setter: Callable
+
+		def __init__(self, method: Callable = None):
+			self._getter = method
+
+		def __get__(self, instance: Any, owner: type = None) -> Any:
+			return self._getter(owner)
+
+		def __set__(self, instance: Any, value: Any) -> None:
+			self._setter(instance.__class__, value)
+
+		def setter(self, method: Callable):
+			self._setter = method
+			return self
+
+	return Descriptor(method)
 
 
 @export
