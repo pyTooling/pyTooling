@@ -120,15 +120,17 @@ def export(entity: T) -> T:
 
 
 @export
-def ClassProperty(method):
-	"""A decorator adding properties to classes."""
+def classproperty(method):
 
 	class Descriptor:
+		"""A decorator adding properties to classes."""
 		_getter: Callable
 		_setter: Callable
 
-		def __init__(self, method: Callable = None):
-			self._getter = method
+		def __init__(self, getter: Callable = None, setter: Callable = None):
+			self._getter = getter
+			self._setter = setter
+			self.__doc__ = getter.__doc__
 
 		def __get__(self, instance: Any, owner: type = None) -> Any:
 			return self._getter(owner)
@@ -136,11 +138,11 @@ def ClassProperty(method):
 		def __set__(self, instance: Any, value: Any) -> None:
 			self._setter(instance.__class__, value)
 
-		def setter(self, method: Callable):
-			self._setter = method
-			return self
+		def setter(self, setter: Callable):
+			return self.__class__(self._getter, setter)
 
-	return Descriptor(method)
+	descriptor = Descriptor(method)
+	return descriptor
 
 
 @export
