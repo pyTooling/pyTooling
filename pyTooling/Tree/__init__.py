@@ -262,6 +262,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		raise NotImplementedError(f"Property 'Level' is not yet implemented.")
 
 	@property
+	def Size(self) -> int:
+		"""
+		Read-only property to return the size of the tree.
+
+		:return: Count of all nodes in the tree structure.
+		"""
+		return len(self._root._nodesWithID) + len(self._root._nodesWithoutID)
+
+	@property
 	def IsRoot(self) -> bool:
 		"""
 		Returns true, if the node is the root node (representative node of the tree).

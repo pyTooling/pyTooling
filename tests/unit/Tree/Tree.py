@@ -228,6 +228,22 @@ class Tree(TestCase):
 
 		self.assertIs("value1", root["key1"])
 
+	def test_Size(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+		grandChildren = [
+			Node(4, parent=children[0]), Node(5, parent=children[0]),
+			Node(6, parent=children[1]), Node(7, parent=children[1])
+		]
+		grandGrandChildren = [
+			Node(8, parent=grandChildren[0]),
+			Node(9, parent=grandChildren[1]), Node(10, parent=grandChildren[1]),
+			Node(11, parent=grandChildren[3])
+		]
+		
+		size = 1 + len(children) + len(grandChildren) + len(grandGrandChildren)
+		self.assertEqual(size, root.Size)
+
 	def test_Iterate(self):
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
