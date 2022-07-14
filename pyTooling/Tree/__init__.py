@@ -573,6 +573,14 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
+	def __len__(self) -> int:
+		"""
+		Returns the number of children, but not including grand-children.
+
+		:return: Number of child nodes.
+		"""
+		return len(self._children)
+
 	def __repr__(self) -> str:
 		"""
 		Returns a detailed string representation of the node.
