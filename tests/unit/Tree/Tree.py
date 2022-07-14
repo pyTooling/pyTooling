@@ -47,6 +47,7 @@ class Tree(TestCase):
 
 		self.assertIs(root, root.Root)
 		self.assertIsNone(root.Parent)
+		self.assertEqual(0, root.Level)
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.IsLeaf)
 		self.assertIs(root, root.GetNodeByID(1))
@@ -57,12 +58,14 @@ class Tree(TestCase):
 
 		self.assertIs(root, root.Root)
 		self.assertIsNone(root.Parent)
+		self.assertEqual(0, root.Level)
 		self.assertTrue(root.IsRoot)
 		self.assertFalse(root.IsLeaf)
 		self.assertTrue(root.HasChildren)
 
 		for child in children:
 			self.assertIs(root, child.Root)
+			self.assertEqual(1, child.Level)
 			self.assertFalse(child.IsRoot)
 			self.assertTrue(child.IsLeaf)
 			self.assertFalse(child.HasChildren)
@@ -80,12 +83,14 @@ class Tree(TestCase):
 
 		self.assertIs(root, root.Root)
 		self.assertIsNone(root.Parent)
+		self.assertEqual(0, root.Level)
 		self.assertTrue(root.IsRoot)
 		self.assertFalse(root.IsLeaf)
 		self.assertTrue(root.HasChildren)
 
 		for child in children:
 			self.assertIs(root, child.Root)
+			self.assertEqual(1, child.Level)
 			self.assertFalse(child.IsRoot)
 			self.assertFalse(child.IsLeaf)
 			self.assertTrue(child.HasChildren)
@@ -97,6 +102,7 @@ class Tree(TestCase):
 
 		for grandChild in grandChildren:
 			self.assertIs(root, grandChild.Root)
+			self.assertEqual(2, grandChild.Level)
 			self.assertFalse(grandChild.IsRoot)
 			self.assertTrue(grandChild.IsLeaf)
 			self.assertFalse(grandChild.HasChildren)
@@ -163,16 +169,46 @@ class Tree(TestCase):
 		root.AddChild(child)
 
 		self.assertIs(root, root.Root)
+		self.assertEqual(0, root.Level)
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
 		self.assertListEqual([child], [child for child in root.GetChildren()])
 
 		self.assertIs(root, child.Root)
+		self.assertEqual(1, child.Level)
 		self.assertFalse(child.IsRoot)
 		self.assertTrue(child.IsLeaf)
 		self.assertFalse(child.HasChildren)
 		self.assertIs(root, child.Parent)
+
+	def test_AddChildTree(self):
+		root = Node(1)
+		child = Node(2)
+		grandChild = Node(3, parent=child)
+
+		root.AddChild(child)
+
+		self.assertIs(root, root.Root)
+		self.assertEqual(0, root.Level)
+		self.assertTrue(root.IsRoot)
+		self.assertTrue(root.HasChildren)
+		self.assertFalse(root.IsLeaf)
+		self.assertListEqual([child], [child for child in root.GetChildren()])
+
+		self.assertIs(root, child.Root)
+		self.assertEqual(1, child.Level)
+		self.assertFalse(child.IsRoot)
+		self.assertFalse(child.IsLeaf)
+		self.assertTrue(child.HasChildren)
+		self.assertIs(root, child.Parent)
+
+		self.assertIs(root, grandChild.Root)
+		self.assertEqual(2, grandChild.Level)
+		self.assertFalse(grandChild.IsRoot)
+		self.assertTrue(grandChild.IsLeaf)
+		self.assertFalse(grandChild.HasChildren)
+		self.assertIs(child, grandChild.Parent)
 
 	def test_AddChildren(self):
 		root = Node(1)
@@ -181,6 +217,7 @@ class Tree(TestCase):
 		root.AddChildren(children)
 
 		self.assertIs(root, root.Root)
+		self.assertEqual(0, root.Level)
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
@@ -188,6 +225,7 @@ class Tree(TestCase):
 
 		for child in children:
 			self.assertIs(root, child.Root)
+			self.assertEqual(1, child.Level)
 			self.assertFalse(child.IsRoot)
 			self.assertTrue(child.IsLeaf)
 			self.assertFalse(child.HasChildren)
@@ -200,12 +238,14 @@ class Tree(TestCase):
 		child.Parent = root
 
 		self.assertIs(root, root.Root)
+		self.assertEqual(0, root.Level)
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
 		self.assertListEqual([child], [child for child in root.GetChildren()])
 
 		self.assertIs(root, child.Root)
+		self.assertEqual(1, child.Level)
 		self.assertFalse(child.IsRoot)
 		self.assertTrue(child.IsLeaf)
 		self.assertFalse(child.HasChildren)
@@ -227,6 +267,34 @@ class Tree(TestCase):
 		root["key1"] = "value1"
 
 		self.assertIs("value1", root["key1"])
+
+	def test_Length(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+
+		self.assertEqual(len(children), len(root))
+
+	def test_Size(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+		grandChildren = [
+			Node(4, parent=children[0]), Node(5, parent=children[0]),
+			Node(6, parent=children[1]), Node(7, parent=children[1])
+		]
+		grandGrandChildren = [
+			Node(8, parent=grandChildren[0]),
+			Node(9, parent=grandChildren[1]), Node(10, parent=grandChildren[1]),
+			Node(11, parent=grandChildren[3])
+		]
+
+		size = 1 + len(children) + len(grandChildren) + len(grandGrandChildren)
+		self.assertEqual(size, root.Size)
+
+	def test_Iterator(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+
+		self.assertListEqual(children, [node for node in root])
 
 	def test_Iterate(self):
 		root = Node(1)
@@ -275,12 +343,23 @@ class Tree(TestCase):
 		root1 = Node(11, parent=children[0])
 		children1 = [Node(12, parent=root1), Node(13, parent=root1)]
 
+		oldSize = root.Size
+
 		root1.Parent = None
 
-		nodes = [root1] + children1
+		self.assertTrue(children[0].IsLeaf)
+		self.assertEqual(0, len(children[0]))
 
+		self.assertEqual(oldSize, root.Size + root1.Size)
+		self.assertEqual(len(children), len(root))
+		self.assertEqual(len(children1), len(root1))
+
+		self.assertIsNone(root1.Parent)
 		self.assertTrue(root1.IsRoot)
-		for node in nodes:
+		self.assertIs(root1, root1.Root)
+		self.assertEqual(0, root1.Level)
+		for node in children1:
 			self.assertIs(root1, node.Root)
+			self.assertEqual(1, node.Level)
 
 		# check if subtree's IDs are not in main tree anymore

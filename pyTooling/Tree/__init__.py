@@ -31,7 +31,7 @@
 """A powerful tree data structure for Python."""
 from collections import deque
 from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, \
-	Union, Deque
+	Union, Deque, Iterator
 
 from ..Decorators import export
 from ..MetaClasses import ExtendedType
@@ -90,6 +90,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	_children: List['Node']                    #: List of all children
 #	_links: List['Node']
 
+	_level: int                                #: Level of the node (distance to the root).
 	_value: Nullable[ValueT]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyT, DictValueT]          #: Dictionary to store key-value-pairs attached to the node.
 
@@ -105,6 +106,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		if parent is None:
 			self._root = self
 			self._parent = None
+			self._level = 0
 
 			self._nodesWithID = {}
 			self._nodesWithoutID = []
@@ -115,6 +117,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		else:
 			self._root = parent._root
 			self._parent = parent
+			self._level = parent._level + 1
 			self._nodesWithID = None
 
 			if nodeID is None:
@@ -201,12 +204,24 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		if parent is None:
 			self._nodesWithID = {}
 			self._nodesWithoutID = []
-			for sibling in self._parent.GetSiblings():
+			self._level = 0
+
+			if self._id is None:
+				self._nodesWithoutID.append(self)
+				self._root._nodesWithoutID.remove(self)
+			else:
+				self._nodesWithID[self._id] = self
+				del self._nodesWithID[self._id]
+
+			for sibling in self.GetSiblings():
 				sibling._root = self
+				sibling._level = sibling._parent._level + 1
 				if sibling._id is None:
 					self._nodesWithoutID.append(sibling)
+					self._root._nodesWithoutID.remove(sibling)
 				else:
 					self._nodesWithID[sibling._id] = sibling
+					del self._nodesWithID[sibling._id]
 
 			self._parent._children.remove(self)
 
@@ -220,6 +235,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 			self._root = parent._root
 			self._parent = parent
+			self._level = parent._level + 1
+			for node in self.GetSiblings():
+				node._level = node._parent._level + 1
 			self._SetNewRoot(self._nodesWithID, self._nodesWithoutID)
 			self._nodesWithID = self._nodesWithoutID = None
 			parent._children.append(self)
@@ -259,7 +277,23 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	@property
 	def Level(self) -> int:
-		raise NotImplementedError(f"Property 'Level' is not yet implemented.")
+		"""
+		Read-only property to return a node's level in the tree.
+
+		The level is the distance to the root node.
+
+		:return: The node's level.
+		"""
+		return self._level
+
+	@property
+	def Size(self) -> int:
+		"""
+		Read-only property to return the size of the tree.
+
+		:return: Count of all nodes in the tree structure.
+		"""
+		return len(self._root._nodesWithID) + len(self._root._nodesWithoutID)
 
 	@property
 	def IsRoot(self) -> bool:
@@ -326,6 +360,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 		child._root = self._root
 		child._parent = self
+		child._level = self._level + 1
+		for node in child.GetSiblings():
+			node._level = node._parent._level + 1
 		self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
 		child._nodesWithID = child._nodesWithoutID = None
 		self._children.append(child)
@@ -354,6 +391,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 			child._root = self._root
 			child._parent = self
+			child._level = self._level + 1
+			for node in child.GetSiblings():
+				node._level = node._parent._level + 1
 			self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
 			child._nodesWithID = child._nodesWithoutID = None
 			self._children.append(child)
@@ -563,6 +603,22 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
+
+	def __iter__(self) -> Iterator['Node']:
+		"""
+		Returns an iterator to iterate all child nodes.
+
+		:return: Children iterator.
+		"""
+		return iter(self._children)
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of children, but not including grand-children.
+
+		:return: Number of child nodes.
+		"""
+		return len(self._children)
 
 	def __repr__(self) -> str:
 		"""

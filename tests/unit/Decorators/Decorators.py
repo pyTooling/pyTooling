@@ -31,7 +31,7 @@
 """Unit tests for Decorators."""
 from unittest import TestCase
 
-from pyTooling.Decorators import InheritDocString, OriginalFunction, ClassProperty
+from pyTooling.Decorators import InheritDocString, OriginalFunction, classproperty
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -68,18 +68,19 @@ class Descriptors(TestCase):
 		class Class_1:
 			_member = Content(1)
 
-			@ClassProperty
+			@classproperty
 			def Member(cls):
+				"""Class_1.Member"""
 				return cls._member
 
 			@Member.setter
-			def Member(cls, value):
+			def _Member(cls, value):
 				cls._member = value
 
 		class Class_2:
 			_member = Content(2)
 
-			@ClassProperty
+			@classproperty
 			def Member(cls):
 				return cls._member
 
@@ -89,6 +90,7 @@ class Descriptors(TestCase):
 
 		self.assertEqual(1, Class_1.Member.Value)
 		self.assertEqual(2, Class_2.Member.Value)
+#		self.assertEqual("Class_1.Member", Class_1.Member.__doc__)
 
 		Class_1.Member = 11
 		Class_2.Member = 12
