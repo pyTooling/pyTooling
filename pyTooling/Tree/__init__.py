@@ -31,7 +31,7 @@
 """A powerful tree data structure for Python."""
 from collections import deque
 from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, \
-	Union, Deque
+	Union, Deque, Iterator
 
 from ..Decorators import export
 from ..MetaClasses import ExtendedType
@@ -572,6 +572,14 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
+
+	def __iter__(self) -> Iterator['Node']:
+		"""
+		Returns an iterator to iterate all child nodes.
+
+		:return: Children iterator.
+		"""
+		return iter(self._children)
 
 	def __len__(self) -> int:
 		"""

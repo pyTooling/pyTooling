@@ -250,6 +250,12 @@ class Tree(TestCase):
 		size = 1 + len(children) + len(grandChildren) + len(grandGrandChildren)
 		self.assertEqual(size, root.Size)
 
+	def test_Iterator(self):
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+
+		self.assertListEqual(children, [node for node in root])
+
 	def test_Iterate(self):
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
