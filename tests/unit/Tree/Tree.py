@@ -246,7 +246,7 @@ class Tree(TestCase):
 			Node(9, parent=grandChildren[1]), Node(10, parent=grandChildren[1]),
 			Node(11, parent=grandChildren[3])
 		]
-		
+
 		size = 1 + len(children) + len(grandChildren) + len(grandGrandChildren)
 		self.assertEqual(size, root.Size)
 
