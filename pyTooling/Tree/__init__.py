@@ -249,7 +249,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	def Siblings(self) -> Tuple['Node', ...]:
 		""".. todo:: Needs documentation."""
 		if self._parent is None:
-			raise Exception(f"Root node has no siblings.")
+			raise RuntimeError(f"Root node has no siblings.")
 
 		return tuple([node for node in self._parent if node is not self])
 
@@ -257,7 +257,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	def LeftSiblings(self) -> Tuple['Node', ...]:
 		""".. todo:: Needs documentation."""
 		if self._parent is None:
-			raise Exception(f"Root node has no siblings.")
+			raise RuntimeError(f"Root node has no siblings.")
 
 		result = []
 		for node in self._parent:
@@ -266,7 +266,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 			else:
 				break
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		return tuple(result)
 
@@ -274,7 +274,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	def RightSiblings(self) -> Tuple['Node', ...]:
 		""".. todo:: Needs documentation."""
 		if self._parent is None:
-			raise Exception(f"Root node has no siblings.")
+			raise RuntimeError(f"Root node has no siblings.")
 
 		result = []
 		iterator = iter(self._parent)
@@ -282,7 +282,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 			if node is self:
 				break
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		for node in iterator:
 			result.append(node)
@@ -426,7 +426,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 				raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
 
 			if child._root is self._root:
-				raise Exception(f"Child '{child}' is already a node in this tree.")
+				raise RuntimeError(f"Child '{child}' is already a node in this tree.")
 
 			child._root = self._root
 			child._parent = self
@@ -494,7 +494,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	def GetSiblings(self) -> Generator['Node', None, None]:
 		""".. todo:: Needs documentation."""
 		if self._parent is None:
-			raise Exception(f"Root node has no siblings.")
+			raise RuntimeError(f"Root node has no siblings.")
 
 		for node in self._parent:
 			if node is self:
@@ -505,7 +505,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	def GetLeftSiblings(self) -> Generator['Node', None, None]:
 		""".. todo:: Needs documentation."""
 		if self._parent is None:
-			raise Exception(f"Root node has no siblings.")
+			raise RuntimeError(f"Root node has no siblings.")
 
 		for node in self._parent:
 			if node is self:
@@ -513,19 +513,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 			yield node
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 	def GetRightSiblings(self) -> Generator['Node', None, None]:
 		""".. todo:: Needs documentation."""
 		if self._parent is None:
-			raise Exception(f"Root node has no siblings.")
+			raise RuntimeError(f"Root node has no siblings.")
 
 		iterator = iter(self._parent)
 		for node in iterator:
 			if node is self:
 				break
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		for node in iterator:
 			yield node
@@ -556,13 +556,13 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		""".. todo:: Needs documentation."""
 		for node in self.GetLeftSiblings():
 			yield node
-			yield node.GetDescendants()
+			yield from node.GetDescendants()
 
 	def GetRightRelatives(self):
 		""".. todo:: Needs documentation."""
 		for node in self.GetRightSiblings():
 			yield node
-			yield node.GetDescendants()
+			yield from node.GetDescendants()
 
 	def IterateLeafs(self) -> Generator['Node', None, None]:
 		for child in self._children:

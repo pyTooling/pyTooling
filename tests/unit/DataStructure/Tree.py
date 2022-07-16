@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for Tree."""
-from typing import Any, Optional as Nullable
+from typing import Any, Optional as Nullable, List
 from unittest import TestCase
 
 from pytest import mark
@@ -79,7 +79,7 @@ class Construction(TestCase):
 			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
 
 		self.assertListEqual(children, [child for child in root.GetChildren()])
-		self.assertListEqual(children, [child for child in root.GetSiblings()])
+#		self.assertListEqual(children, [child for child in root.GetSiblings()])
 
 	def test_NewNodeWithChildren(self):
 		children = [Node(), Node()]
@@ -196,7 +196,11 @@ class Construction(TestCase):
 
 	def test_AddChildren(self):
 		root = Node(1)
-		children = [Node(2), Node(3)]
+		children = [Node(11), Node(12)]
+		grandChildren = [
+			Node(111, parent=children[0]), Node(112, parent=children[0]),
+			Node(121, parent=children[1]), Node(122, parent=children[1])
+		]
 
 		root.AddChildren(children)
 
@@ -211,9 +215,16 @@ class Construction(TestCase):
 			self.assertIs(root, child.Root)
 			self.assertEqual(1, child.Level)
 			self.assertFalse(child.IsRoot)
-			self.assertTrue(child.IsLeaf)
-			self.assertFalse(child.HasChildren)
+			self.assertFalse(child.IsLeaf)
+			self.assertTrue(child.HasChildren)
 			self.assertIs(root, child.Parent)
+
+		for grandChild in grandChildren:
+			self.assertIs(root, grandChild.Root)
+			self.assertEqual(2, grandChild.Level)
+			self.assertFalse(grandChild.IsRoot)
+			self.assertTrue(grandChild.IsLeaf)
+			self.assertFalse(grandChild.HasChildren)
 
 	def test_SetParent(self):
 		root = Node(1)
@@ -455,6 +466,42 @@ class Features(TestCase):
 
 		self.assertListEqual(children, [node for node in root])
 
+	def test_Siblings(self):
+		root = Node(1)
+		children = [
+			Node(11, parent=root),
+			Node(12, parent=root),
+			Node(13, parent=root),
+			Node(14, parent=root),
+			Node(15, parent=root)
+		]
+
+		self.assertListEqual(children[:2] + children[3:], list(children[2].Siblings))
+
+	def test_LeftSiblings(self):
+		root = Node(1)
+		children = [
+			Node(11, parent=root),
+			Node(12, parent=root),
+			Node(13, parent=root),
+			Node(14, parent=root),
+			Node(15, parent=root)
+		]
+
+		self.assertListEqual(children[:2], list(children[2].LeftSiblings))
+
+	def test_RightSiblings(self):
+		root = Node(1)
+		children = [
+			Node(11, parent=root),
+			Node(12, parent=root),
+			Node(13, parent=root),
+			Node(14, parent=root),
+			Node(15, parent=root)
+		]
+
+		self.assertListEqual(children[3:], list(children[2].RightSiblings))
+
 	def test_Repr(self):
 		node = Node()
 		nodeID = Node(nodeID=2)
@@ -502,6 +549,7 @@ class Features(TestCase):
 
 class Iteration(TestCase):
 	_root: Node
+	_children: List[Node]
 
 	def setUp(self) -> None:
 		root = Node(1)
@@ -543,6 +591,37 @@ class Iteration(TestCase):
 		]
 
 		self._root = root
+		self._children = children
+
+	def test_Siblings(self):
+		self.assertListEqual([11, 12, 14, 15], [node.ID for node in self._children[2].Siblings])
+
+	def test_LeftSiblings(self):
+		self.assertListEqual([11, 12], [node.ID for node in self._children[2].LeftSiblings])
+
+	def test_RightSiblings(self):
+		self.assertListEqual([14, 15], [node.ID for node in self._children[2].RightSiblings])
+
+	def test_GetSiblings(self):
+		self.assertListEqual([11, 12, 14, 15], [node.ID for node in self._children[2].GetSiblings()])
+
+	def test_GetLeftSiblings(self):
+		self.assertListEqual([11, 12], [node.ID for node in self._children[2].GetLeftSiblings()])
+
+	def test_GetRightSiblings(self):
+		self.assertListEqual([14, 15], [node.ID for node in self._children[2].GetRightSiblings()])
+
+	def test_GetLeftRelatives(self):
+		self.assertListEqual([
+			11, 111, 1111, 112, 1121, 1122,
+			12, 121,
+		], [node.ID for node in self._children[2].GetLeftRelatives()])
+
+	def test_GetRightRelatives(self):
+		self.assertListEqual([
+			14, 141, 142, 1421, 1422, 14221, 14222,
+			15, 151, 1511
+		], [node.ID for node in self._children[2].GetRightRelatives()])
 
 	def test_IteratePreOrder(self):
 		self.assertListEqual([
@@ -619,6 +698,13 @@ class Exceptions(TestCase):
 		with self.assertRaises(TypeError):
 			root.AddChildren(children)
 
+	def test_AddExistingChildInChildren(self):
+		root = Node()
+		children = [Node(), Node(parent=root), Node()]
+
+		with self.assertRaises(RuntimeError):
+			root.AddChildren(children)
+
 	def test_SetParentWithDuplicateIDs(self):
 		root = Node(1)
 		root1 = Node(1)
@@ -631,3 +717,41 @@ class Exceptions(TestCase):
 
 		with self.assertRaises(ValueError):
 			root.GetNodeByID(None)
+
+	@mark.xfail(reason="Exception doesn't raise.")
+	def test_GetSiblingsOfRoot(self):
+		root = Node(1)
+
+		self.assertIsNone(root.Parent)
+
+		with self.assertRaises(RuntimeError):
+			_ = root.Siblings
+
+		with self.assertRaises(RuntimeError):
+			for _ in root.GetSiblings():
+				pass
+
+	@mark.xfail(reason="Exception doesn't raise.")
+	def test_GetLeftSiblingsOfRoot(self):
+		root = Node(1)
+
+		self.assertIsNone(root.Parent)
+
+		with self.assertRaises(RuntimeError):
+			_ = root.LeftSiblings
+
+		with self.assertRaises(RuntimeError):
+			for _ in root.GetLeftSiblings():
+				pass
+
+	def test_GetRightSiblingsOfRoot(self):
+		root = Node(1)
+
+		self.assertIsNone(root.Parent)
+
+		with self.assertRaises(RuntimeError):
+			_ = root.RightSiblings
+
+		with self.assertRaises(RuntimeError):
+			for _ in root.GetRightSiblings():
+				pass
