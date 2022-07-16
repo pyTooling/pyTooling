@@ -718,7 +718,6 @@ class Exceptions(TestCase):
 		with self.assertRaises(ValueError):
 			root.GetNodeByID(None)
 
-	@mark.xfail(reason="Exception doesn't raise.")
 	def test_GetSiblingsOfRoot(self):
 		root = Node(1)
 
@@ -731,7 +730,6 @@ class Exceptions(TestCase):
 			for _ in root.GetSiblings():
 				pass
 
-	@mark.xfail(reason="Exception doesn't raise.")
 	def test_GetLeftSiblingsOfRoot(self):
 		root = Node(1)
 
