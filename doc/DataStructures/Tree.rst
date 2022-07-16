@@ -17,7 +17,7 @@ The following example code demonstrates a few features in a compact form:
    lib = Node(value="Utility Library", parent=root)
 
    # Another standalone node with unique ID (actually an independent tree)
-   common = Node(id=5, value="Common")
+   common = Node(nodeID=5, value="Common")
 
    # Construct bottom-up
    axi = Node(value="AXI")
@@ -30,8 +30,8 @@ The following example code demonstrates a few features in a compact form:
 
    # Add multiple nodes at once
    axiProtocols = (
-     Node(value="AXI4-Stream")
-     Node(value="AXI4-Lite")
+     Node(value="AXI4-Stream"),
+     Node(value="AXI4-Lite"),
      Node(value="AXI4")
    )
    axi.AddChildren(axiProtocols)
@@ -127,10 +127,10 @@ nodes are added to an existing tree, the newly added node's ID(s) are checked an
 .. code:: python
 
    # Create node with unique ID 5
-   node = Node(id=5)
+   node = Node(nodeID=5)
 
    # Read a node's ID
-   id = node.ID
+   nodeID = node.ID
 
 
 .. _STRUCT/Tree/Value:
@@ -174,10 +174,10 @@ property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used t
 .. code:: python
 
    # Create node without parent relation ship (root node)
-   root = Node(id=0)
+   root = Node(nodeID=0)
 
    # Create a node add directly attach it to an existing tree
-   node = Node(id=1, parent=root)
+   node = Node(nodeID=1, parent=root)
 
    # Access a node's parent
    parent = node.Parent
@@ -188,10 +188,10 @@ assigned a parent relationship.
 .. code:: python
 
    # Create a tree with a single node
-   root = Node(id=0)
+   root = Node(nodeID=0)
 
    # Create a second minimalistic tree
-   otherTree = Node(id=100)
+   otherTree = Node(nodeID=100)
 
    # Set parent relationship and merge trees
    otherTree.Parent = root
@@ -252,7 +252,7 @@ generator is provided by method :py:meth:`~pyTooling.Tree.Node.GetPath` for iter
 
    # Render path from root to node with indentations to ASCII art
    for level, node in enumerate(file.GetPath()):
-     print(f"{'  '*level}{'\-'*level*1}{node}")
+     print(f"{'  '*level}'\-'{node}")
 
    # \-C:
    #   \-temp
