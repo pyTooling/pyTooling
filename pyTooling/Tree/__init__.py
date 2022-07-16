@@ -65,7 +65,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	* :py:meth:`GetAncestors` |rarr| iterate all ancestors bottom-up.
 	* :py:meth:`GetChildren` |rarr| iterate all direct children.
-	* :py:meth:`GetSiblings` |rarr| iterate all siblings.
+	* :py:meth:`GetDescendants` |rarr| iterate all descendants.
 	* :py:meth:`IterateLevelOrder` |rarr| IterateLevelOrder.
 	* :py:meth:`IteratePreOrder` |rarr| iterate siblings in pre-order.
 	* :py:meth:`IteratePostOrder` |rarr| iterate siblings in post-order.
@@ -213,7 +213,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 				self._nodesWithID[self._id] = self
 				del self._nodesWithID[self._id]
 
-			for sibling in self.GetSiblings():
+			for sibling in self.GetDescendants():
 				sibling._root = self
 				sibling._level = sibling._parent._level + 1
 				if sibling._id is None:
@@ -236,19 +236,55 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 			self._root = parent._root
 			self._parent = parent
 			self._level = parent._level + 1
-			for node in self.GetSiblings():
+			for node in self.GetDescendants():
 				node._level = node._parent._level + 1
 			self._SetNewRoot(self._nodesWithID, self._nodesWithoutID)
 			self._nodesWithID = self._nodesWithoutID = None
 			parent._children.append(self)
 
 	@property
-	def LeftSibling(self) -> 'Node':
-		raise NotImplementedError(f"Property 'LeftSibling' is not yet implemented.")
+	def Siblings(self) -> Tuple['Node', ...]:
+		""".. todo:: Needs documentation."""
+		if self._parent is None:
+			raise Exception(f"Root node has no siblings.")
+
+		return tuple([node for node in self._parent if node is not self])
 
 	@property
-	def RightSibling(self) -> 'Node':
-		raise NotImplementedError(f"Property 'RightSibling' is not yet implemented.")
+	def LeftSiblings(self) -> Tuple['Node', ...]:
+		""".. todo:: Needs documentation."""
+		if self._parent is None:
+			raise Exception(f"Root node has no siblings.")
+
+		result = []
+		for node in self._parent:
+			if node is not self:
+				result.append(node)
+			else:
+				break
+		else:
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+
+		return tuple(result)
+
+	@property
+	def RightSiblings(self) -> Tuple['Node', ...]:
+		""".. todo:: Needs documentation."""
+		if self._parent is None:
+			raise Exception(f"Root node has no siblings.")
+
+		result = []
+		iterator = iter(self._parent)
+		for node in iterator:
+			if node is self:
+				break
+		else:
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+
+		for node in iterator:
+			result.append(node)
+
+		return tuple(result)
 
 	def _GetPathAsLinkedList(self) -> Deque["Node"]:
 		"""
@@ -361,7 +397,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		child._root = self._root
 		child._parent = self
 		child._level = self._level + 1
-		for node in child.GetSiblings():
+		for node in child.GetDescendants():
 			node._level = node._parent._level + 1
 		self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
 		child._nodesWithID = child._nodesWithoutID = None
@@ -392,7 +428,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 			child._root = self._root
 			child._parent = self
 			child._level = self._level + 1
-			for node in child.GetSiblings():
+			for node in child.GetDescendants():
 				node._level = node._parent._level + 1
 			self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
 			child._nodesWithID = child._nodesWithoutID = None
@@ -438,8 +474,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 		.. seealso::
 
-		   :py:meth:`GetSiblings` |br|
-		      |rarr| Iterate all siblings.
+		   :py:meth:`GetDescendants` |br|
+		      |rarr| Iterate all descendants.
 		   :py:meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|
@@ -453,8 +489,47 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 			yield child
 
 	def GetSiblings(self) -> Generator['Node', None, None]:
+		""".. todo:: Needs documentation."""
+		if self._parent is None:
+			raise Exception(f"Root node has no siblings.")
+
+		for node in self._parent:
+			if node is self:
+				continue
+
+			yield node
+
+	def GetLeftSiblings(self) -> Generator['Node', None, None]:
+		""".. todo:: Needs documentation."""
+		if self._parent is None:
+			raise Exception(f"Root node has no siblings.")
+
+		for node in self._parent:
+			if node is self:
+				break
+
+			yield node
+		else:
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+
+	def GetRightSiblings(self) -> Generator['Node', None, None]:
+		""".. todo:: Needs documentation."""
+		if self._parent is None:
+			raise Exception(f"Root node has no siblings.")
+
+		iterator = iter(self._parent)
+		for node in iterator:
+			if node is self:
+				break
+		else:
+			raise Exception(f"Data structure corruption: Self is not part of parent's children.")
+
+		for node in iterator:
+			yield node
+
+	def GetDescendants(self) -> Generator['Node', None, None]:
 		"""
-		A generator to iterate all siblings of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
+		A generator to iterate all descendants of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
 		it doesn't include the node itself.
 
 		.. seealso::
@@ -472,13 +547,19 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		"""
 		for child in self._children:
 			yield child
-			yield from child.GetSiblings()
+			yield from child.GetDescendants()
 
-	def GetLeftSiblings(self):
-		raise NotImplementedError(f"Method 'GetLeftSiblings' is not yet implemented.")
+	def GetLeftRelatives(self):
+		""".. todo:: Needs documentation."""
+		for node in self.GetLeftSiblings():
+			yield node
+			yield node.GetDescendants()
 
-	def GetRightSiblings(self):
-		raise NotImplementedError(f"Method 'GetRightSiblings' is not yet implemented.")
+	def GetRightRelatives(self):
+		""".. todo:: Needs documentation."""
+		for node in self.GetRightSiblings():
+			yield node
+			yield node.GetDescendants()
 
 	def IterateLeafs(self) -> Generator['Node', None, None]:
 		for child in self._children:
@@ -489,15 +570,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	def IterateLevelOrder(self) -> Generator['Node', None, None]:
 		"""
-		A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetSiblings`,
+		A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetDescendants`,
 		this includes also the node itself as the first returned node.
 
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`GetSiblings` |br|
-		      |rarr| Iterate all siblings.
+		   :py:meth:`GetDescendants` |br|
+		      |rarr| Iterate all descendants.
 		   :py:meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
@@ -514,15 +595,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	def IteratePreOrder(self) -> Generator['Node', None, None]:
 		"""
-		A generator to iterate all siblings of the current node in pre-order. In contrast to `GetSiblings`, this includes
+		A generator to iterate all siblings of the current node in pre-order. In contrast to `GetDescendants`, this includes
 		also the node itself as the first returned node.
 
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`GetSiblings` |br|
-		      |rarr| Iterate all siblings.
+		   :py:meth:`GetDescendants` |br|
+		      |rarr| Iterate all descendants.
 		   :py:meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
@@ -536,15 +617,15 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 	def IteratePostOrder(self) -> Generator['Node', None, None]:
 		"""
-		A generator to iterate all siblings of the current node in post-order. In contrast to `GetSiblings`, this
+		A generator to iterate all siblings of the current node in post-order. In contrast to `GetDescendants`, this
 		includes also the node itself as the last returned node.
 
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`GetSiblings` |br|
-		      |rarr| Iterate all siblings.
+		   :py:meth:`GetDescendants` |br|
+		      |rarr| Iterate all descendants.
 		   :py:meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|

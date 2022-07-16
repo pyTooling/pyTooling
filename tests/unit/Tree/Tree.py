@@ -74,7 +74,7 @@ class Tree(TestCase):
 			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
 
 		self.assertListEqual(children, [child for child in root.GetChildren()])
-		self.assertListEqual(children, [child for child in root.GetSiblings()])
+		self.assertListEqual(children, [child for child in root.GetDescendants()])
 
 	def test_GrandChildren(self):
 		root = Node(1)
@@ -112,7 +112,7 @@ class Tree(TestCase):
 
 		self.assertListEqual(
 			[children[0], grandChildren[0], grandChildren[1], children[1], grandChildren[2], grandChildren[3]],
-			[child for child in root.GetSiblings()]
+			[child for child in root.GetDescendants()]
 		)
 
 	def test_SelfLoop(self):
