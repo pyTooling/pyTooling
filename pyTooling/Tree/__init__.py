@@ -132,6 +132,9 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		self._children = []
 
 		if children is not None:
+			if not isinstance(children, Iterable):
+				raise TypeError(f"Parameter 'children' is not iterable.")
+
 			for child in children:
 				if not isinstance(child, Node):
 					raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
