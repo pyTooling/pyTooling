@@ -1,0 +1,112 @@
+.. # Template modified  by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=========================
+``pyTooling.MetaClasses``
+=========================
+
+.. automodule:: pyTooling.MetaClasses
+
+
+.. currentmodule:: pyTooling.MetaClasses
+
+
+**Variables**
+
+- :py:data:`M`
+  
+
+
+**Functions**
+
+- :py:func:`abstractmethod`:
+  Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
+
+- :py:func:`mustoverride`:
+  Mark a method as *must-override*.
+
+- :py:func:`overloadable`:
+  Undocumented.
+
+
+
+**Classes**
+
+- :py:class:`Overloading`:
+  Metaclass that allows multiple dispatch of methods based on method signatures.
+
+- :py:class:`ExtendedType`:
+  .. todo:: Needs documentation.
+
+- :py:class:`ObjectWithSlots`:
+  Classes derived from this class will store all members in ``__slots__``.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: M
+   :annotation:
+
+   .. code-block:: text
+
+      ~M
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: abstractmethod
+
+.. autofunction:: mustoverride
+
+.. autofunction:: overloadable
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Overloading
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Overloading
+      :parts: 1
+
+.. autoclass:: ExtendedType
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ExtendedType
+      :parts: 1
+
+.. autoclass:: ObjectWithSlots
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ObjectWithSlots
+      :parts: 1

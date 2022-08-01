@@ -1,0 +1,52 @@
+.. # Template modified  by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+========================
+``pyTooling.Versioning``
+========================
+
+.. automodule:: pyTooling.Versioning
+
+
+.. currentmodule:: pyTooling.Versioning
+
+
+**Classes**
+
+- :py:class:`SemVersion`:
+  Representation of a semantic version number like ``3.7.12``.
+
+- :py:class:`CalVersion`:
+  Representation of a calendar version number like ``2021.10``.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: SemVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SemVersion
+      :parts: 1
+
+.. autoclass:: CalVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CalVersion
+      :parts: 1

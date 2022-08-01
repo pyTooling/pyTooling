@@ -1,0 +1,31 @@
+.. # Template modified  by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=============
+``pyTooling``
+=============
+
+.. automodule:: pyTooling
+
+
+
+**Submodules**
+
+
+.. toctree::
+
+   pyTooling.CallByRef
+   pyTooling.Common
+   pyTooling.Configuration
+   pyTooling.Decorators
+   pyTooling.Exceptions
+   pyTooling.GenericPath
+   pyTooling.Licensing
+   pyTooling.MetaClasses
+   pyTooling.Packaging
+   pyTooling.Timer
+   pyTooling.Tree
+   pyTooling.Versioning
+
+.. currentmodule:: pyTooling

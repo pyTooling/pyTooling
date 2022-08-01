@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Common &mdash; pyTooling 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Common.Platform" href="pyTooling.Common.Platform.html" />
+    <link rel="prev" title="pyTooling.CallByRef" href="pyTooling.CallByRef.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#visibility">Visibility</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyTooling.html"><code class="docutils literal notranslate"><span class="pre">pyTooling</span></code></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CallByRef.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.CallByRef</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">pyTooling.Common</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Common.Platform.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Common.Platform</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Configuration.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Configuration</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Decorators.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Decorators</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Exceptions.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Exceptions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.GenericPath.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.GenericPath</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Licensing.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Licensing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.MetaClasses.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.MetaClasses</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Packaging.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Packaging</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Timer.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Timer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Tree.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Tree</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Versioning.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Versioning</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Coverage Report ➚</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Python Class Reference</a> &raquo;</li>
+          <li><a href="pyTooling.html"><code class="docutils literal notranslate"><span class="pre">pyTooling</span></code></a> &raquo;</li>
+      <li><code class="docutils literal notranslate"><span class="pre">pyTooling.Common</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/pyTooling/pyTooling/blob/dev/doc/pyTooling/pyTooling.Common.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.xlarge {font-size: x-large; }
+</style><section id="module-pyTooling.Common">
+<span id="pytooling-common"></span><h1><code class="docutils literal notranslate"><span class="pre">pyTooling.Common</span></code><a class="headerlink" href="#module-pyTooling.Common" title="Permalink to this heading">¶</a></h1>
+<p>Common types, helper functions and classes.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Common/index.html#common"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Submodules</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.Common.Platform.html"><code class="docutils literal notranslate"><span class="pre">pyTooling.Common.Platform</span></code></a></li>
+</ul>
+</div>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Common.CurrentPlatform" title="pyTooling.Common.CurrentPlatform"><code class="xref py py-data docutils literal notranslate"><span class="pre">CurrentPlatform</span></code></a></p></li>
+</ul>
+<p><strong>Functions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Common.isnestedclass" title="pyTooling.Common.isnestedclass"><code class="xref py py-func docutils literal notranslate"><span class="pre">isnestedclass()</span></code></a>:
+Returns true, if the given class <code class="docutils literal notranslate"><span class="pre">cls</span></code> is a member on an outer class <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.getsizeof" title="pyTooling.Common.getsizeof"><code class="xref py py-func docutils literal notranslate"><span class="pre">getsizeof()</span></code></a>:
+Recursively calculate the “true” size of an object including complex members like <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Variables</strong></p>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Common.CurrentPlatform">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">CurrentPlatform</span></span><a class="headerlink" href="#pyTooling.Common.CurrentPlatform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gathered information for the current platform.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Platforms.Linux
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Functions</strong></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.isnestedclass">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">isnestedclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#isnestedclass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.isnestedclass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true, if the given class <code class="docutils literal notranslate"><span class="pre">cls</span></code> is a member on an outer class <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>) – Class to check, if it’s a nested class.</p></li>
+<li><p><strong>scope</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>) – Outer class which is the outer scope of <code class="docutils literal notranslate"><span class="pre">cls</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if <code class="docutils literal notranslate"><span class="pre">cls</span></code> is a nested class within <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.getsizeof">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">getsizeof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#getsizeof"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.getsizeof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively calculate the “true” size of an object including complex members like <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>.</p>
+<div class="admonition-background-information admonition">
+<p class="admonition-title">Background Information</p>
+<p>The function <a class="reference external" href="https://docs.python.org/3/library/sys.html#sys.getsizeof" title="(in Python v3.10)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.getsizeof()</span></code></a> only returns the raw size of a Python object and doesn’t account for the
+overhead of e.g. <code class="docutils literal notranslate"><span class="pre">_dict__</span></code> to store dynamically allocated object members.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>The code ise based on code snippets and ideas from:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://code.activestate.com/recipes/577504/">Compute Memory Footprint of an Object and its Contents</a> (MIT Lizense)</p></li>
+<li><p><a class="reference external" href="https://stackoverflow.com/a/30316760/3719459">How do I determine the size of an object in Python?</a> (CC BY-SA 4.0)</p></li>
+<li><p><a class="reference external" href="https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots">Python __slots__, slots, and object layout</a> (MIT Lizense)</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – Object to calculate the size of.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True size of an object in bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.CallByRef.html" class="btn btn-neutral float-left" title="pyTooling.CallByRef" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Common.Platform.html" class="btn btn-neutral float-right" title="pyTooling.Common.Platform" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2022, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 01.08.2022.
+      </span></p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

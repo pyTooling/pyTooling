@@ -1,0 +1,87 @@
+.. # Template modified  by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=======================
+``pyTooling.Packaging``
+=======================
+
+.. automodule:: pyTooling.Packaging
+
+
+.. currentmodule:: pyTooling.Packaging
+
+
+**Functions**
+
+- :py:func:`loadReadmeFile`:
+  Read the README file (e.g. in Markdown format), so it can be used as long description for the package.
+
+- :py:func:`loadRequirementsFile`:
+  Reads a `requirements.txt` file and extracts all specified dependencies into an array.
+
+- :py:func:`extractVersionInformation`:
+  Extract double underscored variables from a Python source file, so these can be used for single-sourcing information.
+
+- :py:func:`DescribePythonPackage`:
+  Undocumented.
+
+- :py:func:`DescribePythonPackageHostedOnGitHub`:
+  Undocumented.
+
+
+
+**Classes**
+
+- :py:class:`Readme`:
+  Encapsulates the READMEs file content and MIME type.
+
+- :py:class:`VersionInformation`:
+  Encapsulates version information extracted from a Python source file.
+
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: loadReadmeFile
+
+.. autofunction:: loadRequirementsFile
+
+.. autofunction:: extractVersionInformation
+
+.. autofunction:: DescribePythonPackage
+
+.. autofunction:: DescribePythonPackageHostedOnGitHub
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Readme
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Readme
+      :parts: 1
+
+.. autoclass:: VersionInformation
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: VersionInformation
+      :parts: 1

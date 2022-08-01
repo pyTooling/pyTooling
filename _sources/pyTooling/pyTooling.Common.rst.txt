@@ -1,0 +1,61 @@
+.. # Template modified  by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+``pyTooling.Common``
+====================
+
+.. automodule:: pyTooling.Common
+
+
+
+**Submodules**
+
+
+.. toctree::
+
+   pyTooling.Common.Platform
+
+.. currentmodule:: pyTooling.Common
+
+
+**Variables**
+
+- :py:data:`CurrentPlatform`
+  
+
+
+**Functions**
+
+- :py:func:`isnestedclass`:
+  Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
+
+- :py:func:`getsizeof`:
+  Recursively calculate the "true" size of an object including complex members like ``__dict__``.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: CurrentPlatform
+   :annotation:
+
+   .. code-block:: text
+
+      Platforms.Linux
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: isnestedclass
+
+.. autofunction:: getsizeof

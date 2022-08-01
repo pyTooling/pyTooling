@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Decorators &mdash; pyTooling 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#visibility">Visibility</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/index.html">Python Class Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Coverage Report ➚</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>pyTooling.Decorators</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Decorators</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               ____                           _                                       #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  ___  ___ ___  _ __ __ _| |_ ___  _ __ ___                       #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | | | |/ _ \/ __/ _ \| &#39;__/ _` | __/ _ \| &#39;__/ __|                      #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| |  __/ (_| (_) | | | (_| | || (_) | |  \__ \                      #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \___|\___\___/|_|  \__,_|\__\___/|_|  |___/                      #</span>
+<span class="c1"># |_|    |___/                          |___/                                                                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;Decorators controlling visibility of entities in a Python module.</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;DECO&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">types</span>     <span class="kn">import</span> <span class="n">FunctionType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">,</span> <span class="s2">&quot;Param&quot;</span><span class="p">,</span> <span class="s2">&quot;RetType&quot;</span><span class="p">,</span> <span class="s2">&quot;Func&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">]</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="c1"># See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator</span>
+	<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ParamSpec</span>    <span class="c1"># exists since Python 3.10</span>
+
+	<span class="n">Param</span> <span class="o">=</span> <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;Param&quot;</span><span class="p">)</span>                       <span class="c1">#: A parameter specification for function or method</span>
+	<span class="n">RetType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;RetType&quot;</span><span class="p">)</span>                     <span class="c1">#: Type variable for a return type</span>
+	<span class="n">Func</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="n">Param</span><span class="p">,</span> <span class="n">RetType</span><span class="p">]</span>                  <span class="c1">#: Type specification for a function</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+	<span class="n">Param</span> <span class="o">=</span> <span class="o">...</span>                                      <span class="c1">#: A parameter specification for function or method</span>
+	<span class="n">RetType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;RetType&quot;</span><span class="p">)</span>                     <span class="c1">#: Type variable for a return type</span>
+	<span class="n">Func</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">RetType</span><span class="p">]</span>                    <span class="c1">#: Type specification for a function</span>
+
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">])</span>  <span class="c1">#: Type variable for a class or function</span>
+
+
+<div class="viewcode-block" id="export"><a class="viewcode-back" href="../../pyTooling/pyTooling.Decorators.html#pyTooling.Decorators.export">[docs]</a><span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Register the given function or class as publicly accessible in a module.</span>
+
+<span class="sd">	Creates or updates the ``__all__`` attribute in the module in which the decorated entity is defined to include the</span>
+<span class="sd">	name of the decorated entity.</span>
+
+<span class="sd">	.. admonition:: ``to_export.py``</span>
+
+<span class="sd">	   .. code:: python</span>
+
+<span class="sd">	      from pyTooling.Decorators import export</span>
+
+<span class="sd">	      @export</span>
+<span class="sd">	      def exported():</span>
+<span class="sd">	        pass</span>
+
+<span class="sd">	      def not_exported():</span>
+<span class="sd">	        pass</span>
+
+<span class="sd">	.. admonition:: ``another_file.py``</span>
+
+<span class="sd">	   .. code:: python</span>
+
+<span class="sd">	      from .to_export import *</span>
+
+<span class="sd">	      assert &quot;exported&quot; in globals()</span>
+<span class="sd">	      assert &quot;not_exported&quot; not in globals()</span>
+
+<span class="sd">	:param entity:          The function or class to include in `__all__`.</span>
+<span class="sd">	:returns:               The unmodified function or class.</span>
+<span class="sd">	:raises AttributeError: If parameter ``entity`` has no ``__module__`` member.</span>
+<span class="sd">	:raises TypeError:      If parameter ``entity`` is not a top-level entity in a module.</span>
+<span class="sd">	:raises TypeError:      If parameter ``entity`` has no ``__name__``.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1"># * Based on an idea by Duncan Booth:</span>
+	<span class="c1">#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a</span>
+	<span class="c1"># * Improved via a suggestion by Dave Angel:</span>
+	<span class="c1">#	  http://groups.google.com/group/comp.lang.python/msg/3d400fb22d8a42e1</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="s2">&quot;__module__&quot;</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="si">}</span><span class="s2"> has no __module__ attribute. Please ensure it is a top-level function or class reference defined in a module.&quot;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="s2">&quot;__qualname__&quot;</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;locals&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;lambda&gt;&quot;</span><span class="p">)):</span>
+			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only named top-level functions and classes may be exported, not </span><span class="si">{</span><span class="n">entity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">entity</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;&lt;lambda&gt;&quot;</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Entity must be a named top-level function or class, not </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">module</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="vm">__module__</span><span class="p">]</span>
+	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Module </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2"> is not present in sys.modules. Please ensure it is in the import path before calling export().&quot;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;__all__&quot;</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">__all__</span><span class="p">:</span>	<span class="c1"># type: ignore</span>
+			<span class="n">module</span><span class="o">.</span><span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>	<span class="c1"># type: ignore</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">module</span><span class="o">.</span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>	      <span class="c1"># type: ignore</span>
+
+	<span class="k">return</span> <span class="n">entity</span></div>
+
+
+<div class="viewcode-block" id="classproperty"><a class="viewcode-back" href="../../pyTooling/pyTooling.Decorators.html#pyTooling.Decorators.classproperty">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">classproperty</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+
+	<span class="k">class</span> <span class="nc">Descriptor</span><span class="p">:</span>
+		<span class="sd">&quot;&quot;&quot;A decorator adding properties to classes.&quot;&quot;&quot;</span>
+		<span class="n">_getter</span><span class="p">:</span> <span class="n">Callable</span>
+		<span class="n">_setter</span><span class="p">:</span> <span class="n">Callable</span>
+
+		<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">getter</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">setter</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_getter</span> <span class="o">=</span> <span class="n">getter</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_setter</span> <span class="o">=</span> <span class="n">setter</span>
+			<span class="bp">self</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">getter</span><span class="o">.</span><span class="vm">__doc__</span>
+
+		<span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
+
+		<span class="k">def</span> <span class="fm">__set__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+		<span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">setter</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">,</span> <span class="n">setter</span><span class="p">)</span>
+
+	<span class="n">descriptor</span> <span class="o">=</span> <span class="n">Descriptor</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">descriptor</span></div>
+
+
+<div class="viewcode-block" id="OriginalFunction"><a class="viewcode-back" href="../../pyTooling/pyTooling.Decorators.html#pyTooling.Decorators.OriginalFunction">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">OriginalFunction</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">FunctionType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Func</span><span class="p">],</span> <span class="n">Func</span><span class="p">]:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Store a reference to the original function/method on a new, wrapper or replacement function/method.</span>
+
+<span class="sd">	The function or method reference is stored in ``__orig_func__``.</span>
+
+<span class="sd">	.. admonition:: ``metaclass.py``</span>
+
+<span class="sd">	   .. code:: python</span>
+
+<span class="sd">	      from functools import wraps</span>
+<span class="sd">	      from pyTooling.Decorators import OriginalFunction</span>
+
+<span class="sd">	      class Meta(type):</span>
+<span class="sd">	        def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -&gt; type:</span>
+<span class="sd">	          # Create a new class</span>
+<span class="sd">	          newClass = type.__new__(self, className, baseClasses, members)</span>
+
+<span class="sd">	          @OriginalFunction(newClass.__new__)</span>
+<span class="sd">	          @wraps(newClass.__new__)</span>
+<span class="sd">	          def new(cls, *args, **kwargs):</span>
+<span class="sd">	            # ...</span>
+<span class="sd">	            obj = newClass.__new__(*args, **kwargs)</span>
+<span class="sd">	            # ...</span>
+<span class="sd">	            return obj</span>
+
+<span class="sd">	          newClass.__new__ = new</span>
+
+<span class="sd">	          return newClass</span>
+
+<span class="sd">	:param func: Function or method reference to be store on the decorated function or method.</span>
+<span class="sd">	:returns:    Decorator function that stores the function or method reference on the decorated object.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="n">Func</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.</span>
+
+<span class="sd">		:param f:          Function or method, where the original function or method reference is attached to.</span>
+<span class="sd">		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.</span>
+<span class="sd">		:raises TypeError: If decorated object is not callable.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Decorated object is not callable.&quot;</span><span class="p">)</span>
+
+		<span class="n">f</span><span class="o">.</span><span class="n">__orig_func__</span> <span class="o">=</span> <span class="n">func</span>
+		<span class="k">return</span> <span class="n">f</span>
+
+	<span class="k">return</span> <span class="n">decorator</span></div>
+
+
+<div class="viewcode-block" id="InheritDocString"><a class="viewcode-back" href="../../pyTooling/pyTooling.Decorators.html#pyTooling.Decorators.InheritDocString">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">InheritDocString</span><span class="p">(</span><span class="n">baseClass</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Func</span><span class="p">],</span> <span class="n">Func</span><span class="p">]:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Copy the doc-string from given base-class to the method this decorator is applied to.</span>
+
+<span class="sd">	.. admonition:: ``example.py``</span>
+
+<span class="sd">	   .. code:: python</span>
+
+<span class="sd">	      from pyTooling.Decorators import InheritDocString</span>
+
+<span class="sd">	      class Class1:</span>
+<span class="sd">	        def method(self):</span>
+<span class="sd">	          &#39;&#39;&#39;Method&#39;s doc-string.&#39;&#39;&#39;</span>
+
+<span class="sd">	      class Class2(Class1):</span>
+<span class="sd">	        @InheritDocString(Class1)</span>
+<span class="sd">	        def method(self):</span>
+<span class="sd">	          super().method()</span>
+
+<span class="sd">	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.</span>
+<span class="sd">	:returns:         Decorator function that copies the doc-string.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">Func</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Func</span><span class="p">:</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Decorator function, which copies the doc-string from base-class&#39; method to method ``m``.</span>
+
+<span class="sd">		:param m: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.</span>
+<span class="sd">		:returns: Same method, but with overwritten doc-string field (``__doc__``).</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">m</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="vm">__doc__</span>
+		<span class="k">return</span> <span class="n">m</span>
+
+	<span class="k">return</span> <span class="n">decorator</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2022, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 01.08.2022.
+      </span></p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
