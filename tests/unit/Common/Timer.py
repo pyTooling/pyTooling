@@ -32,6 +32,7 @@
 from time import sleep
 from unittest import TestCase
 
+from pyTooling.Common import CurrentPlatform
 from pyTooling.Timer import Timer
 
 
@@ -43,38 +44,48 @@ if __name__ == "__main__":  # pragma: no cover
 
 class Timing(TestCase):
 	def test_StartStop(self):
+		delay = 0.1
+		inaccuracy = 3.0 if CurrentPlatform.IsNativeMacOS else 0.5
+
 		timer = Timer()
+
 		timer.Start()
-		sleep(0.1)  # 100 ms
+		sleep(delay)  # 100 ms
 		diff = timer.Stop()
 
-		print(f"Duration for 'sleep(0.100)': {diff:0.6f} us")
-		self.assertLessEqual(diff, 0.150)
+		print(f"Duration for 'sleep({delay:0.3f})': {diff:0.6f} us")
+		self.assertLessEqual(diff, delay + (delay * inaccuracy))
 
 	def test_PauseResume(self):
+		delay = 0.1
+		inaccuracy = 3.0 if CurrentPlatform.IsNativeMacOS else 0.5
+
 		timer = Timer()
 
 		timer.Start()
-		sleep(0.1)  # 100 ms
+		sleep(delay)  # 100 ms
 		diff = timer.Pause()
-		print(f"Duration for '1st sleep(0.100)': {diff:0.6f} us")
-		self.assertLessEqual(diff, 0.150)
+		print(f"Duration for '1st sleep({delay:0.3f})': {diff:0.6f} us")
+		self.assertLessEqual(diff, delay + (delay * inaccuracy))
 
-		sleep(0.5)  # 500 ms
+		sleep(delay * 5)  # 500 ms
 
 		timer.Continue()
-		sleep(0.1)  # 100 ms
+		sleep(delay)  # 100 ms
 		diff = timer.Pause()
-		print(f"Duration for '2nd sleep(0.100)': {diff:0.6f} us")
-		self.assertLessEqual(diff, 0.150)
+		print(f"Duration for '2nd sleep({delay:0.3f})': {diff:0.6f} us")
+		self.assertLessEqual(diff, delay + (delay * inaccuracy))
 
 		total = timer.Stop()
-		print(f"Duration for '2x sleep(0.100)': {total:0.6f} us")
-		self.assertLessEqual(total, 0.750)
+		print(f"Duration for '2x sleep({delay:0.3f})': {total:0.6f} us")
+		self.assertLessEqual(total, (7 * delay) + (delay * inaccuracy))
 
 	def test_ContextManager(self):
-		with Timer() as timer:
-			sleep(0.1)  # 100 ms
+		delay = 0.1
+		inaccuracy = 3.0 if CurrentPlatform.IsNativeMacOS else 0.5
 
-		print(f"Duration for '2nd sleep(0.100)': {timer.Duration:0.6f} us")
-		self.assertLessEqual(timer.Duration, 0.150)
+		with Timer() as timer:
+			sleep(delay)  # 100 ms
+
+		print(f"Duration for '2nd sleep({delay:0.3f})': {timer.Duration:0.6f} us")
+		self.assertLessEqual(timer.Duration, delay + (delay * inaccuracy))
