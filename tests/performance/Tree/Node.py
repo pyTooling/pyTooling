@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for Tree."""
+"""Performance tests for pyTooling.Tree."""
 from pyTooling.Tree import Node
 from . import PerformanceTest
 

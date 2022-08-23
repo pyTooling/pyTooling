@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for Tree."""
+"""Unit tests for pyTooling.Tree."""
 from typing import Any, Optional as Nullable, List
 from unittest import TestCase
 
