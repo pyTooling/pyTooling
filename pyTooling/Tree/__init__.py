@@ -36,14 +36,21 @@ from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional a
 from ..Decorators import export
 from ..MetaClasses import ExtendedType
 
-IDT = TypeVar("IDT", bound=Hashable)
-ValueT = TypeVar("ValueT")
-DictKeyT = TypeVar("DictKeyT")
-DictValueT = TypeVar("DictValueT")
+IDType = TypeVar("VertexIDType", bound=Hashable)
+"""A type variable for a tree's ID."""
+
+ValueType = TypeVar("ValueType")
+"""A type variable for a tree's value."""
+
+DictKeyType = TypeVar("DictKeyType")
+"""A type variable for a tree's dictionary keys."""
+
+DictValueType = TypeVar("DictValueType")
+"""A type variable for a tree's dictionary values."""
 
 
 @export
-class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, useSlots=True):
+class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=ExtendedType, useSlots=True):
 	"""
 	A **tree** data structure can be constructed of ``Node`` instances.
 
@@ -82,8 +89,8 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 	key-value-pairs.
 	"""
 
-	_id: Nullable[IDT]                         #: Unique identifier of a node. ``None`` if not used.
-	_nodesWithID: Nullable[Dict[IDT, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
+	_id: Nullable[IDType]                         #: Unique identifier of a node. ``None`` if not used.
+	_nodesWithID: Nullable[Dict[IDType, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
 	_nodesWithoutID: Nullable[List['Node']]    #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
 	_root: 'Node'                              #: Reference to the root of a tree. ``self`` if it's the root node.
 	_parent: Nullable['Node']                  #: Reference to the parent node. ``None`` if it's the root node.
@@ -91,10 +98,10 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 #	_links: List['Node']
 
 	_level: int                                #: Level of the node (distance to the root).
-	_value: Nullable[ValueT]                   #: Field to store the node's value.
-	_dict: Dict[DictKeyT, DictValueT]          #: Dictionary to store key-value-pairs attached to the node.
+	_value: Nullable[ValueType]                   #: Field to store the node's value.
+	_dict: Dict[DictKeyType, DictValueType]          #: Dictionary to store key-value-pairs attached to the node.
 
-	def __init__(self, nodeID: IDT = None, value: ValueT = None, parent: 'Node' = None, children: List['Node'] = None):
+	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None):
 		""".. todo:: Needs documentation."""
 		self._id = nodeID
 		self._value = value
@@ -142,7 +149,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 				child.Parent = self
 
 	@property
-	def ID(self) -> Nullable[IDT]:
+	def ID(self) -> Nullable[IDType]:
 		"""
 		Read-only property to access the unique ID of a node (:py:attr:`_id`).
 
@@ -153,7 +160,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		return self._id
 
 	@property
-	def Value(self) -> Nullable[ValueT]:
+	def Value(self) -> Nullable[ValueType]:
 		"""
 		Property to get and set the value (:py:attr:`_value`) of a node.
 
@@ -162,18 +169,18 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		return self._value
 
 	@Value.setter
-	def Value(self, value: Nullable[ValueT]) -> None:
+	def Value(self, value: Nullable[ValueType]) -> None:
 		self._value = value
 
-	def __getitem__(self, key: DictKeyT) -> DictValueT:
+	def __getitem__(self, key: DictKeyType) -> DictValueType:
 		""".. todo:: Needs documentation."""
 		return self._dict[key]
 
-	def __setitem__(self, key: DictKeyT, value: DictValueT) -> None:
+	def __setitem__(self, key: DictKeyType, value: DictValueType) -> None:
 		""".. todo:: Needs documentation."""
 		self._dict[key] = value
 
-	def __delitem__(self, key: DictKeyT) -> None:
+	def __delitem__(self, key: DictKeyType) -> None:
 		""".. todo:: Needs documentation."""
 		del self._dict[key]
 
@@ -671,7 +678,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		for i in range(index, len(otherPath)):
 			yield otherPath[i]
 
-	def GetNodeByID(self, nodeID: IDT) -> 'Node':
+	def GetNodeByID(self, nodeID: IDType) -> 'Node':
 		"""
 		Lookup a node by its unique ID.
 
