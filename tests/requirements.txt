@@ -15,6 +15,10 @@ lxml>=4.9
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml>=0.17
 
-# For performance testing
+# For performance testing of Node (tree)
 anytree>=2.8.0
 itertree>=0.8.2
+
+# For performance testing of Vertex (graph)
+networkx>=2.8.5
+python-igraph>=1.6.2
