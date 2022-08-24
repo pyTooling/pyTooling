@@ -62,17 +62,30 @@ Common Classes
 Configuration
 =============
 
-TBD
+Abstraction of various configuration file formats.
+
+* :ref:`Abstract configuration file data model <CONFIG>` |br|
+  |rarr| An abstract data model of configuration files supporting sequences (lists) and key-value-pairs (dictionaries).
+* :ref:`YAML configuration reader <CONFIG/FileFormat/YAML>` |br|
+  |rarr| A configuration file reader for the YAML file format.
+
 
 Data Structures
 ===============
 
-Fast data structures.
-
-.. #* Trees:
+Fast and powerful data structures.
 
 * :ref:`Tree data structure <STRUCT/Tree>` |br|
   |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
+* :ref:`Graph data structure <STRUCT/Graph>` |br|
+  |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
+  class.
+* :ref:`Path data structure <STRUCT/Path>` |br|
+  |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
+  class.
+
+.. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
+   |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
 
 
 Decorators

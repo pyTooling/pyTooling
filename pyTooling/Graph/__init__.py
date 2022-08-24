@@ -28,7 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A powerful graph data structure for Python."""
+"""A powerful graph data structure for Python.
+
+A **graph** data structure can be constructed of :py:class:`~pyTooling.Graph.Vertex` (node) and
+:py:class:`~pyTooling.Graph.Edge` (link) instances.
+"""
 from collections import deque
 from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, \
 	Iterator as typing_Iterator, Set, Deque
@@ -64,9 +68,19 @@ EdgeDictKeyType = TypeVar("EdgeDictKeyType", bound=Hashable)
 EdgeDictValueType = TypeVar("EdgeDictValueType")
 """A type variable for a edge's dictionary values."""
 
+GraphDictKeyType = TypeVar("GraphDictKeyType", bound=Hashable)
+"""A type variable for a graph's dictionary keys."""
+
+GraphDictValueType = TypeVar("GraphDictValueType")
+"""A type variable for a graph's dictionary values."""
+
 
 @export
 class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
+	"""A graph data structure is constructed of nodes called ``Vertex`` s and :py:class:`Edges <pyTooling.Graph.Edge>`.
+
+
+	"""
 	_graph:     'Graph[VertexIDType, EdgeIDType]'
 	_inbound:   List['Edge']
 	_outbound:  List['Edge']
@@ -303,13 +317,13 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 
 
 @export
-class Edge(Generic[EdgeIDType, EdgeWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType]):
+class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]):
 	_id:          Nullable[EdgeIDType]
 	_source:      Vertex
 	_destination: Vertex
 	_weight:      Nullable[EdgeWeightType]
-	_value:       Nullable[VertexValueType]
-	_dict:        Dict[VertexDictKeyType, VertexDictValueType]
+	_value:       Nullable[EdgeValueType]
+	_dict:        Dict[EdgeDictKeyType, EdgeDictValueType]
 
 	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, weight: EdgeWeightType = None, value: VertexValueType = None):
 		if source._graph is not destination._graph:
@@ -373,33 +387,14 @@ class Edge(Generic[EdgeIDType, EdgeWeightType, VertexValueType, VertexDictKeyTyp
 		del self._dict[key]
 
 
-
-# @export
-# class HyperEdge(Edge[EdgeIDType, EdgeWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType], Generic[EdgeIDType, EdgeWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType]):
-# 	_sources:       List[Vertex]
-# 	_destinations:  List[Vertex]
-#
-# 	def __init__(self, sources: Iterable[Vertex], destinations: Iterable[Vertex], edgeID: EdgeIDType = None, weight: EdgeWeightType = None, data: VertexValueType = None):
-# 		self._sources = [s for s in sources]
-# 		self._destinations = [d for d in destinations]
-# 		super().__init__(edgeID, weight, data)
-#
-# 	@property
-# 	def Sources(self) -> Iterable[Vertex]:
-# 		return self._sources
-#
-# 	@property
-# 	def Destinations(self) -> Iterable[Vertex]:
-# 		return self._destinations
-
-
 @export
-class Graph(Generic[VertexIDType, EdgeIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
+class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
 	_name:              str
 	_verticesWithID:    Dict[VertexIDType, Vertex]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_edgesWithID:       Dict[EdgeIDType, Edge]
 	_edgesWithoutID:    List[Edge]
+	_dict:              Dict[GraphDictKeyType, GraphDictValueType]
 
 	def __init__(self, name: str = None):
 		self._name = name
@@ -407,6 +402,7 @@ class Graph(Generic[VertexIDType, EdgeIDType, VertexValueType, VertexDictKeyType
 		self._verticesWithoutID = []
 		self._edgesWithID = {}
 		self._edgesWithoutID = []
+		self._dict = {}
 
 	@property
 	def Name(self) -> str:
@@ -418,6 +414,18 @@ class Graph(Generic[VertexIDType, EdgeIDType, VertexValueType, VertexDictKeyType
 			raise TypeError()
 
 		self._name = value
+
+	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
+		""".. todo:: Needs documentation."""
+		return self._dict[key]
+
+	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
+		""".. todo:: Needs documentation."""
+		self._dict[key] = value
+
+	def __delitem__(self, key: VertexDictKeyType) -> None:
+		""".. todo:: Needs documentation."""
+		del self._dict[key]
 
 	def __len__(self) -> int:
 		return len(self._verticesWithoutID) + len(self._verticesWithID)

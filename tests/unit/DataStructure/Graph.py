@@ -70,20 +70,20 @@ class Construction(TestCase):
 
 	def test_SimpleTree(self):
 		v1 = Vertex()
-		v11 = v1.LinkNewVertex()
-		v111 = v11.LinkNewVertex()
-		v112 = v11.LinkNewVertex()
-		v12 = v1.LinkNewVertex()
-		v121 = v12.LinkNewVertex()
-		v1211 = v121.LinkNewVertex()
+		v11 = v1.LinkToNewVertex()
+		v111 = v11.LinkToNewVertex()
+		v112 = v11.LinkToNewVertex()
+		v12 = v1.LinkToNewVertex()
+		v121 = v12.LinkToNewVertex()
+		v1211 = v121.LinkToNewVertex()
 
 		self.assertEqual(2, len(v1))
-		self.assertEqual(3, len(v11))
-		self.assertEqual(1, len(v111))
-		self.assertEqual(1, len(v112))
-		self.assertEqual(2, len(v12))
-		self.assertEqual(2, len(v121))
-		self.assertEqual(1, len(v1211))
+		self.assertEqual(2, len(v11))
+		self.assertEqual(0, len(v111))
+		self.assertEqual(0, len(v112))
+		self.assertEqual(1, len(v12))
+		self.assertEqual(1, len(v121))
+		self.assertEqual(0, len(v1211))
 		self.assertEqual(7, len(v1.Graph))
 
 
@@ -121,6 +121,4 @@ class Iterate(TestCase):
 		for u, v, w in self._edges:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		for vertex in v0.IterateVertexesBFS():
-			print(f"{vertex!r}")
-
+		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVertexesBFS()])
