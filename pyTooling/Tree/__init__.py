@@ -321,7 +321,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 
 		The level is the distance to the root node.
 
-		:return: The node's level.
+		:returns: The node's level.
 		"""
 		return self._level
 
@@ -330,7 +330,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		"""
 		Read-only property to return the size of the tree.
 
-		:return: Count of all nodes in the tree structure.
+		:returns: Count of all nodes in the tree structure.
 		"""
 		return len(self._root._nodesWithID) + len(self._root._nodesWithoutID)
 
@@ -692,7 +692,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		"""
 		Returns an iterator to iterate all child nodes.
 
-		:return: Children iterator.
+		:returns: Children iterator.
 		"""
 		return iter(self._children)
 
@@ -700,7 +700,7 @@ class Node(Generic[IDT, ValueT, DictKeyT, DictValueT], metaclass=ExtendedType, u
 		"""
 		Returns the number of children, but not including grand-children.
 
-		:return: Number of child nodes.
+		:returns: Number of child nodes.
 		"""
 		return len(self._children)
 

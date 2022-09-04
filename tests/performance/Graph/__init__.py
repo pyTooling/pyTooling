@@ -30,6 +30,7 @@
 #
 """Performance tests for pyTooling.Graph."""
 import timeit
+from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
 from time import perf_counter_ns
@@ -38,38 +39,54 @@ from unittest import TestCase
 
 from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex
 
+
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
 
 
+@dataclass
+class BiggestNetwork:
+	startNodeID: int
+	size: int
+
+
+@dataclass
+class EdgeFile:
+	vertexCount: int
+	edgeCount: int
+	biggestNetwork: BiggestNetwork
+	file: Path
+
+
 class PerformanceTest(TestCase):
-	counts: Iterable[int] = (10, 100, 1000)#, 10000)
-	edgeFiles:  Iterable[Tuple[int, int, int, Path]] = (
-		(100, 92, 72, Path("graph_n100_m150_dir_w0_100.edgelist")),
-		(1000, 489, 626, Path("graph_n1000_m1500_dir_w0_100.edgelist")),
-		(10000, 3056, 5741, Path("graph_n10000_m15000_dir_w0_100.edgelist"))
+	counts: Iterable[int] = (10, 100, 1000, 10000)
+	edgeFiles:  Iterable[EdgeFile] = (
+		EdgeFile(   100,    150, BiggestNetwork(  92,    72), Path("graph_n100_m150_dir_w0_100.edgelist")),
+		EdgeFile(  1000,   1500, BiggestNetwork( 489,   626), Path("graph_n1000_m1500_dir_w0_100.edgelist")),
+		EdgeFile( 10000,  15000, BiggestNetwork(3056,  5741), Path("graph_n10000_m15000_dir_w0_100.edgelist")),
+#		EdgeFile(100000, 150000, BiggestNetwork(9671, 58243), Path("graph_n100000_m150000_dir_w0_100.edgelist")),
 	)
 
 	def runSizedTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
-		print(f"         min          avg           max")
+		print(f"            min           avg           max")
 		for count in counts:
 			results = timeit.repeat(func(count), repeat=20, number=50)
 			norm = count / 10
-			print(f"{count:>5}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s")
+			print(f"{count:>6}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s")
 
-	def runFileBasedTests(self, setup: Callable[[Path, int], pt_Graph], func: Callable[[pt_Graph, int, int], Callable[[], None]], edgeFiles: Iterable[Tuple[int, int, int, Path]]):
+	def runFileBasedTests(self, setup: Callable[[Path, int], pt_Graph], func: Callable[[pt_Graph, int, int], Callable[[], None]], edgeFiles: Iterable[EdgeFile]):
 		print()
-		print(f"         min          avg           max        construct")
-		for vertexCount, componentStartVertex, componentSize, file in edgeFiles:
-			file = Path("tests/data/Graph/EdgeLists") / file
+		print(f"            min           avg           max           construct")
+		for edgeFile in edgeFiles:
+			file = Path("tests/data/Graph/EdgeLists") / edgeFile.file
 
 			start = perf_counter_ns()
-			graph = setup(file, vertexCount)
+			graph = setup(file, edgeFile.vertexCount)
 			construct = (perf_counter_ns() - start) / 1e9
 
-			results = timeit.repeat(func(graph, componentStartVertex, componentSize), repeat=20, number=50)
-			norm = componentSize
-			print(f"{vertexCount:>5}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s    {construct/norm:.6f} s")
+			results = timeit.repeat(func(graph, edgeFile.biggestNetwork.startNodeID, edgeFile.biggestNetwork.size), repeat=20, number=50)
+			norm = edgeFile.biggestNetwork.size
+			print(f"{edgeFile.vertexCount:>6}x: {min(results) / norm:.6f} s    {mean(results) / norm:.6f} s    {max(results) / norm:.6f} s    {construct / norm:.6f} s")

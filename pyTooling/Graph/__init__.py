@@ -35,7 +35,7 @@ A **graph** data structure can be constructed of :py:class:`~pyTooling.Graph.Ver
 """
 from collections import deque
 from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, \
-	Iterator as typing_Iterator, Set, Deque
+	Iterator as typing_Iterator, Set, Deque, Generator
 
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import ExtendedType
@@ -151,9 +151,9 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 
 	def __len__(self) -> int:
 		"""
-		Returns the number of outbound directed edges and undirected edges.
+		Returns the number of outbound directed edges.
 
-		:return: Number of outbound edges.
+		:returns: Number of outbound edges.
 		"""
 		return len(self._outbound)
 
@@ -213,29 +213,48 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		for edge in self._inbound:
 			yield edge.Source
 
-	def IterateVertexesBFS(self):
+	def IterateVertexesBFS(self) -> Generator['Vertex', None, None]:
+		"""
+		A generator to iterate all reachable vertexes starting from this node in breadth-first search (BFS) order.
+
+		.. seealso::
+
+		   :py:meth:`IterateVertexesDFS` |br|
+		      |rarr| Iterate all reachable vertexes DFS order.
+
+		:returns: A generator to iterate vertexes traversed in BFS order.
+		"""
 		visited: Set[Vertex] = set()
 		queue: Deque[Vertex] = deque()
 
 		yield self
 		visited.add(self)
 		for edge in self._outbound:
-			destinationVertex = edge.Destination
-			if destinationVertex not in visited:
-				queue.appendleft(destinationVertex)
-				visited.add(destinationVertex)
+			nextVertex = edge.Destination
+			if nextVertex is not self:
+				queue.appendleft(nextVertex)
+				visited.add(nextVertex)
 
 		while queue:
 			vertex = queue.pop()
 			yield vertex
-			visited.add(vertex)
 			for edge in vertex._outbound:
-				destinationVertex = edge.Destination
-				if destinationVertex not in visited:
-					queue.appendleft(destinationVertex)
-				visited.add(destinationVertex)
+				nextVertex = edge.Destination
+				if nextVertex not in visited:
+					queue.appendleft(nextVertex)
+				visited.add(nextVertex)
 
-	def IterateVertexesDFS(self):
+	def IterateVertexesDFS(self) -> Generator['Vertex', None, None]:
+		"""
+		A generator to iterate all reachable vertexes starting from this node in depth-first search (DFS) order.
+
+		.. seealso::
+
+		   :py:meth:`IterateVertexesBFS` |br|
+		      |rarr| Iterate all reachable vertexes BFS order.
+
+		:returns: A generator to iterate vertexes traversed in DFS order.
+		"""
 		visited: Set[Vertex] = set()
 		stack: List[typing_Iterator[Edge]] = list()
 
@@ -246,12 +265,12 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		while True:
 			try:
 				edge = next(stack[-1])
-				destinationVertex = edge._destination
-				if destinationVertex not in visited:
-					visited.add(destinationVertex)
-					yield destinationVertex
-					if len(destinationVertex._outbound) != 0:
-						stack.append(iter(destinationVertex._outbound))
+				nextVertex = edge._destination
+				if nextVertex not in visited:
+					visited.add(nextVertex)
+					yield nextVertex
+					if len(nextVertex._outbound) != 0:
+						stack.append(iter(nextVertex._outbound))
 			except StopIteration:
 				stack.pop()
 

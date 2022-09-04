@@ -101,7 +101,7 @@ def getsizeof(obj: Any) -> int:
 	   * `Python __slots__, slots, and object layout <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>`__ (MIT Lizense)
 
 	:param obj: Object to calculate the size of.
-	:return:    True size of an object in bytes.
+	:returns:   True size of an object in bytes.
 	"""
 	from sys import getsizeof as sys_getsizeof
 
@@ -112,7 +112,7 @@ def getsizeof(obj: Any) -> int:
 		Nested function for recursion.
 
 		:param obj: Subobject to calculate the size of.
-		:return:    Size of a subobject in bytes.
+		:returns:   Size of a subobject in bytes.
 		"""
 		# If already visited, return 0 bytes, so no additional bytes are accumulated
 		objectID = id(obj)
