@@ -88,7 +88,7 @@ class Construction(TestCase):
 
 
 class Iterate(TestCase):
-	_edges = [
+	_edgesForGraph1 = [
 		(0, 1, 0), (0, 9, 0),
 		(1, 8, 0),
 		(2, 8, 0),
@@ -102,13 +102,28 @@ class Iterate(TestCase):
 		(12, 2, 0), (12, 8, 0),
 		(13, 14, 0),
 	]
+	_edgesForGraph2 = [
+		(0, 1, 0), (0, 2, 0), (0, 3, 0),
+		(1, 2, 0), (1, 10, 0),
+		(2, 7, 0), (2, 8, 0),
+		(3, 2, 0), (3, 4, 0),
+		(4, 5, 0), (4, 7, 0),
+		(5, 6, 0), (5, 7, 0),
+		(6, 0, 0), (6, 3, 0), (6, 7, 0), (6, 13, 0),
+		(7, 11, 0), (7, 12, 0),
+		(8, 1, 0), (8, 10, 0), (8, 11, 0),
+		(9, 3, 0), (9, 6, 0),
+		(11, 4, 0), (11, 10, 0), (11, 14, 0),
+		(13, 14, 0),
+		(14, 10, 0),
+	]
 
 	def test_DFS(self):
 		g = Graph()
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
 		v0 = vList[0]
 
-		for u, v, w in self._edges:
+		for u, v, w in self._edgesForGraph1:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 1, 8, 7, 3, 2, 4, 5, 6, 10, 9, 11], [v.ID for v in v0.IterateVertexesDFS()])
@@ -118,7 +133,19 @@ class Iterate(TestCase):
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
 		v0 = vList[0]
 
-		for u, v, w in self._edges:
+		for u, v, w in self._edgesForGraph1:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVertexesBFS()])
+
+	def test_ShortestPathByHops(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+		v0 = vList[0]
+
+		for u, v, w in self._edgesForGraph2:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v in v0.ShortestPathToByHops(vList[14])])
+		with self.assertRaises(KeyError):
+			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])

@@ -34,6 +34,7 @@ A **graph** data structure can be constructed of :py:class:`~pyTooling.Graph.Ver
 :py:class:`~pyTooling.Graph.Edge` (link) instances.
 """
 from collections import deque
+from dataclasses import dataclass
 from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, \
 	Iterator as typing_Iterator, Set, Deque, Generator
 
@@ -278,8 +279,72 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 					return
 
 	def ShortestPathToByHops(self, destination: 'Vertex'):
-		raise NotImplementedError()
-		# BFS
+		# BFS based algorithm
+
+		# Trivial case if start is destination
+		if self is destination:
+			yield self
+			return
+
+		# Local struct to create a linked list of paths to a starting point
+		@dataclass
+		class Node:
+			parent: 'Node'
+			ref: Vertex
+
+			def __str__(self):
+				return f"Vertex: {self.ref.ID}"
+
+		# Initially add all reachable vertexes to a queue if vertexes to be processed.
+		startNode = Node(None, self)
+		visited: Set[Vertex] = set()
+		queue: Deque[Node] = deque()
+
+		visited.add(self)
+		for edge in self._outbound:
+			nextVertex = edge.Destination
+			if nextVertex is destination:
+				destinationNode = Node(startNode, nextVertex)
+				break
+			if nextVertex is not self:
+				#print(f"Add visited: {nextVertex}")
+				visited.add(nextVertex)
+				queue.appendleft(Node(startNode, nextVertex))
+		else:
+			# Process queue until destination is found or no further vertexes are reachable
+			while queue:
+				node = queue.pop()
+				for edge in node.ref._outbound:
+					nextVertex = edge.Destination
+					if nextVertex is destination:
+						destinationNode = Node(node, nextVertex)
+						break
+					if nextVertex not in visited:
+						#print(f"Add visited: {nextVertex}")
+						visited.add(nextVertex)
+						queue.appendleft(Node(node, nextVertex))
+				else:
+					continue
+				break
+			else:
+				raise KeyError(f"Destination is not reachable.")
+
+		# Reverse order of linked list from destinationNode to startNode
+		currentNode = destinationNode
+		previousNode = destinationNode.parent
+		currentNode.parent = None
+		while previousNode is not None:
+			node = previousNode.parent
+			previousNode.parent = currentNode
+			currentNode = previousNode
+			previousNode = node
+
+		# Scan reversed linked-list and yield referenced vertexes
+		yield startNode.ref
+		node = startNode.parent
+		while node is not None:
+			yield node.ref
+			node = node.parent
 
 	def ShortestPathToByWeight(self, destination: 'Vertex'):
 		raise NotImplementedError()
