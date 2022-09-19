@@ -33,10 +33,10 @@
 A **graph** data structure can be constructed of :py:class:`~pyTooling.Graph.Vertex` (node) and
 :py:class:`~pyTooling.Graph.Edge` (link) instances.
 """
+import heapq
 from collections import deque
-from dataclasses import dataclass
 from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, \
-	Iterator as typing_Iterator, Set, Deque, Generator
+	Iterator as typing_Iterator, Set, Deque, Generator, Iterator
 
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import ExtendedType
@@ -158,35 +158,36 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		"""
 		return len(self._outbound)
 
-	def LinkToVertex(self, vertex: 'Vertex', edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
+	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		if not isinstance(vertex, Vertex):
 			raise Exception()
 
-		edge = Edge(self, vertex, edgeWeight, edgeValue)
+		# TODO: set edgeID
+		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
 
-	def LinkFromVertex(self, vertex: 'Vertex', edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
+	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		if not isinstance(vertex, Vertex):
 			raise Exception()
 
-		edge = Edge(vertex, self, edgeWeight, edgeValue)
+		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
 
-	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
+	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexData, self._graph)
 
-		edge = Edge(self, vertex, edgeWeight, edgeValue)
+		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
 
 		return vertex
 
-	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
+	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexData, self._graph)
 
-		edge = Edge(vertex, self, edgeWeight, edgeValue)
+		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
 
@@ -254,6 +255,8 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		   :py:meth:`IterateVertexesBFS` |br|
 		      |rarr| Iterate all reachable vertexes BFS order.
 
+		   Wikipedia - https://en.wikipedia.org/wiki/Depth-first_search
+
 		:returns: A generator to iterate vertexes traversed in DFS order.
 		"""
 		visited: Set[Vertex] = set()
@@ -278,7 +281,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 				if len(stack) == 0:
 					return
 
-	def ShortestPathToByHops(self, destination: 'Vertex'):
+	def ShortestPathToByHops(self, destination: 'Vertex') -> Generator['Vertex', None, None]:
 		# BFS based algorithm
 
 		# Trivial case if start is destination
@@ -286,11 +289,16 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 			yield self
 			return
 
-		# Local struct to create a linked list of paths to a starting point
-		@dataclass
-		class Node:
+		# Local struct to create multiple linked-lists forming a paths from current node back to the starting point
+		# (actually a tree). Each node holds a reference to the vertex it represents.
+		# Hint: slotted classes are faster than '@dataclasses.dataclass'.
+		class Node(metaclass=ExtendedType, useSlots=True):
 			parent: 'Node'
 			ref: Vertex
+
+			def __init__(self, parent: 'Node', ref: Vertex):
+				self.parent = parent
+				self.ref = ref
 
 			def __str__(self):
 				return f"Vertex: {self.ref.ID}"
@@ -300,33 +308,40 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		visited: Set[Vertex] = set()
 		queue: Deque[Node] = deque()
 
+		# Add starting vertex and all its children to the processing list.
+		# If a child is the destination, break immediately else go into 'else' branch and use BFS algorithm.
 		visited.add(self)
 		for edge in self._outbound:
 			nextVertex = edge.Destination
 			if nextVertex is destination:
+				# Child is destination, so construct the last node for path traversal and break from loop.
 				destinationNode = Node(startNode, nextVertex)
 				break
 			if nextVertex is not self:
-				#print(f"Add visited: {nextVertex}")
+				# Ignore backward-edges and side-edges.
+				# Here self-edges, because there is only the starting vertex in the list of visited edges.
 				visited.add(nextVertex)
 				queue.appendleft(Node(startNode, nextVertex))
 		else:
-			# Process queue until destination is found or no further vertexes are reachable
+			# Process queue until destination is found or no further vertexes are reachable.
 			while queue:
 				node = queue.pop()
 				for edge in node.ref._outbound:
 					nextVertex = edge.Destination
+					# Next reachable vertex is destination, so construct the last node for path traversal and break from loop.
 					if nextVertex is destination:
 						destinationNode = Node(node, nextVertex)
 						break
+					# Ignore backward-edges and side-edges.
 					if nextVertex not in visited:
-						#print(f"Add visited: {nextVertex}")
 						visited.add(nextVertex)
 						queue.appendleft(Node(node, nextVertex))
+				# Next 3 lines realize a double-break if break was called in inner loop, otherwise continue with outer loop.
 				else:
 					continue
 				break
 			else:
+				# All reachable vertexes have been processed, but destination was not among them.
 				raise KeyError(f"Destination is not reachable.")
 
 		# Reverse order of linked list from destinationNode to startNode
@@ -346,12 +361,95 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 			yield node.ref
 			node = node.parent
 
-	def ShortestPathToByWeight(self, destination: 'Vertex'):
-		raise NotImplementedError()
-		# Dijkstra
-		# Bellman-Ford
-		# Floyd-Warshall
-		# A*
+	def ShortestPathToByWeight(self, destination: 'Vertex') -> Generator['Vertex', None, None]:
+		# Dijkstra + heapq
+		# Improvements: both-sided Dijkstra (search from start and destination to reduce discovered area.
+
+		# Trivial case if start is destination
+		if self is destination:
+			yield self
+			return
+
+		# Local struct to create multiple-linked lists forming a paths from current node back to the starting point
+		# (actually a tree). Each node holds the overall weight from start to current node and a reference to the vertex it
+		# represents.
+		# Hint: slotted classes are faster than '@dataclasses.dataclass'.
+		class Node(metaclass=ExtendedType, useSlots=True):
+			parent: 'Node'
+			distance: EdgeWeightType
+			ref: Vertex
+
+			def __init__(self, parent: 'Node', distance: EdgeWeightType, ref: Vertex):
+				self.parent = parent
+				self.distance = distance
+				self.ref = ref
+
+			def __lt__(self, other):
+				return self.distance < other.distance
+
+			def __str__(self):
+				return f"Vertex: {self.ref.ID}"
+
+		visited: Set['Vertex'] = set()
+		startNode = Node(None, 0, self)
+		priorityQueue = [startNode]
+
+		# Add starting vertex and all its children to the processing list.
+		# If a child is the destination, break immediately else go into 'else' branch and use Dijkstra algorithm.
+		visited.add(self)
+		for edge in self._outbound:
+			nextVertex = edge.Destination
+			# Child is destination, so construct the last node for path traversal and break from loop.
+			if nextVertex is destination:
+				destinationNode = Node(startNode, edge._weight, nextVertex)
+				break
+			# Ignore backward-edges and side-edges.
+			# Here self-edges, because there is only the starting vertex in the list of visited edges.
+			if nextVertex is not self:
+				visited.add(nextVertex)
+				heapq.heappush(priorityQueue, Node(startNode, edge._weight, nextVertex))
+		else:
+			# Process priority queue until destination is found or no further vertexes are reachable.
+			while priorityQueue:
+				node = heapq.heappop(priorityQueue)
+				for edge in node.ref._outbound:
+					nextVertex = edge.Destination
+					# Next reachable vertex is destination, so construct the last node for path traversal and break from loop.
+					if nextVertex is destination:
+						destinationNode = Node(node, node.distance + edge._weight, nextVertex)
+						break
+					# Ignore backward-edges and side-edges.
+					if nextVertex not in visited:
+						visited.add(nextVertex)
+						heapq.heappush(priorityQueue, Node(node, node.distance + edge._weight, nextVertex))
+				# Next 3 lines realize a double-break if break was called in inner loop, otherwise continue with outer loop.
+				else:
+					continue
+				break
+			else:
+				# All reachable vertexes have been processed, but destination was not among them.
+				raise KeyError(f"Destination is not reachable.")
+
+		# Reverse order of linked-list from destinationNode to startNode
+		currentNode = destinationNode
+		previousNode = destinationNode.parent
+		currentNode.parent = None
+		while previousNode is not None:
+			node = previousNode.parent
+			previousNode.parent = currentNode
+			currentNode = previousNode
+			previousNode = node
+
+		# Scan reversed linked-list and yield referenced vertexes
+		yield (startNode.ref, startNode.distance)
+		node = startNode.parent
+		while node is not None:
+			yield (node.ref, node.distance)
+			node = node.parent
+
+		# Other possible algorithms:
+		# * Bellman-Ford
+		# * Floyd-Warshall
 
 	def PathExistsTo(self, destination: 'Vertex'):
 		raise NotImplementedError()
@@ -513,6 +611,12 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 
 	def __len__(self) -> int:
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
+
+	def __iter__(self) -> Iterator[Vertex]:
+		def gen():
+			yield from self._verticesWithoutID
+			yield from self._verticesWithID
+		return iter(gen())
 
 	def IterateBFS(self):
 		raise NotImplementedError()
