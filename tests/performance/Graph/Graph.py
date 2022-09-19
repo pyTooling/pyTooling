@@ -30,6 +30,7 @@
 #
 """Performance tests for pyTooling.Graph."""
 from pathlib import Path
+from statistics import mean
 
 from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex
 from . import PerformanceTest
@@ -77,16 +78,16 @@ class RandomGraph(PerformanceTest):
 				v, u, w = line.split(" ")
 				vList[int(v)].LinkToVertex(vList[int(u)], edgeWeight=int(w))
 
-		# lenBFS = []
-		# lenDFS = []
-		# for v in vList:
-		# 	bfsList = [u for u in v.IterateVertexesBFS()]
-		# 	dfsList = [u for u in v.IterateVertexesDFS()]
-		# 	lenBFS.append(len(bfsList))
-		# 	lenDFS.append(len(dfsList))
-		# 	print(f"{v}: bfs={len(bfsList)}; dfs={len(dfsList)}")
-		# print(f"BFS: min={min(lenBFS)}  avg={mean(lenBFS)}  max={max(lenBFS)}")
-		# print(f"DFS: min={min(lenDFS)}  avg={mean(lenDFS)}  max={max(lenDFS)}")
+# 		lenBFS = []
+# #		lenDFS = []
+# 		for v in vList:
+# 			bfsList = [u for u in v.IterateVertexesBFS()]
+# #			dfsList = [u for u in v.IterateVertexesDFS()]
+# 			lenBFS.append(len(bfsList))
+# #			lenDFS.append(len(dfsList))
+# #			print(f"{v}: bfs={len(bfsList)}; dfs={len(dfsList)}")
+# 		print(f"BFS: min={min(lenBFS)}  avg={mean(lenBFS)}  max={max(lenBFS)}({lenBFS.index(max(lenBFS))})")
+# #		print(f"DFS: min={min(lenDFS)}  avg={mean(lenDFS)}  max={max(lenDFS)}({lenDFS.index(max(lenDFS))})")
 
 		return graph
 
@@ -109,6 +110,42 @@ class RandomGraph(PerformanceTest):
 
 				bfsList = [v for v in rootVertex.IterateVertexesDFS()]
 				self.assertEqual(componentSize, len(bfsList))
+
+			return func
+
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+
+	def test_ShortestPathByHops(self):
+		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
+			def func():
+				startVertex = graph._verticesWithID[49]
+				destinationVertex = graph._verticesWithID[20]
+
+				try:
+					vertexPath = [v for v in startVertex.ShortestPathToByHops(destinationVertex)]
+				except KeyError:
+					pass
+
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
+
+			return func
+
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+
+	def test_ShortestPathByWeight(self):
+		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
+			def func():
+				startVertex = graph._verticesWithID[49]
+				destinationVertex = graph._verticesWithID[20]
+
+				try:
+					vertexPath = [v for v, w in startVertex.ShortestPathToByWeight(destinationVertex)]
+				except KeyError:
+					pass
+
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
 
 			return func
 

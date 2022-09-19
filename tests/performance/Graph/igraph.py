@@ -55,7 +55,7 @@ class Graph(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.counts[:-1])
 
 	def test_AddEdge_Linear(self):
 		def wrapper(count: int):
@@ -72,7 +72,7 @@ class Graph(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.counts[:-1])
 
 
 class RandomGraph(PerformanceTest):
@@ -105,6 +105,36 @@ class RandomGraph(PerformanceTest):
 				dfsList = [v for v in graph.dfsiter(componentStartVertex)]
 
 				self.assertEqual(componentSize, len(dfsList))
+
+			return func
+
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+
+	def test_ShortestPathByHops(self):
+		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
+			def func():
+				try:
+					vertexPath = graph.shortest_paths(49, 20)
+				except KeyError:
+					pass
+
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
+
+			return func
+
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+
+	def test_ShortestPathByWeight(self):
+		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
+			def func():
+				try:
+					vertexPath = graph.shortest_paths(49, 20, "weight")
+				except KeyError:
+					pass
+
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
 
 			return func
 

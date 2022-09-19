@@ -32,12 +32,12 @@
 import timeit
 from dataclasses import dataclass
 from pathlib import Path
-from statistics import mean
+from statistics import median
 from time import perf_counter_ns
-from typing import Callable, Iterable, Tuple
+from typing import Callable, Iterable
 from unittest import TestCase
 
-from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex
+from pyTooling.Graph import Graph as pt_Graph
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -71,15 +71,15 @@ class PerformanceTest(TestCase):
 
 	def runSizedTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
-		print(f"            min           avg           max")
+		print(f"            min           median        max")
 		for count in counts:
 			results = timeit.repeat(func(count), repeat=20, number=50)
 			norm = count / 10
-			print(f"{count:>6}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s")
+			print(f"{count:>6}x: {min(results)/norm:.6f} s    {median(results)/norm:.6f} s    {max(results)/norm:.6f} s")
 
 	def runFileBasedTests(self, setup: Callable[[Path, int], pt_Graph], func: Callable[[pt_Graph, int, int], Callable[[], None]], edgeFiles: Iterable[EdgeFile]):
 		print()
-		print(f"            min           avg           max           construct")
+		print(f"            min           median        max           construct")
 		for edgeFile in edgeFiles:
 			file = Path("tests/data/Graph/EdgeLists") / edgeFile.file
 
@@ -89,4 +89,4 @@ class PerformanceTest(TestCase):
 
 			results = timeit.repeat(func(graph, edgeFile.biggestNetwork.startNodeID, edgeFile.biggestNetwork.size), repeat=20, number=50)
 			norm = edgeFile.biggestNetwork.size
-			print(f"{edgeFile.vertexCount:>6}x: {min(results) / norm:.6f} s    {mean(results) / norm:.6f} s    {max(results) / norm:.6f} s    {construct / norm:.6f} s")
+			print(f"{edgeFile.vertexCount:>6}x: {min(results) / norm:.6f} s    {median(results) / norm:.6f} s    {max(results) / norm:.6f} s    {construct / norm:.6f} s")

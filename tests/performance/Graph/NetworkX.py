@@ -31,7 +31,8 @@
 """Performance tests for pyTooling.Graph."""
 from pathlib import Path
 
-from networkx import DiGraph as nx_DiGraph, dfs_preorder_nodes, bfs_predecessors
+import networkx.exception
+from networkx import DiGraph as nx_DiGraph, dfs_preorder_nodes, bfs_predecessors, shortest_path
 
 from . import PerformanceTest
 
@@ -103,6 +104,36 @@ class RandomGraph(PerformanceTest):
 				dfsList = [v for v in dfs_preorder_nodes(graph, componentStartVertex)]
 
 				self.assertEqual(componentSize, len(dfsList))
+
+			return func
+
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+
+	def test_ShortestPathByHops(self):
+		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
+			def func():
+				try:
+					vertexPath = shortest_path(graph, 49, 20)
+				except networkx.exception.NetworkXNoPath:
+					pass
+
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
+
+			return func
+
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+
+	def test_ShortestPathByWeight(self):
+		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
+			def func():
+				try:
+					vertexPath = shortest_path(graph, 49, 20, "weight")
+				except networkx.exception.NetworkXNoPath:
+					pass
+
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
 
 			return func
 
