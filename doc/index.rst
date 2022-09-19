@@ -261,6 +261,7 @@ License
    :caption: Appendix
    :hidden:
 
+   UnitTest Report ➚ <unittests/index>
    Coverage Report ➚ <coverage/index>
    Static Type Check Report ➚ <typing/index>
    License
