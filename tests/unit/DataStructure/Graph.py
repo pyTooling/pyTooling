@@ -103,19 +103,19 @@ class Iterate(TestCase):
 		(13, 14, 0),
 	]
 	_edgesForGraph2 = [
-		(0, 1, 0), (0, 2, 0), (0, 3, 0),
-		(1, 2, 0), (1, 10, 0),
-		(2, 7, 0), (2, 8, 0),
-		(3, 2, 0), (3, 4, 0),
-		(4, 5, 0), (4, 7, 0),
-		(5, 6, 0), (5, 7, 0),
-		(6, 0, 0), (6, 3, 0), (6, 7, 0), (6, 13, 0),
-		(7, 11, 0), (7, 12, 0),
-		(8, 1, 0), (8, 10, 0), (8, 11, 0),
-		(9, 3, 0), (9, 6, 0),
-		(11, 4, 0), (11, 10, 0), (11, 14, 0),
-		(13, 14, 0),
-		(14, 10, 0),
+		(0, 1, 1), (0, 2, 2), (0, 3, 3),
+		(1, 2, 3), (1, 10, 3),
+		(2, 7, 20), (2, 8, 6),
+		(3, 2, 1), (3, 4, 1),
+		(4, 5, 1), (4, 7, 1),
+		(5, 6, 1), (5, 7, 1),
+		(6, 0, 4), (6, 3, 2), (6, 7, 5), (6, 13, 8),
+		(7, 11, 6), (7, 12, 1),
+		(8, 1, 5), (8, 10, 1), (8, 11, 16),
+		(9, 3, 4), (9, 6, 1),
+		(11, 4, 4), (11, 10, 4), (11, 14, 1),
+		(13, 14, 3),
+		(14, 10, 9),
 	]
 
 	def test_DFS(self):
@@ -147,5 +147,29 @@ class Iterate(TestCase):
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v in v0.ShortestPathToByHops(vList[14])])
+		with self.assertRaises(KeyError):
+			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])
+
+	def test_ShortestPathByFixedWeight(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+		v0 = vList[0]
+
+		for u, v, _ in self._edgesForGraph2:
+			vList[u].LinkToVertex(vList[v], edgeWeight=1)
+
+		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v, w in v0.ShortestPathToByWeight(vList[14])])
+		with self.assertRaises(KeyError):
+			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])
+
+	def test_ShortestPathByWeight(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+		v0 = vList[0]
+
+		for u, v, w in self._edgesForGraph2:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertListEqual([0, 3, 4, 5, 6, 13, 14], [v.ID for v, w in v0.ShortestPathToByWeight(vList[14])])
 		with self.assertRaises(KeyError):
 			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])
