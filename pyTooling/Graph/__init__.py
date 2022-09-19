@@ -28,10 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A powerful graph data structure for Python.
+"""
+A powerful **graph** data structure for Python.
 
-A **graph** data structure can be constructed of :py:class:`~pyTooling.Graph.Vertex` (node) and
-:py:class:`~pyTooling.Graph.Edge` (link) instances.
+Graph algorithms using all vertexes are provided as methods on the graph instance. Whereas graph algorithms based on a
+starting vertex are provided as methods on a vertex.
 """
 import heapq
 from collections import deque
@@ -78,9 +79,9 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 @export
 class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
-	"""A graph data structure is constructed of nodes called ``Vertex`` s and :py:class:`Edges <pyTooling.Graph.Edge>`.
-
-
+	"""
+	A **vertex** can have a unique ID, a value and attached meta information as key-value pairs. A vertex has references
+	to inbound and outbound edges, thus a graph can be traversed in reverse.
 	"""
 	_graph:     'Graph[VertexIDType, EdgeIDType]'
 	_inbound:   List['Edge']
@@ -500,6 +501,10 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 
 @export
 class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]):
+	"""
+	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value pairs. All edges are
+	directed.
+	"""
 	_id:          Nullable[EdgeIDType]
 	_source:      Vertex
 	_destination: Vertex
@@ -571,6 +576,11 @@ class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, E
 
 @export
 class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
+	"""
+	A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to
+	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
+	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value pairs.
+	"""
 	_name:              str
 	_verticesWithID:    Dict[VertexIDType, Vertex]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
