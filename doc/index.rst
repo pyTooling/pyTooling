@@ -245,13 +245,16 @@ License
 
 .. raw:: latex
 
-   \part{References}
+   \part{References and Reports}
 
 .. toctree::
-   :caption: References
+   :caption: References and Reports
    :hidden:
 
-   pyTooling/index
+   pyTooling/pyTooling
+   Unittest Report ➚ <unittests/index>
+   Coverage Report ➚ <coverage/index>
+   Static Type Check Report ➚ <typing/index>
 
 .. raw:: latex
 
@@ -261,11 +264,8 @@ License
    :caption: Appendix
    :hidden:
 
-   UnitTest Report ➚ <unittests/index>
-   Coverage Report ➚ <coverage/index>
-   Static Type Check Report ➚ <typing/index>
    License
    Doc-License
    Glossary
    genindex
-   py-modindex
+   Python Module Index <modindex>
