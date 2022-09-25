@@ -114,7 +114,7 @@ class RandomGraph(PerformanceTest):
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
-					vertexPath = graph.shortest_paths(49, 20)
+					vertexPath = graph.distances(49, 20)
 				except KeyError:
 					pass
 
@@ -129,7 +129,7 @@ class RandomGraph(PerformanceTest):
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
-					vertexPath = graph.shortest_paths(49, 20, "weight")
+					vertexPath = graph.distances(49, 20, "weight")
 				except KeyError:
 					pass
 
