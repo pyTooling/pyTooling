@@ -33,6 +33,7 @@ jobs:
       - Params
     with:
       jobs: ${{ needs.Params.outputs.python_jobs }}
+      requirements: '-r tests/performance/requirements.txt'
 #      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
       unittest_directory: 'tests/performance'
       pacboy: >-
@@ -50,6 +51,7 @@ jobs:
       - Params
     with:
       jobs: ${{ needs.Params.outputs.python_jobs }}
+      requirements: '-r tests/benchmark/requirements.txt'
 #      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
       unittest_directory: 'tests/benchmark'
       pacboy: >-

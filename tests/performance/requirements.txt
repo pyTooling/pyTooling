@@ -1,0 +1,9 @@
+-r ../requirements.txt
+
+# For performance testing of Node (tree)
+anytree>=2.8.0
+itertree>=0.8.2
+
+# For performance testing of Vertex (graph)
+networkx>=2.8.6
+python-igraph>=0.10.1
