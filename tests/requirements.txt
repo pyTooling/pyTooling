@@ -1,7 +1,7 @@
 -r ../requirements.txt
 
 # Coverage collection
-Coverage>=6.3
+Coverage>=6.4
 
 # Test Runner
 pytest>=7.1.2
@@ -9,7 +9,7 @@ pytest-cov>=3.0.0
 pytest-benchmark>=3.4.1
 
 # Static Type Checking
-mypy>=0.961
+mypy>=0.971
 lxml>=4.9
 
 # For pyTooling.Configuration.YAML testing
@@ -20,5 +20,5 @@ anytree>=2.8.0
 itertree>=0.8.2
 
 # For performance testing of Vertex (graph)
-networkx>=2.8.5
-python-igraph>=1.6.2
+networkx>=2.8.6
+python-igraph>=0.10.1
