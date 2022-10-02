@@ -1,70 +1,86 @@
 .. _COMMON:
+.. _COMMON/HelperFunctions:
 
-Overview
-########
+Helper Functions
+################
 
-.. _COMMON/CurrentPlatform:
+.. _COMMON/Helper/getsizeof:
 
-Current Platform
-****************
+getsizeof
+*********
 
-The module variable :py:data:`~pyTooling.Common.CurrentPlatform` contains a singleton instance of
-:py:class:`~pyTooling.Common.Platform.Platform`, which abstracts and unifies multiple platform APIs of Python into a
-single class instance.
+The :py:func:`~pyTooling.Common.getsizeof` functions returns the "true" size of a Python object including auxiliary data
+structures.
 
 .. rubric:: Example
 
 .. admonition:: example.py
 
-   .. code-block:: python
+   .. code-block:: Python
 
-      from pyTooling.Common import CurrentPlatform
+      class A:
+        _data : int
 
-      # Check for a native Linux platform
-      if CurrentPlatform.IsNativeLinux:
-        pass
+        def __init__(self):
+          _data = 5
 
-.. admonition:: unittest.py
+      from pyTooling.Common import getsizeof
+      a = A()
+      print(getsizeof(a))
 
-   .. code-block:: python
+.. rubric:: Details
 
-      from pyTooling.Common import CurrentPlatform
+In addition to :py:func:`sys.getsizeof`, the used algorithm accounts also for:
 
-      class MyTestCase(TestCase):
-        @mark.skipif(not CurrentPlatform.IsMinGW64OnWindows, reason="Skipped when platform isn't MinGW64.")
-        def test_OnMinGW64(self) -> None:
-          pass
+* ``__dict__``
+* ``__slots__``
+* iterable members made of:
 
-.. rubric:: Supported platforms
+  * :py:class:`tuple`
+  * :py:class:`list`
+  * :py:class:`typing.Set`
+  * :py:class:`collection.deque`
 
-* Native
+.. admonition:: Background Information
 
-  * Linux (x86-64)
-  * macOS (x86-64)
-  * Windows (x86-64)
-
-* MSYS2 (on Windows)
-
-  * MSYS
-  * Clang64
-  * MinGW32
-  * MinGW64
-  * UCRT64
-
-* Cygwin
-
-.. seealso::
-
-   :py:class:`~pyTooling.Common.Platform.Platform`
-     |rarr| ``Is...`` properties describing a platform (and environment) the current Python program is running on.
+   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
+   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 
-.. _COMMON/HelperFunctions:
+.. _COMMON/Helper/isnestedclass:
 
-Helper Functions
-****************
+isnestedclass
+*************
 
-* The :py:func:`~pyTooling.Common.isnestedclass` functions returns true, if a class is a nested class inside another
-  class.
-* The :py:func:`~pyTooling.Common.getsizeof` functions returns the "true" size of a Python object including auxillary
-  data structures like ``_dict__``.
+The :py:func:`~pyTooling.Common.isnestedclass` functions returns true, if a class is a nested class inside another
+class.
+
+.. rubric:: Example
+
+.. admonition:: example.py
+
+   .. code-block:: Python
+
+      class A:
+        class N:
+          _data : int
+
+          def __init__(self):
+            _data = 5
+
+      N = A.N
+      print(isnestedclass(N, A))
+
+.. _COMMON/Helper/mergedicts:
+
+mergedicts
+**********
+
+.. todo:: Needs documentation.
+
+.. _COMMON/Helper/zipdicts:
+
+zipdicts
+********
+
+.. todo:: Needs documentation.

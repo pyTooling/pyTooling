@@ -26,7 +26,7 @@ pyTooling Documentation
 #######################
 
 **pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
-exceptions. It also provides helper functions to ease the handling of package descriptions.
+exceptions. It also provides lots of helper functions e.g. to ease the handling of package descriptions.
 
 It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
 
@@ -46,6 +46,17 @@ GHA-based CI pipelines for Python projects.
 
 Package Details
 ***************
+
+Common Functions
+================
+
+This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
+
+* :ref:`COMMON/Helper/getsizeof` calculates the "real" size of a data structure.
+* :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
+* :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
+* :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
+
 
 Common Classes
 ==============

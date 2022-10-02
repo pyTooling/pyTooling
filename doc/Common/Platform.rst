@@ -26,6 +26,71 @@ This class gives detailed platform information about the environment the Python 
    * :py:func:`platform.architecture`
 
 
+.. _COMMON/CurrentPlatform:
+
+Current Platform
+****************
+
+The module variable :py:data:`pyTooling.Common.CurrentPlatform` contains a singleton instance of
+:py:class:`~pyTooling.Common.Platform.Platform`, which abstracts and unifies multiple platform APIs of Python into a
+single class instance.
+
+.. rubric:: Supported platforms
+
+* Native
+
+  * Linux (x86-64)
+  * macOS (x86-64)
+  * Windows (x86-64)
+
+* MSYS2 (on Windows)
+
+  * MSYS
+  * Clang64
+  * MinGW32
+  * MinGW64
+  * UCRT64
+
+* Cygwin
+
+.. seealso::
+
+   :py:class:`~pyTooling.Common.Platform.Platform`
+     |rarr| ``Is...`` properties describing a platform (and environment) the current Python program is running on.
+
+
+.. _COMMON/CurrentPlatform/Usecases:
+
+Usecase: Platform Specific Code
+===============================
+
+.. rubric:: Example
+
+.. admonition:: example.py
+
+   .. code-block:: python
+
+      from pyTooling.Common import CurrentPlatform
+
+      # Check for a native Linux platform
+      if CurrentPlatform.IsNativeLinux:
+        pass
+
+Usecase: Platform Specific Tests
+================================
+
+.. admonition:: unittest.py
+
+   .. code-block:: python
+
+      from pyTooling.Common import CurrentPlatform
+
+      class MyTestCase(TestCase):
+        @mark.skipif(not CurrentPlatform.IsMinGW64OnWindows, reason="Skipped when platform isn't MinGW64.")
+        def test_OnMinGW64(self) -> None:
+          pass
+
+
 .. _COMMON/Platform/Architectures:
 
 Architectures
