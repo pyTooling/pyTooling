@@ -5,6 +5,10 @@ Platform
 
 This class gives detailed platform information about the environment the Python program or script is running in.
 
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
 .. admonition:: Background Information
 
    Python has several ways in finding out what platform is running underneath of Python. Some information are provided
@@ -64,7 +68,7 @@ single class instance.
 Usecase: Platform Specific Code
 ===============================
 
-.. rubric:: Example
+.. rubric:: Example:
 
 .. admonition:: example.py
 

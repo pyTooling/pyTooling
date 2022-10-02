@@ -90,7 +90,7 @@ information as properties.
 PackageDescriptions
 ###################
 
-.. rubric:: Example
+.. rubric:: Example:
 
 .. code-block:: Python
 

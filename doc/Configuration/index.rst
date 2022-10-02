@@ -5,6 +5,10 @@ Configuration
 
 Module :py:mod:`~pyTooling.Configuration` provides an abstract configuration reader.
 
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
 It supports any configuration file syntax, which provides:
 
 * scalar elements (integer, string, ...),

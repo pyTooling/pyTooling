@@ -5,6 +5,10 @@ Licensing
 
 The :py:mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses.
 
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
 .. admonition:: Background Information
 
    There are several names, identifiers and (Python package) classifiers referring to the same license. E.g. package
@@ -15,7 +19,7 @@ The :py:mod:`pyTooling.Licensing` package provides auxiliary classes to represen
    The package :py:mod:`pyTooling.Licensing` provides license name and identifiers mappings to unify all these names and
    classifiers to and from `SPDX identifiers <https://spdx.org/licenses/>`__.
 
-   .. rubric:: Examples
+   .. rubric:: Examples:
 
    +------------------+------------------------------+------------------+--------------------------------------------------------+
    | SDPX Identifier  | Official License Name        | License Name     | Python package classifier                              |

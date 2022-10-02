@@ -3,8 +3,15 @@
 Tree
 ####
 
-:py:class:`~pyTooling.Tree.Node` implements a fast and simple tree data structure, which outperforms
-:gh:`anytree <c0fec0de/anytree>` and :gh:`itertree <BR1py/itertree>`.
+The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structure based on a single
+:py:class:`~pyTooling.Tree.Node` class, which outperforms :gh:`anytree <c0fec0de/anytree>` and
+:gh:`itertree <BR1py/itertree>`.
+
+.. contents:: Table of Contents
+   :local:
+   :depth: 2
+
+.. rubric:: Comprehensive Example:
 
 The following example code demonstrates a few features in a compact form:
 
@@ -139,7 +146,7 @@ Value
 =====
 
 A node's value can be given at node creating time or it can be set ant any later time via property
-:py:attr:`~pyTooling.Tree.Node.Value`. Any data type is accepted. The internally stored value can be retrieved via the
+:py:attr:`~pyTooling.Tree.Node.Value`. Any data type is accepted. The internally stored value can be retrieved by the
 same property. If a node's string representation is requested via :py:meth:`~pyTooling.Tree.Node.__str__` and a node's
 value isn't None, then the value's string representation is returned.
 

@@ -4,6 +4,13 @@
 Helper Functions
 ################
 
+The :py:mod:`pyTooling.Common` package contains several useful helper functions, which are explained in the following
+sections.
+
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
 .. _COMMON/Helper/getsizeof:
 
 getsizeof
@@ -12,7 +19,7 @@ getsizeof
 The :py:func:`~pyTooling.Common.getsizeof` functions returns the "true" size of a Python object including auxiliary data
 structures.
 
-.. rubric:: Example
+.. rubric:: Example:
 
 .. admonition:: example.py
 
@@ -55,7 +62,7 @@ isnestedclass
 The :py:func:`~pyTooling.Common.isnestedclass` functions returns true, if a class is a nested class inside another
 class.
 
-.. rubric:: Example
+.. rubric:: Example:
 
 .. admonition:: example.py
 
