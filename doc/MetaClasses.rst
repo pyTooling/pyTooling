@@ -5,8 +5,10 @@ Overview
 
 Currently, the following meta-classes are provided:
 
-* :ref:`META/Overloading`
-* :ref:`META/ExtendedType`
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
 
 
 .. seealso::
@@ -53,6 +55,17 @@ annotations.
 
 ExtendedType
 ############
+
+.. _META/Singleton:
+
+Singleton
+*********
+
+.. _META/Slotted:
+
+Slotted Type
+************
+
 
 .. todo::
 

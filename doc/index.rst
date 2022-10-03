@@ -131,6 +131,16 @@ Exceptions
 Meta-Classes
 ============
 
+pyTooling provides an :ref:`enhanced meta-class <META>` called :py:class:`~pyTooling.MetaClasses.ExtendedType`.
+This meta-classes allows to implemented :ref:`singletons <META/Singleton>`, :ref:`slotted types <META/Slotted>` and
+combinations thereof.
+
+A class created with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance to exist. If a
+further instance is going to be created, a cached instance of the previously created instance will be returned.
+
+The slotted type behavior is inherited to all derived classes
+
+
 * :py:class:`~pyTooling.MetaClasses.Overloading` |br|
   ``Overloading`` allows method overloading in Python classes. It dispatches method calls based on method signatures
   (type annotations).
