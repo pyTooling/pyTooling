@@ -47,8 +47,8 @@ GHA-based CI pipelines for Python projects.
 Package Details
 ***************
 
-Common Functions
-================
+Common Helper Functions
+=======================
 
 This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 
@@ -61,24 +61,30 @@ This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 Common Classes
 ==============
 
-* Emulations of :ref:`Call-by-reference parameters <COMMON/CallByRef>` are provided by the :py:mod:`pyTooling.CallByRef` module.
-* Classes representing :ref:`unifyed license names <LICENSING>` and mappings are provided by the :py:mod:`pyTooling.Licensing` module.
-* The :ref:`current platform/environment <COMMON/Platform>` Python is running in, can be access unifying multiple platform APIs
-  provided by Python and summarizing the information in a single class instance.
-* :ref:`Representations of version numbers <VERSIONING>` |br|
-  |rarr| Class representations of semantic version (SemVer) and calendar version (CalVer) numbers are provided by the
-  :py:mod:`pyTooling.Versioning` module.
+* Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. This behavior can be
+  emulated with classes provided by the :py:mod:`pyTooling.CallByRef` module.
+* Setuptools, PyPI, and others have a varying understanding of license names. The :py:mod:`pyTooling.Licensing` module
+  provides :ref:`unifyed license names <LICENSING>` as well as license name mappings or translations.
+* Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
+  Unfortunately, non of the provided standard APIs offers a comprehensive answer. pyTooling provides a
+  :ref:`unified platform and environment description <COMMON/Platform>` by summarizing multiple platform APIs into a
+  single class instance.
+* While Python itself has a good versioning schema, there is no class provided to abstract a version number. pyTooling
+  provides such a :ref:`representations of version numbers <VERSIONING>` following semantic versioning (SemVer) and
+  calendar versioning (CalVer) schemes. It's provided in the :py:mod:`pyTooling.Versioning` module.
 
 
 Configuration
 =============
 
-Abstraction of various configuration file formats.
+Various file formats suitable for configuration information share the same features supporting: key-value pairs
+(dictionaries), sequences (lists), and simple types like string, integer and float. pyTooling provides an
+:ref:`abstract configuration file data model <CONFIG>` supporting these features. Moreover, concrete
+:ref:`configuration file format reader <CONFIG/FileFormat>` implementations are provided as well.
 
-* :ref:`Abstract configuration file data model <CONFIG>` |br|
-  |rarr| An abstract data model of configuration files supporting sequences (lists) and key-value-pairs (dictionaries).
-* :ref:`YAML configuration reader <CONFIG/FileFormat/YAML>` |br|
-  |rarr| A configuration file reader for the YAML file format.
+* :ref:`JSON configuration reader <CONFIG/FileFormat/JSON>` |rarr| To be implemented.
+* :ref:`TOML configuration reader <CONFIG/FileFormat/TOML>`  |rarr| To be implemented.
+* :ref:`YAML configuration reader <CONFIG/FileFormat/YAML>` for the YAML file format.
 
 
 Data Structures
@@ -92,8 +98,7 @@ Fast and powerful data structures.
   |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
   class.
 * :ref:`Path data structure <STRUCT/Path>` |br|
-  |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
-  class.
+  |rarr| To be documented.
 
 .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
    |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
@@ -105,7 +110,6 @@ Decorators
 * :ref:`Documentation <DECO/Documentation>`
 
   * Copy the doc-string from given base-class via :py:class:`~pyTooling.Decorators.InheritDocString`.
-
 
 * :ref:`Visibility <DECO/Visibility>`
 

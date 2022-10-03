@@ -1,8 +1,8 @@
 .. _COMMON:
 .. _COMMON/HelperFunctions:
 
-Helper Functions
-################
+Common Helper Functions
+#######################
 
 The :py:mod:`pyTooling.Common` package contains several useful helper functions, which are explained in the following
 sections.
