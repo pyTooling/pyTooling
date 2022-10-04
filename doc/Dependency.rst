@@ -3,19 +3,15 @@
 Dependencies
 ############
 
-.. |img-pyMetaClasses-lib-status| image:: https://img.shields.io/librariesio/release/pypi/pyTooling
+.. |img-pyTooling-lib-status| image:: https://img.shields.io/librariesio/release/pypi/pyTooling
    :alt: Libraries.io status for latest release
    :height: 22
    :target: https://libraries.io/github/pyTooling/pyTooling
-.. |img-pyMetaClasses-req-status| image:: https://img.shields.io/requires/github/pyTooling/pyTooling
-   :alt: Requires.io
-   :height: 22
-   :target: https://requires.io/github/pyTooling/pyTooling/requirements/?branch=main
 
 +------------------------------------------+------------------------------------------+
-| `Libraries.io <https://libraries.io/>`_  | `Requires.io <https://requires.io/>`_    |
+| `Libraries.io <https://libraries.io/>`_  | Requires.io                              |
 +==========================================+==========================================+
-| |img-pyMetaClasses-lib-status|           | |img-pyMetaClasses-req-status|           |
+| |img-pyTooling-lib-status|               | Service was shutdown                     |
 +------------------------------------------+------------------------------------------+
 
 .. _dependency-package:

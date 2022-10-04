@@ -4,8 +4,12 @@ Tree
 ####
 
 The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structure based on a single
-:py:class:`~pyTooling.Tree.Node` class, which outperforms :gh:`anytree <c0fec0de/anytree>` and
-:gh:`itertree <BR1py/itertree>`.
+:py:class:`~pyTooling.Tree.Node` class.
+
+.. hint::
+
+   This tree data structure outperforms :gh:`anytree <c0fec0de/anytree>` by far and even :gh:`itertree <BR1py/itertree>`
+   by factor of 2.
 
 .. contents:: Table of Contents
    :local:

@@ -14,7 +14,6 @@
 <!--
 [![Gitter](https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef)](https://gitter.im/hdl/community)
 [![Dependent repos (via libraries.io)](https://img.shields.io/librariesio/dependent-repos/pypi/pyTooling?longCache=true&style=flat-square&logo=GitHub)](https://github.com/pyTooling/pyTooling/network/dependents)
-[![Requires.io](https://img.shields.io/requires/github/pyTooling/pyTooling?longCache=true&style=flat-square)](https://requires.io/github/pyTooling/pyTooling/requirements/?branch=main)
 [![Libraries.io SourceRank](https://img.shields.io/librariesio/sourcerank/pypi/pyTooling)](https://libraries.io/github/pyTooling/pyTooling/sourcerank)
 -->
 

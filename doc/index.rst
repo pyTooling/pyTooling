@@ -10,7 +10,7 @@
    |  |SHIELD:svg:pyTooling-pypi-tag| |SHIELD:svg:pyTooling-pypi-status| |SHIELD:svg:pyTooling-pypi-python|
    |  |SHIELD:svg:pyTooling-gha-test| |SHIELD:svg:pyTooling-lib-status| |SHIELD:svg:pyTooling-codacy-quality| |SHIELD:svg:pyTooling-codacy-coverage| |SHIELD:svg:pyTooling-codecov-coverage|
 
-.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:svg:pyTooling-lib-dep| |SHIELD:svg:pyTooling-req-status| |SHIELD:svg:pyTooling-lib-rank|
+.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:svg:pyTooling-lib-dep| |SHIELD:svg:pyTooling-lib-rank|
 
 .. only:: latex
 
@@ -18,7 +18,7 @@
    |SHIELD:png:pyTooling-pypi-tag| |SHIELD:png:pyTooling-pypi-status| |SHIELD:png:pyTooling-pypi-python|
    |SHIELD:png:pyTooling-gha-test| |SHIELD:png:pyTooling-lib-status| |SHIELD:png:pyTooling-codacy-quality| |SHIELD:png:pyTooling-codacy-coverage| |SHIELD:png:pyTooling-codecov-coverage|
 
-.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:png:pyTooling-lib-dep| |SHIELD:png:pyTooling-req-status| |SHIELD:png:pyTooling-lib-rank|
+.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:png:pyTooling-lib-dep| |SHIELD:png:pyTooling-lib-rank|
 
 --------------------------------------------------------------------------------
 
@@ -69,9 +69,9 @@ Common Classes
   Unfortunately, non of the provided standard APIs offers a comprehensive answer. pyTooling provides a
   :ref:`unified platform and environment description <COMMON/Platform>` by summarizing multiple platform APIs into a
   single class instance.
-* While Python itself has a good versioning schema, there is no class provided to abstract a version number. pyTooling
+* While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
   provides such a :ref:`representations of version numbers <VERSIONING>` following semantic versioning (SemVer) and
-  calendar versioning (CalVer) schemes. It's provided in the :py:mod:`pyTooling.Versioning` module.
+  calendar versioning (CalVer) schemes. It's provided by the :py:mod:`pyTooling.Versioning` module.
 
 
 Configuration
@@ -90,7 +90,7 @@ Various file formats suitable for configuration information share the same featu
 Data Structures
 ===============
 
-Fast and powerful data structures.
+pyTooling also provides fast and powerful data structures offering object-oriented APIs:
 
 * :ref:`Tree data structure <STRUCT/Tree>` |br|
   |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
