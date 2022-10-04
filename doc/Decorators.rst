@@ -1,7 +1,7 @@
 .. _DECO:
 
-.. Overview
-   ########
+Overview
+########
 
 The :py:mod:`pyTooling.Decorators` package provides decorators to:
 
@@ -40,6 +40,18 @@ Abstract Methods
 
 .. todo:: Needs documentation.
 
+.. _DECO/DataAccess:
+
+Data Access
+###########
+
+.. _DECO/classproperty:
+
+@classproperty
+**************
+
+.. warning:: Class properties are currently broken in Python.
+
 
 .. _DECO/Documentation:
 
@@ -69,6 +81,21 @@ method in the derived class.
         @InheritDocString(BaseClass)
         def method(self):
           pass
+
+
+.. _DECO/Visibility:
+
+.. _DECO/Misc:
+
+Miscellaneous
+#############
+
+.. _DECO/OriginalFunction:
+
+@OriginalFunction
+*****************
+
+.. todo:: Write documentation.
 
 
 .. _DECO/Visibility:

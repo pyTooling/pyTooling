@@ -1,7 +1,7 @@
 .. _META:
 
-.. Overview
-   ########
+Overview
+########
 
 Currently, the following meta-classes are provided:
 
@@ -19,7 +19,7 @@ Currently, the following meta-classes are provided:
 .. _META/ExtendedType:
 
 ExtendedType
-************
+############
 
 The new meta-class :py:class:`~pyTooling.MetaClasses.ExtendedType` allows to implement :ref:`singletons <META/Singleton>`,
 :ref:`slotted types <META/Slotted>` and combinations thereof.
@@ -36,7 +36,7 @@ meta-class.
 .. _META/Abstract:
 
 Abstract Method
-===============
+***************
 
 .. todo:: Needs documentation
 
@@ -44,7 +44,7 @@ Abstract Method
 .. _META/Singleton:
 
 Singleton
-=========
+*********
 
 A class defined with enabled ``singleton`` behavior implements the `singleton design pattern <https://en.wikipedia.org/wiki/Singleton_pattern>`__,
 which allows only a single instance of that class to exist. If another instance is going to be created, a previously
@@ -69,7 +69,7 @@ cached instance of that class will be returned.
 .. _META/Slotted:
 
 Slotted Type
-============
+************
 
 A class defined with enabled ``useSlots`` behavior stores instance fields in slots. The meta-class,
 translates all type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and
@@ -98,7 +98,7 @@ derived classes.
 .. _META/ObjectWithSlots:
 
 ObjectWithSlots
----------------
+===============
 
 A class definition deriving from :py:class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
 behavior to that class and all derived classes.
@@ -112,7 +112,7 @@ behavior to that class and all derived classes.
 .. _META/Overloading:
 
 Overloading
-***********
+###########
 
 .. warning:: This needs a clear definition before overloading makes sense...
 
