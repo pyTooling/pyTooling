@@ -41,11 +41,10 @@ __version__ =   "2.5.0"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "timer", "data structure", "setuptools", "wheel", "installation", "packaging", "path", "generic path", "generic library", "url"]
 
 from collections import deque
-from collections.abc import Set, Mapping
 from functools import reduce
 from numbers import Number
 from operator import or_
-from typing import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union
+from typing import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set
 
 try:
 	from pyTooling.Decorators import export
