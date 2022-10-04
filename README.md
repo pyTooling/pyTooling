@@ -19,15 +19,33 @@
 
 # pyTooling
 
-**pyTooling** is a powerful collection of arbitrary useful classes, decorators,
-meta-classes and exceptions. It's useful for any Python-base project independent
-if it's a library, framework or CLI tool.
+**pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
+exceptions. It also provides lots of helper functions e.g. to ease the handling of package descriptions.
+
+It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
 
 ## Introduction
 
-*TODO*
+**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. More specialized helpers
+can be found in sub-namespaces like:
+
+* [pyTooling.CLIAbstraction](https://github.com/pyTooling/pyTooling.CLIAbstraction)
+* [pyTooling.TerminalUI](https://github.com/pyTooling/pyTooling.TerminalUI)
+
+In addition, pyTooling provides a collection of CI job templates for GitHub Actions. This drastically simplifies
+GHA-based CI pipelines for Python projects.
 
 ## Package Details
+
+### Common Helper Functions
+
+This is a set of useful [helper functions](https://pytooling.github.io/pyTooling/Common/index.html#common-helperfunctions):
+
+* [getsizeof](https://pytooling.github.io/pyTooling/Common/index.html#getsizeof) calculates the "real" size of a data structure.
+* [isnestedclass](https://pytooling.github.io/pyTooling/Common/index.html#isnestedclass) checks if a class is nested inside another class.
+* [mergedicts](https://pytooling.github.io/pyTooling/Common/index.html#mergedicts) merges multiple dictionaries into a new dictionary.
+* [zipdicts](https://pytooling.github.io/pyTooling/Common/index.html#zipdicts) iterate multiple dictionaries simultaneously.
+
 
 ### Common Classes
 
@@ -38,6 +56,8 @@ if it's a library, framework or CLI tool.
 
 
 ### Data Structures
+
+pyTooling also provides fast and powerful data structures offering object-oriented APIs:
 
 * Trees
   * [Tree data structure](https://pyTooling.GitHub.io/pyTooling/DataStructures/Tree.html)  

@@ -66,7 +66,7 @@ Common Classes
 * Setuptools, PyPI, and others have a varying understanding of license names. The :py:mod:`pyTooling.Licensing` module
   provides :ref:`unifyed license names <LICENSING>` as well as license name mappings or translations.
 * Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
-  Unfortunately, non of the provided standard APIs offers a comprehensive answer. pyTooling provides a
+  Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
   :ref:`unified platform and environment description <COMMON/Platform>` by summarizing multiple platform APIs into a
   single class instance.
 * While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
