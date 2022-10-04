@@ -32,7 +32,7 @@ directed.
 
 The following example code demonstrates a few features in a compact form:
 
-.. code:: python
+.. code-block:: python
 
    # Create a new graph
    graph = Graph(name="Example Graph")
@@ -105,7 +105,7 @@ Also edges can be created with a unique ID when the object is created. Afterward
 is a readonly property. Any hashable object can be used as an ID. The ID must be unique per graph. If graphs are merged
 or vertexes are added to an existing graph, the newly added graph's ID(s) are checked and might cause an exception.
 
-.. code:: python
+.. code-block:: python
 
    # Create vertex with unique ID 5
    graph = Graph()
@@ -127,7 +127,7 @@ vertex's value isn't None, then the value's string representation is returned.
 
 .. todo:: GRAPH: setting / getting a edge's values
 
-.. code:: python
+.. code-block:: python
 
    # Create vertex with unique ID 5
    graph = Graph()

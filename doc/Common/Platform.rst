@@ -108,7 +108,7 @@ a CPU. E.g. a 32-bit architecture can address 4 GiB of main memory without memor
 * x86_32
 * x86_64
 
-.. code:: python
+.. code-block:: python
 
    from pyTooling.Common import CurrentPlatform
 
@@ -129,7 +129,7 @@ The native platform describes the hosting operating system.
 * macOS
 * Windows
 
-.. code:: python
+.. code-block:: python
 
    from pyTooling.Common import CurrentPlatform
 
@@ -160,7 +160,7 @@ of Windows.
 * MSYS2
 * Cygwin
 
-.. code:: python
+.. code-block:: python
 
    from pyTooling.Common import CurrentPlatform
 
@@ -184,7 +184,7 @@ Some environments like ``MSYS2`` provide multiple runtimes.
 * (CLang32)
 * CLang64
 
-.. code:: python
+.. code-block:: python
 
    from pyTooling.Common import CurrentPlatform
 

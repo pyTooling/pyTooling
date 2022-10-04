@@ -67,7 +67,7 @@ Package variables:
 
 .. admonition:: Usage Example
 
-   .. code:: python
+   .. code-block:: python
 
       from setuptools import setup
       from pyTooling.Licensing import Apache_2_0_License

@@ -107,6 +107,15 @@ Fast and powerful data structures.
 Decorators
 ==========
 
+* :ref:`Abstract Methods <META/Abstract>`
+
+  * Methods marked with :py:func:`~pyTooling.MetaClasses.abstractmethod` are abstract and need to be overwritten in a
+    derived class. |br|
+    An *abstract method* might be called from the overwriting method.
+  * Methods marked with :py:func:`~pyTooling.MetaClasses.mustoverride` are abstract and need to be overridden in a
+    derived class. |br|
+    It's not allowed to call a *mustoverride method*.
+
 * :ref:`Documentation <DECO/Documentation>`
 
   * Copy the doc-string from given base-class via :py:class:`~pyTooling.Decorators.InheritDocString`.
@@ -132,25 +141,27 @@ Meta-Classes
 ============
 
 pyTooling provides an :ref:`enhanced meta-class <META>` called :py:class:`~pyTooling.MetaClasses.ExtendedType`.
-This meta-classes allows to implemented :ref:`singletons <META/Singleton>`, :ref:`slotted types <META/Slotted>` and
-combinations thereof.
+This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :ref:`singletons <META/Singleton>`,
+:ref:`slotted types <META/Slotted>` and combinations thereof.
 
-A class created with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance to exist. If a
-further instance is going to be created, a cached instance of the previously created instance will be returned.
+:pycode:`class MyClass(metaclass=ExtendedType):`
+  A class definition using that meta-class can implement :ref:`abstract methods <META/Abstract>` using decorators
+  :pycode:`@abstractmethod` or :pycode:`@mustoverride`.
 
-The slotted type behavior is inherited to all derived classes
+:pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
+  A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
+  exist. If another instance is going to be created, a previously cached instance of that class will be returned.
 
+:pycode:`class MyClass(metaclass=ExtendedType, useSlots=True):`
+  A class defined with enabled :ref:`useSlots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
+  translates all type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and
+  access compared to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint
+  as well as the field access performance of all class instances. This behavior is automatically inherited to all
+  derived classes.
 
-* :py:class:`~pyTooling.MetaClasses.Overloading` |br|
-  ``Overloading`` allows method overloading in Python classes. It dispatches method calls based on method signatures
-  (type annotations).
-* :py:class:`~pyTooling.MetaClasses.Singleton` |br|
-  A class created from meta-class ``Singleton`` allows only a single instance to exist. If a further instance is tried
-  to be created, a cached instance will be returned.
-* :py:class:`~pyTooling.MetaClasses.SlottedType` |br|
-  All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
-  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
-  all derived classes.
+:pycode:`class MyClass(ObjectWithSlots):`
+  A class definition deriving from :py:class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
+  behavior to that class and all derived classes.
 
 
 Packaging

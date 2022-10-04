@@ -1,12 +1,44 @@
 .. _DECO:
 
-Overview
-########
+.. Overview
+   ########
 
 The :py:mod:`pyTooling.Decorators` package provides decorators to:
 
 * help with copying doc-strings from base-classes
 * control the visibility of classes and functions defined in a module
+
+.. contents:: Table of Contents
+   :depth: 2
+
+.. _DECO/Abstract:
+
+Abstract Methods
+################
+
+.. todo::
+
+   Refer to :py:func:`~pyTooling.MetaClasses.abstractmethod` and :py:func:`~pyTooling.MetaClasses.mustoverride`
+   decorators from :ref:`meta classes <META>`.
+
+.. note::
+
+   Classes using decorators :pycode:`@abstractmethod` or :pycode:`@mustoverrride` need to apply the metaclass
+   :py:class:`~pyTooling.MetaClasses.ExtendedType` in the class definition.
+
+.. _DECO/AbstractMethod:
+
+@abstractmethod
+***************
+
+.. todo:: Needs documentation.
+
+.. _DECO/MustOverride:
+
+@mustoverride
+*************
+
+.. todo:: Needs documentation.
 
 
 .. _DECO/Documentation:
@@ -17,8 +49,8 @@ Documentation
 
 .. _DECO/Documentation/InheritDocString:
 
-InheritDocString
-****************
+@InheritDocString
+*****************
 
 When a method in a derived class shall have the same doc-string as the doc-string of the base-class, then the decorator
 :py:func:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class' method to the
@@ -26,7 +58,7 @@ method in the derived class.
 
 .. admonition:: Example
 
-   .. code:: python
+   .. code-block:: python
 
       class BaseClass:
         def method(self):
@@ -47,8 +79,8 @@ Visibility
 
 .. _DECO/Visibility/export:
 
-export
-******
+@export
+*******
 
 The :py:func:`~pyTooling.Decorators.export` decorator makes module's entities (classes and functions) publicly visible.
 Therefore, these entities get registered in the module's variable ``__all__``.
@@ -58,7 +90,7 @@ Besides making these entities accessible via ``from foo import *``, Sphinx exten
 
 .. admonition:: ``module.py``
 
-   .. code:: python
+   .. code-block:: python
 
       # Creating __all__ is only required, if variables need to be listed too
       __all__ = ["MY_CONST"]
@@ -78,7 +110,7 @@ Besides making these entities accessible via ``from foo import *``, Sphinx exten
 
 .. admonition:: ``application.py``
 
-   .. code:: python
+   .. code-block:: python
 
       from .module import *
 

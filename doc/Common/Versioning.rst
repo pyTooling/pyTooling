@@ -19,7 +19,7 @@ The :py:class:`~pyTooling.Versioning.SemVersion` class represents of a version n
 
 .. admonition:: Example
 
-   .. code:: python
+   .. code-block:: python
 
       # Construct from string
       version1 = SemVersion("0.22.8")
@@ -74,7 +74,7 @@ The :py:class:`~pyTooling.Versioning.CalVersion` class represents of a version n
 
 .. admonition:: Example
 
-   .. code:: python
+   .. code-block:: python
 
       # Construct from string
       version1 = CalVersion("2018.3")
