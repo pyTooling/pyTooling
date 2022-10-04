@@ -208,7 +208,8 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 		raise ValueError(f"All given dictionaries must have the same length.")
 
 	for key, item0 in dicts[0].items():
-		yield key, item0, *(d[key] for d in dicts[1:])
+		# WORKAROUND: using redundant parenthesis for Python 3.7
+		yield (key, item0, *(d[key] for d in dicts[1:]))
 
 
 @overload
