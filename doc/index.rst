@@ -185,6 +185,10 @@ A set of helper functions to describe a Python package for setuptools.
   * :py:func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
     tbd
 
+Timer
+=====
+
+A :py:class:`~pyTooling.Timer.Timer` class to measure and accumulate code execution times.
 
 
 Contributors
@@ -278,6 +282,12 @@ License
    :hidden:
 
    Packaging
+
+.. toctree::
+   :caption: Timer
+   :hidden:
+
+   Timer
 
 .. raw:: latex
 

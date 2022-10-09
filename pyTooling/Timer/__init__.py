@@ -28,11 +28,28 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+A timer and stopwatch to measure execution time.
+
+.. hint:: See :ref:`high-level help <TIMER>` for explanations and usage examples.
+"""
 from time import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
 
+from pyTooling.Decorators import export
+from pyTooling.MetaClasses import ObjectWithSlots
 
-class Timer:
+
+@export
+class Timer(ObjectWithSlots):
+	"""
+	Undocumented.
+
+	.. todo::
+
+	   Class:Timer Needs class documentation.
+	"""
+
 	_timers: Dict[str, 'Timer'] = {}
 
 	_startTime: Nullable[int]

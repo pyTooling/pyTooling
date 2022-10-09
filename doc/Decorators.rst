@@ -83,8 +83,6 @@ method in the derived class.
           pass
 
 
-.. _DECO/Visibility:
-
 .. _DECO/Misc:
 
 Miscellaneous
