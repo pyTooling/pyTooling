@@ -80,7 +80,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 	  * Markdown (``*.md``)
 
 	:param readmeFile: Path to the `README` file as an instance of :class:`Path`.
-	:return:           A tuple containing the file content and the MIME type.
+	:returns:          A tuple containing the file content and the MIME type.
 	"""
 	if readmeFile.suffix == ".md":
 		with readmeFile.open("r") as file:
@@ -100,7 +100,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	Special dependency entries like Git repository references are translates to match the syntax expected by setuptools.
 
 	:param requirementsFile: Path to the `requirements.txt` file as an instance of :class:`Path`.
-	:return:                 A list of dependencies.
+	:returns:                A list of dependencies.
 	"""
 	indentation = "  " * indent
 	requirements = []

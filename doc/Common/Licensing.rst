@@ -3,7 +3,12 @@
 Licensing
 #########
 
-The :py:mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses.
+The :py:mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses and mappings
+of their names, because some tools use differing names for the same license.
+
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
 
 .. admonition:: Background Information
 
@@ -15,32 +20,15 @@ The :py:mod:`pyTooling.Licensing` package provides auxiliary classes to represen
    The package :py:mod:`pyTooling.Licensing` provides license name and identifiers mappings to unify all these names and
    classifiers to and from `SPDX identifiers <https://spdx.org/licenses/>`__.
 
-   .. rubric:: Examples
+   .. rubric:: Examples:
 
-   +------------------+------------------------------+------------------+--------------------------------------------------------+
-   | SDPX Identifier  | Official License Name        | License Name     | Python package classifier                              |
-   +==================+==============================+==================+========================================================+
-   | ``Apache-2.0``   | Apache License, Version 2.0  | ``Apache 2.0``   | ``License :: OSI Approved :: Apache Software License`` |
-   +------------------+------------------------------+------------------+--------------------------------------------------------+
-   | ``BSD-3-Clause`` | The 3-Clause BSD License     | ``BSD``          | ``License :: OSI Approved :: BSD License``             |
-   +------------------+------------------------------+------------------+--------------------------------------------------------+
-
-.. _LICENSING/Mappings:
-
-Mappings
-********
-
-:py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES` offers a mapping from SPDX identifier to license names used by
-Python (setuptools). Each dictionary item contains a :py:class:`~pyTooling.Licensing.PythonLicenseNames` instance which
-contains the license name and package classifier used by setuptools.
-
-Currently the following licenses are listed in the mapping:
-
-* Apache-2.0
-* BSD-3-Clause
-* MIT
-* GPL-2.0-or-later
-
+   +------------------+------------------------------+--------------------------+--------------------------------------------------------+
+   | SDPX Identifier  | Official License Name        | License (short) Name     | Python package classifier                              |
+   +==================+==============================+==========================+========================================================+
+   | ``Apache-2.0``   | Apache License, Version 2.0  | ``Apache 2.0``           | ``License :: OSI Approved :: Apache Software License`` |
+   +------------------+------------------------------+--------------------------+--------------------------------------------------------+
+   | ``BSD-3-Clause`` | The 3-Clause BSD License     | ``BSD``                  | ``License :: OSI Approved :: BSD License``             |
+   +------------------+------------------------------+--------------------------+--------------------------------------------------------+
 
 .. _LICENSING/License:
 
@@ -54,16 +42,40 @@ The licenses supported by the package are available as individual package variab
 (:py:data:`~pyTooling.Licensing.SPDX_INDEX`) mapping from SPDX identified to :py:class:`~pyTooling.Licensing.License`
 instances.
 
-Package variables:
+Package variables of predefined licenses:
 
 * :py:data:`~pyTooling.Licensing.Apache_2_0_License`
 * :py:data:`~pyTooling.Licensing.BSD_3_Clause_License`
 * :py:data:`~pyTooling.Licensing.GPL_2_0_or_later`
 * :py:data:`~pyTooling.Licensing.MIT_License`
 
+
+.. _LICENSING/Mappings:
+
+Mappings
+********
+
+:py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES` offers a mapping from SPDX identifier to license names used by
+Python (setuptools). Each dictionary item contains a :py:class:`~pyTooling.Licensing.PythonLicenseNames` instance which
+contains the license name and package classifier used by setuptools.
+
+Currently the following licenses are listed in the Python specific name mapping:
+
+* Apache-2.0
+* BSD-3-Clause
+* MIT
+* GPL-2.0-or-later
+
+.. _LICENSING/Usage:
+
+Usage with Setuptools
+*********************
+
+The following examples demonstrates the usage with setuptools in a ``setup.py``.
+
 .. admonition:: Usage Example
 
-   .. code:: python
+   .. code-block:: python
 
       from setuptools import setup
       from pyTooling.Licensing import Apache_2_0_License

@@ -3,12 +3,23 @@
 Tree
 ####
 
-:py:class:`~pyTooling.Tree.Node` implements a fast and simple tree data structure, which outperforms
-:gh:`anytree <c0fec0de/anytree>` and :gh:`itertree <BR1py/itertree>`.
+The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structure based on a single
+:py:class:`~pyTooling.Tree.Node` class.
+
+.. hint::
+
+   This tree data structure outperforms :gh:`anytree <c0fec0de/anytree>` by far and even :gh:`itertree <BR1py/itertree>`
+   by factor of 2.
+
+.. contents:: Table of Contents
+   :local:
+   :depth: 2
+
+.. rubric:: Comprehensive Example:
 
 The following example code demonstrates a few features in a compact form:
 
-.. code:: python
+.. code-block:: python
 
    # Create a new tree by creating a root node (no parent reference)
    root = Node(value="OSVVM Regression Tests")
@@ -42,7 +53,7 @@ The following example code demonstrates a few features in a compact form:
 
 The presented code will generate this tree:
 
-.. code::
+.. code-block::
 
    OSVVM Regression Tests
    ├── Utility Library
@@ -124,7 +135,7 @@ A node can be created with a unique ID when the object is created. Afterwards, t
 a readonly property. Any hashable object can be used as an ID. The ID must be unique per tree. If trees are merged or
 nodes are added to an existing tree, the newly added node's ID(s) are checked and might cause an exception.
 
-.. code:: python
+.. code-block:: python
 
    # Create node with unique ID 5
    node = Node(nodeID=5)
@@ -139,11 +150,11 @@ Value
 =====
 
 A node's value can be given at node creating time or it can be set ant any later time via property
-:py:attr:`~pyTooling.Tree.Node.Value`. Any data type is accepted. The internally stored value can be retrieved via the
+:py:attr:`~pyTooling.Tree.Node.Value`. Any data type is accepted. The internally stored value can be retrieved by the
 same property. If a node's string representation is requested via :py:meth:`~pyTooling.Tree.Node.__str__` and a node's
 value isn't None, then the value's string representation is returned.
 
-.. code:: python
+.. code-block:: python
 
    # Create node with value 5
    node = Node(value=5)
@@ -171,7 +182,7 @@ Each node has a reference to its parent node. In case, the node is the root node
 parent-child relation can be set at node creation time, or a parent can be assigned to a node at any later time via
 property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used to retrieve the current parent reference.
 
-.. code:: python
+.. code-block:: python
 
    # Create node without parent relation ship (root node)
    root = Node(nodeID=0)
@@ -185,7 +196,7 @@ property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used t
 In case, two trees were created (a single node is already a minimal tree), trees get merged if one tree's root node is
 assigned a parent relationship.
 
-.. code:: python
+.. code-block:: python
 
    # Create a tree with a single node
    root = Node(nodeID=0)
@@ -211,7 +222,7 @@ The root node of a tree contains tree-wide data structures like the list of uniq
 (:py:attr:`~pyTooling.Tree.Node._nodesWithID`, :py:attr:`~pyTooling.Tree.Node._nodesWithoutID`). By utilizing the root
 reference, each node can access these data structures by just one additional hop.
 
-.. code:: python
+.. code-block:: python
 
    # Create a simple tree
    root = Node()
@@ -230,7 +241,7 @@ Path
 The property :py:attr:`~pyTooling.Tree.Node.Path` returns a tuple describing the path top-down from root node to the
 current node.
 
-.. code:: python
+.. code-block:: python
 
    # Create a simple tree representing directories
    root = Node(value="C:")
@@ -243,7 +254,7 @@ current node.
 While the tuple returned by :py:attr:`~pyTooling.Tree.Node.Path` can be used in an iteration (e.g. a for-loop), also a
 generator is provided by method :py:meth:`~pyTooling.Tree.Node.GetPath` for iterations.
 
-.. code:: python
+.. code-block:: python
 
    # Create a simple tree representing directories
    root = Node(value="C:")

@@ -1,10 +1,10 @@
 # ==================================================================================================================== #
-#             _____           _ _             _____                                                                    #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ ___  ___                                                       #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | || '__/ _ \/ _ \                                                      #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | |  __/  __/                                                      #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \___|\___|                                                      #
-# |_|    |___/                          |___/                                                                          #
+#             _____           _ _               ____                 _                                                 #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|_ __ __ _ _ __ | |__                                              #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |  _| '__/ _` | '_ \| '_ \                                             #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |_| | | | (_| | |_) | | | |                                            #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____|_|  \__,_| .__/|_| |_|                                            #
+# |_|    |___/                          |___/                 |_|                                                      #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
@@ -28,8 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.Tree."""
-from pyTooling.Tree import Node
+"""Performance tests for pyTooling.Graph."""
+from pathlib import Path
+
+from igraph import Graph as iGraph
+
 from . import PerformanceTest
 
 
@@ -39,97 +42,100 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Tree(PerformanceTest):
-	def test_AddChildren(self):
+class Graph(PerformanceTest):
+	def test_AddEdge_Flat(self):
 		def wrapper(count: int):
 			def func():
-				rootNode = Node(0)
+				g = iGraph(directed=True)
+				g.add_vertex(0)
 
 				for i in range(1, count):
-					rootNode.AddChild(Node(i))
+					g.add_vertex(i)
+					g.add_edge(0, i)
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.counts[:-1])
 
-	def test_SetParent(self):
+	def test_AddEdge_Linear(self):
 		def wrapper(count: int):
 			def func():
-				rootNode = Node(0)
+				g = iGraph(directed=True)
+
+				prev = 0
+				g.add_vertex(prev)
 
 				for i in range(1, count):
-					Node(i, parent=rootNode)
+					g.add_vertex(i)
+					g.add_edge(prev, i)
+					prev = i
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.counts[:-1])
 
-	def test_AddLongAncestorChain(self):
-		def wrapper(count: int):
+
+class RandomGraph(PerformanceTest):
+	def ConstructGraphFromEdgeListFile(self, file: Path, vertexCount: int) -> iGraph:
+		graph = iGraph(directed=True)
+		for v in range(vertexCount):
+			graph.add_vertex(v)
+
+		with file.open("r") as f:
+			for line in f.readlines():
+				v, u, w = line.split(" ")
+				graph.add_edge(int(v), int(u), weight=int(w))
+
+		return graph
+
+	def test_BFS(self):
+		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					parentNode = Node(i, parent=parentNode)
+				bfsList = [v for v in graph.bfsiter(componentStartVertex)]
+
+				self.assertEqual(componentSize, len(bfsList))
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_AddLongChildBranch(self):
-		def wrapper(count: int):
+	def test_DFS(self):
+		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					node = Node(i)
-					parentNode.AddChild(node)
-					parentNode = node
+				dfsList = [v for v in graph.dfsiter(componentStartVertex)]
+
+				self.assertEqual(componentSize, len(dfsList))
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_Path(self):
-		def wrapper(count: int):
+	def test_ShortestPathByHops(self):
+		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					parentNode = Node(i, parent=parentNode)
+				try:
+					vertexPath = graph.distances(49, 20)
+				except KeyError:
+					pass
 
-				leaf = parentNode
-				_ = leaf.Path
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_GetPath(self):
-		def wrapper(count: int):
+	def test_ShortestPathByWeight(self):
+		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
-				parentNode = Node(0)
-				for i in range(1, count):
-					parentNode = Node(i, parent=parentNode)
+				try:
+					vertexPath = graph.distances(49, 20, "weight")
+				except KeyError:
+					pass
 
-				leaf = parentNode
-				_ = [node for node in leaf.GetPath()]
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_AddFlatTree(self):
-		def run(count: int):
-			def func():
-				trees = []
-				for i in range(1, 10):
-					parentNode = Node(count * i)
-					for j in range(1, count):
-						_ = Node(count * i + j, parent=parentNode)
-
-					trees.append(parentNode)
-
-				rootNode = Node(0)
-				rootNode.AddChildren(trees)
+				# print(f"path length: {len(vertexPath)}")
+				# self.assertEqual(6, len(vertexPath))
 
 			return func
 
-		self.runTests(run, self.counts[:-1])
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)

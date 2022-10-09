@@ -9,11 +9,13 @@ Currently, the following file formats are supported:
 
 Possible future file formats:
 
-* JSON
-* TOML
+* :ref:`CONFIG/FileFormat/JSON`
+* :ref:`CONFIG/FileFormat/TOML`
 * XML
 
 .. toctree::
    :hidden:
 
+   JSON
+   TOML
    YAML

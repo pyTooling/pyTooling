@@ -114,6 +114,12 @@ htmlhelp_basename = "pyToolingDoc"
 # The empty string is equivalent to '%b %d, %Y'.
 html_last_updated_fmt = "%d.%m.%Y"
 
+# ==============================================================================
+# Python settings
+# ==============================================================================
+modindex_common_prefix = [
+	f"{project}."
+]
 
 # ==============================================================================
 # Options for LaTeX / PDF output
@@ -258,7 +264,16 @@ coverage_show_missing_items = True
 # ==============================================================================
 autoapi_modules = {
 	"pyTooling":  {
+		"template": "package",
 		"output": "pyTooling",
 		"override": True
 	}
 }
+
+for directory in [mod for mod in Path("../pyTooling").iterdir() if mod.is_dir() and mod.name != "__pycache__"]:
+	print(f"Adding module rule for '{project}.{directory.name}'")
+	autoapi_modules[f"{project}.{directory.name}"] = {
+		"template": "module",
+		"output": "pyTooling",
+		"override": True
+	}

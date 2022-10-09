@@ -5,6 +5,10 @@ Configuration
 
 Module :py:mod:`~pyTooling.Configuration` provides an abstract configuration reader.
 
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
 It supports any configuration file syntax, which provides:
 
 * scalar elements (integer, string, ...),
@@ -25,10 +29,14 @@ Sequences
 
 A :py:class:`~pyTooling.Configuration.Sequence` represents ordered information items.
 
+.. todo:: CONFIG:: Needs documentation for Sequences
+
 Dictionary
 **********
 
 A :py:class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of information.
+
+.. todo:: CONFIG:: Needs documentation for Dictionary
 
 Configuration
 *************
@@ -36,10 +44,12 @@ Configuration
 A :py:class:`~pyTooling.Configuration.Configuration` represents the whole configuration (file) made of sequences,
 dictionaries and scalar information items.
 
+.. todo:: CONFIG:: Needs documentation for Configuration
+
 Data Model
 **********
 
-.. #rubric:: Data model
+.. todo:: CONFIG:: Needs documentation for Data Model
 
 .. mermaid::
 
