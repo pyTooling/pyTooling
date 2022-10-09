@@ -118,7 +118,7 @@ PackageDescriptions
 DescribePythonPackage
 *********************
 
-.. TODO:: Write documentation here!
+.. TODO:: PACKAGING:: Needs documentation for DescribePythonPackage
 
 
 .. _PACKAGING/Descriptions/GitHub:
@@ -126,5 +126,4 @@ DescribePythonPackage
 DescribePythonPackageHostedOnGitHub
 ***********************************
 
-.. TODO:: Write documentation here!
-
+.. TODO:: PACKAGING:: Needs documentation for DescribePythonPackageHostedOnGitHub

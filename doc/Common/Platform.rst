@@ -3,7 +3,8 @@
 Platform
 ########
 
-This class gives detailed platform information about the environment the Python program or script is running in.
+The :py:class:`~pyTooling.Common.Platform.Platform` class gives detailed platform information about the environment the
+Python program or script is running in.
 
 .. contents:: Table of Contents
    :local:

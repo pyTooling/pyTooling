@@ -7,11 +7,15 @@ Dependencies
    :alt: Libraries.io status for latest release
    :height: 22
    :target: https://libraries.io/github/pyTooling/pyTooling
+.. |img-pyTooling-val-status| image:: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
+   :alt: Snyk Vulnerabilities for GitHub Repo
+   :height: 22
+   :target: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
 
 +------------------------------------------+------------------------------------------+
-| `Libraries.io <https://libraries.io/>`_  | Requires.io                              |
+| `Libraries.io <https://libraries.io/>`_  | Vulnerabilities Summary                  |
 +==========================================+==========================================+
-| |img-pyTooling-lib-status|               | Service was shutdown                     |
+| |img-pyTooling-lib-status|               | |img-pyTooling-val-status|               |
 +------------------------------------------+------------------------------------------+
 
 .. _dependency-package:

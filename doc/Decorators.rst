@@ -18,7 +18,7 @@ Abstract Methods
 
 .. todo::
 
-   Refer to :py:func:`~pyTooling.MetaClasses.abstractmethod` and :py:func:`~pyTooling.MetaClasses.mustoverride`
+   DECO:: Refer to :py:func:`~pyTooling.MetaClasses.abstractmethod` and :py:func:`~pyTooling.MetaClasses.mustoverride`
    decorators from :ref:`meta classes <META>`.
 
 .. note::
@@ -31,14 +31,14 @@ Abstract Methods
 @abstractmethod
 ***************
 
-.. todo:: Needs documentation.
+.. todo:: DECO:: Needs documentation for abstractmethod
 
 .. _DECO/MustOverride:
 
 @mustoverride
 *************
 
-.. todo:: Needs documentation.
+.. todo:: DECO:: Needs documentation for mustoverride
 
 .. _DECO/DataAccess:
 
@@ -95,7 +95,7 @@ Miscellaneous
 @OriginalFunction
 *****************
 
-.. todo:: Write documentation.
+.. todo:: DECO:: Needs documentation for originalfunction
 
 
 .. _DECO/Visibility:

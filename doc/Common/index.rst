@@ -83,11 +83,11 @@ class.
 mergedicts
 **********
 
-.. todo:: Needs documentation.
+.. todo:: HELPERFUNC:: Needs documentation for mergedicts
 
 .. _COMMON/Helper/zipdicts:
 
 zipdicts
 ********
 
-.. todo:: Needs documentation.
+.. todo:: HELPERFUNC:: Needs documentation for zipdicts

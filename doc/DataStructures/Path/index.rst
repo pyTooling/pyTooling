@@ -13,6 +13,8 @@ GenericPath
 Base
 ====
 
+.. todo:: GenericPath:: Needs documentation for Base
+
 .. #autoclass:: pyTooling.GenericPath.Base
    :show-inheritance:
    :members:
@@ -22,6 +24,8 @@ Base
 
 RootMixIn
 =========
+
+.. todo:: GenericPath:: Needs documentation for RootMixIn
 
 .. #autoclass:: pyTooling.GenericPath.RootMixIn
    :show-inheritance:
@@ -33,6 +37,8 @@ RootMixIn
 ElementMixIn
 ============
 
+.. todo:: GenericPath:: Needs documentation for ElementMixIn
+
 .. #autoclass:: pyTooling.GenericPath.ElementMixIn
    :show-inheritance:
    :members:
@@ -43,6 +49,8 @@ ElementMixIn
 SystemMixIn
 ===========
 
+.. todo:: GenericPath:: Needs documentation for SystemMixIn
+
 .. #autoclass:: pyTooling.GenericPath.SystemMixIn
    :show-inheritance:
    :members:
@@ -52,6 +60,8 @@ SystemMixIn
 
 PathMixIn
 =========
+
+.. todo:: GenericPath:: Needs documentation for PathMixIn
 
 .. #autoclass:: pyTooling.GenericPath.PathMixIn
    :show-inheritance:

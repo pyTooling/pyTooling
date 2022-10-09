@@ -45,6 +45,8 @@ by derived wrapper-classes.
       print(myInt.value)
 
 
+.. _COMMON/CallByRefParam:
+
 CallByRefParam
 **************
 
@@ -64,13 +66,33 @@ The internal value can be used via ``obj.value``.
 Type-Specific *call-by-reference* Classes
 *****************************************
 
+.. _COMMON/CallByRefBoolParam:
+
 CallByRefBoolParam
 ==================
 
-This is an implementation for the boolean type (:class:`bool`).
+The class :py:class:`~pyTooling.CallByRef.CallByRefBoolParam` implements call-by-ref behavior for the boolean type
+(:class:`bool`).
 
+Implemented operators:
+
+* Binary comparison operators: ``==``, ``!=``
+* Type conversions: ``bool()``, ``int()``
+
+.. _COMMON/CallByRefIntParam:
 
 CallByRefIntParam
 =================
 
-This is an implementation for the integer type (:class:`int`).
+The class :py:class:`~pyTooling.CallByRef.CallByRefIntParam` implements call-by-ref behavior for the integer type
+(:class:`int`).
+
+Implemented operators:
+
+* Unary operators: ``+``, ``-``, ``~``
+* Binary boolean operators: ``&``, ``|``, ``^``
+* Binary arithmetic operators: ``+``, ``-``, ``*``, ``/``, ``//``, ``%``, ``**``
+* Binary comparison operators: ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``
+* Inplace boolean operators: ``&=``, ``|=``, ``^=``
+* Inplace arithmetic operators: ``+=``, ``-=``, ``*=``, ``/=``, ``//=``, ``%=``, ``**=``
+* Type conversions: ``bool()``, ``int()``
