@@ -3,6 +3,9 @@
 Overview
 ########
 
+.. contents:: Table of Contents
+   :depth: 2
+
 .. _PACKAGING/Helper:
 
 Helper Functions
@@ -90,7 +93,7 @@ information as properties.
 PackageDescriptions
 ###################
 
-.. rubric:: Example
+.. rubric:: Example:
 
 .. code-block:: Python
 
@@ -115,7 +118,7 @@ PackageDescriptions
 DescribePythonPackage
 *********************
 
-.. TODO:: Write documentation here!
+.. TODO:: PACKAGING:: Needs documentation for DescribePythonPackage
 
 
 .. _PACKAGING/Descriptions/GitHub:
@@ -123,5 +126,4 @@ DescribePythonPackage
 DescribePythonPackageHostedOnGitHub
 ***********************************
 
-.. TODO:: Write documentation here!
-
+.. TODO:: PACKAGING:: Needs documentation for DescribePythonPackageHostedOnGitHub

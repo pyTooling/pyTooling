@@ -398,7 +398,7 @@ class ExtendedType(type):
 
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
-		:return:                A tuple of member names to be stored in slots.
+		:returns:               A tuple of member names to be stored in slots.
 		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
 		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
 		"""

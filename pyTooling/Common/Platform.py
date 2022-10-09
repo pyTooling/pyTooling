@@ -206,7 +206,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsNativePlatform(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` platform.
 
-		:return: ``True``, if the platform is a native platform.
+		:returns: ``True``, if the platform is a native platform.
 		"""
 		return self.Platforms.ENV_Native in self._platform
 
@@ -214,7 +214,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsNativeWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` Windows x86-64 platform.
 
-		:return: ``True``, if the platform is a native Windows x86-64 platform.
+		:returns: ``True``, if the platform is a native Windows x86-64 platform.
 		"""
 		return self.Platforms.Windows in self._platform
 
@@ -222,7 +222,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsNativeLinux(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` Linux x86-64 platform.
 
-		:return: ``True``, if the platform is a native Linux x86-64 platform.
+		:returns: ``True``, if the platform is a native Linux x86-64 platform.
 		"""
 		return self.Platforms.Linux in self._platform
 
@@ -230,7 +230,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsNativeMacOS(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` macOS x86-64 platform.
 
-		:return: ``True``, if the platform is a native macOS x86-64 platform.
+		:returns: ``True``, if the platform is a native macOS x86-64 platform.
 		"""
 		return self.Platforms.MacOS in self._platform
 
@@ -238,7 +238,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsMSYS2Environment(self) -> bool:
 		"""Returns true, if the platform is a :term:`MSYS2` environment on Windows.
 
-		:return: ``True``, if the platform is a MSYS2 environment on Windows.
+		:returns: ``True``, if the platform is a MSYS2 environment on Windows.
 		"""
 		return self.Platforms.ENV_MSYS2 in self._platform
 
@@ -246,7 +246,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsMSYSOnWindows(self) -> bool:
 		"""Returns true, if the platform is a MSYS runtime on Windows.
 
-		:return: ``True``, if the platform is a MSYS runtime on Windows.
+		:returns: ``True``, if the platform is a MSYS runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_MSYS in self._platform
 
@@ -254,7 +254,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsMinGW32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`MinGW32 <MinGW>` runtime on Windows.
 
-		:return: ``True``, if the platform is a MINGW32 runtime on Windows.
+		:returns: ``True``, if the platform is a MINGW32 runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_MinGW32 in self._platform
 
@@ -262,7 +262,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsMinGW64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`MinGW64 <MinGW>` runtime on Windows.
 
-		:return: ``True``, if the platform is a MINGW64 runtime on Windows.
+		:returns: ``True``, if the platform is a MINGW64 runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_MinGW64 in self._platform
 
@@ -270,7 +270,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsUCRT64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`UCRT64 <UCRT>` runtime on Windows.
 
-		:return: ``True``, if the platform is a UCRT64 runtime on Windows.
+		:returns: ``True``, if the platform is a UCRT64 runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_UCRT64 in self._platform
 
@@ -278,7 +278,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsClang32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a Clang32 runtime on Windows.
 
-		:return: ``True``, if the platform is a Clang32 runtime on Windows.
+		:returns: ``True``, if the platform is a Clang32 runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_Clang32 in self._platform
 
@@ -286,7 +286,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	def IsClang64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a Clang64 runtime on Windows.
 
-		:return: ``True``, if the platform is a Clang64 runtime on Windows.
+		:returns: ``True``, if the platform is a Clang64 runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_Clang64 in self._platform
 

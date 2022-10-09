@@ -33,6 +33,7 @@ jobs:
       - Params
     with:
       jobs: ${{ needs.Params.outputs.python_jobs }}
+      requirements: '-r tests/performance/requirements.txt'
 #      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
       unittest_directory: 'tests/performance'
       pacboy: >-
@@ -43,6 +44,9 @@ jobs:
         python-ruamel-yaml:p
         python-ruamel.yaml.clib:p
         python-numpy:p
+        igraph:p
+        cmake:p
+        clang:p
 
   Benchmarking:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r0
@@ -50,6 +54,7 @@ jobs:
       - Params
     with:
       jobs: ${{ needs.Params.outputs.python_jobs }}
+      requirements: '-r tests/benchmark/requirements.txt'
 #      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
       unittest_directory: 'tests/benchmark'
       pacboy: >-

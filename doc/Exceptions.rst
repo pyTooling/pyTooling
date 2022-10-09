@@ -1,11 +1,17 @@
 .. _EXECPTION:
 
+Overview
+########
+
+.. contents:: Table of Contents
+   :depth: 2
+
 .. _EXECPTION/Base:
 
 Exception Base Classes
 ######################
 
-The ``pyTooling.Exceptions`` package provides extensible exceptions.
+The :py:mod:`pyTooling.Exceptions` package provides extensible exceptions.
 
 
 ExceptionBase
@@ -32,13 +38,17 @@ Predefined exceptions of ``pyTooling.Exceptions``.
 EnvironmentException
 ********************
 
+.. todo:: EXCEPTION:: Needs documentation for EnvironmentException
 
 PlatformNotSupportedException
 *****************************
 
+.. todo:: EXCEPTION:: Needs documentation for PlatformNotSupportedException
 
 NotConfiguredException
 **********************
+
+.. todo:: EXCEPTION:: Needs documentation for NotConfiguredException
 
 .. seealso::
 

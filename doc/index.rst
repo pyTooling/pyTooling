@@ -10,7 +10,7 @@
    |  |SHIELD:svg:pyTooling-pypi-tag| |SHIELD:svg:pyTooling-pypi-status| |SHIELD:svg:pyTooling-pypi-python|
    |  |SHIELD:svg:pyTooling-gha-test| |SHIELD:svg:pyTooling-lib-status| |SHIELD:svg:pyTooling-codacy-quality| |SHIELD:svg:pyTooling-codacy-coverage| |SHIELD:svg:pyTooling-codecov-coverage|
 
-.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:svg:pyTooling-lib-dep| |SHIELD:svg:pyTooling-req-status| |SHIELD:svg:pyTooling-lib-rank|
+.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:svg:pyTooling-lib-dep| |SHIELD:svg:pyTooling-lib-rank|
 
 .. only:: latex
 
@@ -18,7 +18,7 @@
    |SHIELD:png:pyTooling-pypi-tag| |SHIELD:png:pyTooling-pypi-status| |SHIELD:png:pyTooling-pypi-python|
    |SHIELD:png:pyTooling-gha-test| |SHIELD:png:pyTooling-lib-status| |SHIELD:png:pyTooling-codacy-quality| |SHIELD:png:pyTooling-codacy-coverage| |SHIELD:png:pyTooling-codecov-coverage|
 
-.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:png:pyTooling-lib-dep| |SHIELD:png:pyTooling-req-status| |SHIELD:png:pyTooling-lib-rank|
+.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:png:pyTooling-lib-dep| |SHIELD:png:pyTooling-lib-rank|
 
 --------------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ pyTooling Documentation
 #######################
 
 **pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
-exceptions. It also provides helper functions to ease the handling of package descriptions.
+exceptions. It also provides lots of helper functions e.g. to ease the handling of package descriptions.
 
 It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
 
@@ -47,41 +47,78 @@ GHA-based CI pipelines for Python projects.
 Package Details
 ***************
 
+Common Helper Functions
+=======================
+
+This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
+
+* :ref:`COMMON/Helper/getsizeof` calculates the "real" size of a data structure.
+* :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
+* :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
+* :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
+
+
 Common Classes
 ==============
 
-* Emulations of :ref:`Call-by-reference parameters <COMMON/CallByRef>` are provided by the :py:mod:`pyTooling.CallByRef` module.
-* Classes representing :ref:`unifyed license names <LICENSING>` and mappings are provided by the :py:mod:`pyTooling.Licensing` module.
-* The :ref:`current platform/environment <COMMON/Platform>` Python is running in, can be access unifying multiple platform APIs
-  provided by Python and summarizing the information in a single class instance.
-* :ref:`Representations of version numbers <VERSIONING>` |br|
-  |rarr| Class representations of semantic version (SemVer) and calendar version (CalVer) numbers are provided by the
-  :py:mod:`pyTooling.Versioning` module.
+* Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. This behavior can be
+  emulated with classes provided by the :py:mod:`pyTooling.CallByRef` module.
+* Setuptools, PyPI, and others have a varying understanding of license names. The :py:mod:`pyTooling.Licensing` module
+  provides :ref:`unifyed license names <LICENSING>` as well as license name mappings or translations.
+* Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
+  Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
+  :ref:`unified platform and environment description <COMMON/Platform>` by summarizing multiple platform APIs into a
+  single class instance.
+* While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
+  provides such a :ref:`representations of version numbers <VERSIONING>` following semantic versioning (SemVer) and
+  calendar versioning (CalVer) schemes. It's provided by the :py:mod:`pyTooling.Versioning` module.
 
 
 Configuration
 =============
 
-TBD
+Various file formats suitable for configuration information share the same features supporting: key-value pairs
+(dictionaries), sequences (lists), and simple types like string, integer and float. pyTooling provides an
+:ref:`abstract configuration file data model <CONFIG>` supporting these features. Moreover, concrete
+:ref:`configuration file format reader <CONFIG/FileFormat>` implementations are provided as well.
+
+* :ref:`JSON configuration reader <CONFIG/FileFormat/JSON>` |rarr| To be implemented.
+* :ref:`TOML configuration reader <CONFIG/FileFormat/TOML>`  |rarr| To be implemented.
+* :ref:`YAML configuration reader <CONFIG/FileFormat/YAML>` for the YAML file format.
+
 
 Data Structures
 ===============
 
-Fast data structures.
-
-.. #* Trees:
+pyTooling also provides fast and powerful data structures offering object-oriented APIs:
 
 * :ref:`Tree data structure <STRUCT/Tree>` |br|
   |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
+* :ref:`Graph data structure <STRUCT/Graph>` |br|
+  |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
+  class.
+* :ref:`Path data structure <STRUCT/Path>` |br|
+  |rarr| To be documented.
+
+.. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
+   |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
 
 
 Decorators
 ==========
 
+* :ref:`Abstract Methods <META/Abstract>`
+
+  * Methods marked with :py:func:`~pyTooling.MetaClasses.abstractmethod` are abstract and need to be overwritten in a
+    derived class. |br|
+    An *abstract method* might be called from the overwriting method.
+  * Methods marked with :py:func:`~pyTooling.MetaClasses.mustoverride` are abstract and need to be overridden in a
+    derived class. |br|
+    It's not allowed to call a *mustoverride method*.
+
 * :ref:`Documentation <DECO/Documentation>`
 
   * Copy the doc-string from given base-class via :py:class:`~pyTooling.Decorators.InheritDocString`.
-
 
 * :ref:`Visibility <DECO/Visibility>`
 
@@ -103,16 +140,28 @@ Exceptions
 Meta-Classes
 ============
 
-* :py:class:`~pyTooling.MetaClasses.Overloading` |br|
-  ``Overloading`` allows method overloading in Python classes. It dispatches method calls based on method signatures
-  (type annotations).
-* :py:class:`~pyTooling.MetaClasses.Singleton` |br|
-  A class created from meta-class ``Singleton`` allows only a single instance to exist. If a further instance is tried
-  to be created, a cached instance will be returned.
-* :py:class:`~pyTooling.MetaClasses.SlottedType` |br|
-  All type-annotated fields in a class get stored in a slot rather than in ``__dict__``. This improves the memory
-  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
-  all derived classes.
+pyTooling provides an :ref:`enhanced meta-class <META>` called :py:class:`~pyTooling.MetaClasses.ExtendedType`.
+This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :ref:`singletons <META/Singleton>`,
+:ref:`slotted types <META/Slotted>` and combinations thereof.
+
+:pycode:`class MyClass(metaclass=ExtendedType):`
+  A class definition using that meta-class can implement :ref:`abstract methods <META/Abstract>` using decorators
+  :pycode:`@abstractmethod` or :pycode:`@mustoverride`.
+
+:pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
+  A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
+  exist. If another instance is going to be created, a previously cached instance of that class will be returned.
+
+:pycode:`class MyClass(metaclass=ExtendedType, useSlots=True):`
+  A class defined with enabled :ref:`useSlots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
+  translates all type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and
+  access compared to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint
+  as well as the field access performance of all class instances. This behavior is automatically inherited to all
+  derived classes.
+
+:pycode:`class MyClass(ObjectWithSlots):`
+  A class definition deriving from :py:class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
+  behavior to that class and all derived classes.
 
 
 Packaging
@@ -232,13 +281,16 @@ License
 
 .. raw:: latex
 
-   \part{References}
+   \part{References and Reports}
 
 .. toctree::
-   :caption: References
+   :caption: References and Reports
    :hidden:
 
-   pyTooling/index
+   pyTooling/pyTooling
+   Unittest Report ➚ <unittests/index>
+   Coverage Report ➚ <coverage/index>
+   Static Type Check Report ➚ <typing/index>
 
 .. raw:: latex
 
@@ -248,10 +300,9 @@ License
    :caption: Appendix
    :hidden:
 
-   Coverage Report ➚ <coverage/index>
-   Static Type Check Report ➚ <typing/index>
    License
    Doc-License
    Glossary
    genindex
-   py-modindex
+   Python Module Index <modindex>
+   TODO

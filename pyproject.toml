@@ -8,6 +8,15 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 120
 
+[tool.mypy]
+python_version = "3.10"
+namespace_packages = true
+
+pretty = true
+show_error_context = true
+
+html_report = "report/typing"
+
 [tool.pytest.ini_options]
 # Don't set 'python_classes = *' otherwise, pytest doesn't search for classes
 # derived from unittest.Testcase
