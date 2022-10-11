@@ -628,6 +628,63 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 			yield from self._verticesWithID
 		return iter(gen())
 
+	def IterateRoots(self) -> Generator[Vertex, None, None]:
+		for vertex in self._verticesWithID.values():
+			if len(vertex._inbound) == 0:
+				yield vertex
+
+		for vertex in self._verticesWithoutID:
+			if len(vertex._inbound) == 0:
+				yield vertex
+
+	def IterateLeafs(self) -> Generator[Vertex, None, None]:
+		for vertex in self._verticesWithID.values():
+			if len(vertex._outbound) == 0:
+				yield vertex
+
+		for vertex in self._verticesWithoutID:
+			if len(vertex._outbound) == 0:
+				yield vertex
+
+	def IterateTopologically(self) -> Generator[Vertex, None, None]:
+		outboundEdgeCounts = {}
+		leafVertexes = []
+
+		for vertex in self._verticesWithID.values():
+			count = len(vertex._outbound)
+			if count == 0:
+				leafVertexes.append(vertex)
+			else:
+				outboundEdgeCounts[vertex] = count
+		for vertex in self._verticesWithoutID:
+			count = len(vertex._outbound)
+			if count == 0:
+				leafVertexes.append(vertex)
+			else:
+				outboundEdgeCounts[vertex] = count
+
+		if not leafVertexes:
+			raise Exception(f"Graph has no leafs. Thus no topological sorting exists.")
+
+		overallCount = len(outboundEdgeCounts) + len(leafVertexes)
+
+		for vertex in leafVertexes:
+			yield vertex
+			overallCount -= 1
+			for inboundEdge in vertex._inbound:
+				sourceVertex = inboundEdge.Source
+				count = outboundEdgeCounts[sourceVertex] - 1
+				outboundEdgeCounts[sourceVertex] = count
+				if count == 0:
+					leafVertexes.append(sourceVertex)
+
+		if overallCount == 0:
+			return
+		elif overallCount > 0:
+			raise Exception(f"Graph has remaining vertexes. Thus the graph has at least one cycle.")
+
+		raise Exception(f"Graph data structure is corrupted.")
+
 	def IterateBFS(self):
 		raise NotImplementedError()
 

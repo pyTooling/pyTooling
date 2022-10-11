@@ -118,6 +118,40 @@ class Iterate(TestCase):
 		(14, 10, 9),
 	]
 
+
+class IterateOnGraph(Iterate):
+	def test_Roots(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+		v0 = vList[0]
+
+		for u, v, w in self._edgesForGraph1:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertSetEqual({0, 12, 13}, set(v.ID for v in g.IterateRoots()))
+
+	def test_Leafs(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+		v0 = vList[0]
+
+		for u, v, w in self._edgesForGraph1:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertSetEqual({4, 5, 14}, set(v.ID for v in g.IterateLeafs()))
+
+	def test_Topologically(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+		v0 = vList[0]
+
+		for u, v, w in self._edgesForGraph1:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertListEqual([4, 5, 14], [v.ID for v in g.IterateTopologically()])
+
+
+class IterateStartingFromVertex(Iterate):
 	def test_DFS(self):
 		g = Graph()
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
