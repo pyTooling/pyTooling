@@ -88,6 +88,23 @@ class Construction(TestCase):
 
 
 class Iterate(TestCase):
+	_edgesForGraph0 = [
+		(0, 3, 0),
+		(1, 3, 0),
+		(2, 0, 0), (2, 1, 0),             # root
+		(3, 6, 0), (3, 7, 0),
+		(4, 0, 0), (4, 3, 0), (4, 5, 0),  # root
+		(5, 9, 0), (5, 10, 0),
+		(6, 8, 0),
+		(7, 8, 0), (7, 9, 0),
+		(8, 11, 0),
+		(9, 11, 0), (9, 12, 0),
+		(10, 9, 0),
+		# 11                                leaf
+		# 12                                leaf
+		(13, 14, 0),                      # root
+		# 14                                leaf
+	]
 	_edgesForGraph1 = [
 		(0, 1, 0), (0, 9, 0),
 		(1, 8, 0),
@@ -123,32 +140,29 @@ class IterateOnGraph(Iterate):
 	def test_Roots(self):
 		g = Graph()
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
-		v0 = vList[0]
 
-		for u, v, w in self._edgesForGraph1:
+		for u, v, w in self._edgesForGraph0:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		self.assertSetEqual({0, 12, 13}, set(v.ID for v in g.IterateRoots()))
+		self.assertSetEqual({2, 4, 13}, set(v.ID for v in g.IterateRoots()))
 
 	def test_Leafs(self):
 		g = Graph()
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
-		v0 = vList[0]
 
-		for u, v, w in self._edgesForGraph1:
+		for u, v, w in self._edgesForGraph0:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		self.assertSetEqual({4, 5, 14}, set(v.ID for v in g.IterateLeafs()))
+		self.assertSetEqual({11, 12, 14}, set(v.ID for v in g.IterateLeafs()))
 
 	def test_Topologically(self):
 		g = Graph()
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
-		v0 = vList[0]
 
-		for u, v, w in self._edgesForGraph1:
+		for u, v, w in self._edgesForGraph0:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		self.assertListEqual([4, 5, 14], [v.ID for v in g.IterateTopologically()])
+		self.assertListEqual([11, 12, 14, 8, 9, 13, 6, 7, 10, 3, 5, 0, 1, 4, 2], [v.ID for v in g.IterateTopologically()])
 
 
 class IterateStartingFromVertex(Iterate):
