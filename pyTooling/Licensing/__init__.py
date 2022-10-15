@@ -169,12 +169,12 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		Returns the Python package classifier for this license if it's defined.
 
+		:returns: The Python package classifier.
+		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+
 		.. seealso::
 
 		   List of `Python classifiers <https://pypi.org/classifiers/>`__
-
-		:returns: The Python package classifier.
-		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
 			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]

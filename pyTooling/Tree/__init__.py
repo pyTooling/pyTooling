@@ -36,7 +36,7 @@ from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional a
 from ..Decorators import export
 from ..MetaClasses import ExtendedType
 
-IDType = TypeVar("VertexIDType", bound=Hashable)
+IDType = TypeVar("IDType", bound=Hashable)
 """A type variable for a tree's ID."""
 
 ValueType = TypeVar("ValueType")
@@ -387,16 +387,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :py:attr:`_root` assigned and
 		all IDs are merged into the node's root's ID lists (:py:attr:`_nodesWithID`).
 
+		:param child: The child node to be added to the tree.
+		:raises TypeError: If parameter ``child`` is not a :py:class:`Node`.
+		:raises Exception: If parameter ``child`` is already a node in the tree.
+
 		.. seealso::
 
 		   :py:attr:`Parent` |br|
 		      |rarr| Set the parent of a node.
 		   :py:meth:`AddChildren` |br|
 		      |rarr| Add multiple children at once.
-
-		:param child: The child node to be added to the tree.
-		:raises TypeError: If parameter ``child`` is not a :py:class:`Node`.
-		:raises Exception: If parameter ``child`` is already a node in the tree.
 		"""
 		if not isinstance(child, Node):
 			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
@@ -417,16 +417,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Add multiple children nodes to the current node of the tree.
 
+		:param children: The list of children nodes to be added to the tree.
+		:raises TypeError: If parameter ``children`` contains an item, which is not a :py:class:`Node`.
+		:raises Exception: If parameter ``children`` contains an item, which is already a node in the tree.
+
 		.. seealso::
 
 		   :py:attr:`Parent` |br|
 		      |rarr| Set the parent of a node.
 		   :py:meth:`AddChild` |br|
 		      |rarr| Add a child node to the tree.
-
-		:param children: The list of children nodes to be added to the tree.
-		:raises TypeError: If parameter ``children`` contains an item, which is not a :py:class:`Node`.
-		:raises Exception: If parameter ``children`` contains an item, which is already a node in the tree.
 		"""
 		for child in children:
 			if not isinstance(child, Node):
@@ -482,6 +482,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		A generator to iterate all direct children of the current node.
 
+		:returns: A generator to iterate all children.
+
 		.. seealso::
 
 		   :py:meth:`GetDescendants` |br|
@@ -492,8 +494,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all children.
 		"""
 		for child in self._children:
 			yield child
@@ -542,6 +542,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all descendants of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
 		it doesn't include the node itself.
 
+		:returns: A generator to iterate all siblings.
+
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
@@ -552,8 +554,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all siblings.
 		"""
 		for child in self._children:
 			yield child
@@ -583,6 +583,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetDescendants`,
 		this includes also the node itself as the first returned node.
 
+		:returns: A generator to iterate all siblings level-by-level.
+
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
@@ -593,8 +595,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all siblings level-by-level.
 		"""
 		queue = deque([self])
 		while queue:
@@ -608,6 +608,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all siblings of the current node in pre-order. In contrast to `GetDescendants`, this includes
 		also the node itself as the first returned node.
 
+		:returns: A generator to iterate all siblings in pre-order.
+
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
@@ -618,8 +620,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all siblings in pre-order.
 		"""
 		yield self
 		for child in self._children:
@@ -629,6 +629,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		A generator to iterate all siblings of the current node in post-order. In contrast to `GetDescendants`, this
 		includes also the node itself as the last returned node.
+
+		:returns: A generator to iterate all siblings in post-order.
 
 		.. seealso::
 
@@ -640,8 +642,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-
-		:returns: A generator to iterate all siblings in post-order.
 		"""
 		for child in self._children:
 			yield from child.IteratePostOrder()

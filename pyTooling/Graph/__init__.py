@@ -31,7 +31,7 @@
 """
 A powerful **graph** data structure for Python.
 
-Graph algorithms using all vertexes are provided as methods on the graph instance. Whereas graph algorithms based on a
+Graph algorithms using all vertices are provided as methods on the graph instance. Whereas graph algorithms based on a
 starting vertex are provided as methods on a vertex.
 """
 import heapq
@@ -70,6 +70,12 @@ EdgeDictKeyType = TypeVar("EdgeDictKeyType", bound=Hashable)
 EdgeDictValueType = TypeVar("EdgeDictValueType")
 """A type variable for a edge's dictionary values."""
 
+ComponentDictKeyType = TypeVar("ComponentDictKeyType", bound=Hashable)
+"""A type variable for a component's dictionary keys."""
+
+ComponentDictValueType = TypeVar("ComponentDictValueType")
+"""A type variable for a component's dictionary values."""
+
 GraphDictKeyType = TypeVar("GraphDictKeyType", bound=Hashable)
 """A type variable for a graph's dictionary keys."""
 
@@ -78,12 +84,16 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 
 @export
-class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
+class Vertex(
+	Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType],
+	metaclass=ExtendedType, useSlots=True
+):
 	"""
 	A **vertex** can have a unique ID, a value and attached meta information as key-value pairs. A vertex has references
 	to inbound and outbound edges, thus a graph can be traversed in reverse.
 	"""
 	_graph:     'Graph[VertexIDType, EdgeIDType]'
+	_component: 'Component'
 	_inbound:   List['Edge']
 	_outbound:  List['Edge']
 
@@ -112,10 +122,6 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		self._dict = {}
 
 	@property
-	def Graph(self) -> 'Graph':
-		return self._graph
-
-	@property
 	def ID(self) -> Nullable[VertexIDType]:
 		"""
 		Read-only property to access the unique ID of a vertex (:py:attr:`_id`).
@@ -140,11 +146,23 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		self._value = value
 
 	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
-		""".. todo:: Needs documentation."""
+		"""
+		Read a vertex's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
 		return self._dict[key]
 
 	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
-		""".. todo:: Needs documentation."""
+		"""
+		Create or update a vertex's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
@@ -158,6 +176,24 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		:returns: Number of outbound edges.
 		"""
 		return len(self._outbound)
+
+	@property
+	def Graph(self) -> 'Graph':
+		"""
+		Read-only property to access the graph, this vertex is associated to (:py:attr:`_graph`).
+
+		:returns: The graph this vertex is associated to.
+		"""
+		return self._graph
+
+	@property
+	def Component(self) -> 'Component':
+		"""
+		Read-only property to access the component, this vertex is associated to (:py:attr:`_component`).
+
+		:returns: The component this vertex is associated to.
+		"""
+		return self._component
 
 	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		if not isinstance(vertex, Vertex):
@@ -208,24 +244,24 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 		for edge in self._inbound:
 			yield edge
 
-	def IterateSuccessorVertexes(self):
+	def IterateSuccessorVertices(self):
 		for edge in self._outbound:
 			yield edge.Destination
 
-	def IteratePredecessorVertexes(self):
+	def IteratePredecessorVertices(self):
 		for edge in self._inbound:
 			yield edge.Source
 
-	def IterateVertexesBFS(self) -> Generator['Vertex', None, None]:
+	def IterateVerticesBFS(self) -> Generator['Vertex', None, None]:
 		"""
-		A generator to iterate all reachable vertexes starting from this node in breadth-first search (BFS) order.
+		A generator to iterate all reachable vertices starting from this node in breadth-first search (BFS) order.
+
+		:returns: A generator to iterate vertices traversed in BFS order.
 
 		.. seealso::
 
-		   :py:meth:`IterateVertexesDFS` |br|
-		      |rarr| Iterate all reachable vertexes DFS order.
-
-		:returns: A generator to iterate vertexes traversed in BFS order.
+		   :py:meth:`IterateVerticesDFS` |br|
+		      |rarr| Iterate all reachable vertices **depth-first search** order.
 		"""
 		visited: Set[Vertex] = set()
 		queue: Deque[Vertex] = deque()
@@ -247,18 +283,18 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 					queue.appendleft(nextVertex)
 				visited.add(nextVertex)
 
-	def IterateVertexesDFS(self) -> Generator['Vertex', None, None]:
+	def IterateVerticesDFS(self) -> Generator['Vertex', None, None]:
 		"""
-		A generator to iterate all reachable vertexes starting from this node in depth-first search (DFS) order.
+		A generator to iterate all reachable vertices starting from this node in depth-first search (DFS) order.
+
+		:returns: A generator to iterate vertices traversed in DFS order.
 
 		.. seealso::
 
-		   :py:meth:`IterateVertexesBFS` |br|
-		      |rarr| Iterate all reachable vertexes BFS order.
+		   :py:meth:`IterateVerticesBFS` |br|
+		      |rarr| Iterate all reachable vertices **breadth-first search** order.
 
 		   Wikipedia - https://en.wikipedia.org/wiki/Depth-first_search
-
-		:returns: A generator to iterate vertexes traversed in DFS order.
 		"""
 		visited: Set[Vertex] = set()
 		stack: List[typing_Iterator[Edge]] = list()
@@ -304,7 +340,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 			def __str__(self):
 				return f"Vertex: {self.ref.ID}"
 
-		# Initially add all reachable vertexes to a queue if vertexes to be processed.
+		# Initially add all reachable vertices to a queue if vertices to be processed.
 		startNode = Node(None, self)
 		visited: Set[Vertex] = set()
 		queue: Deque[Node] = deque()
@@ -324,7 +360,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 				visited.add(nextVertex)
 				queue.appendleft(Node(startNode, nextVertex))
 		else:
-			# Process queue until destination is found or no further vertexes are reachable.
+			# Process queue until destination is found or no further vertices are reachable.
 			while queue:
 				node = queue.pop()
 				for edge in node.ref._outbound:
@@ -342,7 +378,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 					continue
 				break
 			else:
-				# All reachable vertexes have been processed, but destination was not among them.
+				# All reachable vertices have been processed, but destination was not among them.
 				raise KeyError(f"Destination is not reachable.")
 
 		# Reverse order of linked list from destinationNode to startNode
@@ -355,7 +391,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 			currentNode = previousNode
 			previousNode = node
 
-		# Scan reversed linked-list and yield referenced vertexes
+		# Scan reversed linked-list and yield referenced vertices
 		yield startNode.ref
 		node = startNode.parent
 		while node is not None:
@@ -410,7 +446,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 				visited.add(nextVertex)
 				heapq.heappush(priorityQueue, Node(startNode, edge._weight, nextVertex))
 		else:
-			# Process priority queue until destination is found or no further vertexes are reachable.
+			# Process priority queue until destination is found or no further vertices are reachable.
 			while priorityQueue:
 				node = heapq.heappop(priorityQueue)
 				for edge in node.ref._outbound:
@@ -428,7 +464,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 					continue
 				break
 			else:
-				# All reachable vertexes have been processed, but destination was not among them.
+				# All reachable vertices have been processed, but destination was not among them.
 				raise KeyError(f"Destination is not reachable.")
 
 		# Reverse order of linked-list from destinationNode to startNode
@@ -441,7 +477,7 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 			currentNode = previousNode
 			previousNode = node
 
-		# Scan reversed linked-list and yield referenced vertexes
+		# Scan reversed linked-list and yield referenced vertices
 		yield (startNode.ref, startNode.distance)
 		node = startNode.parent
 		while node is not None:
@@ -500,7 +536,10 @@ class Vertex(Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDic
 
 
 @export
-class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]):
+class Edge(
+	Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType],
+	metaclass=ExtendedType, useSlots=True
+):
 	"""
 	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value pairs. All edges are
 	directed.
@@ -512,7 +551,14 @@ class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, E
 	_value:       Nullable[EdgeValueType]
 	_dict:        Dict[EdgeDictKeyType, EdgeDictValueType]
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, weight: EdgeWeightType = None, value: VertexValueType = None):
+	def __init__(
+		self,
+		source: Vertex,
+		destination: Vertex,
+		edgeID: EdgeIDType = None,
+		weight: EdgeWeightType = None,
+		value: VertexValueType = None
+	):
 		if source._graph is not destination._graph:
 			raise Exception(f"Source vertex and destination vertex are not in same graph.")
 
@@ -530,18 +576,40 @@ class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, E
 
 	@property
 	def ID(self) -> Nullable[EdgeIDType]:
+		"""
+		Read-only property to access the unique ID of an edge (:py:attr:`_id`).
+
+		If no ID was given at edge construction time, ID return None.
+
+		:returns: Unique ID of an edge, if ID was given at edge creation time, else None.
+		"""
 		return self._id
 
 	@property
 	def Source(self) -> Vertex:
+		"""
+		Read-only property to get the source (:py:attr:`_source`) of an edge.
+
+		:returns: The source of an edge.
+		"""
 		return self._source
 
 	@property
 	def Destination(self) -> Vertex:
+		"""
+		Read-only property to get the destination (:py:attr:`_destination`) of an edge.
+
+		:returns: The destination of an edge.
+		"""
 		return self._destination
 
 	@property
-	def Weight(self) -> EdgeWeightType:
+	def Weight(self) -> Nullable[EdgeWeightType]:
+		"""
+		Property to get and set the weight (:py:attr:`_weight`) of an edge.
+
+		:returns: The weight of an edge.
+		"""
 		return self._weight
 
 	@Weight.setter
@@ -549,24 +617,36 @@ class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, E
 		self._weight = value
 
 	@property
-	def Value(self) -> VertexValueType:
+	def Value(self) -> Nullable[VertexValueType]:
 		"""
-		Property to get and set the value (:py:attr:`_value`) of a vertex.
+		Property to get and set the value (:py:attr:`_value`) of an edge.
 
-		:returns: The value of a vertex.
+		:returns: The value of an edge.
 		"""
 		return self._value
 
 	@Value.setter
-	def Value(self, value: VertexValueType) -> None:
+	def Value(self, value: Nullable[VertexValueType]) -> None:
 		self._value = value
 
 	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
-		""".. todo:: Needs documentation."""
+		"""
+		Read an edge's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
 		return self._dict[key]
 
 	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
-		""".. todo:: Needs documentation."""
+		"""
+		Create or update an edge's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
@@ -575,17 +655,97 @@ class Edge(Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, E
 
 
 @export
-class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], metaclass=ExtendedType, useSlots=True):
+class Component(
+	Generic[
+		ComponentDictKeyType, ComponentDictValueType,
+		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	],
+	metaclass=ExtendedType, useSlots=True
+):
+	_graph:    'Graph'
+	_name:     str
+	_vertices: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_dict:     Dict[ComponentDictKeyType, ComponentDictValueType]
+
+	@property
+	def Graph(self) -> 'Graph':
+		"""
+		Read-only property to access the graph, this component is associated to (:py:attr:`_graph`).
+
+		:returns: The graph this component is associated to.
+		"""
+		return self._graph
+
+	@property
+	def Name(self) -> str:
+		"""
+		Property to get and set the name (:py:attr:`_name`) of the component.
+
+		:returns: The value of a component.
+		"""
+		return self._name
+
+	@Name.setter
+	def Name(self, value: str) -> None:
+		if not isinstance(value, str):
+			raise TypeError()
+
+		self._name = value
+
+	def __getitem__(self, key: ComponentDictKeyType) -> ComponentDictValueType:
+		"""
+		Read a component's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: ComponentDictKeyType, value: ComponentDictValueType) -> None:
+		"""
+		Create or update a component's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: ComponentDictKeyType) -> None:
+		""".. todo:: Needs documentation."""
+		del self._dict[key]
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of vertices in that component.
+
+		:returns: Number of vertices.
+		"""
+		return len(self._vertices)
+
+
+@export
+class Graph(
+	Generic[
+		GraphDictKeyType, GraphDictValueType,
+		ComponentDictKeyType, ComponentDictValueType,
+		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
+	],
+	metaclass=ExtendedType, useSlots=True
+):
 	"""
 	A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to
 	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
 	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value pairs.
 	"""
 	_name:              str
-	_verticesWithID:    Dict[VertexIDType, Vertex]
+	_components:        List[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_verticesWithID:    Dict[VertexIDType, Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_edgesWithID:       Dict[EdgeIDType, Edge]
-	_edgesWithoutID:    List[Edge]
+	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
+	_edgesWithoutID:    List[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_dict:              Dict[GraphDictKeyType, GraphDictValueType]
 
 	def __init__(self, name: str = None):
@@ -598,6 +758,11 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 
 	@property
 	def Name(self) -> str:
+		"""
+		Property to get and set the name (:py:attr:`_name`) of the graph.
+
+		:returns: The value of a graph.
+		"""
 		return self._name
 
 	@Name.setter
@@ -607,28 +772,50 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 
 		self._name = value
 
-	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
-		""".. todo:: Needs documentation."""
+	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
+		"""
+		Read a graph's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
-		""".. todo:: Needs documentation."""
+	def __setitem__(self, key: GraphDictKeyType, value: GraphDictValueType) -> None:
+		"""
+		Create or update a graph's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
 		self._dict[key] = value
 
-	def __delitem__(self, key: VertexDictKeyType) -> None:
+	def __delitem__(self, key: GraphDictKeyType) -> None:
 		""".. todo:: Needs documentation."""
 		del self._dict[key]
 
 	def __len__(self) -> int:
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
 
-	def __iter__(self) -> Iterator[Vertex]:
+	def __iter__(self) -> Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
 		def gen():
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID
 		return iter(gen())
 
-	def IterateRoots(self) -> Generator[Vertex, None, None]:
+	def IterateRoots(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		"""
+		Iterate all roots (vertices without inbound edges / without predecessors) of a graph.
+
+		:return: A generator to iterate vertices without inbound edges.
+
+		.. seealso::
+
+		   :py:meth:`IterateLeafs` |br|
+		      |rarr| Iterate leafs of a graph.
+		"""
 		for vertex in self._verticesWithID.values():
 			if len(vertex._inbound) == 0:
 				yield vertex
@@ -637,7 +824,17 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 			if len(vertex._inbound) == 0:
 				yield vertex
 
-	def IterateLeafs(self) -> Generator[Vertex, None, None]:
+	def IterateLeafs(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		"""
+		Iterate all leafs (vertices without outbound edges / without successors) of a graph.
+
+		:return: A generator to iterate vertices without outbound edges.
+
+		.. seealso::
+
+		   :py:meth:`IterateRoots` |br|
+		      |rarr| Iterate roots of a graph.
+		"""
 		for vertex in self._verticesWithID.values():
 			if len(vertex._outbound) == 0:
 				yield vertex
@@ -646,29 +843,35 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 			if len(vertex._outbound) == 0:
 				yield vertex
 
-	def IterateTopologically(self) -> Generator[Vertex, None, None]:
+	def IterateTopologically(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		"""
+		Iterate all vertices in topological order.
+
+		:return:           A generator to iterate vertices in topological order.
+		:except Exception: Raised if graph is cyclic, thus topological sorting isn't possible.
+		"""
 		outboundEdgeCounts = {}
-		leafVertexes = []
+		leafVertices = []
 
 		for vertex in self._verticesWithID.values():
 			count = len(vertex._outbound)
 			if count == 0:
-				leafVertexes.append(vertex)
+				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
 		for vertex in self._verticesWithoutID:
 			count = len(vertex._outbound)
 			if count == 0:
-				leafVertexes.append(vertex)
+				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
 
-		if not leafVertexes:
-			raise Exception(f"Graph has no leafs. Thus no topological sorting exists.")
+		if not leafVertices:
+			raise Exception(f"Graph has no leafs. Thus, no topological sorting exists.")
 
-		overallCount = len(outboundEdgeCounts) + len(leafVertexes)
+		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
-		for vertex in leafVertexes:
+		for vertex in leafVertices:
 			yield vertex
 			overallCount -= 1
 			for inboundEdge in vertex._inbound:
@@ -676,14 +879,61 @@ class Graph(Generic[GraphDictKeyType, GraphDictValueType, VertexIDType, EdgeIDTy
 				count = outboundEdgeCounts[sourceVertex] - 1
 				outboundEdgeCounts[sourceVertex] = count
 				if count == 0:
-					leafVertexes.append(sourceVertex)
+					leafVertices.append(sourceVertex)
 
 		if overallCount == 0:
 			return
 		elif overallCount > 0:
-			raise Exception(f"Graph has remaining vertexes. Thus the graph has at least one cycle.")
+			raise Exception(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
-		raise Exception(f"Graph data structure is corrupted.")
+		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
+
+	def HasCycle(self) -> bool:
+		# IsAcyclic ?
+
+		# Handle trivial case if graph is empty
+		if len(self._verticesWithID) + len(self._verticesWithoutID) == 0:
+			return False
+
+		outboundEdgeCounts = {}
+		leafVertices = []
+
+		for vertex in self._verticesWithID.values():
+			count = len(vertex._outbound)
+			if count == 0:
+				leafVertices.append(vertex)
+			else:
+				outboundEdgeCounts[vertex] = count
+		for vertex in self._verticesWithoutID:
+			count = len(vertex._outbound)
+			if count == 0:
+				leafVertices.append(vertex)
+			else:
+				outboundEdgeCounts[vertex] = count
+
+		# If there are no leafs, then each vertex has at least one inbound and one outbound edges. Thus, there is a cycle.
+		if not leafVertices:
+			return True
+
+		overallCount = len(outboundEdgeCounts) + len(leafVertices)
+
+		for vertex in leafVertices:
+			overallCount -= 1
+			for inboundEdge in vertex._inbound:
+				sourceVertex = inboundEdge.Source
+				count = outboundEdgeCounts[sourceVertex] - 1
+				outboundEdgeCounts[sourceVertex] = count
+				if count == 0:
+					leafVertices.append(sourceVertex)
+
+		# If all vertices were processed, no cycle exists.
+		if overallCount == 0:
+			return False
+		# If there are remaining vertices, then a cycle exists.
+		elif overallCount > 0:
+			return True
+
+		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
 
 	def IterateBFS(self):
 		raise NotImplementedError()

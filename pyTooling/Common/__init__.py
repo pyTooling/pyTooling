@@ -190,15 +190,15 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 	"""
 	Iterate multiple dictionaries simultaneously.
 
+	:param dicts: Tuple of dictionaries to iterate as positional parameters.
+	:returns:     A generator returning a tuple containing the key and values of each dictionary in the order of given
+	              dictionaries.
+
 	.. seealso::
 
 	   The code is based on code snippets and ideas from:
 
 	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
-
-	:param dicts: Tuple of dictionaries to iterate as positional parameters.
-	:returns:     A generator returning a tuple containing the key and values of each dictionary in the order of given
-	              dictionaries.
 	"""
 	if not dicts:
 		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")

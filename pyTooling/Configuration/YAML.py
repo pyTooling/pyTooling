@@ -305,7 +305,7 @@ class Configuration(Abstract_Configuration, Dictionary):
 		Access a configuration node by key.
 
 		:param key: The key to look for.
-		:returns:   A node (seuqence or dictionary) or scalar value (int, float, str).
+		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 		return self._GetNodeOrValue(str(key))
 
