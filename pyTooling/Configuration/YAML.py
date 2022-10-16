@@ -68,6 +68,11 @@ class Node(Abstract_Node):
 		self._length = len(yamlNode)
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of sub-elements.
+
+		:returns: Number of sub-elements.
+		"""
 		return self._length
 
 	def __getitem__(self, key: KeyT) -> ValueT:

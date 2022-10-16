@@ -83,6 +83,11 @@ class PathMixIn:
 		self._elements =   elements
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of path elements.
+
+		:returns: Number of path elements.
+		"""
 		return len(self._elements)
 
 	def __str__(self) -> str:

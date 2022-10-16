@@ -85,24 +85,24 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	Each node can have a **value** (:py:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
 	modified later. Use the property :py:attr:`Value` to get or set the value.
 
-	Moreover, each node can store various key-value pairs (:py:attr:`_dict`). Use the dictionary syntax to get and set
+	Moreover, each node can store various key-value-pairs (:py:attr:`_dict`). Use the dictionary syntax to get and set
 	key-value-pairs.
 	"""
 
 	_id: Nullable[IDType]                         #: Unique identifier of a node. ``None`` if not used.
 	_nodesWithID: Nullable[Dict[IDType, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
-	_nodesWithoutID: Nullable[List['Node']]    #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
-	_root: 'Node'                              #: Reference to the root of a tree. ``self`` if it's the root node.
-	_parent: Nullable['Node']                  #: Reference to the parent node. ``None`` if it's the root node.
-	_children: List['Node']                    #: List of all children
+	_nodesWithoutID: Nullable[List['Node']]       #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
+	_root: 'Node'                                 #: Reference to the root of a tree. ``self`` if it's the root node.
+	_parent: Nullable['Node']                     #: Reference to the parent node. ``None`` if it's the root node.
+	_children: List['Node']                       #: List of all children
 #	_links: List['Node']
 
-	_level: int                                #: Level of the node (distance to the root).
+	_level: int                                   #: Level of the node (distance to the root).
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
-	_dict: Dict[DictKeyType, DictValueType]          #: Dictionary to store key-value-pairs attached to the node.
+	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
 	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None):
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::init Needs documentation."""
 		self._id = nodeID
 		self._value = value
 		self._dict = {}

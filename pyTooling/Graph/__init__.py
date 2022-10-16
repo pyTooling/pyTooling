@@ -89,7 +89,7 @@ class Vertex(
 	metaclass=ExtendedType, useSlots=True
 ):
 	"""
-	A **vertex** can have a unique ID, a value and attached meta information as key-value pairs. A vertex has references
+	A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
 	to inbound and outbound edges, thus a graph can be traversed in reverse.
 	"""
 	_graph:     'Graph[VertexIDType, EdgeIDType]'
@@ -102,6 +102,7 @@ class Vertex(
 	_dict:      Dict[VertexDictKeyType, VertexDictValueType]
 
 	def __init__(self, vertexID: VertexIDType = None, data: VertexValueType = None, graph: 'Graph' = None):
+		""".. todo:: GRAPH::Vertex::init Needs documentation."""
 		if graph is None:
 			self._graph = Graph()
 		else:
@@ -541,7 +542,7 @@ class Edge(
 	metaclass=ExtendedType, useSlots=True
 ):
 	"""
-	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value pairs. All edges are
+	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
 	directed.
 	"""
 	_id:          Nullable[EdgeIDType]
@@ -559,6 +560,7 @@ class Edge(
 		weight: EdgeWeightType = None,
 		value: VertexValueType = None
 	):
+		""".. todo:: GRAPH::Edge::init Needs documentation."""
 		if source._graph is not destination._graph:
 			raise Exception(f"Source vertex and destination vertex are not in same graph.")
 
@@ -667,6 +669,13 @@ class Component(
 	_vertices: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_dict:     Dict[ComponentDictKeyType, ComponentDictValueType]
 
+	def __int__(self, graph: 'Graph', name: str = None):
+		""".. todo:: GRAPH::Graph::init Needs documentation."""
+		self._graph = graph
+		self._name = name
+		self._vertices = []
+		self._dict = {}
+
 	@property
 	def Graph(self) -> 'Graph':
 		"""
@@ -718,7 +727,7 @@ class Component(
 
 	def __len__(self) -> int:
 		"""
-		Returns the number of vertices in that component.
+		Returns the number of vertices in this component.
 
 		:returns: Number of vertices.
 		"""
@@ -738,7 +747,7 @@ class Graph(
 	"""
 	A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to
 	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
-	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value pairs.
+	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
 	_name:              str
 	_components:        List[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
@@ -749,6 +758,7 @@ class Graph(
 	_dict:              Dict[GraphDictKeyType, GraphDictValueType]
 
 	def __init__(self, name: str = None):
+		""".. todo:: GRAPH::Graph::init Needs documentation."""
 		self._name = name
 		self._verticesWithID = {}
 		self._verticesWithoutID = []
@@ -797,6 +807,11 @@ class Graph(
 		del self._dict[key]
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of vertices in this graph.
+
+		:returns: Number of vertices.
+		"""
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
 
 	def __iter__(self) -> Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
