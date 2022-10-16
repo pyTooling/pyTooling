@@ -45,9 +45,7 @@ class Timer(ObjectWithSlots):
 	"""
 	Undocumented.
 
-	.. todo::
-
-	   Class:Timer Needs class documentation.
+	.. todo::TIMER::Timer Needs class documentation.
 	"""
 
 	_timers: Dict[str, 'Timer'] = {}

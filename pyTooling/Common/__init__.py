@@ -88,6 +88,9 @@ def getsizeof(obj: Any) -> int:
 	"""
 	Recursively calculate the "true" size of an object including complex members like ``__dict__``.
 
+	:param obj: Object to calculate the size of.
+	:returns:   True size of an object in bytes.
+
 	.. admonition:: Background Information
 
 	   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
@@ -100,9 +103,6 @@ def getsizeof(obj: Any) -> int:
 	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT Lizense)
 	   * `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__ (CC BY-SA 4.0)
 	   * `Python __slots__, slots, and object layout <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>`__ (MIT Lizense)
-
-	:param obj: Object to calculate the size of.
-	:returns:   True size of an object in bytes.
 	"""
 	from sys import getsizeof as sys_getsizeof
 
@@ -160,6 +160,49 @@ _DictValue2 = TypeVar("_DictValue2")
 _DictValue3 = TypeVar("_DictValue3")
 
 
+@overload
+def mergedicts(
+	m1: Mapping[_DictKey1, _DictValue1],
+	func: Callable
+) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
+	...
+
+
+@overload
+def mergedicts(
+	m1: Mapping[_DictKey1, _DictValue1],
+	m2: Mapping[_DictKey2, _DictValue2],
+	func: Callable
+) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
+	...
+
+
+@overload
+def mergedicts(
+	m1: Mapping[_DictKey1, _DictValue1],
+	m2: Mapping[_DictKey2, _DictValue2],
+	m3: Mapping[_DictKey3, _DictValue3],
+	func: Callable
+) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
+	...
+
+
+@export
+def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
+	"""
+	Merge multiple dictionaries into a single new dictionary.
+
+	If parameter ``func`` isn't ``None``, then this function is applied to every element during the merge operation.
+
+	:param dicts: Tuple of dictionaries to merge as positional parameters.
+	:param func:  Optional function to apply to each dictionary element when merging.
+	:returns:     A new dictionary containing the merge result.
+	"""
+	if func is None:
+		return {k: reduce(lambda d,x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
+	else:
+		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}
+
 
 @overload
 def zipdicts(
@@ -210,47 +253,3 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 	for key, item0 in dicts[0].items():
 		# WORKAROUND: using redundant parenthesis for Python 3.7
 		yield (key, item0, *(d[key] for d in dicts[1:]))
-
-
-@overload
-def mergedicts(
-	m1: Mapping[_DictKey1, _DictValue1],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
-	...
-
-
-@overload
-def mergedicts(
-	m1: Mapping[_DictKey1, _DictValue1],
-	m2: Mapping[_DictKey2, _DictValue2],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
-	...
-
-
-@overload
-def mergedicts(
-	m1: Mapping[_DictKey1, _DictValue1],
-	m2: Mapping[_DictKey2, _DictValue2],
-	m3: Mapping[_DictKey3, _DictValue3],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
-	...
-
-
-@export
-def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
-	"""
-	Merge multiple dictionaries into a single new dictionary.
-
-	If parameter ``func`` isn't ``None``, then this function is applied to every element during the merge operation.
-
-	:param dicts: Tuple of dictionaries to merge as positional parameters.
-	:param func:  Optional function to apply to each dictionary element when merging.
-	:returns:     A new dictionary containing the merge result.
-	"""
-	if func is None:
-		return {k: reduce(lambda d,x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
-	else:
-		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}

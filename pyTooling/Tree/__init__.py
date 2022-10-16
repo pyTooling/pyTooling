@@ -173,15 +173,27 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self._value = value
 
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
-		""".. todo:: Needs documentation."""
+		"""
+		Read a node's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
 		return self._dict[key]
 
 	def __setitem__(self, key: DictKeyType, value: DictValueType) -> None:
-		""".. todo:: Needs documentation."""
+		"""
+		Create or update a node's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
 		self._dict[key] = value
 
 	def __delitem__(self, key: DictKeyType) -> None:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::__delitem__ Needs documentation."""
 		del self._dict[key]
 
 	@property
@@ -254,7 +266,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	@property
 	def Siblings(self) -> Tuple['Node', ...]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::Siblings Needs documentation."""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -262,7 +274,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	@property
 	def LeftSiblings(self) -> Tuple['Node', ...]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::LeftSiblings Needs documentation."""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -279,7 +291,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	@property
 	def RightSiblings(self) -> Tuple['Node', ...]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::RightSiblings Needs documentation."""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -445,19 +457,19 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetPAth Needs documentation."""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetAncestors Needs documentation."""
 		node = self._parent
 		while node is not None:
 			yield node
 			node = node._parent
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetCommonAncestors Needs documentation."""
 		if isinstance(others, Node):
 			# Check for trivial case
 			if others is self:
@@ -499,7 +511,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield child
 
 	def GetSiblings(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetSiblings Needs documentation."""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -510,7 +522,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield node
 
 	def GetLeftSiblings(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetLeftSiblings Needs documentation."""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -523,7 +535,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 	def GetRightSiblings(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetRightSiblings Needs documentation."""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -560,18 +572,19 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield from child.GetDescendants()
 
 	def GetLeftRelatives(self):
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetLeftRelatives Needs documentation."""
 		for node in self.GetLeftSiblings():
 			yield node
 			yield from node.GetDescendants()
 
 	def GetRightRelatives(self):
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetRightRelatives Needs documentation."""
 		for node in self.GetRightSiblings():
 			yield node
 			yield from node.GetDescendants()
 
 	def IterateLeafs(self) -> Generator['Node', None, None]:
+		""".. todo:: TREE::Node::IterateLeafs Needs documentation."""
 		for child in self._children:
 			if child.IsLeaf:
 				yield child

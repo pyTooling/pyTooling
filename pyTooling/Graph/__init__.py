@@ -62,13 +62,13 @@ EdgeWeightType = TypeVar("EdgeWeightType", bound=Union[int, float])
 """A type variable for an edge's weight."""
 
 EdgeValueType = TypeVar("EdgeValueType")
-"""A type variable for a edge's value."""
+"""A type variable for an edge's value."""
 
 EdgeDictKeyType = TypeVar("EdgeDictKeyType", bound=Hashable)
-"""A type variable for a edge's dictionary keys."""
+"""A type variable for an edge's dictionary keys."""
 
 EdgeDictValueType = TypeVar("EdgeDictValueType")
-"""A type variable for a edge's dictionary values."""
+"""A type variable for an edge's dictionary values."""
 
 ComponentDictKeyType = TypeVar("ComponentDictKeyType", bound=Hashable)
 """A type variable for a component's dictionary keys."""
@@ -167,7 +167,7 @@ class Vertex(
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
-		""".. todo:: Needs documentation."""
+		""".. todo:: GRAPH::Vertex::__delitem__ Needs documentation."""
 		del self._dict[key]
 
 	def __len__(self) -> int:
@@ -652,7 +652,7 @@ class Edge(
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
-		""".. todo:: Needs documentation."""
+		""".. todo:: GRAPH::Edge::__delitem__ Needs documentation."""
 		del self._dict[key]
 
 
@@ -722,7 +722,7 @@ class Component(
 		self._dict[key] = value
 
 	def __delitem__(self, key: ComponentDictKeyType) -> None:
-		""".. todo:: Needs documentation."""
+		""".. todo:: GRAPH::Component::__delitem__ Needs documentation."""
 		del self._dict[key]
 
 	def __len__(self) -> int:
@@ -803,7 +803,7 @@ class Graph(
 		self._dict[key] = value
 
 	def __delitem__(self, key: GraphDictKeyType) -> None:
-		""".. todo:: Needs documentation."""
+		""".. todo:: GRAPH::Graph::__delitem__ Needs documentation."""
 		del self._dict[key]
 
 	def __len__(self) -> int:
