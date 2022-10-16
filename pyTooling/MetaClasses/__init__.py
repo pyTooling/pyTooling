@@ -154,7 +154,7 @@ def abstractmethod(method: M) -> M:
 
 	.. admonition:: ``example.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
@@ -187,7 +187,7 @@ def mustoverride(method: M) -> M:
 
 	.. admonition:: ``example.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      class Data(mataclass=ExtendedType):
 	        @mustoverride

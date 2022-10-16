@@ -64,7 +64,7 @@ def export(entity: T) -> T:
 
 	.. admonition:: ``to_export.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      from pyTooling.Decorators import export
 
@@ -77,7 +77,7 @@ def export(entity: T) -> T:
 
 	.. admonition:: ``another_file.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      from .to_export import *
 
@@ -154,7 +154,7 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 
 	.. admonition:: ``metaclass.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      from functools import wraps
 	      from pyTooling.Decorators import OriginalFunction
@@ -203,7 +203,7 @@ def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
 
 	.. admonition:: ``example.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      from pyTooling.Decorators import InheritDocString
 
