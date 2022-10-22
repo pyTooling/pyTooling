@@ -620,13 +620,21 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield from child.GetDescendants()
 
 	def GetLeftRelatives(self):
-		""".. todo:: TREE::Node::GetLeftRelatives Needs documentation."""
+		"""
+		A generator to iterate all left relatives (left siblings and all their descendants) of the current node.
+
+		:returns: A generator to iterate all left relatives.
+		"""
 		for node in self.GetLeftSiblings():
 			yield node
 			yield from node.GetDescendants()
 
 	def GetRightRelatives(self):
-		""".. todo:: TREE::Node::GetRightRelatives Needs documentation."""
+		"""
+		A generator to iterate all right relatives (right siblings and all their descendants) of the current node.
+
+		:returns: A generator to iterate all right relatives.
+		"""
 		for node in self.GetRightSiblings():
 			yield node
 			yield from node.GetDescendants()

@@ -125,7 +125,7 @@ A vertex's value can be given at vertex creating time or it can be set ant any l
 the same property. If a vertex's string representation is requested via :py:meth:`~pyTooling.Graph.Vertex.__str__` and a
 vertex's value isn't None, then the value's string representation is returned.
 
-.. todo:: GRAPH: setting / getting a edge's values
+.. todo:: GRAPH: setting / getting an edge's values
 
 .. code-block:: python
 
@@ -147,7 +147,7 @@ Key-Value-Pairs
 
 .. todo:: GRAPH: setting / getting a vertex's KVPs
 
-.. todo:: GRAPH: setting / getting a edge's KVPs
+.. todo:: GRAPH: setting / getting an edge's KVPs
 
 .. _STRUCT/Graph/Inbound:
 
