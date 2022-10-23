@@ -364,6 +364,12 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   Post-Order
+     ...
+
+   Pre-Order
+     ...
+
    Relative
      *Relatives* are :term:`siblings <sibling>` and their :term:`descendants <descendant>`.
 

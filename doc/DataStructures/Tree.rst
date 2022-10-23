@@ -13,7 +13,7 @@ The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structur
 
 .. contents:: Table of Contents
    :local:
-   :depth: 2
+   :depth: 3
 
 .. rubric:: Example Tree:
 .. mermaid::
@@ -104,6 +104,7 @@ Features
 * Fast and simple tree data structure based on a single :py:class:`~pyTooling.Tree.Node` class.
 * A tree can be constructed top-down and bottom-up.
 * A node can have a unique ID.
+* Each node knows its level (distance from root).
 * A node can have a value.
 * A node can store key-value-pairs via dictionary syntax.
 * A node has a reference to its parent node.
@@ -171,6 +172,26 @@ nodes are added to an existing tree, the newly added node's ID(s) are checked an
 
    # Read a node's ID
    nodeID = node.ID
+
+
+.. _STRUCT/Tree/Level:
+
+Level
+=====
+
+Each node has a level describing the distance from :term:`root node <root>`. It can be accessed via the read-only
+property :py:attr:`~pyTooling.Tree.Node.Level`.
+
+The root node has a level of ``0``, children of root have a level of ``1``, and so on.
+
+.. code-block:: python
+
+   # Create node
+   root = Node(nodeID=0)
+   node2 = Node(nodeID=1, parent=root)
+
+   # Read a node's level
+   nodeLevel = node2.Level
 
 
 .. _STRUCT/Tree/Value:
@@ -414,7 +435,7 @@ Common Ancestors
 ----------------
 
 If needed, method :py:meth:`~pyTooling.Tree.Node.GetCommonAncestors` provides a generator to iterate the common
-ancestors of two nodes in a tree.
+ancestors of two nodes in a tree. It iterates from root node top-down until the common branch in the tree splits of.
 
 +---------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
 | Python Code                                             | Diagram                                                                                                             |
@@ -454,10 +475,10 @@ ancestors of two nodes in a tree.
 | .. rubric:: Result                                      |                                                                                                                     |
 | .. code-block::                                         |                                                                                                                     |
 |                                                         |                                                                                                                     |
-|    6   # parent                                         |                                                                                                                     |
-|    3   # grandparent                                    |                                                                                                                     |
-|    1   # ...                                            |                                                                                                                     |
 |    0   # root                                           |                                                                                                                     |
+|    1   # ...                                            |                                                                                                                     |
+|    3   # grandparent                                    |                                                                                                                     |
+|    6   # parent                                         |                                                                                                                     |
 +---------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
 
 
@@ -473,7 +494,7 @@ A node object supports returning children either as a tuple via a property or as
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
 |                               | Return a Tuple                                | Return a Generator                               |
 +===============================+===============================================+==================================================+
-| Children                      | :py:meth:`~pyTooling.Tree.Node.Children`      | :py:meth:`~pyTooling.Tree.Node.GetChildren`      |
+| Children                      | :py:attr:`~pyTooling.Tree.Node.Children`      | :py:meth:`~pyTooling.Tree.Node.GetChildren`      |
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
 | Children and children thereof | — — — —                                       | :py:meth:`~pyTooling.Tree.Node.GetDescendants`   |
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
@@ -533,7 +554,9 @@ and child nodes thereof a.k.a. :term:`grandchild`, grand-grandchildren, ...).
 A node object supports returning descendants as a generator via a method call to :py:meth:`~pyTooling.Tree.Node.GetDescendants`,
 due to the recursive behavior.
 
-.. todo:: TREE::Descendants various orders of traversal
+.. seealso::
+
+   See :ref:`STRUCT/Tree/Iterating` for various other forms for iterating nodes in a tree.
 
 +-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
 | Python Code                                         | Diagram                                                                                                             |
@@ -595,11 +618,11 @@ all siblings are returned or just siblings left from the current node (left sibl
 +-------------------+-----------------------------------------------+--------------------------------------------------+
 | Sibling Selection | Return a Tuple                                | Return a Generator                               |
 +===================+===============================================+==================================================+
-| Left Siblings     | :py:meth:`~pyTooling.Tree.Node.LeftSiblings`  | :py:meth:`~pyTooling.Tree.Node.GetLeftSiblings`  |
+| Left Siblings     | :py:attr:`~pyTooling.Tree.Node.LeftSiblings`  | :py:meth:`~pyTooling.Tree.Node.GetLeftSiblings`  |
 +-------------------+-----------------------------------------------+--------------------------------------------------+
-| All Siblings      | :py:meth:`~pyTooling.Tree.Node.Siblings`      | :py:meth:`~pyTooling.Tree.Node.GetSiblings`      |
+| All Siblings      | :py:attr:`~pyTooling.Tree.Node.Siblings`      | :py:meth:`~pyTooling.Tree.Node.GetSiblings`      |
 +-------------------+-----------------------------------------------+--------------------------------------------------+
-| Right Siblings    | :py:meth:`~pyTooling.Tree.Node.RightSiblings` | :py:meth:`~pyTooling.Tree.Node.GetRightSiblings` |
+| Right Siblings    | :py:attr:`~pyTooling.Tree.Node.RightSiblings` | :py:meth:`~pyTooling.Tree.Node.GetRightSiblings` |
 +-------------------+-----------------------------------------------+--------------------------------------------------+
 
 .. attention::
@@ -731,14 +754,38 @@ all relatives are returned or just relatives left from the current node (left re
 Iterating a Tree
 ================
 
-.. todo:: TREE: iterating a tree
+A tree (starting at the :term:`root node <root>`) or a subtree (starting at any node in the tree) can be iterated in
+various orders:
+
+* :py:meth:`~pyTooling.Tree.Node.IterateLeafs` - iterates only over leafs from left to right
+* :py:meth:`~pyTooling.Tree.Node.IterateLevelOrder` - iterates all sub nodes level by level
+* :py:meth:`~pyTooling.Tree.Node.IteratePreOrder` - iterates left to right and returns itself before its descendants
+* :py:meth:`~pyTooling.Tree.Node.IteratePostOrder` - iterates left to right and returns its descendants before itself
+
 
 .. _STRUCT/Tree/Merging:
 
 Merging Trees
 =============
 
-.. todo:: TREE: merging a tree
+A tree **B** is merged into an existing tree **A**, when a tree **B**'s parent relation is set to a non-:py:data:`None`
+value. Therefore use the :py:attr:`B.Parent <pyTooling.Tree.Node.Parent>` property and set it to **A**:
+:pycode:`B.Parent = A`.
+
+The following operations are executed on the tree **B**:
+
+1. register all nodes of **B** with and without ID in **A**, then
+2. delete the list and dictionary objects for nodes with and without IDs from **B**.
+
+The following operations are executed on all nodes in tree **B**:
+
+* set root reference to **A**.
+* recompute the level within **A**.
+
+.. attention::
+
+   In case a node's ID already exists in **A**, an exception is raised, because IDs are unique.
+
 
 .. _STRUCT/Tree/Splitting:
 
