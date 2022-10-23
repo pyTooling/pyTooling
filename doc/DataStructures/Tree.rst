@@ -284,12 +284,12 @@ the tree gets split into 2 trees.
 Moving a branch in same tree
 ----------------------------
 
-tbd
+.. todo:: TREE::Parent::move-branch in same tree - needs also testcases
 
 Moving a branch to another tree
 -------------------------------
 
-tbd
+.. todo:: TREE::Parent::move-branch into another tree - needs also testcases
 
 
 .. _STRUCT/Tree/Root:
@@ -297,14 +297,15 @@ tbd
 Root Reference
 ==============
 
-Each node has a reference to the tree's root node. The root node can also be considered the representative node of a
-tree and can be accessed via read-only property :py:attr:`~pyTooling.Tree.Node.Root`.
+Each node has a reference to the tree's :term:`root node <root>`. The root node can also be considered the
+representative node of a tree and can be accessed via read-only property :py:attr:`~pyTooling.Tree.Node.Root`.
 
-When a node is assigned a new parent relation and this parent a node in another tree, the root reference will change.
+When a node is assigned a new parent relation and this parent is a node in another tree, the root reference will change.
+(A.k.a. moving a branch to another tree.)
 
 The root node of a tree contains tree-wide data structures like the list of unique IDs
 (:py:attr:`~pyTooling.Tree.Node._nodesWithID`, :py:attr:`~pyTooling.Tree.Node._nodesWithoutID`). By utilizing the root
-reference, each node can access these data structures by just one additional hop.
+reference, each node can access these data structures by just one additional reference hop.
 
 .. code-block:: python
 
@@ -362,12 +363,102 @@ Ancestors
 The method :py:meth:`~pyTooling.Tree.Node.GetAncestors` returns a generator to traverse bottom-up from current node to
 the root node. If the top-down direction is needed, see :ref:`STRUCT/Tree/Path` for more details.
 
-.. todo:: TREE: ancestors example
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Python Code                                         | Diagram                                                                                                             |
++=====================================================+=====================================================================================================================+
+| .. rubric:: Tree Construction:                      | .. mermaid::                                                                                                        |
+| .. code-block:: python                              |                                                                                                                     |
+|                                                     |    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%  |
+|    # Create an example tree                         |    graph TD                                                                                                         |
+|    root =        Node(nodeID=0)                     |      R(Root)                                                                                                        |
+|    dots =        Node(nodeID=1, parent=root)        |      A(...)                                                                                                         |
+|    node1 =       Node(nodeID=2, parent=dots)        |      BL(Node); B(GrandParent); BR(Node)                                                                             |
+|    grandParent = Node(nodeID=3, parent=dots)        |      CL(Uncle); C(Parent); CR(Aunt)                                                                                 |
+|    node2 =       Node(nodeID=4, parent=dots)        |      DL(Sibling); D(Node);  DR(Sibling)                                                                             |
+|    uncle =       Node(nodeID=5, parent=grandParent) |      ELN1(Niece); ELN2(Nephew)                                                                                      |
+|    parent =      Node(nodeID=6, parent=grandParent) |      EL(Child);   E(Child); ER(Child);                                                                              |
+|    aunt =        Node(nodeID=7, parent=grandParent) |      ERN1(Niece);ERN2(Nephew)                                                                                       |
+|    sibling1 =    Node(nodeID=8, parent=parent)      |      F1(GrandChild); F2(GrandChild)                                                                                 |
+|    me =          Node(nodeID=9, parent=parent)      |                                                                                                                     |
+|    sibling2 =    Node(nodeID=10, parent=parent)     |      R:::mark1 --> A                                                                                                |
+|    niece1 =      Node(nodeID=11, parent=sibling1)   |      A:::mark2 --> BL & B & BR                                                                                      |
+|    nephew1 =     Node(nodeID=12, parent=sibling1)   |      B:::mark2 --> CL & C & CR                                                                                      |
+|    child1 =      Node(nodeID=13, parent=me)         |      C:::mark2 --> DL & D & DR                                                                                      |
+|    child2 =      Node(nodeID=14, parent=me)         |      DL --> ELN1 & ELN2                                                                                             |
+|    child3 =      Node(nodeID=15, parent=me)         |      D:::cur --> EL & E & ER                                                                                        |
+|    niece2 =      Node(nodeID=16, parent=sibling2)   |      DR --> ERN1 & ERN2                                                                                             |
+|    nephew2 =     Node(nodeID=17, parent=sibling2)   |      E --> F1 & F2                                                                                                  |
+|    grandChild1 = Node(nodeID=18, parent=child2)     |                                                                                                                     |
+|    grandChild2 = Node(nodeID=19, parent=child2)     |      classDef node fill:#eee,stroke:#777,font-size:smaller;                                                         |
+|                                                     |      classDef cur fill:#9e9,stroke:#6e6;                                                                            |
+| .. rubric:: Usage                                   |      classDef mark1 fill:#69f,stroke:#37f,color:#eee;                                                               |
+| .. code-block:: python                              |      classDef mark2 fill:#69f,stroke:#37f;                                                                          |
+|                                                     |                                                                                                                     |
+|    # Walk bottom-up all the way to root             |                                                                                                                     |
+|    for node in me.GetAncestors():                   |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|                                                     |                                                                                                                     |
+| .. rubric:: Result                                  |                                                                                                                     |
+| .. code-block::                                     |                                                                                                                     |
+|                                                     |                                                                                                                     |
+|    6   # parent                                     |                                                                                                                     |
+|    3   # grandparent                                |                                                                                                                     |
+|    1   # ...                                        |                                                                                                                     |
+|    0   # root                                       |                                                                                                                     |
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+
+
+.. _STRUCT/Tree/CommonAncestors:
+
+Common Ancestors
+----------------
 
 If needed, method :py:meth:`~pyTooling.Tree.Node.GetCommonAncestors` provides a generator to iterate the common
 ancestors of two nodes in a tree.
 
-.. todo:: TREE: common ancestors example
++---------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Python Code                                             | Diagram                                                                                                             |
++=========================================================+=====================================================================================================================+
+| .. rubric:: Tree Construction:                          | .. mermaid::                                                                                                        |
+| .. code-block:: python                                  |                                                                                                                     |
+|                                                         |    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%  |
+|    # Create an example tree                             |    graph TD                                                                                                         |
+|    root =        Node(nodeID=0)                         |      R(Root)                                                                                                        |
+|    dots =        Node(nodeID=1, parent=root)            |      A(...)                                                                                                         |
+|    node1 =       Node(nodeID=2, parent=dots)            |      BL(Node); B(GrandParent); BR(Node)                                                                             |
+|    grandParent = Node(nodeID=3, parent=dots)            |      CL(Uncle); C(Parent); CR(Aunt)                                                                                 |
+|    node2 =       Node(nodeID=4, parent=dots)            |      DL(Sibling); D(Node);  DR(Sibling)                                                                             |
+|    uncle =       Node(nodeID=5, parent=grandParent)     |      ELN1(Niece); ELN2(Nephew)                                                                                      |
+|    parent =      Node(nodeID=6, parent=grandParent)     |      EL(Child);   E(Child); ER(Child);                                                                              |
+|    aunt =        Node(nodeID=7, parent=grandParent)     |      ERN1(Niece);ERN2(Nephew)                                                                                       |
+|    sibling1 =    Node(nodeID=8, parent=parent)          |      F1(GrandChild); F2(GrandChild)                                                                                 |
+|    me =          Node(nodeID=9, parent=parent)          |                                                                                                                     |
+|    sibling2 =    Node(nodeID=10, parent=parent)         |      R:::mark1 --> A                                                                                                |
+|    niece1 =      Node(nodeID=11, parent=sibling1)       |      A:::mark2 --> BL & B & BR                                                                                      |
+|    nephew1 =     Node(nodeID=12, parent=sibling1)       |      B:::mark2 --> CL & C & CR                                                                                      |
+|    child1 =      Node(nodeID=13, parent=me)             |      C:::mark2 --> DL & D & DR                                                                                      |
+|    child2 =      Node(nodeID=14, parent=me)             |      DL --> ELN1 & ELN2                                                                                             |
+|    child3 =      Node(nodeID=15, parent=me)             |      D --> EL & E & ER                                                                                              |
+|    niece2 =      Node(nodeID=16, parent=sibling2)       |      DR --> ERN1 & ERN2                                                                                             |
+|    nephew2 =     Node(nodeID=17, parent=sibling2)       |      E --> F1 & F2                                                                                                  |
+|    grandChild1 = Node(nodeID=18, parent=child2)         |      ELN2:::cur; F2:::cur                                                                                           |
+|    grandChild2 = Node(nodeID=19, parent=child2)         |      classDef node fill:#eee,stroke:#777,font-size:smaller;                                                         |
+|                                                         |      classDef cur fill:#9e9,stroke:#6e6;                                                                            |
+| .. rubric:: Usage                                       |      classDef mark1 fill:#69f,stroke:#37f,color:#eee;                                                               |
+| .. code-block:: python                                  |      classDef mark2 fill:#69f,stroke:#37f;                                                                          |
+|                                                         |                                                                                                                     |
+|    # Walk bottom-up all the way to root                 |                                                                                                                     |
+|    for node in nephew1.GetCommonAncestors(grandChild2): |                                                                                                                     |
+|      print(node.ID)                                     |                                                                                                                     |
+|                                                         |                                                                                                                     |
+| .. rubric:: Result                                      |                                                                                                                     |
+| .. code-block::                                         |                                                                                                                     |
+|                                                         |                                                                                                                     |
+|    6   # parent                                         |                                                                                                                     |
+|    3   # grandparent                                    |                                                                                                                     |
+|    1   # ...                                            |                                                                                                                     |
+|    0   # root                                           |                                                                                                                     |
++---------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
 
 
 .. _STRUCT/Tree/Children:
@@ -375,14 +466,265 @@ ancestors of two nodes in a tree.
 Children
 ========
 
-.. todo:: TREE: children
+:term:`Children <Child>` are all direct successors of a :term:`node`.
+
+A node object supports returning children either as a tuple via a property or as a generator via a method call.
+
++-------------------------------+-----------------------------------------------+--------------------------------------------------+
+|                               | Return a Tuple                                | Return a Generator                               |
++===============================+===============================================+==================================================+
+| Children                      | :py:meth:`~pyTooling.Tree.Node.Children`      | :py:meth:`~pyTooling.Tree.Node.GetChildren`      |
++-------------------------------+-----------------------------------------------+--------------------------------------------------+
+| Children and children thereof | — — — —                                       | :py:meth:`~pyTooling.Tree.Node.GetDescendants`   |
++-------------------------------+-----------------------------------------------+--------------------------------------------------+
+
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Python Code                                         | Diagram                                                                                                             |
++=====================================================+=====================================================================================================================+
+| .. rubric:: Tree Construction:                      | .. mermaid::                                                                                                        |
+| .. code-block:: python                              |                                                                                                                     |
+|                                                     |    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%  |
+|    # Create an example tree                         |    graph TD                                                                                                         |
+|    root =        Node(nodeID=0)                     |      R(Root)                                                                                                        |
+|    dots =        Node(nodeID=1, parent=root)        |      A(...)                                                                                                         |
+|    node1 =       Node(nodeID=2, parent=dots)        |      BL(Node); B(GrandParent); BR(Node)                                                                             |
+|    grandParent = Node(nodeID=3, parent=dots)        |      CL(Uncle); C(Parent); CR(Aunt)                                                                                 |
+|    node2 =       Node(nodeID=4, parent=dots)        |      DL(Sibling); D(Node);  DR(Sibling)                                                                             |
+|    uncle =       Node(nodeID=5, parent=grandParent) |      ELN1(Niece); ELN2(Nephew)                                                                                      |
+|    parent =      Node(nodeID=6, parent=grandParent) |      EL(Child);   E(Child); ER(Child);                                                                              |
+|    aunt =        Node(nodeID=7, parent=grandParent) |      ERN1(Niece);ERN2(Nephew)                                                                                       |
+|    sibling1 =    Node(nodeID=8, parent=parent)      |      F1(GrandChild); F2(GrandChild)                                                                                 |
+|    me =          Node(nodeID=9, parent=parent)      |                                                                                                                     |
+|    sibling2 =    Node(nodeID=10, parent=parent)     |      R --> A                                                                                                        |
+|    niece1 =      Node(nodeID=11, parent=sibling1)   |      A --> BL & B & BR                                                                                              |
+|    nephew1 =     Node(nodeID=12, parent=sibling1)   |      B --> CL & C & CR                                                                                              |
+|    child1 =      Node(nodeID=13, parent=me)         |      C --> DL & D & DR                                                                                              |
+|    child2 =      Node(nodeID=14, parent=me)         |      DL --> ELN1 & ELN2                                                                                             |
+|    child3 =      Node(nodeID=15, parent=me)         |      D:::cur --> EL & E & ER                                                                                        |
+|    niece2 =      Node(nodeID=16, parent=sibling2)   |      DR --> ERN1 & ERN2                                                                                             |
+|    nephew2 =     Node(nodeID=17, parent=sibling2)   |      E --> F1 & F2                                                                                                  |
+|    grandChild1 = Node(nodeID=18, parent=child2)     |      EL:::mark2; E:::mark2; ER:::mark2                                                                              |
+|    grandChild2 = Node(nodeID=19, parent=child2)     |      classDef node fill:#eee,stroke:#777,font-size:smaller;                                                         |
+|                                                     |      classDef cur fill:#9e9,stroke:#6e6;                                                                            |
+| .. rubric:: Usage                                   |      classDef mark1 fill:#69f,stroke:#37f,color:#eee;                                                               |
+| .. code-block:: python                              |      classDef mark2 fill:#69f,stroke:#37f;                                                                          |
+|                                                     |                                                                                                                     |
+|    # Walk bottom-up all the way to root             |                                                                                                                     |
+|    for node in me.GetChildren():                    |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|                                                     |                                                                                                                     |
+| .. rubric:: Result                                  |                                                                                                                     |
+| .. code-block::                                     |                                                                                                                     |
+|                                                     |                                                                                                                     |
+|    13  # child1                                     |                                                                                                                     |
+|    14  # child2                                     |                                                                                                                     |
+|    15  # child3                                     |                                                                                                                     |
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+
+
+.. _STRUCT/Tree/Descendants:
+
+Descendants
+===========
+
+:term:`Descendants <Descendant>` are all direct and indirect successors of a :term:`node` (:term:`child nodes <child>`
+and child nodes thereof a.k.a. :term:`grandchild`, grand-grandchildren, ...).
+
+A node object supports returning descendants as a generator via a method call to :py:meth:`~pyTooling.Tree.Node.GetDescendants`,
+due to the recursive behavior.
+
+.. todo:: TREE::Descendants various orders of traversal
+
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Python Code                                         | Diagram                                                                                                             |
++=====================================================+=====================================================================================================================+
+| .. rubric:: Tree Construction:                      | .. mermaid::                                                                                                        |
+| .. code-block:: python                              |                                                                                                                     |
+|                                                     |    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%  |
+|    # Create an example tree                         |    graph TD                                                                                                         |
+|    root =        Node(nodeID=0)                     |      R(Root)                                                                                                        |
+|    dots =        Node(nodeID=1, parent=root)        |      A(...)                                                                                                         |
+|    node1 =       Node(nodeID=2, parent=dots)        |      BL(Node); B(GrandParent); BR(Node)                                                                             |
+|    grandParent = Node(nodeID=3, parent=dots)        |      CL(Uncle); C(Parent); CR(Aunt)                                                                                 |
+|    node2 =       Node(nodeID=4, parent=dots)        |      DL(Sibling); D(Node);  DR(Sibling)                                                                             |
+|    uncle =       Node(nodeID=5, parent=grandParent) |      ELN1(Niece); ELN2(Nephew)                                                                                      |
+|    parent =      Node(nodeID=6, parent=grandParent) |      EL(Child);   E(Child); ER(Child);                                                                              |
+|    aunt =        Node(nodeID=7, parent=grandParent) |      ERN1(Niece);ERN2(Nephew)                                                                                       |
+|    sibling1 =    Node(nodeID=8, parent=parent)      |      F1(GrandChild); F2(GrandChild)                                                                                 |
+|    me =          Node(nodeID=9, parent=parent)      |                                                                                                                     |
+|    sibling2 =    Node(nodeID=10, parent=parent)     |      R --> A                                                                                                        |
+|    niece1 =      Node(nodeID=11, parent=sibling1)   |      A --> BL & B & BR                                                                                              |
+|    nephew1 =     Node(nodeID=12, parent=sibling1)   |      B --> CL & C & CR                                                                                              |
+|    child1 =      Node(nodeID=13, parent=me)         |      C --> DL & D & DR                                                                                              |
+|    child2 =      Node(nodeID=14, parent=me)         |      DL --> ELN1 & ELN2                                                                                             |
+|    child3 =      Node(nodeID=15, parent=me)         |      D:::cur --> EL & E & ER                                                                                        |
+|    niece2 =      Node(nodeID=16, parent=sibling2)   |      DR --> ERN1 & ERN2                                                                                             |
+|    nephew2 =     Node(nodeID=17, parent=sibling2)   |      E --> F1 & F2                                                                                                  |
+|    grandChild1 = Node(nodeID=18, parent=child2)     |      EL:::mark2; E:::mark2; ER:::mark2; F1:::mark2; F2:::mark2                                                      |
+|    grandChild2 = Node(nodeID=19, parent=child2)     |      classDef node fill:#eee,stroke:#777,font-size:smaller;                                                         |
+|                                                     |      classDef cur fill:#9e9,stroke:#6e6;                                                                            |
+| .. rubric:: Usage                                   |      classDef mark1 fill:#69f,stroke:#37f,color:#eee;                                                               |
+| .. code-block:: python                              |      classDef mark2 fill:#69f,stroke:#37f;                                                                          |
+|                                                     |                                                                                                                     |
+|    # Walk bottom-up all the way to root             |                                                                                                                     |
+|    for node in me.GetDescendants():                 |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|                                                     |                                                                                                                     |
+| .. rubric:: Result                                  |                                                                                                                     |
+| .. code-block::                                     |                                                                                                                     |
+|                                                     |                                                                                                                     |
+|    13  # child1                                     |                                                                                                                     |
+|    14  # child2                                     |                                                                                                                     |
+|    18  # grandChild1                                |                                                                                                                     |
+|    19  # grandChild2                                |                                                                                                                     |
+|    15  # child3                                     |                                                                                                                     |
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+
 
 .. _STRUCT/Tree/Siblings:
 
 Siblings
 ========
 
-.. todo:: TREE: siblings
+:term:`Siblings <Sibling>` are all direct :term:`child nodes <child>` of a node's :term:`parent` node except itself.
+
+A node object supports returning siblings either as tuples via a property or as a generator via a method call. Either
+all siblings are returned or just siblings left from the current node (left siblings) or right from the current node
+(right siblings). Left and right is based on the order of child references in the current node's parent.
+
++-------------------+-----------------------------------------------+--------------------------------------------------+
+| Sibling Selection | Return a Tuple                                | Return a Generator                               |
++===================+===============================================+==================================================+
+| Left Siblings     | :py:meth:`~pyTooling.Tree.Node.LeftSiblings`  | :py:meth:`~pyTooling.Tree.Node.GetLeftSiblings`  |
++-------------------+-----------------------------------------------+--------------------------------------------------+
+| All Siblings      | :py:meth:`~pyTooling.Tree.Node.Siblings`      | :py:meth:`~pyTooling.Tree.Node.GetSiblings`      |
++-------------------+-----------------------------------------------+--------------------------------------------------+
+| Right Siblings    | :py:meth:`~pyTooling.Tree.Node.RightSiblings` | :py:meth:`~pyTooling.Tree.Node.GetRightSiblings` |
++-------------------+-----------------------------------------------+--------------------------------------------------+
+
+.. attention::
+
+   In case a node has no parent, an exception is raised, because siblings cannot exist.
+
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Python Code                                         | Diagram                                                                                                             |
++=====================================================+=====================================================================================================================+
+| .. rubric:: Tree Construction:                      | .. mermaid::                                                                                                        |
+| .. code-block:: python                              |                                                                                                                     |
+|                                                     |    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%  |
+|    # Create an example tree                         |    graph TD                                                                                                         |
+|    root =        Node(nodeID=0)                     |      R(Root)                                                                                                        |
+|    dots =        Node(nodeID=1, parent=root)        |      A(...)                                                                                                         |
+|    node1 =       Node(nodeID=2, parent=dots)        |      BL(Node); B(GrandParent); BR(Node)                                                                             |
+|    grandParent = Node(nodeID=3, parent=dots)        |      CL(Uncle); C(Parent); CR(Aunt)                                                                                 |
+|    node2 =       Node(nodeID=4, parent=dots)        |      DL(Sibling); D(Node);  DR(Sibling)                                                                             |
+|    uncle =       Node(nodeID=5, parent=grandParent) |      ELN1(Niece); ELN2(Nephew)                                                                                      |
+|    parent =      Node(nodeID=6, parent=grandParent) |      EL(Child);   E(Child); ER(Child);                                                                              |
+|    aunt =        Node(nodeID=7, parent=grandParent) |      ERN1(Niece);ERN2(Nephew)                                                                                       |
+|    sibling1 =    Node(nodeID=8, parent=parent)      |      F1(GrandChild); F2(GrandChild)                                                                                 |
+|    me =          Node(nodeID=9, parent=parent)      |                                                                                                                     |
+|    sibling2 =    Node(nodeID=10, parent=parent)     |      R --> A                                                                                                        |
+|    niece1 =      Node(nodeID=11, parent=sibling1)   |      A --> BL & B & BR                                                                                              |
+|    nephew1 =     Node(nodeID=12, parent=sibling1)   |      B --> CL & C & CR                                                                                              |
+|    child1 =      Node(nodeID=13, parent=me)         |      C --> DL & D & DR                                                                                              |
+|    child2 =      Node(nodeID=14, parent=me)         |      DL --> ELN1 & ELN2                                                                                             |
+|    child3 =      Node(nodeID=15, parent=me)         |      D:::cur --> EL & E & ER                                                                                        |
+|    niece2 =      Node(nodeID=16, parent=sibling2)   |      DR --> ERN1 & ERN2                                                                                             |
+|    nephew2 =     Node(nodeID=17, parent=sibling2)   |      E --> F1 & F2                                                                                                  |
+|    grandChild1 = Node(nodeID=18, parent=child2)     |      DL:::mark2; DR:::mark2                                                                                         |
+|    grandChild2 = Node(nodeID=19, parent=child2)     |      classDef node fill:#eee,stroke:#777,font-size:smaller;                                                         |
+|                                                     |      classDef cur fill:#9e9,stroke:#6e6;                                                                            |
+| .. rubric:: Usage                                   |      classDef mark1 fill:#69f,stroke:#37f,color:#eee;                                                               |
+| .. code-block:: python                              |      classDef mark2 fill:#69f,stroke:#37f;                                                                          |
+|                                                     |                                                                                                                     |
+|    # Walk bottom-up all the way to root             |                                                                                                                     |
+|    for node in me.GetLeftSiblings():                |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|    for node in me.GetRightSiblings():               |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|                                                     |                                                                                                                     |
+| .. rubric:: Result                                  |                                                                                                                     |
+| .. code-block::                                     |                                                                                                                     |
+|                                                     |                                                                                                                     |
+|    8   # sibling1                                   |                                                                                                                     |
+|    10  # sibling2                                   |                                                                                                                     |
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+
+
+.. _STRUCT/Tree/Relatives:
+
+Relatives
+=========
+
+:term:`Relatives <Relative>` are :term:`siblings <sibling>` and their :term:`descendants <descendant>`.
+
+A node object supports returning relatives as a generator via a method call, due to the recursive behavior. Either
+all relatives are returned or just relatives left from the current node (left relatives) or right from the current node
+(right relatives). Left and right is based on the order of child references in the current node's parent.
+
++--------------------+---------------------------------------------------+
+| Relative Selection | Return a Generator                                |
++====================+===================================================+
+| Left Siblings      | :py:meth:`~pyTooling.Tree.Node.GetLeftRelatives`  |
++--------------------+---------------------------------------------------+
+| All Siblings       | :py:meth:`~pyTooling.Tree.Node.GetRelatives`      |
++--------------------+---------------------------------------------------+
+| Right Siblings     | :py:meth:`~pyTooling.Tree.Node.GetRightRelatives` |
++--------------------+---------------------------------------------------+
+
+.. attention::
+
+   In case a node has no parent, an exception is raised, because siblings and therefore relatives cannot exist.
+
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Python Code                                         | Diagram                                                                                                             |
++=====================================================+=====================================================================================================================+
+| .. rubric:: Tree Construction:                      | .. mermaid::                                                                                                        |
+| .. code-block:: python                              |                                                                                                                     |
+|                                                     |    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%  |
+|    # Create an example tree                         |    graph TD                                                                                                         |
+|    root =        Node(nodeID=0)                     |      R(Root)                                                                                                        |
+|    dots =        Node(nodeID=1, parent=root)        |      A(...)                                                                                                         |
+|    node1 =       Node(nodeID=2, parent=dots)        |      BL(Node); B(GrandParent); BR(Node)                                                                             |
+|    grandParent = Node(nodeID=3, parent=dots)        |      CL(Uncle); C(Parent); CR(Aunt)                                                                                 |
+|    node2 =       Node(nodeID=4, parent=dots)        |      DL(Sibling); D(Node);  DR(Sibling)                                                                             |
+|    uncle =       Node(nodeID=5, parent=grandParent) |      ELN1(Niece); ELN2(Nephew)                                                                                      |
+|    parent =      Node(nodeID=6, parent=grandParent) |      EL(Child);   E(Child); ER(Child);                                                                              |
+|    aunt =        Node(nodeID=7, parent=grandParent) |      ERN1(Niece);ERN2(Nephew)                                                                                       |
+|    sibling1 =    Node(nodeID=8, parent=parent)      |      F1(GrandChild); F2(GrandChild)                                                                                 |
+|    me =          Node(nodeID=9, parent=parent)      |                                                                                                                     |
+|    sibling2 =    Node(nodeID=10, parent=parent)     |      R --> A                                                                                                        |
+|    niece1 =      Node(nodeID=11, parent=sibling1)   |      A --> BL & B & BR                                                                                              |
+|    nephew1 =     Node(nodeID=12, parent=sibling1)   |      B --> CL & C & CR                                                                                              |
+|    child1 =      Node(nodeID=13, parent=me)         |      C --> DL & D & DR                                                                                              |
+|    child2 =      Node(nodeID=14, parent=me)         |      DL --> ELN1 & ELN2                                                                                             |
+|    child3 =      Node(nodeID=15, parent=me)         |      D:::cur --> EL & E & ER                                                                                        |
+|    niece2 =      Node(nodeID=16, parent=sibling2)   |      DR --> ERN1 & ERN2                                                                                             |
+|    nephew2 =     Node(nodeID=17, parent=sibling2)   |      E --> F1 & F2                                                                                                  |
+|    grandChild1 = Node(nodeID=18, parent=child2)     |      DL:::mark2; ELN1:::mark2; ELN2:::mark2; DR:::mark2; ERN1:::mark2; ERN2:::mark2                                 |
+|    grandChild2 = Node(nodeID=19, parent=child2)     |      classDef node fill:#eee,stroke:#777,font-size:smaller;                                                         |
+|                                                     |      classDef cur fill:#9e9,stroke:#6e6;                                                                            |
+| .. rubric:: Usage                                   |      classDef mark1 fill:#69f,stroke:#37f,color:#eee;                                                               |
+| .. code-block:: python                              |      classDef mark2 fill:#69f,stroke:#37f;                                                                          |
+|                                                     |                                                                                                                     |
+|    # Walk bottom-up all the way to root             |                                                                                                                     |
+|    for node in me.GetLeftRelatives():               |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|    for node in me.GetRightRelatives():              |                                                                                                                     |
+|      print(node.ID)                                 |                                                                                                                     |
+|                                                     |                                                                                                                     |
+| .. rubric:: Result                                  |                                                                                                                     |
+| .. code-block::                                     |                                                                                                                     |
+|                                                     |                                                                                                                     |
+|    8   # sibling1                                   |                                                                                                                     |
+|    11  # niece1                                     |                                                                                                                     |
+|    12  # nephew1                                    |                                                                                                                     |
+|                                                     |                                                                                                                     |
+|    10  # sibling2                                   |                                                                                                                     |
+|    16  # niece2                                     |                                                                                                                     |
+|    17  # nephew2                                    |                                                                                                                     |
++-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+
 
 .. _STRUCT/Tree/Iterating:
 

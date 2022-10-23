@@ -602,7 +602,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all descendants of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
 		it doesn't include the node itself.
 
-		:returns: A generator to iterate all siblings.
+		:returns: A generator to iterate all descendants.
 
 		.. seealso::
 
@@ -618,6 +618,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		for child in self._children:
 			yield child
 			yield from child.GetDescendants()
+
+	def GetRelatives(self):
+		"""
+		A generator to iterate all relatives (all siblings and all their descendants) of the current node.
+
+		:returns: A generator to iterate all relatives.
+		"""
+		for node in self.GetSiblings():
+			yield node
+			yield from node.GetDescendants()
 
 	def GetLeftRelatives(self):
 		"""
