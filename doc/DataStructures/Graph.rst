@@ -26,7 +26,7 @@ object-oriented API.
      D & F -.-> B
      I ---> E --> F --> D
 
-     classDef node font-size:smaller;
+     classDef node fill:#eee,stroke:#777,font-size:smaller;
 
 
 .. rubric:: Graph Properties:
@@ -257,4 +257,3 @@ igraph
 .. code-block:: python
 
    # add code here
-

@@ -49,7 +49,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6,font-size:smaller;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
           classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
@@ -87,7 +87,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -114,7 +114,7 @@ Glossary
           H --> J & K
           I --> K & J
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    DG
      A *directed graph* (DG) is a :term:`graph` where all :term:`edges <edge>` have a direction.
@@ -133,7 +133,7 @@ Glossary
           D & F --> B
           I ---> E -.-> F -.-> D
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    Decorator
      ...
@@ -171,7 +171,7 @@ Glossary
           F1:::mark2
           F2:::mark2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -205,7 +205,7 @@ Glossary
           D & F -.-> B
           I ---> E --> F --> D
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    Grandchild
      *Grandchildren* are direct successors of a node's :term:`children <child>` and therefore indirect successors of a
@@ -237,7 +237,7 @@ Glossary
           F1:::mark2
           F2:::mark2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -269,7 +269,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -326,7 +326,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -364,7 +364,7 @@ Glossary
           ERN2:::mark2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -395,7 +395,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 
@@ -426,7 +426,7 @@ Glossary
           DR:::mark2 --> ERN1 & ERN2
           E --> F1 & F2
 
-          classDef node font-size:smaller;
+          classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 

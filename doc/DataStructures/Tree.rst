@@ -40,7 +40,7 @@ The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structur
      DR --> ERN1 & ERN2
      E --> F1 & F2
 
-     classDef node font-size:smaller;
+     classDef node fill:#eee,stroke:#777,font-size:smaller;
      classDef cur fill:#9e9,stroke:#6e6;
      classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 

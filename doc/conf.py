@@ -238,7 +238,6 @@ graphviz_output_format = "svg"
 # SphinxContrib.Mermaid
 # ==============================================================================
 mermaid_params = [
-	'--theme', 'neutral',
 	'--backgroundColor', 'transparent',
 ]
 mermaid_verbose = True
