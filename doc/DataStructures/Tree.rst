@@ -200,15 +200,31 @@ value isn't None, then the value's string representation is returned.
 Key-Value-Pairs
 ===============
 
-.. todo:: TREE: setting / getting a node's KVPs
+Besides a :ref:`unique ID <STRUCT/Tree/ID>` and a :ref:`value <STRUCT/Tree/Value>`, each node can hold an arbitrary set
+of key-value-pairs.
+
+.. code-block:: python
+
+   # Create node
+   node = Node()
+
+   # Create or update a key-value-pair
+   node["key"] = value
+
+   # Access a value by key
+   value = node["key"]
+
+   # Delete a key-value-pair
+   del node["key"]
+
 
 .. _STRUCT/Tree/Parent:
 
 Parent Reference
 ================
 
-Each node has a reference to its parent node. In case, the node is the root node, the parent reference is None. The
-parent-child relation can be set at node creation time, or a parent can be assigned to a node at any later time via
+Each node has a reference to its :term:`parent node <parent>`. In case, the node is the :term:`root node <root>`, the
+parent reference is :py:data:`None`. The parent-child relation can be set at node creation time, or a parent can be assigned to a node at any later time via
 property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used to retrieve the current parent reference.
 
 .. code-block:: python
@@ -221,6 +237,9 @@ property :py:attr:`~pyTooling.Tree.Node.Parent`. The same property can be used t
 
    # Access a node's parent
    parent = node.Parent
+
+Merging Trees
+-------------
 
 In case, two trees were created (a single node is already a minimal tree), trees get merged if one tree's root node is
 assigned a parent relationship.
@@ -235,6 +254,42 @@ assigned a parent relationship.
 
    # Set parent relationship and merge trees
    otherTree.Parent = root
+
+.. seealso::
+
+   See :ref:`STRUCT/Tree/Merging` for more details.
+
+Splitting Trees
+---------------
+
+In case, a node within a tree's hierarchy is updated with respect to it's parent relationship to :py:data:`None`, then
+the tree gets split into 2 trees.
+
+.. code-block:: python
+
+   # Create a tree of 4 nodes
+   root1 = Node(nodeID=0)
+   node1 = Node(nodeID=1, parent=root1)
+
+   root2 = Node(nodeID=2, parent=node1)
+   node3 = Node(nodeID=3, parent=root2)
+
+   # Split the tree between node1 and root2
+   root2.Parent = None
+
+.. seealso::
+
+   See :ref:`STRUCT/Tree/Splitting` for more details.
+
+Moving a branch in same tree
+----------------------------
+
+tbd
+
+Moving a branch to another tree
+-------------------------------
+
+tbd
 
 
 .. _STRUCT/Tree/Root:

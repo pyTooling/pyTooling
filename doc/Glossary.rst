@@ -55,7 +55,22 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
 
    Base-Class
-     An ancestor class for other derived classes.
+     A *base-class* is an ancestor class for other classes derived therefrom.
+
+     .. mermaid::
+        :caption: Base-class in a class hierarchy.
+
+        %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+        graph TD
+          B(BaseClass)
+          C(Class)
+          I1(Instance);I2(Instance)
+
+          B:::mark1 --> C:::mark2 -..-> I1 & I2
+
+          classDef node font-size:smaller;
+          classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
+          classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
 
    Child
      *Children* are all direct successors of a :term:`node`.
@@ -92,7 +107,7 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Cygwin
-     ...
+     :wiki:`Cygwin` is a :wiki:`POSIX`-compatible programming and runtime environment for Windows.
 
    DAG
      A *directed acyclic graph* (DAG) is a :term:`directed graph <DG>` without backward edges and therefore free of cycles.
@@ -176,7 +191,7 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Edge
-     ...
+     An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph`.
 
    Exception
      ...
@@ -274,7 +289,26 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Meta-Class
-     ...
+     A *meta-class* is a class helping to construct classes. Thus, it's the type of a type.
+
+     .. mermaid::
+        :caption: Relation of meta-classes, classes and instances.
+
+        %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+        graph TD
+          T(type)
+          ET(MetaClass)
+          B(BaseClass)
+          C(Class)
+          I1(Instance);I2(Instance)
+
+          T --> T
+          T:::mark1 --> ET:::mark1 -.class definition..-> B
+          B:::mark2 --> C:::mark2 -.instantiation..-> I1 & I2
+
+          classDef node font-size:smaller;
+          classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
+          classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
 
    MinGW
      Minimalistic GNU for Windows.
@@ -431,7 +465,8 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Singleton
-     ...
+     The :wiki:`singleton design pattern <Singleton_pattern>` ensures only a single instance of a class to exist. If
+     another instance is going to be created, a previously cached instance of that class will be returned.
 
    Slots
      ...
