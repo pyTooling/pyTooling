@@ -87,6 +87,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -170,6 +171,7 @@ Glossary
           F1:::mark2
           F2:::mark2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -190,7 +192,7 @@ Glossary
      * Directed Acyclic Graph without Side-Edges: :term:`Tree`
 
      .. mermaid::
-        :caption: A directed graph with cycles (one cycle is denoted by dotted edges).
+        :caption: A directed graph with backward-edges denoted by dotted vertex relations.
 
         %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
         graph LR
@@ -235,6 +237,7 @@ Glossary
           F1:::mark2
           F2:::mark2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -266,6 +269,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -322,6 +326,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -359,6 +364,7 @@ Glossary
           ERN2:::mark2
           E --> F1 & F2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
@@ -389,6 +395,7 @@ Glossary
           DR --> ERN1 & ERN2
           E --> F1 & F2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 
@@ -419,6 +426,7 @@ Glossary
           DR:::mark2 --> ERN1 & ERN2
           E --> F1 & F2
 
+          classDef node font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 

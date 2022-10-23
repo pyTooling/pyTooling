@@ -4,12 +4,32 @@ Graph
 #####
 
 The :py:mod:`pyTooling.Graph` package provides a directed graph data structure. Compared to
-:gh:`NetworkX <networkx/networkx>` and :gh:`igraph <igraph/python-igraph>`, this implementation provides an
+:ref:`NetworkX <STRUCT/Graph/NetworkX>` and :ref:`igraph <STRUCT/Graph/igraph>`, this implementation provides an
 object-oriented API.
 
 .. contents:: Table of Contents
    :local:
    :depth: 2
+
+.. rubric:: Example Graph:
+.. mermaid::
+   :caption: A directed graph with backward-edges denoted by dotted vertex relations.
+
+   %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+   graph LR
+     A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
+
+     A --> B --> E
+     G --> F
+     A --> C --> G --> H --> D
+     D -.-> A
+     D & F -.-> B
+     I ---> E --> F --> D
+
+     classDef node font-size:smaller;
+
+
+.. rubric:: Graph Properties:
 
 A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to all
 nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are made of
@@ -170,4 +190,71 @@ Outbound Edges
 
 Graph Reference
 ===============
+
+.. todo:: GRAPH: reference to the graph
+
+
+.. _STRUCT/Graph/Competitors:
+
+Competing Solutions
+*******************
+
+Compared to :gh:`NetworkX <networkx/networkx>` and :gh:`igraph <igraph/python-igraph>`, this implementation provides an
+object-oriented API.
+
+.. _STRUCT/Graph/NetworkX:
+
+NetworkX
+========
+
+.. rubric:: Disadvantages
+
+* Many operations are executed on the graph, but not on vertex/node objects or edge objects.
+* Algorithms are provided as functions instead of methods.
+* Vertices are created implicitly.
+* ...
+
+.. rubric:: Standoff
+
+* Arbitrary data can be attached to edges.
+* ...
+
+.. rubric:: Advantages
+
+* A huge variety of algorithms is provided.
+* ...
+
+.. code-block:: python
+
+   import networkx as nx
+   G = nx.Graph()
+   G.add_edge("A", "B", weight=4)
+   G.add_edge("B", "D", weight=2)
+   G.add_edge("A", "C", weight=3)
+   G.add_edge("C", "D", weight=4)
+   nx.shortest_path(G, "A", "D", weight="weight")
+
+
+.. _STRUCT/Graph/igraph:
+
+igraph
+======
+
+.. todo:: GRAPH::igraph write example and demonstrate missing OOP API.
+
+.. rubric:: Disadvantages
+
+* ...
+
+.. rubric:: Standoff
+
+* ...
+
+.. rubric:: Advantages
+
+* ...
+
+.. code-block:: python
+
+   # add code here
 

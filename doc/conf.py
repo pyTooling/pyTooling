@@ -239,8 +239,9 @@ graphviz_output_format = "svg"
 # ==============================================================================
 mermaid_params = [
 	'--theme', 'neutral',
-	'--backgroundColor', 'transparent'
+	'--backgroundColor', 'transparent',
 ]
+mermaid_verbose = True
 
 # ==============================================================================
 # Sphinx.Ext.Inheritance_Diagram

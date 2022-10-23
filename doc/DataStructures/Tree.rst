@@ -15,6 +15,35 @@ The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structur
    :local:
    :depth: 2
 
+.. rubric:: Example Tree:
+.. mermaid::
+   :caption: Root of the current node are marked in blue.
+
+   %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+   graph TD
+     R(Root)
+     A(...)
+     BL(Node); B(GrandParent); BR(Node)
+     CL(Uncle); C(Parent); CR(Aunt)
+     DL(Sibling); D(Node);  DR(Sibling)
+     ELN1(Niece); ELN2(Nephew)
+     EL(Child);   E(Child); ER(Child);
+     ERN1(Niece);ERN2(Nephew)
+     F1(GrandChild); F2(GrandChild)
+
+     R:::mark1 --> A
+     A --> BL & B & BR
+     B --> CL & C & CR
+     C --> DL & D & DR
+     DL --> ELN1 & ELN2
+     D:::cur --> EL & E & ER
+     DR --> ERN1 & ERN2
+     E --> F1 & F2
+
+     classDef node font-size:smaller;
+     classDef cur fill:#9e9,stroke:#6e6;
+     classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+
 .. rubric:: Comprehensive Example:
 
 The following example code demonstrates a few features in a compact form:
@@ -320,3 +349,59 @@ Splitting Trees
 ===============
 
 .. todo:: TREE: splitting a tree
+
+
+.. _STRUCT/Tree/Competitors:
+
+Competing Solutions
+*******************
+
+This tree data structure outperforms :gh:`anytree <c0fec0de/anytree>` by far and even :gh:`itertree <BR1py/itertree>`
+by factor of 2.
+
+.. _STRUCT/Tree/anytree:
+
+anytree
+=======
+
+.. todo:: TREE::anytree write comparison here.
+
+.. rubric:: Disadvantages
+
+* ...
+
+.. rubric:: Standoff
+
+* ...
+
+.. rubric:: Advantages
+
+* ...
+
+.. code-block:: python
+
+   # add code here
+
+
+.. _STRUCT/Tree/itertree:
+
+itertree
+========
+
+.. todo:: TREE::itertree write comparison here.
+
+.. rubric:: Disadvantages
+
+* ...
+
+.. rubric:: Standoff
+
+* ...
+
+.. rubric:: Advantages
+
+* ...
+
+.. code-block:: python
+
+   # add code here
