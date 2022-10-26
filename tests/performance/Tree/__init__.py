@@ -30,7 +30,7 @@
 #
 """Performance tests for pyTooling.Tree."""
 import timeit
-from statistics import mean
+from statistics import median, mean
 from typing import Callable, Iterable
 from unittest import TestCase
 
@@ -44,10 +44,23 @@ if __name__ == "__main__":  # pragma: no cover
 class PerformanceTest(TestCase):
 	counts: Iterable[int] = (10, 100, 1000, 10000)
 
+	@staticmethod
+	def minMaxSumMean(array):
+		minimum = 1.0e9
+		maximum = 0.0
+		sum = 0.0
+		for value in array:
+			minimum = value if value < minimum else minimum
+			maximum = value if value > maximum else maximum
+			sum += value
+
+		return minimum, maximum, sum, sum / len(array)
+
 	def runTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
-		print(f"         min          avg           max")
+		print(f"         min           mean          median        max")
 		for count in counts:
 			results = timeit.repeat(func(count), repeat=20, number=50)
 			norm = count / 10
-			print(f"{count:>5}x: {min(results)/norm:.6f} s    {mean(results)/norm:.6f} s    {max(results)/norm:.6f} s")
+			minimum, maximum, _, mean = self.minMaxSumMean(results)
+			print(f"{count:>5}x: {minimum/norm:.6f} s    {mean/norm:.6f} s    {median(results)/norm:.6f} s    {maximum/norm:.6f} s")
