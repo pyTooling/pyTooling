@@ -12,7 +12,7 @@ jobs:
       name: pyTooling
       python_version_list: "3.7 3.8 3.9 3.10 pypy-3.8 pypy-3.9"
       include_list: "ubuntu:3.11 macos:3.11"
-      exclude_list: "windows:pypy-3.7 windows:pypy-3.8"
+      exclude_list: "windows:pypy-3.8 windows:pypy-3.9"
 
   PerformanceTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
