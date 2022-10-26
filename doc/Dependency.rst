@@ -78,11 +78,11 @@ the mandatory dependencies too.
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | **Package**                                                        | **Version** | **License**                                                                            | **Dependencies**     |
 +====================================================================+=============+========================================================================================+======================+
-| `pytest <https://GitHub.com/pytest-dev/pytest>`__                  | ≥7.1.3      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
+| `pytest <https://GitHub.com/pytest-dev/pytest>`__                  | ≥7.2.0      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `pytest-cov <https://GitHub.com/pytest-dev/pytest-cov>`__          | ≥4.0.0      | `MIT <https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `pytest-benchmark <https://GitHub.com/ionelmc/pytest-benchmark>`__ | ≥3.4.1      | `BSD 2-Clause <https://GitHub.com/ionelmc/pytest-benchmark/blob/master/LICENSE>`__     | *Not yet evaluated.* |
+| `pytest-benchmark <https://GitHub.com/ionelmc/pytest-benchmark>`__ | ≥4.0.0      | `BSD 2-Clause <https://GitHub.com/ionelmc/pytest-benchmark/blob/master/LICENSE>`__     | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `Coverage <https://GitHub.com/nedbat/coveragepy>`__                | ≥6.5        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
