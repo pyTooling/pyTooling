@@ -100,7 +100,16 @@ pyTooling also provides fast and powerful data structures offering object-orient
 
 ### Packaging
 
+A set of helper functions to describe a Python package for setuptools.
+
+* Helper Functions:
+
 tbd
+
+* Package Descriptions
+
+tbd
+
 
 ## Examples
 
