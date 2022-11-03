@@ -1,4 +1,4 @@
 -r ../requirements.txt
 
 # Test Runner extensions
-pytest-benchmark>=3.4.1
+pytest-benchmark>=4.0.0

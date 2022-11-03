@@ -70,8 +70,7 @@ class Timer(ObjectWithSlots):
 		self.Stop()
 
 	def Start(self):
-		self._startTime = perf_counter_ns()
-		self._resumeTime = self._startTime
+		self._resumeTime = self._startTime = perf_counter_ns()
 
 	def Stop(self):
 		if self._startTime is None:

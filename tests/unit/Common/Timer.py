@@ -58,7 +58,7 @@ class Timing(TestCase):
 
 	def test_PauseResume(self):
 		delay = 0.1
-		inaccuracy = 3.0 if CurrentPlatform.IsNativeMacOS else 0.5
+		inaccuracy = 4.0 if CurrentPlatform.IsNativeMacOS else 0.5
 
 		timer = Timer()
 
@@ -77,7 +77,7 @@ class Timing(TestCase):
 		self.assertLessEqual(diff, delay + (delay * inaccuracy))
 
 		total = timer.Stop()
-		print(f"Duration for '2x sleep({delay:0.3f})': {total:0.6f} us")
+		print(f"Duration for '2x sleep({delay:0.3f}) + 1x pause({delay * 5:0.3f})': {total:0.6f} us")
 		self.assertLessEqual(total, (7 * delay) + (delay * inaccuracy))
 
 	def test_ContextManager(self):

@@ -69,19 +69,33 @@ class PerformanceTest(TestCase):
 #		EdgeFile(100000, 150000, BiggestNetwork(9671, 58243), Path("graph_n100000_m150000_dir_w0_100.edgelist")),
 	)
 
+	@staticmethod
+	def minMaxSumMean(array):
+		minimum = 1.0e9
+		maximum = 0.0
+		sum = 0.0
+		for value in array:
+			minimum = value if value < minimum else minimum
+			maximum = value if value > maximum else maximum
+			sum += value
+
+		return minimum, maximum, sum, sum/len(array)
+
 	def runSizedTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
-		print(f"            min           median        max")
+		print(f"         min           mean          median        max")
 		for count in counts:
 			results = timeit.repeat(func(count), repeat=20, number=50)
 			norm = count / 10
-			print(f"{count:>6}x: {min(results)/norm:.6f} s    {median(results)/norm:.6f} s    {max(results)/norm:.6f} s")
+
+			minimum, maximum, _, mean = self.minMaxSumMean(results)
+			print(f"{count:>6}x: {minimum/norm:.6f} s    {mean/norm:.6f} s    {median(results)/norm:.6f} s    {maximum/norm:.6f} s")
 
 	def runFileBasedTests(self, setup: Callable[[Path, int], pt_Graph], func: Callable[[pt_Graph, int, int], Callable[[], None]], edgeFiles: Iterable[EdgeFile]):
 		print()
-		print(f"            min           median        max           construct")
+		print(f"         min           mean          median        max           construct")
 		for edgeFile in edgeFiles:
-			file = Path("tests/data/Graph/EdgeLists") / edgeFile.file
+			file = Path("data/Graph/EdgeLists") / edgeFile.file
 
 			start = perf_counter_ns()
 			graph = setup(file, edgeFile.vertexCount)
@@ -89,4 +103,5 @@ class PerformanceTest(TestCase):
 
 			results = timeit.repeat(func(graph, edgeFile.biggestNetwork.startNodeID, edgeFile.biggestNetwork.size), repeat=20, number=50)
 			norm = edgeFile.biggestNetwork.size
-			print(f"{edgeFile.vertexCount:>6}x: {min(results) / norm:.6f} s    {median(results) / norm:.6f} s    {max(results) / norm:.6f} s    {construct / norm:.6f} s")
+			minimum, maximum, _, mean = self.minMaxSumMean(results)
+			print(f"{edgeFile.vertexCount:>6}x: {minimum/norm:.6f} s    {mean/norm:.6f} s    {median(results)/norm:.6f} s    {maximum/norm:.6f} s    {construct/norm:.6f} s")

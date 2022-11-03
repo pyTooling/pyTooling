@@ -51,7 +51,7 @@ class HelperFunctions(TestCase):
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
-		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
+		versionInformation = extractVersionInformation(Path("../pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(19, len(versionInformation.Keywords))
 
@@ -60,7 +60,7 @@ class HelperFunctions(TestCase):
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
-		readme = loadReadmeFile(Path("README.md"))
+		readme = loadReadmeFile(Path("../README.md"))
 		self.assertIn("# pyTooling", readme.Content)
 		self.assertEqual("text/markdown", readme.MimeType)
 
@@ -76,7 +76,7 @@ class HelperFunctions(TestCase):
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		requirements = loadRequirementsFile(Path("doc/requirements.txt"), debug=True)
+		requirements = loadRequirementsFile(Path("../doc/requirements.txt"), debug=True)
 		self.assertEqual(7, len(requirements))
 
 
