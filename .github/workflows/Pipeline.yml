@@ -79,7 +79,7 @@ jobs:
       jobs: ${{ needs.BenchmarkingParams.outputs.python_jobs }}
       requirements: '-r tests/benchmark/requirements.txt'
 #      artifact: ${{ fromJson(needs.BenchmarkingParams.outputs.params).artifacts.unittesting }}
-      unittest_directory: 'tests/benchmark'
+      unittest_directory: 'benchmark'
       pacboy: >-
         python-pip:p
         python-wheel:p
@@ -129,27 +129,24 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: ⚙ Update pip
-        run: python -m pip install -U pip
-
       - name: 🔧 Install wheel and pip dependencies
         if: matrix.system != 'msys2'
         run: |
-          python -m pip install -U wheel
-          python -m pip install -r tests/requirements.txt
+          python -m pip install --disable-pip-version-check -U wheel
+          python -m pip install --disable-pip-version-check -r tests/requirements.txt
 
       - name: 🔧 Install pip dependencies
         if: matrix.system == 'msys2'
         run: |
-          python -m pip install -r tests/requirements.txt
+          python -m pip install --disable-pip-version-check -r tests/requirements.txt
 
-      - name: ☑ Run unit tests
+      - name: ☑ Run unit tests (Bash)
         if: matrix.shell != 'pwsh'
         run: |
           export EXPECTED="${{ matrix.envname }}"
           python -m pytest -rA tests/unit/Common/Platform.py --color=yes
 
-      - name: ☑ Run unit tests
+      - name: ☑ Run unit tests (PoSh)
         if: matrix.shell == 'pwsh'
         run: |
           $env:EXPECTED = "${{ matrix.envname }}"
