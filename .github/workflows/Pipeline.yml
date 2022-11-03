@@ -58,7 +58,7 @@ jobs:
       jobs: ${{ needs.PerformanceTestingParams.outputs.python_jobs }}
       requirements: '-r tests/performance/requirements.txt'
 #      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
-      unittest_directory: 'tests/performance'
+      unittest_directory: 'performance'
       pacboy: >-
         python-pip:p
         python-wheel:p
