@@ -5,14 +5,12 @@ on:
   workflow_dispatch:
 
 jobs:
-
   UnitTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: pyTooling
-      python_version_list: "3.7 3.8 3.9 3.10 pypy-3.8 pypy-3.9"
-      include_list: "ubuntu:3.11 macos:3.11"
-      exclude_list: "windows:pypy-3.8 windows:pypy-3.9"
+      python_version_list: "3.7 3.8 pypy-3.8 3.9 pypy-3.9 3.10 3.11"
+      exclude_list: "windows:pypy-3.8 windows:pypy-3.9 windows:3.11"
 
   PerformanceTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
@@ -40,7 +38,7 @@ jobs:
       - UnitTestingParams
     with:
       jobs: ${{ needs.UnitTestingParams.outputs.python_jobs }}
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
       pacboy: >-
         python-pip:p
         python-wheel:p
@@ -57,7 +55,7 @@ jobs:
     with:
       jobs: ${{ needs.PerformanceTestingParams.outputs.python_jobs }}
       requirements: '-r tests/performance/requirements.txt'
-#      artifact: ${{ fromJson(needs.Params.outputs.params).artifacts.unittesting }}
+#      artifact: ${{ fromJson(needs.Params.outputs.artifact_names).unittesting_xml }}
       unittest_directory: 'performance'
       pacboy: >-
         python-pip:p
@@ -78,7 +76,7 @@ jobs:
     with:
       jobs: ${{ needs.BenchmarkingParams.outputs.python_jobs }}
       requirements: '-r tests/benchmark/requirements.txt'
-#      artifact: ${{ fromJson(needs.BenchmarkingParams.outputs.params).artifacts.unittesting }}
+#      artifact: ${{ fromJson(needs.BenchmarkingParams.outputs.artifact_names).unittesting_xml }}
       unittest_directory: 'benchmark'
       pacboy: >-
         python-pip:p
@@ -157,8 +155,8 @@ jobs:
     needs:
       - UnitTestingParams
     with:
-      python_version: ${{ fromJson(needs.UnitTestingParams.outputs.params).python_version }}
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.coverage }}
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
     secrets:
       codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
@@ -167,12 +165,12 @@ jobs:
     needs:
       - UnitTestingParams
     with:
-      python_version: ${{ fromJson(needs.UnitTestingParams.outputs.params).python_version }}
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       commands: |
         touch pyTooling/__init__.py
         mypy --html-report htmlmypy -p pyTooling
       report: 'htmlmypy'
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.typing }}
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
 
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
@@ -188,9 +186,9 @@ jobs:
       - Coverage
       - PlatformTests
     with:
-      python_version: ${{ fromJson(needs.UnitTestingParams.outputs.params).python_version }}
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       requirements: -r build/requirements.txt
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.package }}
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
 
   Release:
     uses: pyTooling/Actions/.github/workflows/Release.yml@dev
@@ -209,9 +207,9 @@ jobs:
       - Release
       - Package
     with:
-      python_version: ${{ fromJson(needs.UnitTestingParams.outputs.params).python_version }}
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       requirements: -r dist/requirements.txt
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.package }}
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
@@ -220,7 +218,7 @@ jobs:
 #    needs:
 #      - UnitTestingParams
 #    with:
-#      python_version: ${{ fromJson(needs.UnitTestingParams.outputs.params).python_version }}
+#      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
 
   BuildTheDocs:
     uses: pyTooling/Actions/.github/workflows/BuildTheDocs.yml@dev
@@ -228,7 +226,7 @@ jobs:
       - UnitTestingParams
 #      - VerifyDocs
     with:
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.doc }}
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
 
   PublishToGitHubPages:
     uses: pyTooling/Actions/.github/workflows/PublishToGitHubPages.yml@dev
@@ -238,9 +236,9 @@ jobs:
       - Coverage
       - StaticTypeCheck
     with:
-      doc: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.doc }}
-      coverage: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.coverage }}
-      typing: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.typing }}
+      doc: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
+      coverage: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
+      typing: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
 
   ArtifactCleanUp:
     uses: pyTooling/Actions/.github/workflows/ArtifactCleanUp.yml@dev
@@ -256,21 +254,9 @@ jobs:
       - PublishToGitHubPages
       - PublishTestResults
     with:
-      package: ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.package }}
+      package: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
       remaining: |
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-ubuntu-3.7
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-ubuntu-3.8
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-ubuntu-3.9
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-ubuntu-3.10
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-windows-3.7
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-windows-3.8
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-windows-3.9
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-windows-3.10
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-msys2-3.9
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-macos-3.7
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-macos-3.8
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-macos-3.9
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.unittesting }}-macos-3.10
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.coverage }}
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.typing }}
-        ${{ fromJson(needs.UnitTestingParams.outputs.params).artifacts.doc }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}

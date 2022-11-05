@@ -95,7 +95,11 @@ applied to every element during the merge operation.
 zipdicts
 ********
 
-:py:func:`~pyTooling.Common.zipdicts` is a generator that iterates multiple dictionaries simultaneously.
+:py:func:`~pyTooling.Common.zipdicts` is a generator that iterates multiple dictionaries simultaneously. It expects
+multiple dictionary objects (fulfilling the mapping protocol) as positional parameters.
+
+An exception is raise, if not all dictionary objects have the same number of items. Also an exception is raised, if a
+key doesn't exist in all dictionaries.
 
 .. rubric:: Example:
 .. code-block:: Python
