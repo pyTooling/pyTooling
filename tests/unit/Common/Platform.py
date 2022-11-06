@@ -51,7 +51,7 @@ class AnyPlatform(TestCase):
 
 		self.assertEqual(self.expected, str(platform))
 
-	@mark.skipif("Linux (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Linux (x86-64)" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_NativeLinux' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_NativeLinux(self) -> None:
 		platform = Platform()
 
@@ -71,7 +71,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("so", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("MacOS (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("MacOS (x86-64)" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_NativeMacOS' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_NativeMacOS(self) -> None:
 		platform = Platform()
 
@@ -91,7 +91,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("lib", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows (x86-64)" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_NativeWindows' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_NativeWindows(self) -> None:
 		platform = Platform()
 
@@ -111,7 +111,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_MSYS' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_MSYS(self) -> None:
 		platform = Platform()
 
@@ -130,7 +130,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_MinGW32' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_MinGW32(self) -> None:
 		platform = Platform()
 
@@ -149,7 +149,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_MinGW64' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_MinGW64(self) -> None:
 		platform = Platform()
 
@@ -168,7 +168,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_UCRT64' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_UCRT64(self) -> None:
 		platform = Platform()
 
@@ -187,7 +187,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_Clang32' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_Clang32(self) -> None:
 		platform = Platform()
 
@@ -206,7 +206,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.SharedLibraryExtension)
 		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("EXPECTED", "skip"), reason="Skipped when environment variable 'EXPECTED' doesn't match.")
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("EXPECTED", "skip"), reason=f"Skipped 'test_Clang64' when environment variable 'EXPECTED' doesn't match. {os_getenv('EXPECTED', 'skip')}")
 	def test_Clang64(self) -> None:
 		platform = Platform()
 
