@@ -114,13 +114,13 @@ jobs:
       - name: ☑ Run unit tests (Bash)
         if: matrix.shell != 'pwsh'
         run: |
-          export EXPECTED="${{ matrix.envname }}"
+          export ENVIRONMENT_NAME="${{ matrix.envname }}"
           python -m pytest -rA tests/unit/Common/Platform.py --color=yes
 
       - name: ☑ Run unit tests (PoSh)
         if: matrix.shell == 'pwsh'
         run: |
-          $env:EXPECTED = "${{ matrix.envname }}"
+          $env:ENVIRONMENT_NAME = "${{ matrix.envname }}"
           python -m pytest -rA tests/unit/Common/Platform.py --color=yes
 
   Coverage:
