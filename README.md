@@ -49,23 +49,55 @@ This is a set of useful [helper functions](https://pytooling.github.io/pyTooling
 
 ### Common Classes
 
-* [pyTooling.CallByRef.*](https://pyTooling.GitHub.io/pyTooling/CallByRef/)  
-  Emulation of *call-by-reference* parameters.
-* [pyTooling.Versioning.*](https://pyTooling.GitHub.io/pyTooling/Versioning/)  
-  Class representations of semantic version (SemVer) and calendar version (CalVer) numbers.
+* Python doesn't provide [call-by-reference parameters](https://pytooling.github.io/pyTooling/Common/CallByRef.html) for
+  simple types. This behavior can be emulated with classes provided by the `pyTooling.CallByRef` module.
+* Setuptools, PyPI, and others have a varying understanding of license names. The `pyTooling.Licensing` module
+  provides [unified license names](https://pytooling.github.io/pyTooling/Common/Licensing.html) as well as license name
+  mappings or translations.
+* Python has many ways in figuring out the current platform using APIs from `sys`, `platform`, `os`, ….
+  Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
+  [unified platform and environment description](https://pytooling.github.io/pyTooling/Common/Platform.html) by
+  summarizing multiple platform APIs into a single class instance.
+* While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
+  provides such a [representations of version numbers](https://pytooling.github.io/pyTooling/Common/Versioning.html)
+  following semantic versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by the
+  `pyTooling.Versioning` module.
+
+### Configuration
+
+Various file formats suitable for configuration information share the same features supporting: key-value pairs
+(dictionaries), sequences (lists), and simple types like string, integer and float. pyTooling provides an
+[abstract configuration file data model](https://pytooling.github.io/pyTooling/Configuration/index.html) supporting
+these features. Moreover, concrete [configuration file format reader](https://pytooling.github.io/pyTooling/Configuration/FileFormats.html)
+implementations are provided as well.
+
+* [JSON configuration reader](https://pytooling.github.io/pyTooling/Configuration/JSON.html) &rarr; To be implemented.
+* [TOML configuration reader](https://pytooling.github.io/pyTooling/Configuration/TOML.html) &rarr; To be implemented.
+* [YAML configuration reader](https://pytooling.github.io/pyTooling/Configuration/YAML.html) for the YAML file format.
 
 
 ### Data Structures
 
 pyTooling also provides fast and powerful data structures offering object-oriented APIs:
 
-* Trees
-  * [Tree data structure](https://pyTooling.GitHub.io/pyTooling/DataStructures/Tree.html)  
-    &rarr; A fast and simple implementation using a single `Node` class.
+* [Graph data structure](https://pytooling.github.io/pyTooling/DataStructures/Graph.html)  
+  &rarr; A directed graph implementation using a `Vertex` and `Edge`
+  class.
+* [Tree data structure](https://pytooling.github.io/pyTooling/DataStructures/Tree.html)  
+  &rarr; A fast and simple implementation using a single `Node` class.
 
 
 ### Decorators
 
+* [Abstract Methods](https://pytooling.github.io/pyTooling/MetaClasses.html#meta-abstract)
+  * Methods marked with `abstractmethod` are abstract and need to be overwritten in a derived class.  
+    An *abstract method* might be called from the overwriting method.
+  * Methods marked with `mustoverride` are abstract and need to be overridden in a derived class.  
+    It's not allowed to call a *mustoverride method*.
+* [Documentation](https://pytooling.github.io/pyTooling/Decorators.html#deco-documentation)
+  * Copy the doc-string from given base-class via `InheritDocString`.
+* [Visibility](https://pytooling.github.io/pyTooling/Decorators.html#deco-visibility)
+  * Register the given function or class as publicly accessible in a module via `export`.
 * [Documentation](https://pyTooling.GitHub.io/pyTooling/Decorators.html#documentation)
   * [`@InheritDocString`](https://pyTooling.GitHub.io/pyTooling/Decorators.html#inheritdocstring)  
     &rarr; Copy the doc-string from given base-class.
@@ -86,16 +118,32 @@ pyTooling also provides fast and powerful data structures offering object-orient
 
 ### Meta-Classes
 
-* [Overloading](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Overloading.html)  
-  &rarr; `Overloading` allows method overloading in Python classes. It dispatches method calls based on method signatures
-  (type annotations).
-* [Singleton](https://pyTooling.GitHub.io/pyTooling/MetaClasses/Singleton.html)  
-  &rarr; A class created from meta-class `Singleton` allows only a single instance to exist. If a further instance is tried to 
-  be created, a cached instance will be returned.
-* [SlottedType](https://pyTooling.GitHub.io/pyTooling/MetaClasses/SlottedType.html)    
-  &rarr; All type-annotated fields in a class get stored in a slot rather than in `__dict__`. This improves the memory
-  footprint as well as the field access performance of all class instances. The behavior is automatically inherited to
-  all derived classes.
+pyTooling provides an [enhanced meta-class](https://pytooling.github.io/pyTooling/MetaClasses.html) called
+`ExtendedType`. This meta-classes allows to implement
+[abstract methods](https://pytooling.github.io/pyTooling/MetaClasses.html#abstract-method),
+[singletons](https://pytooling.github.io/pyTooling/MetaClasses.html#singleton),
+[slotted types](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) and combinations thereof.
+
+`class MyClass(metaclass=ExtendedType):`
+  A class definition using that meta-class can implement
+  [abstract methods](https://pytooling.github.io/pyTooling/MetaClasses.html#abstract-method) using decorators
+  `@abstractmethod` or `@mustoverride`.
+
+`class MyClass(metaclass=ExtendedType, singleton=True):`
+  A class defined with enabled [singleton](https://pytooling.github.io/pyTooling/MetaClasses.html#singleton) behavior
+  allows only a single instance of that class to exist. If another instance is going to be created, a previously cached
+  instance of that class will be returned.
+
+`class MyClass(metaclass=ExtendedType, useSlots=True):`
+  A class defined with enabled [useSlots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) behavior
+  stores instance fields in slots. The meta-class, translates all type-annotated fields in a class definition into
+  slots. Slots allow a more efficient field storage and access compared to dynamically stored and accessed fields hosted
+  by `__dict__`. This improves the memory footprint as well as the field access performance of all class instances. This
+  behavior is automatically inherited to all derived classes.
+
+`class MyClass(ObjectWithSlots):`
+  A class definition deriving from `ObjectWithSlots` will bring the slotted type behavior to that class and all derived
+  classes.
 
 
 ### Packaging
@@ -103,13 +151,17 @@ pyTooling also provides fast and powerful data structures offering object-orient
 A set of helper functions to describe a Python package for setuptools.
 
 * Helper Functions:
-
-tbd
-
+  * `loadReadmeFile`  
+    Load a `README.md` file from disk and provide the content as long description for setuptools.
+  * `loadRequirementsFile`  
+    Load a `requirements.txt` file from disk and provide the content for setuptools.
+  * `extractVersionInformation`  
+    Extract version information from Python source files and provide the data to setuptools.
 * Package Descriptions
-
-tbd
-
+  * `DescribePythonPackage`  
+    tbd
+  * `DescribePythonPackageHostedOnGitHub`  
+    tbd
 
 ## Examples
 

@@ -64,7 +64,7 @@ Common Classes
 * Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. This behavior can be
   emulated with classes provided by the :py:mod:`pyTooling.CallByRef` module.
 * Setuptools, PyPI, and others have a varying understanding of license names. The :py:mod:`pyTooling.Licensing` module
-  provides :ref:`unifyed license names <LICENSING>` as well as license name mappings or translations.
+  provides :ref:`unified license names <LICENSING>` as well as license name mappings or translations.
 * Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
   Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
   :ref:`unified platform and environment description <COMMON/Platform>` by summarizing multiple platform APIs into a
@@ -92,13 +92,13 @@ Data Structures
 
 pyTooling also provides fast and powerful data structures offering object-oriented APIs:
 
-* :ref:`Tree data structure <STRUCT/Tree>` |br|
-  |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
 * :ref:`Graph data structure <STRUCT/Graph>` |br|
   |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
   class.
 * :ref:`Path data structure <STRUCT/Path>` |br|
   |rarr| To be documented.
+* :ref:`Tree data structure <STRUCT/Tree>` |br|
+  |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
 
 .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
    |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
