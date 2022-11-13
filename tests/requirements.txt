@@ -9,7 +9,7 @@ pytest-cov>=4.0.0
 pytest-benchmark>=4.0.0
 
 # Static Type Checking
-mypy>=0.981
+mypy>=0.990
 lxml>=4.9
 
 # For pyTooling.Configuration.YAML testing

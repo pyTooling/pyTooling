@@ -10,7 +10,8 @@ jobs:
     with:
       name: pyTooling
       python_version_list: "3.7 3.8 pypy-3.8 3.9 pypy-3.9 3.10 3.11"
-      exclude_list: "windows:pypy-3.8 windows:pypy-3.9 windows:3.11"
+      exclude_list: "windows:pypy-3.8 windows:pypy-3.9"
+      disable_list: "windows:3.11"
 
   PerformanceTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
