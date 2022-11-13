@@ -37,7 +37,7 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "2.5.0"
+__version__ =   "2.6.0"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "timer", "data structure", "setuptools", "wheel", "installation", "packaging", "path", "generic path", "generic library", "url"]
 
 from collections import deque
@@ -88,6 +88,9 @@ def getsizeof(obj: Any) -> int:
 	"""
 	Recursively calculate the "true" size of an object including complex members like ``__dict__``.
 
+	:param obj: Object to calculate the size of.
+	:returns:   True size of an object in bytes.
+
 	.. admonition:: Background Information
 
 	   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
@@ -100,9 +103,6 @@ def getsizeof(obj: Any) -> int:
 	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT Lizense)
 	   * `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__ (CC BY-SA 4.0)
 	   * `Python __slots__, slots, and object layout <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>`__ (MIT Lizense)
-
-	:param obj: Object to calculate the size of.
-	:returns:   True size of an object in bytes.
 	"""
 	from sys import getsizeof as sys_getsizeof
 
@@ -160,58 +160,6 @@ _DictValue2 = TypeVar("_DictValue2")
 _DictValue3 = TypeVar("_DictValue3")
 
 
-
-@overload
-def zipdicts(
-	m1: Mapping[_DictKey, _DictValue1]
-) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
-	...
-
-
-@overload
-def zipdicts(
-	m1: Mapping[_DictKey, _DictValue1],
-	m2: Mapping[_DictKey, _DictValue2]
-) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
-	...
-
-
-@overload
-def zipdicts(
-	m1: Mapping[_DictKey, _DictValue1],
-	m2: Mapping[_DictKey, _DictValue2],
-	m3: Mapping[_DictKey, _DictValue3]
-) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
-	...
-
-
-@export
-def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
-	"""
-	Iterate multiple dictionaries simultaneously.
-
-	.. seealso::
-
-	   The code is based on code snippets and ideas from:
-
-	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
-
-	:param dicts: Tuple of dictionaries to iterate as positional parameters.
-	:returns:     A generator returning a tuple containing the key and values of each dictionary in the order of given
-	              dictionaries.
-	"""
-	if not dicts:
-		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
-
-	length = len(dicts[0])
-	if any(len(d) != length for d in dicts):
-		raise ValueError(f"All given dictionaries must have the same length.")
-
-	for key, item0 in dicts[0].items():
-		# WORKAROUND: using redundant parenthesis for Python 3.7
-		yield (key, item0, *(d[key] for d in dicts[1:]))
-
-
 @overload
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
@@ -254,3 +202,54 @@ def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
 		return {k: reduce(lambda d,x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
 	else:
 		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}
+
+
+@overload
+def zipdicts(
+	m1: Mapping[_DictKey, _DictValue1]
+) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
+	...
+
+
+@overload
+def zipdicts(
+	m1: Mapping[_DictKey, _DictValue1],
+	m2: Mapping[_DictKey, _DictValue2]
+) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
+	...
+
+
+@overload
+def zipdicts(
+	m1: Mapping[_DictKey, _DictValue1],
+	m2: Mapping[_DictKey, _DictValue2],
+	m3: Mapping[_DictKey, _DictValue3]
+) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
+	...
+
+
+@export
+def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+	"""
+	Iterate multiple dictionaries simultaneously.
+
+	:param dicts: Tuple of dictionaries to iterate as positional parameters.
+	:returns:     A generator returning a tuple containing the key and values of each dictionary in the order of given
+	              dictionaries.
+
+	.. seealso::
+
+	   The code is based on code snippets and ideas from:
+
+	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
+	"""
+	if not dicts:
+		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
+
+	length = len(dicts[0])
+	if any(len(d) != length for d in dicts):
+		raise ValueError(f"All given dictionaries must have the same length.")
+
+	for key, item0 in dicts[0].items():
+		# WORKAROUND: using redundant parenthesis for Python 3.7
+		yield (key, item0, *(d[key] for d in dicts[1:]))

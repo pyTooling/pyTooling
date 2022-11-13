@@ -38,12 +38,58 @@ meta-class.
 Abstract Method
 ***************
 
-.. todo:: META:: Needs documentation for Abstract Method
+The :py:func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
+replaced by a method raising a :py:exc:`NotImplementedError`. When a class containing *abstract* methods is
+instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   class A(metaclass=ExtendedType):
+     @abstractmethod
+     def method(self) -> int:
+       """Methods documentation."""
+
+   class B(A):
+     @InheritDocString(A)
+     def method(self) -> int:
+       return 2
+
+.. hint::
+
+   If the abstract method should contain code that should be called from an overriding method in a derived class, use
+   the :ref:`@mustoverride <META/MustOverwrite>` decorator.
+
+.. _META/MustOverwrite:
 
 MustOverwrite Method
 ********************
 
-.. todo:: META:: Needs documentation for MustOverwrite Method
+The :py:func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
+*must override* methods is instantiated, an :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
+
+In contrast to :ref:`@abstractmethod <META/Abstract>`, the method can still be called from a derived class
+implementing an overridden method.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   class A(metaclass=ExtendedType):
+     @mustoverride
+     def method(self) -> int:
+       """Methods documentation."""
+       return 2
+
+   class B(A):
+     @InheritDocString(A)
+     def method(self) -> int:
+       result = super().method()
+       return result + 1
+
+.. hint::
+
+   If the method contain no code and throw an exception when called, use the :ref:`@abstractmethod <META/Abstract>`
+   decorator.
 
 
 .. _META/Singleton:
@@ -76,11 +122,10 @@ cached instance of that class will be returned.
 Slotted Type
 ************
 
-A class defined with enabled ``useSlots`` behavior stores instance fields in slots. The meta-class,
-translates all type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and
-access compared to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint
-as well as the field access performance of all class instances. This behavior is automatically inherited to all
-derived classes.
+A class defined with enabled ``useSlots`` behavior stores instance fields in slots. The meta-class, translates all
+type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and access compared
+to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint as well as the
+field access performance of all class instances. This behavior is automatically inherited to all derived classes.
 
 .. code-block:: python
 

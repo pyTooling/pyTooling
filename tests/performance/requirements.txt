@@ -6,5 +6,5 @@ itertree>=0.8.2
 
 # For performance testing of Vertex (graph)
 networkx>=2.6
-#networkx>=2.8.6
+#networkx>=2.8.8
 python-igraph>=0.10.1

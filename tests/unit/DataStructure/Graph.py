@@ -88,6 +88,23 @@ class Construction(TestCase):
 
 
 class Iterate(TestCase):
+	_edgesForGraph0 = [
+		(0, 3, 0),
+		(1, 3, 0),
+		(2, 0, 0), (2, 1, 0),             # root
+		(3, 6, 0), (3, 7, 0),
+		(4, 0, 0), (4, 3, 0), (4, 5, 0),  # root
+		(5, 9, 0), (5, 10, 0),
+		(6, 8, 0),
+		(7, 8, 0), (7, 9, 0),
+		(8, 11, 0),
+		(9, 11, 0), (9, 12, 0),
+		(10, 9, 0),
+		# 11                                leaf
+		# 12                                leaf
+		(13, 14, 0),                      # root
+		# 14                                leaf
+	]
 	_edgesForGraph1 = [
 		(0, 1, 0), (0, 9, 0),
 		(1, 8, 0),
@@ -118,6 +135,56 @@ class Iterate(TestCase):
 		(14, 10, 9),
 	]
 
+
+class IterateOnGraph(Iterate):
+	def test_Roots(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+
+		for u, v, w in self._edgesForGraph0:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertSetEqual({2, 4, 13}, set(v.ID for v in g.IterateRoots()))
+
+	def test_Leafs(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+
+		for u, v, w in self._edgesForGraph0:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertSetEqual({11, 12, 14}, set(v.ID for v in g.IterateLeafs()))
+
+	def test_Topologically(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
+
+		for u, v, w in self._edgesForGraph0:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+
+		self.assertListEqual([11, 12, 14, 8, 9, 13, 6, 7, 10, 3, 5, 0, 1, 4, 2], [v.ID for v in g.IterateTopologically()])
+
+
+class GraphProperties(Iterate):
+	def test_HasCycle(self):
+		g0 = Graph()
+		vList0 = [Vertex(vertexID=i, graph=g0) for i in range(15)]
+
+		for u, v, w in self._edgesForGraph0:
+			vList0[u].LinkToVertex(vList0[v], edgeWeight=w)
+
+		self.assertFalse(g0.HasCycle())
+
+		g1 = Graph()
+		vList1 = [Vertex(vertexID=i, graph=g1) for i in range(15)]
+
+		for u, v, w in self._edgesForGraph1:
+			vList1[u].LinkToVertex(vList1[v], edgeWeight=w)
+
+		self.assertTrue(g1.HasCycle())
+
+
+class IterateStartingFromVertex(Iterate):
 	def test_DFS(self):
 		g = Graph()
 		vList = [Vertex(vertexID=i, graph=g) for i in range(15)]
@@ -126,7 +193,7 @@ class Iterate(TestCase):
 		for u, v, w in self._edgesForGraph1:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		self.assertListEqual([0, 1, 8, 7, 3, 2, 4, 5, 6, 10, 9, 11], [v.ID for v in v0.IterateVertexesDFS()])
+		self.assertListEqual([0, 1, 8, 7, 3, 2, 4, 5, 6, 10, 9, 11], [v.ID for v in v0.IterateVerticesDFS()])
 
 	def test_BFS(self):
 		g = Graph()
@@ -136,7 +203,7 @@ class Iterate(TestCase):
 		for u, v, w in self._edgesForGraph1:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVertexesBFS()])
+		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVerticesBFS()])
 
 	def test_ShortestPathByHops(self):
 		g = Graph()

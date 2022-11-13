@@ -36,7 +36,7 @@ from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional a
 from ..Decorators import export
 from ..MetaClasses import ExtendedType
 
-IDType = TypeVar("VertexIDType", bound=Hashable)
+IDType = TypeVar("IDType", bound=Hashable)
 """A type variable for a tree's ID."""
 
 ValueType = TypeVar("ValueType")
@@ -85,24 +85,24 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	Each node can have a **value** (:py:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
 	modified later. Use the property :py:attr:`Value` to get or set the value.
 
-	Moreover, each node can store various key-value pairs (:py:attr:`_dict`). Use the dictionary syntax to get and set
+	Moreover, each node can store various key-value-pairs (:py:attr:`_dict`). Use the dictionary syntax to get and set
 	key-value-pairs.
 	"""
 
 	_id: Nullable[IDType]                         #: Unique identifier of a node. ``None`` if not used.
 	_nodesWithID: Nullable[Dict[IDType, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
-	_nodesWithoutID: Nullable[List['Node']]    #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
-	_root: 'Node'                              #: Reference to the root of a tree. ``self`` if it's the root node.
-	_parent: Nullable['Node']                  #: Reference to the parent node. ``None`` if it's the root node.
-	_children: List['Node']                    #: List of all children
+	_nodesWithoutID: Nullable[List['Node']]       #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
+	_root: 'Node'                                 #: Reference to the root of a tree. ``self`` if it's the root node.
+	_parent: Nullable['Node']                     #: Reference to the parent node. ``None`` if it's the root node.
+	_children: List['Node']                       #: List of all children
 #	_links: List['Node']
 
-	_level: int                                #: Level of the node (distance to the root).
+	_level: int                                   #: Level of the node (distance to the root).
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
-	_dict: Dict[DictKeyType, DictValueType]          #: Dictionary to store key-value-pairs attached to the node.
+	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
 	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None):
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::init Needs documentation."""
 		self._id = nodeID
 		self._value = value
 		self._dict = {}
@@ -173,15 +173,27 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self._value = value
 
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
-		""".. todo:: Needs documentation."""
+		"""
+		Read a node's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
 		return self._dict[key]
 
 	def __setitem__(self, key: DictKeyType, value: DictValueType) -> None:
-		""".. todo:: Needs documentation."""
+		"""
+		Create or update a node's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
 		self._dict[key] = value
 
 	def __delitem__(self, key: DictKeyType) -> None:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::__delitem__ Needs documentation."""
 		del self._dict[key]
 
 	@property
@@ -254,7 +266,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	@property
 	def Siblings(self) -> Tuple['Node', ...]:
-		""".. todo:: Needs documentation."""
+		"""
+		A read-only property to return a tuple of all siblings from the current node.
+
+		If the current node is the only child, the tuple is empty.
+
+		Siblings are child nodes of the current node's parent node, without the current node itself.
+
+		:returns:             A tuple of all siblings of the current node.
+		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		"""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -262,7 +283,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	@property
 	def LeftSiblings(self) -> Tuple['Node', ...]:
-		""".. todo:: Needs documentation."""
+		"""
+		A read-only property to return a tuple of all siblings left from the current node.
+
+		If the current node is the only child, the tuple is empty.
+
+		Siblings are child nodes of the current node's parent node, without the current node itself.
+
+		:returns:             A tuple of all siblings left of the current node.
+		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		"""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -279,7 +309,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	@property
 	def RightSiblings(self) -> Tuple['Node', ...]:
-		""".. todo:: Needs documentation."""
+		"""
+		A read-only property to return a tuple of all siblings right from the current node.
+
+		If the current node is the only child, the tuple is empty.
+
+		Siblings are child nodes of the current node's parent node, without the current node itself.
+
+		:returns:             A tuple of all siblings right of the current node.
+		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		"""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -387,16 +426,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :py:attr:`_root` assigned and
 		all IDs are merged into the node's root's ID lists (:py:attr:`_nodesWithID`).
 
+		:param child: The child node to be added to the tree.
+		:raises TypeError: If parameter ``child`` is not a :py:class:`Node`.
+		:raises Exception: If parameter ``child`` is already a node in the tree.
+
 		.. seealso::
 
 		   :py:attr:`Parent` |br|
 		      |rarr| Set the parent of a node.
 		   :py:meth:`AddChildren` |br|
 		      |rarr| Add multiple children at once.
-
-		:param child: The child node to be added to the tree.
-		:raises TypeError: If parameter ``child`` is not a :py:class:`Node`.
-		:raises Exception: If parameter ``child`` is already a node in the tree.
 		"""
 		if not isinstance(child, Node):
 			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
@@ -417,16 +456,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Add multiple children nodes to the current node of the tree.
 
+		:param children: The list of children nodes to be added to the tree.
+		:raises TypeError: If parameter ``children`` contains an item, which is not a :py:class:`Node`.
+		:raises Exception: If parameter ``children`` contains an item, which is already a node in the tree.
+
 		.. seealso::
 
 		   :py:attr:`Parent` |br|
 		      |rarr| Set the parent of a node.
 		   :py:meth:`AddChild` |br|
 		      |rarr| Add a child node to the tree.
-
-		:param children: The list of children nodes to be added to the tree.
-		:raises TypeError: If parameter ``children`` contains an item, which is not a :py:class:`Node`.
-		:raises Exception: If parameter ``children`` contains an item, which is already a node in the tree.
 		"""
 		for child in children:
 			if not isinstance(child, Node):
@@ -445,19 +484,19 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetPAth Needs documentation."""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetAncestors Needs documentation."""
 		node = self._parent
 		while node is not None:
 			yield node
 			node = node._parent
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		""".. todo:: TREE::Node::GetCommonAncestors Needs documentation."""
 		if isinstance(others, Node):
 			# Check for trivial case
 			if others is self:
@@ -482,6 +521,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		A generator to iterate all direct children of the current node.
 
+		:returns: A generator to iterate all children.
+
 		.. seealso::
 
 		   :py:meth:`GetDescendants` |br|
@@ -492,14 +533,19 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all children.
 		"""
 		for child in self._children:
 			yield child
 
 	def GetSiblings(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		"""
+		A generator to iterate all siblings.
+
+		Siblings are child nodes of the current node's parent node, without the current node itself.
+
+		:returns:             A generator to iterate all siblings of the current node.
+		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		"""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -510,7 +556,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield node
 
 	def GetLeftSiblings(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		"""
+		A generator to iterate all siblings left from the current node.
+
+		Siblings are child nodes of the current node's parent node, without the current node itself.
+
+		:returns:             A generator to iterate all siblings left of the current node.
+		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		"""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -523,7 +576,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 	def GetRightSiblings(self) -> Generator['Node', None, None]:
-		""".. todo:: Needs documentation."""
+		"""
+		A generator to iterate all siblings right from the current node.
+
+		Siblings are child nodes of the current node's parent node, without the current node itself.
+
+		:returns:             A generator to iterate all siblings right of the current node.
+		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		"""
 		if self._parent is None:
 			raise RuntimeError(f"Root node has no siblings.")
 
@@ -542,6 +602,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all descendants of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`
 		it doesn't include the node itself.
 
+		:returns: A generator to iterate all descendants.
+
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
@@ -552,26 +614,47 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all siblings.
 		"""
 		for child in self._children:
 			yield child
 			yield from child.GetDescendants()
 
+	def GetRelatives(self):
+		"""
+		A generator to iterate all relatives (all siblings and all their descendants) of the current node.
+
+		:returns: A generator to iterate all relatives.
+		"""
+		for node in self.GetSiblings():
+			yield node
+			yield from node.GetDescendants()
+
 	def GetLeftRelatives(self):
-		""".. todo:: Needs documentation."""
+		"""
+		A generator to iterate all left relatives (left siblings and all their descendants) of the current node.
+
+		:returns: A generator to iterate all left relatives.
+		"""
 		for node in self.GetLeftSiblings():
 			yield node
 			yield from node.GetDescendants()
 
 	def GetRightRelatives(self):
-		""".. todo:: Needs documentation."""
+		"""
+		A generator to iterate all right relatives (right siblings and all their descendants) of the current node.
+
+		:returns: A generator to iterate all right relatives.
+		"""
 		for node in self.GetRightSiblings():
 			yield node
 			yield from node.GetDescendants()
 
 	def IterateLeafs(self) -> Generator['Node', None, None]:
+		"""
+		A generator to iterate all leaf-nodes in a subtree, which subtree root is the current node.
+
+		:returns: A generator to iterate leaf-nodes reachable from current node.
+		"""
 		for child in self._children:
 			if child.IsLeaf:
 				yield child
@@ -583,6 +666,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetDescendants`,
 		this includes also the node itself as the first returned node.
 
+		:returns: A generator to iterate all siblings level-by-level.
+
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
@@ -593,8 +678,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all siblings level-by-level.
 		"""
 		queue = deque([self])
 		while queue:
@@ -608,6 +691,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		A generator to iterate all siblings of the current node in pre-order. In contrast to `GetDescendants`, this includes
 		also the node itself as the first returned node.
 
+		:returns: A generator to iterate all siblings in pre-order.
+
 		.. seealso::
 
 		   :py:meth:`GetChildren` |br|
@@ -618,8 +703,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
-
-		:returns: A generator to iterate all siblings in pre-order.
 		"""
 		yield self
 		for child in self._children:
@@ -629,6 +712,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		A generator to iterate all siblings of the current node in post-order. In contrast to `GetDescendants`, this
 		includes also the node itself as the last returned node.
+
+		:returns: A generator to iterate all siblings in post-order.
 
 		.. seealso::
 
@@ -640,8 +725,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
 		   :py:meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-
-		:returns: A generator to iterate all siblings in post-order.
 		"""
 		for child in self._children:
 			yield from child.IteratePostOrder()

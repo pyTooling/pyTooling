@@ -81,8 +81,8 @@ class RandomGraph(PerformanceTest):
 # 		lenBFS = []
 # #		lenDFS = []
 # 		for v in vList:
-# 			bfsList = [u for u in v.IterateVertexesBFS()]
-# #			dfsList = [u for u in v.IterateVertexesDFS()]
+# 			bfsList = [u for u in v.IterateVerticesBFS()]
+# #			dfsList = [u for u in v.IterateVerticesDFS()]
 # 			lenBFS.append(len(bfsList))
 # #			lenDFS.append(len(dfsList))
 # #			print(f"{v}: bfs={len(bfsList)}; dfs={len(dfsList)}")
@@ -96,7 +96,7 @@ class RandomGraph(PerformanceTest):
 			def func():
 				rootVertex = graph._verticesWithID[componentStartVertex]
 
-				bfsList = [v for v in rootVertex.IterateVertexesBFS()]
+				bfsList = [v for v in rootVertex.IterateVerticesBFS()]
 				self.assertEqual(componentSize, len(bfsList))
 
 			return func
@@ -108,7 +108,7 @@ class RandomGraph(PerformanceTest):
 			def func():
 				rootVertex = graph._verticesWithID[componentStartVertex]
 
-				bfsList = [v for v in rootVertex.IterateVertexesDFS()]
+				bfsList = [v for v in rootVertex.IterateVerticesDFS()]
 				self.assertEqual(componentSize, len(bfsList))
 
 			return func

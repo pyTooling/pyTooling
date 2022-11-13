@@ -20,20 +20,17 @@ The :py:func:`~pyTooling.Common.getsizeof` functions returns the "true" size of 
 structures.
 
 .. rubric:: Example:
+.. code-block:: Python
 
-.. admonition:: example.py
+   class A:
+     _data : int
 
-   .. code-block:: Python
+     def __init__(self):
+       _data = 5
 
-      class A:
-        _data : int
-
-        def __init__(self):
-          _data = 5
-
-      from pyTooling.Common import getsizeof
-      a = A()
-      print(getsizeof(a))
+   from pyTooling.Common import getsizeof
+   a = A()
+   print(getsizeof(a))
 
 .. rubric:: Details
 
@@ -63,31 +60,52 @@ The :py:func:`~pyTooling.Common.isnestedclass` functions returns true, if a clas
 class.
 
 .. rubric:: Example:
+.. code-block:: Python
 
-.. admonition:: example.py
+   class A:
+     class N:
+       _data : int
 
-   .. code-block:: Python
+       def __init__(self):
+         _data = 5
 
-      class A:
-        class N:
-          _data : int
-
-          def __init__(self):
-            _data = 5
-
-      N = A.N
-      print(isnestedclass(N, A))
+   N = A.N
+   print(isnestedclass(N, A))
 
 .. _COMMON/Helper/mergedicts:
 
 mergedicts
 **********
 
-.. todo:: HELPERFUNC:: Needs documentation for mergedicts
+:py:func:`~pyTooling.Common.mergedicts` merges multiple dictionaries into a new single dictionary. It accepts an
+arbitrary number of dictionaries to merge. Optionally, the named parameter ``func`` accepts a function that can be
+applied to every element during the merge operation.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   dictA = {11: "11", 12: "12", 13: "13"}
+   dictB = {21: "21", 22: "22", 23: "23"}
+
+   mergedDict = mergedicts(dictA, dictB)
+
 
 .. _COMMON/Helper/zipdicts:
 
 zipdicts
 ********
 
-.. todo:: HELPERFUNC:: Needs documentation for zipdicts
+:py:func:`~pyTooling.Common.zipdicts` is a generator that iterates multiple dictionaries simultaneously. It expects
+multiple dictionary objects (fulfilling the mapping protocol) as positional parameters.
+
+An exception is raise, if not all dictionary objects have the same number of items. Also an exception is raised, if a
+key doesn't exist in all dictionaries.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   dictA = {11: "11", 12: "12", 13: "13"}
+   dictB = {11: "21", 12: "22", 13: "23"}
+
+   for key, valueA, valueB in zipdicts(dictA, dictB):
+     pass

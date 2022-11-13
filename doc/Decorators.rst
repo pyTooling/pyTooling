@@ -21,24 +21,77 @@ Abstract Methods
    DECO:: Refer to :py:func:`~pyTooling.MetaClasses.abstractmethod` and :py:func:`~pyTooling.MetaClasses.mustoverride`
    decorators from :ref:`meta classes <META>`.
 
-.. note::
+.. important::
 
    Classes using decorators :pycode:`@abstractmethod` or :pycode:`@mustoverrride` need to apply the metaclass
-   :py:class:`~pyTooling.MetaClasses.ExtendedType` in the class definition.
+   :ref:`META/ExtendedType` in the class definition.
 
 .. _DECO/AbstractMethod:
 
 @abstractmethod
 ***************
 
-.. todo:: DECO:: Needs documentation for abstractmethod
+The :py:func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
+replaced by a method raising a :py:exc:`NotImplementedError`. When a class containing *abstract* methods is
+instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   class A(metaclass=ExtendedType):
+     @abstractmethod
+     def method(self) -> int:
+       """Methods documentation."""
+
+   class B(A):
+     @InheritDocString(A)
+     def method(self) -> int:
+       return 2
+
+.. hint::
+
+   If the abstract method should contain code that should be called from an overriding method in a derived class, use
+   the :ref:`@mustoverride <DECO/MustOverride>` decorator.
+
+.. important::
+
+   The class declaration must apply the metaclass :ref:`META/ExtendedType` so the decorator has an effect.
+
 
 .. _DECO/MustOverride:
 
 @mustoverride
 *************
 
-.. todo:: DECO:: Needs documentation for mustoverride
+The :py:func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
+*must override* methods is instantiated, an :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
+
+In contrast to :ref:`@abstractmethod <DECO/AbstractMethod>`, the method can still be called from a derived class
+implementing an overridden method.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   class A(metaclass=ExtendedType):
+     @mustoverride
+     def method(self) -> int:
+       """Methods documentation."""
+       return 2
+
+   class B(A):
+     @InheritDocString(A)
+     def method(self) -> int:
+       result = super().method()
+       return result + 1
+
+.. hint::
+
+   If the method contain no code and throw an exception when called, use the :ref:`@abstractmethod <DECO/AbstractMethod>`
+   decorator.
+
+.. important::
+
+   The class declaration must apply the metaclass :ref:`META/ExtendedType` so the decorator has an effect.
 
 .. _DECO/DataAccess:
 
@@ -50,7 +103,7 @@ Data Access
 @classproperty
 **************
 
-.. warning:: Class properties are currently broken in Python.
+.. attention:: Class properties are currently broken in Python.
 
 
 .. _DECO/Documentation:
@@ -93,7 +146,22 @@ Miscellaneous
 @OriginalFunction
 *****************
 
-.. todo:: DECO:: Needs documentation for originalfunction
+The :py:func:`~pyTooling.MetaClasses.OriginalFunction` decorator attaches the original function or method to a new
+function object, when the original gets replaced or wrapped. The original function can be accesses with
+:pycode:`meth.__orig_func__`.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   @export
+   def abstractmethod(method: M) -> M:
+     @OriginalFunction(method)
+     @wraps(method)
+     def func(self):
+       raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
+
+     func.__abstract__ = True
+     return func
 
 
 .. _DECO/Visibility:

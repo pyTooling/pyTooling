@@ -224,6 +224,7 @@ extlinks = {
 	"ghissue": ("https://GitHub.com/pyTooling/pyTooling/issues/%s", "issue #"),
 	"ghpull":  ("https://GitHub.com/pyTooling/pyTooling/pull/%s", "pull request #"),
 	"ghsrc":   ("https://GitHub.com/pyTooling/pyTooling/blob/main/%s", ""),
+	"wiki":    ("https://en.wikipedia.org/wiki/%s", ""),
 }
 
 
@@ -232,6 +233,14 @@ extlinks = {
 # ==============================================================================
 graphviz_output_format = "svg"
 
+
+# ==============================================================================
+# SphinxContrib.Mermaid
+# ==============================================================================
+mermaid_params = [
+	'--backgroundColor', 'transparent',
+]
+mermaid_verbose = True
 
 # ==============================================================================
 # Sphinx.Ext.Inheritance_Diagram

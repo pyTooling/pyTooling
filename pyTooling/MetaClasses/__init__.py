@@ -154,7 +154,7 @@ def abstractmethod(method: M) -> M:
 
 	.. admonition:: ``example.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
@@ -187,7 +187,7 @@ def mustoverride(method: M) -> M:
 
 	.. admonition:: ``example.py``
 
-	   .. code:: python
+	   .. code-block:: python
 
 	      class Data(mataclass=ExtendedType):
 	        @mustoverride
@@ -212,7 +212,7 @@ def overloadable(method: M) -> M:
 @export
 class ExtendedType(type):
 	"""
-  .. todo:: Needs documentation.
+  .. todo:: META::ExtendedType Needs documentation.
 
 	Features:
 

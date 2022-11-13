@@ -68,6 +68,11 @@ class Node(Abstract_Node):
 		self._length = len(yamlNode)
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of sub-elements.
+
+		:returns: Number of sub-elements.
+		"""
 		return self._length
 
 	def __getitem__(self, key: KeyT) -> ValueT:
@@ -305,7 +310,7 @@ class Configuration(Abstract_Configuration, Dictionary):
 		Access a configuration node by key.
 
 		:param key: The key to look for.
-		:returns:   A node (seuqence or dictionary) or scalar value (int, float, str).
+		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 		return self._GetNodeOrValue(str(key))
 
