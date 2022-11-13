@@ -36,8 +36,7 @@ starting vertex are provided as methods on a vertex.
 """
 import heapq
 from collections import deque
-from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, \
-	Iterator as typing_Iterator, Set, Deque, Generator, Iterator
+from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, Iterator as typing_Iterator, Set, Deque, Generator, Iterator
 
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import ExtendedType
@@ -101,12 +100,14 @@ class Vertex(
 	_value:     Nullable[VertexValueType]
 	_dict:      Dict[VertexDictKeyType, VertexDictValueType]
 
-	def __init__(self, vertexID: VertexIDType = None, data: VertexValueType = None, graph: 'Graph' = None):
+	def __init__(self, vertexID: VertexIDType = None, data: VertexValueType = None, component: 'Component' = None, graph: 'Graph' = None):
 		""".. todo:: GRAPH::Vertex::init Needs documentation."""
-		if graph is None:
-			self._graph = Graph()
+		if component is None:
+			self._graph = graph if graph is not None else Graph()
+			self._component = Component(self._graph, vertices=(self,))
 		else:
-			self._graph = graph
+			self._graph = component._graph
+			self._component = component
 
 		self._id = vertexID
 		if vertexID is None:
@@ -197,24 +198,18 @@ class Vertex(
 		return self._component
 
 	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
-		if not isinstance(vertex, Vertex):
-			raise Exception()
-
 		# TODO: set edgeID
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
 
 	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
-		if not isinstance(vertex, Vertex):
-			raise Exception()
-
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
 
 	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
-		vertex = Vertex(vertexID, vertexData, self._graph)
+		vertex = Vertex(vertexID, vertexData, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 		self._outbound.append(edge)
@@ -223,7 +218,7 @@ class Vertex(
 		return vertex
 
 	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
-		vertex = Vertex(vertexID, vertexData, self._graph)
+		vertex = Vertex(vertexID, vertexData, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 		vertex._outbound.append(edge)
@@ -558,16 +553,28 @@ class Edge(
 		destination: Vertex,
 		edgeID: EdgeIDType = None,
 		weight: EdgeWeightType = None,
-		value: VertexValueType = None
+		value: EdgeValueType = None
 	):
 		""".. todo:: GRAPH::Edge::init Needs documentation."""
+		if not isinstance(source, Vertex):
+			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
+		if not isinstance(destination, Vertex):
+			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
+		if edgeID is not None and not isinstance(edgeID, Hashable):
+			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
+		if weight is not None and  not isinstance(weight, (int, float)):
+			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+		# if value is not None and  not isinstance(value, Vertex):
+		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if source._graph is not destination._graph:
 			raise Exception(f"Source vertex and destination vertex are not in same graph.")
 
-		if not isinstance(source, Vertex):
-			raise TypeError()
-		elif not isinstance(destination, Vertex):
-			raise TypeError()
+		if source._component is not destination._component:
+			# TODO: should it be divided into with/without ID?
+			for vertex in destination._component._vertices:
+				component = source._component
+				component._vertices.add(vertex)
+				vertex._component = component
 
 		self._id = edgeID
 		self._source = source
@@ -666,14 +673,23 @@ class Component(
 ):
 	_graph:    'Graph'
 	_name:     str
-	_vertices: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_dict:     Dict[ComponentDictKeyType, ComponentDictValueType]
 
-	def __int__(self, graph: 'Graph', name: str = None):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
 		""".. todo:: GRAPH::Graph::init Needs documentation."""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		if not isinstance(graph, Graph):
+			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+		if name is not None and not isinstance(name, str):
+			raise TypeError("Parameter 'name' is not of type 'str'.")
+
+		graph._components.add(self)
+
 		self._graph = graph
 		self._name = name
-		self._vertices = []
+		self._vertices = set() if vertices is None else {v for v in vertices}
 		self._dict = {}
 
 	@property
@@ -700,6 +716,15 @@ class Component(
 			raise TypeError()
 
 		self._name = value
+
+	@property
+	def Vertices(self) -> Set[Vertex]:
+		"""
+		Read-only property to access the vertices in this component (:py:attr:`_vertices`).
+
+		:returns: The set of vertices in this component.
+		"""
+		return self._vertices
 
 	def __getitem__(self, key: ComponentDictKeyType) -> ComponentDictValueType:
 		"""
@@ -733,6 +758,9 @@ class Component(
 		"""
 		return len(self._vertices)
 
+	def __str__(self):
+		return self._name if self._name is not None else "Unnamed component"
+
 
 @export
 class Graph(
@@ -750,7 +778,7 @@ class Graph(
 	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
 	_name:              str
-	_components:        List[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithID:    Dict[VertexIDType, Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
@@ -760,6 +788,7 @@ class Graph(
 	def __init__(self, name: str = None):
 		""".. todo:: GRAPH::Graph::init Needs documentation."""
 		self._name = name
+		self._components = set()
 		self._verticesWithID = {}
 		self._verticesWithoutID = []
 		self._edgesWithID = {}
@@ -781,6 +810,13 @@ class Graph(
 			raise TypeError()
 
 		self._name = value
+
+	@property
+	def Components(self) -> Set[Component]:
+		"""Read-only property to access the components of this graph (:py:attr:`_components`).
+
+		:returns: The set of components in this graph."""
+		return self._components
 
 	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
 		"""
