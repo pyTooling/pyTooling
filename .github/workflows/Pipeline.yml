@@ -16,20 +16,20 @@ jobs:
   PerformanceTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
-      name: pyTooling
+      name: Performance
       python_version_list: "3.10"
       system_list: "ubuntu windows macos"
 
   BenchmarkingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
-      name: pyTooling
+      name: Benchmark
       python_version_list: "3.7 3.8 3.9 3.10"
 
   PlatformTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
-      name: pyTooling
+      name: Platform
       python_version_list: "3.10"
       system_list: "ubuntu windows macos mingw32 mingw64 clang64 ucrt64"
 
@@ -61,68 +61,14 @@ jobs:
 #      artifact: ${{ fromJson(needs.BenchmarkingParams.outputs.artifact_names).unittesting_xml }}
       unittest_directory: 'benchmark'
 
-  PlatformTests:
-    name: ${{ matrix.sysicon }} ${{ matrix.pyicon }} Platform Tests using Python ${{ matrix.python }}
-    runs-on: ${{ matrix.runs-on }}
+  PlatformTesting:
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
     needs:
       - PlatformTestingParams
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.PlatformTestingParams.outputs.python_jobs) }}
-
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
-
-    steps:
-      - name: ⏬ Checkout repository
-        uses: actions/checkout@v3
-
-      - name: '🟦 Setup MSYS2'
-        if: matrix.system == 'msys2'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.runtime }}
-          update: true
-          pacboy: >-
-            python-pip:p
-            python-wheel:p
-            python-coverage:p
-            python-lxml:p
-            python-ruamel-yaml:p
-            python-ruamel.yaml.clib:p
-            python-numpy:p
-
-      - name: 🐍 Setup Python ${{ matrix.python }}
-        if: matrix.system != 'msys2'
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: 🔧 Install wheel and pip dependencies
-        if: matrix.system != 'msys2'
-        run: |
-          python -m pip install --disable-pip-version-check -U wheel
-          python -m pip install --disable-pip-version-check -r tests/requirements.txt
-
-      - name: 🔧 Install pip dependencies
-        if: matrix.system == 'msys2'
-        run: |
-          python -m pip install --disable-pip-version-check -r tests/requirements.txt
-
-      - name: ☑ Run unit tests (Bash)
-        if: matrix.shell != 'pwsh'
-        run: |
-          export ENVIRONMENT_NAME="${{ matrix.envname }}"
-          python -m pytest -rA tests/unit/Common/Platform.py --color=yes
-
-      - name: ☑ Run unit tests (PoSh)
-        if: matrix.shell == 'pwsh'
-        run: |
-          $env:ENVIRONMENT_NAME = "${{ matrix.envname }}"
-          python -m pytest -rA tests/unit/Common/Platform.py --color=yes
+    with:
+      jobs: ${{ needs.PlatformTestingParams.outputs.python_jobs }}
+      unittest_directory: unit/Common/Platform.py
+      artifact: ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).unittesting_xml }}
 
   Coverage:
     uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@dev
@@ -158,7 +104,7 @@ jobs:
     needs:
       - UnitTestingParams
       - Coverage
-      - PlatformTests
+      - PlatformTesting
     with:
       python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       requirements: -r build/requirements.txt
@@ -221,7 +167,7 @@ jobs:
       - UnitTesting
       - PerformanceTesting
       - Benchmarking
-      - PlatformTests
+      - PlatformTesting
       - Coverage
       - StaticTypeCheck
       - BuildTheDocs
