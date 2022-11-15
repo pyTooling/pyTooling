@@ -100,7 +100,7 @@ class Vertex(
 	_value:     Nullable[VertexValueType]
 	_dict:      Dict[VertexDictKeyType, VertexDictValueType]
 
-	def __init__(self, vertexID: VertexIDType = None, data: VertexValueType = None, component: 'Component' = None, graph: 'Graph' = None):
+	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, component: 'Component' = None, graph: 'Graph' = None):
 		""".. todo:: GRAPH::Vertex::init Needs documentation."""
 		if component is None:
 			self._graph = graph if graph is not None else Graph()
@@ -120,7 +120,7 @@ class Vertex(
 		self._inbound = []
 		self._outbound = []
 
-		self._value = data
+		self._value = value
 		self._dict = {}
 
 	@property
@@ -208,8 +208,8 @@ class Vertex(
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
 
-	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
-		vertex = Vertex(vertexID, vertexData, component=self._component)
+	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
+		vertex = Vertex(vertexID, vertexValue, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 		self._outbound.append(edge)
@@ -217,8 +217,8 @@ class Vertex(
 
 		return vertex
 
-	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexData: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
-		vertex = Vertex(vertexID, vertexData, component=self._component)
+	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
+		vertex = Vertex(vertexID, vertexValue, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 		vertex._outbound.append(edge)

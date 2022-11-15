@@ -51,30 +51,33 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	class Platforms(Flag):
 		Unknown = 0
 
-		OS_Linux =   auto()     #: Operating System: Linux.
-		OS_MacOS =   auto()     #: Operating System: macOS.
-		OS_Windows = auto()     #: Operating System: Windows.
+		OS_Linux =   auto()        #: Operating System: Linux.
+		OS_MacOS =   auto()        #: Operating System: macOS.
+		OS_Windows = auto()        #: Operating System: Windows.
 
 		OperatingSystem = OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
 
-		ENV_Native = auto()     #: Environment: :term:`native`.
-		ENV_WSL =    auto()     #: Environment: :term:`Windows System for Linux <WSL>`.
-		ENV_MSYS2 =  auto()     #: Environment: :term:`MSYS2`.
-		ENV_Cygwin = auto()     #: Environment: :term:`Cygwin`.
+		SEP_WindowsPath =  auto()  #: Seperator: Path element seperator (e.g. for directories).
+		SEP_WindowsValue = auto()  #: Seperator: Value seperator in variables (e.g. for paths in PATH).
+
+		ENV_Native = auto()        #: Environment: :term:`native`.
+		ENV_WSL =    auto()        #: Environment: :term:`Windows System for Linux <WSL>`.
+		ENV_MSYS2 =  auto()        #: Environment: :term:`MSYS2`.
+		ENV_Cygwin = auto()        #: Environment: :term:`Cygwin`.
 
 		Environment = ENV_Native | ENV_WSL | ENV_MSYS2 | ENV_Cygwin  #: Mask: Any environment.
 
-		ARCH_x86_32 =  auto()   #: Architecture: x86-32 (IA32).
-		ARCH_x86_64 =  auto()   #: Architecture: x86-64 (AMD64).
-		ARCH_AArch64 = auto()   #: Architecture: AArch64.
+		ARCH_x86_32 =  auto()      #: Architecture: x86-32 (IA32).
+		ARCH_x86_64 =  auto()      #: Architecture: x86-64 (AMD64).
+		ARCH_AArch64 = auto()      #: Architecture: AArch64.
 
 		Arch_x86 =     ARCH_x86_32 | ARCH_x86_64  #: Mask: Any x86 architecture.
 		Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
 		Architecture = Arch_x86 | Arch_Arm        #: Mask: Any architecture.
 
-		Linux =   OS_Linux   | ENV_Native | ARCH_x86_64    #: Group: native Linux on x86-64.
-		MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64    #: Group: native macOS on x86-64.
-		Windows = OS_Windows | ENV_Native | ARCH_x86_64    #: Group: native Windows on x86-64.
+		Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
+		MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64                                       #: Group: native macOS on x86-64.
+		Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
 
 		MSYS =    auto()     #: MSYS2 Runtime: MSYS.
 		MinGW32 = auto()     #: MSYS2 Runtime: :term:`MinGW32 <MinGW>`.
@@ -120,9 +123,9 @@ class Platform(metaclass=ExtendedType, singleton=True):
 			self._platform |= self.Platforms.OS_Windows
 
 			if sysconfig_platform == "win32":
-				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_32
+				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_32 | self.Platforms.SEP_WindowsPath | self.Platforms.SEP_WindowsValue
 			elif sysconfig_platform == "win-amd64":
-				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_64
+				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_64 | self.Platforms.SEP_WindowsPath | self.Platforms.SEP_WindowsValue
 			elif sysconfig_platform.startswith("mingw"):
 				if machine == "AMD64":
 					self._platform |= self.Platforms.ARCH_x86_64
@@ -289,6 +292,45 @@ class Platform(metaclass=ExtendedType, singleton=True):
 		:returns: ``True``, if the platform is a Clang64 runtime on Windows.
 		"""
 		return self.Platforms.Windows_MSYS2_Clang64 in self._platform
+
+	@property
+	def IsPOSIX(self) -> bool:
+		"""
+		Returns true, if the platform is POSIX or POSIX-like.
+
+		:returns: True, if POSIX or POSIX-like.
+		"""
+		return self.Platforms.SEP_WindowsPath not in self._platform
+
+	@property
+	def PathSeperator(self) -> str:
+		"""
+		Returns the path element separation character (e.g. for directories).
+
+		* POSIX-like: ``/``
+		* Windows: ``\\``
+
+		:returns: Path separation character.
+		"""
+		if self.Platforms.SEP_WindowsPath in self._platform:
+			return "\\"
+		else:
+			return "/"
+
+	@property
+	def ValueSeperator(self) -> str:
+		"""
+		Returns the value separation character (e.g. for paths in PATH).
+
+		* POSIX-like: ``:``
+		* Windows: ``;``
+
+		:returns: Value separation character.
+		"""
+		if self.Platforms.SEP_WindowsValue in self._platform:
+			return ";"
+		else:
+			return ":"
 
 	@property
 	def ExecutableExtension(self) -> str:
