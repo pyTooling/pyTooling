@@ -67,7 +67,8 @@ jobs:
       - PlatformTestingParams
     with:
       jobs: ${{ needs.PlatformTestingParams.outputs.python_jobs }}
-      unittest_directory: unit/Common/Platform.py
+      tests_directory: ""
+      unittest_directory: tests/unit/Common/Platform.py
       artifact: ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).unittesting_xml }}
 
   Coverage:
