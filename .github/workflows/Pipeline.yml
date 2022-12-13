@@ -11,26 +11,25 @@ jobs:
       name: pyTooling
       python_version_list: "3.7 3.8 pypy-3.8 3.9 pypy-3.9 3.10 3.11"
       exclude_list: "windows:pypy-3.8 windows:pypy-3.9"
-      disable_list: "windows:3.11"
+#      disable_list: "windows:3.11"
 
   PerformanceTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Performance
-      python_version_list: "3.10"
+      python_version_list: ""
       system_list: "ubuntu windows macos"
 
   BenchmarkingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Benchmark
-      python_version_list: "3.7 3.8 3.9 3.10"
 
   PlatformTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Platform
-      python_version_list: "3.10"
+      python_version_list: ""
       system_list: "ubuntu windows macos mingw32 mingw64 clang64 ucrt64"
 
   UnitTesting:
