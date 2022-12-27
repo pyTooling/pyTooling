@@ -200,20 +200,50 @@ class Vertex(
 	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		# TODO: set edgeID
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
+
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
 
+		# TODO: move into Edge?
+		# TODO: keep _graph pointer in edge and then register edge on graph?
+		if edgeID is None:
+			self._graph._edgesWithoutID.append(edge)
+		elif edgeID not in self._graph._edgesWithID:
+			self._graph._edgesWithID[edgeID] = edge
+		else:
+			raise Exception()
+
 	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
+
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
+
+		# TODO: move into Edge?
+		# TODO: keep _graph pointer in edge and then register edge on graph?
+		if edgeID is None:
+			self._graph._edgesWithoutID.append(edge)
+		elif edgeID not in self._graph._edgesWithID:
+			self._graph._edgesWithID[edgeID] = edge
+		else:
+			raise Exception()
 
 	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
+
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
+
+		# TODO: move into Edge?
+		# TODO: keep _graph pointer in edge and then register edge on graph?
+		if edgeID is None:
+			self._graph._edgesWithoutID.append(edge)
+		elif edgeID not in self._graph._edgesWithID:
+			self._graph._edgesWithID[edgeID] = edge
+		else:
+			raise Exception()
 
 		return vertex
 
@@ -221,8 +251,18 @@ class Vertex(
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
+
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
+
+		# TODO: move into Edge?
+		# TODO: keep _graph pointer in edge and then register edge on graph?
+		if edgeID is None:
+			self._graph._edgesWithoutID.append(edge)
+		elif edgeID not in self._graph._edgesWithID:
+			self._graph._edgesWithID[edgeID] = edge
+		else:
+			raise Exception()
 
 		return vertex
 

@@ -37,7 +37,7 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "2.7.0"
+__version__ =   "2.8.0"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "timer", "data structure", "setuptools", "wheel", "installation", "packaging", "path", "generic path", "generic library", "url"]
 
 from collections import deque
@@ -151,6 +151,7 @@ def getsizeof(obj: Any) -> int:
 
 	return recurse(obj)
 
+
 _DictKey = TypeVar("_DictKey")
 _DictKey1 = TypeVar("_DictKey1")
 _DictKey2 = TypeVar("_DictKey2")
@@ -158,6 +159,39 @@ _DictKey3 = TypeVar("_DictKey3")
 _DictValue1 = TypeVar("_DictValue1")
 _DictValue2 = TypeVar("_DictValue2")
 _DictValue3 = TypeVar("_DictValue3")
+
+
+@export
+def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
+	"""
+	Retrieves the first key from a dictionary's keys.
+
+	:param d: Dictionary to get the first key from.
+	:returns: The first key.
+	"""
+	return next(iter(d.keys()))
+
+
+@export
+def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
+	"""
+	Retrieves the first value from a dictionary's values.
+
+	:param d: Dictionary to get the first value from.
+	:returns: The first value.
+	"""
+	return next(iter(d.values()))
+
+
+@export
+def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
+	"""
+	Retrieves the first key-value-pair from a dictionary.
+
+	:param d: Dictionary to get the first key-value-pair from.
+	:returns: The first key-value-pair as tuple.
+	"""
+	return next(iter(d.items()))
 
 
 @overload
