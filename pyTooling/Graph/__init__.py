@@ -230,6 +230,8 @@ class Vertex(
 		else:
 			raise Exception()
 
+		return edge
+
 	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 
@@ -244,6 +246,8 @@ class Vertex(
 			self._graph._edgesWithID[edgeID] = edge
 		else:
 			raise Exception()
+
+		return edge
 
 	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
@@ -262,7 +266,7 @@ class Vertex(
 		else:
 			raise Exception()
 
-		return vertex
+		return edge
 
 	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
@@ -281,7 +285,7 @@ class Vertex(
 		else:
 			raise Exception()
 
-		return vertex
+		return edge
 
 	def IsRoot(self):
 		return len(self._inbound) == 0
