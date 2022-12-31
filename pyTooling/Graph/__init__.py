@@ -214,7 +214,7 @@ class Vertex(
 	def Successors(self) -> Tuple['Vertex', ...]:
 		return tuple([edge.Destination for edge in self._outbound])
 
-	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
+	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		# TODO: set edgeID
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 
@@ -232,7 +232,7 @@ class Vertex(
 
 		return edge
 
-	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
+	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 
 		vertex._outbound.append(edge)
@@ -249,7 +249,7 @@ class Vertex(
 
 		return edge
 
-	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
+	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
@@ -268,7 +268,7 @@ class Vertex(
 
 		return edge
 
-	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
+	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
@@ -287,25 +287,25 @@ class Vertex(
 
 		return edge
 
-	def IsRoot(self):
+	def IsRoot(self) -> bool:
 		return len(self._inbound) == 0
 
-	def IsLeaf(self):
+	def IsLeaf(self) -> bool:
 		return len(self._outbound) == 0
 
-	def IterateOutboundEdges(self):
+	def IterateOutboundEdges(self) -> Generator['Edge', None, None]:
 		for edge in self._outbound:
 			yield edge
 
-	def IterateInboundEdges(self):
+	def IterateInboundEdges(self) -> Generator['Edge', None, None]:
 		for edge in self._inbound:
 			yield edge
 
-	def IterateSuccessorVertices(self):
+	def IterateSuccessorVertices(self) -> Generator['Vertex', None, None]:
 		for edge in self._outbound:
 			yield edge.Destination
 
-	def IteratePredecessorVertices(self):
+	def IteratePredecessorVertices(self) -> Generator['Vertex', None, None]:
 		for edge in self._inbound:
 			yield edge.Source
 
@@ -819,7 +819,7 @@ class Component(
 		"""
 		return len(self._vertices)
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return self._name if self._name is not None else "Unnamed component"
 
 
@@ -1051,9 +1051,10 @@ class Graph(
 		raise NotImplementedError()
 
 	def IterateDFS(self):
+		raise NotImplementedError()
 
-		class Iterator():
-			visited = [False for _ in range(self.__len__())]
+		# class Iterator():
+		# 	visited = [False for _ in range(self.__len__())]
 
 	def CheckForNegativeCycles(self):
 		raise NotImplementedError()
