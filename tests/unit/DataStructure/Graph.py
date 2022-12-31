@@ -70,12 +70,12 @@ class Construction(TestCase):
 
 	def test_SimpleTree(self):
 		v1 = Vertex()
-		v11 = v1.LinkToNewVertex()
-		v111 = v11.LinkToNewVertex()
-		v112 = v11.LinkToNewVertex()
-		v12 = v1.LinkToNewVertex()
-		v121 = v12.LinkToNewVertex()
-		v1211 = v121.LinkToNewVertex()
+		v11 = v1.LinkToNewVertex().Destination
+		v111 = v11.LinkToNewVertex().Destination
+		v112 = v11.LinkToNewVertex().Destination
+		v12 = v1.LinkToNewVertex().Destination
+		v121 = v12.LinkToNewVertex().Destination
+		v1211 = v121.LinkToNewVertex().Destination
 
 		self.assertEqual(2, len(v1))
 		self.assertEqual(2, len(v11))
