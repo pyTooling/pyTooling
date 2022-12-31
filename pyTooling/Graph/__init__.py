@@ -36,7 +36,8 @@ starting vertex are provided as methods on a vertex.
 """
 import heapq
 from collections import deque
-from typing import TypeVar, List, Generic, Union, Optional as Nullable, Iterable, Hashable, Dict, Iterator as typing_Iterator, Set, Deque, Generator, Iterator
+from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator
+from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import ExtendedType
@@ -197,6 +198,22 @@ class Vertex(
 		"""
 		return self._component
 
+	@property
+	def Inbound(self) -> Tuple['Edge', ...]:
+		return tuple(self._inbound)
+
+	@property
+	def Outbound(self) -> Tuple['Edge', ...]:
+		return tuple(self._outbound)
+
+	@property
+	def Predecessors(self) -> Tuple['Vertex', ...]:
+		return tuple([edge.Source for edge in self._inbound])
+
+	@property
+	def Successors(self) -> Tuple['Vertex', ...]:
+		return tuple([edge.Destination for edge in self._outbound])
+
 	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		# TODO: set edgeID
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
@@ -213,6 +230,8 @@ class Vertex(
 		else:
 			raise Exception()
 
+		return edge
+
 	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> None:
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 
@@ -227,6 +246,8 @@ class Vertex(
 			self._graph._edgesWithID[edgeID] = edge
 		else:
 			raise Exception()
+
+		return edge
 
 	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
@@ -245,7 +266,7 @@ class Vertex(
 		else:
 			raise Exception()
 
-		return vertex
+		return edge
 
 	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Vertex':
 		vertex = Vertex(vertexID, vertexValue, component=self._component)
@@ -264,7 +285,7 @@ class Vertex(
 		else:
 			raise Exception()
 
-		return vertex
+		return edge
 
 	def IsRoot(self):
 		return len(self._inbound) == 0
@@ -890,7 +911,7 @@ class Graph(
 		"""
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
 
-	def __iter__(self) -> Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
+	def __iter__(self) -> typing_Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
 		def gen():
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID
