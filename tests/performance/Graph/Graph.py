@@ -61,7 +61,7 @@ class EdgeLinking(PerformanceTest):
 				vertex = pt_Vertex(0)
 
 				for i in range(1, count):
-					vertex = vertex.LinkToNewVertex(i)
+					vertex = vertex.LinkToNewVertex(i).Destination
 
 			return func
 
