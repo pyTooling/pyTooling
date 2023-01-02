@@ -36,7 +36,7 @@ starting vertex are provided as methods on a vertex.
 """
 import heapq
 from collections import deque
-from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator
+from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
 from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
 from pyTooling.Decorators import export
@@ -917,6 +917,20 @@ class Graph(
 			yield from self._verticesWithID
 		return iter(gen())
 
+	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		if predicate is None:
+			yield from self._verticesWithID.values()
+			yield from self._verticesWithoutID
+
+		else:
+			for vertex in self._verticesWithID.values():
+				if predicate(vertex):
+					yield vertex
+
+			for vertex in self._verticesWithoutID:
+				if predicate(vertex):
+					yield vertex
+
 	def IterateRoots(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all roots (vertices without inbound edges / without predecessors) of a graph.
@@ -999,6 +1013,20 @@ class Graph(
 			raise Exception(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
 		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
+
+	def IterateEdges(self, predicate: Callable[[Edge], bool] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+		if predicate is None:
+			yield from self._edgesWithID.values()
+			yield from self._edgesWithoutID
+
+		else:
+			for edge in self._edgesWithID.values():
+				if predicate(edge):
+					yield edge
+
+			for edge in self._edgesWithoutID:
+				if predicate(edge):
+					yield edge
 
 	def HasCycle(self) -> bool:
 		# IsAcyclic ?
