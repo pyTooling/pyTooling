@@ -1105,6 +1105,48 @@ class Graph(
 				if predicate(edge):
 					edge.Reverse()
 
+	def RemoveEdges(self, predicate: Callable[[Edge], bool] = None):
+		if predicate is None:
+			for edge in self._edgesWithID.values():
+				del edge
+
+			for edge in self._edgesWithoutID:
+				del edge
+
+			self._edgesWithID = {}
+			self._edgesWithoutID = []
+
+			for vertex in self._verticesWithID.values():
+				vertex._inbound = []
+				vertex._outbound = []
+
+			for vertex in self._verticesWithoutID:
+				vertex._inbound = []
+				vertex._outbound = []
+
+		else:
+			for edge in self._edgesWithID.values():
+				if predicate(edge):
+					if edge._id is None:
+						self._edgesWithoutID.remove(edge)
+					else:
+						del self._edgesWithID[edge._id]
+
+					edge._source._outbound.remove(edge)
+					edge._destination._inbound.remove(edge)
+					del edge
+
+			for edge in self._edgesWithoutID:
+				if predicate(edge):
+					if edge._id is None:
+						self._edgesWithoutID.remove(edge)
+					else:
+						del self._edgesWithID[edge._id]
+
+					edge._source._outbound.remove(edge)
+					edge._destination._inbound.remove(edge)
+					del edge
+
 	def HasCycle(self) -> bool:
 		# IsAcyclic ?
 
