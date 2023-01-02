@@ -859,7 +859,7 @@ class Graph(
 	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
 	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
-	_name:              str
+	_name:              Nullable[str]
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithID:    Dict[VertexIDType, Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
@@ -886,7 +886,7 @@ class Graph(
 		del self._dict
 
 	@property
-	def Name(self) -> str:
+	def Name(self) -> Nullable[str]:
 		"""
 		Property to get and set the name (:py:attr:`_name`) of the graph.
 
@@ -997,6 +997,12 @@ class Graph(
 		for vertex in self._verticesWithoutID:
 			if len(vertex._outbound) == 0:
 				yield vertex
+
+	def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		raise NotImplementedError()
+
+	def IterateDFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		raise NotImplementedError()
 
 	def IterateTopologically(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
@@ -1133,12 +1139,6 @@ class Graph(
 			return True
 
 		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
-
-	def IterateBFS(self):
-		raise NotImplementedError()
-
-	def IterateDFS(self):
-		raise NotImplementedError()
 
 		# class Iterator():
 		# 	visited = [False for _ in range(self.__len__())]
