@@ -1194,6 +1194,43 @@ class Graph(
 
 		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
 
+	def CopyGraph(self) -> 'Graph':
+		raise NotImplementedError()
+
+	def CopyVertices(self, predicate: Callable[[Vertex], bool] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':
+		graph = Graph(self._name)
+		if copyGraphDict:
+			graph._dict = self._dict.copy()
+
+		if predicate is None:
+			for vertexID, vertex in self._verticesWithID.items():
+				v = Vertex(vertexID, vertex._value, graph=graph)
+				if copyVertexDict:
+					v._dict = vertex._dict.copy()
+				graph._verticesWithID[vertexID] = v
+
+			for vertex in self._verticesWithoutID:
+				v = Vertex(None, vertex._value, graph=graph)
+				if copyVertexDict:
+					v._dict = vertex._dict.copy()
+				graph._verticesWithoutID.append(v)
+		else:
+			for vertexID, vertex in self._verticesWithID.items():
+				if predicate(vertex):
+					v = Vertex(vertexID, vertex._value, graph=graph)
+					if copyVertexDict:
+						v._dict = vertex._dict.copy()
+					graph._verticesWithID[vertexID] = v
+
+			for vertex in self._verticesWithoutID:
+				if predicate(vertex):
+					v = Vertex(None, vertex._value, graph=graph)
+					if copyVertexDict:
+						v._dict = vertex._dict.copy()
+					graph._verticesWithoutID.append(v)
+
+		return graph
+
 		# class Iterator():
 		# 	visited = [False for _ in range(self.__len__())]
 
