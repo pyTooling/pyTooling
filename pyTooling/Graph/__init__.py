@@ -124,6 +124,11 @@ class Vertex(
 		self._value = value
 		self._dict = {}
 
+	def __del__(self):
+		del self._inbound
+		del self._outbound
+		del self._dict
+
 	@property
 	def ID(self) -> Nullable[VertexIDType]:
 		"""
@@ -644,6 +649,9 @@ class Edge(
 		self._value = value
 		self._dict = {}
 
+	def __del__(self):
+		del self._dict
+
 	@property
 	def ID(self) -> Nullable[EdgeIDType]:
 		"""
@@ -762,6 +770,10 @@ class Component(
 		self._vertices = set() if vertices is None else {v for v in vertices}
 		self._dict = {}
 
+	def __del__(self):
+		del self._vertices
+		del self._dict
+
 	@property
 	def Graph(self) -> 'Graph':
 		"""
@@ -864,6 +876,14 @@ class Graph(
 		self._edgesWithID = {}
 		self._edgesWithoutID = []
 		self._dict = {}
+
+	def __del__(self):
+		del self._components
+		del self._verticesWithID
+		del self._verticesWithoutID
+		del self._edgesWithID
+		del self._edgesWithoutID
+		del self._dict
 
 	@property
 	def Name(self) -> str:
