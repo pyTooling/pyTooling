@@ -723,6 +723,15 @@ class Edge(
 		""".. todo:: GRAPH::Edge::__delitem__ Needs documentation."""
 		del self._dict[key]
 
+	def Reverse(self) -> None:
+		self._source._outbound.remove(self)
+		self._source._inbound.append(self)
+		self._destination._inbound.remove(self)
+		self._destination._outbound.append(self)
+
+		swap = self._source
+		self._destination = self._source
+		self._source = swap
 
 @export
 class Component(
@@ -1027,6 +1036,36 @@ class Graph(
 			for edge in self._edgesWithoutID:
 				if predicate(edge):
 					yield edge
+
+	def ReverseEdges(self, predicate: Callable[[Edge], bool] = None) -> None:
+		if predicate is None:
+			for edge in self._edgesWithID.values():
+				swap = edge._source
+				edge._source = edge._destination
+				edge._destination = swap
+
+			for edge in self._edgesWithoutID:
+				swap = edge._source
+				edge._source = edge._destination
+				edge._destination = swap
+
+			for vertex in self._verticesWithID.values():
+				swap = vertex._inbound
+				vertex._inbound = vertex._outbound
+				vertex._outbound = swap
+
+			for vertex in self._verticesWithoutID:
+				swap = vertex._inbound
+				vertex._inbound = vertex._outbound
+				vertex._outbound = swap
+		else:
+			for edge in self._edgesWithID.values():
+				if predicate(edge):
+					edge.Reverse()
+
+			for edge in self._edgesWithoutID:
+				if predicate(edge):
+					edge.Reverse()
 
 	def HasCycle(self) -> bool:
 		# IsAcyclic ?
