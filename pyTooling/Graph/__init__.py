@@ -1004,7 +1004,7 @@ class Graph(
 	def IterateDFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		raise NotImplementedError()
 
-	def IterateTopologically(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateTopologically(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all vertices in topological order.
 
@@ -1032,15 +1032,27 @@ class Graph(
 
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
-		for vertex in leafVertices:
-			yield vertex
-			overallCount -= 1
+		def removeVertex(vertex: Vertex):
 			for inboundEdge in vertex._inbound:
 				sourceVertex = inboundEdge.Source
 				count = outboundEdgeCounts[sourceVertex] - 1
 				outboundEdgeCounts[sourceVertex] = count
 				if count == 0:
 					leafVertices.append(sourceVertex)
+
+		if predicate is None:
+			for vertex in leafVertices:
+				yield vertex
+
+				overallCount -= 1
+				removeVertex(vertex)
+		else:
+			for vertex in leafVertices:
+				if predicate(vertex):
+					yield vertex
+
+				overallCount -= 1
+				removeVertex(vertex)
 
 		if overallCount == 0:
 			return
