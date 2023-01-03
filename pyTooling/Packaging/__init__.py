@@ -221,28 +221,28 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 				if isinstance(target, Name) and target.id == "__author__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_author = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):
+					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
 						_author = value.s
 				if isinstance(target, Name) and target.id == "__copyright__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_copyright = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):
+					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
 						_copyright = value.s
 				if isinstance(target, Name) and target.id == "__email__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_email = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):
+					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
 						_email = value.s
 				if isinstance(target, Name) and target.id == "__keywords__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						raise TypeError(f"Variable '__keywords__' should be a list of strings.")
-					elif (version_info < (3, 8)) and isinstance(value, Str):
+					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
 						raise TypeError(f"Variable '__keywords__' should be a list of strings.")
 					elif isinstance(value, ast_List):
 						for const in value.elts:
 							if isinstance(const, Constant) and isinstance(const.value, str):
 								_keywords.append(const.value)
-							elif (version_info < (3, 8)) and isinstance(const, Str):
+							elif (version_info < (3, 8)) and isinstance(const, Str):               # pragma: no cover
 								_keywords.append(const.s)
 							else:
 								raise TypeError(f"List elements in '__keywords__' should be strings.")
@@ -251,24 +251,24 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 				if isinstance(target, Name) and target.id == "__license__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_license = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):
+					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
 						_license = value.s
 				if isinstance(target, Name) and target.id == "__version__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_version = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):
+					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
 						_version = value.s
 
 	if _author is None:
-		raise AssertionError(f"Could not extract '__author__' from '{sourceFile}'.")
+		raise AssertionError(f"Could not extract '__author__' from '{sourceFile}'.")     # pragma: no cover
 	if _copyright is None:
-		raise AssertionError(f"Could not extract '__copyright__' from '{sourceFile}'.")
+		raise AssertionError(f"Could not extract '__copyright__' from '{sourceFile}'.")  # pragma: no cover
 	if _email is None:
-		raise AssertionError(f"Could not extract '__email__' from '{sourceFile}'.")
+		raise AssertionError(f"Could not extract '__email__' from '{sourceFile}'.")      # pragma: no cover
 	if _license is None:
-		raise AssertionError(f"Could not extract '__license__' from '{sourceFile}'.")
+		raise AssertionError(f"Could not extract '__license__' from '{sourceFile}'.")    # pragma: no cover
 	if _version is None:
-		raise AssertionError(f"Could not extract '__version__' from '{sourceFile}'.")
+		raise AssertionError(f"Could not extract '__version__' from '{sourceFile}'.")    # pragma: no cover
 
 	return VersionInformation(_author, _email, _copyright, _license, _version, _description, _keywords)
 
