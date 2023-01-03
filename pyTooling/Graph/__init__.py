@@ -883,18 +883,18 @@ class Graph(
 		""".. todo:: GRAPH::Graph::init Needs documentation."""
 		self._name = name
 		self._components = set()
-		self._verticesWithID = {}
 		self._verticesWithoutID = []
-		self._edgesWithID = {}
+		self._verticesWithID = {}
 		self._edgesWithoutID = []
+		self._edgesWithID = {}
 		self._dict = {}
 
 	def __del__(self):
 		del self._components
-		del self._verticesWithID
 		del self._verticesWithoutID
-		del self._edgesWithID
+		del self._verticesWithID
 		del self._edgesWithoutID
+		del self._edgesWithID
 		del self._dict
 
 	@property
@@ -972,15 +972,15 @@ class Graph(
 
 	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		if predicate is None:
-			yield from self._verticesWithID.values()
 			yield from self._verticesWithoutID
+			yield from self._verticesWithID.values()
 
 		else:
-			for vertex in self._verticesWithID.values():
+			for vertex in self._verticesWithoutID:
 				if predicate(vertex):
 					yield vertex
 
-			for vertex in self._verticesWithoutID:
+			for vertex in self._verticesWithID.values():
 				if predicate(vertex):
 					yield vertex
 
@@ -1038,13 +1038,14 @@ class Graph(
 		outboundEdgeCounts = {}
 		leafVertices = []
 
-		for vertex in self._verticesWithID.values():
+		for vertex in self._verticesWithoutID:
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
-		for vertex in self._verticesWithoutID:
+
+		for vertex in self._verticesWithID.values():
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
@@ -1087,85 +1088,79 @@ class Graph(
 
 	def IterateEdges(self, predicate: Callable[[Edge], bool] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		if predicate is None:
-			yield from self._edgesWithID.values()
 			yield from self._edgesWithoutID
+			yield from self._edgesWithID.values()
 
 		else:
-			for edge in self._edgesWithID.values():
+			for edge in self._edgesWithoutID:
 				if predicate(edge):
 					yield edge
 
-			for edge in self._edgesWithoutID:
+			for edge in self._edgesWithID.values():
 				if predicate(edge):
 					yield edge
 
 	def ReverseEdges(self, predicate: Callable[[Edge], bool] = None) -> None:
 		if predicate is None:
-			for edge in self._edgesWithID.values():
-				swap = edge._source
-				edge._source = edge._destination
-				edge._destination = swap
-
 			for edge in self._edgesWithoutID:
 				swap = edge._source
 				edge._source = edge._destination
 				edge._destination = swap
 
-			for vertex in self._verticesWithID.values():
-				swap = vertex._inbound
-				vertex._inbound = vertex._outbound
-				vertex._outbound = swap
+			for edge in self._edgesWithID.values():
+				swap = edge._source
+				edge._source = edge._destination
+				edge._destination = swap
 
 			for vertex in self._verticesWithoutID:
 				swap = vertex._inbound
 				vertex._inbound = vertex._outbound
 				vertex._outbound = swap
+
+			for vertex in self._verticesWithID.values():
+				swap = vertex._inbound
+				vertex._inbound = vertex._outbound
+				vertex._outbound = swap
 		else:
-			for edge in self._edgesWithID.values():
+			for edge in self._edgesWithoutID:
 				if predicate(edge):
 					edge.Reverse()
 
-			for edge in self._edgesWithoutID:
+			for edge in self._edgesWithID.values():
 				if predicate(edge):
 					edge.Reverse()
 
 	def RemoveEdges(self, predicate: Callable[[Edge], bool] = None):
 		if predicate is None:
-			for edge in self._edgesWithID.values():
-				del edge
-
 			for edge in self._edgesWithoutID:
 				del edge
 
-			self._edgesWithID = {}
-			self._edgesWithoutID = []
+			for edge in self._edgesWithID.values():
+				del edge
 
-			for vertex in self._verticesWithID.values():
-				vertex._inbound = []
-				vertex._outbound = []
+			self._edgesWithoutID = []
+			self._edgesWithID = {}
 
 			for vertex in self._verticesWithoutID:
 				vertex._inbound = []
 				vertex._outbound = []
 
-		else:
-			for edge in self._edgesWithID.values():
-				if predicate(edge):
-					if edge._id is None:
-						self._edgesWithoutID.remove(edge)
-					else:
-						del self._edgesWithID[edge._id]
+			for vertex in self._verticesWithID.values():
+				vertex._inbound = []
+				vertex._outbound = []
 
-					edge._source._outbound.remove(edge)
-					edge._destination._inbound.remove(edge)
-					del edge
+		else:
+			delEdges = [edge for edge in self._edgesWithID.values() if predicate(edge)]
+			for edge in delEdges:
+				del self._edgesWithID[edge._id]
+
+				edge._source._outbound.remove(edge)
+				edge._destination._inbound.remove(edge)
+				del edge
 
 			for edge in self._edgesWithoutID:
 				if predicate(edge):
-					if edge._id is None:
-						self._edgesWithoutID.remove(edge)
-					else:
-						del self._edgesWithID[edge._id]
+					self._edgesWithoutID.remove(edge)
 
 					edge._source._outbound.remove(edge)
 					edge._destination._inbound.remove(edge)
@@ -1181,13 +1176,14 @@ class Graph(
 		outboundEdgeCounts = {}
 		leafVertices = []
 
-		for vertex in self._verticesWithID.values():
+		for vertex in self._verticesWithoutID:
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
-		for vertex in self._verticesWithoutID:
+
+		for vertex in self._verticesWithID.values():
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
@@ -1227,31 +1223,31 @@ class Graph(
 			graph._dict = self._dict.copy()
 
 		if predicate is None:
-			for vertexID, vertex in self._verticesWithID.items():
-				v = Vertex(vertexID, vertex._value, graph=graph)
-				if copyVertexDict:
-					v._dict = vertex._dict.copy()
-				graph._verticesWithID[vertexID] = v
-
 			for vertex in self._verticesWithoutID:
 				v = Vertex(None, vertex._value, graph=graph)
 				if copyVertexDict:
 					v._dict = vertex._dict.copy()
 				graph._verticesWithoutID.append(v)
-		else:
-			for vertexID, vertex in self._verticesWithID.items():
-				if predicate(vertex):
-					v = Vertex(vertexID, vertex._value, graph=graph)
-					if copyVertexDict:
-						v._dict = vertex._dict.copy()
-					graph._verticesWithID[vertexID] = v
 
+			for vertexID, vertex in self._verticesWithID.items():
+				v = Vertex(vertexID, vertex._value, graph=graph)
+				if copyVertexDict:
+					v._dict = vertex._dict.copy()
+				graph._verticesWithID[vertexID] = v
+		else:
 			for vertex in self._verticesWithoutID:
 				if predicate(vertex):
 					v = Vertex(None, vertex._value, graph=graph)
 					if copyVertexDict:
 						v._dict = vertex._dict.copy()
 					graph._verticesWithoutID.append(v)
+
+			for vertexID, vertex in self._verticesWithID.items():
+				if predicate(vertex):
+					v = Vertex(vertexID, vertex._value, graph=graph)
+					if copyVertexDict:
+						v._dict = vertex._dict.copy()
+					graph._verticesWithID[vertexID] = v
 
 		return graph
 
