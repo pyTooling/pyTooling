@@ -984,7 +984,7 @@ class Graph(
 				if predicate(vertex):
 					yield vertex
 
-	def IterateRoots(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateRoots(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -995,15 +995,24 @@ class Graph(
 		   :py:meth:`IterateLeafs` |br|
 		      |rarr| Iterate leafs of a graph.
 		"""
-		for vertex in self._verticesWithID.values():
-			if len(vertex._inbound) == 0:
-				yield vertex
+		if predicate is None:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._inbound) == 0:
+					yield vertex
 
-		for vertex in self._verticesWithoutID:
-			if len(vertex._inbound) == 0:
-				yield vertex
+			for vertex in self._verticesWithID.values():
+				if len(vertex._inbound) == 0:
+					yield vertex
+		else:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._inbound) == 0 and predicate(vertex):
+					yield vertex
 
-	def IterateLeafs(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+			for vertex in self._verticesWithID.values():
+				if len(vertex._inbound) == 0 and predicate(vertex):
+					yield vertex
+
+	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -1014,13 +1023,22 @@ class Graph(
 		   :py:meth:`IterateRoots` |br|
 		      |rarr| Iterate roots of a graph.
 		"""
-		for vertex in self._verticesWithID.values():
-			if len(vertex._outbound) == 0:
-				yield vertex
+		if predicate is None:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._outbound) == 0:
+					yield vertex
 
-		for vertex in self._verticesWithoutID:
-			if len(vertex._outbound) == 0:
-				yield vertex
+			for vertex in self._verticesWithID.values():
+				if len(vertex._outbound) == 0:
+					yield vertex
+		else:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._outbound) == 0 and predicate(vertex):
+					yield vertex
+
+			for vertex in self._verticesWithID.values():
+				if len(vertex._outbound) == 0 and predicate(vertex):
+					yield vertex
 
 	def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		raise NotImplementedError()
