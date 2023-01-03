@@ -1033,7 +1033,9 @@ class Graph(
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
 		def removeVertex(vertex: Vertex):
+			nonlocal overallCount
 			for inboundEdge in vertex._inbound:
+				overallCount -= 1
 				sourceVertex = inboundEdge.Source
 				count = outboundEdgeCounts[sourceVertex] - 1
 				outboundEdgeCounts[sourceVertex] = count
@@ -1044,14 +1046,12 @@ class Graph(
 			for vertex in leafVertices:
 				yield vertex
 
-				overallCount -= 1
 				removeVertex(vertex)
 		else:
 			for vertex in leafVertices:
 				if predicate(vertex):
 					yield vertex
 
-				overallCount -= 1
 				removeVertex(vertex)
 
 		if overallCount == 0:
