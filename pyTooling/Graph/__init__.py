@@ -750,8 +750,8 @@ class Edge(
 		self._destination._outbound.append(self)
 
 		swap = self._source
-		self._destination = self._source
-		self._source = swap
+		self._source = self._destination
+		self._destination = swap
 
 @export
 class Component(
