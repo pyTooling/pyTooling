@@ -1059,8 +1059,8 @@ class Graph(
 
 		def removeVertex(vertex: Vertex):
 			nonlocal overallCount
+			overallCount -= 1
 			for inboundEdge in vertex._inbound:
-				overallCount -= 1
 				sourceVertex = inboundEdge.Source
 				count = outboundEdgeCounts[sourceVertex] - 1
 				outboundEdgeCounts[sourceVertex] = count
