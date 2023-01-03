@@ -51,7 +51,7 @@ class Construction(TestCase):
 
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
-		self.assertEqual(1, len(root.Graph))
+		self.assertEqual(1, root.Graph.VertexCount)
 
 	def test_SingleVertexInEmptyGraph(self):
 		graph = Graph()
@@ -60,7 +60,7 @@ class Construction(TestCase):
 
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
-		self.assertEqual(1, len(root.Graph))
+		self.assertEqual(1, root.Graph.VertexCount)
 		self.assertIsNone(root.Graph.Name)
 
 	def test_SingleVertexInEmptyGraphWithName(self):
@@ -70,7 +70,7 @@ class Construction(TestCase):
 
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
-		self.assertEqual(1, len(root.Graph))
+		self.assertEqual(1, root.Graph.VertexCount)
 		self.assertEqual("test", root.Graph.Name)
 
 	def test_SimpleTree(self):
@@ -82,14 +82,15 @@ class Construction(TestCase):
 		v121 = v12.LinkToNewVertex().Destination
 		v1211 = v121.LinkToNewVertex().Destination
 
-		self.assertEqual(2, len(v1))
-		self.assertEqual(2, len(v11))
-		self.assertEqual(0, len(v111))
-		self.assertEqual(0, len(v112))
-		self.assertEqual(1, len(v12))
-		self.assertEqual(1, len(v121))
-		self.assertEqual(0, len(v1211))
-		self.assertEqual(7, len(v1.Graph))
+		self.assertEqual(2, v1.OutboundEdgeCount)
+		self.assertEqual(2, v11.OutboundEdgeCount)
+		self.assertEqual(0, v111.OutboundEdgeCount)
+		self.assertEqual(0, v112.OutboundEdgeCount)
+		self.assertEqual(1, v12.OutboundEdgeCount)
+		self.assertEqual(1, v121.OutboundEdgeCount)
+		self.assertEqual(0, v1211.OutboundEdgeCount)
+		self.assertEqual(7, v1.Graph.VertexCount)
+		self.assertEqual(6, v1.Graph.EdgeCount)
 
 
 class Dicts(TestCase):
@@ -290,7 +291,7 @@ class GraphOperations(Iterate):
 		vList = [Vertex(value=i, graph=g) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			if w % 2 == 0:
+			if w < (self._graph0.EdgeCount // 2):
 				vList[u].LinkToVertex(vList[v], edgeWeight=w)
 			else:
 				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
@@ -300,9 +301,54 @@ class GraphOperations(Iterate):
 		for i, edge in enumerate(g.IterateEdges()):
 			u, v, w = self._graph0.Edges[i]
 
-			self.assertEqual(vList[v], edge.Source)
-			self.assertEqual(vList[u], edge.Destination)
+			self.assertEqual((vList[v], vList[u], w), (edge.Source, edge.Destination, edge.Weight))
+
+		g.ReverseEdges(predicate=lambda e: e.Weight % 2 == 1)
+
+		for i, edge in enumerate(g.IterateEdges()):
+			u, v, w = self._graph0.Edges[i]
+
+			if w % 2 == 0:
+				v, u = u, v
+
+			self.assertEqual((vList[u], vList[v], w), (edge.Source, edge.Destination, edge.Weight))
+
+	def test_RemoveEdges(self):
+		g = Graph()
+		vList = [Vertex(value=i, graph=g) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
+
+		for u, v, w in self._graph0.Edges:
+			if w < (self._graph0.EdgeCount // 2):
+				vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			else:
+				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
+
+		g.RemoveEdges(predicate=lambda e: e.Weight % 2 == 0)
+
+		for i, edge in enumerate(g.IterateEdges()):
+			u, v, w = self._graph0.Edges[i*2]
+
 			self.assertEqual(w, edge.Weight)
+			self.assertTrue(edge.Weight % 2 == 1)
+
+		g.RemoveEdges()
+
+		self.assertEqual(0, g.EdgeCount)
+
+	def test_CopyVertices(self):
+		g0 = Graph()
+		vList = [Vertex(value=i, graph=g0) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g0) for i in range(0, self._graph0.VertexCount)]
+
+		for u, v, w in self._graph0.Edges:
+			if w < (self._graph0.EdgeCount // 2):
+				vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			else:
+				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
+
+		g1 = g0.CopyVertices()
+
+		for v0, v1 in zip(g0.IterateVertices(), g1.IterateVertices()):
+			self.assertTupleEqual((v0.ID, v0.Value, len(v0)), (v1.ID, v1.Value, len(v1)))
 
 
 class GraphProperties(Iterate):
