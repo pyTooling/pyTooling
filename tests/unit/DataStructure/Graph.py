@@ -41,6 +41,11 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Construction(TestCase):
+	def test_GraphName(self):
+		g = Graph("myGraph")
+
+		self.assertEqual("myGraph", g.Name)
+
 	def test_SingleVertex(self):
 		root: Vertex[Nullable[Any], int, str, Any] = Vertex()
 
@@ -87,6 +92,48 @@ class Construction(TestCase):
 		self.assertEqual(7, len(v1.Graph))
 
 
+class Dicts(TestCase):
+	def test_GraphDict(self):
+		g = Graph()
+		g["key"] = 1
+
+		self.assertEqual(1, g["key"])
+
+		del g["key"]
+		with self.assertRaises(KeyError):
+			_ = g["key"]
+
+	def test_VertexDict(self):
+		g = Graph()
+		v = Vertex(graph=g)
+		v["key"] = 2
+
+		self.assertEqual(2, v["key"])
+
+		del v["key"]
+		with self.assertRaises(KeyError):
+			_ = v["key"]
+
+	def test_EdgeDict(self):
+		g = Graph()
+		v1 = Vertex(graph=g)
+		v1["key"] = 3
+
+		v2 = Vertex(graph=g)
+		v2["key"] = 4
+
+		e12 = v1.LinkToVertex(v2)
+		e12["key"] = 5
+
+		self.assertEqual(3, v1["key"])
+		self.assertEqual(4, v2["key"])
+		self.assertEqual(5, e12["key"])
+
+		del e12["key"]
+		with self.assertRaises(KeyError):
+			_ = e12["key"]
+
+
 class Iterate(TestCase):
 	class TestGraph:
 		_vertexCount: int
@@ -111,20 +158,20 @@ class Iterate(TestCase):
 			return self._edges
 
 	_graph0 = TestGraph([
-		(0, 3, 0),
-		(1, 3, 0),
-		(2, 0, 0), (2, 1, 0),             # root
-		(3, 6, 0), (3, 7, 0),
-		(4, 0, 0), (4, 3, 0), (4, 5, 0),  # root
-		(5, 9, 0), (5, 10, 0),
-		(6, 8, 0),
-		(7, 8, 0), (7, 9, 0),
-		(8, 11, 0),
-		(9, 11, 0), (9, 12, 0),
-		(10, 9, 0),
+		(0, 3, 1),
+		(1, 3, 2),
+		(2, 0, 3), (2, 1, 4),             # root
+		(3, 6, 5), (3, 7, 6),
+		(4, 0, 7), (4, 3, 8), (4, 5, 9),  # root
+		(5, 9, 10), (5, 10, 11),
+		(6, 8, 12),
+		(7, 8, 13), (7, 9, 14),
+		(8, 11, 15),
+		(9, 11, 16), (9, 12, 17),
+		(10, 9, 18),
 		# 11                                leaf
 		# 12                                leaf
-		(13, 14, 0),                      # root
+		(13, 14, 19),                      # root
 		# 14                                leaf
 	])
 
@@ -200,7 +247,7 @@ class IterateOnGraph(Iterate):
 		self.assertListEqual([i for i in range(0, 15, 1)], [v.Value for v in gValue.IterateVertices()])
 		self.assertListEqual([i for i in range(0, 15, 2)], [v.Value for v in gValue.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
 
-		self.assertListEqual([i for i in range(1, 15, 2)] + [i for i in range(0, 15, 2)], [v.Value for v in gMixed.IterateVertices()])
+		self.assertListEqual([i for i in range(0, 15, 2)] + [i for i in range(1, 15, 2)], [v.Value for v in gMixed.IterateVertices()])
 		self.assertListEqual([i for i in range(0, 15, 2)],                                [v.Value for v in gMixed.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
 
 	def test_Topologically(self):
@@ -213,6 +260,49 @@ class IterateOnGraph(Iterate):
 		self.assertListEqual([11, 12, 14, 8, 9, 13, 6, 7, 10, 3, 5, 0, 1, 4, 2], [v.Value for v in g.IterateTopologically()])
 		self.assertListEqual([12, 14, 8, 6, 10, 0, 4, 2],                        [v.Value for v in g.IterateTopologically(predicate=lambda v: v.Value % 2 == 0)])
 		self.assertListEqual([11, 9, 13, 7, 3, 5, 1],                            [v.Value for v in g.IterateTopologically(predicate=lambda v: v.Value % 2 == 1)])
+
+	def test_Edges(self):
+		g = Graph()
+		vList = [Vertex(value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
+
+		for u, v, w in self._graph0.Edges:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[v].LinkToVertex(vList[u], edgeWeight=self._graph0.EdgeCount + w, edgeID=v*20+u)
+
+		for i, edge in enumerate(g.IterateEdges()):
+			if i < self._graph0.EdgeCount:
+				u, v, w = self._graph0.Edges[i % self._graph0.EdgeCount]
+			else:
+				v, u, w = self._graph0.Edges[i % self._graph0.EdgeCount]
+				w += self._graph0.EdgeCount
+
+			self.assertEqual(vList[u], edge.Source)
+			self.assertEqual(vList[v], edge.Destination)
+			self.assertEqual(w, edge.Weight)
+
+		for i, edge in enumerate(g.IterateEdges(predicate=lambda v: v.Weight % 2 == 0), start=1):
+			self.assertEqual(i * 2, edge.Weight)
+
+
+class GraphOperations(Iterate):
+	def test_ReverseEdges(self):
+		g = Graph()
+		vList = [Vertex(value=i, graph=g) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
+
+		for u, v, w in self._graph0.Edges:
+			if w % 2 == 0:
+				vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			else:
+				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
+
+		g.ReverseEdges()
+
+		for i, edge in enumerate(g.IterateEdges()):
+			u, v, w = self._graph0.Edges[i]
+
+			self.assertEqual(vList[v], edge.Source)
+			self.assertEqual(vList[u], edge.Destination)
+			self.assertEqual(w, edge.Weight)
 
 
 class GraphProperties(Iterate):
