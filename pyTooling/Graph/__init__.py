@@ -113,10 +113,10 @@ class Vertex(
 		self._id = vertexID
 		if vertexID is None:
 			self._graph._verticesWithoutID.append(self)
-		elif vertexID in self._graph._verticesWithID:
-			raise ValueError(f"ID '{vertexID}' already exists in this graph.")
-		else:
+		elif vertexID not in self._graph._verticesWithID:
 			self._graph._verticesWithID[vertexID] = self
+		else:
+			raise ValueError(f"ID '{vertexID}' already exists in this graph.")
 
 		self._inbound = []
 		self._outbound = []
@@ -178,12 +178,12 @@ class Vertex(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		"""
-		Returns the number of outbound directed edges.
-
-		:returns: Number of outbound edges.
-		"""
-		return len(self._outbound)
+		# """
+		# Returns the number of outbound directed edges.
+		#
+		# :returns: Number of outbound edges.
+		# """
+		return len(self._dict)
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -210,6 +210,18 @@ class Vertex(
 	@property
 	def Outbound(self) -> Tuple['Edge', ...]:
 		return tuple(self._outbound)
+
+	@property
+	def EdgeCount(self) -> int:
+		return len(self._inbound) + len(self._outbound)
+
+	@property
+	def InboundEdgeCount(self) -> int:
+		return len(self._inbound)
+
+	@property
+	def OutboundEdgeCount(self) -> int:
+		return len(self._outbound)
 
 	@property
 	def Predecessors(self) -> Tuple['Vertex', ...]:
@@ -833,12 +845,12 @@ class Component(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		"""
-		Returns the number of vertices in this component.
-
-		:returns: Number of vertices.
-		"""
-		return len(self._vertices)
+		# """
+		# Returns the number of vertices in this component.
+		#
+		# :returns: Number of vertices.
+		# """
+		return len(self._dict)
 
 	def __str__(self) -> str:
 		return self._name if self._name is not None else "Unnamed component"
@@ -908,6 +920,18 @@ class Graph(
 		:returns: The set of components in this graph."""
 		return self._components
 
+	@property
+	def VertexCount(self) -> int:
+		return len(self._verticesWithoutID) + len(self._verticesWithID)
+
+	@property
+	def EdgeCount(self) -> int:
+		return len(self._edgesWithoutID) + len(self._edgesWithID)
+
+	@property
+	def ComponentCount(self) -> int:
+		return len(self._components)
+
 	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
 		"""
 		Read a graph's attached attributes (key-value-pairs) by key.
@@ -933,12 +957,12 @@ class Graph(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		"""
-		Returns the number of vertices in this graph.
-
-		:returns: Number of vertices.
-		"""
-		return len(self._verticesWithoutID) + len(self._verticesWithID)
+		# """
+		# Returns the number of vertices in this graph.
+		#
+		# :returns: Number of vertices.
+		# """
+		return len(self._dict)
 
 	def __iter__(self) -> typing_Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
 		def gen():
