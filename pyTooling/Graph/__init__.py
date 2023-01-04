@@ -1245,27 +1245,23 @@ class Graph(
 				v = Vertex(None, vertex._value, graph=graph)
 				if copyVertexDict:
 					v._dict = vertex._dict.copy()
-				graph._verticesWithoutID.append(v)
 
 			for vertexID, vertex in self._verticesWithID.items():
 				v = Vertex(vertexID, vertex._value, graph=graph)
 				if copyVertexDict:
 					v._dict = vertex._dict.copy()
-				graph._verticesWithID[vertexID] = v
 		else:
 			for vertex in self._verticesWithoutID:
 				if predicate(vertex):
 					v = Vertex(None, vertex._value, graph=graph)
 					if copyVertexDict:
 						v._dict = vertex._dict.copy()
-					graph._verticesWithoutID.append(v)
 
 			for vertexID, vertex in self._verticesWithID.items():
 				if predicate(vertex):
 					v = Vertex(vertexID, vertex._value, graph=graph)
 					if copyVertexDict:
 						v._dict = vertex._dict.copy()
-					graph._verticesWithID[vertexID] = v
 
 		return graph
 
