@@ -1,3 +1,3 @@
-pyTooling>=2.8.3
+pyTooling>=2.9.0
 
 wheel>=0.38.1
