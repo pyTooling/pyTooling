@@ -36,7 +36,7 @@ starting vertex are provided as methods on a vertex.
 """
 import heapq
 from collections import deque
-from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator
+from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
 from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
 from pyTooling.Decorators import export
@@ -113,16 +113,21 @@ class Vertex(
 		self._id = vertexID
 		if vertexID is None:
 			self._graph._verticesWithoutID.append(self)
-		elif vertexID in self._graph._verticesWithID:
-			raise ValueError(f"ID '{vertexID}' already exists in this graph.")
-		else:
+		elif vertexID not in self._graph._verticesWithID:
 			self._graph._verticesWithID[vertexID] = self
+		else:
+			raise ValueError(f"ID '{vertexID}' already exists in this graph.")
 
 		self._inbound = []
 		self._outbound = []
 
 		self._value = value
 		self._dict = {}
+
+	def __del__(self):
+		del self._inbound
+		del self._outbound
+		del self._dict
 
 	@property
 	def ID(self) -> Nullable[VertexIDType]:
@@ -173,12 +178,12 @@ class Vertex(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		"""
-		Returns the number of outbound directed edges.
-
-		:returns: Number of outbound edges.
-		"""
-		return len(self._outbound)
+		# """
+		# Returns the number of outbound directed edges.
+		#
+		# :returns: Number of outbound edges.
+		# """
+		return len(self._dict)
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -205,6 +210,18 @@ class Vertex(
 	@property
 	def Outbound(self) -> Tuple['Edge', ...]:
 		return tuple(self._outbound)
+
+	@property
+	def EdgeCount(self) -> int:
+		return len(self._inbound) + len(self._outbound)
+
+	@property
+	def InboundEdgeCount(self) -> int:
+		return len(self._inbound)
+
+	@property
+	def OutboundEdgeCount(self) -> int:
+		return len(self._outbound)
 
 	@property
 	def Predecessors(self) -> Tuple['Vertex', ...]:
@@ -644,6 +661,9 @@ class Edge(
 		self._value = value
 		self._dict = {}
 
+	def __del__(self):
+		del self._dict
+
 	@property
 	def ID(self) -> Nullable[EdgeIDType]:
 		"""
@@ -723,6 +743,15 @@ class Edge(
 		""".. todo:: GRAPH::Edge::__delitem__ Needs documentation."""
 		del self._dict[key]
 
+	def Reverse(self) -> None:
+		self._source._outbound.remove(self)
+		self._source._inbound.append(self)
+		self._destination._inbound.remove(self)
+		self._destination._outbound.append(self)
+
+		swap = self._source
+		self._source = self._destination
+		self._destination = swap
 
 @export
 class Component(
@@ -752,6 +781,10 @@ class Component(
 		self._name = name
 		self._vertices = set() if vertices is None else {v for v in vertices}
 		self._dict = {}
+
+	def __del__(self):
+		del self._vertices
+		del self._dict
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -812,12 +845,12 @@ class Component(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		"""
-		Returns the number of vertices in this component.
-
-		:returns: Number of vertices.
-		"""
-		return len(self._vertices)
+		# """
+		# Returns the number of vertices in this component.
+		#
+		# :returns: Number of vertices.
+		# """
+		return len(self._dict)
 
 	def __str__(self) -> str:
 		return self._name if self._name is not None else "Unnamed component"
@@ -838,7 +871,7 @@ class Graph(
 	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
 	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
-	_name:              str
+	_name:              Nullable[str]
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithID:    Dict[VertexIDType, Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
@@ -850,14 +883,22 @@ class Graph(
 		""".. todo:: GRAPH::Graph::init Needs documentation."""
 		self._name = name
 		self._components = set()
-		self._verticesWithID = {}
 		self._verticesWithoutID = []
-		self._edgesWithID = {}
+		self._verticesWithID = {}
 		self._edgesWithoutID = []
+		self._edgesWithID = {}
 		self._dict = {}
 
+	def __del__(self):
+		del self._components
+		del self._verticesWithoutID
+		del self._verticesWithID
+		del self._edgesWithoutID
+		del self._edgesWithID
+		del self._dict
+
 	@property
-	def Name(self) -> str:
+	def Name(self) -> Nullable[str]:
 		"""
 		Property to get and set the name (:py:attr:`_name`) of the graph.
 
@@ -878,6 +919,18 @@ class Graph(
 
 		:returns: The set of components in this graph."""
 		return self._components
+
+	@property
+	def VertexCount(self) -> int:
+		return len(self._verticesWithoutID) + len(self._verticesWithID)
+
+	@property
+	def EdgeCount(self) -> int:
+		return len(self._edgesWithoutID) + len(self._edgesWithID)
+
+	@property
+	def ComponentCount(self) -> int:
+		return len(self._components)
 
 	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
 		"""
@@ -904,12 +957,12 @@ class Graph(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		"""
-		Returns the number of vertices in this graph.
-
-		:returns: Number of vertices.
-		"""
-		return len(self._verticesWithoutID) + len(self._verticesWithID)
+		# """
+		# Returns the number of vertices in this graph.
+		#
+		# :returns: Number of vertices.
+		# """
+		return len(self._dict)
 
 	def __iter__(self) -> typing_Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
 		def gen():
@@ -917,7 +970,21 @@ class Graph(
 			yield from self._verticesWithID
 		return iter(gen())
 
-	def IterateRoots(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		if predicate is None:
+			yield from self._verticesWithoutID
+			yield from self._verticesWithID.values()
+
+		else:
+			for vertex in self._verticesWithoutID:
+				if predicate(vertex):
+					yield vertex
+
+			for vertex in self._verticesWithID.values():
+				if predicate(vertex):
+					yield vertex
+
+	def IterateRoots(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -928,15 +995,24 @@ class Graph(
 		   :py:meth:`IterateLeafs` |br|
 		      |rarr| Iterate leafs of a graph.
 		"""
-		for vertex in self._verticesWithID.values():
-			if len(vertex._inbound) == 0:
-				yield vertex
+		if predicate is None:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._inbound) == 0:
+					yield vertex
 
-		for vertex in self._verticesWithoutID:
-			if len(vertex._inbound) == 0:
-				yield vertex
+			for vertex in self._verticesWithID.values():
+				if len(vertex._inbound) == 0:
+					yield vertex
+		else:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._inbound) == 0 and predicate(vertex):
+					yield vertex
 
-	def IterateLeafs(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+			for vertex in self._verticesWithID.values():
+				if len(vertex._inbound) == 0 and predicate(vertex):
+					yield vertex
+
+	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -947,15 +1023,30 @@ class Graph(
 		   :py:meth:`IterateRoots` |br|
 		      |rarr| Iterate roots of a graph.
 		"""
-		for vertex in self._verticesWithID.values():
-			if len(vertex._outbound) == 0:
-				yield vertex
+		if predicate is None:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._outbound) == 0:
+					yield vertex
 
-		for vertex in self._verticesWithoutID:
-			if len(vertex._outbound) == 0:
-				yield vertex
+			for vertex in self._verticesWithID.values():
+				if len(vertex._outbound) == 0:
+					yield vertex
+		else:
+			for vertex in self._verticesWithoutID:
+				if len(vertex._outbound) == 0 and predicate(vertex):
+					yield vertex
 
-	def IterateTopologically(self) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+			for vertex in self._verticesWithID.values():
+				if len(vertex._outbound) == 0 and predicate(vertex):
+					yield vertex
+
+	def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		raise NotImplementedError()
+
+	def IterateDFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		raise NotImplementedError()
+
+	def IterateTopologically(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
 		Iterate all vertices in topological order.
 
@@ -965,13 +1056,14 @@ class Graph(
 		outboundEdgeCounts = {}
 		leafVertices = []
 
-		for vertex in self._verticesWithID.values():
+		for vertex in self._verticesWithoutID:
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
-		for vertex in self._verticesWithoutID:
+
+		for vertex in self._verticesWithID.values():
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
@@ -983,8 +1075,8 @@ class Graph(
 
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
-		for vertex in leafVertices:
-			yield vertex
+		def removeVertex(vertex: Vertex):
+			nonlocal overallCount
 			overallCount -= 1
 			for inboundEdge in vertex._inbound:
 				sourceVertex = inboundEdge.Source
@@ -993,12 +1085,104 @@ class Graph(
 				if count == 0:
 					leafVertices.append(sourceVertex)
 
+		if predicate is None:
+			for vertex in leafVertices:
+				yield vertex
+
+				removeVertex(vertex)
+		else:
+			for vertex in leafVertices:
+				if predicate(vertex):
+					yield vertex
+
+				removeVertex(vertex)
+
 		if overallCount == 0:
 			return
 		elif overallCount > 0:
 			raise Exception(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
 		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
+
+	def IterateEdges(self, predicate: Callable[[Edge], bool] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+		if predicate is None:
+			yield from self._edgesWithoutID
+			yield from self._edgesWithID.values()
+
+		else:
+			for edge in self._edgesWithoutID:
+				if predicate(edge):
+					yield edge
+
+			for edge in self._edgesWithID.values():
+				if predicate(edge):
+					yield edge
+
+	def ReverseEdges(self, predicate: Callable[[Edge], bool] = None) -> None:
+		if predicate is None:
+			for edge in self._edgesWithoutID:
+				swap = edge._source
+				edge._source = edge._destination
+				edge._destination = swap
+
+			for edge in self._edgesWithID.values():
+				swap = edge._source
+				edge._source = edge._destination
+				edge._destination = swap
+
+			for vertex in self._verticesWithoutID:
+				swap = vertex._inbound
+				vertex._inbound = vertex._outbound
+				vertex._outbound = swap
+
+			for vertex in self._verticesWithID.values():
+				swap = vertex._inbound
+				vertex._inbound = vertex._outbound
+				vertex._outbound = swap
+		else:
+			for edge in self._edgesWithoutID:
+				if predicate(edge):
+					edge.Reverse()
+
+			for edge in self._edgesWithID.values():
+				if predicate(edge):
+					edge.Reverse()
+
+	def RemoveEdges(self, predicate: Callable[[Edge], bool] = None):
+		if predicate is None:
+			for edge in self._edgesWithoutID:
+				del edge
+
+			for edge in self._edgesWithID.values():
+				del edge
+
+			self._edgesWithoutID = []
+			self._edgesWithID = {}
+
+			for vertex in self._verticesWithoutID:
+				vertex._inbound = []
+				vertex._outbound = []
+
+			for vertex in self._verticesWithID.values():
+				vertex._inbound = []
+				vertex._outbound = []
+
+		else:
+			delEdges = [edge for edge in self._edgesWithID.values() if predicate(edge)]
+			for edge in delEdges:
+				del self._edgesWithID[edge._id]
+
+				edge._source._outbound.remove(edge)
+				edge._destination._inbound.remove(edge)
+				del edge
+
+			for edge in self._edgesWithoutID:
+				if predicate(edge):
+					self._edgesWithoutID.remove(edge)
+
+					edge._source._outbound.remove(edge)
+					edge._destination._inbound.remove(edge)
+					del edge
 
 	def HasCycle(self) -> bool:
 		# IsAcyclic ?
@@ -1010,13 +1194,14 @@ class Graph(
 		outboundEdgeCounts = {}
 		leafVertices = []
 
-		for vertex in self._verticesWithID.values():
+		for vertex in self._verticesWithoutID:
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
-		for vertex in self._verticesWithoutID:
+
+		for vertex in self._verticesWithID.values():
 			count = len(vertex._outbound)
 			if count == 0:
 				leafVertices.append(vertex)
@@ -1047,11 +1232,38 @@ class Graph(
 
 		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
 
-	def IterateBFS(self):
+	def CopyGraph(self) -> 'Graph':
 		raise NotImplementedError()
 
-	def IterateDFS(self):
-		raise NotImplementedError()
+	def CopyVertices(self, predicate: Callable[[Vertex], bool] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':
+		graph = Graph(self._name)
+		if copyGraphDict:
+			graph._dict = self._dict.copy()
+
+		if predicate is None:
+			for vertex in self._verticesWithoutID:
+				v = Vertex(None, vertex._value, graph=graph)
+				if copyVertexDict:
+					v._dict = vertex._dict.copy()
+
+			for vertexID, vertex in self._verticesWithID.items():
+				v = Vertex(vertexID, vertex._value, graph=graph)
+				if copyVertexDict:
+					v._dict = vertex._dict.copy()
+		else:
+			for vertex in self._verticesWithoutID:
+				if predicate(vertex):
+					v = Vertex(None, vertex._value, graph=graph)
+					if copyVertexDict:
+						v._dict = vertex._dict.copy()
+
+			for vertexID, vertex in self._verticesWithID.items():
+				if predicate(vertex):
+					v = Vertex(vertexID, vertex._value, graph=graph)
+					if copyVertexDict:
+						v._dict = vertex._dict.copy()
+
+		return graph
 
 		# class Iterator():
 		# 	visited = [False for _ in range(self.__len__())]
