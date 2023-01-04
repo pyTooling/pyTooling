@@ -258,9 +258,9 @@ class IterateOnGraph(Iterate):
 		for u, v, w in self._graph0.Edges:
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
-		self.assertListEqual([11, 12, 14, 8, 9, 13, 6, 7, 10, 3, 5, 0, 1, 4, 2], [v.Value for v in g.IterateTopologically()])
+		self.assertListEqual([12, 14, 11, 13, 8, 9, 6, 7, 10, 3, 5, 0, 1, 4, 2], [v.Value for v in g.IterateTopologically()])
 		self.assertListEqual([12, 14, 8, 6, 10, 0, 4, 2],                        [v.Value for v in g.IterateTopologically(predicate=lambda v: v.Value % 2 == 0)])
-		self.assertListEqual([11, 9, 13, 7, 3, 5, 1],                            [v.Value for v in g.IterateTopologically(predicate=lambda v: v.Value % 2 == 1)])
+		self.assertListEqual([11, 13, 9, 7, 3, 5, 1],                            [v.Value for v in g.IterateTopologically(predicate=lambda v: v.Value % 2 == 1)])
 
 	def test_Edges(self):
 		g = Graph()
@@ -346,9 +346,26 @@ class GraphOperations(Iterate):
 				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
 
 		g1 = g0.CopyVertices()
-
+		self.assertEqual(len(g0), len(g1))
 		for v0, v1 in zip(g0.IterateVertices(), g1.IterateVertices()):
 			self.assertTupleEqual((v0.ID, v0.Value, len(v0)), (v1.ID, v1.Value, len(v1)))
+
+		g2 = g0.CopyVertices(copyGraphDict=False, copyVertexDict=False)
+		self.assertEqual(0, len(g2))
+		for v0, v2 in zip(g0.IterateVertices(), g2.IterateVertices()):
+			self.assertTupleEqual((v0.ID, v0.Value, 0), (v2.ID, v2.Value, len(v2)))
+
+		g3 = g0.CopyVertices(predicate=lambda e: e.Value % 2 == 0)
+		self.assertEqual(len(g0), len(g3))
+		for v3 in g3.IterateVertices():
+			self.assertTrue(v3.Value % 2 == 0)
+			# self.assertEqual(len(v0), len(v3))
+
+		g4 = g0.CopyVertices(predicate=lambda e: e.Value % 2 == 1, copyGraphDict=False, copyVertexDict=False)
+		self.assertEqual(0, len(g4))
+		for v4 in g4.IterateVertices():
+			self.assertTrue(v4.Value % 2 == 1)
+			self.assertEqual(0, len(v4))
 
 
 class GraphProperties(Iterate):
