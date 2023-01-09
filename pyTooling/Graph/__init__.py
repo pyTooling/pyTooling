@@ -304,6 +304,34 @@ class Vertex(
 
 		return edge
 
+	def Copy(self, graph: Graph, copyDict: bool = True, linkingKeyToOriginalVertex: str = None, linkingKeyFromOriginalVertex: str = None) -> 'Vertex':
+		"""
+		Creates a copy of this vertex in another graph.
+
+		Optionally, the vertex's attached attributes (key-value-pairs) can be copied and a linkage between both vertices
+		can be established.
+
+		:param graph:                        The graph, the vertex is created in.
+		:param copyDict:                     If ``True``, copy all attached attributes into the new vertex.
+		:param linkingKeyToOriginalVertex:   If not ``None``, add a key-value-pair using this parameter as key from new vertex to the original vertex.
+		:param linkingKeyFromOriginalVertex: If not ``None``, add a key-value-pair using this parameter as key from original vertex to the new vertex.
+		:returns:                            The newly created vertex.
+		"""
+		if graph is self._graph:
+			raise Exception()
+
+		vertex = Vertex(self._id, self._value, graph=graph)
+		if copyDict:
+			vertex._dict = self._dict.copy()
+
+		if linkingKeyToOriginalVertex is not None:
+			vertex._dict[linkingKeyToOriginalVertex] = self
+		if linkingKeyFromOriginalVertex is not None:
+			self._dict[linkingKeyFromOriginalVertex] = vertex
+
+		return vertex
+
+	# TODO: convert to property?
 	def IsRoot(self) -> bool:
 		return len(self._inbound) == 0
 
