@@ -936,8 +936,9 @@ class Graph(
 		"""
 		Read a graph's attached attributes (key-value-pairs) by key.
 
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
+		:param key:       The key to look for.
+		:returns:         The value associated to the given key.
+		:raises KeyError: If key doesn't exist in the graph's attributes.
 		"""
 		return self._dict[key]
 
@@ -947,7 +948,7 @@ class Graph(
 
 		If a key doesn't exist yet, a new key-value-pair is created.
 
-		:param key: The key to create or update.
+		:param key:   The key to create or update.
 		:param value: The value to associate to the given key.
 		"""
 		self._dict[key] = value
@@ -986,9 +987,12 @@ class Graph(
 
 	def IterateRoots(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
-		Iterate all roots (vertices without inbound edges / without predecessors) of a graph.
+		Iterate all or selected roots (vertices without inbound edges / without predecessors) of a graph.
 
-		:return: A generator to iterate vertices without inbound edges.
+		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
+
+		:param predicate: Filter function accepting any vertex and returning a boolean.
+		:returns:         A generator to iterate all vertices without inbound edges.
 
 		.. seealso::
 
@@ -1014,9 +1018,12 @@ class Graph(
 
 	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
-		Iterate all leafs (vertices without outbound edges / without successors) of a graph.
+		Iterate all or selected leafs (vertices without outbound edges / without successors) of a graph.
 
-		:return: A generator to iterate vertices without outbound edges.
+		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
+
+		:param predicate: Filter function accepting any vertex and returning a boolean.
+		:returns:         A generator to iterate all vertices without outbound edges.
 
 		.. seealso::
 

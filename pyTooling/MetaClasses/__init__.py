@@ -293,8 +293,8 @@ class ExtendedType(type):
 		This implementation is threadsafe.
 
 		:param newClass:  The newly constructed class for further modifications.
-		:param singleton: If true, the class allows only a single instance to exist.
-		:returns:         True, if the class is a singleton.
+		:param singleton: If ``True``, the class allows only a single instance to exist.
+		:returns:         ``True``, if the class is a singleton.
 		"""
 		if hasattr(newClass, "__isSingleton__"):
 			singleton = newClass.__isSingleton__
@@ -354,7 +354,7 @@ class ExtendedType(type):
 		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
 
 		:param newClass:            The newly constructed class for further modifications.
-		:returns:                   True, if the class is abstract.
+		:returns:                   ``True``, if the class is abstract.
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods

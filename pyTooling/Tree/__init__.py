@@ -385,7 +385,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Returns true, if the node is the root node (representative node of the tree).
 
-		:returns: True, if node is the root node.
+		:returns: ``True``, if node is the root node.
 		"""
 		return self._parent is None
 
@@ -394,7 +394,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Returns true, if the node is a leaf node (has no children).
 
-		:returns: True, if node has no children.
+		:returns: ``True``, if node has no children.
 		"""
 		return len(self._children) == 0
 
