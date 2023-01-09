@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -67,7 +67,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, useSlots=True):
 		"""Assigns a value to the *call-by-reference* object.
 
 		:param other: The value to be assigned to this *call-by-reference* object.
-		:returns: Itself.
+		:returns:     Itself.
 		"""
 		self.Value = other
 		return self

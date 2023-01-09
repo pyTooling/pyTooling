@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -298,7 +298,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 		"""
 		Returns true, if the platform is POSIX or POSIX-like.
 
-		:returns: True, if POSIX or POSIX-like.
+		:returns: ``True``, if POSIX or POSIX-like.
 		"""
 		return self.Platforms.SEP_WindowsPath not in self._platform
 
