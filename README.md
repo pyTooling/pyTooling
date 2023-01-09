@@ -11,6 +11,8 @@
 [![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
 [![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/pyTooling/pyTooling?longCache=true&style=flat-square&logo=Codecov)](https://codecov.io/gh/pyTooling/pyTooling)
 
+![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/pyTooling/pyTooling/Pipeline.yml?branch=main)
+
 <!--
 [![Gitter](https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef)](https://gitter.im/hdl/community)
 [![Dependent repos (via libraries.io)](https://img.shields.io/librariesio/dependent-repos/pypi/pyTooling?longCache=true&style=flat-square&logo=GitHub)](https://github.com/pyTooling/pyTooling/network/dependents)

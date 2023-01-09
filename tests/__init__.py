@@ -16,7 +16,7 @@
 #
 # License:
 # ============================================================================
-# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany
+# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany
 # Copyright 2007-2016 Patrick Lehmann - Dresden, Germany
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,4 @@
 #
 """
 Module containing test code written for `pyTest <https://www.pytest.org/>`__.
-
-:copyright: Copyright 2007-2022 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
 """

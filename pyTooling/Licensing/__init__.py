@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -136,7 +136,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		Returns true, if the license is approved by OSI (`Open Source Initiative <https://opensource.org/>`__).
 
-		:returns: True, if the license is approved by the Open Source Initiative.
+		:returns: ``True``, if the license is approved by the Open Source Initiative.
 		"""
 		return self._osiApproved
 
@@ -145,7 +145,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		Returns true, if the license is approved by FSF (`Free Software Foundation <https://www.fsf.org/>`__).
 
-		:returns: True, if the license is approved by the Free Software Foundation.
+		:returns: ``True``, if the license is approved by the Free Software Foundation.
 		"""
 		return self._fsfApproved
 
@@ -188,7 +188,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
-		:returns: True, if both licenses are identical.
+		:returns:          ``True``, if both licenses are identical.
 		:raises TypeError: If second operand is not of type :py:class:`License`.
 		"""
 		if isinstance(other, License):
@@ -200,7 +200,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
-		:returns: True, if both licenses are not identical.
+		:returns:          ``True``, if both licenses are not identical.
 		:raises TypeError: If second operand is not of type :py:class:`License`.
 		"""
 		if isinstance(other, License):

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2020-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2020-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -109,7 +109,7 @@ class SemVersion(metaclass=Overloading):
 		Compare two Version instances (version numbers) for equality.
 
 		:param other:      Parameter to compare against.
-		:returns:          True, if both version numbers are equal.
+		:returns:          ``True``, if both version numbers are equal.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -127,7 +127,7 @@ class SemVersion(metaclass=Overloading):
 		Compare two Version instances (version numbers) for inequality.
 
 		:param other:      Parameter to compare against.
-		:returns:          True, if both version numbers are not equal.
+		:returns:          ``True``, if both version numbers are not equal.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -142,7 +142,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param left:  Left parameter.
 		:param right: Right parameter.
-		:returns:     True, if ``left`` is smaller than ``right``. |br|
+		:returns:     ``True``, if ``left`` is smaller than ``right``. |br|
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both parameters are equal).
 		"""
@@ -173,7 +173,7 @@ class SemVersion(metaclass=Overloading):
 		Compare two Version instances (version numbers) if the version is less than the second operand.
 
 		:param other:      Parameter to compare against.
-		:returns:          True if version is less than the second operand.
+		:returns:          ``True``, if version is less than the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -187,7 +187,7 @@ class SemVersion(metaclass=Overloading):
 		Compare two Version instances (version numbers) if the version is less than or equal to the second operand.
 
 		:param other:      Parameter to compare against.
-		:returns:          True if version is less than or equal to the second operand.
+		:returns:          ``True``, if version is less than or equal to the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -201,7 +201,7 @@ class SemVersion(metaclass=Overloading):
 		Compare two Version instances (version numbers) if the version is greater than the second operand.
 
 		:param other:      Parameter to compare against.
-		:returns:          True if version is greater than the second operand.
+		:returns:          ``True``, if version is greater than the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
@@ -214,7 +214,7 @@ class SemVersion(metaclass=Overloading):
 		Compare two Version instances (version numbers) if the version is greater than or equal to the second operand.
 
 		:param other:      Parameter to compare against.
-		:returns:          True if version is greater than or equal to the second operand.
+		:returns:          ``True``, if version is greater than or equal to the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):

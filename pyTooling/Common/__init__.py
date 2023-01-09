@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -37,7 +37,7 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "2.9.0"
+__version__ =   "2.10.0"
 __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading", "singleton", "tree", "timer", "data structure", "setuptools", "wheel", "installation", "packaging", "path", "generic path", "generic library", "url"]
 
 from collections import deque
@@ -71,7 +71,7 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 
 	:param cls:   Class to check, if it's a nested class.
 	:param scope: Outer class which is the outer scope of ``cls``.
-	:returns:     True, if ``cls`` is a nested class within ``scope``.
+	:returns:     ``True``, if ``cls`` is a nested class within ``scope``.
 	"""
 	for mroClass in scope.mro():
 		for memberName in mroClass.__dict__:

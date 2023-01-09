@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2021-2022 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -214,7 +214,12 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	_version =     None
 
 	with sourceFile.open("r") as file:
-		for item in iter_child_nodes(ast_parse(file.read())):
+		try:
+			ast = ast_parse(file.read())
+		except Exception as ex:                                                          # pragma: no cover
+			raise Exception(f"Internal error when parsing '{sourceFile}'.") from ex
+
+		for item in iter_child_nodes(ast):
 			if isinstance(item, Assign) and len(item.targets) == 1:
 				target = item.targets[0]
 				value = item.value
