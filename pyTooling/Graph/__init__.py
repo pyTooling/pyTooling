@@ -333,9 +333,42 @@ class Vertex(
 
 	# TODO: convert to property?
 	def IsRoot(self) -> bool:
+		"""
+		Check if this vertex is a root vertex in the graph.
+
+		A root has no inbound edges (no predecessor vertices).
+
+		:returns: ``True``, if this vertex is a root.
+
+		.. seealso::
+
+		   :py:meth:`IsLeaf` |br|
+		      |rarr| Check if a vertex is a leaf vertex in the graph.
+		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		      |rarr| Iterate all roots of a graph.
+		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		      |rarr| Iterate all leafs of a graph.
+		"""
 		return len(self._inbound) == 0
 
+	# TODO: convert to property?
 	def IsLeaf(self) -> bool:
+		"""
+		Check if this vertex is a leaf vertex in the graph.
+
+		A leaf has no outbound edges (no successor vertices).
+
+		:returns: ``True``, if this vertex is a leaf.
+
+		.. seealso::
+
+		   :py:meth:`IsRoot` |br|
+		      |rarr| Check if a vertex is a root vertex in the graph.
+		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		      |rarr| Iterate all roots of a graph.
+		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		      |rarr| Iterate all leafs of a graph.
+		"""
 		return len(self._outbound) == 0
 
 	def IterateOutboundEdges(self) -> Generator['Edge', None, None]:
@@ -930,7 +963,7 @@ class Graph(
 		"""
 		Property to get and set the name (:py:attr:`_name`) of the graph.
 
-		:returns: The value of a graph.
+		:returns: The name of a graph.
 		"""
 		return self._name
 
@@ -943,21 +976,30 @@ class Graph(
 
 	@property
 	def Components(self) -> Set[Component]:
-		"""Read-only property to access the components of this graph (:py:attr:`_components`).
+		"""Read-only property to access the components in this graph (:py:attr:`_components`).
 
 		:returns: The set of components in this graph."""
 		return self._components
 
 	@property
 	def VertexCount(self) -> int:
+		"""Read-only property to access the number of vertices in this graph.
+
+		:returns: The number of vertices in this graph."""
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
 
 	@property
 	def EdgeCount(self) -> int:
+		"""Read-only property to access the number of edges in this graph.
+
+		:returns: The number of edges in this graph."""
 		return len(self._edgesWithoutID) + len(self._edgesWithID)
 
 	@property
 	def ComponentCount(self) -> int:
+		"""Read-only property to access the number of components in this graph.
+
+		:returns: The number of components in this graph."""
 		return len(self._components)
 
 	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
@@ -982,15 +1024,20 @@ class Graph(
 		self._dict[key] = value
 
 	def __delitem__(self, key: GraphDictKeyType) -> None:
-		""".. todo:: GRAPH::Graph::__delitem__ Needs documentation."""
+		"""
+		Remove an entry from graph's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the graph's attributes.
+		"""
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		# """
-		# Returns the number of vertices in this graph.
-		#
-		# :returns: Number of vertices.
-		# """
+		"""
+		Returns the number of attached attributes (key-value-pairs) in this graph.
+
+		:returns: Number of attached attributes.
+		"""
 		return len(self._dict)
 
 	def __iter__(self) -> typing_Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
@@ -1000,6 +1047,14 @@ class Graph(
 		return iter(gen())
 
 	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+		"""
+		Iterate all or selected vertices of a graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
+
+		:param predicate: Filter function accepting any vertex and returning a boolean.
+		:returns:         A generator to iterate all vertices.
+		"""
 		if predicate is None:
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID.values()
@@ -1026,6 +1081,10 @@ class Graph(
 
 		   :py:meth:`IterateLeafs` |br|
 		      |rarr| Iterate leafs of a graph.
+		   :py:meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		      |rarr| Check if a vertex is a root vertex in the graph.
+		   :py:meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
 			for vertex in self._verticesWithoutID:
@@ -1057,6 +1116,10 @@ class Graph(
 
 		   :py:meth:`IterateRoots` |br|
 		      |rarr| Iterate roots of a graph.
+		   :py:meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		      |rarr| Check if a vertex is a root vertex in the graph.
+		   :py:meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
 			for vertex in self._verticesWithoutID:
@@ -1083,9 +1146,12 @@ class Graph(
 
 	def IterateTopologically(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
 		"""
-		Iterate all vertices in topological order.
+		Iterate all or selected vertices in topological order.
 
-		:return:           A generator to iterate vertices in topological order.
+		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
+
+		:param predicate:  Filter function accepting any vertex and returning a boolean.
+		:returns:          A generator to iterate all vertices in topological order.
 		:except Exception: Raised if graph is cyclic, thus topological sorting isn't possible.
 		"""
 		outboundEdgeCounts = {}
@@ -1140,6 +1206,14 @@ class Graph(
 		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
 
 	def IterateEdges(self, predicate: Callable[[Edge], bool] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+		"""
+		Iterate all or selected edges of a graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip edges in the generator.
+
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		:returns:         A generator to iterate all edges.
+		"""
 		if predicate is None:
 			yield from self._edgesWithoutID
 			yield from self._edgesWithID.values()
@@ -1154,6 +1228,13 @@ class Graph(
 					yield edge
 
 	def ReverseEdges(self, predicate: Callable[[Edge], bool] = None) -> None:
+		"""
+		Reverse all or selected edges of a graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip edges.
+
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		"""
 		if predicate is None:
 			for edge in self._edgesWithoutID:
 				swap = edge._source
@@ -1184,6 +1265,13 @@ class Graph(
 					edge.Reverse()
 
 	def RemoveEdges(self, predicate: Callable[[Edge], bool] = None):
+		"""
+		Remove all or selected edges of a graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip edges.
+
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		"""
 		if predicate is None:
 			for edge in self._edgesWithoutID:
 				del edge
@@ -1271,6 +1359,15 @@ class Graph(
 		raise NotImplementedError()
 
 	def CopyVertices(self, predicate: Callable[[Vertex], bool] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':
+		"""
+		Create a new graph and copy all or selected vertices of the original graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip vertices.
+
+		:param predicate:      Filter function accepting any vertex and returning a boolean.
+		:param copyGraphDict:  If ``True``, copy all graph attached attributes into the new graph.
+		:param copyVertexDict: If ``True``, copy all vertex attached attributes into the new vertices.
+		"""
 		graph = Graph(self._name)
 		if copyGraphDict:
 			graph._dict = self._dict.copy()
