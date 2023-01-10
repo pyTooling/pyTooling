@@ -371,21 +371,73 @@ class Vertex(
 		"""
 		return len(self._outbound) == 0
 
-	def IterateOutboundEdges(self) -> Generator['Edge', None, None]:
-		for edge in self._outbound:
-			yield edge
+	def IterateOutboundEdges(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Edge', None, None]:
+		"""
+		Iterate all or selected outbound edges of this vertex.
 
-	def IterateInboundEdges(self) -> Generator['Edge', None, None]:
-		for edge in self._inbound:
-			yield edge
+		If parameter ``predicate`` is not None, the given filter function is used to skip edges in the generator.
 
-	def IterateSuccessorVertices(self) -> Generator['Vertex', None, None]:
-		for edge in self._outbound:
-			yield edge.Destination
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		:returns:         A generator to iterate all outbound edges.
+		"""
+		if predicate is None:
+			for edge in self._outbound:
+				yield edge
+		else:
+			for edge in self._outbound:
+				if predicate(edge):
+					yield edge
 
-	def IteratePredecessorVertices(self) -> Generator['Vertex', None, None]:
-		for edge in self._inbound:
-			yield edge.Source
+	def IterateInboundEdges(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Edge', None, None]:
+		"""
+		Iterate all or selected inbound edges of this vertex.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip edges in the generator.
+
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		:returns:         A generator to iterate all inbound edges.
+		"""
+		if predicate is None:
+			for edge in self._inbound:
+				yield edge
+		else:
+			for edge in self._inbound:
+				if predicate(edge):
+					yield edge
+
+	def IterateSuccessorVertices(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Vertex', None, None]:
+		"""
+		Iterate all or selected successor vertices of this vertex.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip successors in the generator.
+
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		:returns:         A generator to iterate all successor vertices.
+		"""
+		if predicate is None:
+			for edge in self._outbound:
+				yield edge.Destination
+		else:
+			for edge in self._outbound:
+				if predicate(edge):
+					yield edge.Destination
+
+	def IteratePredecessorVertices(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Vertex', None, None]:
+		"""
+		Iterate all or selected predecessor vertices of this vertex.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip predecessors in the generator.
+
+		:param predicate: Filter function accepting any edge and returning a boolean.
+		:returns:         A generator to iterate all predecessor vertices.
+		"""
+		if predicate is None:
+			for edge in self._inbound:
+				yield edge.Source
+		else:
+			for edge in self._inbound:
+				if predicate(edge):
+					yield edge.Source
 
 	def IterateVerticesBFS(self) -> Generator['Vertex', None, None]:
 		"""
@@ -805,6 +857,7 @@ class Edge(
 		del self._dict[key]
 
 	def Reverse(self) -> None:
+		"""Reverse the direction of this edge."""
 		self._source._outbound.remove(self)
 		self._source._inbound.append(self)
 		self._destination._inbound.remove(self)
@@ -813,6 +866,7 @@ class Edge(
 		swap = self._source
 		self._source = self._destination
 		self._destination = swap
+
 
 @export
 class Component(
