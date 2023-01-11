@@ -339,6 +339,42 @@ class Vertex(
 
 		return edge
 
+	def HasLinkToDestination(self, destination: 'Vertex') -> bool:
+		"""
+		Check if this vertex is linked to another vertex by any outbound edge.
+
+		:param destination: Destination vertex to check.
+		:return:            ``True``, if the destination vertex is a destination on any outbound edge.
+
+		.. seealso::
+
+		   :py:meth:`HasLinkFromSourcce` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
+		"""
+		for edge in self._outbound:
+			if destination is edge.Destination:
+				return True
+
+		return False
+
+	def HasLinkFromSourcce(self, source: 'Vertex') -> bool:
+		"""
+		Check if this vertex is linked to another vertex by any inbound edge.
+
+		:param source: Source vertex to check.
+		:return:       ``True``, if the source vertex is a source on any inbound edge.
+
+		.. seealso::
+
+		   :py:meth:`HasLinkToDestination` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
+		"""
+		for edge in self._inbound:
+			if source is edge.Source:
+				return True
+
+		return False
+
 	def Copy(self, graph: Graph, copyDict: bool = True, linkingKeyToOriginalVertex: str = None, linkingKeyFromOriginalVertex: str = None) -> 'Vertex':
 		"""
 		Creates a copy of this vertex in another graph.
