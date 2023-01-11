@@ -178,11 +178,11 @@ class Vertex(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		# """
-		# Returns the number of outbound directed edges.
-		#
-		# :returns: Number of outbound edges.
-		# """
+		"""
+		Returns the number of attached attributes (key-value-pairs) in this vertex.
+
+		:returns: Number of attached attributes.
+		"""
 		return len(self._dict)
 
 	@property
@@ -205,30 +205,65 @@ class Vertex(
 
 	@property
 	def Inbound(self) -> Tuple['Edge', ...]:
+		"""
+		Read-only property to get a tuple of inbound edges (:py:attr:`_inbound`).
+
+		:return: Tuple of inbound edges.
+		"""
 		return tuple(self._inbound)
 
 	@property
 	def Outbound(self) -> Tuple['Edge', ...]:
+		"""
+		Read-only property to get a tuple of outbound edges (:py:attr:`_outbound`).
+
+		:return: Tuple of outbound edges.
+		"""
 		return tuple(self._outbound)
 
 	@property
 	def EdgeCount(self) -> int:
+		"""
+		Read-only property to get the number of all edges (inbound and outbound).
+
+		:return: Number of inbound and outbound edges.
+		"""
 		return len(self._inbound) + len(self._outbound)
 
 	@property
 	def InboundEdgeCount(self) -> int:
+		"""
+		Read-only property to get the number of inbound edges.
+
+		:return: Number of inbound edges.
+		"""
 		return len(self._inbound)
 
 	@property
 	def OutboundEdgeCount(self) -> int:
+		"""
+		Read-only property to get the number of outbound edges.
+
+		:return: Number of outbound edges.
+		"""
 		return len(self._outbound)
 
 	@property
 	def Predecessors(self) -> Tuple['Vertex', ...]:
+		"""
+		Read-only property to get a tuple of predecessor vertices.
+
+		:return: Tuple of predecessor vertices.
+		"""
 		return tuple([edge.Source for edge in self._inbound])
 
 	@property
 	def Successors(self) -> Tuple['Vertex', ...]:
+		"""
+		Read-only property to get a tuple of successor vertices.
+
+		:return: Tuple of successor vertices.
+		"""
 		return tuple([edge.Destination for edge in self._outbound])
 
 	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
@@ -506,8 +541,17 @@ class Vertex(
 					return
 
 	def ShortestPathToByHops(self, destination: 'Vertex') -> Generator['Vertex', None, None]:
-		# BFS based algorithm
+		"""
+		Compute the shortest path (by hops) between this vertex and the destination vertex.
 
+		A generator is return to iterate all vertices along the path including source and destination vertex.
+
+		The search algorithm is breadth-first search (BFS) based. The found solution, if any, is not unique but deterministic
+		as long as the graph was not modified (e.g. ordering of edges on vertices).
+
+		:param destination: The destination vertex to reach.
+		:return:            A generator to iterate all vertices on the path found between this vertex and the destination vertex.
+		"""
 		# Trivial case if start is destination
 		if self is destination:
 			yield self
@@ -586,7 +630,17 @@ class Vertex(
 			node = node.parent
 
 	def ShortestPathToByWeight(self, destination: 'Vertex') -> Generator['Vertex', None, None]:
-		# Dijkstra + heapq
+		"""
+		Compute the shortest path (by edge weight) between this vertex and the destination vertex.
+
+		A generator is return to iterate all vertices along the path including source and destination vertex.
+
+		The search algorithm is based on Dijkstra algorithm and using :py:mod:`heapq`. The found solution, if any, is not
+		unique but deterministic as long as the graph was not modified (e.g. ordering of edges on vertices).
+
+		:param destination: The destination vertex to reach.
+		:return:            A generator to iterate all vertices on the path found between this vertex and the destination vertex.
+		"""
 		# Improvements: both-sided Dijkstra (search from start and destination to reduce discovered area.
 
 		# Trivial case if start is destination
@@ -856,6 +910,14 @@ class Edge(
 		""".. todo:: GRAPH::Edge::__delitem__ Needs documentation."""
 		del self._dict[key]
 
+	def __len__(self) -> int:
+		"""
+		Returns the number of attached attributes (key-value-pairs) in this edge.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
+
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
 		self._source._outbound.remove(self)
@@ -960,11 +1022,11 @@ class Component(
 		del self._dict[key]
 
 	def __len__(self) -> int:
-		# """
-		# Returns the number of vertices in this component.
-		#
-		# :returns: Number of vertices.
-		# """
+		"""
+		Returns the number of attached attributes (key-value-pairs) in this component.
+
+		:returns: Number of attached attributes.
+		"""
 		return len(self._dict)
 
 	def __str__(self) -> str:
