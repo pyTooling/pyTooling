@@ -34,8 +34,7 @@ from unittest import TestCase
 
 from pytest import mark
 
-from pyTooling.Tree import Node
-
+from pyTooling.Tree import Node, AlreadyInTreeError, NoSiblingsError
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -702,7 +701,7 @@ class Exceptions(TestCase):
 		root = Node()
 		children = [Node(), Node(parent=root), Node()]
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(AlreadyInTreeError):
 			root.AddChildren(children)
 
 	def test_SetParentWithDuplicateIDs(self):
@@ -723,10 +722,10 @@ class Exceptions(TestCase):
 
 		self.assertIsNone(root.Parent)
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(NoSiblingsError):
 			_ = root.Siblings
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(NoSiblingsError):
 			for _ in root.GetSiblings():
 				pass
 
@@ -735,10 +734,10 @@ class Exceptions(TestCase):
 
 		self.assertIsNone(root.Parent)
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(NoSiblingsError):
 			_ = root.LeftSiblings
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(NoSiblingsError):
 			for _ in root.GetLeftSiblings():
 				pass
 
@@ -747,9 +746,9 @@ class Exceptions(TestCase):
 
 		self.assertIsNone(root.Parent)
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(NoSiblingsError):
 			_ = root.RightSiblings
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(NoSiblingsError):
 			for _ in root.GetRightSiblings():
 				pass
