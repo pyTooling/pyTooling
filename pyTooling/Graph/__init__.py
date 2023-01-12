@@ -110,7 +110,16 @@ class GraphException(ToolingException):
 
 @export
 class InternalError(GraphException):
-	"""The exception is raised when a data structure corruption is detected."""
+	"""
+	The exception is raised when a data structure corruption is detected.
+
+	.. danger::
+
+	   This exception should never be raised.
+
+	   If so, please create an issue at GitHub so the data structure corruption can be investigated and fixed. |br|
+	   `⇒ Bug Tracker at GitHub <https://github.com/pyTooling/pyTooling/issues>`__
+	"""
 
 
 @export
@@ -243,7 +252,7 @@ class Vertex(
 
 	def __len__(self) -> int:
 		"""
-		Returns the number of attached attributes (key-value-pairs) in this vertex.
+		Returns the number of attached attributes (key-value-pairs) on this vertex.
 
 		:returns: Number of attached attributes.
 		"""
