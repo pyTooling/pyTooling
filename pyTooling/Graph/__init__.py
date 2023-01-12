@@ -840,6 +840,43 @@ class Vertex(
 		# Edmons-Karp algorithm
 		# Dinic's algorithm
 
+	def ConvertToTree(self) -> Node:
+		"""
+		Converts all reachable vertices from this starting vertex to a tree of :py:class:`~pyTooling.Tree.Node` instances.
+
+		The tree is traversed using depths-first-search.
+
+		:return:
+		"""
+		visited: Set[Vertex] = set()
+		stack: List[Tuple[Node, typing_Iterator[Edge]]] = list()
+
+		root = Node(nodeID=self._id, value=self._value)
+		root._dict = self._dict.copy()
+
+		visited.add(self)
+		stack.append((root, iter(self._outbound)))
+
+		while True:
+			try:
+				edge = next(stack[-1][1])
+				nextVertex = edge._destination
+				if nextVertex not in visited:
+					node = Node(nextVertex._id, nextVertex._value, parent=stack[-1][0])
+					visited.add(nextVertex)
+					if len(nextVertex._outbound) != 0:
+						stack.append((node, iter(nextVertex._outbound)))
+				else:
+					raise NotATreeError(f"The directed subgraph is not a tree.")
+					# TODO: compute cycle:
+					#       a) branch 1 is described in stack
+					#       b) branch 2 can be found by walking from joint to root in the tree
+			except StopIteration:
+				stack.pop()
+
+				if len(stack) == 0:
+					return root
+
 	def __repr__(self) -> str:
 		"""
 		Returns a detailed string representation of the vertex.
