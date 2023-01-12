@@ -33,6 +33,24 @@ A powerful **graph** data structure for Python.
 
 Graph algorithms using all vertices are provided as methods on the graph instance. Whereas graph algorithms based on a
 starting vertex are provided as methods on a vertex.
+
+.. admonition:: Example Graph
+
+	.. mermaid::
+		 :caption: A directed graph with backward-edges denoted by dotted vertex relations.
+
+		 %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+		 graph LR
+			 A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
+
+			 A --> B --> E
+			 G --> F
+			 A --> C --> G --> H --> D
+			 D -.-> A
+			 D & F -.-> B
+			 I ---> E --> F --> D
+
+			 classDef node fill:#eee,stroke:#777,font-size:smaller;
 """
 import heapq
 from collections import deque
