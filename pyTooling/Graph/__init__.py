@@ -57,8 +57,10 @@ from collections import deque
 from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
 from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators  import export
+from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Tree        import Node
 
 
 VertexIDType = TypeVar("VertexIDType", bound=Hashable)
@@ -102,6 +104,50 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 
 @export
+class GraphException(ToolingException):
+	"""Base exception of all exceptions raised by :py:mod:`pyTooling.Graph`."""
+
+
+@export
+class InternalError(GraphException):
+	"""The exception is raised when a data structure corruption is detected."""
+
+
+@export
+class NotInSameGraph(GraphException):
+	"""The exception is raised when creating an edge between two vertices, but these are not in the same graph."""
+
+
+@export
+class DuplicateVertexError(GraphException):
+	"""The exception is raised when the vertex already exists in the graph."""
+
+
+@export
+class DuplicateEdgeError(GraphException):
+	"""The exception is raised when the edge already exists in the graph."""
+
+
+@export
+class DestinationNotReachable(GraphException):
+	"""The exception is raised when a destination vertex is not reachable."""
+
+
+@export
+class NotATreeError(GraphException):
+	"""
+	The exception is raised when a subgraph is not a tree.
+
+	Either the subgraph has a cycle (backward edge) or links between branches (cross-edge).
+	"""
+
+
+@export
+class CycleError(GraphException):
+	"""The exception is raised when a not permitted cycle is found."""
+
+
+@export
 class Vertex(
 	Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType],
 	metaclass=ExtendedType, useSlots=True
@@ -134,7 +180,7 @@ class Vertex(
 		elif vertexID not in self._graph._verticesWithID:
 			self._graph._verticesWithID[vertexID] = self
 		else:
-			raise ValueError(f"ID '{vertexID}' already exists in this graph.")
+			raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
 
 		self._inbound = []
 		self._outbound = []
@@ -152,9 +198,9 @@ class Vertex(
 		"""
 		Read-only property to access the unique ID of a vertex (:py:attr:`_id`).
 
-		If no ID was given at vertex construction time, ID return None.
+		If no ID was given at vertex construction time, ID returns ``None``.
 
-		:returns: Unique ID of a vertex, if ID was given at vertex creation time, else None.
+		:returns: Unique ID of a vertex, if ID was given at vertex creation time, else ``None``.
 		"""
 		return self._id
 
@@ -298,7 +344,7 @@ class Vertex(
 		elif edgeID not in self._graph._edgesWithID:
 			self._graph._edgesWithID[edgeID] = edge
 		else:
-			raise Exception()
+			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 
 		return edge
 
@@ -315,7 +361,7 @@ class Vertex(
 		elif edgeID not in self._graph._edgesWithID:
 			self._graph._edgesWithID[edgeID] = edge
 		else:
-			raise Exception()
+			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 
 		return edge
 
@@ -334,7 +380,7 @@ class Vertex(
 		elif edgeID not in self._graph._edgesWithID:
 			self._graph._edgesWithID[edgeID] = edge
 		else:
-			raise Exception()
+			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 
 		return edge
 
@@ -353,7 +399,7 @@ class Vertex(
 		elif edgeID not in self._graph._edgesWithID:
 			self._graph._edgesWithID[edgeID] = edge
 		else:
-			raise Exception()
+			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 
 		return edge
 
@@ -664,7 +710,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise KeyError(f"Destination is not reachable.")
+				raise DestinationNotReachable(f"Destination is not reachable.")
 
 		# Reverse order of linked list from destinationNode to startNode
 		currentNode = destinationNode
@@ -760,7 +806,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise KeyError(f"Destination is not reachable.")
+				raise DestinationNotReachable(f"Destination is not reachable.")
 
 		# Reverse order of linked-list from destinationNode to startNode
 		currentNode = destinationNode
@@ -861,12 +907,12 @@ class Edge(
 			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
 		if edgeID is not None and not isinstance(edgeID, Hashable):
 			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
-		if weight is not None and  not isinstance(weight, (int, float)):
+		if weight is not None and not isinstance(weight, (int, float)):
 			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if source._graph is not destination._graph:
-			raise Exception(f"Source vertex and destination vertex are not in same graph.")
+			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
 		if source._component is not destination._component:
 			# TODO: should it be divided into with/without ID?
@@ -890,9 +936,9 @@ class Edge(
 		"""
 		Read-only property to access the unique ID of an edge (:py:attr:`_id`).
 
-		If no ID was given at edge construction time, ID return None.
+		If no ID was given at edge construction time, ID returns ``None``.
 
-		:returns: Unique ID of an edge, if ID was given at edge creation time, else None.
+		:returns: Unique ID of an edge, if ID was given at edge creation time, else ``None``.
 		"""
 		return self._id
 
@@ -1038,7 +1084,7 @@ class Component(
 	@Name.setter
 	def Name(self, value: str) -> None:
 		if not isinstance(value, str):
-			raise TypeError()
+			raise TypeError("Name is not of type 'str'.")
 
 		self._name = value
 
@@ -1140,7 +1186,7 @@ class Graph(
 	@Name.setter
 	def Name(self, value: str) -> None:
 		if not isinstance(value, str):
-			raise TypeError()
+			raise TypeError("Name is not of type 'str'.")
 
 		self._name = value
 
@@ -1320,9 +1366,9 @@ class Graph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
-		:param predicate:  Filter function accepting any vertex and returning a boolean.
-		:returns:          A generator to iterate all vertices in topological order.
-		:except Exception: Raised if graph is cyclic, thus topological sorting isn't possible.
+		:param predicate:   Filter function accepting any vertex and returning a boolean.
+		:returns:           A generator to iterate all vertices in topological order.
+		:except CycleError: Raised if graph is cyclic, thus topological sorting isn't possible.
 		"""
 		outboundEdgeCounts = {}
 		leafVertices = []
@@ -1342,7 +1388,7 @@ class Graph(
 				outboundEdgeCounts[vertex] = count
 
 		if not leafVertices:
-			raise Exception(f"Graph has no leafs. Thus, no topological sorting exists.")
+			raise CycleError(f"Graph has no leafs. Thus, no topological sorting exists.")
 
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
@@ -1371,9 +1417,9 @@ class Graph(
 		if overallCount == 0:
 			return
 		elif overallCount > 0:
-			raise Exception(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
+			raise CycleError(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
-		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
 
 	def IterateEdges(self, predicate: Callable[[Edge], bool] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
@@ -1523,7 +1569,7 @@ class Graph(
 		elif overallCount > 0:
 			return True
 
-		raise Exception(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
 
 	def CopyGraph(self) -> 'Graph':
 		raise NotImplementedError()
