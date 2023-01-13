@@ -891,11 +891,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Render the tree as ASCII art.
 
-		Suggested patterns:
-
-		* ``│    ``, ``├── ``
-		* ``|    ``, ``o-- ``
-
 		:param prefix:       A string printed in front of every line, e.g. for indentation. Default: ``""``.
 		:param lineend:      A string printed at the end of every line. Default: ``"\\n"``.
 		:param nodeMarker:   A string printed before every tree node. Default: ``"o-- "``.

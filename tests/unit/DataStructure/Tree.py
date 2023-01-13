@@ -752,3 +752,32 @@ class Exceptions(TestCase):
 		with self.assertRaises(NoSiblingsError):
 			for _ in root.GetRightSiblings():
 				pass
+
+
+class Rendering(TestCase):
+	_tree = (
+		(0, 1), (0, 2), (0, 3),
+		(1, 4), (1, 5),
+		# 2
+		(3, 6), (3, 7),
+		(4, 8),
+		(5, 10),
+		# 6
+		# 7
+		(8, 9),
+		# 9
+		(10, 11), (10, 12), (10, 13),
+		# 11
+		# 12
+		# 13
+	)
+
+	def test_Render(self):
+		root = Node(nodeID=0, value="<Root 0>")
+
+		for parentID, childID in self._tree:
+			Node(nodeID=childID, value=f"<Node {childID}>", parent=root.GetNodeByID(parentID))
+
+		rendering = root.Render()
+
+		self.assertEqual(len(self._tree) + 2, len(rendering.split("\n")))
