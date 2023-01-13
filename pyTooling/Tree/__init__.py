@@ -886,3 +886,44 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			return str(self._id)
 		else:
 			return self.__repr__()
+
+	def Render(self, prefix: str = "", lineend: str = "\n", nodeMarker: str = "o-- ", bypassMarker: str = "|   ") -> str:
+		"""
+		Render the tree as ASCII art.
+
+		Suggested patterns:
+
+		* ``│    ``, ``├── ``
+		* ``|    ``, ``o-- ``
+
+		:param prefix:       A string printed in front of every line, e.g. for indentation. Default: ``""``.
+		:param lineend:      A string printed at the end of every line. Default: ``"\\n"``.
+		:param nodeMarker:   A string printed before every tree node. Default: ``"o-- "``.
+		:param bypassMarker: A string printed when there are further nodes in the parent level. Default: ``"|   "``.
+		:return:             A rendered tree as multiline string.
+		"""
+		emptyMarker = " " * len(bypassMarker)
+
+		def _render(node: Node, markers: str):
+			result = []
+
+			if node.HasChildren:
+				for child in node._children[:-1]:
+					result.append(f"{prefix}{markers}{nodeMarker}{child}{lineend}")
+					result.extend(_render(child, markers + bypassMarker))
+				result.append(f"{prefix}{markers}{nodeMarker}{node._children[-1]}{lineend}")
+				result.extend(_render(node._children[-1], markers + emptyMarker))
+
+			return result
+
+		# Root element
+		result = [f"{prefix}{self}{lineend}"]
+
+		if self.HasChildren:
+			for child in self._children[:-1]:
+				result.append(f"{prefix}{nodeMarker}{child}{lineend}")
+				result.extend(_render(child, bypassMarker))
+			result.append(f"{prefix}{nodeMarker}{self._children[-1]}{lineend}")
+			result.extend(_render(self._children[-1], emptyMarker))
+
+		return "".join(result)
