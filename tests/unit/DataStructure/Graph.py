@@ -32,7 +32,7 @@
 from typing import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph
+from pyTooling.Graph import Vertex, Graph, DestinationNotReachable
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -205,6 +205,20 @@ class Iterate(TestCase):
 		(11, 4, 4), (11, 10, 4), (11, 14, 1),
 		(13, 14, 3),
 		(14, 10, 9),
+	])
+
+	_tree0 = TestGraph([
+		(0, 1, 1), (0, 2, 2), (0, 3, 3),  # root
+		(1, 4, 4), (1, 5, 5),             # leaf, leaf
+		# 2
+		(3, 6, 6), (3, 7, 7), (3, 8, 8),  # node, leaf, leaf
+		# 4
+		# 5
+		# 6
+		# 7
+		(8, 9, 9),
+		(9, 10, 10),
+		(10, 11, 11), (10, 12, 12), (10, 13, 13),  # leaf, leaf, leaf
 	])
 
 
@@ -417,7 +431,7 @@ class IterateStartingFromVertex(Iterate):
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v in v0.ShortestPathToByHops(vList[14])])
-		with self.assertRaises(KeyError):
+		with self.assertRaises(DestinationNotReachable):
 			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])
 
 	def test_ShortestPathByFixedWeight(self):
@@ -429,7 +443,7 @@ class IterateStartingFromVertex(Iterate):
 			vList[u].LinkToVertex(vList[v], edgeWeight=1)
 
 		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v, w in v0.ShortestPathToByWeight(vList[14])])
-		with self.assertRaises(KeyError):
+		with self.assertRaises(DestinationNotReachable):
 			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])
 
 	def test_ShortestPathByWeight(self):
@@ -441,5 +455,19 @@ class IterateStartingFromVertex(Iterate):
 			vList[u].LinkToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 3, 4, 5, 6, 13, 14], [v.ID for v, w in v0.ShortestPathToByWeight(vList[14])])
-		with self.assertRaises(KeyError):
+		with self.assertRaises(DestinationNotReachable):
 			print([v.ID for v in v0.ShortestPathToByHops(vList[9])])
+
+
+class GraphToTree(Iterate):
+	def test_ConvertToTree(self):
+		g = Graph()
+		vList = [Vertex(value=i, graph=g) for i in range(0, self._tree0.VertexCount)]
+		for u, v, w in self._tree0.Edges:
+			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+		root = vList[0]
+
+		tree = root.ConvertToTree()
+
+		self.assertEqual(g.VertexCount, tree.Size)
+		self.assertSetEqual(set([v.Value for v in g.IterateLeafs()]), set([n.Value for n in tree.IterateLeafs()]))

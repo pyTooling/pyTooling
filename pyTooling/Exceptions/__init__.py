@@ -128,3 +128,8 @@ class PlatformNotSupportedException(ExceptionBase):
 @export
 class NotConfiguredException(ExceptionBase):
 	"""The exception is raise if the requested setting is not configured."""
+
+
+@export
+class ToolingException(Exception):
+	"""the exception is raised by pyTooling internal features."""

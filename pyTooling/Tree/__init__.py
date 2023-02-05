@@ -33,7 +33,8 @@ from collections import deque
 from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, \
 	Union, Deque, Iterator
 
-from ..Decorators import export
+from ..Exceptions  import ToolingException
+from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
 IDType = TypeVar("IDType", bound=Hashable)
@@ -47,6 +48,52 @@ DictKeyType = TypeVar("DictKeyType")
 
 DictValueType = TypeVar("DictValueType")
 """A type variable for a tree's dictionary values."""
+
+
+@export
+class TreeException(ToolingException):
+	"""Base exception of all exceptions raised by :py:mod:`pyTooling.Tree`."""
+
+
+@export
+class InternalError(TreeException):
+	"""
+	The exception is raised when a data structure corruption is detected.
+
+	.. danger::
+
+	   This exception should never be raised.
+
+	   If so, please create an issue at GitHub so the data structure corruption can be investigated and fixed. |br|
+	   `⇒ Bug Tracker at GitHub <https://github.com/pyTooling/pyTooling/issues>`__
+	"""
+
+
+@export
+class NoSiblingsError(TreeException):
+	"""
+	The exception is raised when a node has no parent and thus has no siblings.
+
+	.. hint::
+
+	   A node with no parent is the root node of the tree.
+	"""
+
+
+@export
+class AlreadyInTreeError(TreeException):
+	"""
+	The exception is raised when the current node and the other node are already in the same tree.
+
+	.. hint::
+
+	   A tree a an acyclic graph without cross-edges. Thus backward edges and cross edges are permitted.
+	"""
+
+
+@export
+class NotInSameTreeError(TreeException):
+	"""The exception is raised when the current node and the other node are not in the same tree."""
 
 
 @export
@@ -187,7 +234,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		If a key doesn't exist yet, a new key-value-pair is created.
 
-		:param key: The key to create or update.
+		:param key:   The key to create or update.
 		:param value: The value to associate to the given key.
 		"""
 		self._dict[key] = value
@@ -195,6 +242,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	def __delitem__(self, key: DictKeyType) -> None:
 		""".. todo:: TREE::Node::__delitem__ Needs documentation."""
 		del self._dict[key]
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of attached attributes (key-value-pairs) on this node.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
 
 	@property
 	def Root(self) -> 'Node':
@@ -215,7 +270,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		   As the current node might be a tree itself, appending this node to a tree can lead to a merge of trees and
 		   especially to a merge of IDs. As IDs are unique, it might raise an :py:exc:`Exception`.
 
-		:returns: The parent of a node.
+		:returns:                   The parent of a node.
+		:raises TypeError:          If parameter ``parent`` is not a :py:class:`Node`
+		:raises AlreadyInTreeError: Parent is already a child node in this tree.
 		"""
 		return self._parent
 
@@ -253,7 +310,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise TypeError(f"Parameter 'parent' is not of type 'Node'.")
 		else:
 			if parent._root is self._root:
-				raise Exception(f"Parent '{parent}' is already a child node in this tree.")
+				raise AlreadyInTreeError(f"Parent '{parent}' is already a child node in this tree.")
 
 			self._root = parent._root
 			self._parent = parent
@@ -273,11 +330,11 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Siblings are child nodes of the current node's parent node, without the current node itself.
 
-		:returns:             A tuple of all siblings of the current node.
-		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		:returns:                A tuple of all siblings of the current node.
+		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise RuntimeError(f"Root node has no siblings.")
+			raise NoSiblingsError(f"Root node has no siblings.")
 
 		return tuple([node for node in self._parent if node is not self])
 
@@ -290,11 +347,11 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Siblings are child nodes of the current node's parent node, without the current node itself.
 
-		:returns:             A tuple of all siblings left of the current node.
-		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		:returns:                A tuple of all siblings left of the current node.
+		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise RuntimeError(f"Root node has no siblings.")
+			raise NoSiblingsError(f"Root node has no siblings.")
 
 		result = []
 		for node in self._parent:
@@ -303,7 +360,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			else:
 				break
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		return tuple(result)
 
@@ -316,11 +373,11 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Siblings are child nodes of the current node's parent node, without the current node itself.
 
-		:returns:             A tuple of all siblings right of the current node.
-		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		:returns:                A tuple of all siblings right of the current node.
+		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise RuntimeError(f"Root node has no siblings.")
+			raise NoSiblingsError(f"Root node has no siblings.")
 
 		result = []
 		iterator = iter(self._parent)
@@ -328,7 +385,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			if node is self:
 				break
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		for node in iterator:
 			result.append(node)
@@ -403,7 +460,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Returns true, if the node has child nodes.
 
-		:returns: True, if node has children.
+		:returns: ``True``, if node has children.
 		"""
 		return len(self._children) > 0
 
@@ -426,9 +483,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :py:attr:`_root` assigned and
 		all IDs are merged into the node's root's ID lists (:py:attr:`_nodesWithID`).
 
-		:param child: The child node to be added to the tree.
-		:raises TypeError: If parameter ``child`` is not a :py:class:`Node`.
-		:raises Exception: If parameter ``child`` is already a node in the tree.
+		:param child:               The child node to be added to the tree.
+		:raises TypeError:          If parameter ``child`` is not a :py:class:`Node`.
+		:raises AlreadyInTreeError: If parameter ``child`` is already a node in the tree.
 
 		.. seealso::
 
@@ -441,7 +498,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
 
 		if child._root is self._root:
-			raise Exception(f"Child '{child}' is already a node in this tree.")
+			raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
 
 		child._root = self._root
 		child._parent = self
@@ -456,9 +513,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Add multiple children nodes to the current node of the tree.
 
-		:param children: The list of children nodes to be added to the tree.
-		:raises TypeError: If parameter ``children`` contains an item, which is not a :py:class:`Node`.
-		:raises Exception: If parameter ``children`` contains an item, which is already a node in the tree.
+		:param children:            The list of children nodes to be added to the tree.
+		:raises TypeError:          If parameter ``children`` contains an item, which is not a :py:class:`Node`.
+		:raises AlreadyInTreeError: If parameter ``children`` contains an item, which is already a node in the tree.
 
 		.. seealso::
 
@@ -472,7 +529,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 				raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
 
 			if child._root is self._root:
-				raise RuntimeError(f"Child '{child}' is already a node in this tree.")
+				# TODO: create a more specific exception
+				raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
 
 			child._root = self._root
 			child._parent = self
@@ -506,7 +564,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 			# Check if both are in the same tree.
 			if self._root is not others._root:
-				raise Exception(f"Node 'others' is not in the same tree.")
+				raise NotInSameTreeError(f"Node 'others' is not in the same tree.")
 
 			# Compute paths top-down and walk both paths until they deviate
 			for left, right in zip(self.Path, others.Path):
@@ -543,11 +601,11 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Siblings are child nodes of the current node's parent node, without the current node itself.
 
-		:returns:             A generator to iterate all siblings of the current node.
-		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		:returns:                A generator to iterate all siblings of the current node.
+		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise RuntimeError(f"Root node has no siblings.")
+			raise NoSiblingsError(f"Root node has no siblings.")
 
 		for node in self._parent:
 			if node is self:
@@ -561,11 +619,11 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Siblings are child nodes of the current node's parent node, without the current node itself.
 
-		:returns:             A generator to iterate all siblings left of the current node.
-		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		:returns:                A generator to iterate all siblings left of the current node.
+		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise RuntimeError(f"Root node has no siblings.")
+			raise NoSiblingsError(f"Root node has no siblings.")
 
 		for node in self._parent:
 			if node is self:
@@ -573,7 +631,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 			yield node
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 	def GetRightSiblings(self) -> Generator['Node', None, None]:
 		"""
@@ -581,18 +639,18 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Siblings are child nodes of the current node's parent node, without the current node itself.
 
-		:returns:             A generator to iterate all siblings right of the current node.
-		:raises RuntimeError: If the current node has no parent node and thus no siblings.
+		:returns:                A generator to iterate all siblings right of the current node.
+		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise RuntimeError(f"Root node has no siblings.")
+			raise NoSiblingsError(f"Root node has no siblings.")
 
 		iterator = iter(self._parent)
 		for node in iterator:
 			if node is self:
 				break
 		else:
-			raise Exception(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		for node in iterator:
 			yield node
@@ -734,9 +792,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Returns a generator to iterate the path from node to another node.
 
-		:param other:      Node to walk to.
-		:returns:          Generator to iterate the path from node to other node.
-		:raises Exception: If parameter ``other`` is not part of the same tree.
+		:param other:               Node to walk to.
+		:returns:                   Generator to iterate the path from node to other node.
+		:raises NotInSameTreeError: If parameter ``other`` is not part of the same tree.
 		"""
 		# Check for trivial case
 		if other is self:
@@ -744,7 +802,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		# Check if both are in the same tree.
 		if self._root is not other._root:
-			raise Exception(f"Node 'other' is not in the same tree.")
+			raise NotInSameTreeError(f"Node 'other' is not in the same tree.")
 
 		# Compute both paths to the root.
 		# 1. Walk from self to root, until a first common ancestor is found.
@@ -828,3 +886,39 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			return str(self._id)
 		else:
 			return self.__repr__()
+
+	def Render(self, prefix: str = "", lineend: str = "\n", nodeMarker: str = "o-- ", bypassMarker: str = "|   ") -> str:
+		"""
+		Render the tree as ASCII art.
+
+		:param prefix:       A string printed in front of every line, e.g. for indentation. Default: ``""``.
+		:param lineend:      A string printed at the end of every line. Default: ``"\\n"``.
+		:param nodeMarker:   A string printed before every tree node. Default: ``"o-- "``.
+		:param bypassMarker: A string printed when there are further nodes in the parent level. Default: ``"|   "``.
+		:return:             A rendered tree as multiline string.
+		"""
+		emptyMarker = " " * len(bypassMarker)
+
+		def _render(node: Node, markers: str):
+			result = []
+
+			if node.HasChildren:
+				for child in node._children[:-1]:
+					result.append(f"{prefix}{markers}{nodeMarker}{child}{lineend}")
+					result.extend(_render(child, markers + bypassMarker))
+				result.append(f"{prefix}{markers}{nodeMarker}{node._children[-1]}{lineend}")
+				result.extend(_render(node._children[-1], markers + emptyMarker))
+
+			return result
+
+		# Root element
+		result = [f"{prefix}{self}{lineend}"]
+
+		if self.HasChildren:
+			for child in self._children[:-1]:
+				result.append(f"{prefix}{nodeMarker}{child}{lineend}")
+				result.extend(_render(child, bypassMarker))
+			result.append(f"{prefix}{nodeMarker}{self._children[-1]}{lineend}")
+			result.extend(_render(self._children[-1], emptyMarker))
+
+		return "".join(result)

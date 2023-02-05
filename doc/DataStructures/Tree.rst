@@ -11,6 +11,11 @@ The :py:mod:`pyTooling.Tree` package provides fast and simple tree data structur
    This tree data structure outperforms :gh:`anytree <c0fec0de/anytree>` by far and even :gh:`itertree <BR1py/itertree>`
    by factor of 2.
 
+   Further alternatives:
+
+   **treelib**
+      :gh:`treelib <caesar0301/treelib>`
+
 .. contents:: Table of Contents
    :local:
    :depth: 3
@@ -795,6 +800,36 @@ Splitting Trees
 .. todo:: TREE: splitting a tree
 
 
+.. _STRUCT/Tree/Rendering:
+
+Tree Rendering
+==============
+
+The tree data structure can be rendered as ASCII art. The :py:meth:`~pyTooling.Tree.Node.Render` method renders the tree
+into a multi line string.
+
+.. todo:: TREE:Render:: explain parameters
+
+.. admonition:: Example
+
+   .. code-block::
+
+      <Root 0>
+      o-- <Node 1>
+      |   o-- <Node 4>
+      |   |   o-- <Node 8>
+      |   |       o-- <Node 9>
+      |   o-- <Node 5>
+      |       o-- <Node 10>
+      |           o-- <Node 11>
+      |           o-- <Node 12>
+      |           o-- <Node 13>
+      o-- <Node 2>
+      o-- <Node 3>
+          o-- <Node 6>
+          o-- <Node 7>
+
+
 .. _STRUCT/Tree/Competitors:
 
 Competing Solutions
@@ -807,6 +842,8 @@ by factor of 2.
 
 anytree
 =======
+
+Source: :gh:`anytree <c0fec0de/anytree>`
 
 .. todo:: TREE::anytree write comparison here.
 
@@ -832,6 +869,8 @@ anytree
 itertree
 ========
 
+Source: :gh:`itertree <BR1py/itertree>`
+
 .. todo:: TREE::itertree write comparison here.
 
 .. rubric:: Disadvantages
@@ -849,3 +888,31 @@ itertree
 .. code-block:: python
 
    # add code here
+
+
+.. _STRUCT/Tree/treelib:
+
+treelib
+=======
+
+Source: :gh:`treelib <caesar0301/treelib>`
+
+.. todo:: TREE::treelib write comparison here.
+
+.. rubric:: Disadvantages
+
+* ...
+
+.. rubric:: Standoff
+
+* ...
+
+.. rubric:: Advantages
+
+* ...
+
+.. code-block:: python
+
+   # add code here
+
+

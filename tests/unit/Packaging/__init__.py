@@ -52,7 +52,7 @@ class HelperFunctions(TestCase):
 
 		versionInformation = extractVersionInformation(Path("../pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
-		self.assertEqual(19, len(versionInformation.Keywords))
+		self.assertEqual(20, len(versionInformation.Keywords))
 
 	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")

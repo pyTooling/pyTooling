@@ -32,7 +32,7 @@
 from pathlib import Path
 from statistics import mean
 
-from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex
+from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex, DestinationNotReachable
 from . import PerformanceTest
 
 
@@ -123,7 +123,7 @@ class RandomGraph(PerformanceTest):
 
 				try:
 					vertexPath = [v for v in startVertex.ShortestPathToByHops(destinationVertex)]
-				except KeyError:
+				except DestinationNotReachable:
 					pass
 
 				# print(f"path length: {len(vertexPath)}")
@@ -141,7 +141,7 @@ class RandomGraph(PerformanceTest):
 
 				try:
 					vertexPath = [v for v, w in startVertex.ShortestPathToByWeight(destinationVertex)]
-				except KeyError:
+				except DestinationNotReachable:
 					pass
 
 				# print(f"path length: {len(vertexPath)}")
