@@ -61,7 +61,16 @@ class AbstractClass(AbstractBase):
 	pass
 
 
-class DerivedAbstractClass(AbstractBase):
+class DerivedAbstractBase(AbstractBase):
+	def AbstractMethod(self):
+		super().AbstractMethod()
+
+
+class DoubleDerivedAbstractBase(DerivedAbstractBase):
+	pass
+
+
+class DerivedAbstractClass(AbstractClass):
 	def AbstractMethod(self):
 		super().AbstractMethod()
 
@@ -101,6 +110,22 @@ class Abstract(TestCase):
 
 		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+
+	def test_DerivedAbstractBase(self) -> None:
+		derived = DerivedAbstractBase()
+
+		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+			derived.AbstractMethod()
+
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+
+	def test_DoubleDerivedAbstractBase(self) -> None:
+		derived = DoubleDerivedAbstractBase()
+
+		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+			derived.AbstractMethod()
+
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
 
 	def test_DerivedAbstractClass(self) -> None:
 		derived = DerivedAbstractClass()

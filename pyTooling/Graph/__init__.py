@@ -460,9 +460,10 @@ class Vertex(
 		:param linkingKeyToOriginalVertex:   If not ``None``, add a key-value-pair using this parameter as key from new vertex to the original vertex.
 		:param linkingKeyFromOriginalVertex: If not ``None``, add a key-value-pair using this parameter as key from original vertex to the new vertex.
 		:returns:                            The newly created vertex.
+		:raises GraphException:              If source graph and destination graph are the same.
 		"""
 		if graph is self._graph:
-			raise Exception()
+			raise GraphException("Graph to copy this vertex to, is the same graph.")
 
 		vertex = Vertex(self._id, self._value, graph=graph)
 		if copyDict:
