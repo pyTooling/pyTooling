@@ -271,9 +271,8 @@ class ExtendedType(type):
 		"""
 		result = set()
 		for base in baseClasses:
-			for cls in base.__mro__:
-				if hasattr(cls, "__abstractMethods__"):
-					result = result.union(cls.__abstractMethods__)
+			if hasattr(base, "__abstractMethods__"):
+				result = result.union(base.__abstractMethods__)
 
 		for memberName, member in members.items():
 			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
@@ -360,6 +359,9 @@ class ExtendedType(type):
 		# Replace '__new__' by a variant to throw an error on not overridden methods
 		if newClass.__abstractMethods__:
 			oldnew = newClass.__new__
+			if hasattr(oldnew, "__raises_abstract_class_error__"):
+				return True
+
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
 			def new(cls, *args, **kwargs):
