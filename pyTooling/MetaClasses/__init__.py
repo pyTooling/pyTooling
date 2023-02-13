@@ -40,7 +40,6 @@ from inspect    import signature, Parameter
 from types      import MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
 
-
 try:
 	from ..Exceptions import AbstractClassError
 	from ..Decorators import export, OriginalFunction
@@ -269,18 +268,19 @@ class ExtendedType(type):
 		:param members:     The dictionary of members for the constructed class.
 		:returns:           A tuple of abstract method's names.
 		"""
-		result = set()
-		for base in baseClasses:
-			if hasattr(base, "__abstractMethods__"):
-				result = result.union(base.__abstractMethods__)
+		abstractMethods = set()
+		if baseClasses:
+			for baseClass in baseClasses:
+				if hasattr(baseClass, "__abstractMethods__"):
+					abstractMethods = abstractMethods.union(baseClass.__abstractMethods__)
 
 		for memberName, member in members.items():
 			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
-				result.add(memberName)
-			elif memberName in result:
-				result.remove(memberName)
+				abstractMethods.add(memberName)
+			elif memberName in abstractMethods:
+				abstractMethods.remove(memberName)
 
-		return tuple(result)
+		return tuple(abstractMethods)
 
 	@staticmethod
 	def _wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
@@ -360,7 +360,7 @@ class ExtendedType(type):
 		if newClass.__abstractMethods__:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
-				return True
+				oldnew = oldnew.__orig_func__
 
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
