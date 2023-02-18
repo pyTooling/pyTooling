@@ -43,8 +43,8 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class NormalBase(metaclass=ExtendedType):
-	def NormalMethod(self):
-		pass
+	def NormalMethod(self) -> bool:
+		return True
 
 
 class NormalClass(NormalBase):
@@ -53,8 +53,8 @@ class NormalClass(NormalBase):
 
 class AbstractBase(metaclass=ExtendedType):
 	@abstractmethod
-	def AbstractMethod(self):
-		pass
+	def AbstractMethod(self) -> bool:
+		return False
 
 
 class AbstractClass(AbstractBase):
@@ -62,8 +62,8 @@ class AbstractClass(AbstractBase):
 
 
 class DerivedAbstractBase(AbstractBase):
-	def AbstractMethod(self):
-		super().AbstractMethod()
+	def AbstractMethod(self) -> bool:
+		return super().AbstractMethod()
 
 
 class DoubleDerivedAbstractBase(DerivedAbstractBase):
@@ -71,14 +71,23 @@ class DoubleDerivedAbstractBase(DerivedAbstractBase):
 
 
 class DerivedAbstractClass(AbstractClass):
-	def AbstractMethod(self):
-		super().AbstractMethod()
+	def AbstractMethod(self) -> bool:
+		return super().AbstractMethod()
+
+
+class Mixin:
+	def AbstractMethod(self) -> bool:
+		return True
+
+
+class MultipleInheritance(AbstractBase, Mixin):
+	pass
 
 
 class MustOverrideBase(metaclass=ExtendedType):
 	@mustoverride
-	def MustOverrideMethod(self):
-		pass
+	def MustOverrideMethod(self) -> bool:
+		return False
 
 
 class MustOverrideClass(MustOverrideBase):
@@ -86,8 +95,8 @@ class MustOverrideClass(MustOverrideBase):
 
 
 class DerivedMustOverrideClass(MustOverrideBase):
-	def MustOverrideMethod(self):
-		super().MustOverrideMethod()
+	def MustOverrideMethod(self) -> bool:
+		return super().MustOverrideMethod()
 
 
 class Abstract(TestCase):
@@ -134,6 +143,10 @@ class Abstract(TestCase):
 			derived.AbstractMethod()
 
 		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+
+	def test_MultipleInheritance(self) -> None:
+		derived = MultipleInheritance()
+		derived.AbstractMethod()
 
 	def test_MustOverrideBase(self) -> None:
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:

@@ -37,7 +37,7 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 import threading
 from functools  import wraps
 from inspect    import signature, Parameter
-from types      import MethodType
+from types      import MethodType, FunctionType
 from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
 
 try:
@@ -247,17 +247,21 @@ class ExtendedType(type):
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)
 
+		# Compute abstract methods
+		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
+
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
+
 		# Search in inheritance tree for abstract methods
-		newClass.__abstractMethods__ = self._checkForAbstractMethods(baseClasses, members)
+		newClass.__abstractMethods__ = abstractMethods
 		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		return newClass
 
 	@classmethod
-	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[Dict[str, Callable], Dict[str, Any]]:
 		"""
 		Check if the current class contains abstract methods and return a tuple of them.
 
@@ -268,19 +272,38 @@ class ExtendedType(type):
 		:param members:     The dictionary of members for the constructed class.
 		:returns:           A tuple of abstract method's names.
 		"""
-		abstractMethods = set()
+		abstractMethods = {}
 		if baseClasses:
 			for baseClass in baseClasses:
 				if hasattr(baseClass, "__abstractMethods__"):
-					abstractMethods = abstractMethods.union(baseClass.__abstractMethods__)
+					for key, value in baseClass.__abstractMethods__.items():
+						abstractMethods[key] = value
+
+			for base in baseClasses:
+				for key, value in base.__dict__.items():
+					if isinstance(value, FunctionType):
+						if not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__")):
+							try:
+								oldmethod = abstractMethods[key]
+
+								def outer(method):
+									@wraps(value)
+									def inner(cls, *args, **kwargs):
+										return method(cls, *args, **kwargs)
+
+									return inner
+
+								members[key] = outer(value)
+							except KeyError:
+								pass
 
 		for memberName, member in members.items():
-			if hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"):
-				abstractMethods.add(memberName)
+			if ((hasattr(member, "__abstract__") and member.__abstract__) or (hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+				abstractMethods[memberName] = member
 			elif memberName in abstractMethods:
-				abstractMethods.remove(memberName)
+				del abstractMethods[memberName]
 
-		return tuple(abstractMethods)
+		return abstractMethods, members
 
 	@staticmethod
 	def _wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
@@ -364,9 +387,8 @@ class ExtendedType(type):
 
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
-			def new(cls, *args, **kwargs):
-				formattedMethodNames = "', '".join(newClass.__abstractMethods__)
-				raise AbstractClassError(f"Class '{cls.__name__}' is abstract. The following methods: '{formattedMethodNames}' need to be overridden in a derived class.")
+			def new(cls, *_, **__):
+				raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
 
 			new.__raises_abstract_class_error__ = True
 
