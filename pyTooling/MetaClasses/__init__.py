@@ -281,21 +281,16 @@ class ExtendedType(type):
 
 			for base in baseClasses:
 				for key, value in base.__dict__.items():
-					if isinstance(value, FunctionType):
-						if not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__")):
-							try:
-								oldmethod = abstractMethods[key]
+					if (key in abstractMethods and isinstance(value, FunctionType) and
+						not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__"))):
+						def outer(method):
+							@wraps(method)
+							def inner(cls, *args, **kwargs):
+								return method(cls, *args, **kwargs)
 
-								def outer(method):
-									@wraps(value)
-									def inner(cls, *args, **kwargs):
-										return method(cls, *args, **kwargs)
+							return inner
 
-									return inner
-
-								members[key] = outer(value)
-							except KeyError:
-								pass
+						members[key] = outer(value)
 
 		for memberName, member in members.items():
 			if ((hasattr(member, "__abstract__") and member.__abstract__) or (hasattr(member, "__mustOverride__") and member.__mustOverride__)):
