@@ -154,7 +154,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 				if sysconfig_platform == "linux-x86_64":            # native Linux x86_64; Windows 64 + WSL
 					self._platform |= self.Platforms.ARCH_x86_64
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
-					self._platform |= self.Platforms.ARCH_x86_32
+					self._platform |= self.Platforms.ARCH_AArch64
 				else:
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
