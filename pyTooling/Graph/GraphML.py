@@ -42,6 +42,7 @@ from typing import Any, List, Dict
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph import Graph as pyToolingGraph
+from pyTooling.Tree import Node as pyToolingNode
 
 
 @export
@@ -195,8 +196,9 @@ class Node(Base):
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
 
-	def AddData(self, data: Data):
+	def AddData(self, data: Data) -> Data:
 		self._data.append(data)
+		return data
 
 	def Tag(self, indent: int = 2) -> str:
 		return f"""{'  '*indent}<node id="{self._id}" />"""
@@ -252,8 +254,9 @@ class Edge(Base):
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
 
-	def AddData(self, data: Data):
+	def AddData(self, data: Data) -> Data:
 		self._data.append(data)
+		return data
 
 	def Tag(self, indent: int = 2) -> str:
 		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />"""
@@ -281,7 +284,6 @@ class Graph(Base):
 	_id: str
 	_nodes: Dict[str, Node]
 	_edges: Dict[str, Edge]
-	# _keys: Dict[str, Key]
 	_edgeDefault: EdgeDefault
 	_parseOrder: ParsingOrder
 	_nodeIDStyle: IDStyle
@@ -291,7 +293,6 @@ class Graph(Base):
 		self._id = identifier
 		self._nodes = {}
 		self._edges = {}
-		# self._keys = {}
 		self._edgeDefault = EdgeDefault.Directed
 		self._parseOrder = ParsingOrder.NodesFirst
 		self._nodeIDStyle = IDStyle.Free
@@ -309,20 +310,16 @@ class Graph(Base):
 	def Edges(self) -> Dict[str, Edge]:
 		return self._edges
 
-	def AddNode(self, node: Node) -> None:
+	def AddNode(self, node: Node) -> Node:
 		self._nodes[node._id] = node
+		return node
 
 	def GetNode(self, nodeName: str) -> Node:
 		return self._nodes[nodeName]
 
-	def AddEdge(self, edge: Edge) -> None:
+	def AddEdge(self, edge: Edge) -> Edge:
 		self._edges[edge._id] = edge
-
-	# def AddKey(self, key: Key) -> None:
-	# 	self._keys[key._id] = key
-	#
-	# def GetKey(self, keyName: str) -> Key:
-	# 	return self._keys[keyName]
+		return edge
 
 	def OpeningTag(self, indent: int = 1) -> str:
 		return f"""\
@@ -377,8 +374,9 @@ class GraphMLDocument(Base):
 	def Keys(self) -> Dict[str, Key]:
 		return self._keys
 
-	def AddKey(self, key: Key) -> None:
+	def AddKey(self, key: Key) -> Key:
 		self._keys[key._id] = key
+		return key
 
 	def GetKey(self, keyName: str) -> Key:
 		return self._keys[keyName]
@@ -386,12 +384,12 @@ class GraphMLDocument(Base):
 	def FromGraph(self, graph: pyToolingGraph):
 		self._graph._id = graph._name
 
-		self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
-		self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
+		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
+		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
 
 		for vertex in graph.IterateVertices():
 			newNode = Node(vertex._id)
-			newNode.AddData(Data(self.GetKey("nodeValue"), vertex._value))
+			newNode.AddData(Data(nodeValue, vertex._value))
 
 			self._graph.AddNode(newNode)
 
@@ -400,9 +398,23 @@ class GraphMLDocument(Base):
 			target = self._graph.GetNode(edge._destination._id)
 
 			newEdge = Edge(edge._id, source, target)
-			newEdge.AddData(Data(self.GetKey("edgeValue"), edge._value))
+			newEdge.AddData(Data(edgeValue, edge._value))
 
 			self._graph.AddEdge(newEdge)
+
+	def FromTree(self, tree: pyToolingNode):
+		self._graph._id = tree._id
+
+		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
+
+		rootNode = self._graph.AddNode(Node(tree._id))
+		rootNode.AddData(Data(nodeValue, tree._value))
+
+		for i, node in enumerate(tree.GetDescendants()):
+			newNode = self._graph.AddNode(Node(node._id))
+			newNode.AddData(Data(nodeValue, node._value))
+
+			newEdge = self._graph.AddEdge(Edge(f"e{i}", newNode, self._graph.GetNode(node._parent._id)))
 
 	def OpeningTag(self, indent: int = 0) -> str:
 		return f"""\

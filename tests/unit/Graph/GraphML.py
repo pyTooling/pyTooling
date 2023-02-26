@@ -33,6 +33,7 @@ from unittest import TestCase
 
 from pyTooling.Graph import Graph as pyTooling_Graph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, GraphMLDocument
+from pyTooling.Tree import Node as pyToolingNode
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -210,4 +211,14 @@ class pyToolingGraph(TestCase):
 
 
 class pyToolingTree(TestCase):
-	pass
+	def test_Conversion(self):
+		root = pyToolingNode(nodeID="n0", value="v0")
+		child1 = pyToolingNode("n1", "v1", parent=root)
+		child2 = pyToolingNode("n2", "v2", parent=root)
+
+		doc = GraphMLDocument()
+		doc.FromTree(root)
+
+		self.assertEqual("n0", doc._graph.ID)
+		self.assertEqual(3, len(doc._graph._nodes))
+		self.assertEqual(2, len(doc._graph._edges))
