@@ -56,6 +56,11 @@ class AttributeContext(Enum):
 
 @export
 class AttributeTypes(Enum):
+	Boolean = auto()
+	Int = auto()
+	Long = auto()
+	Float = auto()
+	Double = auto()
 	String = auto()
 
 	def __str__(self) -> str:
@@ -74,6 +79,8 @@ class EdgeDefault(Enum):
 @export
 class ParsingOrder(Enum):
 	NodesFirst = auto()
+	AdjacencyList = auto()
+	Free = auto()
 
 	def __str__(self) -> str:
 		return f"{self.name.lower()}"
