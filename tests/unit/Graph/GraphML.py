@@ -56,6 +56,10 @@ class Construction(TestCase):
 				"""<key id="k1" for="node" attr.name="color" attr.type="string" />"""
 			], key.ToStringLines(0))
 
+		print()
+		for line in key.ToStringLines():
+			print(line)
+
 	def test_Data(self):
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
 		data = Data(key, "violet")
@@ -69,6 +73,10 @@ class Construction(TestCase):
 				"""<data key="k1">violet</data>"""
 			], data.ToStringLines(0))
 
+		print()
+		for line in data.ToStringLines():
+			print(line)
+
 	def test_Node(self):
 		node = Node("n1")
 
@@ -79,6 +87,10 @@ class Construction(TestCase):
 		self.assertListEqual([
 				"""<node id="n1" />"""
 			], node.ToStringLines(0))
+
+		print()
+		for line in node.ToStringLines():
+			print(line)
 
 	def test_NodeWithData(self):
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
@@ -97,6 +109,10 @@ class Construction(TestCase):
 				"""</node>"""
 			], node.ToStringLines(0))
 
+		print()
+		for line in node.ToStringLines():
+			print(line)
+
 	def test_Edge(self):
 		node1 = Node("n1")
 		node2 = Node("n2")
@@ -107,6 +123,10 @@ class Construction(TestCase):
 		self.assertListEqual([
 				"""<edge id="e1" source="n1" target="n2" />"""
 			], edge.ToStringLines(0))
+
+		print()
+		for line in edge.ToStringLines():
+			print(line)
 
 	def test_EdgeWithData(self):
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
@@ -126,6 +146,10 @@ class Construction(TestCase):
 				"""  <data key="k1">violet</data>""",
 				"""</edge>"""
 			], edge.ToStringLines(0))
+
+		print()
+		for line in edge.ToStringLines():
+			print(line)
 
 	def test_Graph(self):
 		graph = Graph("g1")
@@ -151,6 +175,10 @@ class Construction(TestCase):
   parse.edgeids="free">""",
 				"""</graph>"""
 			], graph.ToStringLines(0))
+
+		print()
+		for line in graph.ToStringLines():
+			print(line)
 
 	def test_GraphWithNodesAndEdges(self):
 		graph = Graph("g1")
@@ -184,10 +212,18 @@ class Construction(TestCase):
 			"""</graph>"""
 		], graph.ToStringLines(0))
 
+		print()
+		for line in graph.ToStringLines():
+			print(line)
+
 	def test_GraphML(self):
 		doc = GraphMLDocument("g1")
 
 		self.assertIsInstance(doc._graph, Graph)
+
+		print()
+		for line in doc.ToStringLines():
+			print(line)
 
 
 class pyToolingGraph(TestCase):
@@ -222,3 +258,7 @@ class pyToolingTree(TestCase):
 		self.assertEqual("n0", doc._graph.ID)
 		self.assertEqual(3, len(doc._graph._nodes))
 		self.assertEqual(2, len(doc._graph._edges))
+
+		print()
+		for line in doc.ToStringLines():
+			print(line)
