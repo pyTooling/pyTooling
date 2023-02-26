@@ -364,7 +364,7 @@ class GraphMLDocument(Base):
 	_keys: Dict[str, Key]
 
 	def __init__(self, identifier: str = "G"):
-		super.__init__()
+		super().__init__()
 
 		self._graph = Graph(identifier)
 		self._keys = {}
@@ -384,8 +384,7 @@ class GraphMLDocument(Base):
 		return self._keys[keyName]
 
 	def FromGraph(self, graph: pyToolingGraph):
-		if "name" in graph:
-			self._graph._id = graph["name"]
+		self._graph._id = graph._name
 
 		self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 		self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))

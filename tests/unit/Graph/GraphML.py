@@ -31,6 +31,7 @@
 """Unit tests for pyTooling.Graph.GraphML."""
 from unittest import TestCase
 
+from pyTooling.Graph import Graph as pyTooling_Graph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, GraphMLDocument
 
 
@@ -181,3 +182,32 @@ class Construction(TestCase):
 			"""  <edge id="e1" source="n1" target="n2" />""",
 			"""</graph>"""
 		], graph.ToStringLines(0))
+
+	def test_GraphML(self):
+		doc = GraphMLDocument("g1")
+
+		self.assertIsInstance(doc._graph, Graph)
+
+
+class pyToolingGraph(TestCase):
+	def test_Conversion(self):
+		graph = pyTooling_Graph(name="g1")
+
+		vertex1 = Vertex(vertexID="n1", value="v1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", value="v2", graph=graph)
+		edge = vertex1.LinkToVertex(vertex2, edgeValue="v12", edgeWeight=1)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+
+		self.assertEqual("g1", doc._graph.ID)
+		self.assertEqual(2, len(doc._graph._nodes))
+		self.assertEqual(1, len(doc._graph._edges))
+
+		print()
+		for line in doc.ToStringLines():
+			print(line)
+
+
+class pyToolingTree(TestCase):
+	pass
