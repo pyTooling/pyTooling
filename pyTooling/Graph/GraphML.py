@@ -148,7 +148,7 @@ class Key(Base):
 		return False
 
 	def Tag(self, indent: int = 2) -> str:
-		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />"""
+		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
 		return [self.Tag(indent)]
@@ -176,7 +176,12 @@ class Data(Base):
 		return False
 
 	def Tag(self, indent: int = 1) -> str:
-		return f"""{'  '*indent}<data key="{self._key._id}">{self._data!s}</data>"""
+		data = str(self._data)
+		data = data.replace("&", "&amp;")
+		data = data.replace("<", "&lt;")
+		data = data.replace(">", "&gt;")
+		data = data.replace("\n", "\\n")
+		return f"""{'  '*indent}<data key="{self._key._id}">{data}</data>\n"""
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
 		return [self.Tag(indent)]
@@ -208,13 +213,13 @@ class Node(Base):
 		return data
 
 	def Tag(self, indent: int = 2) -> str:
-		return f"""{'  '*indent}<node id="{self._id}" />"""
+		return f"""{'  '*indent}<node id="{self._id}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
-		return f"""{'  '*indent}<node id="{self._id}">"""
+		return f"""{'  '*indent}<node id="{self._id}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
-		return f"""{'  ' * indent}</node>"""
+		return f"""{'  ' * indent}</node>\n"""
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
 		if not self.HasClosingTag:
@@ -266,13 +271,13 @@ class Edge(Base):
 		return data
 
 	def Tag(self, indent: int = 2) -> str:
-		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />"""
+		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
-		return f"""{'  '*indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}">"""
+		return f"""{'  '*indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
-		return f"""{'  ' * indent}</edge>"""
+		return f"""{'  ' * indent}</edge>\n"""
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
 		if not self.HasClosingTag:
@@ -336,10 +341,11 @@ class Graph(Base):
 {'  '*indent}  parse.edges="{len(self._edges)}"
 {'  '*indent}  parse.order="{self._parseOrder!s}"
 {'  '*indent}  parse.nodeids="{self._nodeIDStyle!s}"
-{'  '*indent}  parse.edgeids="{self._edgeIDStyle!s}">"""
+{'  '*indent}  parse.edgeids="{self._edgeIDStyle!s}">
+"""
 
 	def ClosingTag(self, indent: int = 1) -> str:
-		return f"{'  '*indent}</graph>"
+		return f"{'  '*indent}</graph>\n"
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
 		lines = [self.OpeningTag(indent)]
@@ -427,10 +433,11 @@ class GraphMLDocument(Base):
 		return f"""\
 {'  '*indent}<graphml xmlns="{self.xmlNS[None]}"
 {'  '*indent}         xmlns:xsi="{self.xmlNS["xsi"]}"
-{'  '*indent}         xsi:schemaLocation="{self.xsi["schemaLocation"]}">"""
+{'  '*indent}         xsi:schemaLocation="{self.xsi["schemaLocation"]}">
+"""
 
 	def ClosingTag(self, indent: int = 0) -> str:
-		return f"{'  '*indent}</graphml>"
+		return f"{'  '*indent}</graphml>\n"
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
 		lines = [self.OpeningTag(indent)]

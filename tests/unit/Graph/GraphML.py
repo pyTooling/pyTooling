@@ -51,9 +51,9 @@ class Construction(TestCase):
 		self.assertEqual("string", str(key.AttributeType))
 
 		self.assertFalse(key.HasClosingTag)
-		self.assertEqual("""<key id="k1" for="node" attr.name="color" attr.type="string" />""", key.Tag(0))
+		self.assertEqual("""<key id="k1" for="node" attr.name="color" attr.type="string" />\n""", key.Tag(0))
 		self.assertListEqual([
-				"""<key id="k1" for="node" attr.name="color" attr.type="string" />"""
+				"""<key id="k1" for="node" attr.name="color" attr.type="string" />\n"""
 			], key.ToStringLines(0))
 
 		print()
@@ -68,9 +68,9 @@ class Construction(TestCase):
 		self.assertEqual("violet", data.Data)
 
 		self.assertFalse(data.HasClosingTag)
-		self.assertEqual("""<data key="k1">violet</data>""", data.Tag(0))
+		self.assertEqual("""<data key="k1">violet</data>\n""", data.Tag(0))
 		self.assertListEqual([
-				"""<data key="k1">violet</data>"""
+				"""<data key="k1">violet</data>\n"""
 			], data.ToStringLines(0))
 
 		print()
@@ -83,9 +83,9 @@ class Construction(TestCase):
 		self.assertEqual("n1", node.ID)
 
 		self.assertFalse(node.HasClosingTag)
-		self.assertEqual("""<node id="n1" />""", node.Tag(0))
+		self.assertEqual("""<node id="n1" />\n""", node.Tag(0))
 		self.assertListEqual([
-				"""<node id="n1" />"""
+				"""<node id="n1" />\n"""
 			], node.ToStringLines(0))
 
 		print()
@@ -101,12 +101,12 @@ class Construction(TestCase):
 		self.assertEqual("n1", node.ID)
 
 		self.assertTrue(node.HasClosingTag)
-		self.assertEqual("""<node id="n1">""", node.OpeningTag(0))
-		self.assertEqual("""</node>""", node.ClosingTag(0))
+		self.assertEqual("""<node id="n1">\n""", node.OpeningTag(0))
+		self.assertEqual("""</node>\n""", node.ClosingTag(0))
 		self.assertListEqual([
-				"""<node id="n1">""",
-				"""  <data key="k1">violet</data>""",
-				"""</node>"""
+				"""<node id="n1">\n""",
+				"""  <data key="k1">violet</data>\n""",
+				"""</node>\n"""
 			], node.ToStringLines(0))
 
 		print()
@@ -119,9 +119,9 @@ class Construction(TestCase):
 		edge = Edge("e1", node1, node2)
 
 		self.assertFalse(edge.HasClosingTag)
-		self.assertEqual("""<edge id="e1" source="n1" target="n2" />""", edge.Tag(0))
+		self.assertEqual("""<edge id="e1" source="n1" target="n2" />\n""", edge.Tag(0))
 		self.assertListEqual([
-				"""<edge id="e1" source="n1" target="n2" />"""
+				"""<edge id="e1" source="n1" target="n2" />\n"""
 			], edge.ToStringLines(0))
 
 		print()
@@ -139,12 +139,12 @@ class Construction(TestCase):
 		self.assertEqual("e1", edge.ID)
 
 		self.assertTrue(edge.HasClosingTag)
-		self.assertEqual("""<edge id="e1" source="n1" target="n2">""", edge.OpeningTag(0))
-		self.assertEqual("""</edge>""", edge.ClosingTag(0))
+		self.assertEqual("""<edge id="e1" source="n1" target="n2">\n""", edge.OpeningTag(0))
+		self.assertEqual("""</edge>\n""", edge.ClosingTag(0))
 		self.assertListEqual([
-				"""<edge id="e1" source="n1" target="n2">""",
-				"""  <data key="k1">violet</data>""",
-				"""</edge>"""
+				"""<edge id="e1" source="n1" target="n2">\n""",
+				"""  <data key="k1">violet</data>\n""",
+				"""</edge>\n"""
 			], edge.ToStringLines(0))
 
 		print()
@@ -162,8 +162,8 @@ class Construction(TestCase):
   parse.edges="0"
   parse.order="nodesfirst"
   parse.nodeids="free"
-  parse.edgeids="free">""", graph.OpeningTag(0))
-		self.assertEqual("""</graph>""", graph.ClosingTag(0))
+  parse.edgeids="free">\n""", graph.OpeningTag(0))
+		self.assertEqual("""</graph>\n""", graph.ClosingTag(0))
 		self.assertListEqual([
 			"""\
 <graph id="g1"
@@ -172,8 +172,8 @@ class Construction(TestCase):
   parse.edges="0"
   parse.order="nodesfirst"
   parse.nodeids="free"
-  parse.edgeids="free">""",
-				"""</graph>"""
+  parse.edgeids="free">\n""",
+				"""</graph>\n"""
 			], graph.ToStringLines(0))
 
 		print()
@@ -195,8 +195,8 @@ class Construction(TestCase):
   parse.edges="1"
   parse.order="nodesfirst"
   parse.nodeids="free"
-  parse.edgeids="free">""", graph.OpeningTag(0))
-		self.assertEqual("""</graph>""", graph.ClosingTag(0))
+  parse.edgeids="free">\n""", graph.OpeningTag(0))
+		self.assertEqual("""</graph>\n""", graph.ClosingTag(0))
 		self.assertListEqual([
 			"""\
 <graph id="g1"
@@ -205,11 +205,11 @@ class Construction(TestCase):
   parse.edges="1"
   parse.order="nodesfirst"
   parse.nodeids="free"
-  parse.edgeids="free">""",
-			"""  <node id="n1" />""",
-			"""  <node id="n2" />""",
-			"""  <edge id="e1" source="n1" target="n2" />""",
-			"""</graph>"""
+  parse.edgeids="free">\n""",
+			"""  <node id="n1" />\n""",
+			"""  <node id="n2" />\n""",
+			"""  <edge id="e1" source="n1" target="n2" />\n""",
+			"""</graph>\n"""
 		], graph.ToStringLines(0))
 
 		print()
