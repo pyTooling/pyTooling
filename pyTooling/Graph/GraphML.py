@@ -47,8 +47,11 @@ from pyTooling.Tree import Node as pyToolingNode
 
 @export
 class AttributeContext(Enum):
+	GraphML = auto()
+	Graph = auto()
 	Node = auto()
 	Edge = auto()
+	Port = auto()
 
 	def __str__(self) -> str:
 		return f"{self.name.lower()}"
@@ -394,6 +397,9 @@ class GraphMLDocument(Base):
 	def GetKey(self, keyName: str) -> Key:
 		return self._keys[keyName]
 
+	def HasKey(self, keyName: str) -> bool:
+		return keyName in self._keys
+
 	def FromGraph(self, graph: pyToolingGraph):
 		self._graph._id = graph._name
 
@@ -403,6 +409,12 @@ class GraphMLDocument(Base):
 		for vertex in graph.IterateVertices():
 			newNode = Node(vertex._id)
 			newNode.AddData(Data(nodeValue, vertex._value))
+			for key, value in vertex._dict.items():
+				if self.HasKey(str(key)):
+					nodeKey = self.GetKey(f"node{key!s}")
+				else:
+					nodeKey = self.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
+				newNode.AddData(Data(nodeKey, value))
 
 			self._graph.AddNode(newNode)
 
@@ -412,6 +424,12 @@ class GraphMLDocument(Base):
 
 			newEdge = Edge(edge._id, source, target)
 			newEdge.AddData(Data(edgeValue, edge._value))
+			for key, value in edge._dict.items():
+				if self.HasKey(str(key)):
+					edgeKey = self.GetKey(f"edge{key!s}")
+				else:
+					edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
+				newEdge.AddData(Data(edgeKey, value))
 
 			self._graph.AddEdge(newEdge)
 
