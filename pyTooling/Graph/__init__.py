@@ -255,6 +255,15 @@ class Vertex(
 		"""
 		del self._dict[key]
 
+	def __contains__(self, key: VertexDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this vertex.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
 	def __len__(self) -> int:
 		"""
 		Returns the number of attached attributes (key-value-pairs) on this vertex.
@@ -1067,6 +1076,15 @@ class Edge(
 		"""
 		del self._dict[key]
 
+	def __contains__(self, key: EdgeDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this edge.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
 	def __len__(self) -> int:
 		"""
 		Returns the number of attached attributes (key-value-pairs) in this edge.
@@ -1182,6 +1200,15 @@ class Component(
 		:raises KeyError: If key doesn't exist in the component's attributes.
 		"""
 		del self._dict[key]
+
+	def __contains__(self, key: ComponentDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this component.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
 
 	def __len__(self) -> int:
 		"""
@@ -1309,6 +1336,15 @@ class Graph(
 		:raises KeyError: If key doesn't exist in the graph's attributes.
 		"""
 		del self._dict[key]
+
+	def __contains__(self, key: GraphDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this graph.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
 
 	def __len__(self) -> int:
 		"""
