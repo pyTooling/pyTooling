@@ -247,7 +247,12 @@ class Vertex(
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
-		""".. todo:: GRAPH::Vertex::__delitem__ Needs documentation."""
+		"""
+		Remove an entry from vertex's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the vertex's attributes.
+		"""
 		del self._dict[key]
 
 	def __len__(self) -> int:
@@ -1054,7 +1059,12 @@ class Edge(
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
-		""".. todo:: GRAPH::Edge::__delitem__ Needs documentation."""
+		"""
+		Remove an entry from edge's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the edge's attributes.
+		"""
 		del self._dict[key]
 
 	def __len__(self) -> int:
@@ -1165,7 +1175,12 @@ class Component(
 		self._dict[key] = value
 
 	def __delitem__(self, key: ComponentDictKeyType) -> None:
-		""".. todo:: GRAPH::Component::__delitem__ Needs documentation."""
+		"""
+		Remove an entry from component's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the component's attributes.
+		"""
 		del self._dict[key]
 
 	def __len__(self) -> int:
