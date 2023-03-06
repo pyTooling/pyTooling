@@ -1035,7 +1035,7 @@ class Edge(
 		self._weight = value
 
 	@property
-	def Value(self) -> Nullable[VertexValueType]:
+	def Value(self) -> Nullable[EdgeValueType]:
 		"""
 		Property to get and set the value (:py:attr:`_value`) of an edge.
 
@@ -1044,10 +1044,10 @@ class Edge(
 		return self._value
 
 	@Value.setter
-	def Value(self, value: Nullable[VertexValueType]) -> None:
+	def Value(self, value: Nullable[EdgeValueType]) -> None:
 		self._value = value
 
-	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
+	def __getitem__(self, key: EdgeDictKeyType) -> EdgeDictValueType:
 		"""
 		Read an edge's attached attributes (key-value-pairs) by key.
 
@@ -1056,7 +1056,7 @@ class Edge(
 		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
+	def __setitem__(self, key: EdgeDictKeyType, value: EdgeDictValueType) -> None:
 		"""
 		Create or update an edge's attached attributes (key-value-pairs) by key.
 
@@ -1067,7 +1067,7 @@ class Edge(
 		"""
 		self._dict[key] = value
 
-	def __delitem__(self, key: VertexDictKeyType) -> None:
+	def __delitem__(self, key: EdgeDictKeyType) -> None:
 		"""
 		Remove an entry from edge's attached attributes (key-value-pairs) by key.
 
