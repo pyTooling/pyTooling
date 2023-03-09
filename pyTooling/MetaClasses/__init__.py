@@ -243,6 +243,10 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
+		# print()
+		# print(f"{className}")
+		# print(f"{'='*80}")
+
 		# Check if members should be stored in slots. If so get these members from type annotated fields
 		if useSlots:
 			members['__slots__'] = self.__getSlots(baseClasses, members)
@@ -251,6 +255,11 @@ class ExtendedType(type):
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
 
 		# Create a new class
+		# print(f"Creating class {className} by type:")
+		# if baseClasses:
+		# 	print(f"  base classes: {', '.join([str(t) for t in baseClasses])}")
+		# print(f"  members: {', '.join(members)}")
+
 		newClass = type.__new__(self, className, baseClasses, members)
 
 		# Search in inheritance tree for abstract methods
@@ -274,29 +283,57 @@ class ExtendedType(type):
 		"""
 		abstractMethods = {}
 		if baseClasses:
-			for baseClass in baseClasses:
+			baseClassIterator = iter(baseClasses)
+			baseClass = next(baseClassIterator)
+			# print(f"primary base: {baseClass.__name__}")
+			if hasattr(baseClass, "__abstractMethods__"):
+				# print(f"  abstract methods: {', '.join(baseClass.__abstractMethods__)}")
+				for key, value in baseClass.__abstractMethods__.items():
+					abstractMethods[key] = value
+
+			for baseClass in baseClassIterator:
+				# print(f"secondary base: {baseClass.__name__}")
 				if hasattr(baseClass, "__abstractMethods__"):
+					# print(f"  abstract methods: {', '.join(baseClass.__abstractMethods__)}")
 					for key, value in baseClass.__abstractMethods__.items():
 						abstractMethods[key] = value
 
+			# print(f"found abstract methods from parents: {', '.join(abstractMethods)}")
+
 			for base in baseClasses:
+				# print(f"dict of {base.__name__}")
 				for key, value in base.__dict__.items():
 					if (key in abstractMethods and isinstance(value, FunctionType) and
-						not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__"))):
-						def outer(method):
+							not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__"))):
+						# print(f"  found implementation for: {key}")
+						# print(f"    {abstractMethods[key]}")
+
+						def outer(text, method):
 							@wraps(method)
 							def inner(cls, *args, **kwargs):
+								# print(text)
 								return method(cls, *args, **kwargs)
 
 							return inner
 
-						members[key] = outer(value)
+						members[key] = outer(f"called wrapper for {key} delegating to {value}", value)
+		# else:
+		# 	print(f"no bases classes -> no abstract methods from parents")
 
+		# print(f"updating current class ...")
 		for memberName, member in members.items():
+			# print(memberName, member)
 			if ((hasattr(member, "__abstract__") and member.__abstract__) or (hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+				# print("+ ", memberName)
 				abstractMethods[memberName] = member
 			elif memberName in abstractMethods:
+				# print("- ", memberName)
 				del abstractMethods[memberName]
+
+		# if abstractMethods:
+		# 	print(f"remaining abstract methods:")
+		# 	for method in abstractMethods:
+		# 		print(f"*  {method}")
 
 		return abstractMethods, members
 
@@ -378,7 +415,10 @@ class ExtendedType(type):
 		if newClass.__abstractMethods__:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
+				# print(f"updating replaced __new__ in {newClass.__name__} to error message with new list of abstract methods")
 				oldnew = oldnew.__orig_func__
+			# else:
+			# 	print(f"replacing __new__ in {newClass.__name__} with error message reporting abstract methods")
 
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
@@ -392,6 +432,7 @@ class ExtendedType(type):
 
 		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
 		else:
+			# print(f"replacing __new__ in {newClass.__name__} with real __new__")
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
 				if newClass.__new__.__raises_abstract_class_error__:
