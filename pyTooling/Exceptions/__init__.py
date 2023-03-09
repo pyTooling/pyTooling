@@ -79,6 +79,18 @@ class MustOverrideClassError(AbstractClassError):
 
 
 @export
+class MixinClassError(Exception):
+	"""
+	The exception is raised, when a mixin class is directly instantiated.
+
+	.. seealso::
+
+	   :py:exc:`~AbstractClassError`
+	      |rarr| Exception raised, if a method is marked as *abstract*.
+	"""
+
+
+@export
 class OverloadResolutionError(Exception):
 	"""
 	The exception is raised, when no matching overloaded method was found.

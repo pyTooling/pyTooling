@@ -135,6 +135,7 @@ class Overloading(type):
 		return cls.DispatchDictionary()
 
 
+C = TypeVar("C", bound=type)       #: A type variable for types (classes).
 M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
@@ -198,6 +199,41 @@ def mustoverride(method: M) -> M:
 	"""
 	method.__mustOverride__ = True
 	return method
+
+
+@export
+def mixin(cls: C) -> C:
+	"""
+	Mark a class as *mixin class*.
+
+	.. warning::
+
+	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
+	   Otherwise, a class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.MixinClassError` at instantiation.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+	
+	      @mixin
+	      class Mixin:
+	        def mixedin(self):
+	        '''A method in the mixin.'''
+
+	      try:
+	        mix = Mixin()
+	      except MixinClassError:
+	        pass
+
+	      class Data(Mixin, mataclass=ExtendedType):
+	        def method:
+	          '''This is a very basic implementation'''
+
+	:param cls: Class that is marked as *mixin class*.
+	:returns:   Same type, but with additional ``__mixin__`` field.
+	"""
+	cls.__mixin__ = True
+	return cls
 
 
 @export
