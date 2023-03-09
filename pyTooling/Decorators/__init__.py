@@ -120,28 +120,126 @@ def export(entity: T) -> T:
 
 
 @export
-def classproperty(method):
+def myproperty(method):
+	class MyProperty:
+		"""Emulate PyProperty_Type() in Objects/descrobject.c"""
 
-	class Descriptor:
-		"""A decorator adding properties to classes."""
+		def __init__(self, fget=None, fset=None, fdel=None, doc=None):
+			self.fget = fget
+			self.fset = fset
+			self.fdel = fdel
+			if doc is None and fget is not None:
+					doc = fget.__doc__
+			self.__doc__ = doc
+			self._name = ''
+
+		def __set_name__(self, owner, name):
+			self._name = name
+
+		def __get__(self, obj, objtype=None):
+			if obj is None:
+					return self
+			if self.fget is None:
+					raise AttributeError(f'unreadable attribute {self._name}')
+			return self.fget(obj)
+
+		def __set__(self, obj, value):
+			if self.fset is None:
+					raise AttributeError(f"can't set attribute {self._name}")
+			self.fset(obj, value)
+
+		def __delete__(self, obj):
+			if self.fdel is None:
+					raise AttributeError(f"can't delete attribute {self._name}")
+			self.fdel(obj)
+
+		def getter(self, fget):
+			prop = type(self)(fget, self.fset, self.fdel, self.__doc__)
+			prop._name = self._name
+			return prop
+
+		def setter(self, fset):
+			prop = type(self)(self.fget, fset, self.fdel, self.__doc__)
+			prop._name = self._name
+			return prop
+
+		def deleter(self, fdel):
+			prop = type(self)(self.fget, self.fset, fdel, self.__doc__)
+			prop._name = self._name
+			return prop
+
+	return MyProperty(method)
+
+
+@export
+def classproperty(method):
+	"""A decorator adding properties to classes."""
+
+	class ClassPropertyDescriptor:
+		"""A descriptor for class properties.."""
+
+		_name: str
 		_getter: Callable
 		_setter: Callable
+		_deleter: Callable
 
-		def __init__(self, getter: Callable = None, setter: Callable = None):
+		def __init__(self, getter: Callable = None, setter: Callable = None, deleter: Callable = None, doc: str = None):
 			self._getter = getter
 			self._setter = setter
-			self.__doc__ = getter.__doc__
+			self._deleter = deleter
+			self._name = ''
 
-		def __get__(self, instance: Any, owner: type = None) -> Any:
-			return self._getter(owner)
+			print(f"init: {id(self)}")
 
-		def __set__(self, instance: Any, value: Any) -> None:
-			self._setter(instance.__class__, value)
+			if doc is None and getter is not None:
+				doc = getter.__doc__
+			self.__doc__ = doc
+
+		def __set_name__(self, owner: Any, name: str):
+			self._name = name
+
+		def __get__(self, instance: Any, objtype: type = None):
+#			if instance is None:
+#				return self
+
+			if self._getter is None:
+				raise AttributeError(f'unreadable attribute {self._name}')
+
+			return self._getter(objtype)
+
+		def __set__(self, instance: Any, value: Any):
+			if self._setter is None:
+				raise AttributeError(f"can't set attribute {self._name}")
+
+			self._setter(type(instance), value)
+
+		def __delete__(self, instance: Any):
+			if self._deleter is None:
+				raise AttributeError(f"can't delete attribute {self._name}")
+
+			self._deleter(type(instance))
+
+		def getter(self, getter: Callable):
+			prop = type(self)(getter, self._setter, self._deleter, self.__doc__)
+			prop._name = self._name
+
+			print(f"self: {id(self)}; getter-prop:{id(prop)}")
+			return prop
 
 		def setter(self, setter: Callable):
-			return self.__class__(self._getter, setter)
+			prop = type(self)(self._getter, setter, self._deleter, self.__doc__)
+			prop._name = self._name
 
-	descriptor = Descriptor(method)
+			print(f"self: {id(self)}; setter-prop:{id(prop)}")
+			return prop
+
+		def deleter(self, deleter: Callable):
+			prop = type(self)(self._getter, self._setter, deleter, self.__doc__)
+			prop._name = self._name
+
+			return prop
+
+	descriptor = ClassPropertyDescriptor(method)
 	return descriptor
 
 
