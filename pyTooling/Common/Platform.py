@@ -51,11 +51,12 @@ class Platform(metaclass=ExtendedType, singleton=True):
 	class Platforms(Flag):
 		Unknown = 0
 
+		OS_BSD =     auto()        #: Operating System: BSD (Unix).
 		OS_Linux =   auto()        #: Operating System: Linux.
 		OS_MacOS =   auto()        #: Operating System: macOS.
 		OS_Windows = auto()        #: Operating System: Windows.
 
-		OperatingSystem = OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
+		OperatingSystem = OS_BSD | OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
 
 		SEP_WindowsPath =  auto()  #: Seperator: Path element seperator (e.g. for directories).
 		SEP_WindowsValue = auto()  #: Seperator: Value seperator in variables (e.g. for paths in PATH).
@@ -75,6 +76,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 		Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
 		Architecture = Arch_x86 | Arch_Arm        #: Mask: Any architecture.
 
+		FreeBSD = OS_BSD     | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
 		Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
 		MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64                                       #: Group: native macOS on x86-64.
 		Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
@@ -86,7 +88,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 		Clang32 = auto()     #: MSYS2 Runtime: Clang32.
 		Clang64 = auto()     #: MSYS2 Runtime: Clang64.
 
-		MSYS2_Runtime = MSYS | MinGW32 | MinGW64 | UCRT64 | Clang32 | Clang64  #: Mask: Any MSYS2 runtime environment.
+		MSYS2_Runtime = MSYS | MinGW32 | MinGW64 | UCRT64 | Clang32 | Clang64    #: Mask: Any MSYS2 runtime environment.
 
 		Windows_MSYS2_MSYS =    OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MSYS      #: Group: MSYS runtime running on Windows x86-64
 		Windows_MSYS2_MinGW32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW32   #: Group: MinGW32 runtime running on Windows x86-64
@@ -152,7 +154,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 				if sysconfig_platform == "linux-x86_64":            # native Linux x86_64; Windows 64 + WSL
 					self._platform |= self.Platforms.ARCH_x86_64
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
-					self._platform |= self.Platforms.ARCH_x86_32
+					self._platform |= self.Platforms.ARCH_AArch64
 				else:
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
@@ -194,6 +196,11 @@ class Platform(metaclass=ExtendedType, singleton=True):
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
+			elif sys_platform.startswith("freebsd"):
+				if machine == "amd64":
+					self._platform = self.Platforms.FreeBSD
+				else:
+					raise Exception(f"Unknown architecture '{machine}' for FreeBSD.")
 			else:
 				raise Exception(f"Unknown POSIX platform '{sys_platform}'.")
 		else:

@@ -247,8 +247,22 @@ class Vertex(
 		self._dict[key] = value
 
 	def __delitem__(self, key: VertexDictKeyType) -> None:
-		""".. todo:: GRAPH::Vertex::__delitem__ Needs documentation."""
+		"""
+		Remove an entry from vertex's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the vertex's attributes.
+		"""
 		del self._dict[key]
+
+	def __contains__(self, key: VertexDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this vertex.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
 
 	def __len__(self) -> int:
 		"""
@@ -1021,7 +1035,7 @@ class Edge(
 		self._weight = value
 
 	@property
-	def Value(self) -> Nullable[VertexValueType]:
+	def Value(self) -> Nullable[EdgeValueType]:
 		"""
 		Property to get and set the value (:py:attr:`_value`) of an edge.
 
@@ -1030,10 +1044,10 @@ class Edge(
 		return self._value
 
 	@Value.setter
-	def Value(self, value: Nullable[VertexValueType]) -> None:
+	def Value(self, value: Nullable[EdgeValueType]) -> None:
 		self._value = value
 
-	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
+	def __getitem__(self, key: EdgeDictKeyType) -> EdgeDictValueType:
 		"""
 		Read an edge's attached attributes (key-value-pairs) by key.
 
@@ -1042,7 +1056,7 @@ class Edge(
 		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
+	def __setitem__(self, key: EdgeDictKeyType, value: EdgeDictValueType) -> None:
 		"""
 		Create or update an edge's attached attributes (key-value-pairs) by key.
 
@@ -1053,9 +1067,23 @@ class Edge(
 		"""
 		self._dict[key] = value
 
-	def __delitem__(self, key: VertexDictKeyType) -> None:
-		""".. todo:: GRAPH::Edge::__delitem__ Needs documentation."""
+	def __delitem__(self, key: EdgeDictKeyType) -> None:
+		"""
+		Remove an entry from edge's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the edge's attributes.
+		"""
 		del self._dict[key]
+
+	def __contains__(self, key: EdgeDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this edge.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
 
 	def __len__(self) -> int:
 		"""
@@ -1165,8 +1193,22 @@ class Component(
 		self._dict[key] = value
 
 	def __delitem__(self, key: ComponentDictKeyType) -> None:
-		""".. todo:: GRAPH::Component::__delitem__ Needs documentation."""
+		"""
+		Remove an entry from component's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the component's attributes.
+		"""
 		del self._dict[key]
+
+	def __contains__(self, key: ComponentDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this component.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
 
 	def __len__(self) -> int:
 		"""
@@ -1294,6 +1336,15 @@ class Graph(
 		:raises KeyError: If key doesn't exist in the graph's attributes.
 		"""
 		del self._dict[key]
+
+	def __contains__(self, key: GraphDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this graph.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
 
 	def __len__(self) -> int:
 		"""

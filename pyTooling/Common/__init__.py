@@ -37,8 +37,8 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "2.12.3"
-__keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning", "licensing", "overloading",
+__version__ =   "2.13.0"
+__keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versioning", "licensing", "overloading",
 								"singleton", "tree", "graph", "timer", "data structure", "setuptools", "wheel", "installation",
 								"packaging", "path", "generic path", "generic library", "url"]
 

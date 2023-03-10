@@ -211,7 +211,7 @@ def overloadable(method: M) -> M:
 @export
 class ExtendedType(type):
 	"""
-  .. todo:: META::ExtendedType Needs documentation.
+	.. todo:: META::ExtendedType Needs documentation.
 
 	Features:
 
