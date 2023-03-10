@@ -99,7 +99,7 @@ class IDStyle(Enum):
 
 
 @export
-class Base(metaclass=ExtendedType, useSlots=True):
+class Base0(metaclass=ExtendedType, useSlots=True):
 	@property
 	def HasClosingTag(self) -> bool:
 		return True
@@ -118,21 +118,47 @@ class Base(metaclass=ExtendedType, useSlots=True):
 
 
 @export
-class Key(Base):
+class Base1(Base0):
 	_id: str
+
+	def __init__(self, identifier: str):
+		self._id = identifier
+
+	@property
+	def ID(self) -> str:
+		return self._id
+
+
+@export
+class Base2(Base1):
+	_data: List['Data']
+
+	def __init__(self, identifier: str):
+		super().__init__(identifier)
+
+		self._data = []
+
+	@property
+	def Data(self) -> List['Data']:
+		return self._data
+
+	def AddData(self, data: Data) -> Data:
+		self._data.append(data)
+		return data
+
+
+@export
+class Key(Base1):
 	_context: AttributeContext
 	_attributeName: str
 	_attributeType: AttributeTypes
 
 	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes):
-		self._id = identifier
+		super().__init__(identifier)
+
 		self._context = context
 		self._attributeName = name
 		self._attributeType = type
-
-	@property
-	def ID(self) -> str:
-		return self._id
 
 	@property
 	def Context(self) -> AttributeContext:
@@ -153,12 +179,12 @@ class Key(Base):
 	def Tag(self, indent: int = 2) -> str:
 		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> List[str]:
 		return [self.Tag(indent)]
 
 
 @export
-class Data(Base):
+class Data(Base0):
 	_key: Key
 	_data: Any
 
@@ -178,7 +204,7 @@ class Data(Base):
 	def HasClosingTag(self) -> bool:
 		return False
 
-	def Tag(self, indent: int = 1) -> str:
+	def Tag(self, indent: int = 2) -> str:
 		data = str(self._data)
 		data = data.replace("&", "&amp;")
 		data = data.replace("<", "&lt;")
@@ -186,34 +212,16 @@ class Data(Base):
 		data = data.replace("\n", "\\n")
 		return f"""{'  '*indent}<data key="{self._key._id}">{data}</data>\n"""
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> List[str]:
 		return [self.Tag(indent)]
 
 
 @export
-class Node(Base):
-	_id: str
-	_data: List[Data]
-
-	def __init__(self, identifier: str):
-		self._id = identifier
-		self._data = []
-
-	@property
-	def ID(self) -> str:
-		return self._id
-
-	@property
-	def Data(self) -> List[Data]:
-		return self._data
+class Node(Base2):
 
 	@property
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
-
-	def AddData(self, data: Data) -> Data:
-		self._data.append(data)
-		return data
 
 	def Tag(self, indent: int = 2) -> str:
 		return f"""{'  '*indent}<node id="{self._id}" />\n"""
@@ -224,7 +232,7 @@ class Node(Base):
 	def ClosingTag(self, indent: int = 2) -> str:
 		return f"""{'  ' * indent}</node>\n"""
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> List[str]:
 		if not self.HasClosingTag:
 			return [self.Tag(indent)]
 
@@ -237,21 +245,15 @@ class Node(Base):
 
 
 @export
-class Edge(Base):
-	_id: str
+class Edge(Base2):
 	_source: Node
 	_target: Node
-	_data: List[Data]
 
 	def __init__(self, identifier: str, source: Node, target: Node):
-		self._id = identifier
+		super().__init__(identifier)
+
 		self._source = source
 		self._target = target
-		self._data = []
-
-	@property
-	def ID(self) -> str:
-		return self._id
 
 	@property
 	def Source(self) -> Node:
@@ -262,16 +264,8 @@ class Edge(Base):
 		return self._target
 
 	@property
-	def Data(self) -> List[Data]:
-		return self._data
-
-	@property
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
-
-	def AddData(self, data: Data) -> Data:
-		self._data.append(data)
-		return data
 
 	def Tag(self, indent: int = 2) -> str:
 		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />\n"""
@@ -282,7 +276,7 @@ class Edge(Base):
 	def ClosingTag(self, indent: int = 2) -> str:
 		return f"""{'  ' * indent}</edge>\n"""
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> List[str]:
 		if not self.HasClosingTag:
 			return [self.Tag(indent)]
 
@@ -295,8 +289,8 @@ class Edge(Base):
 
 
 @export
-class Graph(Base):
-	_id: str
+class Graph(Base2):
+	_subgraphs: Dict[str, 'Subgraph']
 	_nodes: Dict[str, Node]
 	_edges: Dict[str, Edge]
 	_edgeDefault: EdgeDefault
@@ -305,7 +299,9 @@ class Graph(Base):
 	_edgeIDStyle: IDStyle
 
 	def __init__(self, identifier: str = None):
-		self._id = identifier
+		super().__init__(identifier)
+
+		self._subgraphs = {}
 		self._nodes = {}
 		self._edges = {}
 		self._edgeDefault = EdgeDefault.Directed
@@ -314,8 +310,8 @@ class Graph(Base):
 		self._edgeIDStyle = IDStyle.Free
 
 	@property
-	def ID(self) -> str:
-		return self._id
+	def Subgraphs(self) -> Dict[str, 'Subgraph']:
+		return self._subgraphs
 
 	@property
 	def Nodes(self) -> Dict[str, Node]:
@@ -324,6 +320,14 @@ class Graph(Base):
 	@property
 	def Edges(self) -> Dict[str, Edge]:
 		return self._edges
+
+	def AddSubgraph(self, subgraph: 'Subgraph') -> 'Subgraph':
+		self._subgraphs[subgraph._subgraphID] = subgraph
+		self._nodes[subgraph._id] = subgraph
+		return subgraph
+
+	def GetSubgraph(self, subgraphName: str) -> 'Subgraph':
+		return self._subgraphs[subgraphName]
 
 	def AddNode(self, node: Node) -> Node:
 		self._nodes[node._id] = node
@@ -350,7 +354,7 @@ class Graph(Base):
 	def ClosingTag(self, indent: int = 1) -> str:
 		return f"{'  '*indent}</graph>\n"
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 1) -> List[str]:
 		lines = [self.OpeningTag(indent)]
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 1))
@@ -364,7 +368,59 @@ class Graph(Base):
 
 
 @export
-class GraphMLDocument(Base):
+class Subgraph(Node, Graph):
+	_subgraphID: str
+
+	def __init__(self, nodeIdentifier: str, graphIdentifier: str):
+		super().__init__(nodeIdentifier)
+
+		self._subgraphID = graphIdentifier
+
+	@property
+	def SubgraphID(self) -> str:
+		return self._subgraphID
+
+	@property
+	def HasClosingTag(self) -> bool:
+		return True
+
+	def Tag(self, indent: int = 2) -> str:
+		raise NotImplementedError()
+
+	def OpeningTag(self, indent: int = 1) -> str:
+			return f"""\
+{'  ' * indent}<graph id="{self._subgraphID}"
+{'  ' * indent}  edgedefault="{self._edgeDefault!s}"
+{'  ' * indent}  parse.nodes="{len(self._nodes)}"
+{'  ' * indent}  parse.edges="{len(self._edges)}"
+{'  ' * indent}  parse.order="{self._parseOrder!s}"
+{'  ' * indent}  parse.nodeids="{self._nodeIDStyle!s}"
+{'  ' * indent}  parse.edgeids="{self._edgeIDStyle!s}">
+"""
+
+	def ClosingTag(self, indent: int = 2) -> str:
+		return Graph.ClosingTag(self, indent)
+
+	def ToStringLines(self, indent: int = 2) -> List[str]:
+		lines = [super().OpeningTag(indent)]
+		for data in self._data:
+			lines.extend(data.ToStringLines(indent + 1))
+		# lines.extend(Graph.ToStringLines(self, indent + 1))
+		lines.append(self.OpeningTag(indent + 1))
+		for node in self._nodes.values():
+			lines.extend(node.ToStringLines(indent + 2))
+		for edge in self._edges.values():
+			lines.extend(edge.ToStringLines(indent + 2))
+		# for data in self._data:
+		# 	lines.extend(data.ToStringLines(indent + 1))
+		lines.append(self.ClosingTag(indent + 1))
+		lines.append(super().ClosingTag(indent))
+
+		return lines
+
+
+@export
+class GraphMLDocument(Base0):
 	xmlNS = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"

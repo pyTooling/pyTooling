@@ -32,7 +32,8 @@
 from unittest import TestCase
 
 from pyTooling.Graph import Graph as pyTooling_Graph, Vertex
-from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, GraphMLDocument
+from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, GraphMLDocument, \
+	Subgraph
 from pyTooling.Tree import Node as pyToolingNode
 
 
@@ -58,7 +59,7 @@ class Construction(TestCase):
 
 		print()
 		for line in key.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_Data(self):
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
@@ -75,7 +76,7 @@ class Construction(TestCase):
 
 		print()
 		for line in data.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_Node(self):
 		node = Node("n1")
@@ -90,7 +91,7 @@ class Construction(TestCase):
 
 		print()
 		for line in node.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_NodeWithData(self):
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
@@ -111,7 +112,7 @@ class Construction(TestCase):
 
 		print()
 		for line in node.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_Edge(self):
 		node1 = Node("n1")
@@ -126,7 +127,7 @@ class Construction(TestCase):
 
 		print()
 		for line in edge.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_EdgeWithData(self):
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
@@ -149,7 +150,7 @@ class Construction(TestCase):
 
 		print()
 		for line in edge.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_Graph(self):
 		graph = Graph("g1")
@@ -178,7 +179,7 @@ class Construction(TestCase):
 
 		print()
 		for line in graph.ToStringLines():
-			print(line)
+			print(line, end="")
 
 	def test_GraphWithNodesAndEdges(self):
 		graph = Graph("g1")
@@ -214,7 +215,35 @@ class Construction(TestCase):
 
 		print()
 		for line in graph.ToStringLines():
-			print(line)
+			print(line, end="")
+
+	def test_GraphWithSubgraph(self):
+		graph = Graph("g1")
+
+		graph.AddNode(Node("n1"))
+		graph.AddNode(Node("n2"))
+		graph.AddEdge(Edge("e1", graph.GetNode("n1"), graph.GetNode("n2")))
+
+		sg1 = graph.AddSubgraph(Subgraph("nsg1", "sg1"))
+		sg1.AddNode(Node("sg1n1"))
+		sg1.AddNode(Node("sg1n2"))
+		sg1.AddEdge(Edge("sg1e1", sg1.GetNode("sg1n1"), sg1.GetNode("sg1n2")))
+
+		sg2 = graph.AddSubgraph(Subgraph("nsg2", "sg2"))
+		sg2.AddNode(Node("sg2n1"))
+		sg2.AddNode(Node("sg2n2"))
+		sg2.AddEdge(Edge("sg2e1", sg2.GetNode("sg2n1"), sg2.GetNode("sg2n2")))
+
+		graph.AddEdge(Edge("e2", graph.GetNode("n1"), sg1.GetNode("sg1n2")))
+		graph.AddEdge(Edge("e3", graph.GetNode("n2"), sg2.GetNode("sg2n1")))
+		graph.AddEdge(Edge("e4", sg1.GetNode("sg1n1"), sg2.GetNode("sg2n2")))
+
+		self.assertTrue(graph.HasClosingTag)
+		self.assertEqual(2, len(graph.Subgraphs))
+
+		print()
+		for line in graph.ToStringLines():
+			print(line, end="")
 
 	def test_GraphML(self):
 		doc = GraphMLDocument("g1")
@@ -223,7 +252,7 @@ class Construction(TestCase):
 
 		print()
 		for line in doc.ToStringLines():
-			print(line)
+			print(line, end="")
 
 
 class pyToolingGraph(TestCase):
@@ -243,7 +272,7 @@ class pyToolingGraph(TestCase):
 
 		print()
 		for line in doc.ToStringLines():
-			print(line)
+			print(line, end="")
 
 
 class pyToolingTree(TestCase):
@@ -261,4 +290,4 @@ class pyToolingTree(TestCase):
 
 		print()
 		for line in doc.ToStringLines():
-			print(line)
+			print(line, end="")
