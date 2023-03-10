@@ -165,6 +165,46 @@ A set of helper functions to describe a Python package for setuptools.
   * `DescribePythonPackageHostedOnGitHub`  
     tbd
 
+
+### Terminal
+
+A set of helpers to implement a text user interface (TUI) in a terminal.
+
+#### Features
+
+* Colored command line outputs based on `colorama`.
+* Message classification in `fatal`, `error`, `warning`, `normal`, `quiet`, ...
+* Get information like terminal dimensions from underlying terminal window.
+
+
+#### Simple Terminal Application
+
+This is a minimal terminal application example which inherits from `LineTerminal`.
+
+```python
+from pyTooling.TerminalUI import LineTerminal
+
+class Application(LineTerminal):
+  def __init__(self):
+    super().__init__()
+
+  def run(self):
+    self.WriteNormal("This is a simple application.")
+    self.WriteWarning("This is a warning message.")
+    self.WriteError("This is an error message.")
+
+# entry point
+if __name__ == "__main__":
+  Application.versionCheck((3, 6, 0))
+  app = Application()
+  app.run()
+  app.exit()
+```
+
+### Timer
+
+*tbd*
+
 ## Examples
 
 ### `@export` Decorator

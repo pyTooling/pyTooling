@@ -296,6 +296,8 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 				return struct_unpack('hh', fcntl_ioctl(fd, TIOCGWINSZ, '1234'))
 			except ImportError:
 				pass
+			except OSError:
+				pass
 
 		#               STDIN              STDOUT             STDERR
 		cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
