@@ -99,7 +99,7 @@ class IDStyle(Enum):
 
 
 @export
-class Base0(metaclass=ExtendedType, useSlots=True):
+class Base(metaclass=ExtendedType, useSlots=True):
 	@property
 	def HasClosingTag(self) -> bool:
 		return True
@@ -118,7 +118,7 @@ class Base0(metaclass=ExtendedType, useSlots=True):
 
 
 @export
-class Base1(Base0):
+class BaseWithID(Base):
 	_id: str
 
 	def __init__(self, identifier: str):
@@ -130,7 +130,7 @@ class Base1(Base0):
 
 
 @export
-class Base2(Base1):
+class BaseWithData(BaseWithID):
 	_data: List['Data']
 
 	def __init__(self, identifier: str):
@@ -148,7 +148,7 @@ class Base2(Base1):
 
 
 @export
-class Key(Base1):
+class Key(BaseWithID):
 	_context: AttributeContext
 	_attributeName: str
 	_attributeType: AttributeTypes
@@ -184,7 +184,7 @@ class Key(Base1):
 
 
 @export
-class Data(Base0):
+class Data(Base):
 	_key: Key
 	_data: Any
 
@@ -217,7 +217,7 @@ class Data(Base0):
 
 
 @export
-class Node(Base2):
+class Node(BaseWithData):
 
 	@property
 	def HasClosingTag(self) -> bool:
@@ -245,7 +245,7 @@ class Node(Base2):
 
 
 @export
-class Edge(Base2):
+class Edge(BaseWithData):
 	_source: Node
 	_target: Node
 
@@ -289,7 +289,7 @@ class Edge(Base2):
 
 
 @export
-class Graph(Base2):
+class Graph(BaseWithData):
 	_subgraphs: Dict[str, 'Subgraph']
 	_nodes: Dict[str, Node]
 	_edges: Dict[str, Edge]
@@ -420,7 +420,7 @@ class Subgraph(Node, Graph):
 
 
 @export
-class GraphMLDocument(Base0):
+class GraphMLDocument(Base):
 	xmlNS = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"
