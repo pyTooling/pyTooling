@@ -303,7 +303,6 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 		cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
 		if not cr:
 			try:
-
 				fd = os.open(os.ctermid(), os.O_RDONLY)
 				cr = ioctl_GWINSZ(fd)
 				os.close(fd)
@@ -314,6 +313,7 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 				cr = (os.environ['LINES'], os.environ['COLUMNS'])
 			except:
 				return None
+
 		return (int(cr[1]), int(cr[0]))
 
 
