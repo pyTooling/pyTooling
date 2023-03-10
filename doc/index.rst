@@ -125,7 +125,6 @@ Decorators
   * Register the given function or class as publicly accessible in a module via :py:class:`~pyTooling.Decorators.export`.
 
 
-
 Exceptions
 ==========
 
@@ -184,6 +183,12 @@ A set of helper functions to describe a Python package for setuptools.
     tbd
   * :py:func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
     tbd
+
+
+Terminal
+========
+
+*tbd*
 
 Timer
 =====
@@ -282,6 +287,12 @@ License
    :hidden:
 
    Packaging
+
+.. toctree::
+   :caption: Terminal
+   :hidden:
+
+   Terminal/index
 
 .. toctree::
    :caption: Timer
