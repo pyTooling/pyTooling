@@ -243,6 +243,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		""".. todo:: TREE::Node::__delitem__ Needs documentation."""
 		del self._dict[key]
 
+	def __contains__(self, key: DictKeyType) -> bool:
+		""".. todo:: TREE::Node::__contains__ Needs documentation."""
+		return key in self._dict
+
 	def __len__(self) -> int:
 		"""
 		Returns the number of attached attributes (key-value-pairs) on this node.
