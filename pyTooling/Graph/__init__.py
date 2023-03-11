@@ -1307,6 +1307,13 @@ class Subgraph(
 		"""
 		return self._vertices
 
+	@property
+	def VertexCount(self) -> int:
+		"""Read-only property to access the number of vertices in this subgraph.
+
+		:returns: The number of vertices in this subgraph."""
+		return len(self._vertices)
+
 	def __getitem__(self, key: SubgraphDictKeyType) -> SubgraphDictValueType:
 		"""
 		Read a subgraph's attached attributes (key-value-pairs) by key.
@@ -1424,6 +1431,13 @@ class View(
 		:returns: The set of vertices in this view.
 		"""
 		return self._vertices
+
+	@property
+	def VertexCount(self) -> int:
+		"""Read-only property to access the number of vertices in this view.
+
+		:returns: The number of vertices in this view."""
+		return len(self._vertices)
 
 	def __getitem__(self, key: ViewDictKeyType) -> ViewDictValueType:
 		"""

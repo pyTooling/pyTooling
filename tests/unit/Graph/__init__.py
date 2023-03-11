@@ -32,7 +32,7 @@
 from typing import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable
+from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -52,12 +52,12 @@ class Construction(TestCase):
 		self.assertEqual(0, g.ViewCount)
 		self.assertEqual(0, len(g))
 
-	def test_GraphName(self):
+	def test_GraphWithName(self):
 		g = Graph("myGraph")
 
 		self.assertEqual("myGraph", g.Name)
 
-	def test_SingleVertex(self):
+	def test_StandaloneVertex(self):
 		root: Vertex[Nullable[Any], int, str, Any] = Vertex()
 
 		self.assertIsNone(root.ID)
@@ -65,7 +65,7 @@ class Construction(TestCase):
 		self.assertEqual(1, root.Graph.VertexCount)
 		self.assertEqual(1, root.Graph.ComponentCount)
 
-	def test_SingleVertexInEmptyGraph(self):
+	def test_SingleVertexForExistingGraph(self):
 		graph = Graph()
 
 		root: Vertex[Nullable[Any], int, str, Any] = Vertex(graph=graph)
@@ -75,7 +75,7 @@ class Construction(TestCase):
 		self.assertEqual(1, graph.VertexCount)
 		self.assertEqual(1, graph.ComponentCount)
 
-	def test_SingleEdgeLinkToVertex(self):
+	def test_Edge_LinkToVertex(self):
 		graph = Graph()
 
 		vertex1 = Vertex(graph=graph)
@@ -91,7 +91,7 @@ class Construction(TestCase):
 		self.assertIsNone(edge12.ID)
 		self.assertIsNone(edge12.Value)
 
-	def test_SingleEdgeLinkFromVertex(self):
+	def test_Edge_LinkFromVertex(self):
 		graph = Graph()
 
 		vertex1 = Vertex(graph=graph)
@@ -107,7 +107,7 @@ class Construction(TestCase):
 		self.assertIsNone(edge21.ID)
 		self.assertIsNone(edge21.Value)
 
-	def test_SingleEdgeLinkToNewVertex(self):
+	def test_Edge_LinkToNewVertex(self):
 		graph = Graph()
 
 		vertex1 = Vertex(graph=graph)
@@ -122,7 +122,7 @@ class Construction(TestCase):
 		self.assertIsNone(edge1x.ID)
 		self.assertIsNone(edge1x.Value)
 
-	def test_SingleEdgeLinkFromNewVertex(self):
+	def test_Edge_LinkFromNewVertex(self):
 		graph = Graph()
 
 		vertex1 = Vertex(graph=graph)
@@ -136,6 +136,42 @@ class Construction(TestCase):
 		self.assertIs(vertex1, edgex1.Destination)
 		self.assertIsNone(edgex1.ID)
 		self.assertIsNone(edgex1.Value)
+
+	def test_Subgraph(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertIs(graph, subgraph.Graph)
+		self.assertIsNone(subgraph.Name)
+		self.assertEqual(0, subgraph.VertexCount)
+
+	def test_SubgraphWithName(self):
+		graph = Graph()
+		subgraph = Subgraph(name="subgraph1", graph=graph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertIs(graph, subgraph.Graph)
+		self.assertEqual("subgraph1", subgraph.Name)
+		self.assertEqual(0, subgraph.VertexCount)
+
+	def test_View(self):
+		graph = Graph()
+		view = View(graph=graph)
+
+		self.assertEqual(1, graph.ViewCount)
+		self.assertIs(graph, view.Graph)
+		self.assertIsNone(view.Name)
+		self.assertEqual(0, view.VertexCount)
+
+	def test_ViewWithName(self):
+		graph = Graph()
+		view = View(name="view1", graph=graph)
+
+		self.assertEqual(1, graph.ViewCount)
+		self.assertIs(graph, view.Graph)
+		self.assertEqual("view1", view.Name)
+		self.assertEqual(0, view.VertexCount)
 
 	def test_SimpleTree(self):
 		v1 = Vertex()
@@ -162,44 +198,119 @@ class Construction(TestCase):
 
 class Dicts(TestCase):
 	def test_GraphDict(self):
-		g = Graph()
-		g["key"] = 1
+		graph = Graph()
 
-		self.assertEqual(1, g["key"])
+		self.assertEqual(0, len(graph))
 
-		del g["key"]
+		graph["key"] = 2
+
+		self.assertEqual(2, graph["key"])
+		self.assertEqual(1, len(graph))
+		self.assertIn("key", graph)
+
+		del graph["key"]
+
+		self.assertNotIn("key", graph)
+		self.assertEqual(0, len(graph))
 		with self.assertRaises(KeyError):
-			_ = g["key"]
+			_ = graph["key"]
+
+	def test_SubgraphDict(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+
+		self.assertEqual(0, len(subgraph))
+
+		subgraph["key"] = 2
+
+		self.assertEqual(2, subgraph["key"])
+		self.assertEqual(1, len(subgraph))
+		self.assertIn("key", subgraph)
+
+		del subgraph["key"]
+
+		self.assertNotIn("key", subgraph)
+		self.assertEqual(0, len(subgraph))
+		with self.assertRaises(KeyError):
+			_ = subgraph["key"]
+
+	def test_ViewDict(self):
+		graph = Graph()
+		view = View(graph=graph)
+
+		self.assertEqual(0, len(view))
+
+		view["key"] = 2
+
+		self.assertEqual(2, view["key"])
+		self.assertEqual(1, len(view))
+		self.assertIn("key", view)
+
+		del view["key"]
+
+		self.assertNotIn("key", view)
+		self.assertEqual(0, len(view))
+		with self.assertRaises(KeyError):
+			_ = view["key"]
+
+	def test_ComponentDict(self):
+		graph = Graph()
+		component = Vertex(graph=graph).Component
+
+		self.assertEqual(0, len(component))
+
+		component["key"] = 2
+
+		self.assertEqual(2, component["key"])
+		self.assertEqual(1, len(component))
+		self.assertIn("key", component)
+
+		del component["key"]
+
+		self.assertNotIn("key", component)
+		self.assertEqual(0, len(component))
+		with self.assertRaises(KeyError):
+			_ = component["key"]
 
 	def test_VertexDict(self):
-		g = Graph()
-		v = Vertex(graph=g)
-		v["key"] = 2
+		graph = Graph()
+		vertex = Vertex(graph=graph)
 
-		self.assertEqual(2, v["key"])
+		self.assertEqual(0, len(vertex))
 
-		del v["key"]
+		vertex["key"] = 2
+
+		self.assertEqual(2, vertex["key"])
+		self.assertEqual(1, len(vertex))
+		self.assertIn("key", vertex)
+
+		del vertex["key"]
+
+		self.assertNotIn("key", vertex)
+		self.assertEqual(0, len(vertex))
 		with self.assertRaises(KeyError):
-			_ = v["key"]
+			_ = vertex["key"]
 
 	def test_EdgeDict(self):
-		g = Graph()
-		v1 = Vertex(graph=g)
-		v1["key"] = 3
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.LinkToVertex(vertex2)
 
-		v2 = Vertex(graph=g)
-		v2["key"] = 4
+		self.assertEqual(0, len(edge12))
 
-		e12 = v1.LinkToVertex(v2)
-		e12["key"] = 5
+		edge12["key"] = 2
 
-		self.assertEqual(3, v1["key"])
-		self.assertEqual(4, v2["key"])
-		self.assertEqual(5, e12["key"])
+		self.assertEqual(2, edge12["key"])
+		self.assertEqual(1, len(edge12))
+		self.assertIn("key", edge12)
 
-		del e12["key"]
+		del edge12["key"]
+
+		self.assertNotIn("key", edge12)
+		self.assertEqual(0, len(edge12))
 		with self.assertRaises(KeyError):
-			_ = e12["key"]
+			_ = edge12["key"]
 
 
 class Iterate(TestCase):
