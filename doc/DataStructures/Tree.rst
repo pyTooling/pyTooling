@@ -109,11 +109,13 @@ Features
 * Fast and simple tree data structure based on a single :py:class:`~pyTooling.Tree.Node` class.
 * A tree can be constructed top-down and bottom-up.
 * A node can have a unique ID.
-* Each node knows its level (distance from root).
+* A node knows its level (distance from root).
 * A node can have a value.
 * A node can store key-value-pairs via dictionary syntax.
 * A node has a reference to its parent node.
-* Each node has a reference to the root node in a tree (representative node).
+* A node has a reference to the root node in a tree (representative node).
+* Rendering to simple ASCII art for debugging purposes.
+
 
 .. _STRUCT/Tree/MissingFeatures:
 
@@ -131,8 +133,9 @@ Missing Features
 Planned Features
 ================
 
-* Rendering to simple ASCII art for debugging purposes.
 * Allow filters (predicates) in generators to allow node filtering.
+* Tree export to formats like GraphML, ...
+* Export the tree data structure to file the YAML format.
 * Allow nodes to have tags and group nodes by tags.
 * Allow nodes to link to other nodes (implement proxy behavior?)
 
@@ -144,9 +147,9 @@ Out of Scope
 
 * Preserve or recover the tree data structure before an erroneous operation caused an exception and aborted a tree
   modification, which might leave the tree in a corrupted state.
-* Export the tree data structure to various file formats like JSON, YAML, TOML, ...
+* Export the tree data structure to various file formats like JSON, TOML, ...
 * Import a tree data structure from various file formats like JSON, YAML, TOML, ...
-* Tree visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, ...
+* Tree visualization or rendering to complex formats like GraphViz, Mermaid, ...
 
 
 .. _STRUCT/Tree/ByFeature:

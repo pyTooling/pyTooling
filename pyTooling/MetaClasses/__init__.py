@@ -157,7 +157,7 @@ def abstractmethod(method: M) -> M:
 
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
-	        def method:
+	        def method(self):
 	          '''This method needs to be implemented'''
 
 	:param method: Method that is marked as *abstract*.
@@ -190,7 +190,7 @@ def mustoverride(method: M) -> M:
 
 	      class Data(mataclass=ExtendedType):
 	        @mustoverride
-	        def method:
+	        def method(self):
 	          '''This is a very basic implementation'''
 
 	:param method: Method that is marked as *must-override*.
@@ -293,7 +293,8 @@ class ExtendedType(type):
 						members[key] = outer(value)
 
 		for memberName, member in members.items():
-			if ((hasattr(member, "__abstract__") and member.__abstract__) or (hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+			if ((hasattr(member, "__abstract__") and member.__abstract__) or
+					(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
 				abstractMethods[memberName] = member
 			elif memberName in abstractMethods:
 				del abstractMethods[memberName]

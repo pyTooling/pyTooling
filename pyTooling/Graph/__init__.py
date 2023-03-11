@@ -1114,7 +1114,7 @@ class Component(
 	metaclass=ExtendedType, useSlots=True
 ):
 	_graph:    'Graph'
-	_name:     str
+	_name:     Nullable[str]
 	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_dict:     Dict[ComponentDictKeyType, ComponentDictValueType]
 
@@ -1148,7 +1148,7 @@ class Component(
 		return self._graph
 
 	@property
-	def Name(self) -> str:
+	def Name(self) -> Nullable[str]:
 		"""
 		Property to get and set the name (:py:attr:`_name`) of the component.
 
