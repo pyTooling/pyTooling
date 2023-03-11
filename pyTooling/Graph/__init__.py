@@ -186,14 +186,10 @@ class Vertex(
 	_value:     Nullable[VertexValueType]
 	_dict:      Dict[VertexDictKeyType, VertexDictValueType]
 
-	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, component: 'Component' = None, graph: 'Graph' = None):
+	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, graph: 'Graph' = None):
 		""".. todo:: GRAPH::Vertex::init Needs documentation."""
-		if component is None:
-			self._graph = graph if graph is not None else Graph()
-			self._component = Component(self._graph, vertices=(self,))
-		else:
-			self._graph = component._graph
-			self._component = component
+		self._graph = graph if graph is not None else Graph()
+		self._component = Component(self._graph, vertices=(self,))
 
 		self._id = vertexID
 		if vertexID is None:
@@ -401,7 +397,7 @@ class Vertex(
 		return edge
 
 	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		vertex = Vertex(vertexID, vertexValue, component=self._component)
+		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
 
@@ -420,7 +416,7 @@ class Vertex(
 		return edge
 
 	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		vertex = Vertex(vertexID, vertexValue, component=self._component)
+		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
 
@@ -987,12 +983,15 @@ class Edge(
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
-		if source._component is not destination._component:
+		component = source._component
+		if component is not destination._component:
 			# TODO: should it be divided into with/without ID?
-			for vertex in destination._component._vertices:
-				component = source._component
-				component._vertices.add(vertex)
+			oldComponent = destination._component
+			for vertex in oldComponent._vertices:
 				vertex._component = component
+				component._vertices.add(vertex)
+			component._graph._components.remove(oldComponent)
+			del oldComponent
 
 		self._id = edgeID
 		self._source = source
@@ -1147,7 +1146,6 @@ class Component(
 		self._dict = {}
 
 	def __del__(self):
-		self._graph._components.remove(self)
 		del self._vertices
 		del self._dict
 
@@ -1269,7 +1267,6 @@ class Subgraph(
 		self._dict = {}
 
 	def __del__(self):
-		self._graph._subgraphs.remove(self)
 		del self._vertices
 		del self._dict
 
@@ -1394,7 +1391,6 @@ class View(
 		self._dict = {}
 
 	def __del__(self):
-		self._graph._views.remove(self)
 		del self._vertices
 		del self._dict
 
