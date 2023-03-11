@@ -96,6 +96,18 @@ ComponentDictKeyType = TypeVar("ComponentDictKeyType", bound=Hashable)
 ComponentDictValueType = TypeVar("ComponentDictValueType")
 """A type variable for a component's dictionary values."""
 
+SubgraphDictKeyType = TypeVar("SubgraphDictKeyType", bound=Hashable)
+"""A type variable for a component's dictionary keys."""
+
+SubgraphDictValueType = TypeVar("SubgraphDictValueType")
+"""A type variable for a component's dictionary values."""
+
+ViewDictKeyType = TypeVar("ViewDictKeyType", bound=Hashable)
+"""A type variable for a component's dictionary keys."""
+
+ViewDictValueType = TypeVar("ViewDictValueType")
+"""A type variable for a component's dictionary values."""
+
 GraphDictKeyType = TypeVar("GraphDictKeyType", bound=Hashable)
 """A type variable for a graph's dictionary keys."""
 
@@ -1135,6 +1147,7 @@ class Component(
 		self._dict = {}
 
 	def __del__(self):
+		self._graph._components.remove(self)
 		del self._vertices
 		del self._dict
 
@@ -1162,6 +1175,10 @@ class Component(
 			raise TypeError("Name is not of type 'str'.")
 
 		self._name = value
+
+	@property
+	def VertexCount(self) -> int:
+		return len(self._vertices)
 
 	@property
 	def Vertices(self) -> Set[Vertex]:
@@ -1223,10 +1240,248 @@ class Component(
 
 
 @export
+class Subgraph(
+	Generic[
+		SubgraphDictKeyType, SubgraphDictValueType,
+		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	],
+	metaclass=ExtendedType, useSlots=True
+):
+	_graph:    'Graph'
+	_name:     Nullable[str]
+	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_dict:     Dict[SubgraphDictKeyType, SubgraphDictValueType]
+
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+		""".. todo:: GRAPH::Subgraph::init Needs documentation."""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		if not isinstance(graph, Graph):
+			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+		if name is not None and not isinstance(name, str):
+			raise TypeError("Parameter 'name' is not of type 'str'.")
+
+		graph._subgraphs.add(self)
+
+		self._graph = graph
+		self._name = name
+		self._vertices = set() if vertices is None else {v for v in vertices}
+		self._dict = {}
+
+	def __del__(self):
+		self._graph._subgraphs.remove(self)
+		del self._vertices
+		del self._dict
+
+	@property
+	def Graph(self) -> 'Graph':
+		"""
+		Read-only property to access the graph, this subgraph is associated to (:py:attr:`_graph`).
+
+		:returns: The graph this subgraph is associated to.
+		"""
+		return self._graph
+
+	@property
+	def Name(self) -> Nullable[str]:
+		"""
+		Property to get and set the name (:py:attr:`_name`) of the subgraph.
+
+		:returns: The value of a subgraph.
+		"""
+		return self._name
+
+	@Name.setter
+	def Name(self, value: str) -> None:
+		if not isinstance(value, str):
+			raise TypeError("Name is not of type 'str'.")
+
+		self._name = value
+
+	@property
+	def Vertices(self) -> Set[Vertex]:
+		"""
+		Read-only property to access the vertices in this subgraph (:py:attr:`_vertices`).
+
+		:returns: The set of vertices in this subgraph.
+		"""
+		return self._vertices
+
+	def __getitem__(self, key: SubgraphDictKeyType) -> SubgraphDictValueType:
+		"""
+		Read a subgraph's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: SubgraphDictKeyType, value: SubgraphDictValueType) -> None:
+		"""
+		Create or update a subgraph's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: SubgraphDictKeyType) -> None:
+		"""
+		Remove an entry from subgraph's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the component's attributes.
+		"""
+		del self._dict[key]
+
+	def __contains__(self, key: SubgraphDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this subgraph.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of attached attributes (key-value-pairs) in this subgraph.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
+
+	def __str__(self) -> str:
+		return self._name if self._name is not None else "Unnamed subgraph"
+
+
+@export
+class View(
+	Generic[
+		ViewDictKeyType, ViewDictValueType,
+		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	],
+	metaclass=ExtendedType, useSlots=True
+):
+	_graph:    'Graph'
+	_name:     Nullable[str]
+	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_dict:     Dict[ViewDictKeyType, ViewDictValueType]
+
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+		""".. todo:: GRAPH::View::init Needs documentation."""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		if not isinstance(graph, Graph):
+			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+		if name is not None and not isinstance(name, str):
+			raise TypeError("Parameter 'name' is not of type 'str'.")
+
+		graph._views.add(self)
+
+		self._graph = graph
+		self._name = name
+		self._vertices = set() if vertices is None else {v for v in vertices}
+		self._dict = {}
+
+	def __del__(self):
+		self._graph._views.remove(self)
+		del self._vertices
+		del self._dict
+
+	@property
+	def Graph(self) -> 'Graph':
+		"""
+		Read-only property to access the graph, this view is associated to (:py:attr:`_graph`).
+
+		:returns: The graph this view is associated to.
+		"""
+		return self._graph
+
+	@property
+	def Name(self) -> Nullable[str]:
+		"""
+		Property to get and set the name (:py:attr:`_name`) of the view.
+
+		:returns: The value of a view.
+		"""
+		return self._name
+
+	@Name.setter
+	def Name(self, value: str) -> None:
+		if not isinstance(value, str):
+			raise TypeError("Name is not of type 'str'.")
+
+		self._name = value
+
+	@property
+	def Vertices(self) -> Set[Vertex]:
+		"""
+		Read-only property to access the vertices in this view (:py:attr:`_vertices`).
+
+		:returns: The set of vertices in this view.
+		"""
+		return self._vertices
+
+	def __getitem__(self, key: ViewDictKeyType) -> ViewDictValueType:
+		"""
+		Read a view's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: ViewDictKeyType, value: ViewDictValueType) -> None:
+		"""
+		Create or update a view's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key: The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: ViewDictKeyType) -> None:
+		"""
+		Remove an entry from view's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the component's attributes.
+		"""
+		del self._dict[key]
+
+	def __contains__(self, key: ViewDictKeyType) -> bool:
+		"""
+		Returns if the key is an attached attribute (key-value-pairs) on this view.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of attached attributes (key-value-pairs) in this view.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
+
+	def __str__(self) -> str:
+		return self._name if self._name is not None else "Unnamed view"
+
+
+@export
 class Graph(
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
 		ComponentDictKeyType, ComponentDictValueType,
+		SubgraphDictKeyType, SubgraphDictValueType,
+		ViewDictKeyType, ViewDictValueType,
 		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType,
 		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
 	],
@@ -1239,6 +1494,8 @@ class Graph(
 	"""
 	_name:              Nullable[str]
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_subgraphs:         Set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_views:             Set[View[ViewDictKeyType, ViewDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithID:    Dict[VertexIDType, Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
 	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
@@ -1249,6 +1506,8 @@ class Graph(
 		""".. todo:: GRAPH::Graph::init Needs documentation."""
 		self._name = name
 		self._components = set()
+		self._subgraphs = set()
+		self._views = set()
 		self._verticesWithoutID = []
 		self._verticesWithID = {}
 		self._edgesWithoutID = []
@@ -1306,6 +1565,20 @@ class Graph(
 
 		:returns: The number of components in this graph."""
 		return len(self._components)
+
+	@property
+	def SubgraphCount(self) -> int:
+		"""Read-only property to access the number of subgraphs in this graph.
+
+		:returns: The number of subgraphs in this graph."""
+		return len(self._subgraphs)
+
+	@property
+	def ViewCount(self) -> int:
+		"""Read-only property to access the number of views in this graph.
+
+		:returns: The number of views in this graph."""
+		return len(self._views)
 
 	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
 		"""

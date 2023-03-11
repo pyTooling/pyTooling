@@ -41,6 +41,17 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Construction(TestCase):
+	def test_Graph(self):
+		g = Graph()
+
+		self.assertIsNone(g.Name)
+		self.assertEqual(0, g.VertexCount)
+		self.assertEqual(0, g.EdgeCount)
+		self.assertEqual(0, g.ComponentCount)
+		self.assertEqual(0, g.SubgraphCount)
+		self.assertEqual(0, g.ViewCount)
+		self.assertEqual(0, len(g))
+
 	def test_GraphName(self):
 		g = Graph("myGraph")
 
@@ -52,6 +63,7 @@ class Construction(TestCase):
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
 		self.assertEqual(1, root.Graph.VertexCount)
+		self.assertEqual(1, root.Graph.ComponentCount)
 
 	def test_SingleVertexInEmptyGraph(self):
 		graph = Graph()
@@ -60,18 +72,70 @@ class Construction(TestCase):
 
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
-		self.assertEqual(1, root.Graph.VertexCount)
-		self.assertIsNone(root.Graph.Name)
+		self.assertEqual(1, graph.VertexCount)
+		self.assertEqual(1, graph.ComponentCount)
 
-	def test_SingleVertexInEmptyGraphWithName(self):
-		graph = Graph("test")
+	def test_SingleEdgeLinkToVertex(self):
+		graph = Graph()
 
-		root = Vertex(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
 
-		self.assertIsNone(root.ID)
-		self.assertIsNone(root.Value)
-		self.assertEqual(1, root.Graph.VertexCount)
-		self.assertEqual("test", root.Graph.Name)
+		self.assertEqual(2, graph.ComponentCount)
+
+		edge12 = vertex1.LinkToVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIs(vertex1, edge12.Source)
+		self.assertIs(vertex2, edge12.Destination)
+		self.assertIsNone(edge12.ID)
+		self.assertIsNone(edge12.Value)
+
+	def test_SingleEdgeLinkFromVertex(self):
+		graph = Graph()
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+
+		self.assertEqual(2, graph.ComponentCount)
+
+		edge21 = vertex1.LinkFromVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIs(vertex2, edge21.Source)
+		self.assertIs(vertex1, edge21.Destination)
+		self.assertIsNone(edge21.ID)
+		self.assertIsNone(edge21.Value)
+
+	def test_SingleEdgeLinkToNewVertex(self):
+		graph = Graph()
+
+		vertex1 = Vertex(graph=graph)
+
+		self.assertEqual(1, graph.ComponentCount)
+
+		edge1x = vertex1.LinkToNewVertex()
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIs(vertex1, edge1x.Source)
+		self.assertIsNot(vertex1, edge1x.Destination)
+		self.assertIsNone(edge1x.ID)
+		self.assertIsNone(edge1x.Value)
+
+	def test_SingleEdgeLinkFromNewVertex(self):
+		graph = Graph()
+
+		vertex1 = Vertex(graph=graph)
+
+		self.assertEqual(1, graph.ComponentCount)
+
+		edgex1 = vertex1.LinkFromNewVertex()
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIsNot(vertex1, edgex1.Source)
+		self.assertIs(vertex1, edgex1.Destination)
+		self.assertIsNone(edgex1.ID)
+		self.assertIsNone(edgex1.Value)
 
 	def test_SimpleTree(self):
 		v1 = Vertex()
@@ -89,8 +153,11 @@ class Construction(TestCase):
 		self.assertEqual(1, v12.OutboundEdgeCount)
 		self.assertEqual(1, v121.OutboundEdgeCount)
 		self.assertEqual(0, v1211.OutboundEdgeCount)
+
 		self.assertEqual(7, v1.Graph.VertexCount)
 		self.assertEqual(6, v1.Graph.EdgeCount)
+		self.assertEqual(1, v1.Graph.ComponentCount)
+		self.assertEqual(7, next(iter(v1.Graph.Components)).VertexCount)
 
 
 class Dicts(TestCase):
