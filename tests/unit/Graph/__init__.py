@@ -212,8 +212,8 @@ class Subgraphs(TestCase):
 		graph = Graph()
 		subgraph = Subgraph(name="subgraph1", graph=graph)
 
-		vertex3 = Vertex(graph=subgraph)
-		vertex4 = Vertex(graph=subgraph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
 
 		self.assertEqual(1, graph.SubgraphCount)
 		self.assertEqual(0, graph.VertexCount)
@@ -225,8 +225,8 @@ class Subgraphs(TestCase):
 
 		vertex1 = Vertex(graph=graph)
 		vertex2 = Vertex(graph=graph)
-		vertex3 = Vertex(graph=subgraph)
-		vertex4 = Vertex(graph=subgraph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
 
 		self.assertEqual(1, graph.SubgraphCount)
 		self.assertEqual(2, graph.VertexCount)

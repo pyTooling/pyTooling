@@ -410,22 +410,32 @@ class Vertex(
 	_inbound:   List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
 	_outbound:  List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
 
-	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None):
+	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None, subgraph: 'Subgraph' = None):
 		""".. todo:: GRAPH::Vertex::init Needs documentation."""
 		if vertexID is not None and not isinstance(vertexID, Hashable):
 			raise TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
 
 		super().__init__(vertexID, value, weight)
 
-		self._graph = graph if graph is not None else Graph()
-		self._component = Component(self._graph, vertices=(self,))
+		if subgraph is None:
+			self._graph = graph if graph is not None else Graph()
+			self._component = Component(self._graph, vertices=(self,))
 
-		if vertexID is None:
-			self._graph._verticesWithoutID.append(self)
-		elif vertexID not in self._graph._verticesWithID:
-			self._graph._verticesWithID[vertexID] = self
+			if vertexID is None:
+				self._graph._verticesWithoutID.append(self)
+			elif vertexID not in self._graph._verticesWithID:
+				self._graph._verticesWithID[vertexID] = self
+			else:
+				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
 		else:
-			raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
+			self._graph = subgraph._graph
+
+			if vertexID is None:
+				subgraph._verticesWithoutID.append(self)
+			elif vertexID not in subgraph._verticesWithID:
+				subgraph._verticesWithID[vertexID] = self
+			else:
+				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this subgraph.")
 
 		self._inbound = []
 		self._outbound = []
@@ -1182,6 +1192,8 @@ class BaseGraph(
 		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
 	]
 ):
+	""".. todo:: GRAPH::BaseGraph Needs documentation."""
+
 	_verticesWithID:    Dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_verticesWithoutID: List[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
@@ -1540,6 +1552,8 @@ class Subgraph(
 		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
 	]
 ):
+	""".. todo:: GRAPH::Subgraph Needs documentation."""
+
 	_graph:    'Graph'
 
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
@@ -1584,6 +1598,8 @@ class View(
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
 	]
 ):
+	""".. todo:: GRAPH::View Needs documentation."""
+
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
 		""".. todo:: GRAPH::View::init Needs documentation."""
 		super().__init__(graph, name, vertices)
@@ -1610,6 +1626,8 @@ class Component(
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
 	]
 ):
+	""".. todo:: GRAPH::Component Needs documentation."""
+
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
 		""".. todo:: GRAPH::Component::init Needs documentation."""
 		super().__init__(graph, name, vertices)
