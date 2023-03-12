@@ -258,9 +258,6 @@ class BaseWithIDValueAndWeight(
 
 	def __init__(self, identifier: IDType = None, value: ValueType = None, weight: WeightType = None):
 		""".. todo:: GRAPH::Vertex::init Needs documentation."""
-		if weight is not None and not isinstance(weight, (int, float)):
-			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
-
 		super().__init__()
 
 		self._id = identifier
@@ -419,6 +416,7 @@ class Vertex(
 
 		if subgraph is None:
 			self._graph = graph if graph is not None else Graph()
+			self._subgraph = None
 			self._component = Component(self._graph, vertices=(self,))
 
 			if vertexID is None:
@@ -429,6 +427,8 @@ class Vertex(
 				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
 		else:
 			self._graph = subgraph._graph
+			self._subgraph = subgraph
+			self._component = Component(self._graph, vertices=(self,))
 
 			if vertexID is None:
 				subgraph._verticesWithoutID.append(self)
@@ -526,12 +526,16 @@ class Vertex(
 		"""
 		return tuple([edge.Destination for edge in self._outbound])
 
-	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		# TODO: set edgeID
-		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
-		self._outbound.append(edge)
-		vertex._inbound.append(edge)
+		if self._subgraph is vertex._subgraph:
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
+
+			self._outbound.append(edge)
+			vertex._inbound.append(edge)
+		else:
+			link = Link(self, vertex, edgeID, edgeValue, edgeWeight)
 
 		# TODO: move into Edge?
 		# TODO: keep _graph pointer in edge and then register edge on graph?
@@ -544,7 +548,7 @@ class Vertex(
 
 		return edge
 
-	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
 		vertex._outbound.append(edge)
@@ -561,7 +565,7 @@ class Vertex(
 
 		return edge
 
-	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
@@ -580,7 +584,7 @@ class Vertex(
 
 		return edge
 
-	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
@@ -599,7 +603,7 @@ class Vertex(
 
 		return edge
 
-	def HasLinkToDestination(self, destination: 'Vertex') -> bool:
+	def HasEdgeToDestination(self, destination: 'Vertex') -> bool:
 		"""
 		Check if this vertex is linked to another vertex by any outbound edge.
 
@@ -608,7 +612,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasLinkFromSourcce` |br|
+		   :py:meth:`HasEdgeFromSourcce` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
 		"""
 		for edge in self._outbound:
@@ -617,7 +621,7 @@ class Vertex(
 
 		return False
 
-	def HasLinkFromSourcce(self, source: 'Vertex') -> bool:
+	def HasEdgeFromSourcce(self, source: 'Vertex') -> bool:
 		"""
 		Check if this vertex is linked to another vertex by any inbound edge.
 
@@ -626,7 +630,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasLinkToDestination` |br|
+		   :py:meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
 		"""
 		for edge in self._inbound:
@@ -1026,16 +1030,16 @@ class Vertex(
 		# * Bellman-Ford
 		# * Floyd-Warshall
 
-	def PathExistsTo(self, destination: 'Vertex'):
-		raise NotImplementedError()
-		# DFS
-		# Union find
-
-	def MaximumFlowTo(self, destination: 'Vertex'):
-		raise NotImplementedError()
-		# Ford-Fulkerson algorithm
-		# Edmons-Karp algorithm
-		# Dinic's algorithm
+	# def PathExistsTo(self, destination: 'Vertex'):
+	# 	raise NotImplementedError()
+	# 	# DFS
+	# 	# Union find
+	#
+	# def MaximumFlowTo(self, destination: 'Vertex'):
+	# 	raise NotImplementedError()
+	# 	# Ford-Fulkerson algorithm
+	# 	# Edmons-Karp algorithm
+	# 	# Dinic's algorithm
 
 	def ConvertToTree(self) -> Node:
 		"""
@@ -1111,7 +1115,7 @@ class Vertex(
 
 
 @export
-class Edge(
+class BaseEdge(
 	BaseWithIDValueAndWeight[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
 	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
 ):
@@ -1123,18 +1127,7 @@ class Edge(
 	_destination: Vertex
 
 	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
-		""".. todo:: GRAPH::Edge::init Needs documentation."""
-		if not isinstance(source, Vertex):
-			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
-		if not isinstance(destination, Vertex):
-			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
-		if edgeID is not None and not isinstance(edgeID, Hashable):
-			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
-		# if value is not None and  not isinstance(value, Vertex):
-		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
-		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
-
+		""".. todo:: GRAPH::BaseEdge::init Needs documentation."""
 		super().__init__(edgeID, value, weight)
 
 		self._source = source
@@ -1149,9 +1142,6 @@ class Edge(
 				component._vertices.add(vertex)
 			component._graph._components.remove(oldComponent)
 			del oldComponent
-
-	def __del__(self):
-		super().__del__()
 
 	@property
 	def Source(self) -> Vertex:
@@ -1171,6 +1161,41 @@ class Edge(
 		"""
 		return self._destination
 
+	# @mustoverride
+	def Reverse(self) -> None:
+		"""Reverse the direction of this edge."""
+		swap = self._source
+		self._source = self._destination
+		self._destination = swap
+
+
+@export
+class Edge(
+	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+):
+	"""
+	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
+	directed.
+	"""
+
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
+		""".. todo:: GRAPH::Edge::init Needs documentation."""
+		if not isinstance(source, Vertex):
+			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
+		if not isinstance(destination, Vertex):
+			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
+		if edgeID is not None and not isinstance(edgeID, Hashable):
+			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
+		# if value is not None and  not isinstance(value, Vertex):
+		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
+		if weight is not None and not isinstance(weight, (int, float)):
+			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+		if source._graph is not destination._graph:
+			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+
+		super().__init__(source, destination, edgeID, value, weight)
+
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
 		self._source._outbound.remove(self)
@@ -1178,9 +1203,44 @@ class Edge(
 		self._destination._inbound.remove(self)
 		self._destination._outbound.append(self)
 
-		swap = self._source
-		self._source = self._destination
-		self._destination = swap
+		super().Reverse()
+
+
+@export
+class Link(
+	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+):
+	"""
+	A **link** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All links are
+	directed.
+	"""
+
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
+		""".. todo:: GRAPH::Edge::init Needs documentation."""
+		if not isinstance(source, Vertex):
+			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
+		if not isinstance(destination, Vertex):
+			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
+		if edgeID is not None and not isinstance(edgeID, Hashable):
+			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
+		# if value is not None and  not isinstance(value, Vertex):
+		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
+		if weight is not None and not isinstance(weight, (int, float)):
+			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+		if source._graph is not destination._graph:
+			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+
+		super().__init__(source, destination, edgeID, value, weight)
+
+	def Reverse(self) -> None:
+		"""Reverse the direction of this link."""
+		self._source._outbound.remove(self)
+		self._source._inbound.append(self)
+		self._destination._inbound.remove(self)
+		self._destination._outbound.append(self)
+
+		super().Reverse()
 
 
 @export

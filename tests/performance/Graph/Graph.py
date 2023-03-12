@@ -49,7 +49,7 @@ class EdgeLinking(PerformanceTest):
 				rootVertex = pt_Vertex(0)
 
 				for i in range(1, count):
-					rootVertex.LinkToNewVertex(i)
+					rootVertex.EdgeToNewVertex(i)
 
 			return func
 
@@ -61,7 +61,7 @@ class EdgeLinking(PerformanceTest):
 				vertex = pt_Vertex(0)
 
 				for i in range(1, count):
-					vertex = vertex.LinkToNewVertex(i).Destination
+					vertex = vertex.EdgeToNewVertex(i).Destination
 
 			return func
 
@@ -76,7 +76,7 @@ class RandomGraph(PerformanceTest):
 		with file.open("r") as f:
 			for line in f.readlines():
 				v, u, w = line.split(" ")
-				vList[int(v)].LinkToVertex(vList[int(u)], edgeWeight=int(w))
+				vList[int(v)].EdgeToVertex(vList[int(u)], edgeWeight=int(w))
 
 # 		lenBFS = []
 # #		lenDFS = []
