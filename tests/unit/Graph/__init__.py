@@ -196,6 +196,43 @@ class Construction(TestCase):
 		self.assertEqual(7, next(iter(v1.Graph.Components)).VertexCount)
 
 
+class Subgraphs(TestCase):
+	def test_OuterVertices(self):
+		graph = Graph()
+		subgraph = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(2, graph.VertexCount)
+		self.assertEqual(0, subgraph.VertexCount)
+
+	def test_InnerVertices(self):
+		graph = Graph()
+		subgraph = Subgraph(name="subgraph1", graph=graph)
+
+		vertex3 = Vertex(graph=subgraph)
+		vertex4 = Vertex(graph=subgraph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(2, subgraph.VertexCount)
+
+	def test_OuterAndInnerVertices(self):
+		graph = Graph()
+		subgraph = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(graph=subgraph)
+		vertex4 = Vertex(graph=subgraph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(2, graph.VertexCount)
+		self.assertEqual(2, subgraph.VertexCount)
+
+
 class Dicts(TestCase):
 	def test_GraphDict(self):
 		graph = Graph()

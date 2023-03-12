@@ -62,9 +62,26 @@ from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Tree        import Node
 
+DictKeyType = TypeVar("DictKeyType", bound=Hashable)
+"""A type variable for dictionary keys."""
+
+DictValueType = TypeVar("DictValueType")
+"""A type variable for dictionary values."""
+
+IDType = TypeVar("IDType", bound=Hashable)
+"""A type variable for an ID."""
+
+WeightType = TypeVar("WeightType", bound=Union[int, float])
+"""A type variable for a weight."""
+
+ValueType = TypeVar("ValueType")
+"""A type variable for a value."""
 
 VertexIDType = TypeVar("VertexIDType", bound=Hashable)
 """A type variable for a vertex's ID."""
+
+VertexWeightType = TypeVar("VertexWeightType", bound=Union[int, float])
+"""A type variable for a vertex's weight."""
 
 VertexValueType = TypeVar("VertexValueType")
 """A type variable for a vertex's value."""
@@ -169,72 +186,21 @@ class CycleError(GraphException):
 
 
 @export
-class Vertex(
-	Generic[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType],
+class Base(
+	Generic[DictKeyType, DictValueType],
 	metaclass=ExtendedType, useSlots=True
 ):
-	"""
-	A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
-	to inbound and outbound edges, thus a graph can be traversed in reverse.
-	"""
-	_graph:     'Graph[VertexIDType, EdgeIDType]'
-	_component: 'Component'
-	_inbound:   List['Edge']
-	_outbound:  List['Edge']
+	_dict: Dict[DictKeyType, DictValueType]
 
-	_id:        Nullable[VertexIDType]
-	_value:     Nullable[VertexValueType]
-	_dict:      Dict[VertexDictKeyType, VertexDictValueType]
-
-	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, graph: 'Graph' = None):
-		""".. todo:: GRAPH::Vertex::init Needs documentation."""
-		self._graph = graph if graph is not None else Graph()
-		self._component = Component(self._graph, vertices=(self,))
-
-		self._id = vertexID
-		if vertexID is None:
-			self._graph._verticesWithoutID.append(self)
-		elif vertexID not in self._graph._verticesWithID:
-			self._graph._verticesWithID[vertexID] = self
-		else:
-			raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
-
-		self._inbound = []
-		self._outbound = []
-
-		self._value = value
+	def __init__(self):
+		""".. todo:: GRAPH::Base::init Needs documentation."""
 		self._dict = {}
 
 	def __del__(self):
-		del self._inbound
-		del self._outbound
+		""".. todo:: GRAPH::Base::del Needs documentation."""
 		del self._dict
 
-	@property
-	def ID(self) -> Nullable[VertexIDType]:
-		"""
-		Read-only property to access the unique ID of a vertex (:py:attr:`_id`).
-
-		If no ID was given at vertex construction time, ID returns ``None``.
-
-		:returns: Unique ID of a vertex, if ID was given at vertex creation time, else ``None``.
-		"""
-		return self._id
-
-	@property
-	def Value(self) -> VertexValueType:
-		"""
-		Property to get and set the value (:py:attr:`_value`) of a vertex.
-
-		:returns: The value of a vertex.
-		"""
-		return self._value
-
-	@Value.setter
-	def Value(self, value: VertexValueType) -> None:
-		self._value = value
-
-	def __getitem__(self, key: VertexDictKeyType) -> VertexDictValueType:
+	def __getitem__(self, key: DictKeyType) -> DictValueType:
 		"""
 		Read a vertex's attached attributes (key-value-pairs) by key.
 
@@ -243,7 +209,7 @@ class Vertex(
 		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: VertexDictKeyType, value: VertexDictValueType) -> None:
+	def __setitem__(self, key: DictKeyType, value: DictValueType) -> None:
 		"""
 		Create or update a vertex's attached attributes (key-value-pairs) by key.
 
@@ -254,7 +220,7 @@ class Vertex(
 		"""
 		self._dict[key] = value
 
-	def __delitem__(self, key: VertexDictKeyType) -> None:
+	def __delitem__(self, key: DictKeyType) -> None:
 		"""
 		Remove an entry from vertex's attached attributes (key-value-pairs) by key.
 
@@ -263,7 +229,7 @@ class Vertex(
 		"""
 		del self._dict[key]
 
-	def __contains__(self, key: VertexDictKeyType) -> bool:
+	def __contains__(self, key: DictKeyType) -> bool:
 		"""
 		Returns if the key is an attached attribute (key-value-pairs) on this vertex.
 
@@ -279,6 +245,195 @@ class Vertex(
 		:returns: Number of attached attributes.
 		"""
 		return len(self._dict)
+
+
+@export
+class BaseWithIDValueAndWeight(
+	Base[DictKeyType, DictValueType],
+	Generic[IDType, ValueType, WeightType, DictKeyType, DictValueType]
+):
+	_id:        Nullable[IDType]
+	_value:     Nullable[ValueType]
+	_weight:    Nullable[WeightType]
+
+	def __init__(self, identifier: IDType = None, value: ValueType = None, weight: WeightType = None):
+		""".. todo:: GRAPH::Vertex::init Needs documentation."""
+		if weight is not None and not isinstance(weight, (int, float)):
+			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+
+		super().__init__()
+
+		self._id = identifier
+		self._value = value
+		self._weight = weight
+
+	@property
+	def ID(self) -> Nullable[IDType]:
+		"""
+		Read-only property to access the unique ID (:py:attr:`_id`).
+
+		If no ID was given at creation time, ID returns ``None``.
+
+		:returns: Unique ID, if ID was given at creation time, else ``None``.
+		"""
+		return self._id
+
+	@property
+	def Value(self) -> ValueType:
+		"""
+		Property to get and set the value (:py:attr:`_value`).
+
+		:returns: The value.
+		"""
+		return self._value
+
+	@Value.setter
+	def Value(self, value: ValueType) -> None:
+		self._value = value
+
+	@property
+	def Weight(self) -> Nullable[EdgeWeightType]:
+		"""
+		Property to get and set the weight (:py:attr:`_weight`) of an edge.
+
+		:returns: The weight of an edge.
+		"""
+		return self._weight
+
+	@Weight.setter
+	def Weight(self, value: Nullable[EdgeWeightType]) -> None:
+		self._weight = value
+
+
+@export
+class BaseWithName(
+	Base[DictKeyType, DictValueType],
+	Generic[DictKeyType, DictValueType]
+):
+	_name:     Nullable[str]
+
+	def __init__(self, name: str = None):
+		""".. todo:: GRAPH::BaseWithName::init Needs documentation."""
+		if name is not None and not isinstance(name, str):
+			raise TypeError("Parameter 'name' is not of type 'str'.")
+
+		super().__init__()
+
+		self._name = name
+
+	@property
+	def Name(self) -> Nullable[str]:
+		"""
+		Property to get and set the name (:py:attr:`_name`).
+
+		:returns: The value of a component.
+		"""
+		return self._name
+
+	@Name.setter
+	def Name(self, value: str) -> None:
+		if not isinstance(value, str):
+			raise TypeError("Name is not of type 'str'.")
+
+		self._name = value
+
+
+@export
+class BaseWithVertices(
+	BaseWithName[DictKeyType, DictValueType],
+	Generic[
+		DictKeyType, DictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	]
+):
+	_graph:    'Graph'
+	_vertices: Set['Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable['Vertex'] = None):
+		""".. todo:: GRAPH::Component::init Needs documentation."""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		if not isinstance(graph, Graph):
+			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+
+		super().__init__(name)
+
+		self._graph = graph
+		self._vertices = set() if vertices is None else {v for v in vertices}
+
+	def __del__(self):
+		""".. todo:: GRAPH::BaseWithVertices::del Needs documentation."""
+		super().__del__()
+		del self._vertices
+
+	@property
+	def Graph(self) -> 'Graph':
+		"""
+		Read-only property to access the graph, this component is associated to (:py:attr:`_graph`).
+
+		:returns: The graph this component is associated to.
+		"""
+		return self._graph
+
+	@property
+	def Vertices(self) -> Set['Vertex']:
+		"""
+		Read-only property to access the vertices in this component (:py:attr:`_vertices`).
+
+		:returns: The set of vertices in this component.
+		"""
+		return self._vertices
+
+	@property
+	def VertexCount(self) -> int:
+		""".. todo:: GRAPH::BaseWithVertices::VertexCount Needs documentation."""
+		return len(self._vertices)
+
+
+@export
+class Vertex(
+	BaseWithIDValueAndWeight[VertexIDType, VertexValueType, VertexWeightType, VertexDictKeyType, VertexDictValueType],
+	Generic[
+		GraphDictKeyType, GraphDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
+	]
+):
+	"""
+	A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
+	to inbound and outbound edges, thus a graph can be traversed in reverse.
+	"""
+	_graph:     'BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]'
+	_subgraph:  'Subgraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]'
+	_component: 'Component'
+	_views:     Dict[Hashable, 'View']
+	_inbound:   List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+	_outbound:  List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+
+	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None):
+		""".. todo:: GRAPH::Vertex::init Needs documentation."""
+		if vertexID is not None and not isinstance(vertexID, Hashable):
+			raise TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
+
+		super().__init__(vertexID, value, weight)
+
+		self._graph = graph if graph is not None else Graph()
+		self._component = Component(self._graph, vertices=(self,))
+
+		if vertexID is None:
+			self._graph._verticesWithoutID.append(self)
+		elif vertexID not in self._graph._verticesWithID:
+			self._graph._verticesWithID[vertexID] = self
+		else:
+			raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
+
+		self._inbound = []
+		self._outbound = []
+
+	def __del__(self):
+		super().__del__()
+		del self._inbound
+		del self._outbound
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -363,7 +518,7 @@ class Vertex(
 
 	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		# TODO: set edgeID
-		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
+		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
@@ -380,7 +535,7 @@ class Vertex(
 		return edge
 
 	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
+		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
@@ -399,7 +554,7 @@ class Vertex(
 	def LinkToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
-		edge = Edge(self, vertex, edgeID, edgeWeight, edgeValue)
+		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
 		self._outbound.append(edge)
 		vertex._inbound.append(edge)
@@ -418,7 +573,7 @@ class Vertex(
 	def LinkFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
-		edge = Edge(vertex, self, edgeID, edgeWeight, edgeValue)
+		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
 		vertex._outbound.append(edge)
 		self._inbound.append(edge)
@@ -947,28 +1102,17 @@ class Vertex(
 
 @export
 class Edge(
-	Generic[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType],
-	metaclass=ExtendedType, useSlots=True
+	BaseWithIDValueAndWeight[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
 	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
 	directed.
 	"""
-	_id:          Nullable[EdgeIDType]
 	_source:      Vertex
 	_destination: Vertex
-	_weight:      Nullable[EdgeWeightType]
-	_value:       Nullable[EdgeValueType]
-	_dict:        Dict[EdgeDictKeyType, EdgeDictValueType]
 
-	def __init__(
-		self,
-		source: Vertex,
-		destination: Vertex,
-		edgeID: EdgeIDType = None,
-		weight: EdgeWeightType = None,
-		value: EdgeValueType = None
-	):
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
 		""".. todo:: GRAPH::Edge::init Needs documentation."""
 		if not isinstance(source, Vertex):
 			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
@@ -976,12 +1120,15 @@ class Edge(
 			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
 		if edgeID is not None and not isinstance(edgeID, Hashable):
 			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
-		if weight is not None and not isinstance(weight, (int, float)):
-			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+
+		super().__init__(edgeID, value, weight)
+
+		self._source = source
+		self._destination = destination
 
 		component = source._component
 		if component is not destination._component:
@@ -993,26 +1140,8 @@ class Edge(
 			component._graph._components.remove(oldComponent)
 			del oldComponent
 
-		self._id = edgeID
-		self._source = source
-		self._destination = destination
-		self._weight = weight
-		self._value = value
-		self._dict = {}
-
 	def __del__(self):
-		del self._dict
-
-	@property
-	def ID(self) -> Nullable[EdgeIDType]:
-		"""
-		Read-only property to access the unique ID of an edge (:py:attr:`_id`).
-
-		If no ID was given at edge construction time, ID returns ``None``.
-
-		:returns: Unique ID of an edge, if ID was given at edge creation time, else ``None``.
-		"""
-		return self._id
+		super().__del__()
 
 	@property
 	def Source(self) -> Vertex:
@@ -1032,78 +1161,6 @@ class Edge(
 		"""
 		return self._destination
 
-	@property
-	def Weight(self) -> Nullable[EdgeWeightType]:
-		"""
-		Property to get and set the weight (:py:attr:`_weight`) of an edge.
-
-		:returns: The weight of an edge.
-		"""
-		return self._weight
-
-	@Weight.setter
-	def Weight(self, value: Nullable[EdgeWeightType]) -> None:
-		self._weight = value
-
-	@property
-	def Value(self) -> Nullable[EdgeValueType]:
-		"""
-		Property to get and set the value (:py:attr:`_value`) of an edge.
-
-		:returns: The value of an edge.
-		"""
-		return self._value
-
-	@Value.setter
-	def Value(self, value: Nullable[EdgeValueType]) -> None:
-		self._value = value
-
-	def __getitem__(self, key: EdgeDictKeyType) -> EdgeDictValueType:
-		"""
-		Read an edge's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: EdgeDictKeyType, value: EdgeDictValueType) -> None:
-		"""
-		Create or update an edge's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key: The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: EdgeDictKeyType) -> None:
-		"""
-		Remove an entry from edge's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the edge's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: EdgeDictKeyType) -> bool:
-		"""
-		Returns if the key is an attached attribute (key-value-pairs) on this edge.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) in this edge.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
 		self._source._outbound.remove(self)
@@ -1117,443 +1174,34 @@ class Edge(
 
 
 @export
-class Component(
-	Generic[
-		ComponentDictKeyType, ComponentDictValueType,
-		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType
-	],
-	metaclass=ExtendedType, useSlots=True
-):
-	_graph:    'Graph'
-	_name:     Nullable[str]
-	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_dict:     Dict[ComponentDictKeyType, ComponentDictValueType]
-
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::Graph::init Needs documentation."""
-		if graph is None:
-			raise ValueError("Parameter 'graph' is None.")
-		if not isinstance(graph, Graph):
-			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
-		if name is not None and not isinstance(name, str):
-			raise TypeError("Parameter 'name' is not of type 'str'.")
-
-		graph._components.add(self)
-
-		self._graph = graph
-		self._name = name
-		self._vertices = set() if vertices is None else {v for v in vertices}
-		self._dict = {}
-
-	def __del__(self):
-		del self._vertices
-		del self._dict
-
-	@property
-	def Graph(self) -> 'Graph':
-		"""
-		Read-only property to access the graph, this component is associated to (:py:attr:`_graph`).
-
-		:returns: The graph this component is associated to.
-		"""
-		return self._graph
-
-	@property
-	def Name(self) -> Nullable[str]:
-		"""
-		Property to get and set the name (:py:attr:`_name`) of the component.
-
-		:returns: The value of a component.
-		"""
-		return self._name
-
-	@Name.setter
-	def Name(self, value: str) -> None:
-		if not isinstance(value, str):
-			raise TypeError("Name is not of type 'str'.")
-
-		self._name = value
-
-	@property
-	def VertexCount(self) -> int:
-		return len(self._vertices)
-
-	@property
-	def Vertices(self) -> Set[Vertex]:
-		"""
-		Read-only property to access the vertices in this component (:py:attr:`_vertices`).
-
-		:returns: The set of vertices in this component.
-		"""
-		return self._vertices
-
-	def __getitem__(self, key: ComponentDictKeyType) -> ComponentDictValueType:
-		"""
-		Read a component's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: ComponentDictKeyType, value: ComponentDictValueType) -> None:
-		"""
-		Create or update a component's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key: The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: ComponentDictKeyType) -> None:
-		"""
-		Remove an entry from component's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the component's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: ComponentDictKeyType) -> bool:
-		"""
-		Returns if the key is an attached attribute (key-value-pairs) on this component.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) in this component.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __str__(self) -> str:
-		return self._name if self._name is not None else "Unnamed component"
-
-
-@export
-class Subgraph(
-	Generic[
-		SubgraphDictKeyType, SubgraphDictValueType,
-		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType
-	],
-	metaclass=ExtendedType, useSlots=True
-):
-	_graph:    'Graph'
-	_name:     Nullable[str]
-	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_dict:     Dict[SubgraphDictKeyType, SubgraphDictValueType]
-
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::Subgraph::init Needs documentation."""
-		if graph is None:
-			raise ValueError("Parameter 'graph' is None.")
-		if not isinstance(graph, Graph):
-			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
-		if name is not None and not isinstance(name, str):
-			raise TypeError("Parameter 'name' is not of type 'str'.")
-
-		graph._subgraphs.add(self)
-
-		self._graph = graph
-		self._name = name
-		self._vertices = set() if vertices is None else {v for v in vertices}
-		self._dict = {}
-
-	def __del__(self):
-		del self._vertices
-		del self._dict
-
-	@property
-	def Graph(self) -> 'Graph':
-		"""
-		Read-only property to access the graph, this subgraph is associated to (:py:attr:`_graph`).
-
-		:returns: The graph this subgraph is associated to.
-		"""
-		return self._graph
-
-	@property
-	def Name(self) -> Nullable[str]:
-		"""
-		Property to get and set the name (:py:attr:`_name`) of the subgraph.
-
-		:returns: The value of a subgraph.
-		"""
-		return self._name
-
-	@Name.setter
-	def Name(self, value: str) -> None:
-		if not isinstance(value, str):
-			raise TypeError("Name is not of type 'str'.")
-
-		self._name = value
-
-	@property
-	def Vertices(self) -> Set[Vertex]:
-		"""
-		Read-only property to access the vertices in this subgraph (:py:attr:`_vertices`).
-
-		:returns: The set of vertices in this subgraph.
-		"""
-		return self._vertices
-
-	@property
-	def VertexCount(self) -> int:
-		"""Read-only property to access the number of vertices in this subgraph.
-
-		:returns: The number of vertices in this subgraph."""
-		return len(self._vertices)
-
-	def __getitem__(self, key: SubgraphDictKeyType) -> SubgraphDictValueType:
-		"""
-		Read a subgraph's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: SubgraphDictKeyType, value: SubgraphDictValueType) -> None:
-		"""
-		Create or update a subgraph's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key: The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: SubgraphDictKeyType) -> None:
-		"""
-		Remove an entry from subgraph's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the component's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: SubgraphDictKeyType) -> bool:
-		"""
-		Returns if the key is an attached attribute (key-value-pairs) on this subgraph.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) in this subgraph.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __str__(self) -> str:
-		return self._name if self._name is not None else "Unnamed subgraph"
-
-
-@export
-class View(
-	Generic[
-		ViewDictKeyType, ViewDictValueType,
-		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType
-	],
-	metaclass=ExtendedType, useSlots=True
-):
-	_graph:    'Graph'
-	_name:     Nullable[str]
-	_vertices: Set[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_dict:     Dict[ViewDictKeyType, ViewDictValueType]
-
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::View::init Needs documentation."""
-		if graph is None:
-			raise ValueError("Parameter 'graph' is None.")
-		if not isinstance(graph, Graph):
-			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
-		if name is not None and not isinstance(name, str):
-			raise TypeError("Parameter 'name' is not of type 'str'.")
-
-		graph._views.add(self)
-
-		self._graph = graph
-		self._name = name
-		self._vertices = set() if vertices is None else {v for v in vertices}
-		self._dict = {}
-
-	def __del__(self):
-		del self._vertices
-		del self._dict
-
-	@property
-	def Graph(self) -> 'Graph':
-		"""
-		Read-only property to access the graph, this view is associated to (:py:attr:`_graph`).
-
-		:returns: The graph this view is associated to.
-		"""
-		return self._graph
-
-	@property
-	def Name(self) -> Nullable[str]:
-		"""
-		Property to get and set the name (:py:attr:`_name`) of the view.
-
-		:returns: The value of a view.
-		"""
-		return self._name
-
-	@Name.setter
-	def Name(self, value: str) -> None:
-		if not isinstance(value, str):
-			raise TypeError("Name is not of type 'str'.")
-
-		self._name = value
-
-	@property
-	def Vertices(self) -> Set[Vertex]:
-		"""
-		Read-only property to access the vertices in this view (:py:attr:`_vertices`).
-
-		:returns: The set of vertices in this view.
-		"""
-		return self._vertices
-
-	@property
-	def VertexCount(self) -> int:
-		"""Read-only property to access the number of vertices in this view.
-
-		:returns: The number of vertices in this view."""
-		return len(self._vertices)
-
-	def __getitem__(self, key: ViewDictKeyType) -> ViewDictValueType:
-		"""
-		Read a view's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: ViewDictKeyType, value: ViewDictValueType) -> None:
-		"""
-		Create or update a view's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key: The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: ViewDictKeyType) -> None:
-		"""
-		Remove an entry from view's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the component's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: ViewDictKeyType) -> bool:
-		"""
-		Returns if the key is an attached attribute (key-value-pairs) on this view.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) in this view.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __str__(self) -> str:
-		return self._name if self._name is not None else "Unnamed view"
-
-
-@export
-class Graph(
+class BaseGraph(
+	BaseWithName[GraphDictKeyType, GraphDictValueType],
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
-		ComponentDictKeyType, ComponentDictValueType,
-		SubgraphDictKeyType, SubgraphDictValueType,
-		ViewDictKeyType, ViewDictValueType,
-		VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
 		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
-	],
-	metaclass=ExtendedType, useSlots=True
+	]
 ):
-	"""
-	A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to
-	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
-	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
-	"""
-	_name:              Nullable[str]
-	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_subgraphs:         Set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_views:             Set[View[ViewDictKeyType, ViewDictValueType, VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_verticesWithID:    Dict[VertexIDType, Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
-	_verticesWithoutID: List[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_verticesWithID:    Dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
+	_verticesWithoutID: List[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_edgesWithoutID:    List[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
-	_dict:              Dict[GraphDictKeyType, GraphDictValueType]
 
-	def __init__(self, name: str = None):
-		""".. todo:: GRAPH::Graph::init Needs documentation."""
-		self._name = name
-		self._components = set()
-		self._subgraphs = set()
-		self._views = set()
+	def __init__(self, name: str = None):  #, vertices: Iterable[Vertex] = None):
+		""".. todo:: GRAPH::BaseGraph::init Needs documentation."""
+		super().__init__(name)
+
 		self._verticesWithoutID = []
 		self._verticesWithID = {}
 		self._edgesWithoutID = []
 		self._edgesWithID = {}
-		self._dict = {}
 
 	def __del__(self):
-		del self._components
+		super().__del__()
 		del self._verticesWithoutID
 		del self._verticesWithID
 		del self._edgesWithoutID
 		del self._edgesWithID
-		del self._dict
-
-	@property
-	def Name(self) -> Nullable[str]:
-		"""
-		Property to get and set the name (:py:attr:`_name`) of the graph.
-
-		:returns: The name of a graph.
-		"""
-		return self._name
-
-	@Name.setter
-	def Name(self, value: str) -> None:
-		if not isinstance(value, str):
-			raise TypeError("Name is not of type 'str'.")
-
-		self._name = value
-
-	@property
-	def Components(self) -> Set[Component]:
-		"""Read-only property to access the components in this graph (:py:attr:`_components`).
-
-		:returns: The set of components in this graph."""
-		return self._components
 
 	@property
 	def VertexCount(self) -> int:
@@ -1569,81 +1217,7 @@ class Graph(
 		:returns: The number of edges in this graph."""
 		return len(self._edgesWithoutID) + len(self._edgesWithID)
 
-	@property
-	def ComponentCount(self) -> int:
-		"""Read-only property to access the number of components in this graph.
-
-		:returns: The number of components in this graph."""
-		return len(self._components)
-
-	@property
-	def SubgraphCount(self) -> int:
-		"""Read-only property to access the number of subgraphs in this graph.
-
-		:returns: The number of subgraphs in this graph."""
-		return len(self._subgraphs)
-
-	@property
-	def ViewCount(self) -> int:
-		"""Read-only property to access the number of views in this graph.
-
-		:returns: The number of views in this graph."""
-		return len(self._views)
-
-	def __getitem__(self, key: GraphDictKeyType) -> GraphDictValueType:
-		"""
-		Read a graph's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to look for.
-		:returns:         The value associated to the given key.
-		:raises KeyError: If key doesn't exist in the graph's attributes.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: GraphDictKeyType, value: GraphDictValueType) -> None:
-		"""
-		Create or update a graph's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: GraphDictKeyType) -> None:
-		"""
-		Remove an entry from graph's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the graph's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: GraphDictKeyType) -> bool:
-		"""
-		Returns if the key is an attached attribute (key-value-pairs) on this graph.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) in this graph.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __iter__(self) -> typing_Iterator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType]]:
-		def gen():
-			yield from self._verticesWithoutID
-			yield from self._verticesWithID
-		return iter(gen())
-
-	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices of a graph.
 
@@ -1665,7 +1239,7 @@ class Graph(
 				if predicate(vertex):
 					yield vertex
 
-	def IterateRoots(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateRoots(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -1700,7 +1274,7 @@ class Graph(
 				if len(vertex._inbound) == 0 and predicate(vertex):
 					yield vertex
 
-	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -1735,13 +1309,13 @@ class Graph(
 				if len(vertex._outbound) == 0 and predicate(vertex):
 					yield vertex
 
-	def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
-		raise NotImplementedError()
+	# def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+	# 	raise NotImplementedError()
+	#
+	# def IterateDFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+	# 	raise NotImplementedError()
 
-	def IterateDFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
-		raise NotImplementedError()
-
-	def IterateTopologically(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[VertexIDType, VertexValueType, VertexDictKeyType, VertexDictValueType], None, None]:
+	def IterateTopologically(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices in topological order.
 
@@ -1951,6 +1525,180 @@ class Graph(
 			return True
 
 		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+
+
+@export
+class Subgraph(
+	BaseGraph[
+		SubgraphDictKeyType, SubgraphDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
+	],
+	Generic[
+		SubgraphDictKeyType, SubgraphDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
+	]
+):
+	_graph:    'Graph'
+
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+		""".. todo:: GRAPH::Subgraph::init Needs documentation."""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		if not isinstance(graph, Graph):
+			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+
+		super().__init__(name)
+
+		graph._subgraphs.add(self)
+
+		self._graph = graph
+
+	def __del__(self):
+		""".. todo:: GRAPH::Subgraph::del Needs documentation."""
+		super().__del__()
+
+	@property
+	def Graph(self) -> 'Graph':
+		"""
+		Read-only property to access the graph, this subgraph is associated to (:py:attr:`_graph`).
+
+		:returns: The graph this subgraph is associated to.
+		"""
+		return self._graph
+
+	def __str__(self) -> str:
+		""".. todo:: GRAPH::Subgraph::str Needs documentation."""
+		return self._name if self._name is not None else "Unnamed subgraph"
+
+
+@export
+class View(
+	BaseWithVertices[
+		ViewDictKeyType, ViewDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	],
+	Generic[
+		ViewDictKeyType, ViewDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	]
+):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+		""".. todo:: GRAPH::View::init Needs documentation."""
+		super().__init__(graph, name, vertices)
+
+		graph._views.add(self)
+
+	def __del__(self):
+		""".. todo:: GRAPH::View::del Needs documentation."""
+		super().__del__()
+
+	def __str__(self) -> str:
+		""".. todo:: GRAPH::View::str Needs documentation."""
+		return self._name if self._name is not None else "Unnamed view"
+
+
+@export
+class Component(
+	BaseWithVertices[
+		ComponentDictKeyType, ComponentDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	],
+	Generic[
+		ComponentDictKeyType, ComponentDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType
+	]
+):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+		""".. todo:: GRAPH::Component::init Needs documentation."""
+		super().__init__(graph, name, vertices)
+
+		graph._components.add(self)
+
+	def __del__(self):
+		""".. todo:: GRAPH::Component::del Needs documentation."""
+		super().__del__()
+
+	def __str__(self) -> str:
+		""".. todo:: GRAPH::Component::str Needs documentation."""
+		return self._name if self._name is not None else "Unnamed component"
+
+
+@export
+class Graph(
+	BaseGraph[
+		GraphDictKeyType, GraphDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
+	],
+	Generic[
+		GraphDictKeyType, GraphDictValueType,
+		ComponentDictKeyType, ComponentDictValueType,
+		SubgraphDictKeyType, SubgraphDictValueType,
+		ViewDictKeyType, ViewDictValueType,
+		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType
+	]
+):
+	"""
+	A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to
+	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
+	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
+	"""
+	_subgraphs:         Set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
+	_views:             Set[View[ViewDictKeyType, ViewDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType]]
+
+	def __init__(self, name: str = None):
+		""".. todo:: GRAPH::Graph::init Needs documentation."""
+		super().__init__(name)
+
+		self._subgraphs = set()
+		self._views = set()
+		self._components = set()
+
+	def __del__(self):
+		""".. todo:: GRAPH::Graph::del Needs documentation."""
+		super().__del__()
+		del self._subgraphs
+		del self._views
+		del self._components
+
+	@property
+	def Components(self) -> Set[Component]:
+		"""Read-only property to access the components in this graph (:py:attr:`_components`).
+
+		:returns: The set of components in this graph."""
+		return self._components
+
+	@property
+	def SubgraphCount(self) -> int:
+		"""Read-only property to access the number of subgraphs in this graph.
+
+		:returns: The number of subgraphs in this graph."""
+		return len(self._subgraphs)
+
+	@property
+	def ViewCount(self) -> int:
+		"""Read-only property to access the number of views in this graph.
+
+		:returns: The number of views in this graph."""
+		return len(self._views)
+
+	@property
+	def ComponentCount(self) -> int:
+		"""Read-only property to access the number of components in this graph.
+
+		:returns: The number of components in this graph."""
+		return len(self._components)
+
+	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]:
+		""".. todo:: GRAPH::Graph::iter Needs documentation."""
+		def gen():
+			yield from self._verticesWithoutID
+			yield from self._verticesWithID
+		return iter(gen())
 
 	def CopyGraph(self) -> 'Graph':
 		raise NotImplementedError()
