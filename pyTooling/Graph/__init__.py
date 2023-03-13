@@ -625,17 +625,27 @@ class Vertex(
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
-		else:
-			link = Link(self, vertex, edgeID, edgeValue, edgeWeight)
 
-		# TODO: move into Edge?
-		# TODO: keep _graph pointer in edge and then register edge on graph?
-		if edgeID is None:
-			self._graph._edgesWithoutID.append(edge)
-		elif edgeID not in self._graph._edgesWithID:
-			self._graph._edgesWithID[edgeID] = edge
+			if self._subgraph is None:
+				# TODO: move into Edge?
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._graph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._graph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			else:
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._subgraph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._subgraph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			# FIXME: needs an error message
+			raise GraphException()
 
 		return edge
 
