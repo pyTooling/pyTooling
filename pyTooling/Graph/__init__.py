@@ -307,7 +307,7 @@ class BaseWithName(
 	Base[DictKeyType, DictValueType],
 	Generic[DictKeyType, DictValueType]
 ):
-	_name:     Nullable[str]
+	_name: Nullable[str]
 
 	def __init__(self, name: str = None):
 		""".. todo:: GRAPH::BaseWithName::init Needs documentation."""
@@ -742,7 +742,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasEdgeFromSourcce` |br|
+		   :py:meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
 		   :py:meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
@@ -755,7 +755,7 @@ class Vertex(
 
 		return False
 
-	def HasEdgeFromSourcce(self, source: 'Vertex') -> bool:
+	def HasEdgeFromSource(self, source: 'Vertex') -> bool:
 		"""
 		Check if this vertex is linked to another vertex by any inbound edge.
 
@@ -788,7 +788,7 @@ class Vertex(
 
 		   :py:meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :py:meth:`HasEdgeFromSourcce` |br|
+		   :py:meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
 		   :py:meth:`HasLinkFromSourcce` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
@@ -810,7 +810,7 @@ class Vertex(
 
 		   :py:meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :py:meth:`HasEdgeFromSourcce` |br|
+		   :py:meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
 		   :py:meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
@@ -821,7 +821,7 @@ class Vertex(
 
 		return False
 
-	def Copy(self, graph: Graph, copyDict: bool = True, linkingKeyToOriginalVertex: str = None, linkingKeyFromOriginalVertex: str = None) -> 'Vertex':
+	def Copy(self, graph: Graph, copyDict: bool = False, linkingKeyToOriginalVertex: str = None, linkingKeyFromOriginalVertex: str = None) -> 'Vertex':
 		"""
 		Creates a copy of this vertex in another graph.
 
@@ -1965,31 +1965,46 @@ class Graph(
 		# class Iterator():
 		# 	visited = [False for _ in range(self.__len__())]
 
-	def CheckForNegativeCycles(self):
-		raise NotImplementedError()
-		# Bellman-Ford
-		# Floyd-Warshall
+	# def CheckForNegativeCycles(self):
+	# 	raise NotImplementedError()
+	# 	# Bellman-Ford
+	# 	# Floyd-Warshall
+	#
+	# def IsStronglyConnected(self):
+	# 	raise NotImplementedError()
+	#
+	# def GetStronglyConnectedComponents(self):
+	# 	raise NotImplementedError()
+	# 	# Tarjan's and Kosaraju's algorithm
+	#
+	# def TravelingSalesmanProblem(self):
+	# 	raise NotImplementedError()
+	# 	# Held-Karp
+	# 	# branch and bound
+	#
+	# def GetBridges(self):
+	# 	raise NotImplementedError()
+	#
+	# def GetArticulationPoints(self):
+	# 	raise NotImplementedError()
+	#
+	# def MinimumSpanningTree(self):
+	# 	raise NotImplementedError()
+	# 	# Kruskal
+	# 	# Prim's algorithm
+	# 	# Buruvka's algorithm
 
-	def IsStronglyConnected(self):
-		raise NotImplementedError()
+	def __repr__(self) -> str:
+		""".. todo:: GRAPH::Graph::repr Needs documentation."""
+		statistics = f", vertices: {self.VertexCount}, edges: {self.EdgeCount}"
+		if self._name is None:
+			return f"<graph: unnamed graph{statistics}>"
+		else:
+			return f"<graph: '{self._name}'{statistics}>"
 
-	def GetStronglyConnectedComponents(self):
-		raise NotImplementedError()
-		# Tarjan's and Kosaraju's algorithm
-
-	def TravelingSalesmanProblem(self):
-		raise NotImplementedError()
-		# Held-Karp
-		# branch and bound
-
-	def GetBridges(self):
-		raise NotImplementedError()
-
-	def GetArticulationPoints(self):
-		raise NotImplementedError()
-
-	def MinimumSpanningTree(self):
-		raise NotImplementedError()
-		# Kruskal
-		# Prim's algorithm
-		# Buruvka's algorithm
+	def __str__(self) -> str:
+		""".. todo:: GRAPH::Graph::str Needs documentation."""
+		if self._name is None:
+			return f"Graph: unnamed graph"
+		else:
+			return f"Graph: '{self._name}'"

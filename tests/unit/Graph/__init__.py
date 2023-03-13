@@ -32,7 +32,7 @@
 from typing import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View
+from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -42,20 +42,24 @@ if __name__ == "__main__":  # pragma: no cover
 
 class Construction(TestCase):
 	def test_Graph(self):
-		g = Graph()
+		graph = Graph()
 
-		self.assertIsNone(g.Name)
-		self.assertEqual(0, g.VertexCount)
-		self.assertEqual(0, g.EdgeCount)
-		self.assertEqual(0, g.ComponentCount)
-		self.assertEqual(0, g.SubgraphCount)
-		self.assertEqual(0, g.ViewCount)
-		self.assertEqual(0, len(g))
+		self.assertIsNone(graph.Name)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(0, graph.ComponentCount)
+		self.assertEqual(0, graph.SubgraphCount)
+		self.assertEqual(0, graph.ViewCount)
+		self.assertEqual(0, len(graph))
+		self.assertEqual("<graph: unnamed graph, vertices: 0, edges: 0>", repr(graph))
+		self.assertEqual("Graph: unnamed graph", str(graph))
 
 	def test_GraphWithName(self):
-		g = Graph("myGraph")
+		graph = Graph("myGraph")
 
-		self.assertEqual("myGraph", g.Name)
+		self.assertEqual("myGraph", graph.Name)
+		self.assertEqual("<graph: 'myGraph', vertices: 0, edges: 0>", repr(graph))
+		self.assertEqual("Graph: 'myGraph'", str(graph))
 
 	def test_StandaloneVertex(self):
 		root: Vertex[Nullable[Any], int, str, Any] = Vertex()
@@ -64,6 +68,8 @@ class Construction(TestCase):
 		self.assertIsNone(root.Value)
 		self.assertEqual(1, root.Graph.VertexCount)
 		self.assertEqual(1, root.Graph.ComponentCount)
+		self.assertEqual("<vertex>", repr(root))
+		self.assertEqual("<vertex>", str(root))
 
 	def test_SingleVertexForExistingGraph(self):
 		graph = Graph()
@@ -86,10 +92,34 @@ class Construction(TestCase):
 		edge12 = vertex1.EdgeToVertex(vertex2)
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, vertex1.EdgeCount)
+		self.assertEqual(1, vertex1.OutboundEdgeCount)
+		self.assertEqual(0, vertex1.InboundEdgeCount)
+		self.assertEqual(1, vertex2.EdgeCount)
+		self.assertEqual(0, vertex2.OutboundEdgeCount)
+		self.assertEqual(1, vertex2.InboundEdgeCount)
+		self.assertTupleEqual(tuple(), vertex1.InboundEdges)
+		self.assertTupleEqual((edge12,), vertex1.OutboundEdges)
+		self.assertTupleEqual((edge12,), vertex2.InboundEdges)
+		self.assertTupleEqual(tuple(), vertex2.OutboundEdges)
+		self.assertTupleEqual(tuple(), vertex1.Predecessors)
+		self.assertTupleEqual((vertex2,), vertex1.Successors)
+		self.assertTupleEqual((vertex1,), vertex2.Predecessors)
+		self.assertTupleEqual(tuple(), vertex2.Successors)
+		self.assertTrue(vertex1.HasEdgeToDestination(vertex2))
+		self.assertFalse(vertex1.HasEdgeFromSource(vertex2))
+		self.assertFalse(vertex2.HasEdgeToDestination(vertex1))
+		self.assertTrue(vertex2.HasEdgeFromSource(vertex1))
+		self.assertTrue(vertex1.IsRoot)
+		self.assertFalse(vertex1.IsLeaf)
+		self.assertFalse(vertex2.IsRoot)
+		self.assertTrue(vertex2.IsLeaf)
 		self.assertIs(vertex1, edge12.Source)
 		self.assertIs(vertex2, edge12.Destination)
 		self.assertIsNone(edge12.ID)
 		self.assertIsNone(edge12.Value)
+		# self.assertEqual("", repr(edge12))
+		# self.assertEqual("", str(edge12))
 
 	def test_EdgeFromVertex(self):
 		graph = Graph()
@@ -633,6 +663,70 @@ class GraphOperations(Iterate):
 		for v4 in g4.IterateVertices():
 			self.assertTrue(v4.Value % 2 == 1)
 			self.assertEqual(0, len(v4))
+
+
+class VertexOperations(Iterate):
+	def test_CopyIntoSameGraph(self):
+		graph1 = Graph()
+		vertex1 = Vertex(graph=graph1)
+
+		with self.assertRaises(GraphException):
+			vertex1.Copy(graph1)
+
+	def test_Copy(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2)
+
+		self.assertEqual(1, graph2.VertexCount)
+		self.assertEqual(0, len(vertex2))
+
+	def test_CopyWithDict(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2, copyDict=True)
+
+		self.assertEqual(1, len(vertex2))
+		self.assertIn("key", vertex2)
+		self.assertEqual("value", vertex2["key"])
+
+	def test_CopyAddForwardLink(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2, linkingKeyFromOriginalVertex="forward")
+
+		self.assertEqual(2, len(vertex1))
+		self.assertEqual(0, len(vertex2))
+		self.assertIn("forward", vertex1)
+		self.assertNotIn("forward", vertex2)
+		self.assertEqual(vertex2, vertex1["forward"])
+
+	def test_CopyAddBackwardLink(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2, linkingKeyToOriginalVertex="backward")
+
+		self.assertEqual(1, len(vertex1))
+		self.assertEqual(1, len(vertex2))
+		self.assertNotIn("backward", vertex1)
+		self.assertIn("backward", vertex2)
+		self.assertEqual(vertex1, vertex2["backward"])
 
 
 class GraphProperties(Iterate):
