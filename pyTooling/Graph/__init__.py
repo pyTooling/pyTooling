@@ -445,6 +445,7 @@ class Vertex(
 		self._outboundLinks = []
 
 	def __del__(self):
+		""".. todo:: GRAPH::BaseEdge::del Needs documentation."""
 		super().__del__()
 		del self._inboundEdges
 		del self._outboundEdges
@@ -494,7 +495,7 @@ class Vertex(
 
 		:return: Tuple of inbound links.
 		"""
-		return tuple(self._inboundEdges)
+		return tuple(self._inboundLinks)
 
 	@property
 	def OutboundLinks(self) -> Tuple['Link', ...]:
@@ -503,7 +504,7 @@ class Vertex(
 
 		:return: Tuple of outbound links.
 		"""
-		return tuple(self._outboundEdges)
+		return tuple(self._outboundLinks)
 
 	@property
 	def EdgeCount(self) -> int:
@@ -618,8 +619,7 @@ class Vertex(
 		return tuple([edge.Destination for edge in self._outboundEdges])
 
 	def EdgeToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		# TODO: set edgeID
-
+		""".. todo:: GRAPH::Vertex::EdgeToVertex Needs documentation."""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
@@ -650,6 +650,7 @@ class Vertex(
 		return edge
 
 	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+		""".. todo:: GRAPH::Vertex::EdgeFromVertex Needs documentation."""
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
 		vertex._outboundEdges.append(edge)
@@ -667,6 +668,7 @@ class Vertex(
 		return edge
 
 	def EdgeToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+		""".. todo:: GRAPH::Vertex::EdgeToNewVertex Needs documentation."""
 		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
 		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
@@ -686,6 +688,7 @@ class Vertex(
 		return edge
 
 	def EdgeFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+		""".. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs documentation."""
 		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
 
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
@@ -704,29 +707,39 @@ class Vertex(
 
 		return edge
 
-	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		# TODO: set edgeID
-
+	def LinkToVertex(self, vertex: 'Vertex', linkID: EdgeIDType = None, linkWeight: EdgeWeightType = None, linkValue: VertexValueType = None) -> 'Link':
+		""".. todo:: GRAPH::Vertex::LinkToVertex Needs documentation."""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
-
-			self._outboundEdges.append(edge)
-			vertex._inboundEdges.append(edge)
+			# FIXME: needs an error message
+			raise GraphException()
 		else:
-			link = Link(self, vertex, edgeID, edgeValue, edgeWeight)
+			link = Link(self, vertex, linkID, linkValue, linkWeight)
 
-		# TODO: move into Edge?
-		# TODO: keep _graph pointer in edge and then register edge on graph?
-		if edgeID is None:
-			self._graph._edgesWithoutID.append(edge)
-		elif edgeID not in self._graph._edgesWithID:
-			self._graph._edgesWithID[edgeID] = edge
-		else:
-			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			self._outboundLinks.append(link)
+			vertex._inboundLinks.append(link)
 
-		return edge
+			if self._subgraph is None:
+				# TODO: move into Edge?
+				# TODO: keep _graph pointer in link and then register link on graph?
+				if linkID is None:
+					self._graph._linksWithoutID.append(link)
+				elif linkID not in self._graph._linksWithID:
+					self._graph._linksWithID[linkID] = link
+				else:
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+			else:
+				# TODO: keep _graph pointer in link and then register link on graph?
+				if linkID is None:
+					self._subgraph._linksWithoutID.append(link)
+				elif linkID not in self._graph._linksWithID:
+					self._subgraph._linksWithID[linkID] = link
+				else:
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+
+		return link
 
 	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+		""".. todo:: GRAPH::Vertex::LinkFromVertex Needs documentation."""
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
 		vertex._outboundEdges.append(edge)
@@ -1410,6 +1423,8 @@ class BaseGraph(
 	_verticesWithoutID: List[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 	_edgesWithoutID:    List[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
+	_linksWithID:       Dict[EdgeIDType, Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
+	_linksWithoutID:    List[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]
 
 	def __init__(self, name: str = None):  #, vertices: Iterable[Vertex] = None):
 		""".. todo:: GRAPH::BaseGraph::init Needs documentation."""
@@ -1419,13 +1434,18 @@ class BaseGraph(
 		self._verticesWithID = {}
 		self._edgesWithoutID = []
 		self._edgesWithID = {}
+		self._linksWithoutID = []
+		self._linksWithID = {}
 
 	def __del__(self):
+		""".. todo:: GRAPH::BaseGraph::del Needs documentation."""
 		super().__del__()
 		del self._verticesWithoutID
 		del self._verticesWithID
 		del self._edgesWithoutID
 		del self._edgesWithID
+		del self._linksWithoutID
+		del self._linksWithID
 
 	@property
 	def VertexCount(self) -> int:
@@ -1440,6 +1460,13 @@ class BaseGraph(
 
 		:returns: The number of edges in this graph."""
 		return len(self._edgesWithoutID) + len(self._edgesWithID)
+
+	@property
+	def LinkCount(self) -> int:
+		"""Read-only property to access the number of links in this graph.
+
+		:returns: The number of links in this graph."""
+		return len(self._linksWithoutID) + len(self._linksWithID)
 
 	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
@@ -1703,6 +1730,7 @@ class BaseGraph(
 					del edge
 
 	def HasCycle(self) -> bool:
+		""".. todo:: GRAPH::BaseGraph::HasCycle Needs documentation."""
 		# IsAcyclic ?
 
 		# Handle trivial case if graph is empty

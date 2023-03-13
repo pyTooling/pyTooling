@@ -300,6 +300,32 @@ class Subgraphs(TestCase):
 		self.assertEqual(3, subgraph1.VertexCount)
 		self.assertEqual(3, subgraph1.EdgeCount)
 
+	def test_OuterToInnerEdges(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(subgraph=subgraph1)
+		with self.assertRaises(GraphException):
+			edge12 = vertex1.EdgeToVertex(vertex2)
+
+		link12 = vertex1.LinkToVertex(vertex2)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(1, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(1, subgraph1.VertexCount)
+		self.assertEqual(1, vertex1.LinkCount)
+		self.assertEqual(1, vertex1.OutboundLinkCount)
+		self.assertEqual(0, vertex1.InboundLinkCount)
+		self.assertEqual(1, vertex2.LinkCount)
+		self.assertEqual(0, vertex2.OutboundLinkCount)
+		self.assertEqual(1, vertex2.InboundLinkCount)
+		self.assertTupleEqual((link12,), vertex1.OutboundLinks)
+		self.assertTupleEqual(tuple(), vertex1.InboundLinks)
+		self.assertTupleEqual(tuple(), vertex2.OutboundLinks)
+		self.assertTupleEqual((link12,), vertex2.InboundLinks)
+
 
 class Dicts(TestCase):
 	def test_GraphDict(self):
