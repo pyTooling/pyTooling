@@ -178,6 +178,8 @@ def mustoverride(method: M) -> M:
 	"""
 	Mark a method as *must-override*.
 
+	Such methods can offer a partial implementation, which is called via ``super()...``.
+
 	.. warning::
 
 	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.

@@ -261,7 +261,7 @@ class pyToolingGraph(TestCase):
 
 		vertex1 = Vertex(vertexID="n1", value="v1", graph=graph)
 		vertex2 = Vertex(vertexID="n2", value="v2", graph=graph)
-		edge = vertex1.LinkToVertex(vertex2, edgeValue="v12", edgeWeight=1)
+		edge = vertex1.EdgeToVertex(vertex2, edgeValue="v12", edgeWeight=1)
 
 		doc = GraphMLDocument()
 		doc.FromGraph(graph)
