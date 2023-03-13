@@ -404,8 +404,10 @@ class Vertex(
 	_subgraph:  'Subgraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]'
 	_component: 'Component'
 	_views:     Dict[Hashable, 'View']
-	_inbound:   List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
-	_outbound:  List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+	_inboundEdges:   List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+	_outboundEdges:  List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+	_inboundLinks:   List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
+	_outboundLinks:  List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']
 
 	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None, subgraph: 'Subgraph' = None):
 		""".. todo:: GRAPH::Vertex::init Needs documentation."""
@@ -437,13 +439,17 @@ class Vertex(
 			else:
 				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this subgraph.")
 
-		self._inbound = []
-		self._outbound = []
+		self._inboundEdges =  []
+		self._outboundEdges = []
+		self._inboundLinks =  []
+		self._outboundLinks = []
 
 	def __del__(self):
 		super().__del__()
-		del self._inbound
-		del self._outbound
+		del self._inboundEdges
+		del self._outboundEdges
+		del self._inboundLinks
+		del self._outboundLinks
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -464,22 +470,40 @@ class Vertex(
 		return self._component
 
 	@property
-	def Inbound(self) -> Tuple['Edge', ...]:
+	def InboundEdges(self) -> Tuple['Edge', ...]:
 		"""
-		Read-only property to get a tuple of inbound edges (:py:attr:`_inbound`).
+		Read-only property to get a tuple of inbound edges (:py:attr:`_inboundEdges`).
 
 		:return: Tuple of inbound edges.
 		"""
-		return tuple(self._inbound)
+		return tuple(self._inboundEdges)
 
 	@property
-	def Outbound(self) -> Tuple['Edge', ...]:
+	def OutboundEdges(self) -> Tuple['Edge', ...]:
 		"""
-		Read-only property to get a tuple of outbound edges (:py:attr:`_outbound`).
+		Read-only property to get a tuple of outbound edges (:py:attr:`_outboundEdges`).
 
 		:return: Tuple of outbound edges.
 		"""
-		return tuple(self._outbound)
+		return tuple(self._outboundEdges)
+
+	@property
+	def InboundLinks(self) -> Tuple['Link', ...]:
+		"""
+		Read-only property to get a tuple of inbound links (:py:attr:`_inboundLinks`).
+
+		:return: Tuple of inbound links.
+		"""
+		return tuple(self._inboundEdges)
+
+	@property
+	def OutboundLinks(self) -> Tuple['Link', ...]:
+		"""
+		Read-only property to get a tuple of outbound links (:py:attr:`_outboundLinks`).
+
+		:return: Tuple of outbound links.
+		"""
+		return tuple(self._outboundEdges)
 
 	@property
 	def EdgeCount(self) -> int:
@@ -488,7 +512,7 @@ class Vertex(
 
 		:return: Number of inbound and outbound edges.
 		"""
-		return len(self._inbound) + len(self._outbound)
+		return len(self._inboundEdges) + len(self._outboundEdges)
 
 	@property
 	def InboundEdgeCount(self) -> int:
@@ -497,7 +521,7 @@ class Vertex(
 
 		:return: Number of inbound edges.
 		"""
-		return len(self._inbound)
+		return len(self._inboundEdges)
 
 	@property
 	def OutboundEdgeCount(self) -> int:
@@ -506,7 +530,74 @@ class Vertex(
 
 		:return: Number of outbound edges.
 		"""
-		return len(self._outbound)
+		return len(self._outboundEdges)
+
+	@property
+	def LinkCount(self) -> int:
+		"""
+		Read-only property to get the number of all links (inbound and outbound).
+
+		:return: Number of inbound and outbound links.
+		"""
+		return len(self._inboundLinks) + len(self._outboundLinks)
+
+	@property
+	def InboundLinkCount(self) -> int:
+		"""
+		Read-only property to get the number of inbound links.
+
+		:return: Number of inbound links.
+		"""
+		return len(self._inboundLinks)
+
+	@property
+	def OutboundLinkCount(self) -> int:
+		"""
+		Read-only property to get the number of outbound links.
+
+		:return: Number of outbound links.
+		"""
+		return len(self._outboundLinks)
+
+	@property
+	def IsRoot(self) -> bool:
+		"""
+		Read-only property to check if this vertex is a root vertex in the graph.
+
+		A root has no inbound edges (no predecessor vertices).
+
+		:returns: ``True``, if this vertex is a root.
+
+		.. seealso::
+
+		   :py:meth:`IsLeaf` |br|
+		      |rarr| Check if a vertex is a leaf vertex in the graph.
+		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		      |rarr| Iterate all roots of a graph.
+		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		      |rarr| Iterate all leafs of a graph.
+		"""
+		return len(self._inboundEdges) == 0
+
+	@property
+	def IsLeaf(self) -> bool:
+		"""
+		Read-only property to check if this vertex is a leaf vertex in the graph.
+
+		A leaf has no outbound edges (no successor vertices).
+
+		:returns: ``True``, if this vertex is a leaf.
+
+		.. seealso::
+
+		   :py:meth:`IsRoot` |br|
+		      |rarr| Check if a vertex is a root vertex in the graph.
+		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		      |rarr| Iterate all roots of a graph.
+		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		      |rarr| Iterate all leafs of a graph.
+		"""
+		return len(self._outboundEdges) == 0
 
 	@property
 	def Predecessors(self) -> Tuple['Vertex', ...]:
@@ -515,7 +606,7 @@ class Vertex(
 
 		:return: Tuple of predecessor vertices.
 		"""
-		return tuple([edge.Source for edge in self._inbound])
+		return tuple([edge.Source for edge in self._inboundEdges])
 
 	@property
 	def Successors(self) -> Tuple['Vertex', ...]:
@@ -524,7 +615,7 @@ class Vertex(
 
 		:return: Tuple of successor vertices.
 		"""
-		return tuple([edge.Destination for edge in self._outbound])
+		return tuple([edge.Destination for edge in self._outboundEdges])
 
 	def EdgeToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		# TODO: set edgeID
@@ -532,8 +623,8 @@ class Vertex(
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
-			self._outbound.append(edge)
-			vertex._inbound.append(edge)
+			self._outboundEdges.append(edge)
+			vertex._inboundEdges.append(edge)
 		else:
 			link = Link(self, vertex, edgeID, edgeValue, edgeWeight)
 
@@ -551,8 +642,8 @@ class Vertex(
 	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
-		vertex._outbound.append(edge)
-		self._inbound.append(edge)
+		vertex._outboundEdges.append(edge)
+		self._inboundEdges.append(edge)
 
 		# TODO: move into Edge?
 		# TODO: keep _graph pointer in edge and then register edge on graph?
@@ -570,8 +661,8 @@ class Vertex(
 
 		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
-		self._outbound.append(edge)
-		vertex._inbound.append(edge)
+		self._outboundEdges.append(edge)
+		vertex._inboundEdges.append(edge)
 
 		# TODO: move into Edge?
 		# TODO: keep _graph pointer in edge and then register edge on graph?
@@ -589,8 +680,47 @@ class Vertex(
 
 		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
-		vertex._outbound.append(edge)
-		self._inbound.append(edge)
+		vertex._outboundEdges.append(edge)
+		self._inboundEdges.append(edge)
+
+		# TODO: move into Edge?
+		# TODO: keep _graph pointer in edge and then register edge on graph?
+		if edgeID is None:
+			self._graph._edgesWithoutID.append(edge)
+		elif edgeID not in self._graph._edgesWithID:
+			self._graph._edgesWithID[edgeID] = edge
+		else:
+			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+
+		return edge
+
+	def LinkToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+		# TODO: set edgeID
+
+		if self._subgraph is vertex._subgraph:
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
+
+			self._outboundEdges.append(edge)
+			vertex._inboundEdges.append(edge)
+		else:
+			link = Link(self, vertex, edgeID, edgeValue, edgeWeight)
+
+		# TODO: move into Edge?
+		# TODO: keep _graph pointer in edge and then register edge on graph?
+		if edgeID is None:
+			self._graph._edgesWithoutID.append(edge)
+		elif edgeID not in self._graph._edgesWithID:
+			self._graph._edgesWithID[edgeID] = edge
+		else:
+			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+
+		return edge
+
+	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
+
+		vertex._outboundEdges.append(edge)
+		self._inboundEdges.append(edge)
 
 		# TODO: move into Edge?
 		# TODO: keep _graph pointer in edge and then register edge on graph?
@@ -614,8 +744,12 @@ class Vertex(
 
 		   :py:meth:`HasEdgeFromSourcce` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
+		   :py:meth:`HasLinkToDestination` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
+		   :py:meth:`HasLinkFromSourcce` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
-		for edge in self._outbound:
+		for edge in self._outboundEdges:
 			if destination is edge.Destination:
 				return True
 
@@ -632,9 +766,57 @@ class Vertex(
 
 		   :py:meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
+		   :py:meth:`HasLinkToDestination` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
+		   :py:meth:`HasLinkFromSourcce` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
-		for edge in self._inbound:
+		for edge in self._inboundEdges:
 			if source is edge.Source:
+				return True
+
+		return False
+
+	def HasLinkToDestination(self, destination: 'Vertex') -> bool:
+		"""
+		Check if this vertex is linked to another vertex by any outbound link.
+
+		:param destination: Destination vertex to check.
+		:return:            ``True``, if the destination vertex is a destination on any outbound link.
+
+		.. seealso::
+
+		   :py:meth:`HasEdgeToDestination` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
+		   :py:meth:`HasEdgeFromSourcce` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
+		   :py:meth:`HasLinkFromSourcce` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
+		"""
+		for link in self._outboundLinks:
+			if destination is link.Destination:
+				return True
+
+		return False
+
+	def HasLinkFromSourcce(self, source: 'Vertex') -> bool:
+		"""
+		Check if this vertex is linked to another vertex by any inbound link.
+
+		:param source: Source vertex to check.
+		:return:       ``True``, if the source vertex is a source on any inbound link.
+
+		.. seealso::
+
+		   :py:meth:`HasEdgeToDestination` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
+		   :py:meth:`HasEdgeFromSourcce` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
+		   :py:meth:`HasLinkToDestination` |br|
+		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
+		"""
+		for link in self._inboundLinks:
+			if source is link.Source:
 				return True
 
 		return False
@@ -667,46 +849,6 @@ class Vertex(
 
 		return vertex
 
-	# TODO: convert to property?
-	def IsRoot(self) -> bool:
-		"""
-		Check if this vertex is a root vertex in the graph.
-
-		A root has no inbound edges (no predecessor vertices).
-
-		:returns: ``True``, if this vertex is a root.
-
-		.. seealso::
-
-		   :py:meth:`IsLeaf` |br|
-		      |rarr| Check if a vertex is a leaf vertex in the graph.
-		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
-		      |rarr| Iterate all roots of a graph.
-		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
-		      |rarr| Iterate all leafs of a graph.
-		"""
-		return len(self._inbound) == 0
-
-	# TODO: convert to property?
-	def IsLeaf(self) -> bool:
-		"""
-		Check if this vertex is a leaf vertex in the graph.
-
-		A leaf has no outbound edges (no successor vertices).
-
-		:returns: ``True``, if this vertex is a leaf.
-
-		.. seealso::
-
-		   :py:meth:`IsRoot` |br|
-		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
-		      |rarr| Iterate all roots of a graph.
-		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
-		      |rarr| Iterate all leafs of a graph.
-		"""
-		return len(self._outbound) == 0
-
 	def IterateOutboundEdges(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Edge', None, None]:
 		"""
 		Iterate all or selected outbound edges of this vertex.
@@ -717,10 +859,10 @@ class Vertex(
 		:returns:         A generator to iterate all outbound edges.
 		"""
 		if predicate is None:
-			for edge in self._outbound:
+			for edge in self._outboundEdges:
 				yield edge
 		else:
-			for edge in self._outbound:
+			for edge in self._outboundEdges:
 				if predicate(edge):
 					yield edge
 
@@ -734,10 +876,10 @@ class Vertex(
 		:returns:         A generator to iterate all inbound edges.
 		"""
 		if predicate is None:
-			for edge in self._inbound:
+			for edge in self._inboundEdges:
 				yield edge
 		else:
-			for edge in self._inbound:
+			for edge in self._inboundEdges:
 				if predicate(edge):
 					yield edge
 
@@ -751,10 +893,10 @@ class Vertex(
 		:returns:         A generator to iterate all successor vertices.
 		"""
 		if predicate is None:
-			for edge in self._outbound:
+			for edge in self._outboundEdges:
 				yield edge.Destination
 		else:
-			for edge in self._outbound:
+			for edge in self._outboundEdges:
 				if predicate(edge):
 					yield edge.Destination
 
@@ -768,10 +910,10 @@ class Vertex(
 		:returns:         A generator to iterate all predecessor vertices.
 		"""
 		if predicate is None:
-			for edge in self._inbound:
+			for edge in self._inboundEdges:
 				yield edge.Source
 		else:
-			for edge in self._inbound:
+			for edge in self._inboundEdges:
 				if predicate(edge):
 					yield edge.Source
 
@@ -791,7 +933,7 @@ class Vertex(
 
 		yield self
 		visited.add(self)
-		for edge in self._outbound:
+		for edge in self._outboundEdges:
 			nextVertex = edge.Destination
 			if nextVertex is not self:
 				queue.appendleft(nextVertex)
@@ -800,7 +942,7 @@ class Vertex(
 		while queue:
 			vertex = queue.pop()
 			yield vertex
-			for edge in vertex._outbound:
+			for edge in vertex._outboundEdges:
 				nextVertex = edge.Destination
 				if nextVertex not in visited:
 					queue.appendleft(nextVertex)
@@ -824,7 +966,7 @@ class Vertex(
 
 		yield self
 		visited.add(self)
-		stack.append(iter(self._outbound))
+		stack.append(iter(self._outboundEdges))
 
 		while True:
 			try:
@@ -833,8 +975,8 @@ class Vertex(
 				if nextVertex not in visited:
 					visited.add(nextVertex)
 					yield nextVertex
-					if len(nextVertex._outbound) != 0:
-						stack.append(iter(nextVertex._outbound))
+					if len(nextVertex._outboundEdges) != 0:
+						stack.append(iter(nextVertex._outboundEdges))
 			except StopIteration:
 				stack.pop()
 
@@ -880,7 +1022,7 @@ class Vertex(
 		# Add starting vertex and all its children to the processing list.
 		# If a child is the destination, break immediately else go into 'else' branch and use BFS algorithm.
 		visited.add(self)
-		for edge in self._outbound:
+		for edge in self._outboundEdges:
 			nextVertex = edge.Destination
 			if nextVertex is destination:
 				# Child is destination, so construct the last node for path traversal and break from loop.
@@ -895,7 +1037,7 @@ class Vertex(
 			# Process queue until destination is found or no further vertices are reachable.
 			while queue:
 				node = queue.pop()
-				for edge in node.ref._outbound:
+				for edge in node.ref._outboundEdges:
 					nextVertex = edge.Destination
 					# Next reachable vertex is destination, so construct the last node for path traversal and break from loop.
 					if nextVertex is destination:
@@ -976,7 +1118,7 @@ class Vertex(
 		# Add starting vertex and all its children to the processing list.
 		# If a child is the destination, break immediately else go into 'else' branch and use Dijkstra algorithm.
 		visited.add(self)
-		for edge in self._outbound:
+		for edge in self._outboundEdges:
 			nextVertex = edge.Destination
 			# Child is destination, so construct the last node for path traversal and break from loop.
 			if nextVertex is destination:
@@ -991,7 +1133,7 @@ class Vertex(
 			# Process priority queue until destination is found or no further vertices are reachable.
 			while priorityQueue:
 				node = heapq.heappop(priorityQueue)
-				for edge in node.ref._outbound:
+				for edge in node.ref._outboundEdges:
 					nextVertex = edge.Destination
 					# Next reachable vertex is destination, so construct the last node for path traversal and break from loop.
 					if nextVertex is destination:
@@ -1056,7 +1198,7 @@ class Vertex(
 		root._dict = self._dict.copy()
 
 		visited.add(self)
-		stack.append((root, iter(self._outbound)))
+		stack.append((root, iter(self._outboundEdges)))
 
 		while True:
 			try:
@@ -1065,8 +1207,8 @@ class Vertex(
 				if nextVertex not in visited:
 					node = Node(nextVertex._id, nextVertex._value, parent=stack[-1][0])
 					visited.add(nextVertex)
-					if len(nextVertex._outbound) != 0:
-						stack.append((node, iter(nextVertex._outbound)))
+					if len(nextVertex._outboundEdges) != 0:
+						stack.append((node, iter(nextVertex._outboundEdges)))
 				else:
 					raise NotATreeError(f"The directed subgraph is not a tree.")
 					# TODO: compute cycle:
@@ -1198,10 +1340,10 @@ class Edge(
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
-		self._source._outbound.remove(self)
-		self._source._inbound.append(self)
-		self._destination._inbound.remove(self)
-		self._destination._outbound.append(self)
+		self._source._outboundEdges.remove(self)
+		self._source._inboundEdges.append(self)
+		self._destination._inboundEdges.remove(self)
+		self._destination._outboundEdges.append(self)
 
 		super().Reverse()
 
@@ -1235,10 +1377,10 @@ class Link(
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this link."""
-		self._source._outbound.remove(self)
-		self._source._inbound.append(self)
-		self._destination._inbound.remove(self)
-		self._destination._outbound.append(self)
+		self._source._outboundEdges.remove(self)
+		self._source._inboundEdges.append(self)
+		self._destination._inboundEdges.remove(self)
+		self._destination._outboundEdges.append(self)
 
 		super().Reverse()
 
@@ -1331,19 +1473,19 @@ class BaseGraph(
 		"""
 		if predicate is None:
 			for vertex in self._verticesWithoutID:
-				if len(vertex._inbound) == 0:
+				if len(vertex._inboundEdges) == 0:
 					yield vertex
 
 			for vertex in self._verticesWithID.values():
-				if len(vertex._inbound) == 0:
+				if len(vertex._inboundEdges) == 0:
 					yield vertex
 		else:
 			for vertex in self._verticesWithoutID:
-				if len(vertex._inbound) == 0 and predicate(vertex):
+				if len(vertex._inboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
 			for vertex in self._verticesWithID.values():
-				if len(vertex._inbound) == 0 and predicate(vertex):
+				if len(vertex._inboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
 	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
@@ -1366,19 +1508,19 @@ class BaseGraph(
 		"""
 		if predicate is None:
 			for vertex in self._verticesWithoutID:
-				if len(vertex._outbound) == 0:
+				if len(vertex._outboundEdges) == 0:
 					yield vertex
 
 			for vertex in self._verticesWithID.values():
-				if len(vertex._outbound) == 0:
+				if len(vertex._outboundEdges) == 0:
 					yield vertex
 		else:
 			for vertex in self._verticesWithoutID:
-				if len(vertex._outbound) == 0 and predicate(vertex):
+				if len(vertex._outboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
 			for vertex in self._verticesWithID.values():
-				if len(vertex._outbound) == 0 and predicate(vertex):
+				if len(vertex._outboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
 	# def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
@@ -1401,14 +1543,14 @@ class BaseGraph(
 		leafVertices = []
 
 		for vertex in self._verticesWithoutID:
-			count = len(vertex._outbound)
+			count = len(vertex._outboundEdges)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
 
 		for vertex in self._verticesWithID.values():
-			count = len(vertex._outbound)
+			count = len(vertex._outboundEdges)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
@@ -1422,7 +1564,7 @@ class BaseGraph(
 		def removeVertex(vertex: Vertex):
 			nonlocal overallCount
 			overallCount -= 1
-			for inboundEdge in vertex._inbound:
+			for inboundEdge in vertex._inboundEdges:
 				sourceVertex = inboundEdge.Source
 				count = outboundEdgeCounts[sourceVertex] - 1
 				outboundEdgeCounts[sourceVertex] = count
@@ -1490,14 +1632,14 @@ class BaseGraph(
 				edge._destination = swap
 
 			for vertex in self._verticesWithoutID:
-				swap = vertex._inbound
-				vertex._inbound = vertex._outbound
-				vertex._outbound = swap
+				swap = vertex._inboundEdges
+				vertex._inboundEdges = vertex._outboundEdges
+				vertex._outboundEdges = swap
 
 			for vertex in self._verticesWithID.values():
-				swap = vertex._inbound
-				vertex._inbound = vertex._outbound
-				vertex._outbound = swap
+				swap = vertex._inboundEdges
+				vertex._inboundEdges = vertex._outboundEdges
+				vertex._outboundEdges = swap
 		else:
 			for edge in self._edgesWithoutID:
 				if predicate(edge):
@@ -1526,28 +1668,28 @@ class BaseGraph(
 			self._edgesWithID = {}
 
 			for vertex in self._verticesWithoutID:
-				vertex._inbound = []
-				vertex._outbound = []
+				vertex._inboundEdges = []
+				vertex._outboundEdges = []
 
 			for vertex in self._verticesWithID.values():
-				vertex._inbound = []
-				vertex._outbound = []
+				vertex._inboundEdges = []
+				vertex._outboundEdges = []
 
 		else:
 			delEdges = [edge for edge in self._edgesWithID.values() if predicate(edge)]
 			for edge in delEdges:
 				del self._edgesWithID[edge._id]
 
-				edge._source._outbound.remove(edge)
-				edge._destination._inbound.remove(edge)
+				edge._source._outboundEdges.remove(edge)
+				edge._destination._inboundEdges.remove(edge)
 				del edge
 
 			for edge in self._edgesWithoutID:
 				if predicate(edge):
 					self._edgesWithoutID.remove(edge)
 
-					edge._source._outbound.remove(edge)
-					edge._destination._inbound.remove(edge)
+					edge._source._outboundEdges.remove(edge)
+					edge._destination._inboundEdges.remove(edge)
 					del edge
 
 	def HasCycle(self) -> bool:
@@ -1561,14 +1703,14 @@ class BaseGraph(
 		leafVertices = []
 
 		for vertex in self._verticesWithoutID:
-			count = len(vertex._outbound)
+			count = len(vertex._outboundEdges)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
 
 		for vertex in self._verticesWithID.values():
-			count = len(vertex._outbound)
+			count = len(vertex._outboundEdges)
 			if count == 0:
 				leafVertices.append(vertex)
 			else:
@@ -1582,7 +1724,7 @@ class BaseGraph(
 
 		for vertex in leafVertices:
 			overallCount -= 1
-			for inboundEdge in vertex._inbound:
+			for inboundEdge in vertex._inboundEdges:
 				sourceVertex = inboundEdge.Source
 				count = outboundEdgeCounts[sourceVertex] - 1
 				outboundEdgeCounts[sourceVertex] = count
