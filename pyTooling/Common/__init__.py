@@ -37,10 +37,11 @@ __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
 __copyright__ = "2017-2022, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "3.1.0"
+__version__ =   "4.0.0"
 __keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versioning", "licensing", "overloading",
 								"singleton", "tree", "graph", "timer", "data structure", "setuptools", "wheel", "installation",
-								"packaging", "path", "generic path", "generic library", "url"]
+								"packaging", "path", "generic path", "generic library", "url", "terminal", "shell", "TUI", "console",
+								"text user interface", "message logging", "abstract", "override"]
 
 from collections import deque
 from functools import reduce
