@@ -327,6 +327,124 @@ class Subgraphs(TestCase):
 		self.assertTupleEqual((link12,), vertex2.InboundLinks)
 
 
+class Names(TestCase):
+	def test_Graph_NoName(self):
+		graph = Graph()
+
+		self.assertIsNone(graph.Name)
+
+		graph.Name = "myGraph"
+
+		self.assertEqual("myGraph", graph.Name)
+
+	def test_Graph_WrongName(self):
+		with self.assertRaises(TypeError):
+			graph = Graph(name=25)
+
+	def test_Graph_WithName(self):
+		graph = Graph(name="myGraph")
+
+		self.assertEqual("myGraph", graph.Name)
+
+		with self.assertRaises(TypeError):
+			graph.Name = None
+
+		with self.assertRaises(TypeError):
+			graph.Name = 25
+
+
+class Values(TestCase):
+	def test_VertexNoneValue(self):
+		graph = Graph()
+		vertex = Vertex(graph=graph)
+
+		self.assertIsNone(vertex.Value)
+
+		vertex.Value = 5
+
+		self.assertEqual(5, vertex.Value)
+
+	def test_VertexValue(self):
+		graph = Graph()
+		vertex = Vertex(value=1, graph=graph)
+
+		self.assertEqual(1, vertex.Value)
+
+		vertex.Value = None
+
+		self.assertIsNone(vertex.Value)
+
+	def test_EdgeNoneValue(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2)
+
+		self.assertIsNone(edge12.Value)
+
+		edge12.Value = 5
+
+		self.assertEqual(5, edge12.Value)
+
+	def test_EdgeValue(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeValue=3)
+
+		self.assertEqual(3, edge12.Value)
+
+		edge12.Value = None
+
+		self.assertIsNone(edge12.Value)
+
+
+class Weights(TestCase):
+	def test_VertexNoneWeight(self):
+		graph = Graph()
+		vertex = Vertex(graph=graph)
+
+		self.assertIsNone(vertex.Weight)
+
+		vertex.Weight = 5
+
+		self.assertEqual(5, vertex.Weight)
+
+	def test_VertexWeight(self):
+		graph = Graph()
+		vertex = Vertex(weight=1, graph=graph)
+
+		self.assertEqual(1, vertex.Weight)
+
+		vertex.Weight = None
+
+		self.assertIsNone(vertex.Weight)
+
+	def test_EdgeNoneWeight(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2)
+
+		self.assertIsNone(edge12.Weight)
+
+		edge12.Weight = 5
+
+		self.assertEqual(5, edge12.Weight)
+
+	def test_EdgeWeight(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeWeight=3)
+
+		self.assertEqual(3, edge12.Weight)
+
+		edge12.Weight = None
+
+		self.assertIsNone(edge12.Weight)
+
+
 class Dicts(TestCase):
 	def test_GraphDict(self):
 		graph = Graph()
