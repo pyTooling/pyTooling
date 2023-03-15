@@ -651,59 +651,98 @@ class Vertex(
 
 	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		""".. todo:: GRAPH::Vertex::EdgeFromVertex Needs documentation."""
-		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
+		if self._subgraph is vertex._subgraph:
+			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
-		vertex._outboundEdges.append(edge)
-		self._inboundEdges.append(edge)
+			vertex._outboundEdges.append(edge)
+			self._inboundEdges.append(edge)
 
-		# TODO: move into Edge?
-		# TODO: keep _graph pointer in edge and then register edge on graph?
-		if edgeID is None:
-			self._graph._edgesWithoutID.append(edge)
-		elif edgeID not in self._graph._edgesWithID:
-			self._graph._edgesWithID[edgeID] = edge
+			if self._subgraph is None:
+				# TODO: move into Edge?
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._graph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._graph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			else:
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._subgraph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._subgraph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			# FIXME: needs an error message
+			raise GraphException()
 
 		return edge
 
-	def EdgeToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, vertexWeight: VertexWeightType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		""".. todo:: GRAPH::Vertex::EdgeToNewVertex Needs documentation."""
-		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
+		vertex = Vertex(vertexID, vertexValue, vertexWeight, graph=self._graph)  # , component=self._component)
 
-		edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
+		if self._subgraph is vertex._subgraph:
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
-		self._outboundEdges.append(edge)
-		vertex._inboundEdges.append(edge)
+			self._outboundEdges.append(edge)
+			vertex._inboundEdges.append(edge)
 
-		# TODO: move into Edge?
-		# TODO: keep _graph pointer in edge and then register edge on graph?
-		if edgeID is None:
-			self._graph._edgesWithoutID.append(edge)
-		elif edgeID not in self._graph._edgesWithID:
-			self._graph._edgesWithID[edgeID] = edge
+			if self._subgraph is None:
+				# TODO: move into Edge?
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._graph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._graph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			else:
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._subgraph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._subgraph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			# FIXME: needs an error message
+			raise GraphException()
 
 		return edge
 
-	def EdgeFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, vertexWeight: VertexWeightType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
 		""".. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs documentation."""
-		vertex = Vertex(vertexID, vertexValue, graph=self._graph)  #, component=self._component)
+		vertex = Vertex(vertexID, vertexValue, vertexWeight, graph=self._graph)  # , component=self._component)
 
-		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
+		if self._subgraph is vertex._subgraph:
+			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
-		vertex._outboundEdges.append(edge)
-		self._inboundEdges.append(edge)
+			vertex._outboundEdges.append(edge)
+			self._inboundEdges.append(edge)
 
-		# TODO: move into Edge?
-		# TODO: keep _graph pointer in edge and then register edge on graph?
-		if edgeID is None:
-			self._graph._edgesWithoutID.append(edge)
-		elif edgeID not in self._graph._edgesWithID:
-			self._graph._edgesWithID[edgeID] = edge
+			if self._subgraph is None:
+				# TODO: move into Edge?
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._graph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._graph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			else:
+				# TODO: keep _graph pointer in edge and then register edge on graph?
+				if edgeID is None:
+					self._subgraph._edgesWithoutID.append(edge)
+				elif edgeID not in self._graph._edgesWithID:
+					self._subgraph._edgesWithID[edgeID] = edge
+				else:
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			# FIXME: needs an error message
+			raise GraphException()
 
 		return edge
 
@@ -738,23 +777,36 @@ class Vertex(
 
 		return link
 
-	def LinkFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		""".. todo:: GRAPH::Vertex::LinkFromVertex Needs documentation."""
-		edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
-
-		vertex._outboundEdges.append(edge)
-		self._inboundEdges.append(edge)
-
-		# TODO: move into Edge?
-		# TODO: keep _graph pointer in edge and then register edge on graph?
-		if edgeID is None:
-			self._graph._edgesWithoutID.append(edge)
-		elif edgeID not in self._graph._edgesWithID:
-			self._graph._edgesWithID[edgeID] = edge
+	def LinkFromVertex(self, vertex: 'Vertex', linkID: EdgeIDType = None, linkWeight: EdgeWeightType = None, linkValue: VertexValueType = None) -> 'Edge':
+		""".. todo:: GRAPH::Vertex::LinkToVertex Needs documentation."""
+		if self._subgraph is vertex._subgraph:
+			# FIXME: needs an error message
+			raise GraphException()
 		else:
-			raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+			link = Link(vertex, self, linkID, linkValue, linkWeight)
 
-		return edge
+			vertex._outboundLinks.append(link)
+			self._inboundLinks.append(link)
+
+			if self._subgraph is None:
+				# TODO: move into Edge?
+				# TODO: keep _graph pointer in link and then register link on graph?
+				if linkID is None:
+					self._graph._linksWithoutID.append(link)
+				elif linkID not in self._graph._linksWithID:
+					self._graph._linksWithID[linkID] = link
+				else:
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+			else:
+				# TODO: keep _graph pointer in link and then register link on graph?
+				if linkID is None:
+					self._subgraph._linksWithoutID.append(link)
+				elif linkID not in self._graph._linksWithID:
+					self._subgraph._linksWithID[linkID] = link
+				else:
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+
+		return link
 
 	def HasEdgeToDestination(self, destination: 'Vertex') -> bool:
 		"""
@@ -861,7 +913,7 @@ class Vertex(
 		if graph is self._graph:
 			raise GraphException("Graph to copy this vertex to, is the same graph.")
 
-		vertex = Vertex(self._id, self._value, graph=graph)
+		vertex = Vertex(self._id, self._value, self._weight, graph=graph)
 		if copyDict:
 			vertex._dict = self._dict.copy()
 
