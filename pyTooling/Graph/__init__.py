@@ -821,7 +821,7 @@ class Vertex(
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
 		   :py:meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :py:meth:`HasLinkFromSourcce` |br|
+		   :py:meth:`HasLinkFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._outboundEdges:
@@ -843,7 +843,7 @@ class Vertex(
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
 		   :py:meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :py:meth:`HasLinkFromSourcce` |br|
+		   :py:meth:`HasLinkFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._inboundEdges:
@@ -865,7 +865,7 @@ class Vertex(
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
 		   :py:meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :py:meth:`HasLinkFromSourcce` |br|
+		   :py:meth:`HasLinkFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for link in self._outboundLinks:
@@ -874,7 +874,7 @@ class Vertex(
 
 		return False
 
-	def HasLinkFromSourcce(self, source: 'Vertex') -> bool:
+	def HasLinkFromSource(self, source: 'Vertex') -> bool:
 		"""
 		Check if this vertex is linked to another vertex by any inbound link.
 
@@ -1378,7 +1378,6 @@ class BaseEdge(
 		"""
 		return self._destination
 
-	# @mustoverride
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
 		swap = self._source
