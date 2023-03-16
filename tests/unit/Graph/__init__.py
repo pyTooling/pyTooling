@@ -92,6 +92,7 @@ class Construction(TestCase):
 		edge12 = vertex1.EdgeToVertex(vertex2)
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
 		self.assertEqual(1, vertex1.EdgeCount)
 		self.assertEqual(1, vertex1.OutboundEdgeCount)
 		self.assertEqual(0, vertex1.InboundEdgeCount)
@@ -132,6 +133,7 @@ class Construction(TestCase):
 		edge21 = vertex1.EdgeFromVertex(vertex2)
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
 		self.assertEqual(1, vertex1.EdgeCount)
 		self.assertEqual(0, vertex1.OutboundEdgeCount)
 		self.assertEqual(1, vertex1.InboundEdgeCount)
@@ -172,6 +174,7 @@ class Construction(TestCase):
 		vertex2 = edge1x.Destination
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
 		self.assertEqual(1, vertex1.EdgeCount)
 		self.assertEqual(1, vertex1.OutboundEdgeCount)
 		self.assertEqual(0, vertex1.InboundEdgeCount)
@@ -212,6 +215,7 @@ class Construction(TestCase):
 		vertex2 = edgex1.Source
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
 		self.assertEqual(1, vertex1.EdgeCount)
 		self.assertEqual(0, vertex1.OutboundEdgeCount)
 		self.assertEqual(1, vertex1.InboundEdgeCount)
@@ -254,6 +258,9 @@ class Construction(TestCase):
 		link12 = vertex1.LinkToVertex(vertex2)
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(0, graph.LinkCount)
+		self.assertEqual(1, subgraph1.LinkCount)
+		self.assertEqual(1, subgraph2.LinkCount)
 		self.assertEqual(1, vertex1.LinkCount)
 		self.assertEqual(1, vertex1.OutboundLinkCount)
 		self.assertEqual(0, vertex1.InboundLinkCount)
@@ -296,6 +303,9 @@ class Construction(TestCase):
 		link21 = vertex1.LinkFromVertex(vertex2)
 
 		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(0, graph.LinkCount)
+		self.assertEqual(1, subgraph1.LinkCount)
+		self.assertEqual(1, subgraph2.LinkCount)
 		self.assertEqual(1, vertex1.LinkCount)
 		self.assertEqual(0, vertex1.OutboundLinkCount)
 		self.assertEqual(1, vertex1.InboundLinkCount)

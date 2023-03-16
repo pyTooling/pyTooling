@@ -770,8 +770,10 @@ class Vertex(
 				# TODO: keep _graph pointer in link and then register link on graph?
 				if linkID is None:
 					self._subgraph._linksWithoutID.append(link)
+					vertex._subgraph._linksWithoutID.append(link)
 				elif linkID not in self._graph._linksWithID:
 					self._subgraph._linksWithID[linkID] = link
+					vertex._subgraph._linksWithID[linkID] = link
 				else:
 					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
 
@@ -801,8 +803,10 @@ class Vertex(
 				# TODO: keep _graph pointer in link and then register link on graph?
 				if linkID is None:
 					self._subgraph._linksWithoutID.append(link)
+					vertex._subgraph._linksWithoutID.append(link)
 				elif linkID not in self._graph._linksWithID:
 					self._subgraph._linksWithID[linkID] = link
+					vertex._subgraph._linksWithID[linkID] = link
 				else:
 					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
 
