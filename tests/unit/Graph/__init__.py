@@ -32,7 +32,8 @@
 from typing import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException, DuplicateEdgeError
+from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException, DuplicateEdgeError, \
+	Edge, NotInSameGraph, Link
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -70,6 +71,44 @@ class Construction(TestCase):
 		self.assertEqual(1, root.Graph.ComponentCount)
 		self.assertEqual("<vertex>", repr(root))
 		self.assertEqual("<vertex>", str(root))
+
+	def test_StandaloneEdge(self):
+		vertex1 = Vertex()
+		vertex2 = Vertex()
+
+		with self.assertRaises(TypeError):
+			Edge(1, vertex1)
+
+		with self.assertRaises(TypeError):
+			Edge(vertex1, 2)
+
+		with self.assertRaises(TypeError):
+			Edge(vertex1, vertex2, edgeID=[])
+
+		with self.assertRaises(TypeError):
+			Edge(vertex1, vertex2, weight="2")
+
+		with self.assertRaises(NotInSameGraph):
+			Edge(vertex1, vertex2)
+
+	def test_StandaloneLink(self):
+		vertex1 = Vertex()
+		vertex2 = Vertex()
+
+		with self.assertRaises(TypeError):
+			Link(1, vertex1)
+
+		with self.assertRaises(TypeError):
+			Link(vertex1, 2)
+
+		with self.assertRaises(TypeError):
+			Link(vertex1, vertex2, linkID=[])
+
+		with self.assertRaises(TypeError):
+			Link(vertex1, vertex2, weight="2")
+
+		with self.assertRaises(NotInSameGraph):
+			Link(vertex1, vertex2)
 
 	def test_SingleVertexForExistingGraph(self):
 		graph = Graph()

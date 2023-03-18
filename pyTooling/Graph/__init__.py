@@ -1493,21 +1493,21 @@ class Edge(
 
 @export
 class Link(
-	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
-	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+	BaseEdge[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType],
+	Generic[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]
 ):
 	"""
 	A **link** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All links are
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
+	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: LinkWeightType = None):
 		""".. todo:: GRAPH::Edge::init Needs documentation."""
 		if not isinstance(source, Vertex):
 			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
 		if not isinstance(destination, Vertex):
 			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
-		if edgeID is not None and not isinstance(edgeID, Hashable):
+		if linkID is not None and not isinstance(linkID, Hashable):
 			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
@@ -1516,7 +1516,7 @@ class Link(
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, edgeID, value, weight)
+		super().__init__(source, destination, linkID, value, weight)
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this link."""
