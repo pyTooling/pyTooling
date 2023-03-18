@@ -32,7 +32,7 @@
 from typing import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException
+from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException, DuplicateEdgeError
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -728,6 +728,163 @@ class Dicts(TestCase):
 		self.assertEqual(0, len(edge12))
 		with self.assertRaises(KeyError):
 			_ = edge12["key"]
+
+
+class EdgesAndLinks(TestCase):
+	def test_EdgeToVertex(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2)
+		edge34 = vertex3.EdgeToVertex(vertex4)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+
+	def test_EdgeToVertexWithID(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeID=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeID=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.ID)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.ID)
+
+	def test_DuplicateEdgeID(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		vertex1.EdgeToVertex(vertex2, edgeID=1)
+		vertex3.EdgeToVertex(vertex4, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex2.EdgeToVertex(vertex1, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex4.EdgeToVertex(vertex3, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex1.EdgeFromVertex(vertex2, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex3.EdgeFromVertex(vertex4, edgeID=1)
+
+	def test_EdgeToVertexWithValue(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeValue=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeValue=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Value)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Value)
+
+	def test_EdgeToVertexWithWeight(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeWeight=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeWeight=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Weight)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Weight)
+
+	def test_EdgeFromVertex(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1)
+		edge34 = vertex4.EdgeFromVertex(vertex3)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+
+	def test_EdgeFromVertexWithID(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1, edgeID=1)
+		edge34 = vertex4.EdgeFromVertex(vertex3, edgeID=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.ID)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.ID)
+
+	def test_EdgeFromVertexWithValue(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1, edgeValue=1)
+		edge34 = vertex4.EdgeFromVertex(vertex3, edgeValue=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Value)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Value)
+
+	def test_EdgeFromVertexWithWeight(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1, edgeWeight=1)
+		edge34 = vertex4.EdgeFromVertex(vertex3, edgeWeight=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Weight)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Weight)
 
 
 class Iterate(TestCase):
