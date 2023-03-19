@@ -31,9 +31,8 @@
 """Unit tests for pyTooling.Graph.GraphML."""
 from unittest import TestCase
 
-from pyTooling.Graph import Graph as pyTooling_Graph, Vertex
-from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, GraphMLDocument, \
-	Subgraph
+from pyTooling.Graph import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
+from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
 from pyTooling.Tree import Node as pyToolingNode
 
 
@@ -153,7 +152,7 @@ class Construction(TestCase):
 			print(line, end="")
 
 	def test_Graph(self):
-		graph = Graph("g1")
+		graph = Graph(None, "g1")
 
 		self.assertTrue(graph.HasClosingTag)
 		self.assertEqual("""\
@@ -182,7 +181,7 @@ class Construction(TestCase):
 			print(line, end="")
 
 	def test_GraphWithNodesAndEdges(self):
-		graph = Graph("g1")
+		graph = Graph(None, "g1")
 
 		graph.AddNode(Node("n1"))
 		graph.AddNode(Node("n2"))
@@ -218,7 +217,7 @@ class Construction(TestCase):
 			print(line, end="")
 
 	def test_GraphWithSubgraph(self):
-		graph = Graph("g1")
+		graph = Graph(None, "g1")
 
 		graph.AddNode(Node("n1"))
 		graph.AddNode(Node("n2"))
@@ -256,7 +255,7 @@ class Construction(TestCase):
 
 
 class pyToolingGraph(TestCase):
-	def test_Conversion(self):
+	def test_ConvertGraph(self):
 		graph = pyTooling_Graph(name="g1")
 
 		vertex1 = Vertex(vertexID="n1", value="v1", graph=graph)
@@ -268,6 +267,38 @@ class pyToolingGraph(TestCase):
 
 		self.assertEqual("g1", doc._graph.ID)
 		self.assertEqual(2, len(doc._graph._nodes))
+		self.assertEqual(1, len(doc._graph._edges))
+
+		print()
+		for line in doc.ToStringLines():
+			print(line, end="")
+
+	def test_ConvertSubgraph(self):
+		graph = pyTooling_Graph(name="g1")
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+
+		vertex1 = Vertex(vertexID="n1", value="v1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", value="v2", graph=graph)
+		vertex3 = Vertex(vertexID="n3", value="v3", subgraph=subgraph1)
+		vertex4 = Vertex(vertexID="n4", value="v4", subgraph=subgraph1)
+		vertex5 = Vertex(vertexID="n5", value="v5", subgraph=subgraph2)
+		vertex6 = Vertex(vertexID="n6", value="v6", subgraph=subgraph2)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeValue="v12", edgeWeight=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeValue="v34", edgeWeight=1)
+		edge56 = vertex5.EdgeToVertex(vertex6, edgeValue="v56", edgeWeight=1)
+
+		link13 = vertex1.LinkToVertex(vertex3, linkValue="v13", linkWeight=2)
+		link25 = vertex2.LinkToVertex(vertex5, linkValue="v25", linkWeight=2)
+		link46 = vertex4.LinkToVertex(vertex6, linkValue="v46", linkWeight=2)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+
+		self.assertEqual("g1", doc._graph.ID)
+		self.assertEqual(2, len(doc._graph._subgraphs))
+		self.assertEqual(4, len(doc._graph._nodes))
 		self.assertEqual(1, len(doc._graph._edges))
 
 		print()
