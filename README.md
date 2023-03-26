@@ -32,10 +32,9 @@ It's useful for **any** Python-base project independent if it's a library, frame
 can be found in sub-namespaces like:
 
 * [pyTooling.CLIAbstraction](https://github.com/pyTooling/pyTooling.CLIAbstraction)
-* [pyTooling.TerminalUI](https://github.com/pyTooling/pyTooling.TerminalUI)
 
-In addition, pyTooling provides a collection of CI job templates for GitHub Actions. This drastically simplifies
-GHA-based CI pipelines for Python projects.
+In addition, pyTooling provides a collection of [CI job templates for GitHub Actions](https://github.com/pyTooling/Actions).
+This drastically simplifies GHA-based CI pipelines for Python projects.
 
 ## Package Details
 
