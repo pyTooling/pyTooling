@@ -37,11 +37,11 @@ A data model to write out GraphML XML files.
 """
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Union, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Graph import Graph as pyToolingGraph
+from pyTooling.Graph import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
 from pyTooling.Tree import Node as pyToolingNode
 
 
@@ -289,7 +289,7 @@ class Edge(BaseWithData):
 
 
 @export
-class Graph(BaseWithData):
+class BaseGraph(BaseWithData):
 	_subgraphs: Dict[str, 'Subgraph']
 	_nodes: Dict[str, Node]
 	_edges: Dict[str, Edge]
@@ -340,6 +340,9 @@ class Graph(BaseWithData):
 		self._edges[edge._id] = edge
 		return edge
 
+	def GetEdge(self, edgeName: str) -> Edge:
+		return self._edges[edgeName]
+
 	def OpeningTag(self, indent: int = 1) -> str:
 		return f"""\
 {'  '*indent}<graph id="{self._id}"
@@ -368,13 +371,49 @@ class Graph(BaseWithData):
 
 
 @export
-class Subgraph(Node, Graph):
+class Graph(BaseGraph):
+	_document: 'GraphMLDocument'
+	_ids: Dict[str, Union[Node, Edge, 'Subgraph']]
+
+	def __init__(self, document: 'GraphMLDocument', identifier: str):
+		super().__init__(identifier)
+		self._document = document
+		self._ids = {}
+
+	def GetByID(self, identifier: str) -> Union[Node, Edge, 'Subgraph']:
+		return self._ids[identifier]
+
+	def AddSubgraph(self, subgraph: 'Subgraph') -> 'Subgraph':
+		result = super().AddSubgraph(subgraph)
+		self._ids[subgraph._subgraphID] = subgraph
+		subgraph._root = self
+		return result
+
+	def AddNode(self, node: Node) -> Node:
+		result = super().AddNode(node)
+		self._ids[node._id] = node
+		return result
+
+	def AddEdge(self, edge: Edge) -> Edge:
+		result = super().AddEdge(edge)
+		self._ids[edge._id] = edge
+		return result
+
+
+@export
+class Subgraph(Node, BaseGraph):
 	_subgraphID: str
+	_root:       Nullable[Graph]
 
 	def __init__(self, nodeIdentifier: str, graphIdentifier: str):
 		super().__init__(nodeIdentifier)
 
 		self._subgraphID = graphIdentifier
+		self._root = None
+
+	@property
+	def RootGraph(self) -> Graph:
+		return self._root
 
 	@property
 	def SubgraphID(self) -> str:
@@ -383,6 +422,16 @@ class Subgraph(Node, Graph):
 	@property
 	def HasClosingTag(self) -> bool:
 		return True
+
+	def AddNode(self, node: Node) -> Node:
+		result = super().AddNode(node)
+		self._root._ids[node._id] = node
+		return result
+
+	def AddEdge(self, edge: Edge) -> Edge:
+		result = super().AddEdge(edge)
+		self._root._ids[edge._id] = edge
+		return result
 
 	def Tag(self, indent: int = 2) -> str:
 		raise NotImplementedError()
@@ -399,7 +448,7 @@ class Subgraph(Node, Graph):
 """
 
 	def ClosingTag(self, indent: int = 2) -> str:
-		return Graph.ClosingTag(self, indent)
+		return BaseGraph.ClosingTag(self, indent)
 
 	def ToStringLines(self, indent: int = 2) -> List[str]:
 		lines = [super().OpeningTag(indent)]
@@ -435,11 +484,11 @@ class GraphMLDocument(Base):
 	def __init__(self, identifier: str = "G"):
 		super().__init__()
 
-		self._graph = Graph(identifier)
+		self._graph = Graph(self, identifier)
 		self._keys = {}
 
 	@property
-	def Graph(self) -> Graph:
+	def Graph(self) -> BaseGraph:
 		return self._graph
 
 	@property
@@ -457,37 +506,91 @@ class GraphMLDocument(Base):
 		return keyName in self._keys
 
 	def FromGraph(self, graph: pyToolingGraph):
+		document = self
 		self._graph._id = graph._name
 
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
 
-		for vertex in graph.IterateVertices():
-			newNode = Node(vertex._id)
-			newNode.AddData(Data(nodeValue, vertex._value))
-			for key, value in vertex._dict.items():
-				if self.HasKey(str(key)):
-					nodeKey = self.GetKey(f"node{key!s}")
-				else:
-					nodeKey = self.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
-				newNode.AddData(Data(nodeKey, value))
+		def translateGraph(rootGraph: Graph, pyTGraph: pyToolingGraph):
+			for vertex in pyTGraph.IterateVertices():
+				newNode = Node(vertex._id)
+				newNode.AddData(Data(nodeValue, vertex._value))
+				for key, value in vertex._dict.items():
+					if document.HasKey(str(key)):
+						nodeKey = document.GetKey(f"node{key!s}")
+					else:
+						nodeKey = document.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
+					newNode.AddData(Data(nodeKey, value))
 
-			self._graph.AddNode(newNode)
+				rootGraph.AddNode(newNode)
 
-		for edge in graph.IterateEdges():
-			source = self._graph.GetNode(edge._source._id)
-			target = self._graph.GetNode(edge._destination._id)
+			for edge in pyTGraph.IterateEdges():
+				source = rootGraph.GetByID(edge._source._id)
+				target = rootGraph.GetByID(edge._destination._id)
 
-			newEdge = Edge(edge._id, source, target)
-			newEdge.AddData(Data(edgeValue, edge._value))
-			for key, value in edge._dict.items():
-				if self.HasKey(str(key)):
-					edgeKey = self.GetKey(f"edge{key!s}")
-				else:
-					edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
-				newEdge.AddData(Data(edgeKey, value))
+				newEdge = Edge(edge._id, source, target)
+				newEdge.AddData(Data(edgeValue, edge._value))
+				for key, value in edge._dict.items():
+					if self.HasKey(str(key)):
+						edgeKey = self.GetBy(f"edge{key!s}")
+					else:
+						edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
+					newEdge.AddData(Data(edgeKey, value))
 
-			self._graph.AddEdge(newEdge)
+				rootGraph.AddEdge(newEdge)
+
+			for link in pyTGraph.IterateLinks():
+				source = rootGraph.GetByID(link._source._id)
+				target = rootGraph.GetByID(link._destination._id)
+
+				newEdge = Edge(link._id, source, target)
+				newEdge.AddData(Data(edgeValue, link._value))
+				for key, value in link._dict.items():
+					if self.HasKey(str(key)):
+						edgeKey = self.GetKey(f"link{key!s}")
+					else:
+						edgeKey = self.AddKey(Key(f"link{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
+					newEdge.AddData(Data(edgeKey, value))
+
+				rootGraph.AddEdge(newEdge)
+
+		def translateSubgraph(nodeGraph: Subgraph, pyTSubgraph: pyToolingSubgraph):
+			rootGraph = nodeGraph.RootGraph
+
+			for vertex in pyTSubgraph.IterateVertices():
+				newNode = Node(vertex._id)
+				newNode.AddData(Data(nodeValue, vertex._value))
+				for key, value in vertex._dict.items():
+					if self.HasKey(str(key)):
+						nodeKey = self.GetKey(f"node{key!s}")
+					else:
+						nodeKey = self.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
+					newNode.AddData(Data(nodeKey, value))
+
+				nodeGraph.AddNode(newNode)
+
+			for edge in pyTSubgraph.IterateEdges():
+				source = nodeGraph.GetNode(edge._source._id)
+				target = nodeGraph.GetNode(edge._destination._id)
+
+				newEdge = Edge(edge._id, source, target)
+				newEdge.AddData(Data(edgeValue, edge._value))
+				for key, value in edge._dict.items():
+					if self.HasKey(str(key)):
+						edgeKey = self.GetKey(f"edge{key!s}")
+					else:
+						edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
+					newEdge.AddData(Data(edgeKey, value))
+
+				nodeGraph.AddEdge(newEdge)
+
+		for subgraph in graph.Subgraphs:
+			nodeGraph = Subgraph(subgraph.Name, "sg" + subgraph.Name)
+			self._graph.AddSubgraph(nodeGraph)
+			translateSubgraph(nodeGraph, subgraph)
+
+		translateGraph(self._graph, graph)
 
 	def FromTree(self, tree: pyToolingNode):
 		self._graph._id = tree._id

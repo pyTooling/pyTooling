@@ -32,7 +32,8 @@
 from typing import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable
+from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException, DuplicateEdgeError, \
+	Edge, NotInSameGraph, Link
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -41,46 +42,382 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Construction(TestCase):
-	def test_GraphName(self):
-		g = Graph("myGraph")
+	def test_Graph(self):
+		graph = Graph()
 
-		self.assertEqual("myGraph", g.Name)
+		self.assertIsNone(graph.Name)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(0, graph.ComponentCount)
+		self.assertEqual(0, graph.SubgraphCount)
+		self.assertEqual(0, graph.ViewCount)
+		self.assertEqual(0, len(graph))
+		self.assertEqual("<graph: unnamed graph, vertices: 0, edges: 0>", repr(graph))
+		self.assertEqual("Graph: unnamed graph", str(graph))
 
-	def test_SingleVertex(self):
+	def test_GraphWithName(self):
+		graph = Graph("myGraph")
+
+		self.assertEqual("myGraph", graph.Name)
+		self.assertEqual("<graph: 'myGraph', vertices: 0, edges: 0>", repr(graph))
+		self.assertEqual("Graph: 'myGraph'", str(graph))
+
+	def test_StandaloneVertex(self):
 		root: Vertex[Nullable[Any], int, str, Any] = Vertex()
 
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
 		self.assertEqual(1, root.Graph.VertexCount)
+		self.assertEqual(1, root.Graph.ComponentCount)
+		self.assertEqual("<vertex>", repr(root))
+		self.assertEqual("<vertex>", str(root))
 
-	def test_SingleVertexInEmptyGraph(self):
+	def test_StandaloneEdge(self):
+		vertex1 = Vertex()
+		vertex2 = Vertex()
+
+		with self.assertRaises(TypeError):
+			Edge(1, vertex1)
+
+		with self.assertRaises(TypeError):
+			Edge(vertex1, 2)
+
+		with self.assertRaises(TypeError):
+			Edge(vertex1, vertex2, edgeID=[])
+
+		with self.assertRaises(TypeError):
+			Edge(vertex1, vertex2, weight="2")
+
+		with self.assertRaises(NotInSameGraph):
+			Edge(vertex1, vertex2)
+
+	def test_StandaloneLink(self):
+		vertex1 = Vertex()
+		vertex2 = Vertex()
+
+		with self.assertRaises(TypeError):
+			Link(1, vertex1)
+
+		with self.assertRaises(TypeError):
+			Link(vertex1, 2)
+
+		with self.assertRaises(TypeError):
+			Link(vertex1, vertex2, linkID=[])
+
+		with self.assertRaises(TypeError):
+			Link(vertex1, vertex2, weight="2")
+
+		with self.assertRaises(NotInSameGraph):
+			Link(vertex1, vertex2)
+
+	def test_SingleVertexForExistingGraph(self):
 		graph = Graph()
 
 		root: Vertex[Nullable[Any], int, str, Any] = Vertex(graph=graph)
 
 		self.assertIsNone(root.ID)
 		self.assertIsNone(root.Value)
-		self.assertEqual(1, root.Graph.VertexCount)
-		self.assertIsNone(root.Graph.Name)
+		self.assertEqual(1, graph.VertexCount)
+		self.assertEqual(1, graph.ComponentCount)
 
-	def test_SingleVertexInEmptyGraphWithName(self):
-		graph = Graph("test")
+	def test_EdgeToVertex(self):
+		graph = Graph()
 
-		root = Vertex(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
 
-		self.assertIsNone(root.ID)
-		self.assertIsNone(root.Value)
-		self.assertEqual(1, root.Graph.VertexCount)
-		self.assertEqual("test", root.Graph.Name)
+		self.assertEqual(2, graph.ComponentCount)
+
+		edge12 = vertex1.EdgeToVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
+		self.assertEqual(1, vertex1.EdgeCount)
+		self.assertEqual(1, vertex1.OutboundEdgeCount)
+		self.assertEqual(0, vertex1.InboundEdgeCount)
+		self.assertEqual(1, vertex2.EdgeCount)
+		self.assertEqual(0, vertex2.OutboundEdgeCount)
+		self.assertEqual(1, vertex2.InboundEdgeCount)
+		self.assertTupleEqual(tuple(), vertex1.InboundEdges)
+		self.assertTupleEqual((edge12,), vertex1.OutboundEdges)
+		self.assertTupleEqual((edge12,), vertex2.InboundEdges)
+		self.assertTupleEqual(tuple(), vertex2.OutboundEdges)
+		self.assertTupleEqual(tuple(), vertex1.Predecessors)
+		self.assertTupleEqual((vertex2,), vertex1.Successors)
+		self.assertTupleEqual((vertex1,), vertex2.Predecessors)
+		self.assertTupleEqual(tuple(), vertex2.Successors)
+		self.assertTrue(vertex1.HasEdgeToDestination(vertex2))
+		self.assertFalse(vertex1.HasEdgeFromSource(vertex2))
+		self.assertFalse(vertex2.HasEdgeToDestination(vertex1))
+		self.assertTrue(vertex2.HasEdgeFromSource(vertex1))
+		self.assertTrue(vertex1.IsRoot)
+		self.assertFalse(vertex1.IsLeaf)
+		self.assertFalse(vertex2.IsRoot)
+		self.assertTrue(vertex2.IsLeaf)
+		self.assertIs(vertex1, edge12.Source)
+		self.assertIs(vertex2, edge12.Destination)
+		self.assertIsNone(edge12.ID)
+		self.assertIsNone(edge12.Value)
+		# self.assertEqual("", repr(edge12))
+		# self.assertEqual("", str(edge12))
+
+	def test_EdgeFromVertex(self):
+		graph = Graph()
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+
+		self.assertEqual(2, graph.ComponentCount)
+
+		edge21 = vertex1.EdgeFromVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
+		self.assertEqual(1, vertex1.EdgeCount)
+		self.assertEqual(0, vertex1.OutboundEdgeCount)
+		self.assertEqual(1, vertex1.InboundEdgeCount)
+		self.assertEqual(1, vertex2.EdgeCount)
+		self.assertEqual(1, vertex2.OutboundEdgeCount)
+		self.assertEqual(0, vertex2.InboundEdgeCount)
+		self.assertTupleEqual((edge21,), vertex1.InboundEdges)
+		self.assertTupleEqual(tuple(), vertex1.OutboundEdges)
+		self.assertTupleEqual(tuple(), vertex2.InboundEdges)
+		self.assertTupleEqual((edge21,), vertex2.OutboundEdges)
+		self.assertTupleEqual((vertex2,), vertex1.Predecessors)
+		self.assertTupleEqual(tuple(), vertex1.Successors)
+		self.assertTupleEqual(tuple(), vertex2.Predecessors)
+		self.assertTupleEqual((vertex1,), vertex2.Successors)
+		self.assertFalse(vertex1.HasEdgeToDestination(vertex2))
+		self.assertTrue(vertex1.HasEdgeFromSource(vertex2))
+		self.assertTrue(vertex2.HasEdgeToDestination(vertex1))
+		self.assertFalse(vertex2.HasEdgeFromSource(vertex1))
+		self.assertFalse(vertex1.IsRoot)
+		self.assertTrue(vertex1.IsLeaf)
+		self.assertTrue(vertex2.IsRoot)
+		self.assertFalse(vertex2.IsLeaf)
+		self.assertIs(vertex1, edge21.Destination)
+		self.assertIs(vertex2, edge21.Source)
+		self.assertIsNone(edge21.ID)
+		self.assertIsNone(edge21.Value)
+		# self.assertEqual("", repr(edge12))
+		# self.assertEqual("", str(edge12))
+
+	def test_EdgeToNewVertex(self):
+		graph = Graph()
+
+		vertex1 = Vertex(graph=graph)
+
+		self.assertEqual(1, graph.ComponentCount)
+
+		edge1x = vertex1.EdgeToNewVertex()
+		vertex2 = edge1x.Destination
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
+		self.assertEqual(1, vertex1.EdgeCount)
+		self.assertEqual(1, vertex1.OutboundEdgeCount)
+		self.assertEqual(0, vertex1.InboundEdgeCount)
+		self.assertEqual(1, vertex2.EdgeCount)
+		self.assertEqual(0, vertex2.OutboundEdgeCount)
+		self.assertEqual(1, vertex2.InboundEdgeCount)
+		self.assertTupleEqual(tuple(), vertex1.InboundEdges)
+		self.assertTupleEqual((edge1x,), vertex1.OutboundEdges)
+		self.assertTupleEqual((edge1x,), vertex2.InboundEdges)
+		self.assertTupleEqual(tuple(), vertex2.OutboundEdges)
+		self.assertTupleEqual(tuple(), vertex1.Predecessors)
+		self.assertTupleEqual((vertex2,), vertex1.Successors)
+		self.assertTupleEqual((vertex1,), vertex2.Predecessors)
+		self.assertTupleEqual(tuple(), vertex2.Successors)
+		self.assertTrue(vertex1.HasEdgeToDestination(vertex2))
+		self.assertFalse(vertex1.HasEdgeFromSource(vertex2))
+		self.assertFalse(vertex2.HasEdgeToDestination(vertex1))
+		self.assertTrue(vertex2.HasEdgeFromSource(vertex1))
+		self.assertTrue(vertex1.IsRoot)
+		self.assertFalse(vertex1.IsLeaf)
+		self.assertFalse(vertex2.IsRoot)
+		self.assertTrue(vertex2.IsLeaf)
+		self.assertIs(vertex1, edge1x.Source)
+		# self.assertIs(vertex2, edge1x.Destination)
+		self.assertIsNone(edge1x.ID)
+		self.assertIsNone(edge1x.Value)
+		# self.assertEqual("", repr(edge12))
+		# self.assertEqual("", str(edge12))
+
+	def test_EdgeFromNewVertex(self):
+		graph = Graph()
+
+		vertex1 = Vertex(graph=graph)
+
+		self.assertEqual(1, graph.ComponentCount)
+
+		edgex1 = vertex1.EdgeFromNewVertex()
+		vertex2 = edgex1.Source
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(1, graph.EdgeCount)
+		self.assertEqual(1, vertex1.EdgeCount)
+		self.assertEqual(0, vertex1.OutboundEdgeCount)
+		self.assertEqual(1, vertex1.InboundEdgeCount)
+		self.assertEqual(1, vertex2.EdgeCount)
+		self.assertEqual(1, vertex2.OutboundEdgeCount)
+		self.assertEqual(0, vertex2.InboundEdgeCount)
+		self.assertTupleEqual((edgex1,), vertex1.InboundEdges)
+		self.assertTupleEqual(tuple(), vertex1.OutboundEdges)
+		self.assertTupleEqual(tuple(), vertex2.InboundEdges)
+		self.assertTupleEqual((edgex1,), vertex2.OutboundEdges)
+		self.assertTupleEqual((vertex2,), vertex1.Predecessors)
+		self.assertTupleEqual(tuple(), vertex1.Successors)
+		self.assertTupleEqual(tuple(), vertex2.Predecessors)
+		self.assertTupleEqual((vertex1,), vertex2.Successors)
+		self.assertFalse(vertex1.HasEdgeToDestination(vertex2))
+		self.assertTrue(vertex1.HasEdgeFromSource(vertex2))
+		self.assertTrue(vertex2.HasEdgeToDestination(vertex1))
+		self.assertFalse(vertex2.HasEdgeFromSource(vertex1))
+		self.assertFalse(vertex1.IsRoot)
+		self.assertTrue(vertex1.IsLeaf)
+		self.assertTrue(vertex2.IsRoot)
+		self.assertFalse(vertex2.IsLeaf)
+		self.assertIs(vertex1, edgex1.Destination)
+		# self.assertIs(vertex2, edgex1.Source)
+		self.assertIsNone(edgex1.ID)
+		self.assertIsNone(edgex1.Value)
+		# self.assertEqual("", repr(edge12))
+		# self.assertEqual("", str(edge12))
+
+	def test_LinkToVertex(self):
+		graph = Graph()
+		subgraph1 = Subgraph(graph=graph)
+		subgraph2 = Subgraph(graph=graph)
+
+		vertex1 = Vertex(subgraph=subgraph1)
+		vertex2 = Vertex(subgraph=subgraph2)
+
+		self.assertEqual(2, graph.ComponentCount)
+
+		link12 = vertex1.LinkToVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(0, graph.LinkCount)
+		self.assertEqual(1, subgraph1.LinkCount)
+		self.assertEqual(1, subgraph2.LinkCount)
+		self.assertEqual(1, vertex1.LinkCount)
+		self.assertEqual(1, vertex1.OutboundLinkCount)
+		self.assertEqual(0, vertex1.InboundLinkCount)
+		self.assertEqual(1, vertex2.LinkCount)
+		self.assertEqual(0, vertex2.OutboundLinkCount)
+		self.assertEqual(1, vertex2.InboundLinkCount)
+		self.assertTupleEqual(tuple(), vertex1.InboundLinks)
+		self.assertTupleEqual((link12,), vertex1.OutboundLinks)
+		self.assertTupleEqual((link12,), vertex2.InboundLinks)
+		self.assertTupleEqual(tuple(), vertex2.OutboundLinks)
+		# self.assertTupleEqual(tuple(), vertex1.Predecessors)
+		# self.assertTupleEqual((vertex2,), vertex1.Successors)
+		# self.assertTupleEqual((vertex1,), vertex2.Predecessors)
+		# self.assertTupleEqual(tuple(), vertex2.Successors)
+		self.assertTrue(vertex1.HasLinkToDestination(vertex2))
+		self.assertFalse(vertex1.HasLinkFromSource(vertex2))
+		self.assertFalse(vertex2.HasLinkToDestination(vertex1))
+		self.assertTrue(vertex2.HasLinkFromSource(vertex1))
+		# self.assertTrue(vertex1.IsRoot)
+		# self.assertFalse(vertex1.IsLeaf)
+		# self.assertFalse(vertex2.IsRoot)
+		# self.assertTrue(vertex2.IsLeaf)
+		self.assertIs(vertex1, link12.Source)
+		self.assertIs(vertex2, link12.Destination)
+		self.assertIsNone(link12.ID)
+		self.assertIsNone(link12.Value)
+		# self.assertEqual("", repr(link12))
+		# self.assertEqual("", str(link12))
+
+	def test_LinkFromVertex(self):
+		graph = Graph()
+		subgraph1 = Subgraph(graph=graph)
+		subgraph2 = Subgraph(graph=graph)
+
+		vertex1 = Vertex(subgraph=subgraph1)
+		vertex2 = Vertex(subgraph=subgraph2)
+
+		self.assertEqual(2, graph.ComponentCount)
+
+		link21 = vertex1.LinkFromVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertEqual(0, graph.LinkCount)
+		self.assertEqual(1, subgraph1.LinkCount)
+		self.assertEqual(1, subgraph2.LinkCount)
+		self.assertEqual(1, vertex1.LinkCount)
+		self.assertEqual(0, vertex1.OutboundLinkCount)
+		self.assertEqual(1, vertex1.InboundLinkCount)
+		self.assertEqual(1, vertex2.LinkCount)
+		self.assertEqual(1, vertex2.OutboundLinkCount)
+		self.assertEqual(0, vertex2.InboundLinkCount)
+		self.assertTupleEqual((link21,), vertex1.InboundLinks)
+		self.assertTupleEqual(tuple(), vertex1.OutboundLinks)
+		self.assertTupleEqual(tuple(), vertex2.InboundLinks)
+		self.assertTupleEqual((link21,), vertex2.OutboundLinks)
+		# self.assertTupleEqual((vertex2,), vertex1.Predecessors)
+		# self.assertTupleEqual(tuple(), vertex1.Successors)
+		# self.assertTupleEqual(tuple(), vertex2.Predecessors)
+		# self.assertTupleEqual((vertex1,), vertex2.Successors)
+		self.assertFalse(vertex1.HasLinkToDestination(vertex2))
+		self.assertTrue(vertex1.HasLinkFromSource(vertex2))
+		self.assertTrue(vertex2.HasLinkToDestination(vertex1))
+		self.assertFalse(vertex2.HasLinkFromSource(vertex1))
+		# self.assertFalse(vertex1.IsRoot)
+		# self.assertTrue(vertex1.IsLeaf)
+		# self.assertTrue(vertex2.IsRoot)
+		# self.assertFalse(vertex2.IsLeaf)
+		self.assertIs(vertex1, link21.Destination)
+		self.assertIs(vertex2, link21.Source)
+		self.assertIsNone(link21.ID)
+		self.assertIsNone(link21.Value)
+		# self.assertEqual("", repr(link12))
+		# self.assertEqual("", str(link12))
+
+	def test_Subgraph(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertIs(graph, subgraph.Graph)
+		self.assertIsNone(subgraph.Name)
+		self.assertEqual(0, subgraph.VertexCount)
+
+	def test_SubgraphWithName(self):
+		graph = Graph()
+		subgraph = Subgraph(name="subgraph1", graph=graph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertIs(graph, subgraph.Graph)
+		self.assertEqual("subgraph1", subgraph.Name)
+		self.assertEqual(0, subgraph.VertexCount)
+
+	def test_View(self):
+		graph = Graph()
+		view = View(graph=graph)
+
+		self.assertEqual(1, graph.ViewCount)
+		self.assertIs(graph, view.Graph)
+		self.assertIsNone(view.Name)
+		self.assertEqual(0, view.VertexCount)
+
+	def test_ViewWithName(self):
+		graph = Graph()
+		view = View(name="view1", graph=graph)
+
+		self.assertEqual(1, graph.ViewCount)
+		self.assertIs(graph, view.Graph)
+		self.assertEqual("view1", view.Name)
+		self.assertEqual(0, view.VertexCount)
 
 	def test_SimpleTree(self):
 		v1 = Vertex()
-		v11 = v1.LinkToNewVertex().Destination
-		v111 = v11.LinkToNewVertex().Destination
-		v112 = v11.LinkToNewVertex().Destination
-		v12 = v1.LinkToNewVertex().Destination
-		v121 = v12.LinkToNewVertex().Destination
-		v1211 = v121.LinkToNewVertex().Destination
+		v11 = v1.EdgeToNewVertex().Destination
+		v111 = v11.EdgeToNewVertex().Destination
+		v112 = v11.EdgeToNewVertex().Destination
+		v12 = v1.EdgeToNewVertex().Destination
+		v121 = v12.EdgeToNewVertex().Destination
+		v1211 = v121.EdgeToNewVertex().Destination
 
 		self.assertEqual(2, v1.OutboundEdgeCount)
 		self.assertEqual(2, v11.OutboundEdgeCount)
@@ -89,50 +426,504 @@ class Construction(TestCase):
 		self.assertEqual(1, v12.OutboundEdgeCount)
 		self.assertEqual(1, v121.OutboundEdgeCount)
 		self.assertEqual(0, v1211.OutboundEdgeCount)
+
 		self.assertEqual(7, v1.Graph.VertexCount)
 		self.assertEqual(6, v1.Graph.EdgeCount)
+		self.assertEqual(1, v1.Graph.ComponentCount)
+		self.assertEqual(7, next(iter(v1.Graph.Components)).VertexCount)
+
+
+class Subgraphs(TestCase):
+	def test_OuterVertices(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(2, graph.VertexCount)
+		self.assertEqual(0, subgraph1.VertexCount)
+
+	def test_InnerVertices(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+
+		vertex3 = Vertex(subgraph=subgraph1)
+		vertex4 = Vertex(subgraph=subgraph1)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(2, subgraph1.VertexCount)
+
+	def test_OuterAndInnerVertices(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+		subgraph2 = Subgraph(name="subgraph2", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph1)
+		vertex4 = Vertex(subgraph=subgraph1)
+		vertex5 = Vertex(subgraph=subgraph2)
+		vertex6 = Vertex(subgraph=subgraph2)
+
+		self.assertEqual(2, graph.SubgraphCount)
+		self.assertEqual(2, graph.VertexCount)
+		self.assertEqual(2, subgraph1.VertexCount)
+		self.assertEqual(2, subgraph2.VertexCount)
+
+	def test_OuterEdges(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2)
+		edge23 = vertex2.EdgeToVertex(vertex3)
+		edge31 = vertex3.EdgeToVertex(vertex1)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(3, graph.VertexCount)
+		self.assertEqual(3, graph.EdgeCount)
+		self.assertEqual(0, subgraph1.VertexCount)
+		self.assertEqual(0, subgraph1.EdgeCount)
+
+	def test_InnerEdges(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(subgraph=subgraph1)
+		vertex2 = Vertex(subgraph=subgraph1)
+		vertex3 = Vertex(subgraph=subgraph1)
+		edge12 = vertex1.EdgeToVertex(vertex2)
+		edge23 = vertex2.EdgeToVertex(vertex3)
+		edge31 = vertex3.EdgeToVertex(vertex1)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(3, subgraph1.VertexCount)
+		self.assertEqual(3, subgraph1.EdgeCount)
+
+	def test_OuterToInnerEdges(self):
+		graph = Graph()
+		subgraph1 = Subgraph(name="subgraph1", graph=graph)
+
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(subgraph=subgraph1)
+		with self.assertRaises(GraphException):
+			edge12 = vertex1.EdgeToVertex(vertex2)
+
+		link12 = vertex1.LinkToVertex(vertex2)
+
+		self.assertEqual(1, graph.SubgraphCount)
+		self.assertEqual(1, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(1, subgraph1.VertexCount)
+		self.assertEqual(1, vertex1.LinkCount)
+		self.assertEqual(1, vertex1.OutboundLinkCount)
+		self.assertEqual(0, vertex1.InboundLinkCount)
+		self.assertEqual(1, vertex2.LinkCount)
+		self.assertEqual(0, vertex2.OutboundLinkCount)
+		self.assertEqual(1, vertex2.InboundLinkCount)
+		self.assertTupleEqual((link12,), vertex1.OutboundLinks)
+		self.assertTupleEqual(tuple(), vertex1.InboundLinks)
+		self.assertTupleEqual(tuple(), vertex2.OutboundLinks)
+		self.assertTupleEqual((link12,), vertex2.InboundLinks)
+
+
+class Names(TestCase):
+	def test_Graph_NoName(self):
+		graph = Graph()
+
+		self.assertIsNone(graph.Name)
+
+		graph.Name = "myGraph"
+
+		self.assertEqual("myGraph", graph.Name)
+
+	def test_Graph_WrongName(self):
+		with self.assertRaises(TypeError):
+			graph = Graph(name=25)
+
+	def test_Graph_WithName(self):
+		graph = Graph(name="myGraph")
+
+		self.assertEqual("myGraph", graph.Name)
+
+		with self.assertRaises(TypeError):
+			graph.Name = None
+
+		with self.assertRaises(TypeError):
+			graph.Name = 25
+
+
+class Values(TestCase):
+	def test_VertexNoneValue(self):
+		graph = Graph()
+		vertex = Vertex(graph=graph)
+
+		self.assertIsNone(vertex.Value)
+
+		vertex.Value = 5
+
+		self.assertEqual(5, vertex.Value)
+
+	def test_VertexValue(self):
+		graph = Graph()
+		vertex = Vertex(value=1, graph=graph)
+
+		self.assertEqual(1, vertex.Value)
+
+		vertex.Value = None
+
+		self.assertIsNone(vertex.Value)
+
+	def test_EdgeNoneValue(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2)
+
+		self.assertIsNone(edge12.Value)
+
+		edge12.Value = 5
+
+		self.assertEqual(5, edge12.Value)
+
+	def test_EdgeValue(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeValue=3)
+
+		self.assertEqual(3, edge12.Value)
+
+		edge12.Value = None
+
+		self.assertIsNone(edge12.Value)
+
+
+class Weights(TestCase):
+	def test_VertexNoneWeight(self):
+		graph = Graph()
+		vertex = Vertex(graph=graph)
+
+		self.assertIsNone(vertex.Weight)
+
+		vertex.Weight = 5
+
+		self.assertEqual(5, vertex.Weight)
+
+	def test_VertexWeight(self):
+		graph = Graph()
+		vertex = Vertex(weight=1, graph=graph)
+
+		self.assertEqual(1, vertex.Weight)
+
+		vertex.Weight = None
+
+		self.assertIsNone(vertex.Weight)
+
+	def test_EdgeNoneWeight(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2)
+
+		self.assertIsNone(edge12.Weight)
+
+		edge12.Weight = 5
+
+		self.assertEqual(5, edge12.Weight)
+
+	def test_EdgeWeight(self):
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeWeight=3)
+
+		self.assertEqual(3, edge12.Weight)
+
+		edge12.Weight = None
+
+		self.assertIsNone(edge12.Weight)
 
 
 class Dicts(TestCase):
 	def test_GraphDict(self):
-		g = Graph()
-		g["key"] = 1
+		graph = Graph()
 
-		self.assertEqual(1, g["key"])
+		self.assertEqual(0, len(graph))
 
-		del g["key"]
+		graph["key"] = 2
+
+		self.assertEqual(2, graph["key"])
+		self.assertEqual(1, len(graph))
+		self.assertIn("key", graph)
+
+		del graph["key"]
+
+		self.assertNotIn("key", graph)
+		self.assertEqual(0, len(graph))
 		with self.assertRaises(KeyError):
-			_ = g["key"]
+			_ = graph["key"]
+
+	def test_SubgraphDict(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+
+		self.assertEqual(0, len(subgraph))
+
+		subgraph["key"] = 2
+
+		self.assertEqual(2, subgraph["key"])
+		self.assertEqual(1, len(subgraph))
+		self.assertIn("key", subgraph)
+
+		del subgraph["key"]
+
+		self.assertNotIn("key", subgraph)
+		self.assertEqual(0, len(subgraph))
+		with self.assertRaises(KeyError):
+			_ = subgraph["key"]
+
+	def test_ViewDict(self):
+		graph = Graph()
+		view = View(graph=graph)
+
+		self.assertEqual(0, len(view))
+
+		view["key"] = 2
+
+		self.assertEqual(2, view["key"])
+		self.assertEqual(1, len(view))
+		self.assertIn("key", view)
+
+		del view["key"]
+
+		self.assertNotIn("key", view)
+		self.assertEqual(0, len(view))
+		with self.assertRaises(KeyError):
+			_ = view["key"]
+
+	def test_ComponentDict(self):
+		graph = Graph()
+		component = Vertex(graph=graph).Component
+
+		self.assertEqual(0, len(component))
+
+		component["key"] = 2
+
+		self.assertEqual(2, component["key"])
+		self.assertEqual(1, len(component))
+		self.assertIn("key", component)
+
+		del component["key"]
+
+		self.assertNotIn("key", component)
+		self.assertEqual(0, len(component))
+		with self.assertRaises(KeyError):
+			_ = component["key"]
 
 	def test_VertexDict(self):
-		g = Graph()
-		v = Vertex(graph=g)
-		v["key"] = 2
+		graph = Graph()
+		vertex = Vertex(graph=graph)
 
-		self.assertEqual(2, v["key"])
+		self.assertEqual(0, len(vertex))
 
-		del v["key"]
+		vertex["key"] = 2
+
+		self.assertEqual(2, vertex["key"])
+		self.assertEqual(1, len(vertex))
+		self.assertIn("key", vertex)
+
+		del vertex["key"]
+
+		self.assertNotIn("key", vertex)
+		self.assertEqual(0, len(vertex))
 		with self.assertRaises(KeyError):
-			_ = v["key"]
+			_ = vertex["key"]
 
 	def test_EdgeDict(self):
-		g = Graph()
-		v1 = Vertex(graph=g)
-		v1["key"] = 3
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		edge12 = vertex1.EdgeToVertex(vertex2)
 
-		v2 = Vertex(graph=g)
-		v2["key"] = 4
+		self.assertEqual(0, len(edge12))
 
-		e12 = v1.LinkToVertex(v2)
-		e12["key"] = 5
+		edge12["key"] = 2
 
-		self.assertEqual(3, v1["key"])
-		self.assertEqual(4, v2["key"])
-		self.assertEqual(5, e12["key"])
+		self.assertEqual(2, edge12["key"])
+		self.assertEqual(1, len(edge12))
+		self.assertIn("key", edge12)
 
-		del e12["key"]
+		del edge12["key"]
+
+		self.assertNotIn("key", edge12)
+		self.assertEqual(0, len(edge12))
 		with self.assertRaises(KeyError):
-			_ = e12["key"]
+			_ = edge12["key"]
+
+
+class EdgesAndLinks(TestCase):
+	def test_EdgeToVertex(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2)
+		edge34 = vertex3.EdgeToVertex(vertex4)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+
+	def test_EdgeToVertexWithID(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeID=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeID=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.ID)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.ID)
+
+	def test_DuplicateEdgeID(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		vertex1.EdgeToVertex(vertex2, edgeID=1)
+		vertex3.EdgeToVertex(vertex4, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex2.EdgeToVertex(vertex1, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex4.EdgeToVertex(vertex3, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex1.EdgeFromVertex(vertex2, edgeID=1)
+
+		with self.assertRaises(DuplicateEdgeError):
+			vertex3.EdgeFromVertex(vertex4, edgeID=1)
+
+	def test_EdgeToVertexWithValue(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeValue=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeValue=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Value)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Value)
+
+	def test_EdgeToVertexWithWeight(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex1.EdgeToVertex(vertex2, edgeWeight=1)
+		edge34 = vertex3.EdgeToVertex(vertex4, edgeWeight=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Weight)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Weight)
+
+	def test_EdgeFromVertex(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1)
+		edge34 = vertex4.EdgeFromVertex(vertex3)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+
+	def test_EdgeFromVertexWithID(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1, edgeID=1)
+		edge34 = vertex4.EdgeFromVertex(vertex3, edgeID=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.ID)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.ID)
+
+	def test_EdgeFromVertexWithValue(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1, edgeValue=1)
+		edge34 = vertex4.EdgeFromVertex(vertex3, edgeValue=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Value)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Value)
+
+	def test_EdgeFromVertexWithWeight(self):
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex3 = Vertex(subgraph=subgraph)
+		vertex4 = Vertex(subgraph=subgraph)
+
+		edge12 = vertex2.EdgeFromVertex(vertex1, edgeWeight=1)
+		edge34 = vertex4.EdgeFromVertex(vertex3, edgeWeight=2)
+		self.assertEqual(vertex1, edge12.Source)
+		self.assertEqual(vertex2, edge12.Destination)
+		self.assertEqual(1, edge12.Weight)
+		self.assertEqual(vertex3, edge34.Source)
+		self.assertEqual(vertex4, edge34.Destination)
+		self.assertEqual(2, edge34.Weight)
 
 
 class Iterate(TestCase):
@@ -228,7 +1019,7 @@ class IterateOnGraph(Iterate):
 		vList = [Vertex(value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertSetEqual({2, 4, 13}, set(v.Value for v in g.IterateRoots()))
 		self.assertSetEqual({2, 4},     set(v.Value for v in g.IterateRoots(predicate=lambda v: v.Value % 2 == 0)))
@@ -238,7 +1029,7 @@ class IterateOnGraph(Iterate):
 		vList = [Vertex(value=i, graph=g) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertSetEqual({11, 12, 14}, set(v.Value for v in g.IterateLeafs()))
 		self.assertSetEqual({12, 14},     set(v.Value for v in g.IterateLeafs(predicate=lambda v: v.Value % 2 == 0)))
@@ -252,9 +1043,9 @@ class IterateOnGraph(Iterate):
 		vListMixed = [Vertex(value=i, graph=gMixed) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=gMixed) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			vListID[u].LinkToVertex(vListID[v], edgeWeight=w)
-			vListValue[u].LinkToVertex(vListValue[v], edgeWeight=w)
-			vListMixed[u].LinkToVertex(vListMixed[v], edgeWeight=w)
+			vListID[u].EdgeToVertex(vListID[v], edgeWeight=w)
+			vListValue[u].EdgeToVertex(vListValue[v], edgeWeight=w)
+			vListMixed[u].EdgeToVertex(vListMixed[v], edgeWeight=w)
 
 		self.assertListEqual([i for i in range(0, 15, 1)], [v.Value for v in gID.IterateVertices()])
 		self.assertListEqual([i for i in range(0, 15, 2)], [v.Value for v in gID.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
@@ -270,7 +1061,7 @@ class IterateOnGraph(Iterate):
 		vList = [Vertex(value=i, graph=g) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([12, 14, 11, 13, 8, 9, 6, 7, 10, 3, 5, 0, 1, 4, 2], [v.Value for v in g.IterateTopologically()])
 		self.assertListEqual([12, 14, 8, 6, 10, 0, 4, 2],                        [v.Value for v in g.IterateTopologically(predicate=lambda v: v.Value % 2 == 0)])
@@ -281,8 +1072,8 @@ class IterateOnGraph(Iterate):
 		vList = [Vertex(value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
-			vList[v].LinkToVertex(vList[u], edgeWeight=self._graph0.EdgeCount + w, edgeID=v*20+u)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+			vList[v].EdgeToVertex(vList[u], edgeWeight=self._graph0.EdgeCount + w, edgeID=v * 20 + u)
 
 		for i, edge in enumerate(g.IterateEdges()):
 			if i < self._graph0.EdgeCount:
@@ -306,9 +1097,9 @@ class GraphOperations(Iterate):
 
 		for u, v, w in self._graph0.Edges:
 			if w < (self._graph0.EdgeCount // 2):
-				vList[u].LinkToVertex(vList[v], edgeWeight=w)
+				vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 			else:
-				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
+				vList[u].EdgeToVertex(vList[v], edgeWeight=w, edgeID=w)
 
 		g.ReverseEdges()
 
@@ -333,9 +1124,9 @@ class GraphOperations(Iterate):
 
 		for u, v, w in self._graph0.Edges:
 			if w < (self._graph0.EdgeCount // 2):
-				vList[u].LinkToVertex(vList[v], edgeWeight=w)
+				vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 			else:
-				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
+				vList[u].EdgeToVertex(vList[v], edgeWeight=w, edgeID=w)
 
 		g.RemoveEdges(predicate=lambda e: e.Weight % 2 == 0)
 
@@ -355,9 +1146,9 @@ class GraphOperations(Iterate):
 
 		for u, v, w in self._graph0.Edges:
 			if w < (self._graph0.EdgeCount // 2):
-				vList[u].LinkToVertex(vList[v], edgeWeight=w)
+				vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 			else:
-				vList[u].LinkToVertex(vList[v], edgeWeight=w, edgeID=w)
+				vList[u].EdgeToVertex(vList[v], edgeWeight=w, edgeID=w)
 
 		g1 = g0.CopyVertices()
 		self.assertEqual(len(g0), len(g1))
@@ -382,13 +1173,77 @@ class GraphOperations(Iterate):
 			self.assertEqual(0, len(v4))
 
 
+class VertexOperations(Iterate):
+	def test_CopyIntoSameGraph(self):
+		graph1 = Graph()
+		vertex1 = Vertex(graph=graph1)
+
+		with self.assertRaises(GraphException):
+			vertex1.Copy(graph1)
+
+	def test_Copy(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2)
+
+		self.assertEqual(1, graph2.VertexCount)
+		self.assertEqual(0, len(vertex2))
+
+	def test_CopyWithDict(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2, copyDict=True)
+
+		self.assertEqual(1, len(vertex2))
+		self.assertIn("key", vertex2)
+		self.assertEqual("value", vertex2["key"])
+
+	def test_CopyAddForwardLink(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2, linkingKeyFromOriginalVertex="forward")
+
+		self.assertEqual(2, len(vertex1))
+		self.assertEqual(0, len(vertex2))
+		self.assertIn("forward", vertex1)
+		self.assertNotIn("forward", vertex2)
+		self.assertEqual(vertex2, vertex1["forward"])
+
+	def test_CopyAddBackwardLink(self):
+		graph1 = Graph()
+		graph2 = Graph()
+
+		vertex1 = Vertex(graph=graph1)
+		vertex1["key"] = "value"
+
+		vertex2 = vertex1.Copy(graph2, linkingKeyToOriginalVertex="backward")
+
+		self.assertEqual(1, len(vertex1))
+		self.assertEqual(1, len(vertex2))
+		self.assertNotIn("backward", vertex1)
+		self.assertIn("backward", vertex2)
+		self.assertEqual(vertex1, vertex2["backward"])
+
+
 class GraphProperties(Iterate):
 	def test_HasCycle(self):
 		g0 = Graph()
 		vList0 = [Vertex(value=i, graph=g0) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g0) for i in range(0, self._graph0.VertexCount)]
 
 		for u, v, w in self._graph0.Edges:
-			vList0[u].LinkToVertex(vList0[v], edgeWeight=w)
+			vList0[u].EdgeToVertex(vList0[v], edgeWeight=w)
 
 		self.assertFalse(g0.HasCycle())
 
@@ -396,7 +1251,7 @@ class GraphProperties(Iterate):
 		vList1 = [Vertex(vertexID=i, graph=g1) for i in range(0, self._graph1.VertexCount)]
 
 		for u, v, w in self._graph1.Edges:
-			vList1[u].LinkToVertex(vList1[v], edgeWeight=w)
+			vList1[u].EdgeToVertex(vList1[v], edgeWeight=w)
 
 		self.assertTrue(g1.HasCycle())
 
@@ -408,7 +1263,7 @@ class IterateStartingFromVertex(Iterate):
 		v0 = vList[0]
 
 		for u, v, w in self._graph1.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 1, 8, 7, 3, 2, 4, 5, 6, 10, 9, 11], [v.ID for v in v0.IterateVerticesDFS()])
 
@@ -418,7 +1273,7 @@ class IterateStartingFromVertex(Iterate):
 		v0 = vList[0]
 
 		for u, v, w in self._graph1.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVerticesBFS()])
 
@@ -428,7 +1283,7 @@ class IterateStartingFromVertex(Iterate):
 		v0 = vList[0]
 
 		for u, v, w in self._graph2.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v in v0.ShortestPathToByHops(vList[14])])
 		with self.assertRaises(DestinationNotReachable):
@@ -440,7 +1295,7 @@ class IterateStartingFromVertex(Iterate):
 		v0 = vList[0]
 
 		for u, v, _ in self._graph2.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=1)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=1)
 
 		self.assertListEqual([0, 2, 7, 11, 14], [v.ID for v, w in v0.ShortestPathToByWeight(vList[14])])
 		with self.assertRaises(DestinationNotReachable):
@@ -452,7 +1307,7 @@ class IterateStartingFromVertex(Iterate):
 		v0 = vList[0]
 
 		for u, v, w in self._graph2.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 3, 4, 5, 6, 13, 14], [v.ID for v, w in v0.ShortestPathToByWeight(vList[14])])
 		with self.assertRaises(DestinationNotReachable):
@@ -464,7 +1319,7 @@ class GraphToTree(Iterate):
 		g = Graph()
 		vList = [Vertex(value=i, graph=g) for i in range(0, self._tree0.VertexCount)]
 		for u, v, w in self._tree0.Edges:
-			vList[u].LinkToVertex(vList[v], edgeWeight=w)
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 		root = vList[0]
 
 		tree = root.ConvertToTree()

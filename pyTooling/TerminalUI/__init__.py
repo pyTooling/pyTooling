@@ -66,7 +66,7 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 			"ERROR":        Foreground.LIGHTRED_EX,
 			"WARNING":      Foreground.LIGHTYELLOW_EX
 		}                 #: Terminal colors
-	except ImportError:
+	except ImportError:  # pragma: no cover
 		Foreground = {
 			"RED":         "",
 			"DARK_RED":    "",
@@ -112,7 +112,7 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 			from colorama import init
 
 			init()#strip=False)
-		except ImportError:
+		except ImportError:  # pragma: no cover
 			pass
 
 	@classmethod
@@ -122,7 +122,7 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 			from colorama import deinit
 
 			deinit()
-		except ImportError:
+		except ImportError:  # pragma: no cover
 			pass
 
 	@classmethod
@@ -245,8 +245,9 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 				platform.startswith("MINGW64")):
 			size = Terminal.__GetTerminalSizeOnLinux()
 
-		if size is None:
-			size = (80, 25) # default size
+		if size is None:   # pragma: no cover
+			size = (80, 25)  # default size
+
 		return size
 
 	@staticmethod
@@ -303,7 +304,6 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 		cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
 		if not cr:
 			try:
-
 				fd = os.open(os.ctermid(), os.O_RDONLY)
 				cr = ioctl_GWINSZ(fd)
 				os.close(fd)
@@ -314,6 +314,7 @@ class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
 				cr = (os.environ['LINES'], os.environ['COLUMNS'])
 			except:
 				return None
+
 		return (int(cr[1]), int(cr[0]))
 
 

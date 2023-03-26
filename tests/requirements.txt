@@ -14,3 +14,6 @@ lxml>=4.9
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml>=0.17
+
+# For pyTooling.TerminalUI testing
+colorama>=0.4.6
