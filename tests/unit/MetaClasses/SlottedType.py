@@ -33,7 +33,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 """
 from unittest       import TestCase
 
-from pyTooling.Common import getsizeof
+from pyTooling.Common      import getsizeof
 from pyTooling.MetaClasses import ExtendedType
 
 
@@ -65,7 +65,10 @@ class Slotted(TestCase):
 		data._data1 = 6
 		self.assertEqual(6, data._data1)
 
-		self.assertLess(getsizeof(data), 80)
+		try:
+			self.assertLess(getsizeof(data), 80)
+		except TypeError:
+			print(f"getsizeof: not supported on PyPy")
 
 		print()
 		try:
@@ -81,13 +84,16 @@ class Slotted(TestCase):
 		data._data1 = 12
 		self.assertEqual(12, data._data1)
 
-		self.assertLess(getsizeof(data), 160)
+		try:
+			self.assertLess(getsizeof(data), 160)
+		except TypeError:
+			print(f"getsizeof: not supported on PyPy")
 
 		print()
 		try:
-			print(f"size: {getsizeof(data)}")
+			print(f"getsizeof: {getsizeof(data)}")
 		except TypeError:
-			print(f"size: not supported on PyPy")
+			print(f"getsizeof: not supported on PyPy")
 
 
 class AttributeErrors(TestCase):
@@ -224,7 +230,7 @@ class ObjectSizes(TestCase):
 			print(f"size of Normal1: {getsizeof(data1)}")
 			print(f"size of Normal2: {getsizeof(data2)}")
 		except TypeError:
-			print(f"size: not supported on PyPy")
+			print(f"getsizeof: not supported on PyPy")
 
 	def test_ExtendedType(self):
 		data1 = self.Extended1(20)
@@ -235,7 +241,7 @@ class ObjectSizes(TestCase):
 			print(f"size of Extended1: {getsizeof(data1)}")
 			print(f"size of Extended2: {getsizeof(data2)}")
 		except TypeError:
-			print(f"size: not supported on PyPy")
+			print(f"getsizeof: not supported on PyPy")
 
 	def test_SlottedType(self):
 		data1 = self.Slotted1(30)
@@ -246,6 +252,4 @@ class ObjectSizes(TestCase):
 			print(f"size of Slotted1: {getsizeof(data1)}")
 			print(f"size of Slotted2: {getsizeof(data2)}")
 		except TypeError:
-			print(f"size: not supported on PyPy")
-
-
+			print(f"getsizeof: not supported on PyPy")
