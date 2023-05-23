@@ -50,7 +50,7 @@ class Slotted(TestCase):
 		def __init__(self, data: int):
 			self._data1 = data
 
-	class Data2(Data1, useSlots=True):
+	class Data2(Data1):  #, useSlots=True):
 		_data2: int
 
 		def __init__(self, data: int):
@@ -126,7 +126,7 @@ class AttributeErrors(TestCase):
 		def method_12(self):
 			_ = self._int_0
 
-	class Data2(Data1, useSlots=True):
+	class Data2(Data1):  #, useSlots=True):
 		_int_2: int
 
 		def __init__(self):
@@ -231,7 +231,7 @@ class ObjectSizes(TestCase):
 		def __init__(self, data: int):
 			self._data1 = data
 
-	class Slotted2(Slotted1, useSlots=True):
+	class Slotted2(Slotted1):  #, useSlots=True):
 		_data2: int
 
 		def __init__(self, data: int):
