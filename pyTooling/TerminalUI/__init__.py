@@ -40,7 +40,7 @@ from pyTooling.MetaClasses  import ExtendedType
 
 
 @export
-class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
+class Terminal(metaclass=ExtendedType, singleton=True):
 	FATAL_EXIT_CODE = 255
 
 	try:
@@ -423,7 +423,7 @@ class Line:
 
 
 @export
-class ILineTerminal:
+class ILineTerminal(metaclass=ExtendedType):
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
 	_terminal: Terminal
