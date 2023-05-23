@@ -7,7 +7,7 @@ Dependencies
    :alt: Libraries.io status for latest release
    :height: 22
    :target: https://libraries.io/github/pyTooling/pyTooling
-.. |img-pyTooling-val-status| image:: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
+.. |img-pyTooling-vul-status| image:: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
    :alt: Snyk Vulnerabilities for GitHub Repo
    :height: 22
    :target: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
@@ -15,7 +15,7 @@ Dependencies
 +------------------------------------------+------------------------------------------+
 | `Libraries.io <https://libraries.io/>`_  | Vulnerabilities Summary                  |
 +==========================================+==========================================+
-| |img-pyTooling-lib-status|               | |img-pyTooling-val-status|               |
+| |img-pyTooling-lib-status|               | |img-pyTooling-vul-status|               |
 +------------------------------------------+------------------------------------------+
 
 .. _dependency-package:
@@ -65,8 +65,11 @@ When installed as ``pyTooling[yaml]``:
 
 .. _dependency-testing:
 
+Unit Testing (Optional)
+***********************
+
 Unit Testing / Coverage / Type Checking (Optional)
-**************************************************
+==================================================
 
 Additional Python packages needed for testing, code coverage collection and static type checking. These packages are
 only needed for developers or on a CI server, thus sub-dependencies are not evaluated further.
@@ -81,24 +84,76 @@ the mandatory dependencies too.
 
    pip3 install -U -r tests/requirements.txt
 
-
-.. rubric:: Dependency List
+.. rubric:: Dependency List - Unit Testing
 
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | **Package**                                                        | **Version** | **License**                                                                            | **Dependencies**     |
 +====================================================================+=============+========================================================================================+======================+
-| `pytest <https://GitHub.com/pytest-dev/pytest>`__                  | ≥7.2.0      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
+| `pytest <https://GitHub.com/pytest-dev/pytest>`__                  | ≥7.3.1      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `pytest-cov <https://GitHub.com/pytest-dev/pytest-cov>`__          | ≥4.0.0      | `MIT <https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `pytest-benchmark <https://GitHub.com/ionelmc/pytest-benchmark>`__ | ≥4.0.0      | `BSD 2-Clause <https://GitHub.com/ionelmc/pytest-benchmark/blob/master/LICENSE>`__     | *Not yet evaluated.* |
-+--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `Coverage <https://GitHub.com/nedbat/coveragepy>`__                | ≥7.2        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `mypy <https://GitHub.com/python/mypy>`__                          | ≥1.1.1      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
+| `mypy <https://GitHub.com/python/mypy>`__                          | ≥1.2.0      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `lxml <https://GitHub.com/lxml/lxml>`__                            | ≥4.9        | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+
+Unit Testing with Benchmarking (Optional)
+=========================================
+
+Further Python packages are needed for benchmarking. These packages are only needed for developers or on a CI server,
+thus sub-dependencies are not evaluated further.
+
+.. rubric:: Manually Installing Benchmarking Requirements
+
+Use the :file:`tests/benchmark/requirements.txt` file to install all dependencies via ``pip3``. The file will
+recursively install the mandatory dependencies too.
+
+.. code-block:: shell
+
+   pip3 install -U -r tests/benchmark/requirements.txt
+
+.. rubric:: Dependency List - With Benchmark Testing
+
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| **Package**                                                        | **Version** | **License**                                                                            | **Dependencies**     |
++====================================================================+=============+========================================================================================+======================+
+| `pytest-benchmark <https://GitHub.com/ionelmc/pytest-benchmark>`__ | ≥4.0.0      | `BSD 2-Clause <https://GitHub.com/ionelmc/pytest-benchmark/blob/master/LICENSE>`__     | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+
+Unit Testing with Performance Testing (Optional)
+================================================
+
+Further Python packages are needed for performance testing (comparison). These packages are only needed for developers
+or on a CI server, thus sub-dependencies are not evaluated further.
+
+.. rubric:: Manually Installing Benchmarking Requirements
+
+Use the :file:`tests/performance/requirements.txt` file to install all dependencies via ``pip3``. The file will
+recursively install the mandatory dependencies too.
+
+.. code-block:: shell
+
+   pip3 install -U -r tests/performance/requirements.txt
+
+.. rubric:: Dependency List - With Performance Testing
+
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| **Package**                                                        | **Version** | **License**                                                                            | **Dependencies**     |
++====================================================================+=============+========================================================================================+======================+
+| `anytree <https://GitHub.com/c0fec0de/anytree>`__                  | ≥2.8.0      | `Apache 2 <https://GitHub.com/c0fec0de/anytree/blob/main/LICENSE>`__                   | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `itertree <https://GitHub.com/BR1py/itertree>`__                   | ≥0.8.2      | `MIT <https://GitHub.com/BR1py/itertree/blob/main/LICENSE>`__                          | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `treelib <https://GitHub.com/caesar0301/treelib>`__                | ≥1.6.4      | `Apache 2 <https://GitHub.com/caesar0301/treelib/blob/master/LICENSE>`__               | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `networkx <https://GitHub.com/networkx/networkx>`__                | ≥3.1        | `BSD 3-Clause <https://GitHub.com/networkx/networkx/blob/main/LICENSE.txt>`__          | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `igraph <https://GitHub.com/igraph/python-igraph>`__               | ≥0.10.4     | `GPL-2.0 <https://GitHub.com/igraph/python-igraph/blob/main/LICENSE>`__                | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+
 
 
 .. _dependency-documentation:

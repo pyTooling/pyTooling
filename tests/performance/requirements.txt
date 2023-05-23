@@ -3,9 +3,8 @@
 # For performance testing of Node (tree)
 anytree>=2.8.0
 itertree>=0.8.2
-treelib>=1.6.1
+treelib>=1.6.4
 
 # For performance testing of Vertex (graph)
-networkx>=2.6
-#networkx>=2.8.8
-igraph>=0.10.1
+networkx>=3.1
+igraph>=0.10.4
