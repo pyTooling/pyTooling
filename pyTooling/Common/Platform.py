@@ -40,7 +40,21 @@ from pyTooling.MetaClasses import ExtendedType
 
 
 @export
-class Platform(metaclass=ExtendedType, singleton=True):
+class PythonVersion(metaclass=ExtendedType, singleton=True, useSlots=True):
+	Major: int
+	Minor: int
+	Micro: int
+
+	def __init__(self):
+		from sys import version_info
+
+		self.Major = version_info.major
+		self.Minor = version_info.minor
+		self.Micro = version_info.micro
+
+
+@export
+class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 	"""An instance of this class contains all gathered information available from various sources.
 
 	.. seealso::
@@ -97,7 +111,8 @@ class Platform(metaclass=ExtendedType, singleton=True):
 		Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
 		Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64   #: Group: Clang64 runtime running on Windows x86-64
 
-	_platform: Platforms
+	_platform:      Platforms
+	_pythonVersion: PythonVersion
 
 	def __init__(self):
 		import sys
@@ -106,6 +121,7 @@ class Platform(metaclass=ExtendedType, singleton=True):
 		import sysconfig
 
 		self._platform = self.Platforms.Unknown
+		self._pythonVersion = PythonVersion()
 
 		# system = platform.system()
 		machine = platform.machine()
@@ -374,6 +390,10 @@ class Platform(metaclass=ExtendedType, singleton=True):
 			return "lib"
 		else:
 			raise Exception(f"Unknown operating system.")
+
+	@property
+	def PythonVersion(self) -> PythonVersion:
+		return self._pythonVersion
 
 	def __repr__(self) -> str:
 		return str(self._platform)

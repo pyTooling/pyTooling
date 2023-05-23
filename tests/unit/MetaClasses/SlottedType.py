@@ -33,7 +33,7 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 """
 from unittest       import TestCase
 
-from pyTooling.Common      import getsizeof
+from pyTooling.Common import getsizeof, CurrentPlatform
 from pyTooling.MetaClasses import ExtendedType
 
 
@@ -57,6 +57,15 @@ class Slotted(TestCase):
 			super().__init__(data)
 			self._data2 = data + 1
 
+	SIZES = {
+		Data1: {
+			3: {7: 84, 8: 68, 9: 68, 10: 68, 11: 68}
+		},
+		Data2: {
+			3: {7: 92, 8: 76, 9: 76, 10: 76, 11: 76}
+		}
+	}
+
 	def test_Slots1(self):
 		data = self.Data1(data=5)
 
@@ -66,7 +75,11 @@ class Slotted(TestCase):
 		self.assertEqual(6, data._data1)
 
 		try:
-			self.assertLess(getsizeof(data), 80)
+			pv = CurrentPlatform.PythonVersion
+			self.assertEqual(
+				getsizeof(data),
+				self.SIZES[self.Data1][pv.Major][pv.Minor]
+			)
 		except TypeError:
 			print(f"getsizeof: not supported on PyPy")
 
