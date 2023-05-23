@@ -245,8 +245,18 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
+		# Inherit 'useSlots' feature from primary base-class
+		if len(baseClasses) > 0 and type(baseClasses[0]) is self:
+			useSlots = baseClasses[0].__usesSlots__
+
 		# Check if members should be stored in slots. If so get these members from type annotated fields
 		if useSlots:
+			for baseClass in baseClasses:
+				if not hasattr(baseClass, "__slots__"):
+					ex = AttributeError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
+					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
+					raise ex
+
 			members['__slots__'] = self.__getSlots(baseClasses, members)
 
 		# Compute abstract methods
@@ -254,6 +264,7 @@ class ExtendedType(type):
 
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
+		newClass.__usesSlots__ = useSlots
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
