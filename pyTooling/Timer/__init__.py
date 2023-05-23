@@ -48,7 +48,7 @@ class Timer(ObjectWithSlots):
 	.. todo::TIMER::Timer Needs class documentation.
 	"""
 
-	_timers: Dict[str, 'Timer'] = {}
+	_timers: Dict[str, 'Timer']
 
 	_startTime: Nullable[int]
 	_resumeTime: Nullable[int]
@@ -58,6 +58,8 @@ class Timer(ObjectWithSlots):
 	_diffTimes: List[int]
 
 	def __init__(self):
+		self._timers = {}
+
 		self._startTime = None
 		self._resumeTime = None
 		self._diffTimes = []
