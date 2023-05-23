@@ -44,45 +44,127 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Slotted(TestCase):
-	def test_Data(self):
-		class Data:
-			_data: int
+	class Data1(metaclass=ExtendedType, useSlots=True):
+		_data1: int
 
-		data = Data()
+		def __init__(self, data: int):
+			self._data1 = data
 
-		print()
-		print()
-		try:
-			print(f"size: {getsizeof(data)}")
-		except TypeError:
-			print(f"size: not supported on PyPy")
+	class Data2(Data1, useSlots=True):
+		_data2: int
 
-	def test_SlottedData(self):
-		class SlottedData(metaclass=ExtendedType, useSlots=True):
-			_data: int
+		def __init__(self, data: int):
+			super().__init__(data)
+			self._data2 = data + 1
 
-			def __init__(self, data: int):
-				self._data = data
+	def test_Slots1(self):
+		data = self.Data1(data=5)
 
-			def raiseError(self):
-				self._x = 5
+		self.assertListEqual(["_data1"], list(data.__slots__))
+		self.assertEqual(5, data._data1)
+		data._data1 = 6
+		self.assertEqual(6, data._data1)
 
-		data = SlottedData(data=5)
-
-		self.assertListEqual(["_data"], list(data.__slots__))
-		self.assertEqual(5, data._data)
-		with self.assertRaises(AttributeError):
-			data.raiseError()
-		with self.assertRaises(AttributeError):
-			data._y = 2
-		with self.assertRaises(AttributeError):
-			_ = data._z
+		self.assertLess(getsizeof(data), 80)
 
 		print()
 		try:
 			print(f"size: {getsizeof(data)}")
 		except TypeError:
 			print(f"size: not supported on PyPy")
+
+	def test_Slots2(self):
+		data = self.Data2(data=10)
+
+		self.assertListEqual(["_data2"], list(data.__slots__))
+		self.assertEqual(10, data._data1)
+		data._data1 = 12
+		self.assertEqual(12, data._data1)
+
+		self.assertLess(getsizeof(data), 160)
+
+		print()
+		try:
+			print(f"size: {getsizeof(data)}")
+		except TypeError:
+			print(f"size: not supported on PyPy")
+
+
+class AttributeErrors(TestCase):
+	class Data1(metaclass=ExtendedType, useSlots=True):
+		_int_1: int
+
+		def __init__(self):
+			self._int_1 = 1
+
+		def method_11(self):
+			self._str_1 = "foo"
+
+		def method_12(self):
+			_ = self._int_0
+
+	class Data2(Data1, useSlots=True):
+		_int_2: int
+
+		def __init__(self):
+			super().__init__()
+			self._int_2 = 2
+
+		def method_21(self):
+			self._str_2 = "bar"
+
+		def method_22(self):
+			_ = self._int_0
+
+	def test_NormalField_1(self):
+		data = self.Data1()
+		self.assertEqual(1, data._int_1)
+
+	def test_AddNewFieldInMethod_1(self):
+		data = self.Data1()
+		with self.assertRaises(AttributeError):
+			data.method_11()
+
+	def test_AddNewFieldByCode_1(self):
+		data = self.Data1()
+		with self.assertRaises(AttributeError):
+			data._float1 = 3.4
+
+	def test_NormalField_2(self):
+		data = self.Data2()
+		self.assertEqual(1, data._int_1)
+		self.assertEqual(2, data._int_2)
+
+	def test_AddNewFieldInMethod_2(self):
+		data = self.Data2()
+		with self.assertRaises(AttributeError):
+			data.method_21()
+
+	def test_AddNewFieldByCode_2(self):
+		data = self.Data2()
+		with self.assertRaises(AttributeError):
+			data._float2 = 4.3
+
+	def test_ReadNonExistingFieldInMethod_1(self):
+		data = self.Data1()
+		with self.assertRaises(AttributeError):
+			data.method_12()
+
+	def test_ReadNonExistingFieldInMethod_2(self):
+		data = self.Data2()
+		with self.assertRaises(AttributeError):
+			data.method_22()
+
+	def test_ReadNonExistingFieldByCode_1(self):
+		data = self.Data1()
+		with self.assertRaises(AttributeError):
+			_ = data._int_0
+
+	def test_ReadNonExistingFieldByCode_2(self):
+		data = self.Data2()
+		with self.assertRaises(AttributeError):
+			_ = data._int_0
+
 
 	def test_NonSlottedBaseClass(self):
 		class Base:
@@ -92,8 +174,78 @@ class Slotted(TestCase):
 			class SlottedData(Base, metaclass=ExtendedType, useSlots=True):
 				_data: int
 
-				def __init__(self, data: int):
-					self._data = data
 
-				def raiseError(self):
-					self._x = 5
+class ObjectSizes(TestCase):
+	class Normal1:
+		_data1: int
+
+		def __init__(self, data: int):
+			self._data1 = data
+
+	class Normal2(Normal1):
+		_data2: int
+
+		def __init__(self, data: int):
+			super().__init__(data)
+			self._data2 = data + 1
+
+	class Extended1(metaclass=ExtendedType):
+		_data1: int
+
+		def __init__(self, data: int):
+			self._data1 = data
+
+	class Extended2(Extended1):
+		_data2: int
+
+		def __init__(self, data: int):
+			super().__init__(data)
+			self._data2 = data + 1
+
+	class Slotted1(metaclass=ExtendedType, useSlots=True):
+		_data1: int
+
+		def __init__(self, data: int):
+			self._data1 = data
+
+	class Slotted2(Slotted1, useSlots=True):
+		_data2: int
+
+		def __init__(self, data: int):
+			super().__init__(data)
+			self._data2 = data + 1
+
+	def test_NormalType(self):
+		data1 = self.Normal1(10)
+		data2 = self.Normal2(15)
+
+		print()
+		try:
+			print(f"size of Normal1: {getsizeof(data1)}")
+			print(f"size of Normal2: {getsizeof(data2)}")
+		except TypeError:
+			print(f"size: not supported on PyPy")
+
+	def test_ExtendedType(self):
+		data1 = self.Extended1(20)
+		data2 = self.Extended2(25)
+
+		print()
+		try:
+			print(f"size of Extended1: {getsizeof(data1)}")
+			print(f"size of Extended2: {getsizeof(data2)}")
+		except TypeError:
+			print(f"size: not supported on PyPy")
+
+	def test_SlottedType(self):
+		data1 = self.Slotted1(30)
+		data2 = self.Slotted2(35)
+
+		print()
+		try:
+			print(f"size of Slotted1: {getsizeof(data1)}")
+			print(f"size of Slotted2: {getsizeof(data2)}")
+		except TypeError:
+			print(f"size: not supported on PyPy")
+
+
