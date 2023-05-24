@@ -113,6 +113,107 @@ class Slotted(TestCase):
 			print(f"getsizeof: not supported on PyPy")
 
 
+class MultipleInheritance(TestCase):
+	def test_PrimaryIsExtendedSlotted_SecondaryIsNormal_MergedNoSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase:
+			_data1: int
+
+		with self.assertRaises(AttributeError):
+			class Merged(PrimaryBase, SecondaryBase):
+				pass
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsNormal_MergedHasSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase:
+			_data1: int
+
+		print(type(type(SecondaryBase())))
+
+		with self.assertRaises(AttributeError):
+			class Merged(PrimaryBase, SecondaryBase):
+				_data2: int
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsExtended_MergedNoSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase(metaclass=ExtendedType, mixin=True):
+			_data1: int
+
+		class Merged(PrimaryBase, SecondaryBase):
+			pass
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsExtended_MergedHasSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase(metaclass=ExtendedType, mixin=True):
+			_data1: int
+
+		class Merged(PrimaryBase, SecondaryBase):
+			_data2: int
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsSlotted_MergedNoSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase(metaclass=ExtendedType, mixin=True):
+			_data1: int
+			__slots__ = ("_data1",)
+
+		class Merged(PrimaryBase, SecondaryBase):
+			pass
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsSlotted_MergedHasSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase(metaclass=ExtendedType, mixin=True):
+			_data1: int
+			__slots__ = ("_data1",)
+
+		class Merged(PrimaryBase, SecondaryBase):
+			_data2: int
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsExtendedSlotted_MergedNoSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase(metaclass=ExtendedType, useSlots=True, mixin=True):
+			_data1: int
+
+		class Merged(PrimaryBase, SecondaryBase):
+			pass
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsExtendedSlotted_MergedHasSlots(self):
+		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class SecondaryBase(metaclass=ExtendedType, useSlots=True, mixin=True):
+			_data1: int
+
+		class Merged(PrimaryBase, SecondaryBase):
+			_data2: int
+
+	def test_BaseIsExtendedSlotted_Rombus(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class PrimaryBase(Base):
+			_data1: int
+
+		class SecondaryBase(Base, mixin=True):
+			_data2: int
+
+		class Merged(PrimaryBase, SecondaryBase):
+			_data3: int
+
+
 class AttributeErrors(TestCase):
 	class Data1(metaclass=ExtendedType, useSlots=True):
 		_int_1: int
@@ -268,5 +369,17 @@ class ObjectSizes(TestCase):
 		try:
 			print(f"size of Slotted1: {getsizeof(data1)}")
 			print(f"size of Slotted2: {getsizeof(data2)}")
+		except TypeError:
+			print(f"getsizeof: not supported on PyPy")
+
+	def test_ClassSizes(self):
+		print()
+		try:
+			print(f"size of Normal1: {getsizeof(self.Normal1)}")
+			print(f"size of Normal2: {getsizeof(self.Normal2)}")
+			print(f"size of Extended1: {getsizeof(self.Extended1)}")
+			print(f"size of Extended2: {getsizeof(self.Extended2)}")
+			print(f"size of Slotted1: {getsizeof(self.Slotted1)}")
+			print(f"size of Slotted2: {getsizeof(self.Slotted2)}")
 		except TypeError:
 			print(f"getsizeof: not supported on PyPy")

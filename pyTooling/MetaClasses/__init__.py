@@ -230,6 +230,7 @@ class ExtendedType(type):
 		className: str,
 		baseClasses: Tuple[type],
 		members: Dict[str, Any],
+		mixin: bool = False,
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
@@ -239,25 +240,56 @@ class ExtendedType(type):
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
+		:param mixin:           If true, make the class a :term:`Mixin`.
 		:param singleton:       If true, make the class a :term:`Singleton`.
 		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		# Inherit 'useSlots' feature from primary base-class
-		if len(baseClasses) > 0 and type(baseClasses[0]) is self:
-			useSlots = baseClasses[0].__usesSlots__
+		mixinSlots = []
+		if mixin:
+			for baseClass in baseClasses:  # type: ExtendedType
+				if baseClass.__class__ is not ExtendedType:
+					raise TypeError(f"Meta-class of '{baseClass.__name__}' must be 'ExtendedType'.")
+				elif not baseClass.__isMixin__:
+					ex = TypeError(f"Base-class '{baseClass.__name__}' is not a mixin-class.")
+					ex.add_note(f"All base-classes of a mixin-class must be mixin-classes itself.")
+					raise ex
+				mixinSlots.extend(baseClass.__mixinSlots__)
+		else:
+			if len(baseClasses) > 0:
+				primaryBaseClass = baseClasses[0]
+				if primaryBaseClass.__class__ is ExtendedType and primaryBaseClass.__isMixin__:
+					mixin = True
+					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
 
+			for secondaryBaseClass in baseClasses[1:]:
+				if not secondaryBaseClass.__isMixin__:
+					ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
+					ex.add_note(f"All secondary base-classes must be mixin-classes.")
+					raise ex
+
+				mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
+
+		# Inherit 'useSlots' feature from primary base-class
+		if len(baseClasses) > 0 and type(primaryBaseClass) is self:
+			useSlots = primaryBaseClass.__usesSlots__
+
+		if mixin:
+			mixinSlots.extend(self.__getSlots(baseClasses, members))
+			members["__slots__"] = tuple()
 		# Check if members should be stored in slots. If so get these members from type annotated fields
-		if useSlots:
+		elif useSlots:
 			for baseClass in baseClasses:
 				if not hasattr(baseClass, "__slots__"):
 					ex = AttributeError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
 					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
 					raise ex
 
-			members['__slots__'] = self.__getSlots(baseClasses, members)
+			members["__slots__"] = self.__getSlots(baseClasses, members)
+		else:
+			members["__slots__"] = tuple()
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
@@ -265,6 +297,8 @@ class ExtendedType(type):
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
 		newClass.__usesSlots__ = useSlots
+		newClass.__isMixin__ = mixin
+		newClass.__mixinSlots__ = (*mixinSlots, )
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods

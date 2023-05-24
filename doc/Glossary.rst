@@ -313,6 +313,9 @@ Glossary
    MinGW
      Minimalistic GNU for Windows.
 
+   Mixin
+     A *mixin classes* are classes used as secondary base-classes in multiple inheritance.
+
    MSYS2
      ...
 
@@ -487,7 +490,7 @@ Glossary
      Universal C Runtime
 
    Vertex
-     A vertex is a :term:`node` in a graph.
+     A vertex is a :term:`node` in a graph. Vertexes in a graph are connected using :term:`edges <edge>`.
 
    WSL
      Windows System for Linux
