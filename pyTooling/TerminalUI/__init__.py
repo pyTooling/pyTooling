@@ -423,7 +423,7 @@ class Line:
 
 
 @export
-class ILineTerminal(metaclass=ExtendedType):
+class ILineTerminal(metaclass=ExtendedType, mixin=True):
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
 	_terminal: Terminal

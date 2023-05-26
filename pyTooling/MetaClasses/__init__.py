@@ -230,7 +230,7 @@ class ExtendedType(type):
 		className: str,
 		baseClasses: Tuple[type],
 		members: Dict[str, Any],
-		mixin: bool = False,
+		mixin: bool = None,
 		singleton: bool = False,
 		useSlots: bool = False
 	) -> type:
@@ -241,6 +241,8 @@ class ExtendedType(type):
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
 		:param mixin:           If true, make the class a :term:`Mixin`.
+		                        If false, create slots if ``useSlots`` is true.
+		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
 		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
 		:returns:               The new class.
@@ -248,48 +250,90 @@ class ExtendedType(type):
 		:raises AttributeError: If slot already exists in base-class.
 		"""
 		mixinSlots = []
-		if mixin:
-			for baseClass in baseClasses:  # type: ExtendedType
-				if baseClass.__class__ is not ExtendedType:
-					raise TypeError(f"Meta-class of '{baseClass.__name__}' must be 'ExtendedType'.")
-				elif not baseClass.__isMixin__:
-					ex = TypeError(f"Base-class '{baseClass.__name__}' is not a mixin-class.")
-					ex.add_note(f"All base-classes of a mixin-class must be mixin-classes itself.")
-					raise ex
-				mixinSlots.extend(baseClass.__mixinSlots__)
-		else:
+		if mixin is None:
+			mixin = False
 			if len(baseClasses) > 0:
+				# If mixin isn't set explicitly (None), then check if primary base-class is a mixin.
+				#   If so, inherit the behavior.
+				#   If again a mixin, then aggregate all mixinSlots in a list
 				primaryBaseClass = baseClasses[0]
-				if primaryBaseClass.__class__ is ExtendedType and primaryBaseClass.__isMixin__:
-					mixin = True
+				if primaryBaseClass.__class__ is self and primaryBaseClass.__isMixin__:
 					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
+					mixin = True
 
+		if mixin:
+			if len(baseClasses) > 0:
+				inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
+				primaryInharitancePath: Set[type] = set(inheritancePaths[0])
+				for typePath in inheritancePaths[1:]:
+					for t in typePath:
+						if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
+							ex = TypeError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
+							ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
+							# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
+							# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
+							raise ex
+
+				# If current class is set to be a mixin, then aggregate all mixinSlots in a list.
+				#   Ensure all base-classes are either constructed
+				#     * by meta-class ExtendedType, or
+				#     * use no slots, or
+				#     * are typing.Generic
+				#   If it was constructed by ExtendedType, then ensure this class itself is a mixin-class.
+				for baseClass in baseClasses:  # type: ExtendedType
+					if baseClass.__class__ is self:
+						if baseClass.__isMixin__:
+							mixinSlots.extend(baseClass.__mixinSlots__)
+		else:
+			# Not a mixin, because it's a normal class in the primary inheritance path or the end (final) of a mixin hierarchy.
 			for secondaryBaseClass in baseClasses[1:]:
-				if not secondaryBaseClass.__isMixin__:
-					ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
-					ex.add_note(f"All secondary base-classes must be mixin-classes.")
+				if secondaryBaseClass.__class__ is self:
+					if secondaryBaseClass.__isMixin__:
+						mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
+					else:
+						ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
+						ex.add_note(f"All secondary base-classes must be mixin-classes.")
+						raise ex
+				elif secondaryBaseClass.__class__ is type:
+					if secondaryBaseClass is Generic:
+						pass
+					elif hasattr(secondaryBaseClass, "__slots__") and len(secondaryBaseClass.__slots__) != 0:
+						ex = TypeError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
+						ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
+						ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
+						ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
+						raise ex
+				else:
+					ex = TypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
+					ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
 					raise ex
 
 				mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
 
 		# Inherit 'useSlots' feature from primary base-class
-		if len(baseClasses) > 0 and type(primaryBaseClass) is self:
-			useSlots = primaryBaseClass.__usesSlots__
+		if len(baseClasses) > 0:
+			primaryBaseClass = baseClasses[0]
+			if type(primaryBaseClass) is self:
+				useSlots = primaryBaseClass.__usesSlots__
 
 		if mixin:
+			# If it's a mixin, __slots__ must be an empty tuple.
+			#   Collect further fields (listed in members) in the mixinSlots list
 			mixinSlots.extend(self.__getSlots(baseClasses, members))
 			members["__slots__"] = tuple()
 		# Check if members should be stored in slots. If so get these members from type annotated fields
 		elif useSlots:
-			for baseClass in baseClasses:
-				if not hasattr(baseClass, "__slots__"):
+			# If slots are used, all base classes must use slots.
+			for baseClass in self._iterateBaseClasses(baseClasses):
+				if baseClass is object:
+				elif not hasattr(baseClass, "__slots__"):
 					ex = AttributeError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
 					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
 					raise ex
 
-			members["__slots__"] = self.__getSlots(baseClasses, members)
-		else:
-			members["__slots__"] = tuple()
+			members["__slots__"] = (*mixinSlots, *self.__getSlots(baseClasses, members))
+		# else:
+		# 	members["__slots__"] = tuple()
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
@@ -306,6 +350,73 @@ class ExtendedType(type):
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		return newClass
+
+	@classmethod
+	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
+		if len(baseClasses) == 0:
+			return
+
+		visited:       Set[type] =            set()
+		iteratorStack: List[Iterator[type]] = list()
+
+		for baseClass in baseClasses:
+			yield baseClass
+			visited.add(baseClass)
+			iteratorStack.append(iter(baseClass.__bases__))
+
+			while True:
+				try:
+					base = next(iteratorStack[-1])  # type: type
+					if base not in visited:
+						yield base
+						if len(base.__bases__) > 0:
+							iteratorStack.append(iter(base.__bases__))
+					else:
+						continue
+
+				except StopIteration:
+					iteratorStack.pop()
+
+					if len(iteratorStack) == 0:
+						break
+
+	@classmethod
+	def _iterateBaseClassPaths(metacls, baseClasses: Tuple[type]) -> Generator[Tuple[type, ...], None, None]:
+		"""
+		Return a generator to iterate all possible inheritance paths for a given list of base-classes.
+
+		An inheritance path is expressed as a tuple of base-classes from current base-class (left-most item) to
+		:class:`object` (right-most item).
+
+		:param baseClasses: List (tuple) of base-classes.
+		:returns:           Generator to iterate all inheritance paths. An inheritance path is a tuple of types (base-classes).
+		"""
+		if len(baseClasses) == 0:
+			return
+
+		typeStack:   List[type] =           list()
+		iteratorStack: List[Iterator[type]] = list()
+
+		for baseClass in baseClasses:
+			typeStack.append(baseClass)
+			iteratorStack.append(iter(baseClass.__bases__))
+
+			while True:
+				try:
+					base = next(iteratorStack[-1])  # type: type
+					typeStack.append(base)
+					if len(base.__bases__) == 0:
+						yield tuple(typeStack)
+						typeStack.pop()
+					else:
+						iteratorStack.append(iter(base.__bases__))
+
+				except StopIteration:
+					typeStack.pop()
+					iteratorStack.pop()
+
+					if len(typeStack) == 0:
+						break
 
 	@classmethod
 	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[Dict[str, Callable], Dict[str, Any]]:
