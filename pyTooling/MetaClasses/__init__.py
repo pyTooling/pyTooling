@@ -38,7 +38,7 @@ import threading
 from functools  import wraps
 from inspect    import signature, Parameter
 from types      import MethodType, FunctionType
-from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
+from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar, Generic, Generator, Set, Iterator
 
 try:
 	from ..Exceptions import AbstractClassError
@@ -326,6 +326,7 @@ class ExtendedType(type):
 			# If slots are used, all base classes must use slots.
 			for baseClass in self._iterateBaseClasses(baseClasses):
 				if baseClass is object:
+					pass
 				elif not hasattr(baseClass, "__slots__"):
 					ex = AttributeError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
 					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")

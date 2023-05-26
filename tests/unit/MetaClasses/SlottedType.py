@@ -31,6 +31,7 @@
 """
 Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 """
+from typing import Generic, TypeVar
 from unittest       import TestCase
 
 from pyTooling.Common import getsizeof, CurrentPlatform, Platform
@@ -142,11 +143,25 @@ class MultipleInheritance(TestCase):
 		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
 			_data0: int
 
+			def Method_0(self):
+				self._data0 = 0
+
+		# @mixin
 		class SecondaryBase(metaclass=ExtendedType, mixin=True):
 			_data1: int
 
+			def Method_1(self):
+				self._data1 = 1
+
 		class Merged(PrimaryBase, SecondaryBase):
-			pass
+			def Method_M(self):
+				self._data0 = 2
+				self._data1 = 3
+
+		m = Merged()
+		m.Method_0()
+		m.Method_1()
+		m.Method_M()
 
 	def test_PrimaryIsExtendedSlotted_SecondaryIsExtended_MergedHasSlots(self):
 		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
@@ -212,6 +227,57 @@ class MultipleInheritance(TestCase):
 
 		class Merged(PrimaryBase, SecondaryBase):
 			_data3: int
+
+	def test_GenericAndExtended(self):
+		T = TypeVar("T")
+
+		class Extended(Generic[T], metaclass=ExtendedType):
+			_data0: int
+
+	def test_GenericAndExtendedSlotted(self):
+		T = TypeVar("T")
+
+		class Slotted(Generic[T], metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+	def test_GenericAndExtendedSlotted_Derived(self):
+		T = TypeVar("T")
+
+		class Base(Generic[T], metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class Slotted(Base):
+			_data1: int
+
+	def test_BaseIsExtendedSlotted_Generic(self):
+		T = TypeVar("T")
+
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class Slotted(Base, Generic[T]):
+			_data1: int
+
+	def test_GenericBase_ExtendedSlotted(self):
+		T = TypeVar("T")
+
+		class Base(Generic[T]):
+			_data0: int
+
+		class Slotted(Base, metaclass=ExtendedType, useSlots=True):
+			_data1: int
+
+	def test_PrimaryIsExtendedSlotted_SecondaryIsGeneric_Merged(self):
+		T = TypeVar("T")
+
+		class Primary(metaclass=ExtendedType, useSlots=True):
+			_data0: int
+
+		class Secondary(Generic[T], metaclass=ExtendedType, mixin=True):
+			_data1: int
+
+		class Merged(Primary, Secondary):
+			_data1: int
 
 
 class AttributeErrors(TestCase):
