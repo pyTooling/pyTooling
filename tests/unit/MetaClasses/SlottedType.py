@@ -210,7 +210,7 @@ class AttributeErrors(TestCase):
 
 
 class Inheritance(TestCase):
-	def test_LinearInheritance_1(self):
+	def test_LinearInheritance_1_BaseSlotted(self):
 		class Base(metaclass=ExtendedType, useSlots=True):
 			_data_0: int
 
@@ -228,7 +228,7 @@ class Inheritance(TestCase):
 		self.assertEqual(0, inst._data_0)
 		self.assertEqual(1, inst._data_1)
 
-	def test_LinearInheritance_2(self):
+	def test_LinearInheritance_2_BaseSlotted(self):
 		class Base(metaclass=ExtendedType, useSlots=True):
 			_data_0: int
 
@@ -243,6 +243,149 @@ class Inheritance(TestCase):
 				self._data_1 = data + 1
 
 		class Final(Parent):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_2 = data + 2
+
+		inst = Final(1)
+		self.assertEqual(1, inst._data_0)
+		self.assertEqual(2, inst._data_1)
+		self.assertEqual(3, inst._data_2)
+
+	def test_LinearInheritance_1_BaseMixin(self):
+		class Base(metaclass=ExtendedType, mixin=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Final(Base):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		# FIXME: why does it fail?
+		# TODO: could be an instantiation error (TypeError) when collected slots (mixinSlots) are not set in __slots__
+		with self.assertRaises(AttributeError):
+			inst = Final(0)
+			self.assertEqual(0, inst._data_0)
+			self.assertEqual(1, inst._data_1)
+
+	def test_LinearInheritance_2_BaseMixin(self):
+		class Base(metaclass=ExtendedType, mixin=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Parent(Base):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		class Final(Parent):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_2 = data + 2
+
+		# FIXME: why does it fail?
+		# TODO: could be an instantiation error (TypeError) when collected slots (mixinSlots) are not set in __slots__
+		with self.assertRaises(AttributeError):
+			inst = Final(1)
+			self.assertEqual(1, inst._data_0)
+			self.assertEqual(2, inst._data_1)
+			self.assertEqual(3, inst._data_2)
+
+	def test_LinearInheritance_1_BaseSlottedMixin(self):
+		class Base(metaclass=ExtendedType, useSlots=True, mixin=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Final(Base, mixin=False):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		inst = Final(0)
+		self.assertEqual(0, inst._data_0)
+		self.assertEqual(1, inst._data_1)
+
+	def test_LinearInheritance_2_BaseSlottedMixin(self):
+		class Base(metaclass=ExtendedType, useSlots=True, mixin=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Parent(Base):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		class Final(Parent, mixin=False):
+			_data_2: int
+
+			def __init__(self, data: int):
+				bs = Base.__slots__
+				bm = Base.__mixinSlots__
+				ps = Parent.__slots__
+				pm = Parent.__mixinSlots__
+				fs = Final.__slots__
+				super().__init__(data)
+				self._data_2 = data + 2
+
+		inst = Final(1)
+		self.assertEqual(1, inst._data_0)
+		self.assertEqual(2, inst._data_1)
+		self.assertEqual(3, inst._data_2)
+
+	def test_LinearInheritance_1_BaseMixin_FinalSlotted(self):
+		class Base(metaclass=ExtendedType, mixin=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Final(Base, useSlots=True, mixin=False):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		inst = Final(0)
+		self.assertEqual(0, inst._data_0)
+		self.assertEqual(1, inst._data_1)
+
+	def test_LinearInheritance_2_BaseMixin_FinalSlotted(self):
+		class Base(metaclass=ExtendedType, mixin=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Parent(Base):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		class Final(Parent, useSlots=True, mixin=False):
 			_data_2: int
 
 			def __init__(self, data: int):
