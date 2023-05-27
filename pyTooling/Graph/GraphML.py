@@ -47,6 +47,11 @@ from pyTooling.Tree import Node as pyToolingNode
 
 @export
 class AttributeContext(Enum):
+	"""
+	Enumeration of all attribute contexts.
+
+	An attribute context describes to what kind of GraphML node an attribute can be applied.
+	"""
 	GraphML = auto()
 	Graph = auto()
 	Node = auto()
@@ -59,6 +64,11 @@ class AttributeContext(Enum):
 
 @export
 class AttributeTypes(Enum):
+	"""
+	Enumeration of all attribute types.
+
+	An attribute type describes what datatype can be applied to an attribute.
+	"""
 	Boolean = auto()
 	Int = auto()
 	Long = auto()
@@ -72,6 +82,7 @@ class AttributeTypes(Enum):
 
 @export
 class EdgeDefault(Enum):
+	"""An enumeration describing the default edge direction."""
 	Undirected = auto()
 	Directed = auto()
 
@@ -81,7 +92,8 @@ class EdgeDefault(Enum):
 
 @export
 class ParsingOrder(Enum):
-	NodesFirst = auto()
+	"""An enumeration describing the parsing order of the graph's representation."""
+	NodesFirst = auto()     #: First, all nodes are given, then followed by all edges.
 	AdjacencyList = auto()
 	Free = auto()
 
@@ -91,6 +103,7 @@ class ParsingOrder(Enum):
 
 @export
 class IDStyle(Enum):
+	"""An enumeration describing the style of identifiers (IDs)."""
 	Canonical = auto()
 	Free = auto()
 
@@ -100,6 +113,9 @@ class IDStyle(Enum):
 
 @export
 class Base(metaclass=ExtendedType, useSlots=True):
+	"""
+	Base-class for all GraphML data model classes.
+	"""
 	@property
 	def HasClosingTag(self) -> bool:
 		return True
