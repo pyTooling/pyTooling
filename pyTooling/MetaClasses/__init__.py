@@ -308,8 +308,6 @@ class ExtendedType(type):
 					ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
 					raise ex
 
-				mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
-
 		# Inherit 'useSlots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
@@ -333,8 +331,7 @@ class ExtendedType(type):
 					raise ex
 
 			members["__slots__"] = (*mixinSlots, *self.__getSlots(baseClasses, members))
-		# else:
-		# 	members["__slots__"] = tuple()
+			mixinSlots.clear()
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
