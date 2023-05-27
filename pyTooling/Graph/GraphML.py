@@ -138,6 +138,7 @@ class BaseWithID(Base):
 	_id: str
 
 	def __init__(self, identifier: str):
+		super().__init__()
 		self._id = identifier
 
 	@property
@@ -205,6 +206,8 @@ class Data(Base):
 	_data: Any
 
 	def __init__(self, key: Key, data: Any):
+		super().__init__()
+
 		self._key = key
 		self._data = data
 
@@ -234,6 +237,8 @@ class Data(Base):
 
 @export
 class Node(BaseWithData):
+	def __init__(self, identifier: str):
+		super().__init__(identifier)
 
 	@property
 	def HasClosingTag(self) -> bool:
@@ -305,7 +310,7 @@ class Edge(BaseWithData):
 
 
 @export
-class BaseGraph(BaseWithData):
+class BaseGraph(BaseWithData, mixin=True):
 	_subgraphs: Dict[str, 'Subgraph']
 	_nodes: Dict[str, Node]
 	_edges: Dict[str, Edge]
@@ -423,6 +428,7 @@ class Subgraph(Node, BaseGraph):
 
 	def __init__(self, nodeIdentifier: str, graphIdentifier: str):
 		super().__init__(nodeIdentifier)
+		BaseGraph.__init__(self, nodeIdentifier)
 
 		self._subgraphID = graphIdentifier
 		self._root = None
