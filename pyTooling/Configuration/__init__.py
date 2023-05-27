@@ -33,9 +33,9 @@ Abstract configuration reader.
 
 .. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
 """
-from typing import Union, ClassVar, Iterator
+from typing        import Union, ClassVar, Iterator
 
-from ..Decorators import export
+from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
 
@@ -82,16 +82,22 @@ class Node(metaclass=ExtendedType, useSlots=True):
 
 
 @export
-class Dictionary(Node):
+class Dictionary(Node, mixin=True):
 	"""Abstract dictionary node in a configuration."""
+
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		Node.__init__(self, root, parent)
 
 	def __contains__(self, key: KeyT) -> bool:
 		raise NotImplementedError()
 
 
 @export
-class Sequence(Node):
+class Sequence(Node, mixin=True):
 	"""Abstract sequence node in a configuration."""
+
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		Node.__init__(self, root, parent)
 
 	def __getitem__(self, index: int) -> ValueT:
 		raise NotImplementedError()
@@ -105,8 +111,8 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
-class Configuration(Node):
+class Configuration(Node, mixin=True):
 	"""Abstract root node in a configuration."""
 
-	def __init__(self):
-		Node.__init__(self)
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		Node.__init__(self, root, parent)

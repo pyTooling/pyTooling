@@ -33,10 +33,10 @@ Configuration reader for YAML files.
 
 .. hint:: See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
-from pathlib import Path
-from typing import Dict, List, Union, Iterator as typing_Iterator
+from pathlib       import Path
+from typing        import Dict, List, Union, Iterator as typing_Iterator
 
-from ..Decorators import export
+from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
 try:
@@ -56,12 +56,13 @@ from . import (
 @export
 class Node(Abstract_Node):
 	_yamlNode: Union[CommentedMap, CommentedSeq]
-	_cache: Dict[str, ValueT]
-	_key: KeyT
-	_length: int
+	_cache:    Dict[str, ValueT]
+	_key:      KeyT
+	_length:   int
 
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]):
-		super().__init__(root, parent)
+		Abstract_Node.__init__(self, root, parent)
+
 		self._yamlNode = yamlNode
 		self._cache = {}
 		self._key = key
@@ -188,13 +189,14 @@ class Node(Abstract_Node):
 
 
 @export
-class Dictionary(Abstract_Dict, Node):
+class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
 	_keys: List[KeyT]
 
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap):
 		Node.__init__(self, root, parent, key, yamlNode)
+
 		self._keys = [str(k) for k in yamlNode.keys()]
 
 	def __contains__(self, key: KeyT) -> bool:
@@ -230,11 +232,12 @@ class Dictionary(Abstract_Dict, Node):
 
 
 @export
-class Sequence(Abstract_Seq, Node):
+class Sequence(Node, Abstract_Seq):
 	"""A sequence node (ordered list) in a YAML data file."""
 
 	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq):
 		Node.__init__(self, root, parent, key, yamlNode)
+
 		self._length = len(yamlNode)
 
 	__getitem__ = Node.__getitem__
@@ -285,7 +288,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
-class Configuration(Abstract_Configuration, Dictionary):
+class Configuration(Dictionary, Abstract_Configuration):
 	"""A configuration read from a YAML file."""
 
 	_yamlConfig: YAML
@@ -298,8 +301,6 @@ class Configuration(Abstract_Configuration, Dictionary):
 
 		:param configFile: Configuration file to read and parse.
 		"""
-		Abstract_Configuration.__init__(self)
-
 		with configFile.open() as file:
 			self._yamlConfig = YAML().load(file)
 
