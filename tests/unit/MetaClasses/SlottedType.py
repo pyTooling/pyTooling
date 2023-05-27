@@ -31,10 +31,9 @@
 """
 Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 """
-from typing import Generic, TypeVar
-from unittest       import TestCase
+from unittest              import TestCase
 
-from pyTooling.Common import getsizeof, CurrentPlatform, Platform
+from pyTooling.Common      import getsizeof, CurrentPlatform
 from pyTooling.MetaClasses import ExtendedType
 
 
@@ -44,240 +43,94 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Slotted(TestCase):
-	class Data1(metaclass=ExtendedType, useSlots=True):
-		_data1: int
+class ObjectSizes(TestCase):
+	class Normal1:
+		_data_0: int
 
 		def __init__(self, data: int):
-			self._data1 = data
+			self._data_0 = data
 
-	class Data2(Data1):  #, useSlots=True):
-		_data2: int
+	class Normal2(Normal1):
+		_data_1: int
 
 		def __init__(self, data: int):
 			super().__init__(data)
-			self._data2 = data + 1
+			self._data_1 = data + 1
+
+	class Extended1(metaclass=ExtendedType):
+		_data_0: int
+
+		def __init__(self, data: int):
+			self._data_0 = data
+
+	class Extended2(Extended1):
+		_data_1: int
+
+		def __init__(self, data: int):
+			super().__init__(data)
+			self._data_1 = data + 1
+
+	class Slotted1(metaclass=ExtendedType, useSlots=True):
+		_data_0: int
+
+		def __init__(self, data: int):
+			self._data_0 = data
+
+	class Slotted2(Slotted1):
+		_data_1: int
+
+		def __init__(self, data: int):
+			super().__init__(data)
+			self._data_1 = data + 1
 
 	SIZES = {
-		Data1: {
+		Slotted1: {
 			3: {7: 84, 8: 68, 9: 68, 10: 68, 11: 68}
 		},
-		Data2: {
+		Slotted2: {
 			3: {7: 92, 8: 76, 9: 76, 10: 76, 11: 76}
 		}
 	}
 
-	def test_Slots1(self):
-		data = self.Data1(data=5)
-
-		self.assertListEqual(["_data1"], list(data.__slots__))
-		self.assertEqual(5, data._data1)
-		data._data1 = 6
-		self.assertEqual(6, data._data1)
+	def test_SizeOfSlotted1(self):
+		data = self.Slotted1(data=5)
 
 		try:
 			pv = CurrentPlatform.PythonVersion
+			dataSize = getsizeof(data)
 			self.assertLessEqual(
-				getsizeof(data),
-				self.SIZES[self.Data1][pv.Major][pv.Minor]
+				dataSize,
+				self.SIZES[self.Slotted1][pv.Major][pv.Minor]
 			)
+			print(f"\nsize: {dataSize} B")
 		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
+			print(f"\ngetsizeof: not supported on PyPy")
 
-		print()
-		try:
-			print(f"size: {getsizeof(data)}")
-		except TypeError:
-			print(f"size: not supported on PyPy")
-
-	def test_Slots2(self):
-		data = self.Data2(data=10)
-
-		self.assertListEqual(["_data2"], list(data.__slots__))
-		self.assertEqual(10, data._data1)
-		data._data1 = 12
-		self.assertEqual(12, data._data1)
+	def test_SizeOfSlotted2(self):
+		data = self.Slotted2(data=5)
 
 		try:
 			pv = CurrentPlatform.PythonVersion
+			dataSize = getsizeof(data)
 			self.assertLessEqual(
-				getsizeof(data),
-				self.SIZES[self.Data2][pv.Major][pv.Minor]
+				dataSize,
+				self.SIZES[self.Slotted2][pv.Major][pv.Minor]
 			)
+			print(f"\nsize: {dataSize} B")
 		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
+			print(f"\ngetsizeof: not supported on PyPy")
 
+	def test_ClassSizes(self):
 		print()
 		try:
-			print(f"getsizeof: {getsizeof(data)}")
+			print(f"size of Normal1:  {getsizeof(self.Normal1)} B")
+			print(f"size of Normal2:  {getsizeof(self.Normal2)} B")
+			print(f"size of Extended1: {getsizeof(self.Extended1)} B")
+			print(f"size of Extended2: {getsizeof(self.Extended2)} B")
+			print(f"size of Slotted1:  {getsizeof(self.Slotted1)} B")
+			print(f"size of Slotted2:  {getsizeof(self.Slotted2)} B")
 		except TypeError:
 			print(f"getsizeof: not supported on PyPy")
-
-
-class MultipleInheritance(TestCase):
-	def test_PrimaryIsExtendedSlotted_SecondaryIsNormal_MergedNoSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase:
-			_data1: int
-
-		with self.assertRaises(AttributeError):
-			class Merged(PrimaryBase, SecondaryBase):
-				pass
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsNormal_MergedHasSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase:
-			_data1: int
-
-		print(type(type(SecondaryBase())))
-
-		with self.assertRaises(AttributeError):
-			class Merged(PrimaryBase, SecondaryBase):
-				_data2: int
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsExtended_MergedNoSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-			def Method_0(self):
-				self._data0 = 0
-
-		# @mixin
-		class SecondaryBase(metaclass=ExtendedType, mixin=True):
-			_data1: int
-
-			def Method_1(self):
-				self._data1 = 1
-
-		class Merged(PrimaryBase, SecondaryBase):
-			def Method_M(self):
-				self._data0 = 2
-				self._data1 = 3
-
-		m = Merged()
-		m.Method_0()
-		m.Method_1()
-		m.Method_M()
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsExtended_MergedHasSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase(metaclass=ExtendedType, mixin=True):
-			_data1: int
-
-		class Merged(PrimaryBase, SecondaryBase):
-			_data2: int
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsSlotted_MergedNoSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase(metaclass=ExtendedType, mixin=True):
-			_data1: int
-			__slots__ = ("_data1",)
-
-		class Merged(PrimaryBase, SecondaryBase):
-			pass
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsSlotted_MergedHasSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase(metaclass=ExtendedType, mixin=True):
-			_data1: int
-			__slots__ = ("_data1",)
-
-		class Merged(PrimaryBase, SecondaryBase):
-			_data2: int
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsExtendedSlotted_MergedNoSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase(metaclass=ExtendedType, useSlots=True, mixin=True):
-			_data1: int
-
-		class Merged(PrimaryBase, SecondaryBase):
-			pass
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsExtendedSlotted_MergedHasSlots(self):
-		class PrimaryBase(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class SecondaryBase(metaclass=ExtendedType, useSlots=True, mixin=True):
-			_data1: int
-
-		class Merged(PrimaryBase, SecondaryBase):
-			_data2: int
-
-	def test_BaseIsExtendedSlotted_Rombus(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class PrimaryBase(Base):
-			_data1: int
-
-		class SecondaryBase(Base, mixin=True):
-			_data2: int
-
-		class Merged(PrimaryBase, SecondaryBase):
-			_data3: int
-
-	def test_GenericAndExtended(self):
-		T = TypeVar("T")
-
-		class Extended(Generic[T], metaclass=ExtendedType):
-			_data0: int
-
-	def test_GenericAndExtendedSlotted(self):
-		T = TypeVar("T")
-
-		class Slotted(Generic[T], metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-	def test_GenericAndExtendedSlotted_Derived(self):
-		T = TypeVar("T")
-
-		class Base(Generic[T], metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class Slotted(Base):
-			_data1: int
-
-	def test_BaseIsExtendedSlotted_Generic(self):
-		T = TypeVar("T")
-
-		class Base(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class Slotted(Base, Generic[T]):
-			_data1: int
-
-	def test_GenericBase_ExtendedSlotted(self):
-		T = TypeVar("T")
-
-		class Base(Generic[T]):
-			_data0: int
-
-		class Slotted(Base, metaclass=ExtendedType, useSlots=True):
-			_data1: int
-
-	def test_PrimaryIsExtendedSlotted_SecondaryIsGeneric_Merged(self):
-		T = TypeVar("T")
-
-		class Primary(metaclass=ExtendedType, useSlots=True):
-			_data0: int
-
-		class Secondary(Generic[T], metaclass=ExtendedType, mixin=True):
-			_data1: int
-
-		class Merged(Primary, Secondary):
-			_data1: int
 
 
 class AttributeErrors(TestCase):
@@ -356,96 +209,754 @@ class AttributeErrors(TestCase):
 			_ = data._int_0
 
 
-	def test_NonSlottedBaseClass(self):
-		class Base:
-			_baseData: int
+class Inheritance(TestCase):
+	def test_LinearInheritance_1(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Final(Base):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		inst = Final(0)
+		self.assertEqual(0, inst._data_0)
+		self.assertEqual(1, inst._data_1)
+
+	def test_LinearInheritance_2(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Parent(Base):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_1 = data + 1
+
+		class Final(Parent):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_2 = data + 2
+
+		inst = Final(1)
+		self.assertEqual(1, inst._data_0)
+		self.assertEqual(2, inst._data_1)
+		self.assertEqual(3, inst._data_2)
+
+	def test_VInheritance_PrimaryExtended(self):
+		class Primary(metaclass=ExtendedType, useSlots=True):
+			_data_L0: int
+
+			def __init__(self, data: int):
+				self._data_L0 = data
+
+		class Secondary:
+			_data_R0: int
+
+			def __init__(self, data: int):
+				self._data_R0 = data + 1
 
 		with self.assertRaises(AttributeError):
-			class SlottedData(Base, metaclass=ExtendedType, useSlots=True):
-				_data: int
+			class Final(Primary, Secondary):
+				_data_1: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_1 = data + 2
+
+			# inst = Final(2)
+			# self.assertEqual(2, inst._data_L0)
+			# self.assertEqual(3, inst._data_R0)
+			# self.assertEqual(4, inst._data_1)
+
+	def test_VInheritance_PrimaryExtended_Mixin(self):
+		class Primary(metaclass=ExtendedType, useSlots=True):
+			_data_L0: int
+
+			def __init__(self, data: int):
+				self._data_L0 = data
+
+		class Secondary(metaclass=ExtendedType, mixin=True):
+			_data_R0: int
+
+			def __init__(self, data: int):
+				self._data_R0 = data + 1
+
+		class Final(Primary, Secondary):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_1 = data + 2
+
+		inst = Final(2)
+		self.assertEqual(2, inst._data_L0)
+		self.assertEqual(3, inst._data_R0)
+		self.assertEqual(4, inst._data_1)
+
+	def test_VInheritance_SecondaryExtended(self):
+		class Primary:
+			_data_L0: int
+
+			def __init__(self, data: int):
+				self._data_L0 = data
+
+		class Secondary(metaclass=ExtendedType, useSlots=True):
+			_data_R0: int
+
+			def __init__(self, data: int):
+				self._data_R0 = data + 1
+
+		class Final(Primary, Secondary):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_1 = data + 2
+
+		inst = Final(3)
+		self.assertEqual(3, inst._data_L0)
+		self.assertEqual(4, inst._data_R0)
+		self.assertEqual(5, inst._data_1)
+
+	def test_YInheritance_PrimaryExtended(self):
+		class Primary(metaclass=ExtendedType, useSlots=True):
+			_data_L0: int
+
+			def __init__(self, data: int):
+				self._data_L0 = data
+
+		class Secondary:
+			_data_R0: int
+
+			def __init__(self, data: int):
+				self._data_R0 = data + 1
+
+		with self.assertRaises(AttributeError):
+			class Merged(Primary, Secondary):
+				_data_1: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_1 = data + 2
+
+			# class Final(Merged):
+			# 	_data_2: int
+			#
+			# 	def __init__(self, data: int):
+			# 		super().__init__(data)
+			# 		self._data_2 = data + 3
+			#
+			# inst = Final(4)
+			# self.assertEqual(4, inst._data_L0)
+			# self.assertEqual(5, inst._data_R0)
+			# self.assertEqual(6, inst._data_1)
+			# self.assertEqual(7, inst._data_2)
+
+	def test_YInheritance_PrimaryExtended_Mixin(self):
+		class Primary(metaclass=ExtendedType, useSlots=True):
+			_data_L0: int
+
+			def __init__(self, data: int):
+				self._data_L0 = data
+
+		class Secondary(metaclass=ExtendedType, mixin=True):
+			_data_R0: int
+
+			def __init__(self, data: int):
+				self._data_R0 = data + 1
+
+		class Merged(Primary, Secondary):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_1 = data + 2
+
+		class Final(Merged):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_2 = data + 3
+
+		inst = Final(4)
+		self.assertEqual(4, inst._data_L0)
+		self.assertEqual(5, inst._data_R0)
+		self.assertEqual(6, inst._data_1)
+		self.assertEqual(7, inst._data_2)
+
+	def test_YInheritance_SecondaryExtended(self):
+		class Primary:
+			_data_L0: int
+
+			def __init__(self, data: int):
+				self._data_L0 = data
+
+		class Secondary(metaclass=ExtendedType, useSlots=True):
+			_data_R0: int
+
+			def __init__(self, data: int):
+				self._data_R0 = data + 1
+
+		class Merged(Primary, Secondary):
+			_data_1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_1 = data + 2
+
+		class Final(Merged):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_2 = data + 3
+
+		inst = Final(5)
+		self.assertEqual(5, inst._data_L0)
+		self.assertEqual(6, inst._data_R0)
+		self.assertEqual(7, inst._data_1)
+		self.assertEqual(8, inst._data_2)
+
+	def test_OInheritance_BaseExtended(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		with self.assertRaises(TypeError):
+			class Final(Primary, Secondary):
+				_data_2: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_2 = data + 3
+
+			# inst = Final(6)
+			# for m in Final.mro():
+			# 	print(m)
+			# self.assertEqual(6, inst._data_0)
+			# self.assertEqual(7, inst._data_L1)
+			# self.assertEqual(8, inst._data_R1)
+			# self.assertEqual(9, inst._data_2)
+
+	def test_OInheritance_BaseExtended_PrimaryMixin(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base, mixin=True):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		with self.assertRaises(TypeError):
+			class Final(Primary, Secondary):
+				_data_2: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_2 = data + 3
+
+			# inst = Final(6)
+			# for m in Final.mro():
+			# 	print(m)
+			# self.assertEqual(6, inst._data_0)
+			# self.assertEqual(7, inst._data_L1)
+			# self.assertEqual(8, inst._data_R1)
+			# self.assertEqual(9, inst._data_2)
+
+	def test_OInheritance_BaseExtended_SecondaryMixin(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base, mixin=True):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		class Final(Primary, Secondary):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_2 = data + 3
+
+		inst = Final(6)
+		for m in Final.mro():
+			print(m)
+		self.assertEqual(6, inst._data_0)
+		self.assertEqual(7, inst._data_L1)
+		self.assertEqual(8, inst._data_R1)
+		self.assertEqual(9, inst._data_2)
+
+	def test_OInheritance_PrimaryExtended(self):
+		class Base:
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		with self.assertRaises(AttributeError):
+			class Primary(Base, metaclass=ExtendedType, useSlots=True):
+				_data_L1: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					self._data_L1 = data + 1
+
+			# class Secondary(Base):
+			# 	_data_R1: int
+			#
+			# 	def __init__(self, data: int):
+			# 		super().__init__(data)
+			# 		self._data_R1 = data + 2
+			#
+			# class Final(Primary, Secondary):
+			# 	_data_2: int
+			#
+			# 	def __init__(self, data: int):
+			# 		super().__init__(data)
+			# 		Secondary.__init__(self, data)
+			# 		self._data_2 = data + 3
+			#
+			# inst = Final(7)
+			# self.assertEqual(7, inst._data_0)
+			# self.assertEqual(8, inst._data_L1)
+			# self.assertEqual(9, inst._data_R1)
+			# self.assertEqual(10, inst._data_2)
+
+	def test_OInheritance_PrimaryExtended_Slots_Mixin(self):
+		class Base:
+			_data_0: int
+			__slots__ = ("_data_0", )
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base, metaclass=ExtendedType, useSlots=True):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base, metaclass=ExtendedType, mixin=True):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		class Final(Primary, Secondary):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_2 = data + 3
+
+		inst = Final(7)
+		self.assertEqual(7, inst._data_0)
+		self.assertEqual(8, inst._data_L1)
+		self.assertEqual(9, inst._data_R1)
+		self.assertEqual(10, inst._data_2)
+
+	def test_OInheritance_SecondaryExtended(self):
+		class Base:
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		with self.assertRaises(AttributeError):
+			class Secondary(Base, metaclass=ExtendedType, useSlots=True):
+				_data_R1: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					self._data_R1 = data + 2
+
+			# class Final(Primary, Secondary):
+			# 	_data_2: int
+			#
+			# 	def __init__(self, data: int):
+			# 		super().__init__(data)
+			# 		Secondary.__init__(self, data)
+			# 		self._data_2 = data + 3
+			#
+			# inst = Final(8)
+			# self.assertEqual(8, inst._data_0)
+			# self.assertEqual(9, inst._data_L1)
+			# self.assertEqual(10, inst._data_R1)
+			# self.assertEqual(11, inst._data_2)
+
+	def test_OInheritance_SecondaryExtended_Slots_Slots(self):
+		class Base:
+			_data_0: int
+			__slots__ = ("_data_0", )
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+			# __slots__ = ()
+			# __mixinSlots__ = ("_data_L1")
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base, metaclass=ExtendedType, useSlots=True):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		class Final(Primary, Secondary):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_2 = data + 3
+
+		inst = Final(8)
+		self.assertEqual(8, inst._data_0)
+		self.assertEqual(9, inst._data_L1)
+		self.assertEqual(10, inst._data_R1)
+		self.assertEqual(11, inst._data_2)
+
+	def test_OInheritance_MergedExtended(self):
+		class Base:
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		with self.assertRaises(AttributeError):
+			class Final(Primary, Secondary, metaclass=ExtendedType, useSlots=True):
+				_data_2: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_2 = data + 3
+
+			# inst = Final(9)
+			# self.assertEqual(9, inst._data_0)
+			# self.assertEqual(10, inst._data_L1)
+			# self.assertEqual(11, inst._data_R1)
+			# self.assertEqual(12, inst._data_2)
+
+	def test_QInheritance_BaseExtended(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		with self.assertRaises(TypeError):
+			class Merged(Primary, Secondary):
+				_data_2: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_2 = data + 3
+
+			# class Final(Merged):
+			# 	_data_3: int
+			#
+			# 	def __init__(self, data: int):
+			# 		super().__init__(data)
+			# 		self._data_3 = data + 4
+			#
+			# inst = Final(10)
+			# self.assertEqual(10, inst._data_0)
+			# self.assertEqual(11, inst._data_L1)
+			# self.assertEqual(12, inst._data_R1)
+			# self.assertEqual(13, inst._data_2)
+			# self.assertEqual(14, inst._data_3)
+
+	def test_QInheritance_BaseExtended_PrimaryMixin(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base, mixin=True):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		with self.assertRaises(TypeError):
+			class Merged(Primary, Secondary):
+				_data_2: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					Secondary.__init__(self, data)
+					self._data_2 = data + 3
+
+			# class Final(Merged):
+			# 	_data_3: int
+			#
+			# 	def __init__(self, data: int):
+			# 		super().__init__(data)
+			# 		self._data_3 = data + 4
+			#
+			# inst = Final(10)
+			# self.assertEqual(10, inst._data_0)
+			# self.assertEqual(11, inst._data_L1)
+			# self.assertEqual(12, inst._data_R1)
+			# self.assertEqual(13, inst._data_2)
+			# self.assertEqual(14, inst._data_3)
+
+	def test_QInheritance_BaseExtended_SecondaryMixin(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base, mixin=True):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		class Merged(Primary, Secondary):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_2 = data + 3
+
+		class Final(Merged):
+			_data_3: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_3 = data + 4
+
+		inst = Final(10)
+		self.assertEqual(10, inst._data_0)
+		self.assertEqual(11, inst._data_L1)
+		self.assertEqual(12, inst._data_R1)
+		self.assertEqual(13, inst._data_2)
+		self.assertEqual(14, inst._data_3)
+
+	def test_QInheritance_FinalExtended(self):
+		class Base:
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		class Primary(Base):
+			_data_L1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_L1 = data + 1
+
+		class Secondary(Base):
+			_data_R1: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				self._data_R1 = data + 2
+
+		class Merged(Primary, Secondary):
+			_data_2: int
+
+			def __init__(self, data: int):
+				super().__init__(data)
+				Secondary.__init__(self, data)
+				self._data_2 = data + 3
+
+		with self.assertRaises(AttributeError):
+			class Final(Merged, metaclass=ExtendedType, useSlots=True):
+				_data_3: int
+
+				def __init__(self, data: int):
+					super().__init__(data)
+					self._data_3 = data + 4
+
+			# inst = Final(14)
+			# self.assertEqual(14, inst._data_0)
+			# self.assertEqual(15, inst._data_L1)
+			# self.assertEqual(16, inst._data_R1)
+			# self.assertEqual(17, inst._data_2)
+			# self.assertEqual(18, inst._data_3)
 
 
-class ObjectSizes(TestCase):
-	class Normal1:
-		_data1: int
+class Hierarchy(TestCase):
+	def test_GraphMLInheritanceHierarchy(self):
+		class Base(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
 
-		def __init__(self, data: int):
-			self._data1 = data
+			def __init__(self):
+				super().__init__()
+				self._data_0 = 0
 
-	class Normal2(Normal1):
-		_data2: int
+		class WithID(Base):
+			_data_1: int
 
-		def __init__(self, data: int):
-			super().__init__(data)
-			self._data2 = data + 1
+			def __init__(self):
+				super().__init__()
+				self._data_1 = 1
 
-	class Extended1(metaclass=ExtendedType):
-		_data1: int
+		class WithData(WithID):
+			_data_2: int
 
-		def __init__(self, data: int):
-			self._data1 = data
+			def __init__(self):
+				super().__init__()
+				self._data_2 = 2
 
-	class Extended2(Extended1):
-		_data2: int
+		class Node(WithData):
+			_data_3: int
 
-		def __init__(self, data: int):
-			super().__init__(data)
-			self._data2 = data + 1
+			def __init__(self):
+				super().__init__()
+				self._data_3 = 3
 
-	class Slotted1(metaclass=ExtendedType, useSlots=True):
-		_data1: int
+		class BaseGraph(WithData, mixin=True):
+			_data_4: int
 
-		def __init__(self, data: int):
-			self._data1 = data
+			def __init__(self, param: str = None):
+				if param is not None:
+					super().__init__()
 
-	class Slotted2(Slotted1):  #, useSlots=True):
-		_data2: int
+				self._data_4 = 4
 
-		def __init__(self, data: int):
-			super().__init__(data)
-			self._data2 = data + 1
+			def test_BaseGraph(self):
+				self._data_4 = 14
 
-	def test_NormalType(self):
-		data1 = self.Normal1(10)
-		data2 = self.Normal2(15)
+		class SubGraph(Node, BaseGraph):
+			_data_4: int
+			_data_5: int
 
-		print()
-		try:
-			print(f"size of Normal1: {getsizeof(data1)}")
-			print(f"size of Normal2: {getsizeof(data2)}")
-		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
+			def __init__(self):
+				super().__init__()
+				BaseGraph.__init__(self)
+				self._data_5 = 5
 
-	def test_ExtendedType(self):
-		data1 = self.Extended1(20)
-		data2 = self.Extended2(25)
-
-		print()
-		try:
-			print(f"size of Extended1: {getsizeof(data1)}")
-			print(f"size of Extended2: {getsizeof(data2)}")
-		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
-
-	def test_SlottedType(self):
-		data1 = self.Slotted1(30)
-		data2 = self.Slotted2(35)
-
-		print()
-		try:
-			print(f"size of Slotted1: {getsizeof(data1)}")
-			print(f"size of Slotted2: {getsizeof(data2)}")
-		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
-
-	def test_ClassSizes(self):
-		print()
-		try:
-			print(f"size of Normal1: {getsizeof(self.Normal1)}")
-			print(f"size of Normal2: {getsizeof(self.Normal2)}")
-			print(f"size of Extended1: {getsizeof(self.Extended1)}")
-			print(f"size of Extended2: {getsizeof(self.Extended2)}")
-			print(f"size of Slotted1: {getsizeof(self.Slotted1)}")
-			print(f"size of Slotted2: {getsizeof(self.Slotted2)}")
-		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
+		sg = SubGraph()
+		sg.test_BaseGraph()

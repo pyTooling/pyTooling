@@ -31,10 +31,8 @@
 """
 Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 """
-from typing import Generic, TypeVar
-from unittest       import TestCase
+from unittest              import TestCase
 
-from pyTooling.Common import getsizeof, CurrentPlatform, Platform
 from pyTooling.MetaClasses import ExtendedType
 
 
@@ -393,7 +391,6 @@ class Normal(TestCase):
 		self.assertEqual(12, inst._data_R1)
 		self.assertEqual(13, inst._data_2)
 		self.assertEqual(14, inst._data_3)
-
 
 	def test_QInheritance_FinalExtended(self):
 		class Base:
