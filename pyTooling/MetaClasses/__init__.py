@@ -261,6 +261,12 @@ class ExtendedType(type):
 					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
 					mixin = True
 
+		# Inherit 'useSlots' feature from primary base-class
+		if len(baseClasses) > 0:
+			primaryBaseClass = baseClasses[0]
+			if type(primaryBaseClass) is self:
+				useSlots = primaryBaseClass.__usesSlots__
+
 		if mixin:
 			if len(baseClasses) > 0:
 				inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
@@ -284,7 +290,7 @@ class ExtendedType(type):
 					if baseClass.__class__ is self:
 						if baseClass.__isMixin__:
 							mixinSlots.extend(baseClass.__mixinSlots__)
-		else:
+		elif useSlots:
 			# Not a mixin, because it's a normal class in the primary inheritance path or the end (final) of a mixin hierarchy.
 			for secondaryBaseClass in baseClasses[1:]:
 				if secondaryBaseClass.__class__ is self:
@@ -307,12 +313,6 @@ class ExtendedType(type):
 					ex = TypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
 					ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
 					raise ex
-
-		# Inherit 'useSlots' feature from primary base-class
-		if len(baseClasses) > 0:
-			primaryBaseClass = baseClasses[0]
-			if type(primaryBaseClass) is self:
-				useSlots = primaryBaseClass.__usesSlots__
 
 		if mixin:
 			# If it's a mixin, __slots__ must be an empty tuple.
