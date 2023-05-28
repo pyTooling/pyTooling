@@ -69,6 +69,16 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 
 
 @export
+class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
+	pass
+
+
+@export
+class BaseClassIsNotAMixinError(ExtendedTypeError):
+	pass
+
+
+@export
 class DuplicateFieldInSlotsError(ExtendedTypeError):
 	pass
 
@@ -87,14 +97,6 @@ class AbstractClassError(ExtendedTypeError):
 	   :py:exc:`~MustOverrideClassError`
 	      |rarr| Exception raised, if a method is marked as *must-override*.
 	"""
-	# WORKAROUND: for Python <3.10
-	# Implementing a dummy method for Python versions before
-	if version_info < (3, 11):
-		def add_note(self, message: str):
-			try:
-				self.__notes__.append(message)
-			except AttributeError:
-				self.__notes__ = [message]
 
 
 @export
@@ -111,14 +113,6 @@ class MustOverrideClassError(AbstractClassError):
 	   :py:exc:`~AbstractClassError`
 	      |rarr| Exception raised, if a method is marked as *abstract*.
 	"""
-	# WORKAROUND: for Python <3.10
-	# Implementing a dummy method for Python versions before
-	if version_info < (3, 11):
-		def add_note(self, message: str):
-			try:
-				self.__notes__.append(message)
-			except AttributeError:
-				self.__notes__ = [message]
 
 
 @export
@@ -337,7 +331,7 @@ class ExtendedType(type):
 				for typePath in inheritancePaths[1:]:
 					for t in typePath:
 						if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
-							ex = TypeError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
+							ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
 							ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
 							# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
 							# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
@@ -365,20 +359,20 @@ class ExtendedType(type):
 						if secondaryBaseClass.__isMixin__:
 							mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
 						else:
-							ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
+							ex = BaseClassIsNotAMixinError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
 							ex.add_note(f"All secondary base-classes must be mixin-classes.")
 							raise ex
 					elif isinstance(secondaryBaseClass, type):
 						if issubclass(secondaryBaseClass, Generic):
 							pass
 						elif hasattr(secondaryBaseClass, "__slots__") and len(secondaryBaseClass.__slots__) != 0:
-							ex = TypeError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
+							ex = BaseClassWithNonEmptySlotsError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
 							ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
 							ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
 							ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
 							raise ex
 					else:
-						ex = TypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
+						ex = ExtendedTypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
 						ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
 						raise ex
 

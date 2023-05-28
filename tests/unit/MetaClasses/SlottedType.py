@@ -34,8 +34,8 @@ Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
 from unittest              import TestCase
 
 from pyTooling.Common      import getsizeof, CurrentPlatform
-from pyTooling.MetaClasses import ExtendedType
-
+from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, \
+	BaseClassWithoutSlotsError
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -410,7 +410,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_R0 = data + 1
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(BaseClassWithoutSlotsError):
 			class Final(Primary, Secondary):
 				_data_1: int
 
@@ -489,7 +489,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_R0 = data + 1
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(BaseClassWithoutSlotsError):
 			class Merged(Primary, Secondary):
 				_data_1: int
 
@@ -600,7 +600,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -638,7 +638,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(BaseClassWithNonEmptySlotsError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -699,7 +699,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(BaseClassWithoutSlotsError):
 			class Primary(Base, metaclass=ExtendedType, useSlots=True):
 				_data_L1: int
 
@@ -778,7 +778,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_L1 = data + 1
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(BaseClassWithoutSlotsError):
 			class Secondary(Base, metaclass=ExtendedType, useSlots=True):
 				_data_R1: int
 
@@ -859,7 +859,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(BaseClassWithoutSlotsError):
 			class Final(Primary, Secondary, metaclass=ExtendedType, useSlots=True):
 				_data_2: int
 
@@ -895,7 +895,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -939,7 +939,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(BaseClassWithNonEmptySlotsError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -1034,7 +1034,7 @@ class Inheritance(TestCase):
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(BaseClassWithoutSlotsError):
 			class Final(Merged, metaclass=ExtendedType, useSlots=True):
 				_data_3: int
 
@@ -1093,7 +1093,6 @@ class Hierarchy(TestCase):
 				self._data_4 = 14
 
 		class SubGraph(Node, BaseGraph):
-			_data_4: int
 			_data_5: int
 
 			def __init__(self):

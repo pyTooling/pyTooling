@@ -50,38 +50,6 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 
 @export
-class AbstractClassError(Exception):
-	"""
-	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
-
-	.. seealso::
-
-	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
-	      |rarr| Mark a method as *abstract*.
-	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
-	      |rarr| Mark a method as *must overrride*.
-	   :py:exc:`~MustOverrideClassError`
-	      |rarr| Exception raised, if a method is marked as *must-override*.
-	"""
-
-
-@export
-class MustOverrideClassError(AbstractClassError):
-	"""
-	The exception is raised, when a class contains methods marked with *must-override*.
-
-	.. seealso::
-
-	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
-	      |rarr| Mark a method as *abstract*.
-	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
-	      |rarr| Mark a method as *must overrride*.
-	   :py:exc:`~AbstractClassError`
-	      |rarr| Exception raised, if a method is marked as *abstract*.
-	"""
-
-
-@export
 class OverloadResolutionError(Exception):
 	"""
 	The exception is raised, when no matching overloaded method was found.
