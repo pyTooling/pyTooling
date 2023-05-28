@@ -291,28 +291,33 @@ class ExtendedType(type):
 						if baseClass.__isMixin__:
 							mixinSlots.extend(baseClass.__mixinSlots__)
 		elif useSlots:
-			# Not a mixin, because it's a normal class in the primary inheritance path or the end (final) of a mixin hierarchy.
-			for secondaryBaseClass in baseClasses[1:]:
-				if secondaryBaseClass.__class__ is self:
-					if secondaryBaseClass.__isMixin__:
-						mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
+			if len(baseClasses) > 0:
+				primaryBaseClass = baseClasses[0]
+				if type(primaryBaseClass) is self:
+					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
+					
+				# Not a mixin, because it's a normal class in the primary inheritance path or the end (final) of a mixin hierarchy.
+				for secondaryBaseClass in baseClasses[1:]:
+					if secondaryBaseClass.__class__ is self:
+						if secondaryBaseClass.__isMixin__:
+							mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
+						else:
+							ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
+							ex.add_note(f"All secondary base-classes must be mixin-classes.")
+							raise ex
+					elif secondaryBaseClass.__class__ is type:
+						if secondaryBaseClass is Generic:
+							pass
+						elif hasattr(secondaryBaseClass, "__slots__") and len(secondaryBaseClass.__slots__) != 0:
+							ex = TypeError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
+							ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
+							ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
+							ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
+							raise ex
 					else:
-						ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
-						ex.add_note(f"All secondary base-classes must be mixin-classes.")
+						ex = TypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
+						ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
 						raise ex
-				elif secondaryBaseClass.__class__ is type:
-					if secondaryBaseClass is Generic:
-						pass
-					elif hasattr(secondaryBaseClass, "__slots__") and len(secondaryBaseClass.__slots__) != 0:
-						ex = TypeError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
-						ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
-						ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
-						ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
-						raise ex
-				else:
-					ex = TypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
-					ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
-					raise ex
 
 		if mixin:
 			# If it's a mixin, __slots__ must be an empty tuple.
