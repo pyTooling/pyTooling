@@ -34,20 +34,21 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
-import threading
 from functools  import wraps
 from inspect    import signature, Parameter
+from sys        import version_info
+from threading  import Condition
 from types      import MethodType, FunctionType
 from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar, Generic, Generator, Set, Iterator
 
 try:
-	from ..Exceptions import AbstractClassError
+	from ..Exceptions import ToolingException
 	from ..Decorators import export, OriginalFunction
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Exceptions import AbstractClassError
+		from Exceptions import ToolingException
 		from Decorators import export, OriginalFunction
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
@@ -55,6 +56,69 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 
 __all__ = ["M"]
+
+
+@export
+class ExtendedTypeError(ToolingException):
+	pass
+
+
+@export
+class BaseClassWithoutSlotsError(ExtendedTypeError):
+	pass
+
+
+@export
+class DuplicateFieldInSlotsError(ExtendedTypeError):
+	pass
+
+
+@export
+class AbstractClassError(ExtendedTypeError):
+	"""
+	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
+
+	.. seealso::
+
+	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	      |rarr| Mark a method as *abstract*.
+	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	      |rarr| Mark a method as *must overrride*.
+	   :py:exc:`~MustOverrideClassError`
+	      |rarr| Exception raised, if a method is marked as *must-override*.
+	"""
+	# WORKAROUND: for Python <3.10
+	# Implementing a dummy method for Python versions before
+	if version_info < (3, 11):
+		def add_note(self, message: str):
+			try:
+				self.__notes__.append(message)
+			except AttributeError:
+				self.__notes__ = [message]
+
+
+@export
+class MustOverrideClassError(AbstractClassError):
+	"""
+	The exception is raised, when a class contains methods marked with *must-override*.
+
+	.. seealso::
+
+	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	      |rarr| Mark a method as *abstract*.
+	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	      |rarr| Mark a method as *must overrride*.
+	   :py:exc:`~AbstractClassError`
+	      |rarr| Exception raised, if a method is marked as *abstract*.
+	"""
+	# WORKAROUND: for Python <3.10
+	# Implementing a dummy method for Python versions before
+	if version_info < (3, 11):
+		def add_note(self, message: str):
+			try:
+				self.__notes__.append(message)
+			except AttributeError:
+				self.__notes__ = [message]
 
 
 @export
@@ -208,12 +272,11 @@ def overloadable(method: M) -> M:
 	return method
 
 
-# TODO: allow __dict__ and __weakref__ if slotted is enabled
-
 @export
 class ExtendedType(type):
 	"""
 	.. todo:: META::ExtendedType Needs documentation.
+	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
 
 	Features:
 
@@ -250,21 +313,21 @@ class ExtendedType(type):
 		:raises AttributeError: If slot already exists in base-class.
 		"""
 		mixinSlots = []
+		# If mixin isn't set explicitly (None), then check if primary base-class is a mixin.
+		#   If so, inherit that behavior.
+		#   If it's a mixin, then aggregate all mixinSlots in a list (mixinSlots)
 		if mixin is None:
 			mixin = False
 			if len(baseClasses) > 0:
-				# If mixin isn't set explicitly (None), then check if primary base-class is a mixin.
-				#   If so, inherit the behavior.
-				#   If again a mixin, then aggregate all mixinSlots in a list
 				primaryBaseClass = baseClasses[0]
-				if primaryBaseClass.__class__ is self and primaryBaseClass.__isMixin__:
-					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
+				if isinstance(primaryBaseClass, self) and primaryBaseClass.__isMixin__:
+					# mixinSlots.extend(primaryBaseClass.__mixinSlots__)
 					mixin = True
 
 		# Inherit 'useSlots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
-			if type(primaryBaseClass) is self:
+			if isinstance(primaryBaseClass, self):
 				useSlots = primaryBaseClass.__usesSlots__
 
 		if mixin:
@@ -295,18 +358,18 @@ class ExtendedType(type):
 				primaryBaseClass = baseClasses[0]
 				if type(primaryBaseClass) is self:
 					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
-					
+
 				# Not a mixin, because it's a normal class in the primary inheritance path or the end (final) of a mixin hierarchy.
 				for secondaryBaseClass in baseClasses[1:]:
-					if secondaryBaseClass.__class__ is self:
+					if isinstance(secondaryBaseClass, self):
 						if secondaryBaseClass.__isMixin__:
 							mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
 						else:
 							ex = TypeError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
 							ex.add_note(f"All secondary base-classes must be mixin-classes.")
 							raise ex
-					elif secondaryBaseClass.__class__ is type:
-						if secondaryBaseClass is Generic:
+					elif isinstance(secondaryBaseClass, type):
+						if issubclass(secondaryBaseClass, Generic):
 							pass
 						elif hasattr(secondaryBaseClass, "__slots__") and len(secondaryBaseClass.__slots__) != 0:
 							ex = TypeError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
@@ -331,11 +394,18 @@ class ExtendedType(type):
 				if baseClass is object:
 					pass
 				elif not hasattr(baseClass, "__slots__"):
-					ex = AttributeError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
+					ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
 					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
 					raise ex
 
-			members["__slots__"] = (*mixinSlots, *self.__getSlots(baseClasses, members))
+			mixinSlots.extend(self.__getSlots(baseClasses, members))
+			if len(set(mixinSlots)) != len(mixinSlots):
+				from collections import Counter
+				duplicates = [field for field, count in Counter(mixinSlots).items() if count > 1]
+
+				raise DuplicateFieldInSlotsError(f"Duplicate fields in __slots__: {', '.join(duplicates)}")
+
+			members["__slots__"] = tuple(mixinSlots)
 			mixinSlots.clear()
 
 		# Compute abstract methods
@@ -520,7 +590,7 @@ class ExtendedType(type):
 
 			newClass.__new__ = new
 			newClass.__init__ = init
-			newClass.__singletonInstanceCond__ = threading.Condition()
+			newClass.__singletonInstanceCond__ = Condition()
 			newClass.__singletonInstanceInit__ = True
 			newClass.__singletonInstanceCache__ = None
 			return True
