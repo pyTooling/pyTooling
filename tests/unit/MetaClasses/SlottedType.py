@@ -134,6 +134,9 @@ class ObjectSizes(TestCase):
 
 
 class AttributeErrors(TestCase):
+	class Data0(metaclass=ExtendedType, useSlots=True):
+		_int_0: int
+
 	class Data1(metaclass=ExtendedType, useSlots=True):
 		_int_1: int
 
@@ -207,6 +210,14 @@ class AttributeErrors(TestCase):
 		data = self.Data2()
 		with self.assertRaises(AttributeError):
 			_ = data._int_0
+
+	def test_UninitializedSlot(self):
+		data = self.Data0()
+		with self.assertRaises(AttributeError):
+			_ = data._int_0
+
+		data._int_0 = 1
+		_ = data._int_0
 
 
 class Inheritance(TestCase):
@@ -1102,3 +1113,24 @@ class Hierarchy(TestCase):
 
 		sg = SubGraph()
 		sg.test_BaseGraph()
+
+	def test_YAMLConfigurationInheritanceHierarchy(self):
+		class Node0(metaclass=ExtendedType, useSlots=True):
+			_data_0: int
+
+		class Dict0(Node0, mixin=True):
+			_data_10: int
+
+		class Config0(Node0, mixin=True):
+			_data_11: int
+
+		class Node(Node0, mixin=False):
+			_data_2: int
+
+		class Dict(Node, Dict0, mixin=False):
+			_data_3: int
+
+		class Config(Dict, Config0):
+			_data_4: int
+
+		c = Config()
