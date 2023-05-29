@@ -72,6 +72,67 @@ class.
    N = A.N
    print(isnestedclass(N, A))
 
+
+.. _COMMON/Helper/firstKey:
+
+firstKey
+********
+
+:py:func:`~pyTooling.Common.firstKey` returns the first key from a dictionary.
+
+.. code-block:: Python
+
+   d = {}
+   d["a"] = 1
+   d["b"] = 2
+
+   k = firstKey(d)
+   # "a"
+
+.. hint:: The dictionary should be an order preserving dictionary, otherwise the "first" item is not defined and can
+   return any item.
+
+
+.. _COMMON/Helper/firstValue:
+
+firstValue
+**********
+
+:py:func:`~pyTooling.Common.firstValue` returns the first value from a dictionary.
+
+.. code-block:: Python
+
+   d = {}
+   d["a"] = 1
+   d["b"] = 2
+
+   k = firstValue(d)
+   # 1
+
+.. hint:: The dictionary should be an order preserving dictionary, otherwise the "first" item is not defined and can
+   return any item.
+
+
+.. _COMMON/Helper/firstItem:
+
+firstItem
+*********
+
+:py:func:`~pyTooling.Common.firstItem` returns the first item (key-value-pair tuple) from a dictionary.
+
+.. code-block:: Python
+
+   d = {}
+   d["a"] = 1
+   d["b"] = 2
+
+   k = firstItem(d)
+   # ("a", 1)
+
+.. hint:: The dictionary should be an order preserving dictionary, otherwise the "first" item is not defined and can
+   return any item.
+
+
 .. _COMMON/Helper/mergedicts:
 
 mergedicts
@@ -88,7 +149,7 @@ applied to every element during the merge operation.
    dictB = {21: "21", 22: "22", 23: "23"}
 
    mergedDict = mergedicts(dictA, dictB)
-
+   # {11: "11", 12: "12", 13: "13", 21: "21", 22: "22", 23: "23"}
 
 .. _COMMON/Helper/zipdicts:
 
@@ -98,7 +159,7 @@ zipdicts
 :py:func:`~pyTooling.Common.zipdicts` is a generator that iterates multiple dictionaries simultaneously. It expects
 multiple dictionary objects (fulfilling the mapping protocol) as positional parameters.
 
-An exception is raise, if not all dictionary objects have the same number of items. Also an exception is raised, if a
+An exception is raised, if not all dictionary objects have the same number of items. Also an exception is raised, if a
 key doesn't exist in all dictionaries.
 
 .. rubric:: Example:
