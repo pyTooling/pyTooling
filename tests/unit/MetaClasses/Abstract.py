@@ -29,7 +29,12 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Abstract`.
+Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
+
+This test suite tests decorators:
+
+* :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+* :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
 """
 from unittest              import TestCase
 

@@ -14,6 +14,7 @@ sphinxcontrib-mermaid>=0.8.1
 #sphinxcontrib-spelling>=2.2.0
 autoapi>=2.0.1
 sphinx_fontawesome>=0.0.6
+sphinx-inline-tabs>=2023.4.21
 sphinx_autodoc_typehints>=1.19.5
 # changelog>=0.3.5
 
