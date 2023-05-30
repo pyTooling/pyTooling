@@ -668,5 +668,5 @@ class ExtendedType(type):
 
 
 @export
-class ObjectWithSlots(metaclass=ExtendedType, useSlots=True):
+class SlottedObject(metaclass=ExtendedType, useSlots=True):
 	"""Classes derived from this class will store all members in ``__slots__``."""
