@@ -24,25 +24,82 @@ The abstracted data model is based on a common :py:class:`~pyTooling.Configurati
 .. inheritance-diagram:: pyTooling.Configuration
    :parts: 1
 
-Sequences
-*********
-
-A :py:class:`~pyTooling.Configuration.Sequence` represents ordered information items.
-
-.. todo:: CONFIG:: Needs documentation for Sequences
-
 Dictionary
 **********
 
 A :py:class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of information.
 
+.. tab:: JSON
+
+   .. code-block:: JSON
+
+      {"key1": "item1", "key2": "item2", "key3": "item3"}
+
+.. tab:: YAML
+
+   .. code-block:: JSON
+
+      key1: item1
+      key2: item2
+      key3: item3
+
 .. todo:: CONFIG:: Needs documentation for Dictionary
+
+Sequences
+*********
+
+A :py:class:`~pyTooling.Configuration.Sequence` represents ordered information items.
+
+.. tab:: JSON
+
+   .. code-block:: JSON
+
+      ["item1", "item2", "item3"]
+
+.. tab:: YAML
+
+   .. code-block:: JSON
+
+      - item1
+      - item2
+      - item3
+
+.. todo:: CONFIG:: Needs documentation for Sequences
 
 Configuration
 *************
 
 A :py:class:`~pyTooling.Configuration.Configuration` represents the whole configuration (file) made of sequences,
 dictionaries and scalar information items.
+
+.. tab:: JSON
+
+   .. code-block:: JSON
+
+      { "version": "1.0",
+        "settings": {
+          "key1": "item1",
+          "key2": "item2"
+        },
+        "files": [
+          "path/to/file1.ext",
+          "path/to/file2.ext",
+          "path/to/file3.ext"
+        ]
+      }
+
+.. tab:: YAML
+
+   .. code-block:: JSON
+
+      version: "1.0"
+      settings:
+        key1: item1
+        key2: item2
+      files:
+        - path/to/file1.ext
+        - path/to/file2.ext
+        - path/to/file3.ext
 
 .. todo:: CONFIG:: Needs documentation for Configuration
 
@@ -86,28 +143,36 @@ Follow these steps to derive a concrete implementation of the abstract configura
       @export
       class Node(Abstract_Node):
         _configNode: Union[CommentedMap, CommentedSeq]
+        # further local fields
 
         def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: Union[CommentedMap, CommentedSeq]):
-          super().__init__(root, parent)
+          Abstract_Node.__init__(self, root, parent)
+
           self._configNode = configNode
+
+        # Implement mandatory methods and properties
 
 3. Derive a dictionary class:
 
    .. code-block:: python
 
       @export
-      class Dictionary(Abstract_Dict, Node):
+      class Dictionary(Node, Abstract_Dict):
         def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedMap):
           Node.__init__(self, root, parent, key, configNode)
+
+        # Implement mandatory methods and properties
 
 4. Derive a sequence class:
 
    .. code-block:: python
 
       @export
-      class Sequence(Abstract_Seq, Node):
+      class Sequence(Node, Abstract_Seq):
         def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedSeq):
           Node.__init__(self, root, parent, key, configNode)
+
+        # Implement mandatory methods and properties
 
 5. Set new dictionary and sequence classes as types in the abstract node class.
 
@@ -121,11 +186,11 @@ Follow these steps to derive a concrete implementation of the abstract configura
    .. code-block:: python
 
       @export
-      class Configuration(Abstract_Configuration, Dictionary):
+      class Configuration(Dictionary, Abstract_Configuration):
         def __init__(self, configFile: Path):
-          Abstract_Configuration.__init__(self)
-
           with configFile.open() as file:
             self._config = ...
 
           Dictionary.__init__(self, self, self, None, self._config)
+
+        # Implement mandatory methods and properties
