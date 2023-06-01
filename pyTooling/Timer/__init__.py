@@ -37,11 +37,11 @@ from time import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
 
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import ObjectWithSlots
+from pyTooling.MetaClasses import SlottedObject
 
 
 @export
-class Timer(ObjectWithSlots):
+class Timer(SlottedObject):
 	"""
 	Undocumented.
 
