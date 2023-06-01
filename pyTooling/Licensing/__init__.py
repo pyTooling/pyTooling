@@ -74,7 +74,7 @@ __all__ = [
 
 @export
 @dataclass
-class PythonLicenseNames:
+class PythonLicenseName:
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
 
 	ShortName: str    #: License's short name
@@ -90,11 +90,11 @@ class PythonLicenseNames:
 
 
 #: Mapping of SPDX identifiers to Python license names
-PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
-	"Apache-2.0":       PythonLicenseNames("Apache 2.0",       "Apache Software License"),
-	"BSD-3-Clause":     PythonLicenseNames("BSD",              "BSD License"),
-	"MIT":              PythonLicenseNames("MIT",              "MIT License"),
-	"GPL-2.0-or-later": PythonLicenseNames("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
+PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseName] = {
+	"Apache-2.0":       PythonLicenseName("Apache 2.0",       "Apache Software License"),
+	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
+	"MIT":              PythonLicenseName("MIT",              "MIT License"),
+	"GPL-2.0-or-later": PythonLicenseName("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
 }
 
 
@@ -158,7 +158,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		:raises ValueError: If there is no license name defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
-			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
 			raise ValueError("License has no Python specify information.") from ex
 
@@ -177,7 +177,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		   List of `Python classifiers <https://pypi.org/classifiers/>`__
 		"""
 		try:
-			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
 			raise ValueError(f"License has no Python specify information.") from ex
 
