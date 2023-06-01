@@ -261,6 +261,7 @@ License
    DataStructures/index
    DataStructures/Graph
    DataStructures/Path/index
+   DataStructures/StateMachine
    DataStructures/Tree
 
 .. toctree::
