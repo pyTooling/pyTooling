@@ -33,7 +33,7 @@ Abstract configuration reader.
 
 .. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
 """
-from typing        import Union, ClassVar, Iterator
+from typing        import Union, ClassVar, Iterator, Type
 
 from ..Decorators  import export
 from ..MetaClasses import ExtendedType
@@ -48,12 +48,18 @@ ValueT = Union[NodeT, str, int, float]
 class Node(metaclass=ExtendedType, useSlots=True):
 	"""Abstract node in a configuration data structure."""
 
-	DICT_TYPE: ClassVar["Dictionary"]
-	SEQ_TYPE: ClassVar["Sequence"]
-	_parent: "Dictionary"
-	_root: "Configuration"
+	DICT_TYPE: ClassVar[Type["Dictionary"]]  #: Type reference used when instantiating new dictionaries
+	SEQ_TYPE:  ClassVar[Type["Sequence"]]    #: Type reference used when instantiating new sequences
+	_root:     "Configuration"               #: Reference to the root node.
+	_parent:   "Dictionary"                  #: Reference to a parent node.
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a node.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
 		self._root = root
 		self._parent = parent
 
@@ -86,6 +92,12 @@ class Dictionary(Node, mixin=True):
 	"""Abstract dictionary node in a configuration."""
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a dictionary.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
 		Node.__init__(self, root, parent)
 
 	def __contains__(self, key: KeyT) -> bool:
@@ -97,6 +109,12 @@ class Sequence(Node, mixin=True):
 	"""Abstract sequence node in a configuration."""
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a sequence.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
 		Node.__init__(self, root, parent)
 
 	def __getitem__(self, index: int) -> ValueT:
@@ -115,4 +133,10 @@ class Configuration(Node, mixin=True):
 	"""Abstract root node in a configuration."""
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a configuration.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
 		Node.__init__(self, root, parent)
