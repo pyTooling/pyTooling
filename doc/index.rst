@@ -53,6 +53,8 @@ This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 
 * :ref:`COMMON/Helper/getsizeof` calculates the "real" size of a data structure.
 * :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
+* :ref:`COMMON/Helper/firstKey`, :ref:`COMMON/Helper/firstValue`, :ref:`COMMON/Helper/firstItem` get the first
+  key/value/item from an ordered dictionary.
 * :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
 * :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
 
@@ -96,6 +98,9 @@ pyTooling also provides fast and powerful data structures offering object-orient
   class.
 * :ref:`Path data structure <STRUCT/Path>` |br|
   |rarr| To be documented.
+* :ref:`Finite State Machine data structure <STRUCT/StateMachine>` |br|
+  |rarr| A data model for state machines using :class:`pyTooling.StateMachine.State` and
+  :class:`pyTooling.StateMachine.Transition` classes.
 * :ref:`Tree data structure <STRUCT/Tree>` |br|
   |rarr| A fast and simple implementation using a single :class:`pyTooling.Tree.Node` class.
 
@@ -106,22 +111,32 @@ pyTooling also provides fast and powerful data structures offering object-orient
 Decorators
 ==========
 
-* :ref:`Abstract Methods <META/Abstract>`
+* :ref:`META/Abstract`
 
-  * Methods marked with :func:`~pyTooling.MetaClasses.abstractmethod` are abstract and need to be overwritten in a
+  * Methods marked with :ref:`DECO/AbstractMethod` are abstract and need to be overwritten in a
     derived class. |br|
     An *abstract method* might be called from the overwriting method.
-  * Methods marked with :func:`~pyTooling.MetaClasses.mustoverride` are abstract and need to be overridden in a
+  * Methods marked with :ref:`DECO/MustOverride` are abstract and need to be overridden in a
     derived class. |br|
     It's not allowed to call a *mustoverride method*.
 
-* :ref:`Documentation <DECO/Documentation>`
+* :ref:`DECO/DataAccess`
 
-  * Copy the doc-string from given base-class via :class:`~pyTooling.Decorators.InheritDocString`.
+  * :ref:`DECO/readonly`
+  * :ref:`DECO/classproperty`
 
-* :ref:`Visibility <DECO/Visibility>`
+* :ref:`DECO/Documentation`
 
-  * Register the given function or class as publicly accessible in a module via :class:`~pyTooling.Decorators.export`.
+  * Register the given function or class as publicly accessible in a module via :ref:`DECO/export`. |br|
+    This is also used by Sphinx extensions to (auto-)document public module members.
+  * Copy the doc-string from given base-class via :ref:`DECO/InheritDocString`.
+
+* :ref:`DECO/Misc`
+
+  * The :ref:`DECO/notimplemented` decorator replaces a callable (function or method) with a callable raising a
+    :exc:`NotImplementedError`. The original code gets unreachable.
+  * If a callable gets replaced or wrapped by a e.g. a decorator, the :ref:`DECO/OriginalFunction` decorator can be used
+    to preserve a reference to the original callable.
 
 
 Exceptions

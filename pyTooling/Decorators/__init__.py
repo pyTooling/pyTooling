@@ -33,15 +33,16 @@
 .. hint:: See :ref:`high-level help <DECO>` for explanations and usage examples.
 """
 import sys
+from functools import wraps
 from types     import FunctionType
-from typing import Union, Type, TypeVar, Callable, Any
+from typing    import Union, Type, TypeVar, Callable, Any
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
 try:
 	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
-	from typing import ParamSpec    # exists since Python 3.10
+	from typing import ParamSpec                     # WORKAROUND: exists since Python 3.10
 
 	Param = ParamSpec("Param")                       #: A parameter specification for function or method
 	RetType = TypeVar("RetType")                     #: Type variable for a return type
@@ -52,7 +53,8 @@ except ImportError:  # pragma: no cover
 	Func = Callable[..., RetType]                    #: Type specification for a function
 
 
-T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class or function
+T = TypeVar("T", bound=Union[Type, FunctionType])  #: A type variable for a classes or functions.
+C = TypeVar("C", bound=Callable)                   #: A type variable for functions or methods.
 
 
 def export(entity: T) -> T:
@@ -62,27 +64,21 @@ def export(entity: T) -> T:
 	Creates or updates the ``__all__`` attribute in the module in which the decorated entity is defined to include the
 	name of the decorated entity.
 
-	.. admonition:: ``to_export.py``
-
-	   .. code-block:: python
-
-	      from pyTooling.Decorators import export
-
-	      @export
-	      def exported():
-	        pass
-
-	      def not_exported():
-	        pass
-
-	.. admonition:: ``another_file.py``
-
-	   .. code-block:: python
-
-	      from .to_export import *
-
-	      assert "exported" in globals()
-	      assert "not_exported" not in globals()
+	+---------------------------------------------+------------------------------------------------+
+	| ``to_export.py``                            | ``another_file.py``                            |
+	+=============================================+================================================+
+	| .. code-block:: python                      | .. code-block:: python                         |
+	|                                             |                                                |
+	|    from pyTooling.Decorators import export  |    from .to_export import *                    |
+	|                                             |                                                |
+	|    @export                                  |                                                |
+	|    def exported():                          |    # 'exported' will be listed in __all__      |
+	|      pass                                   |    assert "exported"         in globals()      |
+	|                                             |                                                |
+	|    def not_exported():                      |    # 'not_exported' won't be listed in __all__ |
+	|      pass                                   |    assert "not_exported" not in globals()      |
+	|                                             |                                                |
+	+---------------------------------------------+------------------------------------------------+
 
 	:param entity:          The function or class to include in `__all__`.
 	:returns:               The unmodified function or class.
@@ -117,6 +113,45 @@ def export(entity: T) -> T:
 		module.__all__ = [entity.__name__]	      # type: ignore
 
 	return entity
+
+
+@export
+def notimplemented(message: str) -> Callable:
+	"""
+	Mark a method as *not implemented* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
+
+	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacing method. In
+	additional the field ``<method>.__notImplemented__`` is added.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      class Data:
+	        @notimplemented
+	        def method(self) -> bool:
+	          '''This method needs to be implemented'''
+	          return True
+
+	:param method: Method that is marked as *not implemented*.
+	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+
+	.. seealso::
+
+	   * :func:`~pyTooling.Metaclasses.abstractmethod`
+	   * :func:`~pyTooling.Metaclasses.mustoverride`
+	"""
+
+	def decorator(method: C) -> C:
+		@OriginalFunction(method)
+		@wraps(method)
+		def func(*_, **__):
+			raise NotImplementedError(message)
+
+		func.__notImplemented__ = True
+		return func
+
+	return decorator
 
 
 @export

@@ -10,7 +10,7 @@ implementing ``__call__``. Decorator can accept parameters, when a decorator fac
 
 The decorator syntax of Python is syntactic sugar for a function call.
 
-See :ref:`DECO` for decorators offered by pyTooling.
+See also :ref:`decorators offered by pyTooling <DECO>`.
 
 .. hint::
 
