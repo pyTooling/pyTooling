@@ -122,8 +122,8 @@ Decorators
 
 * :ref:`DECO/DataAccess`
 
-  * :ref:`DECO/readonly`
-  * :ref:`DECO/classproperty`
+  * Methods with :ref:`DECO/readonly` decorator transform a method into a read-only property.
+  * ⚠BROKEN⚠: Methods with :ref:`DECO/classproperty` decorator transform methods to class-properties.
 
 * :ref:`DECO/Documentation`
 
@@ -159,7 +159,7 @@ This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :
 
 :pycode:`class MyClass(metaclass=ExtendedType):`
   A class definition using that meta-class can implement :ref:`abstract methods <META/Abstract>` using decorators
-  :pycode:`@abstractmethod` or :pycode:`@mustoverride`.
+  :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
 
 :pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
   A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
@@ -172,9 +172,13 @@ This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :
   as well as the field access performance of all class instances. This behavior is automatically inherited to all
   derived classes.
 
-:pycode:`class MyClass(ObjectWithSlots):`
-  A class definition deriving from :class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
-  behavior to that class and all derived classes.
+:pycode:`class MyClass(metaclass=ExtendedType, useSlots=True, mixin=True):`
+  A class defined with enabled :ref:`mixin <META/Mixin>` behavior collects instance fields so they can be added to
+  slots in a derived class.
+
+:pycode:`class MyClass(SlottedObject):`
+  A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` will bring the slotted type behavior to
+  that class and all derived classes.
 
 
 Packaging
