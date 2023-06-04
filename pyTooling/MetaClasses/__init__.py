@@ -204,6 +204,50 @@ M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
 @export
+def notimplemented(message: str) -> Callable:
+	"""
+	Mark a method as *not implemented* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
+
+	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacing method. In
+	additional the field ``<method>.__notImplemented__`` is added.
+
+	.. warning::
+
+	   This decorator should be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      class Data(mataclass=ExtendedType):
+	        @notimplemented
+	        def method(self) -> bool:
+	          '''This method needs to be implemented'''
+	          return True
+
+	:param method: Method that is marked as *not implemented*.
+	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+
+	.. seealso::
+
+	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
+	   * :func:`~pyTooling.Metaclasses.abstractmethod`
+	   * :func:`~pyTooling.Metaclasses.mustoverride`
+	"""
+
+	def decorator(method: M) -> M:
+		@OriginalFunction(method)
+		@wraps(method)
+		def func(*_, **__):
+			raise NotImplementedError(message)
+
+		func.__notImplemented__ = True
+		return func
+
+	return decorator
+
+
+@export
 def abstractmethod(method: M) -> M:
 	"""
 	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
