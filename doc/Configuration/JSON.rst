@@ -40,6 +40,16 @@ Module :mod:`~pyTooling.Configuration.JSON` provides a configuration reader impl
         }
       }
 
+.. seealso::
+
+   ECMA Standard 404
+     https://www.ecma-international.org/publications-and-standards/standards/ecma-404/
+   Official JSON Website
+     https://www.json.org/json-en.html
+   Wikipedia
+     https://en.wikipedia.org/wiki/JSON
+
+
 Reading a JSON Formatted Config File
 ====================================
 
