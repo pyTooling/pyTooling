@@ -331,7 +331,6 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		mixinSlots = []
 		# If mixin isn't set explicitly (None), then check if primary base-class is a mixin.
 		#   If so, inherit that behavior.
 		#   If it's a mixin, then aggregate all mixinSlots in a list (mixinSlots)
@@ -349,6 +348,28 @@ class ExtendedType(type):
 			if isinstance(primaryBaseClass, self):
 				useSlots = primaryBaseClass.__usesSlots__
 
+		# members gets modified
+		mixinSlots, members = self._aggregateMixinSlots(className, baseClasses, members, mixin, useSlots)
+
+		# Compute abstract methods
+		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
+
+		# Create a new class
+		newClass = type.__new__(self, className, baseClasses, members)
+		newClass.__usesSlots__ = useSlots
+		newClass.__isMixin__ = mixin
+		newClass.__mixinSlots__ = (*mixinSlots, )
+
+		# Search in inheritance tree for abstract methods
+		newClass.__abstractMethods__ = abstractMethods
+		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		return newClass
+
+	@classmethod
+	def _aggregateMixinSlots(self, className, baseClasses, members, mixin, useSlots):
+		mixinSlots = []
 		if mixin:
 			if len(baseClasses) > 0:
 				inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
@@ -427,21 +448,7 @@ class ExtendedType(type):
 			members["__slots__"] = tuple(mixinSlots)
 			mixinSlots.clear()
 
-		# Compute abstract methods
-		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
-
-		# Create a new class
-		newClass = type.__new__(self, className, baseClasses, members)
-		newClass.__usesSlots__ = useSlots
-		newClass.__isMixin__ = mixin
-		newClass.__mixinSlots__ = (*mixinSlots, )
-
-		# Search in inheritance tree for abstract methods
-		newClass.__abstractMethods__ = abstractMethods
-		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
-		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
-
-		return newClass
+		return mixinSlots, members
 
 	@classmethod
 	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
