@@ -31,12 +31,95 @@
 """Unit tests for Decorators."""
 from unittest import TestCase
 
-from pyTooling.Decorators import InheritDocString, OriginalFunction, classproperty
+from pytest   import mark
+
+from pyTooling.Decorators import export, InheritDocString, OriginalFunction, classproperty, readonly
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
+
+
+__all__ = []
+
+
+@export
+class exported:
+	pass
+
+
+class notexported:
+	pass
+
+
+class Export(TestCase):
+	def test_Export(self):
+		self.assertIn(exported.__name__, __all__)
+		self.assertNotIn(notexported.__name__, __all__)
+
+
+class ReadOnly(TestCase):
+	def test_ReadOnly(self):
+		class Data:
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
+			@readonly
+			def length(self) -> int:
+				return 2 ** self._data
+
+		d = Data(2)
+		self.assertEqual(4, d.length)
+		with self.assertRaises(AttributeError):
+			d.length = 5
+		with self.assertRaises(AttributeError):
+			del d.length
+
+	# FIXME: needs to be activated and tested
+	@mark.skip("EXPECTED ERROR IS NOT RAISED")
+	def test_Setter(self):
+		with self.assertRaises(AttributeError):
+			class Data:
+				_data: int
+
+				def __init__(self, data: int):
+					self._data = data
+
+				@readonly
+				def length(self) -> int:
+					return 2 ** self._data
+
+				@length.setter
+				def length(self, value):
+					self._data = value
+
+			d = Data(6)
+			d.length = 16
+
+	# FIXME: needs to be activated and tested
+	@mark.skip("EXPECTED ERROR IS NOT RAISED")
+	def test_Deleter(self):
+		with self.assertRaises(AttributeError):
+			class Data:
+				_data: int
+
+				def __init__(self, data: int):
+					self._data = data
+
+				@readonly
+				def length(self) -> int:
+					return 2 ** self._data
+
+				@length.deleter
+				def length(self, value):
+					del self._data
+
+			d = Data(7)
+			del d.length
 
 
 class InheritDocStrings(TestCase):
