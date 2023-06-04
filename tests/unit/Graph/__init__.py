@@ -29,11 +29,12 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.Graph."""
-from typing import Any, Optional as Nullable, List, Tuple
+from typing   import Any, Optional as Nullable, List, Tuple
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException, DuplicateEdgeError, \
-	Edge, NotInSameGraph, Link
+from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View
+from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")

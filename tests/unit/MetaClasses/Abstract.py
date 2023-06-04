@@ -49,18 +49,28 @@ if __name__ == "__main__":  # pragma: no cover
 class AbstractMethod(TestCase):
 	def test_AbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
 			@abstractmethod
 			def AbstractMethod(self) -> bool:
 				return False
 
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:
-			AbstractBase()
+			AbstractBase(1)
 
 		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
 
 	def test_AbstractClass(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
 			@abstractmethod
 			def AbstractMethod(self) -> bool:
 				return False
@@ -69,13 +79,18 @@ class AbstractMethod(TestCase):
 			pass
 
 		with self.assertRaises(AbstractClassError) as ExceptionCapture:
-			AbstractClass()
+			AbstractClass(2)
 
 		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
 
 	def test_DerivedAbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
 			@abstractmethod
 			def AbstractMethod(self) -> bool:
 				return False
@@ -84,7 +99,7 @@ class AbstractMethod(TestCase):
 			def AbstractMethod(self) -> bool:
 				return super().AbstractMethod()
 
-		derived = DerivedAbstractBase()
+		derived = DerivedAbstractBase(3)
 
 		with self.assertRaises(NotImplementedError) as ExceptionCapture:
 			derived.AbstractMethod()
@@ -93,6 +108,11 @@ class AbstractMethod(TestCase):
 
 	def test_DoubleDerivedAbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
 			@abstractmethod
 			def AbstractMethod(self) -> bool:
 				return False
@@ -104,7 +124,7 @@ class AbstractMethod(TestCase):
 		class DoubleDerivedAbstractBase(DerivedAbstractBase):
 			pass
 
-		derived = DoubleDerivedAbstractBase()
+		derived = DoubleDerivedAbstractBase(4)
 
 		with self.assertRaises(NotImplementedError) as ExceptionCapture:
 			derived.AbstractMethod()
@@ -113,6 +133,11 @@ class AbstractMethod(TestCase):
 
 	def test_DerivedAbstractClass(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
 			@abstractmethod
 			def AbstractMethod(self) -> bool:
 				return False
@@ -124,7 +149,7 @@ class AbstractMethod(TestCase):
 			def AbstractMethod(self) -> bool:
 				return super().AbstractMethod()
 
-		derived = DerivedAbstractClass()
+		derived = DerivedAbstractClass(5)
 
 		with self.assertRaises(NotImplementedError) as ExceptionCapture:
 			derived.AbstractMethod()
@@ -133,6 +158,11 @@ class AbstractMethod(TestCase):
 
 	def test_MultipleInheritance(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
 			@abstractmethod
 			def AbstractMethod(self) -> bool:
 				return False
@@ -144,7 +174,7 @@ class AbstractMethod(TestCase):
 		class MultipleInheritance(AbstractBase, Mixin):
 			pass
 
-		derived = MultipleInheritance()
+		derived = MultipleInheritance(6)
 		derived.AbstractMethod()
 
 
