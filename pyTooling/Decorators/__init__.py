@@ -181,6 +181,21 @@ def classproperty(method):
 
 
 @export
+def readonly(func: FunctionType) -> property:
+	"""
+	Marks a property as *read-only*.
+
+	It will remove ``<property>.setter`` and ``<property>.deleter``.
+
+	:param func:
+	:return:
+	"""
+	prop = property(fget=func, fset=None, fdel=None, doc=func.__doc__)
+
+	return prop
+
+
+@export
 def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 	"""
 	Store a reference to the original function/method on a new, wrapper or replacement function/method.
