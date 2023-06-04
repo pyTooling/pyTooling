@@ -113,7 +113,7 @@ the mandatory dependencies too.
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `mypy <https://GitHub.com/python/mypy>`__                           | ≥1.2.0      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `typing-extensions <https://GitHub.com/python/typing_extensions>`__ | ≥4.6.2      | `PSF-2.0 <https://github.com/python/typing_extensions/blob/main/LICENSE>`__            | *Not yet evaluated.* |
+| `typing-extensions <https://GitHub.com/python/typing_extensions>`__ | ≥4.6.3      | `PSF-2.0 <https://github.com/python/typing_extensions/blob/main/LICENSE>`__            | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `lxml <https://GitHub.com/lxml/lxml>`__                             | ≥4.9        | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
