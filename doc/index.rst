@@ -83,7 +83,7 @@ Various file formats suitable for configuration information share the same featu
 :ref:`abstract configuration file data model <CONFIG>` supporting these features. Moreover, concrete
 :ref:`configuration file format reader <CONFIG/FileFormat>` implementations are provided as well.
 
-* :ref:`JSON configuration reader <CONFIG/FileFormat/JSON>` |rarr| To be implemented.
+* :ref:`JSON configuration reader <CONFIG/FileFormat/JSON>` for the JSON file format.
 * :ref:`TOML configuration reader <CONFIG/FileFormat/TOML>`  |rarr| To be implemented.
 * :ref:`YAML configuration reader <CONFIG/FileFormat/YAML>` for the YAML file format.
 
