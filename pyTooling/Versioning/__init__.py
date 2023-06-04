@@ -110,7 +110,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both version numbers are equal.
-		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -128,7 +128,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both version numbers are not equal.
-		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -138,7 +138,7 @@ class SemVersion(metaclass=Overloading):
 	@staticmethod
 	def __compare(left: 'SemVersion', right: 'SemVersion') -> Nullable[bool]:
 		"""
-		Private helper method to compute the comparison of two :py:class:`SemVersion` instances.
+		Private helper method to compute the comparison of two :class:`SemVersion` instances.
 
 		:param left:  Left parameter.
 		:param right: Right parameter.
@@ -174,7 +174,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is less than the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -188,7 +188,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is less than or equal to the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -202,7 +202,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is greater than the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
@@ -215,7 +215,7 @@ class SemVersion(metaclass=Overloading):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is greater than or equal to the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :py:class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
 		if not isinstance(other, SemVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")

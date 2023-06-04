@@ -56,7 +56,7 @@ class OverloadResolutionError(Exception):
 
 	.. seealso::
 
-	   :py:func:`@overloadable <pyTooling.MetaClasses.overloadable>`
+	   :func:`@overloadable <pyTooling.MetaClasses.overloadable>`
 	      |rarr| Mark a method as *overloadable*.
 	"""
 	# WORKAROUND: for Python <3.11
@@ -72,7 +72,7 @@ class OverloadResolutionError(Exception):
 
 @export
 class ExceptionBase(Exception):
-	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
+	"""Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions."""
 
 	def __init__(self, message: str = ""):
 		"""
@@ -122,7 +122,7 @@ class NotConfiguredException(ExceptionBase):
 
 @export
 class ToolingException(Exception):
-	"""the exception is raised by pyTooling internal features."""
+	"""The exception is raised by pyTooling internal features."""
 
 	# WORKAROUND: for Python <3.11
 	# Implementing a dummy method for Python versions before

@@ -8,15 +8,15 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
 Introduction
 ************
 
-This package offers a :py:class:`pyTooling.TerminalUI.LineTerminal` implementation, derived from a basic
-:py:class:`pyTooling.TerminalUI.Terminal` class. It eases the creation of simple terminal/console applications. It
+This package offers a :class:`pyTooling.TerminalUI.LineTerminal` implementation, derived from a basic
+:class:`pyTooling.TerminalUI.Terminal` class. It eases the creation of simple terminal/console applications. It
 includes colored outputs based on `colorama`.
 
 List of base-classes
 ********************
 
-* :py:class:`pyTooling.TerminalUI.Terminal`
-* :py:class:`pyTooling.TerminalUI.LineTerminal`
+* :class:`pyTooling.TerminalUI.Terminal`
+* :class:`pyTooling.TerminalUI.LineTerminal`
 
 
 Example

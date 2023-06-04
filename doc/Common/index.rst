@@ -4,7 +4,7 @@
 Common Helper Functions
 #######################
 
-The :py:mod:`pyTooling.Common` package contains several useful helper functions, which are explained in the following
+The :mod:`pyTooling.Common` package contains several useful helper functions, which are explained in the following
 sections.
 
 .. contents:: Table of Contents
@@ -16,7 +16,7 @@ sections.
 getsizeof
 *********
 
-The :py:func:`~pyTooling.Common.getsizeof` functions returns the "true" size of a Python object including auxiliary data
+The :func:`~pyTooling.Common.getsizeof` functions returns the "true" size of a Python object including auxiliary data
 structures.
 
 .. rubric:: Example:
@@ -34,20 +34,20 @@ structures.
 
 .. rubric:: Details
 
-In addition to :py:func:`sys.getsizeof`, the used algorithm accounts also for:
+In addition to :func:`sys.getsizeof`, the used algorithm accounts also for:
 
 * ``__dict__``
 * ``__slots__``
 * iterable members made of:
 
-  * :py:class:`tuple`
-  * :py:class:`list`
-  * :py:class:`typing.Set`
-  * :py:class:`collection.deque`
+  * :class:`tuple`
+  * :class:`list`
+  * :class:`typing.Set`
+  * :class:`collection.deque`
 
 .. admonition:: Background Information
 
-   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
+   The function :func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
    overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 
@@ -56,7 +56,7 @@ In addition to :py:func:`sys.getsizeof`, the used algorithm accounts also for:
 isnestedclass
 *************
 
-The :py:func:`~pyTooling.Common.isnestedclass` functions returns true, if a class is a nested class inside another
+The :func:`~pyTooling.Common.isnestedclass` functions returns true, if a class is a nested class inside another
 class.
 
 .. rubric:: Example:
@@ -78,7 +78,7 @@ class.
 firstKey
 ********
 
-:py:func:`~pyTooling.Common.firstKey` returns the first key from a dictionary.
+:func:`~pyTooling.Common.firstKey` returns the first key from a dictionary.
 
 .. code-block:: Python
 
@@ -98,7 +98,7 @@ firstKey
 firstValue
 **********
 
-:py:func:`~pyTooling.Common.firstValue` returns the first value from a dictionary.
+:func:`~pyTooling.Common.firstValue` returns the first value from a dictionary.
 
 .. code-block:: Python
 
@@ -118,7 +118,7 @@ firstValue
 firstItem
 *********
 
-:py:func:`~pyTooling.Common.firstItem` returns the first item (key-value-pair tuple) from a dictionary.
+:func:`~pyTooling.Common.firstItem` returns the first item (key-value-pair tuple) from a dictionary.
 
 .. code-block:: Python
 
@@ -138,7 +138,7 @@ firstItem
 mergedicts
 **********
 
-:py:func:`~pyTooling.Common.mergedicts` merges multiple dictionaries into a new single dictionary. It accepts an
+:func:`~pyTooling.Common.mergedicts` merges multiple dictionaries into a new single dictionary. It accepts an
 arbitrary number of dictionaries to merge. Optionally, the named parameter ``func`` accepts a function that can be
 applied to every element during the merge operation.
 
@@ -156,7 +156,7 @@ applied to every element during the merge operation.
 zipdicts
 ********
 
-:py:func:`~pyTooling.Common.zipdicts` is a generator that iterates multiple dictionaries simultaneously. It expects
+:func:`~pyTooling.Common.zipdicts` is a generator that iterates multiple dictionaries simultaneously. It expects
 multiple dictionary objects (fulfilling the mapping protocol) as positional parameters.
 
 An exception is raised, if not all dictionary objects have the same number of items. Also an exception is raised, if a

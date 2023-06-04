@@ -52,7 +52,7 @@ DictValueType = TypeVar("DictValueType")
 
 @export
 class TreeException(ToolingException):
-	"""Base exception of all exceptions raised by :py:mod:`pyTooling.Tree`."""
+	"""Base exception of all exceptions raised by :mod:`pyTooling.Tree`."""
 
 
 @export
@@ -108,31 +108,31 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
 	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the
-	root node (:py:attr:`_root`). In case of adding a tree to an existing tree, such data structures get merged and all added
-	nodes get assigned with new root references. Use the read-only property :py:attr:`Root` to access the root reference.
+	root node (:attr:`_root`). In case of adding a tree to an existing tree, such data structures get merged and all added
+	nodes get assigned with new root references. Use the read-only property :attr:`Root` to access the root reference.
 
-	The reference to the parent node (:py:attr:`_parent`) can be access via property :py:attr:`Parent`. If the property's setter
+	The reference to the parent node (:attr:`_parent`) can be access via property :attr:`Parent`. If the property's setter
 	is used, a node and all its siblings are added to another tree or to a new position in the same tree.
 
-	The references to all node's children is stored in a list (:py:attr:`_children`). Children, siblings, ancestors, can be
+	The references to all node's children is stored in a list (:attr:`_children`). Children, siblings, ancestors, can be
 	accessed via various generators:
 
-	* :py:meth:`GetAncestors` |rarr| iterate all ancestors bottom-up.
-	* :py:meth:`GetChildren` |rarr| iterate all direct children.
-	* :py:meth:`GetDescendants` |rarr| iterate all descendants.
-	* :py:meth:`IterateLevelOrder` |rarr| IterateLevelOrder.
-	* :py:meth:`IteratePreOrder` |rarr| iterate siblings in pre-order.
-	* :py:meth:`IteratePostOrder` |rarr| iterate siblings in post-order.
+	* :meth:`GetAncestors` |rarr| iterate all ancestors bottom-up.
+	* :meth:`GetChildren` |rarr| iterate all direct children.
+	* :meth:`GetDescendants` |rarr| iterate all descendants.
+	* :meth:`IterateLevelOrder` |rarr| IterateLevelOrder.
+	* :meth:`IteratePreOrder` |rarr| iterate siblings in pre-order.
+	* :meth:`IteratePostOrder` |rarr| iterate siblings in post-order.
 
 	Each node can have a **unique ID** or no ID at all (``nodeID=None``). The root node is used to store all IDs in a
-	dictionary (:py:attr:`_nodesWithID`). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
-	list of nodes. An ID can be modified after the Node was created. Use the read-only property :py:attr:`ID` to access
+	dictionary (:attr:`_nodesWithID`). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
+	list of nodes. An ID can be modified after the Node was created. Use the read-only property :attr:`ID` to access
 	the ID.
 
-	Each node can have a **value** (:py:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
-	modified later. Use the property :py:attr:`Value` to get or set the value.
+	Each node can have a **value** (:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
+	modified later. Use the property :attr:`Value` to get or set the value.
 
-	Moreover, each node can store various key-value-pairs (:py:attr:`_dict`). Use the dictionary syntax to get and set
+	Moreover, each node can store various key-value-pairs (:attr:`_dict`). Use the dictionary syntax to get and set
 	key-value-pairs.
 	"""
 
@@ -198,7 +198,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@property
 	def ID(self) -> Nullable[IDType]:
 		"""
-		Read-only property to access the unique ID of a node (:py:attr:`_id`).
+		Read-only property to access the unique ID of a node (:attr:`_id`).
 
 		If no ID was given at node construction time, ID return None.
 
@@ -209,7 +209,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@property
 	def Value(self) -> Nullable[ValueType]:
 		"""
-		Property to get and set the value (:py:attr:`_value`) of a node.
+		Property to get and set the value (:attr:`_value`) of a node.
 
 		:returns: The value of a node.
 		"""
@@ -258,7 +258,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@property
 	def Root(self) -> 'Node':
 		"""
-		Read-only property to access the tree's root node (:py:attr:`_root`).
+		Read-only property to access the tree's root node (:attr:`_root`).
 
 		:returns: The root node (representative node) of a tree.
 		"""
@@ -267,15 +267,15 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@property
 	def Parent(self) -> Nullable['Node']:
 		"""
-		Property to get and set the parent (:py:attr:`_parent`) of a node.
+		Property to get and set the parent (:attr:`_parent`) of a node.
 
 		.. note::
 
 		   As the current node might be a tree itself, appending this node to a tree can lead to a merge of trees and
-		   especially to a merge of IDs. As IDs are unique, it might raise an :py:exc:`Exception`.
+		   especially to a merge of IDs. As IDs are unique, it might raise an :exc:`Exception`.
 
 		:returns:                   The parent of a node.
-		:raises TypeError:          If parameter ``parent`` is not a :py:class:`Node`
+		:raises TypeError:          If parameter ``parent`` is not a :class:`Node`
 		:raises AlreadyInTreeError: Parent is already a child node in this tree.
 		"""
 		return self._parent
@@ -398,7 +398,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def _GetPathAsLinkedList(self) -> Deque["Node"]:
 		"""
-		Compute the path from current node to root node by using a linked list (:py:class:`deque`).
+		Compute the path from current node to root node by using a linked list (:class:`deque`).
 
 		:meta private:
 		:returns: Path from node to root node as double-ended queue (deque).
@@ -484,18 +484,18 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Add a child node to the current node of the tree.
 
-		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :py:attr:`_root` assigned and
-		all IDs are merged into the node's root's ID lists (:py:attr:`_nodesWithID`).
+		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :attr:`_root` assigned and
+		all IDs are merged into the node's root's ID lists (:attr:`_nodesWithID`).
 
 		:param child:               The child node to be added to the tree.
-		:raises TypeError:          If parameter ``child`` is not a :py:class:`Node`.
+		:raises TypeError:          If parameter ``child`` is not a :class:`Node`.
 		:raises AlreadyInTreeError: If parameter ``child`` is already a node in the tree.
 
 		.. seealso::
 
-		   :py:attr:`Parent` |br|
+		   :attr:`Parent` |br|
 		      |rarr| Set the parent of a node.
-		   :py:meth:`AddChildren` |br|
+		   :meth:`AddChildren` |br|
 		      |rarr| Add multiple children at once.
 		"""
 		if not isinstance(child, Node):
@@ -518,14 +518,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		Add multiple children nodes to the current node of the tree.
 
 		:param children:            The list of children nodes to be added to the tree.
-		:raises TypeError:          If parameter ``children`` contains an item, which is not a :py:class:`Node`.
+		:raises TypeError:          If parameter ``children`` contains an item, which is not a :class:`Node`.
 		:raises AlreadyInTreeError: If parameter ``children`` contains an item, which is already a node in the tree.
 
 		.. seealso::
 
-		   :py:attr:`Parent` |br|
+		   :attr:`Parent` |br|
 		      |rarr| Set the parent of a node.
-		   :py:meth:`AddChild` |br|
+		   :meth:`AddChild` |br|
 		      |rarr| Add a child node to the tree.
 		"""
 		for child in children:
@@ -587,13 +587,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :py:meth:`GetDescendants` |br|
+		   :meth:`GetDescendants` |br|
 		      |rarr| Iterate all descendants.
-		   :py:meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		for child in self._children:
@@ -668,13 +668,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :py:meth:`GetChildren` |br|
+		   :meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		for child in self._children:
@@ -732,13 +732,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :py:meth:`GetChildren` |br|
+		   :meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`GetDescendants` |br|
+		   :meth:`GetDescendants` |br|
 		      |rarr| Iterate all descendants.
-		   :py:meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		queue = deque([self])
@@ -757,13 +757,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :py:meth:`GetChildren` |br|
+		   :meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`GetDescendants` |br|
+		   :meth:`GetDescendants` |br|
 		      |rarr| Iterate all descendants.
-		   :py:meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder` |br|
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		yield self
@@ -779,13 +779,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :py:meth:`GetChildren` |br|
+		   :meth:`GetChildren` |br|
 		      |rarr| Iterate all children, but no grand-children.
-		   :py:meth:`GetDescendants` |br|
+		   :meth:`GetDescendants` |br|
 		      |rarr| Iterate all descendants.
-		   :py:meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder` |br|
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :py:meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder` |br|
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		"""
 		for child in self._children:
@@ -878,9 +878,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		Order of resolution:
 
-		1. If :py:attr:`_value` is not None, return the string representation of :py:attr:`_value`.
-		2. If :py:attr:`_id` is not None, return the string representation of :py:attr:`_id`.
-		3. Else, return :py:meth:`__repr__`.
+		1. If :attr:`_value` is not None, return the string representation of :attr:`_value`.
+		2. If :attr:`_id` is not None, return the string representation of :attr:`_id`.
+		3. Else, return :meth:`__repr__`.
 
 		:returns: The resolved string representation of the node.
 		"""

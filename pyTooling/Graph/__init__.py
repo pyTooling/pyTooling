@@ -149,7 +149,7 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 @export
 class GraphException(ToolingException):
-	"""Base exception of all exceptions raised by :py:mod:`pyTooling.Graph`."""
+	"""Base exception of all exceptions raised by :mod:`pyTooling.Graph`."""
 
 
 @export
@@ -282,7 +282,7 @@ class BaseWithIDValueAndWeight(
 	@property
 	def ID(self) -> Nullable[IDType]:
 		"""
-		Read-only property to access the unique ID (:py:attr:`_id`).
+		Read-only property to access the unique ID (:attr:`_id`).
 
 		If no ID was given at creation time, ID returns ``None``.
 
@@ -293,7 +293,7 @@ class BaseWithIDValueAndWeight(
 	@property
 	def Value(self) -> ValueType:
 		"""
-		Property to get and set the value (:py:attr:`_value`).
+		Property to get and set the value (:attr:`_value`).
 
 		:returns: The value.
 		"""
@@ -306,7 +306,7 @@ class BaseWithIDValueAndWeight(
 	@property
 	def Weight(self) -> Nullable[EdgeWeightType]:
 		"""
-		Property to get and set the weight (:py:attr:`_weight`) of an edge.
+		Property to get and set the weight (:attr:`_weight`) of an edge.
 
 		:returns: The weight of an edge.
 		"""
@@ -336,7 +336,7 @@ class BaseWithName(
 	@property
 	def Name(self) -> Nullable[str]:
 		"""
-		Property to get and set the name (:py:attr:`_name`).
+		Property to get and set the name (:attr:`_name`).
 
 		:returns: The value of a component.
 		"""
@@ -392,7 +392,7 @@ class BaseWithVertices(
 	@property
 	def Graph(self) -> 'Graph':
 		"""
-		Read-only property to access the graph, this object is associated to (:py:attr:`_graph`).
+		Read-only property to access the graph, this object is associated to (:attr:`_graph`).
 
 		:returns: The graph this object is associated to.
 		"""
@@ -401,7 +401,7 @@ class BaseWithVertices(
 	@property
 	def Vertices(self) -> Set['Vertex']:
 		"""
-		Read-only property to access the vertices in this component (:py:attr:`_vertices`).
+		Read-only property to access the vertices in this component (:attr:`_vertices`).
 
 		:returns: The set of vertices in this component.
 		"""
@@ -486,7 +486,7 @@ class Vertex(
 	@property
 	def Graph(self) -> 'Graph':
 		"""
-		Read-only property to access the graph, this vertex is associated to (:py:attr:`_graph`).
+		Read-only property to access the graph, this vertex is associated to (:attr:`_graph`).
 
 		:returns: The graph this vertex is associated to.
 		"""
@@ -495,7 +495,7 @@ class Vertex(
 	@property
 	def Component(self) -> 'Component':
 		"""
-		Read-only property to access the component, this vertex is associated to (:py:attr:`_component`).
+		Read-only property to access the component, this vertex is associated to (:attr:`_component`).
 
 		:returns: The component this vertex is associated to.
 		"""
@@ -504,7 +504,7 @@ class Vertex(
 	@property
 	def InboundEdges(self) -> Tuple['Edge', ...]:
 		"""
-		Read-only property to get a tuple of inbound edges (:py:attr:`_inboundEdges`).
+		Read-only property to get a tuple of inbound edges (:attr:`_inboundEdges`).
 
 		:return: Tuple of inbound edges.
 		"""
@@ -513,7 +513,7 @@ class Vertex(
 	@property
 	def OutboundEdges(self) -> Tuple['Edge', ...]:
 		"""
-		Read-only property to get a tuple of outbound edges (:py:attr:`_outboundEdges`).
+		Read-only property to get a tuple of outbound edges (:attr:`_outboundEdges`).
 
 		:return: Tuple of outbound edges.
 		"""
@@ -522,7 +522,7 @@ class Vertex(
 	@property
 	def InboundLinks(self) -> Tuple['Link', ...]:
 		"""
-		Read-only property to get a tuple of inbound links (:py:attr:`_inboundLinks`).
+		Read-only property to get a tuple of inbound links (:attr:`_inboundLinks`).
 
 		:return: Tuple of inbound links.
 		"""
@@ -531,7 +531,7 @@ class Vertex(
 	@property
 	def OutboundLinks(self) -> Tuple['Link', ...]:
 		"""
-		Read-only property to get a tuple of outbound links (:py:attr:`_outboundLinks`).
+		Read-only property to get a tuple of outbound links (:attr:`_outboundLinks`).
 
 		:return: Tuple of outbound links.
 		"""
@@ -602,11 +602,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`IsLeaf` |br|
+		   :meth:`IsLeaf` |br|
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
-		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
 		      |rarr| Iterate all roots of a graph.
-		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._inboundEdges) == 0
@@ -622,11 +622,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`IsRoot` |br|
+		   :meth:`IsRoot` |br|
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :py:meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
 		      |rarr| Iterate all roots of a graph.
-		   :py:meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._outboundEdges) == 0
@@ -852,11 +852,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :py:meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :py:meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._outboundEdges:
@@ -874,11 +874,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :py:meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :py:meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._inboundEdges:
@@ -896,11 +896,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :py:meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :py:meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for link in self._outboundLinks:
@@ -918,11 +918,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :py:meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :py:meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination` |br|
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
 		"""
 		for link in self._inboundLinks:
@@ -1069,7 +1069,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`IterateVerticesDFS` |br|
+		   :meth:`IterateVerticesDFS` |br|
 		      |rarr| Iterate all reachable vertices **depth-first search** order.
 		"""
 		visited: Set[Vertex] = set()
@@ -1100,7 +1100,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :py:meth:`IterateVerticesBFS` |br|
+		   :meth:`IterateVerticesBFS` |br|
 		      |rarr| Iterate all reachable vertices **breadth-first search** order.
 
 		   Wikipedia - https://en.wikipedia.org/wiki/Depth-first_search
@@ -1222,7 +1222,7 @@ class Vertex(
 
 		A generator is return to iterate all vertices along the path including source and destination vertex.
 
-		The search algorithm is based on Dijkstra algorithm and using :py:mod:`heapq`. The found solution, if any, is not
+		The search algorithm is based on Dijkstra algorithm and using :mod:`heapq`. The found solution, if any, is not
 		unique but deterministic as long as the graph was not modified (e.g. ordering of edges on vertices).
 
 		:param destination: The destination vertex to reach.
@@ -1329,7 +1329,7 @@ class Vertex(
 
 	def ConvertToTree(self) -> Node:
 		"""
-		Converts all reachable vertices from this starting vertex to a tree of :py:class:`~pyTooling.Tree.Node` instances.
+		Converts all reachable vertices from this starting vertex to a tree of :class:`~pyTooling.Tree.Node` instances.
 
 		The tree is traversed using depths-first-search.
 
@@ -1386,9 +1386,9 @@ class Vertex(
 
 		Order of resolution:
 
-		1. If :py:attr:`_value` is not None, return the string representation of :py:attr:`_value`.
-		2. If :py:attr:`_id` is not None, return the string representation of :py:attr:`_id`.
-		3. Else, return :py:meth:`__repr__`.
+		1. If :attr:`_value` is not None, return the string representation of :attr:`_value`.
+		2. If :attr:`_id` is not None, return the string representation of :attr:`_id`.
+		3. Else, return :meth:`__repr__`.
 
 		:returns: The resolved string representation of the vertex.
 		"""
@@ -1432,7 +1432,7 @@ class BaseEdge(
 	@property
 	def Source(self) -> Vertex:
 		"""
-		Read-only property to get the source (:py:attr:`_source`) of an edge.
+		Read-only property to get the source (:attr:`_source`) of an edge.
 
 		:returns: The source of an edge.
 		"""
@@ -1441,7 +1441,7 @@ class BaseEdge(
 	@property
 	def Destination(self) -> Vertex:
 		"""
-		Read-only property to get the destination (:py:attr:`_destination`) of an edge.
+		Read-only property to get the destination (:attr:`_destination`) of an edge.
 
 		:returns: The destination of an edge.
 		"""
@@ -1622,11 +1622,11 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :py:meth:`IterateLeafs` |br|
+		   :meth:`IterateLeafs` |br|
 		      |rarr| Iterate leafs of a graph.
-		   :py:meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :py:meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
@@ -1657,11 +1657,11 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :py:meth:`IterateRoots` |br|
+		   :meth:`IterateRoots` |br|
 		      |rarr| Iterate roots of a graph.
-		   :py:meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :py:meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
@@ -2041,7 +2041,7 @@ class Subgraph(
 	@property
 	def Graph(self) -> 'Graph':
 		"""
-		Read-only property to access the graph, this subgraph is associated to (:py:attr:`_graph`).
+		Read-only property to access the graph, this subgraph is associated to (:attr:`_graph`).
 
 		:returns: The graph this subgraph is associated to.
 		"""
@@ -2139,9 +2139,9 @@ class Graph(
 	]
 ):
 	"""
-	A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to
-	all nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
-	made of :py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
+	A **graph** data structure is represented by an instance of :class:`~pyTooling.Graph.Graph` holding references to
+	all nodes. Nodes are instances of :class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
+	made of :class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
 	_subgraphs:         Set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_views:             Set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
@@ -2164,21 +2164,21 @@ class Graph(
 
 	@property
 	def Subgraphs(self) -> Set[Subgraph]:
-		"""Read-only property to access the subgraphs in this graph (:py:attr:`_subgraphs`).
+		"""Read-only property to access the subgraphs in this graph (:attr:`_subgraphs`).
 
 		:returns: The set of subgraphs in this graph."""
 		return self._subgraphs
 
 	@property
 	def Views(self) -> Set[View]:
-		"""Read-only property to access the views in this graph (:py:attr:`_views`).
+		"""Read-only property to access the views in this graph (:attr:`_views`).
 
 		:returns: The set of views in this graph."""
 		return self._views
 
 	@property
 	def Components(self) -> Set[Component]:
-		"""Read-only property to access the components in this graph (:py:attr:`_components`).
+		"""Read-only property to access the components in this graph (:attr:`_components`).
 
 		:returns: The set of components in this graph."""
 		return self._components

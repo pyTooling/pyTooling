@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Singleton`.
+Unit tests for class :class:`pyTooling.MetaClasses.Singleton`.
 """
 from unittest import TestCase
 

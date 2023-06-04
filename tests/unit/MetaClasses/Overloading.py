@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for class :class:`pyTooling.MetaClasses.Overloading`.
 """
 from unittest       import TestCase
 

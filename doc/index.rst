@@ -61,8 +61,8 @@ Common Classes
 ==============
 
 * Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. This behavior can be
-  emulated with classes provided by the :py:mod:`pyTooling.CallByRef` module.
-* Setuptools, PyPI, and others have a varying understanding of license names. The :py:mod:`pyTooling.Licensing` module
+  emulated with classes provided by the :mod:`pyTooling.CallByRef` module.
+* Setuptools, PyPI, and others have a varying understanding of license names. The :mod:`pyTooling.Licensing` module
   provides :ref:`unified license names <LICENSING>` as well as license name mappings or translations.
 * Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
   Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
@@ -70,7 +70,7 @@ Common Classes
   single class instance.
 * While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
   provides such a :ref:`representations of version numbers <VERSIONING>` following semantic versioning (SemVer) and
-  calendar versioning (CalVer) schemes. It's provided by the :py:mod:`pyTooling.Versioning` module.
+  calendar versioning (CalVer) schemes. It's provided by the :mod:`pyTooling.Versioning` module.
 
 
 Configuration
@@ -92,15 +92,15 @@ Data Structures
 pyTooling also provides fast and powerful data structures offering object-oriented APIs:
 
 * :ref:`Graph data structure <STRUCT/Graph>` |br|
-  |rarr| A directed graph implementation using a :py:class:`pyTooling.Graph.Vertex` and :py:class:`pyTooling.Graph.Edge`
+  |rarr| A directed graph implementation using a :class:`pyTooling.Graph.Vertex` and :class:`pyTooling.Graph.Edge`
   class.
 * :ref:`Path data structure <STRUCT/Path>` |br|
   |rarr| To be documented.
 * :ref:`Tree data structure <STRUCT/Tree>` |br|
-  |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
+  |rarr| A fast and simple implementation using a single :class:`pyTooling.Tree.Node` class.
 
 .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
-   |rarr| A fast and simple implementation using a single :py:class:`pyTooling.Tree.Node` class.
+   |rarr| A fast and simple implementation using a single :class:`pyTooling.Tree.Node` class.
 
 
 Decorators
@@ -108,37 +108,37 @@ Decorators
 
 * :ref:`Abstract Methods <META/Abstract>`
 
-  * Methods marked with :py:func:`~pyTooling.MetaClasses.abstractmethod` are abstract and need to be overwritten in a
+  * Methods marked with :func:`~pyTooling.MetaClasses.abstractmethod` are abstract and need to be overwritten in a
     derived class. |br|
     An *abstract method* might be called from the overwriting method.
-  * Methods marked with :py:func:`~pyTooling.MetaClasses.mustoverride` are abstract and need to be overridden in a
+  * Methods marked with :func:`~pyTooling.MetaClasses.mustoverride` are abstract and need to be overridden in a
     derived class. |br|
     It's not allowed to call a *mustoverride method*.
 
 * :ref:`Documentation <DECO/Documentation>`
 
-  * Copy the doc-string from given base-class via :py:class:`~pyTooling.Decorators.InheritDocString`.
+  * Copy the doc-string from given base-class via :class:`~pyTooling.Decorators.InheritDocString`.
 
 * :ref:`Visibility <DECO/Visibility>`
 
-  * Register the given function or class as publicly accessible in a module via :py:class:`~pyTooling.Decorators.export`.
+  * Register the given function or class as publicly accessible in a module via :class:`~pyTooling.Decorators.export`.
 
 
 Exceptions
 ==========
 
-* :py:exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
   ... is raised when an expected environment variable is missing.
-* :py:exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
   ... is raise if the platform is not supported.
-* :py:exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
   ... is raise if the requested setting is not configured.
 
 
 Meta-Classes
 ============
 
-pyTooling provides an :ref:`enhanced meta-class <META>` called :py:class:`~pyTooling.MetaClasses.ExtendedType`.
+pyTooling provides an :ref:`enhanced meta-class <META>` called :class:`~pyTooling.MetaClasses.ExtendedType`.
 This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :ref:`singletons <META/Singleton>`,
 :ref:`slotted types <META/Slotted>` and combinations thereof.
 
@@ -158,7 +158,7 @@ This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :
   derived classes.
 
 :pycode:`class MyClass(ObjectWithSlots):`
-  A class definition deriving from :py:class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
+  A class definition deriving from :class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
   behavior to that class and all derived classes.
 
 
@@ -169,18 +169,18 @@ A set of helper functions to describe a Python package for setuptools.
 
 * Helper Functions:
 
-  * :py:func:`pyTooling.Packaging.loadReadmeFile` |br|
+  * :func:`pyTooling.Packaging.loadReadmeFile` |br|
     Load a ``README.md`` file from disk and provide the content as long description for setuptools.
-  * :py:func:`pyTooling.Packaging.loadRequirementsFile` |br|
+  * :func:`pyTooling.Packaging.loadRequirementsFile` |br|
     Load a ``requirements.txt`` file from disk and provide the content for setuptools.
-  * :py:func:`pyTooling.Packaging.extractVersionInformation` |br|
+  * :func:`pyTooling.Packaging.extractVersionInformation` |br|
     Extract version information from Python source files and provide the data to setuptools.
 
 * Package Descriptions
 
-  * :py:func:`pyTooling.Packaging.DescribePythonPackage` |br|
+  * :func:`pyTooling.Packaging.DescribePythonPackage` |br|
     tbd
-  * :py:func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
+  * :func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
     tbd
 
 
@@ -192,7 +192,7 @@ Terminal
 Timer
 =====
 
-A :py:class:`~pyTooling.Timer.Timer` class to measure and accumulate code execution times.
+A :class:`~pyTooling.Timer.Timer` class to measure and accumulate code execution times.
 
 
 Contributors

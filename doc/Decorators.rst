@@ -3,7 +3,7 @@
 Overview
 ########
 
-The :py:mod:`pyTooling.Decorators` package provides decorators to:
+The :mod:`pyTooling.Decorators` package provides decorators to:
 
 * help with copying doc-strings from base-classes
 * control the visibility of classes and functions defined in a module
@@ -18,7 +18,7 @@ Abstract Methods
 
 .. todo::
 
-   DECO:: Refer to :py:func:`~pyTooling.MetaClasses.abstractmethod` and :py:func:`~pyTooling.MetaClasses.mustoverride`
+   DECO:: Refer to :func:`~pyTooling.MetaClasses.abstractmethod` and :func:`~pyTooling.MetaClasses.mustoverride`
    decorators from :ref:`meta classes <META>`.
 
 .. important::
@@ -31,9 +31,9 @@ Abstract Methods
 @abstractmethod
 ***************
 
-The :py:func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
-replaced by a method raising a :py:exc:`NotImplementedError`. When a class containing *abstract* methods is
-instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
+The :func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
+replaced by a method raising a :exc:`NotImplementedError`. When a class containing *abstract* methods is
+instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 
 .. rubric:: Example:
 .. code-block:: Python
@@ -63,8 +63,8 @@ instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 @mustoverride
 *************
 
-The :py:func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
-*must override* methods is instantiated, an :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
+The :func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
+*must override* methods is instantiated, an :exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
 
 In contrast to :ref:`@abstractmethod <DECO/AbstractMethod>`, the method can still be called from a derived class
 implementing an overridden method.
@@ -118,7 +118,7 @@ Documentation
 *****************
 
 When a method in a derived class shall have the same doc-string as the doc-string of the base-class, then the decorator
-:py:func:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class' method to the
+:func:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class' method to the
 method in the derived class.
 
 .. admonition:: Example
@@ -146,7 +146,7 @@ Miscellaneous
 @OriginalFunction
 *****************
 
-The :py:func:`~pyTooling.MetaClasses.OriginalFunction` decorator attaches the original function or method to a new
+The :func:`~pyTooling.MetaClasses.OriginalFunction` decorator attaches the original function or method to a new
 function object, when the original gets replaced or wrapped. The original function can be accesses with
 :pycode:`meth.__orig_func__`.
 
@@ -175,7 +175,7 @@ Visibility
 @export
 *******
 
-The :py:func:`~pyTooling.Decorators.export` decorator makes module's entities (classes and functions) publicly visible.
+The :func:`~pyTooling.Decorators.export` decorator makes module's entities (classes and functions) publicly visible.
 Therefore, these entities get registered in the module's variable ``__all__``.
 
 Besides making these entities accessible via ``from foo import *``, Sphinx extensions like autoapi are reading

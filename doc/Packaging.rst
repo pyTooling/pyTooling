@@ -16,7 +16,7 @@ Helper Functions
 loadReadmeFile
 **************
 
-The function :py:func:`~pyTooling.Packaging.loadReadmeFile` reads a ``README`` file. This text can then be used for the
+The function :func:`~pyTooling.Packaging.loadReadmeFile` reads a ``README`` file. This text can then be used for the
 package's *long description*.
 
 .. rubric:: Supported file formats
@@ -29,7 +29,7 @@ package's *long description*.
 loadRequirementsFile
 ********************
 
-The function :py:func:`~pyTooling.Packaging.loadRequirementsFile` reads a ``requirements.txt`` file and extracts all
+The function :func:`~pyTooling.Packaging.loadRequirementsFile` reads a ``requirements.txt`` file and extracts all
 specified dependencies into an array.
 
 .. rubric:: Features
@@ -43,7 +43,7 @@ specified dependencies into an array.
 extractVersionInformation
 *************************
 
-The function :py:func:`~pyTooling.Packaging.extractVersionInformation` extracts version information from a Python source
+The function :func:`~pyTooling.Packaging.extractVersionInformation` extracts version information from a Python source
 file (module). Usually these module variables are defined in a ``__init__.py`` file.
 
 .. rubric:: Supported fields
@@ -55,7 +55,7 @@ file (module). Usually these module variables are defined in a ``__init__.py`` f
 * Version number (``__version__``)
 * Keywords (``__keywords__``)
 
-The function returns an instance of :py:class:`~pyTooling.Packaging.VersionInformation`, which offers the gathered
+The function returns an instance of :class:`~pyTooling.Packaging.VersionInformation`, which offers the gathered
 information as properties.
 
 .. admonition:: ``__init__.py``

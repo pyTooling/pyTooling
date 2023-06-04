@@ -21,7 +21,7 @@ Currently, the following meta-classes are provided:
 ExtendedType
 ############
 
-The new meta-class :py:class:`~pyTooling.MetaClasses.ExtendedType` allows to implement :ref:`singletons <META/Singleton>`,
+The new meta-class :class:`~pyTooling.MetaClasses.ExtendedType` allows to implement :ref:`singletons <META/Singleton>`,
 :ref:`slotted types <META/Slotted>` and combinations thereof.
 
 Since Python 3, meta-classes are applied in a class definition by adding a named parameter called ``metaclass`` to the
@@ -38,9 +38,9 @@ meta-class.
 Abstract Method
 ***************
 
-The :py:func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
-replaced by a method raising a :py:exc:`NotImplementedError`. When a class containing *abstract* methods is
-instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
+The :func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
+replaced by a method raising a :exc:`NotImplementedError`. When a class containing *abstract* methods is
+instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 
 .. rubric:: Example:
 .. code-block:: Python
@@ -65,8 +65,8 @@ instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 MustOverwrite Method
 ********************
 
-The :py:func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
-*must override* methods is instantiated, an :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
+The :func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
+*must override* methods is instantiated, an :exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
 
 In contrast to :ref:`@abstractmethod <META/Abstract>`, the method can still be called from a derived class
 implementing an overridden method.
@@ -150,7 +150,7 @@ field access performance of all class instances. This behavior is automatically 
 ObjectWithSlots
 ===============
 
-A class definition deriving from :py:class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
+A class definition deriving from :class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
 behavior to that class and all derived classes.
 
 .. code-block:: python

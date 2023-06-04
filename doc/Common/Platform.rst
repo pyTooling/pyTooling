@@ -3,7 +3,7 @@
 Platform
 ########
 
-The :py:class:`~pyTooling.Common.Platform.Platform` class gives detailed platform information about the environment the
+The :class:`~pyTooling.Common.Platform.Platform` class gives detailed platform information about the environment the
 Python program or script is running in.
 
 .. contents:: Table of Contents
@@ -13,22 +13,22 @@ Python program or script is running in.
 .. admonition:: Background Information
 
    Python has several ways in finding out what platform is running underneath of Python. Some information are provided
-   via function calls, others are variables in a module. The :py:class:`~pyTooling.Common.Platform.Platform` class
+   via function calls, others are variables in a module. The :class:`~pyTooling.Common.Platform.Platform` class
    unifies all these APIs into a single class instance providing access to the platform and runtime information.
    Moreover, some (older) APIs do not reflect modern platforms like Python running in a MSYS2 MinGW64 environment on a
    Windows x86-64. By combining multiple APIs, it's possible to identify also such platforms.
 
    The internally used APIs are:
 
-   * :py:func:`platform.machine`
-   * :py:data:`sys.platform`
-   * :py:func:`sysconfig.get_platform`
+   * :func:`platform.machine`
+   * :data:`sys.platform`
+   * :func:`sysconfig.get_platform`
 
    These APIs are currently unused/not needed, because their information is already provided by the ones mentioned above:
 
-   * :py:data:`os.name`
-   * :py:func:`platform.system`
-   * :py:func:`platform.architecture`
+   * :data:`os.name`
+   * :func:`platform.system`
+   * :func:`platform.architecture`
 
 
 .. _COMMON/CurrentPlatform:
@@ -36,8 +36,8 @@ Python program or script is running in.
 Current Platform
 ****************
 
-The module variable :py:data:`pyTooling.Common.CurrentPlatform` contains a singleton instance of
-:py:class:`~pyTooling.Common.Platform.Platform`, which abstracts and unifies multiple platform APIs of Python into a
+The module variable :data:`pyTooling.Common.CurrentPlatform` contains a singleton instance of
+:class:`~pyTooling.Common.Platform.Platform`, which abstracts and unifies multiple platform APIs of Python into a
 single class instance.
 
 .. rubric:: Supported platforms
@@ -60,7 +60,7 @@ single class instance.
 
 .. seealso::
 
-   :py:class:`~pyTooling.Common.Platform.Platform`
+   :class:`~pyTooling.Common.Platform.Platform`
      |rarr| ``Is...`` properties describing a platform (and environment) the current Python program is running on.
 
 

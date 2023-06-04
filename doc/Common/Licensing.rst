@@ -3,7 +3,7 @@
 Licensing
 #########
 
-The :py:mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses and mappings
+The :mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses and mappings
 of their names, because some tools use differing names for the same license.
 
 .. contents:: Table of Contents
@@ -17,7 +17,7 @@ of their names, because some tools use differing names for the same license.
    not even identical to the official license names. Also some allegedly similar licenses got different SPDX
    identifiers.
 
-   The package :py:mod:`pyTooling.Licensing` provides license name and identifiers mappings to unify all these names and
+   The package :mod:`pyTooling.Licensing` provides license name and identifiers mappings to unify all these names and
    classifiers to and from `SPDX identifiers <https://spdx.org/licenses/>`__.
 
    .. rubric:: Examples:
@@ -35,11 +35,11 @@ of their names, because some tools use differing names for the same license.
 Licenses
 ********
 
-The :py:class:`~pyTooling.Licensing.License` class represents of a license like *Apache License, Version 2.0*
+The :class:`~pyTooling.Licensing.License` class represents of a license like *Apache License, Version 2.0*
 (SPDX: ``Apache-2.0``). It offers several information about a license as properties. Licenses can be compared for
 equality (``==``, ``!=``) based on there SPDX identifier.
 
-**Condensed definition of class** :py:class:`~pyTooling.Licensing.License`:
+**Condensed definition of class** :class:`~pyTooling.Licensing.License`:
 
 .. code-block:: python
 
@@ -78,10 +78,10 @@ The licenses supported by this package are available as individual package varia
 
 Package variables of predefined licenses:
 
-* :py:data:`~pyTooling.Licensing.Apache_2_0_License`
-* :py:data:`~pyTooling.Licensing.BSD_3_Clause_License`
-* :py:data:`~pyTooling.Licensing.GPL_2_0_or_later`
-* :py:data:`~pyTooling.Licensing.MIT_License`
+* :data:`~pyTooling.Licensing.Apache_2_0_License`
+* :data:`~pyTooling.Licensing.BSD_3_Clause_License`
+* :data:`~pyTooling.Licensing.GPL_2_0_or_later`
+* :data:`~pyTooling.Licensing.MIT_License`
 
 .. code-block:: python
 
@@ -94,24 +94,24 @@ Package variables of predefined licenses:
    # SPDX:              Apache-2.0
 
 .. #
-   * :py:data:`~pyTooling.Licensing.Apache_2_0_License`
-   * :py:data:`~pyTooling.Licensing.Artistic_License`
-   * :py:data:`~pyTooling.Licensing.BSD_3_Clause_License`
-   * :py:data:`~pyTooling.Licensing.BSD_4_Clause_License`
-   * :py:data:`~pyTooling.Licensing.CreativeCommons_CC0_1_0`
-   * :py:data:`~pyTooling.Licensing.CreativeCommons_CCBY_4_0`
-   * :py:data:`~pyTooling.Licensing.CreativeCommons_CCBYSA_4_0`
-   * :py:data:`~pyTooling.Licensing.EclipsePublicLicense_2_0`
-   * :py:data:`~pyTooling.Licensing.GNU_AfferoGeneralPublicLicense_3_0`
-   * :py:data:`~pyTooling.Licensing.GNU_GeneralPublicLicense_2_0_or_later`
-   * :py:data:`~pyTooling.Licensing.GNU_GeneralPublicLicense_3_0_or_later`
-   * :py:data:`~pyTooling.Licensing.GNU_LesserGeneralPublicLicense_3_0_or_later`
-   * :py:data:`~pyTooling.Licensing.MicrosoftPublicLicense`
-   * :py:data:`~pyTooling.Licensing.MIT_License`
-   * :py:data:`~pyTooling.Licensing.MozillaPublicLicense_2_0`
+   * :data:`~pyTooling.Licensing.Apache_2_0_License`
+   * :data:`~pyTooling.Licensing.Artistic_License`
+   * :data:`~pyTooling.Licensing.BSD_3_Clause_License`
+   * :data:`~pyTooling.Licensing.BSD_4_Clause_License`
+   * :data:`~pyTooling.Licensing.CreativeCommons_CC0_1_0`
+   * :data:`~pyTooling.Licensing.CreativeCommons_CCBY_4_0`
+   * :data:`~pyTooling.Licensing.CreativeCommons_CCBYSA_4_0`
+   * :data:`~pyTooling.Licensing.EclipsePublicLicense_2_0`
+   * :data:`~pyTooling.Licensing.GNU_AfferoGeneralPublicLicense_3_0`
+   * :data:`~pyTooling.Licensing.GNU_GeneralPublicLicense_2_0_or_later`
+   * :data:`~pyTooling.Licensing.GNU_GeneralPublicLicense_3_0_or_later`
+   * :data:`~pyTooling.Licensing.GNU_LesserGeneralPublicLicense_3_0_or_later`
+   * :data:`~pyTooling.Licensing.MicrosoftPublicLicense`
+   * :data:`~pyTooling.Licensing.MIT_License`
+   * :data:`~pyTooling.Licensing.MozillaPublicLicense_2_0`
 
-In addition a dictionary (:py:data:`~pyTooling.Licensing.SPDX_INDEX`) maps from SPDX identified to
-:py:class:`~pyTooling.Licensing.License` instances.
+In addition a dictionary (:data:`~pyTooling.Licensing.SPDX_INDEX`) maps from SPDX identified to
+:class:`~pyTooling.Licensing.License` instances.
 
 .. code-block:: python
 
@@ -130,8 +130,8 @@ In addition a dictionary (:py:data:`~pyTooling.Licensing.SPDX_INDEX`) maps from 
 Mappings
 ********
 
-:py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES` offers a Python specific mapping from SPDX identifier to license
-names used by Python (setuptools). Each dictionary item contains a :py:class:`~pyTooling.Licensing.PythonLicenseNames`
+:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES` offers a Python specific mapping from SPDX identifier to license
+names used by Python (setuptools). Each dictionary item contains a :class:`~pyTooling.Licensing.PythonLicenseNames`
 instance which contains the license name and package classifier used by setuptools.
 
 Currently the following licenses are listed in the Python specific name mapping:

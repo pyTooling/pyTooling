@@ -3,7 +3,7 @@
 Configuration
 #############
 
-Module :py:mod:`~pyTooling.Configuration` provides an abstract configuration reader.
+Module :mod:`~pyTooling.Configuration` provides an abstract configuration reader.
 
 .. contents:: Table of Contents
    :local:
@@ -15,9 +15,9 @@ It supports any configuration file syntax, which provides:
 * sequences (ordered lists), and
 * dictionaries (key-value-pairs).
 
-The abstracted data model is based on a common :py:class:`~pyTooling.Configuration.Node` class, which is derived to a
-:py:class:`~pyTooling.Configuration.Sequence`, :py:class:`~pyTooling.Configuration.Dictionary` and
-:py:class:`~pyTooling.Configuration.Configuration` class.
+The abstracted data model is based on a common :class:`~pyTooling.Configuration.Node` class, which is derived to a
+:class:`~pyTooling.Configuration.Sequence`, :class:`~pyTooling.Configuration.Dictionary` and
+:class:`~pyTooling.Configuration.Configuration` class.
 
 .. rubric:: Inheritance diagram:
 
@@ -27,7 +27,7 @@ The abstracted data model is based on a common :py:class:`~pyTooling.Configurati
 Dictionary
 **********
 
-A :py:class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of information.
+A :class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of information.
 
 .. tab:: JSON
 
@@ -48,7 +48,7 @@ A :py:class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of 
 Sequences
 *********
 
-A :py:class:`~pyTooling.Configuration.Sequence` represents ordered information items.
+A :class:`~pyTooling.Configuration.Sequence` represents ordered information items.
 
 .. tab:: JSON
 
@@ -69,7 +69,7 @@ A :py:class:`~pyTooling.Configuration.Sequence` represents ordered information i
 Configuration
 *************
 
-A :py:class:`~pyTooling.Configuration.Configuration` represents the whole configuration (file) made of sequences,
+A :class:`~pyTooling.Configuration.Configuration` represents the whole configuration (file) made of sequences,
 dictionaries and scalar information items.
 
 .. tab:: JSON

@@ -96,7 +96,7 @@ def getsizeof(obj: Any) -> int:
 
 	.. admonition:: Background Information
 
-	   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
+	   The function :func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
 	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 	.. seealso::

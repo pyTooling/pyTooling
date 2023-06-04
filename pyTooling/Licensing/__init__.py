@@ -155,7 +155,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns the Python license name for this license if it's defined.
 
 		:returns: The Python license name.
-		:raises ValueError: If there is no license name defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+		:raises ValueError: If there is no license name defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
 			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
@@ -170,7 +170,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns the Python package classifier for this license if it's defined.
 
 		:returns: The Python package classifier.
-		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 
 		.. seealso::
 
@@ -189,7 +189,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are identical.
-		:raises TypeError: If second operand is not of type :py:class:`License`.
+		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
@@ -201,7 +201,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are not identical.
-		:raises TypeError: If second operand is not of type :py:class:`License`.
+		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier

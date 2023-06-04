@@ -3,7 +3,7 @@
 StateMachine
 ############
 
-The :py:mod:`pyTooling.StateMachine` package
+The :mod:`pyTooling.StateMachine` package
 
 .. contents:: Table of Contents
    :local:

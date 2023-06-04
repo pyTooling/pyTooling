@@ -48,9 +48,9 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, useSlots=True):
 
 	.. seealso::
 
-	   * :py:class:`CallByRefBoolParam` |br|
+	   * :class:`CallByRefBoolParam` |br|
 	     |rarr| A special *call-by-reference* implementation for boolean reference types.
-	   * :py:class:`CallByRefIntParam` |br|
+	   * :class:`CallByRefIntParam` |br|
 	     |rarr| A special *call-by-reference* implementation for integer reference types.
 	"""
 
