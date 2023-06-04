@@ -551,8 +551,8 @@ class ExtendedType(type):
 
 		return abstractMethods, members
 
-	@staticmethod
-	def _wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+	@classmethod
+	def _wrapNewMethodIfSingleton(metacls, newClass, singleton: bool) -> bool:
 		"""
 		If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
 
@@ -616,8 +616,8 @@ class ExtendedType(type):
 
 		return False
 
-	@staticmethod
-	def _wrapNewMethodIfAbstract(newClass) -> bool:
+	@classmethod
+	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
 		"""
 		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
 
@@ -661,8 +661,8 @@ class ExtendedType(type):
 
 			return False
 
-	@staticmethod
-	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
+	@classmethod
+	def __getSlots(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
 		"""
 		Get all object attributes, that should be stored in a slot.
 
