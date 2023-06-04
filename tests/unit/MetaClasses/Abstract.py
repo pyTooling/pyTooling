@@ -38,8 +38,7 @@ This test suite tests decorators:
 """
 from unittest              import TestCase
 
-from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError
-
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError, notimplemented
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -188,3 +187,22 @@ class MustOverride(TestCase):
 				return super().MustOverrideMethod()
 
 		DerivedMustOverrideClass()
+
+
+class NotImplemented(TestCase):
+	def test_NotImplementedBase(self) -> None:
+		class NotImplementedBase(metaclass=ExtendedType):
+			@notimplemented("It's not working.")
+			def NotYetFinished(self, param: int) -> bool:
+				"""Documentation is unfinished."""
+				return False
+
+		c = NotImplementedBase()
+
+		self.assertEqual("Documentation is unfinished.", c.NotYetFinished.__doc__)
+		self.assertEqual("NotYetFinished", c.NotYetFinished.__name__)
+
+		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+			c.NotYetFinished(4)
+
+		self.assertEqual("It's not working.", str(ExceptionCapture.exception))

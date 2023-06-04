@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
 from unittest              import TestCase
 
