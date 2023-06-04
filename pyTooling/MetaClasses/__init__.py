@@ -60,12 +60,19 @@ __all__ = ["M"]
 
 @export
 class ExtendedTypeError(ToolingException):
-	pass
+	"""The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`."""
 
 
 @export
 class BaseClassWithoutSlotsError(ExtendedTypeError):
-	pass
+	"""
+	The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
+
+	.. seealso::
+
+	   * :ref:`Python data model for slots <slots>`
+	   * :ref:`Glossary entry __slots__ <__slots__>`
+	"""
 
 
 @export
@@ -199,9 +206,10 @@ M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 @export
 def abstractmethod(method: M) -> M:
 	"""
-	Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
+	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
 
-	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacement method.
+	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacing method. In
+	additional field ``<method>.__abstract__`` is added.
 
 	.. warning::
 
@@ -215,12 +223,17 @@ def abstractmethod(method: M) -> M:
 
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
-	        def method(self):
+	        def method(self) -> bool:
 	          '''This method needs to be implemented'''
 
 	:param method: Method that is marked as *abstract*.
-	:returns:      Replacement method, which raises a :py:exc:`NotImplementedError`. In additional field ``__abstract__``
-	               is added.
+	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+
+	.. seealso::
+
+	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
+	   * :func:`~pyTooling.Metaclasses.mustoverride`
+	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
 	@OriginalFunction(method)
 	@wraps(method)
@@ -236,7 +249,11 @@ def mustoverride(method: M) -> M:
 	"""
 	Mark a method as *must-override*.
 
-	Such methods can offer a partial implementation, which is called via ``super()...``.
+	The returned function is the original function, but with an additional field ``<method>.____mustOverride__``, so a
+	meta-class can identify a *must-override* method and raise an error. Such an error is not raised if the method is
+	overridden by an inheriting class.
+
+	A *must-override* methods can offer a partial implementation, which is called via ``super()...``.
 
 	.. warning::
 
@@ -254,7 +271,13 @@ def mustoverride(method: M) -> M:
 	          '''This is a very basic implementation'''
 
 	:param method: Method that is marked as *must-override*.
-	:returns:      Same method, but with additional ``__mustOverride__`` field.
+	:returns:      Same method, but with additional ``<method>.__mustOverride__`` field.
+
+	.. seealso::
+
+	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`
+	   * :func:`~pyTooling.Metaclasses.abstractmethod`
+	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
 	method.__mustOverride__ = True
 	return method
@@ -269,6 +292,8 @@ def overloadable(method: M) -> M:
 @export
 class ExtendedType(type):
 	"""
+	An updates meta-class to construct new classes with an extended feature set.
+
 	.. todo:: META::ExtendedType Needs documentation.
 	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
 

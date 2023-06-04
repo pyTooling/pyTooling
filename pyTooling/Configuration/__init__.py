@@ -64,7 +64,11 @@ class Node(metaclass=ExtendedType, useSlots=True):
 		self._parent = parent
 
 	def __len__(self) -> int:
-		raise NotImplementedError()
+		"""
+		Returns the number of sub-elements.
+
+		:returns: Number of sub-elements.
+		"""
 
 	def __getitem__(self, key: KeyT) -> ValueT:
 		raise NotImplementedError()
