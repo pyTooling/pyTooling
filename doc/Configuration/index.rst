@@ -33,17 +33,61 @@ A :class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of inf
 
    .. code-block:: JSON
 
+      // one-liner style
       {"key1": "item1", "key2": "item2", "key3": "item3"}
+
+      // multi-line style
+      {
+        "key1": "item1",
+        "key2": "item2",
+        "key3": "item3"
+      }
+
+.. tab:: TOML
+
+   .. code-block:: TOML
+
+      # one-liner style
+      section_2 = {key1 = item1, key2 = item2, key3 = item3}
+
+      # multi-line style
+      section_3 = {
+        key1 = item1,
+        key2 = item2,
+        key3 = item3
+      }
+
+      # section style
+      [section_1]
+      key1 = item1
+      key2 = item2
+      key3 = item3
 
 .. tab:: YAML
 
-   .. code-block:: JSON
+   .. code-block:: YAML
 
+      # one-liner style
+      {key1: item1, key2: item2, key3: item3}
+
+      # multi-line style
       key1: item1
       key2: item2
       key3: item3
 
+.. tab:: XML
+
+   .. code-block:: XML
+
+      <items>
+        <item key="key1">item1</item>
+        <item key="key2">item2</item>
+        <item key="key3">item3</item>
+      </items>
+
+
 .. todo:: CONFIG:: Needs documentation for Dictionary
+
 
 Sequences
 *********
@@ -54,17 +98,54 @@ A :class:`~pyTooling.Configuration.Sequence` represents ordered information item
 
    .. code-block:: JSON
 
+      // one-liner style
       ["item1", "item2", "item3"]
+
+      // multi-line style
+      [
+        "item1",
+        "item2",
+        "item3"
+      ]
+
+.. tab:: TOML
+
+   .. code-block:: TOML
+
+      # one-liner style
+      section_2 = [item1, item2, item3]
+
+      # multi-line style
+      section_3 = [
+        item1,
+        item2,
+        item3
+      ]
 
 .. tab:: YAML
 
-   .. code-block:: JSON
+   .. code-block:: YAML
 
+      # one-liner style
+      [item1, item2, item3]
+
+      # multi-line style
       - item1
       - item2
       - item3
 
+.. tab:: XML
+
+   .. code-block:: XML
+
+      <items>
+        <item>item1</item>
+        <item>item2</item>
+        <item>item3</item>
+      </items>
+
 .. todo:: CONFIG:: Needs documentation for Sequences
+
 
 Configuration
 *************
@@ -88,9 +169,28 @@ dictionaries and scalar information items.
         ]
       }
 
+.. tab:: TOML
+
+   .. attention:: Not yet implemented.
+
+   .. code-block:: TOML
+
+      version = "1.0"
+
+      settings = {
+        key1 = "item1",
+        key2 = "item2"
+      }
+
+      files = [
+        "path/to/file1.ext",
+        "path/to/file2.ext",
+        "path/to/file3.ext"
+      ]
+
 .. tab:: YAML
 
-   .. code-block:: JSON
+   .. code-block:: YAML
 
       version: "1.0"
       settings:
@@ -101,7 +201,27 @@ dictionaries and scalar information items.
         - path/to/file2.ext
         - path/to/file3.ext
 
+.. tab:: XML
+
+   .. attention:: Not yet implemented.
+
+   .. code-block:: XML
+
+      <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+      <configuration version="1.0">
+        <settings>
+          <setting key="key1">item1</setting>
+          <setting key="key2">item2</setting>
+        </settings>
+        <files>
+          <file>path/to/file1.ext</file>
+          <file>path/to/file2.ext</file>
+          <file>path/to/file3.ext</file>
+        </files>
+      </configuration>
+
 .. todo:: CONFIG:: Needs documentation for Configuration
+
 
 Data Model
 **********
