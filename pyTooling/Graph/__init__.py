@@ -54,6 +54,7 @@ starting vertex are provided as methods on a vertex.
 """
 import heapq
 from collections import deque
+from itertools   import chain
 from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
 from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
@@ -2210,6 +2211,30 @@ class Graph(
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID
 		return iter(gen())
+
+	def GetVertexByID(self, vertexID: Nullable[VertexIDType]) -> Vertex:
+		""".. todo:: GRAPH::Graph::GetVertexByID Needs documentation."""
+		if vertexID is None:
+			if len(self._verticesWithoutID) > 1:
+				raise KeyError(f"Found multiple vertices with ID `None`.")
+			else:
+				try:
+					return self._verticesWithoutID[0]
+				except IndexError:
+					raise KeyError(f"Found no vertex with ID `None`.")
+		else:
+			return self._verticesWithID[vertexID]
+
+	def GetVertexByValue(self, value) -> Vertex:
+		""".. todo:: GRAPH::Graph::GetVertexByValue Needs documentation."""
+		vertices = [vertex for vertex in chain(self._verticesWithID.values(), self._verticesWithoutID) if vertex._value == value]
+		if len(vertices) > 1:
+			raise KeyError(f"Found multiple vertices with Value == `{value}`.")
+		else:
+			try:
+				return vertices[0]
+			except IndexError:
+				raise KeyError(f"Found no vertex with Value == `{value}`.")
 
 	def CopyGraph(self) -> 'Graph':
 		raise NotImplementedError()
