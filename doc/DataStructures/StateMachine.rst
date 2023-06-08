@@ -10,19 +10,16 @@ The :mod:`pyTooling.StateMachine` package
    :depth: 2
 
 .. rubric:: Example Statemachine:
-.. #mermaid::
-   :caption: A directed graph with backward-edges denoted by dotted vertex relations.
+.. mermaid::
+   :caption: A directed graph describing states and transitions of a state machine.
 
-   %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+   %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "useMaxWidth": false } } }%%
    graph LR
-     A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
+     A(A); B(B); C(C); D(D); E(E); F(F)
 
-     A --> B --> E
-     G --> F
-     A --> C --> G --> H --> D
-     D -.-> A
-     D & F -.-> B
-     I ---> E --> F --> D
+     A --> B --> C --> D --> F
+     C --> F --> A
+     B --> E --> B
 
      classDef node fill:#eee,stroke:#777,font-size:smaller;
 
@@ -37,6 +34,7 @@ Features
 ********
 
 * TBD
+
 
 
 .. _STRUCT/StateMachine/MissingFeatures:
@@ -62,6 +60,7 @@ Planned Features
 Out of Scope
 ============
 
+* TBD
 
 
 

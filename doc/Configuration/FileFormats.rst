@@ -5,19 +5,20 @@ File Formats
 
 Currently, the following file formats are supported:
 
-* :ref:`CONFIG/FileFormat/JSON`
-* :ref:`CONFIG/FileFormat/YAML`
+* :ref:`CONFIG/FileFormat/JSON` - JavaScript Object Notation
+* :ref:`CONFIG/FileFormat/YAML` - YAML Ain’t Markup Language
 
 Possible future file formats:
 
-* :ref:`CONFIG/FileFormat/TOML`
-* :ref:`CONFIG/FileFormat/XML`
+* :ref:`CONFIG/FileFormat/TOML` - Tom's Obvious, Minimal Language
+* :ref:`CONFIG/FileFormat/XML` - Extensible Markup Language
 
 .. tab:: JSON
 
    .. code-block:: JSON
 
-      { "version": "1.0",
+      {
+        "version": "1.0",
         "settings": {
           "key1": "item1",
           "key2": "item2"
