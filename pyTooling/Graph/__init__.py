@@ -1128,6 +1128,44 @@ class Vertex(
 				if len(stack) == 0:
 					return
 
+	def IterateAllOutboundPathsAsVertexList(self) -> Generator[Tuple['Vertex', ...], None, None]:
+		if len(self._outboundEdges) == 0:
+			yield (self, )
+			return
+
+		visited:       Set[Vertex] =                 set()
+		vertexStack:   List[Vertex] =                list()
+		iteratorStack: List[typing_Iterator[Edge]] = list()
+
+		visited.add(self)
+		vertexStack.append(self)
+		iteratorStack.append(iter(self._outboundEdges))
+
+		while True:
+			try:
+				edge = next(iteratorStack[-1])
+				nextVertex = edge._destination
+				if nextVertex in visited:
+					ex = CycleError(f"Loop detected.")
+					ex.add_note(f"First loop is:")
+					for i, vertex in enumerate(vertexStack):
+						ex.add_note(f"  {i}: {vertex!r}")
+					raise ex
+
+				vertexStack.append(nextVertex)
+				if len(nextVertex._outboundEdges) == 0:
+					yield tuple(vertexStack)
+					vertexStack.pop()
+				else:
+					iteratorStack.append(iter(nextVertex._outboundEdges))
+
+			except StopIteration:
+				vertexStack.pop()
+				iteratorStack.pop()
+
+				if len(vertexStack) == 0:
+					return
+
 	def ShortestPathToByHops(self, destination: 'Vertex') -> Generator['Vertex', None, None]:
 		"""
 		Compute the shortest path (by hops) between this vertex and the destination vertex.

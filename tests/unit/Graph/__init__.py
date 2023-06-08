@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.Graph."""
-from typing   import Any, Optional as Nullable, List, Tuple
+from typing   import Any, Optional as Nullable, List, Tuple, Callable
 from unittest import TestCase
 
 from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError
@@ -1351,6 +1351,38 @@ class IterateStartingFromVertex(Iterate):
 			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVerticesBFS()])
+
+	def test_IterateAllOutboundPathsAsVertexList(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(0, self._graph2.VertexCount)]
+		v0 = vList[0]
+
+		for u, v, w in self._graph2.Edges:
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+
+		source = vList[10]
+		paths = [path for path in source.IterateAllOutboundPathsAsVertexList()]
+		self.assertEqual(1, len(paths))
+		self.assertTupleEqual((source,), paths[0])
+
+		source = vList[7]
+		with self.assertRaises(CycleError):
+			for path in source.IterateAllOutboundPathsAsVertexList():
+				pass
+
+		# FIXME: remove one edge with global filter, but a per vertex operation would be more suitable -> not yet implemented
+		# vList[11].RemoveEdgeTo(vList[4])
+		g.RemoveEdges(lambda e: e._source == vList[11] and e._destination == vList[4])
+
+		source = vList[7]
+		expectedPaths = (
+			(source, vList[11], vList[10]),
+			(source, vList[11], vList[14], vList[10]),
+			(source, vList[12]),
+		)
+		for i, path in enumerate(source.IterateAllOutboundPathsAsVertexList()):
+			print(f"{i}: {path}")
+			self.assertTupleEqual(expectedPaths[i], path)
 
 	def test_ShortestPathByHops(self):
 		g = Graph()
