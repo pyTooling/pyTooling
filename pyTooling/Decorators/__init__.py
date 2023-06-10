@@ -107,10 +107,10 @@ def export(entity: T) -> T:
 		raise ValueError(f"Module {entity.__module__} is not present in sys.modules. Please ensure it is in the import path before calling export().")
 
 	if hasattr(module, "__all__"):
-		if entity.__name__ not in module.__all__:	# type: ignore
-			module.__all__.append(entity.__name__)	# type: ignore
+		if entity.__name__ not in module.__all__:  # type: ignore
+			module.__all__.append(entity.__name__)   # type: ignore
 	else:
-		module.__all__ = [entity.__name__]	      # type: ignore
+		module.__all__ = [entity.__name__]         # type: ignore
 
 	return entity
 

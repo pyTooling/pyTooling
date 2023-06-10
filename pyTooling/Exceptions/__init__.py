@@ -62,7 +62,7 @@ class OverloadResolutionError(Exception):
 	# WORKAROUND: for Python <3.11
 	# Implementing a dummy method for Python versions before
 	__notes__: List[str]
-	if version_info < (3, 11):
+	if version_info < (3, 11):  # pragma: no cover
 		def add_note(self, message: str):
 			try:
 				self.__notes__.append(message)
@@ -86,7 +86,7 @@ class ExceptionBase(Exception):
 	# WORKAROUND: for Python <3.11
 	# Implementing a dummy method for Python versions before
 	__notes__: List[str]
-	if version_info < (3, 11):
+	if version_info < (3, 11):  # pragma: no cover
 		def add_note(self, message: str):
 			try:
 				self.__notes__.append(message)
@@ -127,7 +127,7 @@ class ToolingException(Exception):
 	# WORKAROUND: for Python <3.11
 	# Implementing a dummy method for Python versions before
 	__notes__: List[str]
-	if version_info < (3, 11):
+	if version_info < (3, 11):  # pragma: no cover
 		def add_note(self, message: str):
 			try:
 				self.__notes__.append(message)

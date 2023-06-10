@@ -217,7 +217,7 @@ class Dictionary(Node, Abstract_Dict):
 
 				:returns: Itself.
 				"""
-				return self
+				return self  # pragma: no cover
 
 			def __next__(self) -> ValueT:
 				"""
@@ -264,7 +264,7 @@ class Sequence(Node, Abstract_Seq):
 
 				:returns: Itself.
 				"""
-				return self
+				return self  # pragma: no cover
 
 			def __next__(self) -> ValueT:
 				"""

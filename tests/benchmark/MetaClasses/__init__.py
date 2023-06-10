@@ -28,4 +28,4 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for MetaClasses."""
+"""Benchmark tests for pyTooling.MetaClasses."""

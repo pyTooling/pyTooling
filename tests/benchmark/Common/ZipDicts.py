@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for ExtendedType."""
+"""Benchmark tests for pyTooling.Common.*."""
 from pytest import mark
 
 from pyTooling.MetaClasses import ExtendedType
