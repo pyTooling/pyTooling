@@ -172,6 +172,9 @@ def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	:param d: Dictionary to get the first key from.
 	:returns: The first key.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.keys()))
 
 
@@ -183,6 +186,9 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	:param d: Dictionary to get the first value from.
 	:returns: The first value.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.values()))
 
 
@@ -194,6 +200,9 @@ def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	:param d: Dictionary to get the first key-value-pair from.
 	:returns: The first key-value-pair as tuple.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.items()))
 
 
@@ -201,8 +210,9 @@ def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	func: Callable
-) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
-	...
+) -> Dict[Union[_DictKey1], Union[_DictValue1]]:
+#) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
+	...  # pragma: no cover
 
 
 @overload
@@ -210,8 +220,9 @@ def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
 	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
-	...
+) -> Dict[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]]:
+# ) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
+	...  # pragma: no cover
 
 
 @overload
@@ -220,8 +231,9 @@ def mergedicts(
 	m2: Mapping[_DictKey2, _DictValue2],
 	m3: Mapping[_DictKey3, _DictValue3],
 	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
-	...
+) -> Dict[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]]:
+#) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
+	...  # pragma: no cover
 
 
 @export
@@ -234,9 +246,14 @@ def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
 	:param dicts: Tuple of dictionaries to merge as positional parameters.
 	:param func:  Optional function to apply to each dictionary element when merging.
 	:returns:     A new dictionary containing the merge result.
+
+	.. warning:: The resulting dictionary does not preserve the order of its inputs.
 	"""
+	if len(dicts) == 0:
+		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")
+
 	if func is None:
-		return {k: reduce(lambda d,x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
+		return {k: reduce(lambda d, x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
 	else:
 		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}
 
@@ -245,7 +262,7 @@ def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
 def zipdicts(
 	m1: Mapping[_DictKey, _DictValue1]
 ) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @overload
@@ -253,7 +270,7 @@ def zipdicts(
 	m1: Mapping[_DictKey, _DictValue1],
 	m2: Mapping[_DictKey, _DictValue2]
 ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @overload
@@ -262,7 +279,7 @@ def zipdicts(
 	m2: Mapping[_DictKey, _DictValue2],
 	m3: Mapping[_DictKey, _DictValue3]
 ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @export
@@ -280,13 +297,16 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 
 	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
 	"""
-	if not dicts:
+	if len(dicts) == 0:
 		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
 
 	length = len(dicts[0])
 	if any(len(d) != length for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
-	for key, item0 in dicts[0].items():
-		# WORKAROUND: using redundant parenthesis for Python 3.7
-		yield (key, item0, *(d[key] for d in dicts[1:]))
+	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+		for key, item0 in ds[0].items():
+			# WORKAROUND: using redundant parenthesis for Python 3.7
+			yield (key, item0, *(d[key] for d in ds[1:]))
+
+	return gen(dicts)
