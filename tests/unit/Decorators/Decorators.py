@@ -46,18 +46,64 @@ __all__ = []
 
 
 @export
-class exported:
+class ExportedClass:
 	pass
 
 
-class notexported:
+class NotYetExportedClass:
 	pass
+
+
+class NotExportedClass:
+	pass
+
+
+@export
+def ExportedFunction():
+	pass
+
+
+def NotYetExportedFunction():
+	pass
+
+
+def NotExportedFunction():
+	pass
+
+
+L = lambda x: x
 
 
 class Export(TestCase):
-	def test_Export(self):
-		self.assertIn(exported.__name__, __all__)
-		self.assertNotIn(notexported.__name__, __all__)
+	def test_ExportedClass(self):
+		self.assertIn(ExportedClass.__name__, __all__)
+		self.assertNotIn(NotExportedClass.__name__, __all__)
+
+	def test_ExportedFunction(self):
+		self.assertIn(ExportedFunction.__name__, __all__)
+		self.assertNotIn(NotExportedFunction.__name__, __all__)
+
+	def test_ExportTopLevelClass(self):
+		export(NotYetExportedClass)
+
+	def test_ExportTopLevelFunction(self):
+		export(NotYetExportedFunction)
+
+	def test_ExportTopLevelLambda(self):
+		with self.assertRaises(TypeError):
+			export(L)
+
+	def test_ExportLocalFunction(self):
+		with self.assertRaises(TypeError):
+			@export
+			def F():
+				pass
+
+	def test_ExportLocalClass(self):
+		with self.assertRaises(TypeError):
+			@export
+			class C:
+				pass
 
 
 class ReadOnly(TestCase):
