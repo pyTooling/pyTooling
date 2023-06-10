@@ -31,7 +31,7 @@
 """Benchmark tests for pyTooling.Common.*."""
 from pytest import mark
 
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Common import zipdicts
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -40,157 +40,74 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Node_1:
-	_data_0: int
+dictA_10 = {str(i): i    for i in range(10)}
+dictB_10 = {str(i): i*10 for i in range(10)}
+dictC_10 = {str(i): i*20 for i in range(10)}
+dictD_10 = {str(i): i*30 for i in range(10)}
 
-	def __init__(self, data):
-		self._data_0 = data
+dictA_100 = {str(i): i     for i in range(100)}
+dictB_100 = {str(i): i*100 for i in range(100)}
+dictC_100 = {str(i): i*200 for i in range(100)}
+dictD_100 = {str(i): i*300 for i in range(100)}
 
-	def inc(self, add: int):
-		self._data_0 = self._data_0 + add
-
-
-class SlottedNode_1(metaclass=ExtendedType, useSlots=True):
-	_data_0: int
-
-	def __init__(self, data):
-		self._data_0 = data
-
-	def inc(self, add: int):
-		self._data_0 = self._data_0 + add
+dictA_1000 = {str(i): i      for i in range(1000)}
+dictB_1000 = {str(i): i*1000 for i in range(1000)}
+dictC_1000 = {str(i): i*2000 for i in range(1000)}
+dictD_1000 = {str(i): i*3000 for i in range(1000)}
 
 
-class Node_10:
-	_data_0: int
-	_data_1: int
-	_data_2: int
-	_data_3: int
-	_data_4: int
-	_data_5: int
-	_data_6: int
-	_data_7: int
-	_data_8: int
-	_data_9: int
-
-	def __init__(self, data):
-		self._data_0 = data
-		self._data_1 = data
-		self._data_2 = data
-		self._data_3 = data
-		self._data_4 = data
-		self._data_5 = data
-		self._data_6 = data
-		self._data_7 = data
-		self._data_8 = data
-		self._data_9 = data
-
-	def inc(self, add: int):
-		self._data_1 = self._data_0 + add
-		self._data_2 = self._data_1 + add
-		self._data_3 = self._data_2 + add
-		self._data_4 = self._data_3 + add
-		self._data_5 = self._data_4 + add
-		self._data_6 = self._data_5 + add
-		self._data_7 = self._data_6 + add
-		self._data_8 = self._data_7 + add
-		self._data_9 = self._data_8 + add
-
-
-class SlottedNode_10(metaclass=ExtendedType, useSlots=True):
-	_data_0: int
-	_data_1: int
-	_data_2: int
-	_data_3: int
-	_data_4: int
-	_data_5: int
-	_data_6: int
-	_data_7: int
-	_data_8: int
-	_data_9: int
-
-	def __init__(self, data):
-		self._data_0 = data
-		self._data_1 = data
-		self._data_2 = data
-		self._data_3 = data
-		self._data_4 = data
-		self._data_5 = data
-		self._data_6 = data
-		self._data_7 = data
-		self._data_8 = data
-		self._data_9 = data
-
-	def inc(self, add: int):
-		self._data_1 = self._data_0 + add
-		self._data_2 = self._data_1 + add
-		self._data_3 = self._data_2 + add
-		self._data_4 = self._data_3 + add
-		self._data_5 = self._data_4 + add
-		self._data_6 = self._data_5 + add
-		self._data_7 = self._data_6 + add
-		self._data_8 = self._data_7 + add
-		self._data_9 = self._data_8 + add
-
-
-@mark.benchmark(group="Create Objects with 1 slot")
-def test_CreateObjects_1(benchmark):
+@mark.benchmark(group="Zip dictionaries with 10 items")
+def test_Zip1x10(benchmark):
 	@benchmark
 	def func():
-		[Node_1(i) for i in range(1000)]
+		z = zipdicts(dictA_10)
 
 
-@mark.benchmark(group="Create Objects with 1 slot")
-def test_CreateSlottedObjects_1(benchmark):
+@mark.benchmark(group="Zip dictionaries with 10 items")
+def test_Zip2x10(benchmark):
 	@benchmark
 	def func():
-		[SlottedNode_1(i) for i in range(1000)]
+		z = zipdicts(dictA_10, dictB_10)
 
 
-@mark.benchmark(group="Create Objects with 10 slots")
-def test_CreateObjects_10(benchmark):
+@mark.benchmark(group="Zip dictionaries with 10 items")
+def test_Zip3x10(benchmark):
 	@benchmark
 	def func():
-		[Node_10(i) for i in range(1000)]
+		z = zipdicts(dictA_10, dictB_10, dictC_10)
 
 
-@mark.benchmark(group="Create Objects with 10 slots")
-def test_CreateSlottedObjects_10(benchmark):
+@mark.benchmark(group="Zip dictionaries with 10 items")
+def test_Zip4x10(benchmark):
 	@benchmark
 	def func():
-		[SlottedNode_10(i) for i in range(1000)]
+		z = zipdicts(dictA_10, dictB_10, dictC_10, dictD_10)
 
 
-@mark.benchmark(group="Accumulate a single integer slot")
-def test_Accumulate_1(benchmark):
+@mark.benchmark(group="Zip dictionaries with 100 items")
+def test_Zip2x100(benchmark):
 	@benchmark
 	def func():
-		node = Node_1(0)
-		for i in range(1000):
-			node.inc(i)
+		z = zipdicts(dictA_100, dictB_100)
 
 
-@mark.benchmark(group="Accumulate a single integer slot")
-def test_SlottedAccumulate_1(benchmark):
+@mark.benchmark(group="Zip dictionaries with 100 items")
+def test_Zip4x100(benchmark):
 	@benchmark
 	def func():
-		node = SlottedNode_1(0)
-		for i in range(1000):
-			node.inc(i)
+		z = zipdicts(dictA_100, dictB_100, dictC_100, dictD_100)
 
 
-@mark.benchmark(group="Accumulate 10 integer slots")
-def test_Accumulate_10(benchmark):
+
+@mark.benchmark(group="Zip dictionaries with 1000 items")
+def test_Zip2x1000(benchmark):
 	@benchmark
 	def func():
-		node = Node_10(0)
-		for i in range(1000):
-			node.inc(i)
+		z = zipdicts(dictA_1000, dictB_1000)
 
 
-@mark.benchmark(group="Accumulate 10 integer slots")
-def test_SlottedAccumulate_10(benchmark):
+@mark.benchmark(group="Zip dictionaries with 1000 items")
+def test_Zip4x1000(benchmark):
 	@benchmark
 	def func():
-		node = SlottedNode_10(0)
-		for i in range(1000):
-			node.inc(i)
+		z = zipdicts(dictA_1000, dictB_1000, dictC_1000, dictD_1000)
