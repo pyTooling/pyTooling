@@ -226,9 +226,13 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 
 	          return newClass
 
-	:param func: Function or method reference to be store on the decorated function or method.
-	:returns:    Decorator function that stores the function or method reference on the decorated object.
+	:param func:       Function or method reference to be store on the decorated function or method.
+	:returns:          Decorator function that stores the function or method reference on the decorated object.
+	:raises TypeError: If original function is not callable.
 	"""
+	if not callable(func):
+		raise TypeError(f"Original function is not callable.")
+
 	def decorator(f: Func) -> Func:
 		"""
 		Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
@@ -237,7 +241,7 @@ def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
 		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.
 		:raises TypeError: If decorated object is not callable.
 		"""
-		if not isinstance(f, Callable):
+		if not callable(f):
 			raise TypeError(f"Decorated object is not callable.")
 
 		f.__orig_func__ = func
