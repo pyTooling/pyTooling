@@ -228,12 +228,27 @@ class Descriptors(TestCase):
 		self.assertEqual(12, Class_2.Member)
 
 
-class Original(TestCase):
-	def test_OriginalFunction(self) -> None:
+class OrigFunction(TestCase):
+	def test_Function(self) -> None:
 		def func():
 			return 0
 
 		oldfunc = func
+		@OriginalFunction(oldfunc)
+		def wrapper():
+			return oldfunc() + 1
+
+		func = wrapper
+
+		self.assertEqual(1, func())
+		self.assertEqual(0, func.__orig_func__())
+
+	def test_CallableObjectAsOriginal(self) -> None:
+		class func:
+			def __call__(self):
+				return 0
+
+		oldfunc = func()
 		@OriginalFunction(oldfunc)
 		def wrapper():
 			return oldfunc() + 1
