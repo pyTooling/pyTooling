@@ -216,6 +216,9 @@ class Base(
 		""".. todo:: GRAPH::Base::del Needs documentation."""
 		del self._dict
 
+	def Delete(self) -> None:
+		self._dict = None
+
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
 		"""
 		Read a vertex's attached attributes (key-value-pairs) by key.
@@ -387,8 +390,9 @@ class BaseWithVertices(
 
 	def __del__(self):
 		""".. todo:: GRAPH::BaseWithVertices::del Needs documentation."""
-		super().__del__()
 		del self._vertices
+
+		super().__del__()
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -471,6 +475,7 @@ class Vertex(
 			else:
 				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this subgraph.")
 
+		self._views =         {}
 		self._inboundEdges =  []
 		self._outboundEdges = []
 		self._inboundLinks =  []
@@ -478,11 +483,46 @@ class Vertex(
 
 	def __del__(self):
 		""".. todo:: GRAPH::BaseEdge::del Needs documentation."""
-		super().__del__()
+		del self._views
 		del self._inboundEdges
 		del self._outboundEdges
 		del self._inboundLinks
 		del self._outboundLinks
+
+		super().__del__()
+
+	def Delete(self) -> None:
+		for edge in self._outboundEdges:
+			edge._destination._inboundEdges.remove(edge)
+			edge._Delete()
+		for edge in self._inboundEdges:
+			edge._source._outboundEdges.remove(edge)
+			edge._Delete()
+		for link in self._outboundLinks:
+			link._destination._inboundLinks.remove(link)
+			link._Delete()
+		for link in self._inboundLinks:
+			link._source._outboundLinks.remove(link)
+			link._Delete()
+
+		if self._id is None:
+			self._graph._verticesWithoutID.remove(self)
+		else:
+			del self._graph._verticesWithID[self._id]
+
+		# subgraph
+
+		# component
+
+		# views
+		self._views =         None
+		self._inboundEdges =  None
+		self._outboundEdges = None
+		self._inboundLinks =  None
+		self._outboundLinks = None
+
+		super().Delete()
+		assert getrefcount(self) == 1
 
 	@property
 	def Graph(self) -> 'Graph':
@@ -931,6 +971,42 @@ class Vertex(
 				return True
 
 		return False
+
+	def DeleteEdgeTo(self, destination: 'Vertex'):
+		for edge in self._outboundEdges:
+			if edge._destination is destination:
+				break
+		else:
+			raise GraphException(f"No outbound edge found to '{destination!r}'.")
+
+		edge.Delete()
+
+	def DeleteEdgeFrom(self, source: 'Vertex'):
+		for edge in self._inboundEdges:
+			if edge._source is source:
+				break
+		else:
+			raise GraphException(f"No inbound edge found to '{source!r}'.")
+
+		edge.Delete()
+
+	def DeleteLinkTo(self, destination: 'Vertex'):
+		for link in self._outboundLinks:
+			if link._destination is destination:
+				break
+		else:
+			raise GraphException(f"No outbound link found to '{destination!r}'.")
+
+		link.Delete()
+
+	def DeleteLinkFrom(self, source: 'Vertex'):
+		for link in self._inboundLinks:
+			if link._source is source:
+				break
+		else:
+			raise GraphException(f"No inbound link found to '{source!r}'.")
+
+		link.Delete()
 
 	def Copy(self, graph: Graph, copyDict: bool = False, linkingKeyToOriginalVertex: str = None, linkingKeyFromOriginalVertex: str = None) -> 'Vertex':
 		"""
@@ -1520,6 +1596,26 @@ class Edge(
 
 		super().__init__(source, destination, edgeID, value, weight)
 
+	def Delete(self) -> None:
+		# Remove from Source and Destination
+		self._source._outboundEdges.remove(self)
+		self._destination._inboundEdges.remove(self)
+
+		# Remove from Graph and Subgraph
+		if self._id is None:
+			self._source._graph._edgesWithoutID.remove(self)
+			if self._source._subgraph is not None:
+				self._source._subgraph._edgesWithoutID.remove(self)
+		else:
+			del self._source._graph._edgesWithID[self._id]
+			if self._source._subgraph is not None:
+				del self._source._subgraph._edgesWithID[self]
+
+		self._Delete()
+
+	def _Delete(self) -> None:
+		super().Delete()
+
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
 		self._source._outboundEdges.remove(self)
@@ -1556,6 +1652,21 @@ class Link(
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
 		super().__init__(source, destination, linkID, value, weight)
+
+	def Delete(self) -> None:
+		self._source._outboundEdges.remove(self)
+		self._destination._inboundEdges.remove(self)
+
+		if self._id is None:
+			self._source._graph._linksWithoutID.remove(self)
+		else:
+			del self._source._graph._linksWithID[self._id]
+
+		self._Delete()
+		assert getrefcount(self) == 1
+
+	def _Delete(self) -> None:
+		super().Delete()
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this link."""
@@ -1599,13 +1710,14 @@ class BaseGraph(
 
 	def __del__(self):
 		""".. todo:: GRAPH::BaseGraph::del Needs documentation."""
-		super().__del__()
 		del self._verticesWithoutID
 		del self._verticesWithID
 		del self._edgesWithoutID
 		del self._edgesWithID
 		del self._linksWithoutID
 		del self._linksWithID
+
+		super().__del__()
 
 	@property
 	def VertexCount(self) -> int:
@@ -1915,10 +2027,10 @@ class BaseGraph(
 		"""
 		if predicate is None:
 			for edge in self._edgesWithoutID:
-				del edge
+				edge._Delete()
 
 			for edge in self._edgesWithID.values():
-				del edge
+				edge._Delete()
 
 			self._edgesWithoutID = []
 			self._edgesWithID = {}
@@ -1938,7 +2050,7 @@ class BaseGraph(
 
 				edge._source._outboundEdges.remove(edge)
 				edge._destination._inboundEdges.remove(edge)
-				del edge
+				edge._Delete()
 
 			for edge in self._edgesWithoutID:
 				if predicate(edge):
@@ -1946,7 +2058,7 @@ class BaseGraph(
 
 					edge._source._outboundEdges.remove(edge)
 					edge._destination._inboundEdges.remove(edge)
-					del edge
+					edge._Delete()
 
 	def RemoveLinks(self, predicate: Callable[[Link], bool] = None):
 		"""
@@ -1958,10 +2070,10 @@ class BaseGraph(
 		"""
 		if predicate is None:
 			for link in self._linksWithoutID:
-				del link
+				link._Delete()
 
 			for link in self._linksWithID.values():
-				del link
+				link._Delete()
 
 			self._linksWithoutID = []
 			self._linksWithID = {}
@@ -1981,7 +2093,7 @@ class BaseGraph(
 
 				link._source._outboundLinks.remove(link)
 				link._destination._inboundLinks.remove(link)
-				del link
+				link._Delete()
 
 			for link in self._linksWithoutID:
 				if predicate(link):
@@ -1989,7 +2101,7 @@ class BaseGraph(
 
 					link._source._outboundLinks.remove(link)
 					link._destination._inboundLinks.remove(link)
-					del link
+					link._Delete()
 
 	def HasCycle(self) -> bool:
 		""".. todo:: GRAPH::BaseGraph::HasCycle Needs documentation."""
@@ -2196,10 +2308,11 @@ class Graph(
 
 	def __del__(self):
 		""".. todo:: GRAPH::Graph::del Needs documentation."""
-		super().__del__()
 		del self._subgraphs
 		del self._views
 		del self._components
+
+		super().__del__()
 
 	@property
 	def Subgraphs(self) -> Set[Subgraph]:

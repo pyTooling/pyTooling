@@ -1370,9 +1370,8 @@ class IterateStartingFromVertex(Iterate):
 			for path in source.IterateAllOutboundPathsAsVertexList():
 				pass
 
-		# FIXME: remove one edge with global filter, but a per vertex operation would be more suitable -> not yet implemented
-		# vList[11].RemoveEdgeTo(vList[4])
-		g.RemoveEdges(lambda e: e._source == vList[11] and e._destination == vList[4])
+		# Removing a reverse edge to avoid cycles.
+		vList[11].DeleteEdgeTo(vList[4])
 
 		source = vList[7]
 		expectedPaths = (
