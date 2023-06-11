@@ -28,10 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmark tests for :func:`pyTooling.Common.zipdicts`."""
+"""Benchmark tests for :func:`pyTooling.Common.mergedicts`."""
 from pytest import mark
 
-from pyTooling.Common import zipdicts
+from pyTooling.Common import mergedicts
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -40,74 +40,73 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-dictA_10 = {str(i): i    for i in range(10)}
-dictB_10 = {str(i): i*10 for i in range(10)}
-dictC_10 = {str(i): i*20 for i in range(10)}
-dictD_10 = {str(i): i*30 for i in range(10)}
+dictA_10 = {str(i): i for i in range(0, 10)}
+dictB_10 = {str(i): i for i in range(10, 10)}
+dictC_10 = {str(i): i for i in range(20, 10)}
+dictD_10 = {str(i): i for i in range(30, 10)}
 
-dictA_100 = {str(i): i     for i in range(100)}
-dictB_100 = {str(i): i*100 for i in range(100)}
-dictC_100 = {str(i): i*200 for i in range(100)}
-dictD_100 = {str(i): i*300 for i in range(100)}
+dictA_100 = {str(i): i for i in range(0, 100)}
+dictB_100 = {str(i): i for i in range(100, 100)}
+dictC_100 = {str(i): i for i in range(200, 100)}
+dictD_100 = {str(i): i for i in range(300, 100)}
 
-dictA_1000 = {str(i): i      for i in range(1000)}
-dictB_1000 = {str(i): i*1000 for i in range(1000)}
-dictC_1000 = {str(i): i*2000 for i in range(1000)}
-dictD_1000 = {str(i): i*3000 for i in range(1000)}
+dictA_1000 = {str(i): i for i in range(0, 1000)}
+dictB_1000 = {str(i): i for i in range(1000, 1000)}
+dictC_1000 = {str(i): i for i in range(2000, 1000)}
+dictD_1000 = {str(i): i for i in range(3000, 1000)}
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
-def test_Zip1x10(benchmark):
+@mark.benchmark(group="Merge dictionaries with 10 items")
+def test_Merge1x10(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_10)
+		z = mergedicts(dictA_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
-def test_Zip2x10(benchmark):
+@mark.benchmark(group="Merge dictionaries with 10 items")
+def test_Merge2x10(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_10, dictB_10)
+		z = mergedicts(dictA_10, dictB_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
-def test_Zip3x10(benchmark):
+@mark.benchmark(group="Merge dictionaries with 10 items")
+def test_Merge3x10(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_10, dictB_10, dictC_10)
+		z = mergedicts(dictA_10, dictB_10, dictC_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
-def test_Zip4x10(benchmark):
+@mark.benchmark(group="Merge dictionaries with 10 items")
+def test_Merge4x10(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_10, dictB_10, dictC_10, dictD_10)
+		z = mergedicts(dictA_10, dictB_10, dictC_10, dictD_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 100 items")
-def test_Zip2x100(benchmark):
+@mark.benchmark(group="Merge dictionaries with 100 items")
+def test_Merge2x100(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_100, dictB_100)
+		z = mergedicts(dictA_100, dictB_100)
 
 
-@mark.benchmark(group="Zip dictionaries with 100 items")
-def test_Zip4x100(benchmark):
+@mark.benchmark(group="Merge dictionaries with 100 items")
+def test_Merge4x100(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_100, dictB_100, dictC_100, dictD_100)
+		z = mergedicts(dictA_100, dictB_100, dictC_100, dictD_100)
 
 
-
-@mark.benchmark(group="Zip dictionaries with 1000 items")
-def test_Zip2x1000(benchmark):
+@mark.benchmark(group="Merge dictionaries with 1000 items")
+def test_Merge2x1000(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_1000, dictB_1000)
+		z = mergedicts(dictA_1000, dictB_1000)
 
 
-@mark.benchmark(group="Zip dictionaries with 1000 items")
-def test_Zip4x1000(benchmark):
+@mark.benchmark(group="Merge dictionaries with 1000 items")
+def test_Merge4x1000(benchmark):
 	@benchmark
 	def func():
-		z = zipdicts(dictA_1000, dictB_1000, dictC_1000, dictD_1000)
+		z = mergedicts(dictA_1000, dictB_1000, dictC_1000, dictD_1000)

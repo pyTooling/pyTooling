@@ -44,10 +44,8 @@ __keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versio
 								"text user interface", "message logging", "abstract", "override"]
 
 from collections import deque
-from functools import reduce
-from numbers import Number
-from operator import or_
-from typing import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set
+from numbers     import Number
+from typing      import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set, Hashable, Optional
 
 try:
 	from pyTooling.Decorators import export
@@ -209,7 +207,7 @@ def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 @overload
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
-	func: Callable
+	filter: Optional[Callable[[Hashable, Any], bool]]
 ) -> Dict[Union[_DictKey1], Union[_DictValue1]]:
 #) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
 	...  # pragma: no cover
@@ -219,7 +217,7 @@ def mergedicts(
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
-	func: Callable
+	filter: Optional[Callable[[Hashable, Any], bool]]
 ) -> Dict[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]]:
 # ) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
 	...  # pragma: no cover
@@ -230,32 +228,31 @@ def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
 	m3: Mapping[_DictKey3, _DictValue3],
-	func: Callable
+	filter: Optional[Callable[[Hashable, Any], bool]]
 ) -> Dict[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]]:
 #) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
 	...  # pragma: no cover
 
 
 @export
-def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
+def mergedicts(*dicts: Tuple[Dict, ...], filter: Callable[[Hashable, Any], bool] = None) -> Dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
-	If parameter ``func`` isn't ``None``, then this function is applied to every element during the merge operation.
+	If parameter ``filter`` isn't ``None``, then this function is applied to every element during the merge operation. If
+	it returns true, the dictionary element will be present in the resulting dictionary.
 
-	:param dicts: Tuple of dictionaries to merge as positional parameters.
-	:param func:  Optional function to apply to each dictionary element when merging.
-	:returns:     A new dictionary containing the merge result.
-
-	.. warning:: The resulting dictionary does not preserve the order of its inputs.
+	:param dicts:  Tuple of dictionaries to merge as positional parameters.
+	:param filter: Optional filter function to apply to each dictionary element when merging.
+	:returns:      A new dictionary containing the merge result.
 	"""
 	if len(dicts) == 0:
 		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")
 
-	if func is None:
-		return {k: reduce(lambda d, x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
+	if filter is None:
+		return {k: v for d in dicts for k, v in d.items()}
 	else:
-		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}
+		return {k: v for d in dicts for k, v in d.items() if filter(k, v)}
 
 
 @overload
