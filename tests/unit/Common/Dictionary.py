@@ -104,43 +104,61 @@ class Merge(TestCase):
 			m = mergedicts()
 
 		with self.assertRaises(ValueError):
-			m = mergedicts(func=lambda item: item)
+			m = mergedicts(filter=lambda k, v: True)
 
 	def test_Merge1(self):
 		d1 = {"1": 1, "2": 2}
 
-		expected = {"1": 1, "2": 2}
+		expected = (
+			("1", 1),
+			("2", 2)
+		)
 
 		m = mergedicts(d1)
-		self.assertDictEqual(expected, m)
+		self.assertTupleEqual(expected, tuple(m.items()))
 
 	def test_Merge2(self):
 		d1 = {"1": 1, "2": 2}
 		d2 = {"3": 3, "4": 4}
 
-		expected = {"1": 1, "2": 2, "3": 3, "4": 4}
+		expected = (
+			("1", 1),
+			("2", 2),
+			("3", 3),
+			("4", 4)
+		)
 
 		m = mergedicts(d1, d2)
-		self.assertDictEqual(expected, m)
+		self.assertTupleEqual(expected, tuple(m.items()))
 
 	def test_Merge3(self):
 		d1 = {"1": 1, "2": 2}
 		d2 = {"3": 3, "4": 4}
 		d3 = {"5": 5, "6": 6}
 
-		expected = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6}
+		expected = (
+			("1", 1),
+			("2", 2),
+			("3", 3),
+			("4", 4),
+			("5", 5),
+			("6", 6)
+		)
 
 		m = mergedicts(d1, d2, d3)
-		self.assertDictEqual(expected, m)
+		self.assertTupleEqual(expected, tuple(m.items()))
 
-	def test_Merge2Func(self):
+	def test_Merge2Filter(self):
 		d1 = {"1": 1, "2": 2}
 		d2 = {"3": 3, "4": 4}
 
-		expected = {"1": 1, "2": 2, "3": 3, "4": 4}
+		expected = (
+			("2", 2),
+			("4", 4)
+		)
 
-		m = mergedicts(d1, d2, func=lambda key, value: (key, value * 2))
-		self.assertDictEqual(expected, m)
+		m = mergedicts(d1, d2, filter=lambda key, value: value % 2 == 0)
+		self.assertTupleEqual(expected, tuple(m.items()))
 
 
 class Zip(TestCase):
