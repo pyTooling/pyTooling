@@ -245,6 +245,10 @@ def mergedicts(*dicts: Tuple[Dict, ...], filter: Callable[[Hashable, Any], bool]
 	:param dicts:  Tuple of dictionaries to merge as positional parameters.
 	:param filter: Optional filter function to apply to each dictionary element when merging.
 	:returns:      A new dictionary containing the merge result.
+
+	.. seealso::
+
+	   `How do I merge two dictionaries in a single expression in Python? <https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-in-python>`__
 	"""
 	if len(dicts) == 0:
 		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")

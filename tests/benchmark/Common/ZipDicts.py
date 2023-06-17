@@ -56,42 +56,42 @@ dictC_1000 = {str(i): i*2000 for i in range(1000)}
 dictD_1000 = {str(i): i*3000 for i in range(1000)}
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
+@mark.benchmark(group="F0: Zip dictionaries with 10 items")
 def test_Zip1x10(benchmark):
 	@benchmark
 	def func():
 		z = zipdicts(dictA_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
+@mark.benchmark(group="F0: Zip dictionaries with 10 items")
 def test_Zip2x10(benchmark):
 	@benchmark
 	def func():
 		z = zipdicts(dictA_10, dictB_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
+@mark.benchmark(group="F0: Zip dictionaries with 10 items")
 def test_Zip3x10(benchmark):
 	@benchmark
 	def func():
 		z = zipdicts(dictA_10, dictB_10, dictC_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 10 items")
+@mark.benchmark(group="F0: Zip dictionaries with 10 items")
 def test_Zip4x10(benchmark):
 	@benchmark
 	def func():
 		z = zipdicts(dictA_10, dictB_10, dictC_10, dictD_10)
 
 
-@mark.benchmark(group="Zip dictionaries with 100 items")
+@mark.benchmark(group="F1: Zip dictionaries with 100 items")
 def test_Zip2x100(benchmark):
 	@benchmark
 	def func():
 		z = zipdicts(dictA_100, dictB_100)
 
 
-@mark.benchmark(group="Zip dictionaries with 100 items")
+@mark.benchmark(group="F1: Zip dictionaries with 100 items")
 def test_Zip4x100(benchmark):
 	@benchmark
 	def func():
@@ -99,14 +99,14 @@ def test_Zip4x100(benchmark):
 
 
 
-@mark.benchmark(group="Zip dictionaries with 1000 items")
+@mark.benchmark(group="F2: Zip dictionaries with 1000 items")
 def test_Zip2x1000(benchmark):
 	@benchmark
 	def func():
 		z = zipdicts(dictA_1000, dictB_1000)
 
 
-@mark.benchmark(group="Zip dictionaries with 1000 items")
+@mark.benchmark(group="F2: Zip dictionaries with 1000 items")
 def test_Zip4x1000(benchmark):
 	@benchmark
 	def func():

@@ -204,6 +204,69 @@ M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
 @export
+def useslots(cls):
+	if cls.__class__ is type:
+		metacls = ExtendedType
+	elif issubclass(cls.__class__, ExtendedType):
+		metacls = cls.__class__
+	else:
+		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+
+	bases = tuple(base for base in cls.__bases__ if base is not object)
+	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
+	members = {
+		"__qualname__": cls.__qualname__
+	}
+	for key, value in cls.__dict__.items():
+		if key not in slots:
+			members[key] = value
+
+	return metacls(cls.__name__, bases, members, useSlots=True)
+
+
+@export
+def mixin(cls):
+	if cls.__class__ is type:
+		metacls = ExtendedType
+	elif issubclass(cls.__class__, ExtendedType):
+		metacls = cls.__class__
+	else:
+		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+
+	bases = tuple(base for base in cls.__bases__ if base is not object)
+	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
+	members = {
+		"__qualname__": cls.__qualname__
+	}
+	for key, value in cls.__dict__.items():
+		if key not in slots:
+			members[key] = value
+
+	return metacls(cls.__name__, bases, members, useSlots=True, mixin=True)
+
+
+@export
+def singleton(cls):
+	if cls.__class__ is type:
+		metacls = ExtendedType
+	elif issubclass(cls.__class__, ExtendedType):
+		metacls = cls.__class__
+	else:
+		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+
+	bases = tuple(base for base in cls.__bases__ if base is not object)
+	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
+	members = {
+		"__qualname__": cls.__qualname__
+	}
+	for key, value in cls.__dict__.items():
+		if key not in slots:
+			members[key] = value
+
+	return metacls(cls.__name__, bases, members, singleton=True)
+
+
+@export
 def abstractmethod(method: M) -> M:
 	"""
 	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
@@ -307,26 +370,29 @@ class ExtendedType(type):
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 	"""
 
-	def __new__(
-		self,
-		className: str,
-		baseClasses: Tuple[type],
-		members: Dict[str, Any],
-		mixin: bool = None,
-		singleton: bool = False,
-		useSlots: bool = False
-	) -> type:
+	def __call__(cls, *args, **kwargs):
+		if cls.__new__ is object.__new__:
+			newCls = cls.__new__(cls,,
+		else:
+			newCls = cls.__new__(cls, **kwargs)
+
+		cls.__init__(newCls, *args, **kwargs)
+
+		return newCls
+
+	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any], useSlots: bool = False,
+							mixin: bool = None, singleton: bool = False) -> type:
 		"""
 		Construct a new class using this :term:`meta-class`.
 
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
+		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
 		:param mixin:           If true, make the class a :term:`Mixin`.
 		                        If false, create slots if ``useSlots`` is true.
 		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
-		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
@@ -348,7 +414,7 @@ class ExtendedType(type):
 			if isinstance(primaryBaseClass, self):
 				useSlots = primaryBaseClass.__usesSlots__
 
-		# members gets modified
+		# Possible adds members["__slots__"]
 		mixinSlots, members = self._aggregateMixinSlots(className, baseClasses, members, mixin, useSlots)
 
 		# Compute abstract methods
