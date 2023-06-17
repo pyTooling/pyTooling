@@ -372,9 +372,9 @@ class ExtendedType(type):
 
 	def __call__(cls, *args, **kwargs):
 		if cls.__new__ is object.__new__:
-			newCls = cls.__new__(cls,,
+			newCls = cls.__new__(cls)
 		else:
-			newCls = cls.__new__(cls, **kwargs)
+			newCls = cls.__new__(cls, *args, **kwargs)
 
 		cls.__init__(newCls, *args, **kwargs)
 

@@ -32,7 +32,7 @@
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 from unittest import TestCase
 
-from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError
+from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError, CycleError
 from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 
 

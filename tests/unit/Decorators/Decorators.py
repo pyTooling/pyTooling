@@ -229,6 +229,28 @@ class Descriptors(TestCase):
 
 
 class OrigFunction(TestCase):
+	def test_NotCallableOriginal(self) -> None:
+		class func:
+			pass
+
+		oldfunc = func()
+		with self.assertRaises(TypeError):
+			@OriginalFunction(oldfunc)
+			def wrapper():
+				return oldfunc() + 1
+
+	def test_NotCallableWrapper(self) -> None:
+		def func():
+			return 0
+
+		oldfunc = func
+		with self.assertRaises(TypeError):
+			class Wrapper:
+				pass
+
+			func = Wrapper()
+			func = OriginalFunction(oldfunc)(func)
+
 	def test_Function(self) -> None:
 		def func():
 			return 0
@@ -254,6 +276,21 @@ class OrigFunction(TestCase):
 			return oldfunc() + 1
 
 		func = wrapper
+
+		self.assertEqual(1, func())
+		self.assertEqual(0, func.__orig_func__())
+
+	def test_CallableObjectAsWrapper(self) -> None:
+		def func():
+			return 0
+
+		oldfunc = func
+		class Wrapper:
+			def __call__(self):
+				return oldfunc() + 1
+
+		func = Wrapper()
+		func = OriginalFunction(oldfunc)(func)
 
 		self.assertEqual(1, func())
 		self.assertEqual(0, func.__orig_func__())

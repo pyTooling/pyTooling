@@ -38,7 +38,8 @@ This test suite tests decorators:
 """
 from unittest              import TestCase
 
-from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError, notimplemented
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
