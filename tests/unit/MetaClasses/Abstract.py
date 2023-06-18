@@ -38,6 +38,7 @@ This test suite tests decorators:
 """
 from unittest              import TestCase
 
+from pyTooling.Decorators  import notimplemented
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError
 
 
