@@ -95,7 +95,7 @@ Various file formats suitable for configuration information share the same featu
 Data Structures
 ===============
 
-pyTooling also provides fast and powerful data structures offering object-oriented APIs:
+pyTooling also provides :ref:`fast and powerful data structures <STRUCT>` offering object-oriented APIs:
 
 * :ref:`Graph data structure <STRUCT/Graph>` |br|
   |rarr| A directed graph implementation using a :class:`pyTooling.Graph.Vertex` and :class:`pyTooling.Graph.Edge`
@@ -166,9 +166,14 @@ Exceptions
 Meta-Classes
 ============
 
-pyTooling provides an :ref:`enhanced meta-class <META>` called :class:`~pyTooling.MetaClasses.ExtendedType`.
-This meta-classes allows to implement :ref:`abstract methods <META/Abstract>`, :ref:`singletons <META/Singleton>`,
-:ref:`slotted types <META/Slotted>` and combinations thereof.
+pyTooling provides an :ref:`enhanced meta-class <META>` called :class:`~pyTooling.MetaClasses.ExtendedType` to replace
+the default meta-class :class:`type`. Is combines features like using slots, abstract methods and singletons in a single
+meta-class compared to Python approach in providing multiple specific meta-classes that can't be combined to e.g. a
+singleton using slots.
+
+:ref:`ExtendedType <META/ExtendedType>` allows to implement :ref:`slotted types <META/Slotted>`,
+:ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/Abstract>` and :ref:`singletons <META/Singleton>`,
+and combinations thereof.
 
 :pycode:`class MyClass(metaclass=ExtendedType):`
   A class definition using that meta-class can implement :ref:`abstract methods <META/Abstract>` using decorators
