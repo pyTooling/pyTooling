@@ -40,6 +40,14 @@ from pyTooling.MetaClasses import ExtendedType
 
 
 @export
+class PythonImplementation(Flag):
+	Unknown = 0
+
+	CPython = 1
+	PyPy = 2
+
+
+@export
 class PythonVersion(metaclass=ExtendedType, singleton=True, useSlots=True):
 	Major: int
 	Minor: int
@@ -52,6 +60,56 @@ class PythonVersion(metaclass=ExtendedType, singleton=True, useSlots=True):
 		self.Minor = version_info.minor
 		self.Micro = version_info.micro
 
+@export
+class Platforms(Flag):
+	Unknown = 0
+
+	OS_BSD =     auto()        #: Operating System: BSD (Unix).
+	OS_Linux =   auto()        #: Operating System: Linux.
+	OS_MacOS =   auto()        #: Operating System: macOS.
+	OS_Windows = auto()        #: Operating System: Windows.
+
+	OperatingSystem = OS_BSD | OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
+
+	SEP_WindowsPath =  auto()  #: Seperator: Path element seperator (e.g. for directories).
+	SEP_WindowsValue = auto()  #: Seperator: Value seperator in variables (e.g. for paths in PATH).
+
+	ENV_Native = auto()        #: Environment: :term:`native`.
+	ENV_WSL =    auto()        #: Environment: :term:`Windows System for Linux <WSL>`.
+	ENV_MSYS2 =  auto()        #: Environment: :term:`MSYS2`.
+	ENV_Cygwin = auto()        #: Environment: :term:`Cygwin`.
+
+	Environment = ENV_Native | ENV_WSL | ENV_MSYS2 | ENV_Cygwin  #: Mask: Any environment.
+
+	ARCH_x86_32 =  auto()      #: Architecture: x86-32 (IA32).
+	ARCH_x86_64 =  auto()      #: Architecture: x86-64 (AMD64).
+	ARCH_AArch64 = auto()      #: Architecture: AArch64.
+
+	Arch_x86 =     ARCH_x86_32 | ARCH_x86_64  #: Mask: Any x86 architecture.
+	Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
+	Architecture = Arch_x86 | Arch_Arm        #: Mask: Any architecture.
+
+	FreeBSD = OS_BSD     | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
+	Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
+	MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64                                       #: Group: native macOS on x86-64.
+	Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
+
+	MSYS =    auto()     #: MSYS2 Runtime: MSYS.
+	MinGW32 = auto()     #: MSYS2 Runtime: :term:`MinGW32 <MinGW>`.
+	MinGW64 = auto()     #: MSYS2 Runtime: :term:`MinGW64 <MinGW>`.
+	UCRT64 =  auto()     #: MSYS2 Runtime: :term:`UCRT64 <UCRT>`.
+	Clang32 = auto()     #: MSYS2 Runtime: Clang32.
+	Clang64 = auto()     #: MSYS2 Runtime: Clang64.
+
+	MSYS2_Runtime = MSYS | MinGW32 | MinGW64 | UCRT64 | Clang32 | Clang64    #: Mask: Any MSYS2 runtime environment.
+
+	Windows_MSYS2_MSYS =    OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MSYS      #: Group: MSYS runtime running on Windows x86-64
+	Windows_MSYS2_MinGW32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW32   #: Group: MinGW32 runtime running on Windows x86-64
+	Windows_MSYS2_MinGW64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW64   #: Group: MinGW64 runtime running on Windows x86-64
+	Windows_MSYS2_UCRT64 =  OS_Windows | ENV_MSYS2 | ARCH_x86_64 | UCRT64    #: Group: UCRT64 runtime running on Windows x86-64
+	Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
+	Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64   #: Group: Clang64 runtime running on Windows x86-64
+
 
 @export
 class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
@@ -62,57 +120,9 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 	   StackOverflow question: `Python: What OS am I running on? <https://stackoverflow.com/a/54837707/3719459>`__
 	"""
 
-	class Platforms(Flag):
-		Unknown = 0
-
-		OS_BSD =     auto()        #: Operating System: BSD (Unix).
-		OS_Linux =   auto()        #: Operating System: Linux.
-		OS_MacOS =   auto()        #: Operating System: macOS.
-		OS_Windows = auto()        #: Operating System: Windows.
-
-		OperatingSystem = OS_BSD | OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
-
-		SEP_WindowsPath =  auto()  #: Seperator: Path element seperator (e.g. for directories).
-		SEP_WindowsValue = auto()  #: Seperator: Value seperator in variables (e.g. for paths in PATH).
-
-		ENV_Native = auto()        #: Environment: :term:`native`.
-		ENV_WSL =    auto()        #: Environment: :term:`Windows System for Linux <WSL>`.
-		ENV_MSYS2 =  auto()        #: Environment: :term:`MSYS2`.
-		ENV_Cygwin = auto()        #: Environment: :term:`Cygwin`.
-
-		Environment = ENV_Native | ENV_WSL | ENV_MSYS2 | ENV_Cygwin  #: Mask: Any environment.
-
-		ARCH_x86_32 =  auto()      #: Architecture: x86-32 (IA32).
-		ARCH_x86_64 =  auto()      #: Architecture: x86-64 (AMD64).
-		ARCH_AArch64 = auto()      #: Architecture: AArch64.
-
-		Arch_x86 =     ARCH_x86_32 | ARCH_x86_64  #: Mask: Any x86 architecture.
-		Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
-		Architecture = Arch_x86 | Arch_Arm        #: Mask: Any architecture.
-
-		FreeBSD = OS_BSD     | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
-		Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
-		MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64                                       #: Group: native macOS on x86-64.
-		Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
-
-		MSYS =    auto()     #: MSYS2 Runtime: MSYS.
-		MinGW32 = auto()     #: MSYS2 Runtime: :term:`MinGW32 <MinGW>`.
-		MinGW64 = auto()     #: MSYS2 Runtime: :term:`MinGW64 <MinGW>`.
-		UCRT64 =  auto()     #: MSYS2 Runtime: :term:`UCRT64 <UCRT>`.
-		Clang32 = auto()     #: MSYS2 Runtime: Clang32.
-		Clang64 = auto()     #: MSYS2 Runtime: Clang64.
-
-		MSYS2_Runtime = MSYS | MinGW32 | MinGW64 | UCRT64 | Clang32 | Clang64    #: Mask: Any MSYS2 runtime environment.
-
-		Windows_MSYS2_MSYS =    OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MSYS      #: Group: MSYS runtime running on Windows x86-64
-		Windows_MSYS2_MinGW32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW32   #: Group: MinGW32 runtime running on Windows x86-64
-		Windows_MSYS2_MinGW64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW64   #: Group: MinGW64 runtime running on Windows x86-64
-		Windows_MSYS2_UCRT64 =  OS_Windows | ENV_MSYS2 | ARCH_x86_64 | UCRT64    #: Group: UCRT64 runtime running on Windows x86-64
-		Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
-		Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64   #: Group: Clang64 runtime running on Windows x86-64
-
-	_platform:      Platforms
-	_pythonVersion: PythonVersion
+	_platform:             Platforms
+	_pythonImplementation: PythonImplementation
+	_pythonVersion:        PythonVersion
 
 	def __init__(self):
 		import sys
@@ -120,8 +130,20 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 		import platform
 		import sysconfig
 
-		self._platform = self.Platforms.Unknown
+		# Discover the Python implementation
+		pythonImplementation = platform.python_implementation()
+		if pythonImplementation == "CPython":
+			self._pythonImplementation = PythonImplementation.CPython
+		elif pythonImplementation == "PyPy":
+			self._pythonImplementation = PythonImplementation.PyPy
+		else:
+			self._pythonImplementation = PythonImplementation.Unknown
+
+		# Discover the Python version
 		self._pythonVersion = PythonVersion()
+
+		# Discover the platform
+		self._platform = Platforms.Unknown
 
 		# system = platform.system()
 		machine = platform.machine()
@@ -138,26 +160,26 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 		# print(sysconfig_platform)
 
 		if os.name == "nt":
-			self._platform |= self.Platforms.OS_Windows
+			self._platform |= Platforms.OS_Windows
 
 			if sysconfig_platform == "win32":
-				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_32 | self.Platforms.SEP_WindowsPath | self.Platforms.SEP_WindowsValue
+				self._platform |= Platforms.ENV_Native | Platforms.ARCH_x86_32 | Platforms.SEP_WindowsPath | Platforms.SEP_WindowsValue
 			elif sysconfig_platform == "win-amd64":
-				self._platform |= self.Platforms.ENV_Native | self.Platforms.ARCH_x86_64 | self.Platforms.SEP_WindowsPath | self.Platforms.SEP_WindowsValue
+				self._platform |= Platforms.ENV_Native | Platforms.ARCH_x86_64 | Platforms.SEP_WindowsPath | Platforms.SEP_WindowsValue
 			elif sysconfig_platform.startswith("mingw"):
 				if machine == "AMD64":
-					self._platform |= self.Platforms.ARCH_x86_64
+					self._platform |= Platforms.ARCH_x86_64
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for Windows.")
 
 				if sysconfig_platform == "mingw_i686":
-					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MinGW32
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
 				elif sysconfig_platform == "mingw_x86_64":
-					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MinGW64
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64
 				elif sysconfig_platform == "mingw_x86_64_ucrt":
-					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.UCRT64
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
 				elif sysconfig_platform == "mingw_x86_64_clang":
-					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.Clang64
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
 				else:
 					raise Exception(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
 			else:
@@ -165,17 +187,17 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		elif os.name == "posix":
 			if sys_platform == "linux":
-				self._platform |= self.Platforms.OS_Linux | self.Platforms.ENV_Native
+				self._platform |= Platforms.OS_Linux | Platforms.ENV_Native
 
 				if sysconfig_platform == "linux-x86_64":            # native Linux x86_64; Windows 64 + WSL
-					self._platform |= self.Platforms.ARCH_x86_64
+					self._platform |= Platforms.ARCH_x86_64
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
-					self._platform |= self.Platforms.ARCH_AArch64
+					self._platform |= Platforms.ARCH_AArch64
 				else:
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
 			elif sys_platform == "darwin":
-				self._platform |= self.Platforms.OS_MacOS | self.Platforms.ENV_Native | self.Platforms.ARCH_x86_64
+				self._platform |= Platforms.OS_MacOS | Platforms.ENV_Native | Platforms.ARCH_x86_64
 
 				# print()
 				# print(os.name)
@@ -185,36 +207,36 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 				# print(sys_platform)
 				# print(sysconfig_platform)
 			elif sys_platform == "msys":
-				self._platform |= self.Platforms.OS_Windows | self.Platforms.ENV_MSYS2 | self.Platforms.MSYS
+				self._platform |= Platforms.OS_Windows | Platforms.ENV_MSYS2 | Platforms.MSYS
 
 				if machine == "i686":
-					self._platform |= self.Platforms.ARCH_x86_32
+					self._platform |= Platforms.ARCH_x86_32
 				elif machine == "x86_64":
-					self._platform |= self.Platforms.ARCH_x86_64
+					self._platform |= Platforms.ARCH_x86_64
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
 
 			elif sys_platform == "cygwin":
-				self._platform |= self.Platforms.OS_Windows
+				self._platform |= Platforms.OS_Windows
 
 				if sysconfig_platform.startswith("msys"):
-					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MSYS
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.MSYS
 
 					if machine == "i686":
-						self._platform |= self.Platforms.ARCH_x86_32
+						self._platform |= Platforms.ARCH_x86_32
 					elif machine == "x86_64":
-						self._platform |= self.Platforms.ARCH_x86_64
+						self._platform |= Platforms.ARCH_x86_64
 					else:
 						raise Exception(f"Unknown architecture '{machine}' for MSYS2 on Windows.")
 
 				elif sysconfig_platform.startswith("mingw64"):
-					self._platform |= self.Platforms.ENV_MSYS2 | self.Platforms.MinGW64 | self.Platforms.ARCH_x86_64
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64 | Platforms.ARCH_x86_64
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
 			elif sys_platform.startswith("freebsd"):
 				if machine == "amd64":
-					self._platform = self.Platforms.FreeBSD
+					self._platform = Platforms.FreeBSD
 				else:
 					raise Exception(f"Unknown architecture '{machine}' for FreeBSD.")
 			else:
@@ -224,9 +246,34 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		# print(self._platform)
 
+
+	@property
+	def PythonImplementation(self) -> PythonImplementation:
+		return self._pythonImplementation
+
+	@property
+	def IsCPython(self) -> bool:
+		"""Returns true, if the Python implementation is a :term:`CPython`.
+
+		:returns: ``True``, if the Python implementation is CPython.
+		"""
+		return self._pythonImplementation is PythonImplementation.CPython
+
+	@property
+	def IsPyPy(self) -> bool:
+		"""Returns true, if the Python implementation is a :term:`PyPy`.
+
+		:returns: ``True``, if the Python implementation is PyPY.
+		"""
+		return self._pythonImplementation is PythonImplementation.PyPy
+
+	@property
+	def PythonVersion(self) -> PythonVersion:
+		return self._pythonVersion
+
 	@property
 	def HostOperatingSystem(self) -> Platforms:
-		return self._platform & self.Platforms.OperatingSystem
+		return self._platform & Platforms.OperatingSystem
 
 	@property
 	def IsNativePlatform(self) -> bool:
@@ -234,7 +281,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a native platform.
 		"""
-		return self.Platforms.ENV_Native in self._platform
+		return Platforms.ENV_Native in self._platform
 
 	@property
 	def IsNativeWindows(self) -> bool:
@@ -242,7 +289,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a native Windows x86-64 platform.
 		"""
-		return self.Platforms.Windows in self._platform
+		return Platforms.Windows in self._platform
 
 	@property
 	def IsNativeLinux(self) -> bool:
@@ -250,7 +297,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a native Linux x86-64 platform.
 		"""
-		return self.Platforms.Linux in self._platform
+		return Platforms.Linux in self._platform
 
 	@property
 	def IsNativeMacOS(self) -> bool:
@@ -258,7 +305,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a native macOS x86-64 platform.
 		"""
-		return self.Platforms.MacOS in self._platform
+		return Platforms.MacOS in self._platform
 
 	@property
 	def IsMSYS2Environment(self) -> bool:
@@ -266,7 +313,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a MSYS2 environment on Windows.
 		"""
-		return self.Platforms.ENV_MSYS2 in self._platform
+		return Platforms.ENV_MSYS2 in self._platform
 
 	@property
 	def IsMSYSOnWindows(self) -> bool:
@@ -274,7 +321,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a MSYS runtime on Windows.
 		"""
-		return self.Platforms.Windows_MSYS2_MSYS in self._platform
+		return Platforms.Windows_MSYS2_MSYS in self._platform
 
 	@property
 	def IsMinGW32OnWindows(self) -> bool:
@@ -282,7 +329,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a MINGW32 runtime on Windows.
 		"""
-		return self.Platforms.Windows_MSYS2_MinGW32 in self._platform
+		return Platforms.Windows_MSYS2_MinGW32 in self._platform
 
 	@property
 	def IsMinGW64OnWindows(self) -> bool:
@@ -290,7 +337,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a MINGW64 runtime on Windows.
 		"""
-		return self.Platforms.Windows_MSYS2_MinGW64 in self._platform
+		return Platforms.Windows_MSYS2_MinGW64 in self._platform
 
 	@property
 	def IsUCRT64OnWindows(self) -> bool:
@@ -298,7 +345,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a UCRT64 runtime on Windows.
 		"""
-		return self.Platforms.Windows_MSYS2_UCRT64 in self._platform
+		return Platforms.Windows_MSYS2_UCRT64 in self._platform
 
 	@property
 	def IsClang32OnWindows(self) -> bool:
@@ -306,7 +353,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a Clang32 runtime on Windows.
 		"""
-		return self.Platforms.Windows_MSYS2_Clang32 in self._platform
+		return Platforms.Windows_MSYS2_Clang32 in self._platform
 
 	@property
 	def IsClang64OnWindows(self) -> bool:
@@ -314,7 +361,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if the platform is a Clang64 runtime on Windows.
 		"""
-		return self.Platforms.Windows_MSYS2_Clang64 in self._platform
+		return Platforms.Windows_MSYS2_Clang64 in self._platform
 
 	@property
 	def IsPOSIX(self) -> bool:
@@ -323,7 +370,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: ``True``, if POSIX or POSIX-like.
 		"""
-		return self.Platforms.SEP_WindowsPath not in self._platform
+		return Platforms.SEP_WindowsPath not in self._platform
 
 	@property
 	def PathSeperator(self) -> str:
@@ -335,7 +382,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: Path separation character.
 		"""
-		if self.Platforms.SEP_WindowsPath in self._platform:
+		if Platforms.SEP_WindowsPath in self._platform:
 			return "\\"
 		else:
 			return "/"
@@ -350,7 +397,7 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 
 		:returns: Value separation character.
 		"""
-		if self.Platforms.SEP_WindowsValue in self._platform:
+		if Platforms.SEP_WindowsValue in self._platform:
 			return ";"
 		else:
 			return ":"
@@ -364,11 +411,11 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 		* macOS: ``""`` (empty string)
 		* Windows: ``"exe"``
 		"""
-		if self.Platforms.OS_Windows in self._platform:
+		if Platforms.OS_Windows in self._platform:
 			return "exe"
-		elif self.Platforms.OS_Linux in self._platform:
+		elif Platforms.OS_Linux in self._platform:
 			return ""
-		elif self.Platforms.OS_MacOS in self._platform:
+		elif Platforms.OS_MacOS in self._platform:
 			return ""
 		else:
 			raise Exception(f"Unknown operating system.")
@@ -382,18 +429,14 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 		* macOS: ``"lib"``
 		* Windows: ``"dll"``
 		"""
-		if self.Platforms.OS_Windows in self._platform:
+		if Platforms.OS_Windows in self._platform:
 			return "dll"
-		elif self.Platforms.OS_Linux in self._platform:
+		elif Platforms.OS_Linux in self._platform:
 			return "so"
-		elif self.Platforms.OS_MacOS in self._platform:
+		elif Platforms.OS_MacOS in self._platform:
 			return "lib"
 		else:
 			raise Exception(f"Unknown operating system.")
-
-	@property
-	def PythonVersion(self) -> PythonVersion:
-		return self._pythonVersion
 
 	def __repr__(self) -> str:
 		return str(self._platform)
@@ -401,47 +444,47 @@ class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
 	def __str__(self) -> str:
 		runtime = ""
 
-		if self.Platforms.OS_MacOS in self._platform:
+		if Platforms.OS_MacOS in self._platform:
 			platform = "MacOS"
-		elif self.Platforms.OS_Linux in self._platform:
+		elif Platforms.OS_Linux in self._platform:
 			platform = "Linux"
-		elif self.Platforms.OS_Windows in self._platform:
+		elif Platforms.OS_Windows in self._platform:
 			platform = "Windows"
 		else:
 			platform = "plat:dec-err"
 
-		if self.Platforms.ENV_Native in self._platform:
+		if Platforms.ENV_Native in self._platform:
 			environment = ""
-		elif self.Platforms.ENV_WSL in self._platform:
+		elif Platforms.ENV_WSL in self._platform:
 			environment = "+WSL"
-		elif self.Platforms.ENV_MSYS2 in self._platform:
+		elif Platforms.ENV_MSYS2 in self._platform:
 			environment = "+MSYS2"
 
-			if self.Platforms.MSYS in self._platform:
+			if Platforms.MSYS in self._platform:
 				runtime = " - MSYS"
-			elif self.Platforms.MinGW32 in self._platform:
+			elif Platforms.MinGW32 in self._platform:
 				runtime = " - MinGW32"
-			elif self.Platforms.MinGW64 in self._platform:
+			elif Platforms.MinGW64 in self._platform:
 				runtime = " - MinGW64"
-			elif self.Platforms.UCRT64 in self._platform:
+			elif Platforms.UCRT64 in self._platform:
 				runtime = " - UCRT64"
-			elif self.Platforms.Clang32 in self._platform:
+			elif Platforms.Clang32 in self._platform:
 				runtime = " - Clang32"
-			elif self.Platforms.Clang64 in self._platform:
+			elif Platforms.Clang64 in self._platform:
 				runtime = " - Clang64"
 			else:
 				runtime = "rt:dec-err"
 
-		elif self.Platforms.ENV_Cygwin in self._platform:
+		elif Platforms.ENV_Cygwin in self._platform:
 			environment = "+Cygwin"
 		else:
 			environment = "env:dec-err"
 
-		if self.Platforms.ARCH_x86_32 in self._platform:
+		if Platforms.ARCH_x86_32 in self._platform:
 			architecture = "x86-32"
-		elif self.Platforms.ARCH_x86_64 in self._platform:
+		elif Platforms.ARCH_x86_64 in self._platform:
 			architecture = "x86-64"
-		elif self.Platforms.ARCH_AArch64 in self._platform:
+		elif Platforms.ARCH_AArch64 in self._platform:
 			architecture = "amd64"
 		else:
 			architecture = "arch:dec-err"
