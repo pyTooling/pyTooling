@@ -33,6 +33,8 @@ Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
 from unittest              import TestCase
 
+from pytest import mark
+
 from pyTooling.Common      import getsizeof, CurrentPlatform
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, \
 	BaseClassWithoutSlotsError
@@ -92,45 +94,39 @@ class ObjectSizes(TestCase):
 		}
 	}
 
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_SizeOfSlotted1(self):
 		data = self.Slotted1(data=5)
 
-		try:
-			pv = CurrentPlatform.PythonVersion
-			dataSize = getsizeof(data)
-			self.assertLessEqual(
-				dataSize,
-				self.SIZES[self.Slotted1][pv.Major][pv.Minor]
-			)
-			print(f"\nsize: {dataSize} B")
-		except TypeError:
-			print(f"\ngetsizeof: not supported on PyPy")
+		pv = CurrentPlatform.PythonVersion
+		dataSize = getsizeof(data)
+		self.assertLessEqual(
+			dataSize,
+			self.SIZES[self.Slotted1][pv.Major][pv.Minor]
+		)
+		print(f"\nsize: {dataSize} B")
 
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_SizeOfSlotted2(self):
 		data = self.Slotted2(data=5)
 
-		try:
-			pv = CurrentPlatform.PythonVersion
-			dataSize = getsizeof(data)
-			self.assertLessEqual(
-				dataSize,
-				self.SIZES[self.Slotted2][pv.Major][pv.Minor]
-			)
-			print(f"\nsize: {dataSize} B")
-		except TypeError:
-			print(f"\ngetsizeof: not supported on PyPy")
+		pv = CurrentPlatform.PythonVersion
+		dataSize = getsizeof(data)
+		self.assertLessEqual(
+			dataSize,
+			self.SIZES[self.Slotted2][pv.Major][pv.Minor]
+		)
+		print(f"\nsize: {dataSize} B")
 
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_ClassSizes(self):
 		print()
-		try:
-			print(f"size of Normal1:  {getsizeof(self.Normal1)} B")
-			print(f"size of Normal2:  {getsizeof(self.Normal2)} B")
-			print(f"size of Extended1: {getsizeof(self.Extended1)} B")
-			print(f"size of Extended2: {getsizeof(self.Extended2)} B")
-			print(f"size of Slotted1:  {getsizeof(self.Slotted1)} B")
-			print(f"size of Slotted2:  {getsizeof(self.Slotted2)} B")
-		except TypeError:
-			print(f"getsizeof: not supported on PyPy")
+		print(f"size of Normal1:  {getsizeof(self.Normal1)} B")
+		print(f"size of Normal2:  {getsizeof(self.Normal2)} B")
+		print(f"size of Extended1: {getsizeof(self.Extended1)} B")
+		print(f"size of Extended2: {getsizeof(self.Extended2)} B")
+		print(f"size of Slotted1:  {getsizeof(self.Slotted1)} B")
+		print(f"size of Slotted2:  {getsizeof(self.Slotted2)} B")
 
 
 class AttributeErrors(TestCase):

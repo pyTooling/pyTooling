@@ -33,7 +33,9 @@ Unit tests for :func:`isnestedclass`.
 """
 from unittest import TestCase
 
-from pyTooling.Common import getsizeof
+from pytest import mark
+
+from pyTooling.Common import getsizeof, CurrentPlatform
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,6 +45,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class ObjectSizes(TestCase):
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_EmptyClass(self):
 		class C:
 			pass
@@ -51,6 +54,7 @@ class ObjectSizes(TestCase):
 
 		self.assertLessEqual(getsizeof(c), 360)
 
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_ClassWith2DictMembers(self):
 		class C:
 			def __init__(self):
@@ -61,6 +65,7 @@ class ObjectSizes(TestCase):
 
 		self.assertLessEqual(getsizeof(c), 520)
 
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_ClassWith2SlotMembers(self):
 		class C:
 			__slots__ = ("_a", "_b")
