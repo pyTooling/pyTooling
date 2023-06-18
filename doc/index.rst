@@ -25,10 +25,12 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
-exceptions. It also provides lots of helper functions e.g. to ease the handling of package descriptions.
+**pyTooling** is a powerful collection of arbitrary useful abstract data models, missing classes, decorators, a new
+performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
+handling of package descriptions or to unify multiple existing APIs into a single API.
 
-It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
+It's useful - if not even essential - for **any** Python-base project independent if it's a library, framework, CLI tool
+or just a "script".
 
 
 Introduction
@@ -62,9 +64,10 @@ This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 Common Classes
 ==============
 
-* Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. |br|
+* :ref:`Call-by-reference parameters <COMMON/CallByRef>`: Python doesn't provide *call-by-reference parameters* for
+  simple types. |br|
   This behavior can be emulated with classes provided by the :mod:`pyTooling.CallByRef` module.
-* Setuptools, PyPI, and others have a varying understanding of license names. |br|
+* :ref:`Unified license names <LICENSING>`: Setuptools, PyPI, and others have a varying understanding of license names. |br|
   The :mod:`pyTooling.Licensing` module provides :ref:`unified license names <LICENSING>` as well as license name
   mappings or translations.
 * Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
@@ -128,9 +131,9 @@ Decorators
 
 * :ref:`DECO/Documentation`
 
-  * Register the given function or class as publicly accessible in a module via :ref:`DECO/export`. |br|
-    This is also used by Sphinx extensions to (auto-)document public module members.
-  * Copy the doc-string from given base-class via :ref:`DECO/InheritDocString`.
+  * :ref:`DECO/export`: Register a given function or class as publicly accessible in a module. |br|
+    Functions and classes exposed like this are also used by Sphinx extensions to (auto-)document public module members.
+  * :ref:`DECO/InheritDocString`: The decorator copies the doc-string from a given base-class to the annotated method.
 
 * :ref:`DECO/Performance`
 
@@ -143,9 +146,9 @@ Decorators
 
 * :ref:`DECO/Misc`
 
-  * The :ref:`DECO/notimplemented` decorator replaces a callable (function or method) with a callable raising a
+  * :ref:`DECO/notimplemented`: This decorator replaces a callable (function or method) with a callable raising a
     :exc:`NotImplementedError`. The original code becomes unreachable.
-  * If a callable gets replaced or wrapped by a e.g. a decorator, the :ref:`DECO/OriginalFunction` decorator can be used
+  * :ref:`DECO/OriginalFunction`: If a callable gets replaced or wrapped by e.g. a decorator, this decorator can be used
     to preserve a reference to the original callable.
 
 

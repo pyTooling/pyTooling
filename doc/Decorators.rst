@@ -24,8 +24,11 @@ Abstract Methods
 
 .. important::
 
-   Classes using decorators :ref:`@abstractmethod <DECO/AbstractMethod>` or :ref:`@mustoverride <DECO/MustOverride>`
-   need to apply the meta-class :class:`ExtendedType <META/ExtendedType>` in the class definition.
+   Classes using method decorators :ref:`@abstractmethod <DECO/AbstractMethod>` or
+   :ref:`@mustoverride <DECO/MustOverride>` need to use the meta-class :ref:`ExtendedType <META/ExtendedType>`.
+
+   Alternatively, classes can be derived from :ref:`SlottedObject <META/SlottedObject>` or apply decorators
+   :ref:`DECO/useslots` or :ref:`DECO/mixin`.
 
 .. _DECO/AbstractMethod:
 
@@ -125,8 +128,7 @@ and :pycode:`deleter` can't be used.
           self._data = data
 
         @readonly
-        @property
-        def length(self) -> int:
+        def Length(self) -> int:
           return 2 ** self._data
 
 
@@ -217,7 +219,30 @@ Performance
 @useslots
 *********
 
-.. todo:: DECO::useslots needs documentation
+The size of class instances (objects) can be reduced by using :ref:`slots`. This decreases the object creation time and
+memory footprint. In addition access to fields faster because there is no time consuming field lookup in ``__dict__``. A
+class with 2 ``__dict__`` members has around 520 B whereas the same class structure uses only around 120 B if slots are
+used. On CPython 3.10 using slots, the code accessing class fields is 10..25 % faster.
+
+The :class:`~pyTooling.MetaClasses.ExtendedType` meta-class can automatically infer slots from type annotations. Because
+the syntax for applying a meta-class is quite heavy, this decorator simplifies the syntax.
+
++----------------------------------------------------+-----------------------------------------------------+
+| Syntax using Decorator ``useslots``                | Syntax using meta-class ``ExtendedType``            |
++====================================================+=====================================================+
+| .. code-block:: Python                             | .. code-block:: Python                              |
+|                                                    |                                                     |
+|    @export                                         |    @export                                          |
+|    @useslots                                       |    class A(metaclass=ExtendedType, useSlots=True):  |
+|    class A:                                        |      _field1: int                                   |
+|      _field1: int                                  |      _field2: str                                   |
+|      _field2: str                                  |                                                     |
+|                                                    |      def __init__(self, arg1: int, arg2: str):      |
+|      def __init__(self, arg1: int, arg2: str):     |        self._field1 = arg1                          |
+|        self._field1 = arg1                         |        self._field2 = arg2                          |
+|        self._field2 = arg2                         |                                                     |
+|                                                    |                                                     |
++----------------------------------------------------+-----------------------------------------------------+
 
 
 .. _DECO/mixin:
@@ -225,7 +250,55 @@ Performance
 @mixin
 ******
 
-.. todo:: DECO::mixin needs documentation
+The size of class instances (objects) can be reduced by using :ref:`slots` (see :ref:`DECO/useslots`). If slots are used
+in multiple inheritance scenarios, only one ancestor line can use slots. For other ancestor lines, it's allowed to
+define the slot fields in the inheriting class. Therefore pyTooling allows marking classes as
+:term:`mixin-classes <mixin-class>`.
+
+The :class:`~pyTooling.MetaClasses.ExtendedType` meta-class can automatically infer slots from type annotations. If a
+class is marked as a mixin-class, the inferred slots are collected and handed over to class defining slots. Because
+the syntax for applying a meta-class is quite heavy, this decorator simplifies the syntax.
+
++----------------------------------------------------+----------------------------------------------------+
+| Syntax using Decorator ``mixin``                   | Syntax using meta-class ``ExtendedType``           |
++====================================================+====================================================+
+| .. code-block:: Python                             | .. code-block:: Python                             |
+|                                                    |                                                    |
+|    @export                                         |                                                    |
+|    @useslots                                       |    @export                                         |
+|    class A:                                        |    class A(metaclass=ExtendedType, useSlots=True): |
+|      _field1: int                                  |      _field1: int                                  |
+|      _field2: str                                  |      _field2: str                                  |
+|                                                    |                                                    |
+|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str):     |
+|        self._field1 = arg1                         |        self._field1 = arg1                         |
+|        self._field2 = arg2                         |        self._field2 = arg2                         |
+|                                                    |                                                    |
+|    @export                                         |    @export                                         |
+|    class B(A):                                     |    class B(A):                                     |
+|      _field3: int                                  |      _field3: int                                  |
+|      _field4: str                                  |      _field4: str                                  |
+|                                                    |                                                    |
+|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str):     |
+|        self._field3 = arg1                         |        self._field3 = arg1                         |
+|        self._field4 = arg2                         |        self._field4 = arg2                         |
+|        super().__init__(arg1, arg2)                |        super().__init__(arg1, arg2)                |
+|                                                    |                                                    |
+|    @export                                         |                                                    |
+|    @mixin                                          |    @export                                         |
+|    class C(A):                                     |    class C(A, mixin=True):                         |
+|      _field5: int                                  |      _field5: int                                  |
+|      _field6: str                                  |      _field6: str                                  |
+|                                                    |                                                    |
+|      def Method(self) -> str:                      |      def Method(self) -> str:                      |
+|        return f"{self._field5} -> {self._field6}"  |        return f"{self._field5} -> {self._field6}"  |
+|                                                    |                                                    |
+|    @export                                         |    @export                                         |
+|    class D(B, C):                                  |    class D(B, C):                                  |
+|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str):     |
+|        super().__init__(arg1, arg2)                |        super().__init__(arg1, arg2)                |
+|                                                    |                                                    |
++----------------------------------------------------+----------------------------------------------------+
 
 
 .. _DECO/singleton:

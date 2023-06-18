@@ -145,18 +145,23 @@ field access performance of all class instances. This behavior is automatically 
       root = Node()
       node = Node(root)
 
-.. _META/ObjectWithSlots:
+.. _META/SlottedObject:
 
-ObjectWithSlots
-===============
+SlottedObject
+=============
 
-A class definition deriving from :class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
-behavior to that class and all derived classes.
+A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` will bring the slotted type behavior to
+that class and all derived classes.
 
-.. code-block:: python
-
-   class MyClass(ObjectWithSlots):
-     pass
++----------------------------------------+----------------------------------------+----------------------------------------------------------+
+| Deriving from ``SlottedObject``        | Apply ``useslots`` Decorator           | Deriving from ``SlottedObject``                          |
++========================================+========================================+==========================================================+
+| .. code-block:: Python                 | .. code-block:: Python                 | .. code-block:: Python                                   |
+|                                        |                                        |                                                          |
+|    class MyClass(SlottedObject):       |    @useslots                           |    class MyClass(metaclass=ExtendedType, useslots=True): |
+|      pass                              |    class MyClass(SlottedObject):       |      pass                                                |
+|                                        |      pass                              |                                                          |
++----------------------------------------+----------------------------------------+----------------------------------------------------------+
 
 
 .. _META/Overloading:
