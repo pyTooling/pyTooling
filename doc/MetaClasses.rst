@@ -128,7 +128,7 @@ cached instance of that class will be returned.
         def WriteLine(self, message):
           print(message)
 
-.. _META/Slotted:
+.. _META/Slottedd:
 
 Slotted Type
 ************

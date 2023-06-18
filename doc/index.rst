@@ -168,12 +168,16 @@ Meta-Classes
 
 pyTooling provides an :ref:`enhanced meta-class <META>` called :class:`~pyTooling.MetaClasses.ExtendedType` to replace
 the default meta-class :class:`type`. Is combines features like using slots, abstract methods and singletons in a single
-meta-class compared to Python approach in providing multiple specific meta-classes that can't be combined to e.g. a
-singleton using slots.
+meta-class compared to Python approach in providing multiple specific meta-classes (e.g. from :mod:`abc`) that can't be
+combined to a singleton using slots.
 
 :ref:`ExtendedType <META/ExtendedType>` allows to implement :ref:`slotted types <META/Slotted>`,
 :ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/Abstract>` and :ref:`singletons <META/Singleton>`,
 and combinations thereof.
+
+Slotted types significantly reduce the memory footprint by 4x and decrease the class field access time by 10..25%. While
+setting up slotted types needed a lot of manual coding, this is now fully automated by this meta-class. Moreover, it
+also takes care deferred slots in multiple-inheritance scenarios by marking secondary base-classes as mixins.
 
 :pycode:`class MyClass(metaclass=ExtendedType):`
   A class definition using that meta-class can implement :ref:`abstract methods <META/Abstract>` using decorators
