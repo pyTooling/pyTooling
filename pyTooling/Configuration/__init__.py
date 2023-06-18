@@ -36,7 +36,7 @@ Abstract configuration reader.
 from typing        import Union, ClassVar, Iterator, Type
 
 from ..Decorators  import export
-from ..MetaClasses import ExtendedType
+from ..MetaClasses import ExtendedType, mixin
 
 
 KeyT = Union[str, int]
@@ -92,7 +92,8 @@ class Node(metaclass=ExtendedType, useSlots=True):
 
 
 @export
-class Dictionary(Node, mixin=True):
+@mixin
+class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
@@ -109,7 +110,8 @@ class Dictionary(Node, mixin=True):
 
 
 @export
-class Sequence(Node, mixin=True):
+@mixin
+class Sequence(Node):
 	"""Abstract sequence node in a configuration."""
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
@@ -133,7 +135,8 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
-class Configuration(Node, mixin=True):
+@mixin
+class Configuration(Node):
 	"""Abstract root node in a configuration."""
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):

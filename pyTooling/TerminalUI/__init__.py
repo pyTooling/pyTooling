@@ -36,7 +36,7 @@ from platform               import system as platform_system
 from typing                 import NoReturn, Tuple, Any
 
 from pyTooling.Decorators   import export
-from pyTooling.MetaClasses  import ExtendedType
+from pyTooling.MetaClasses  import ExtendedType, mixin
 
 
 @export
@@ -423,7 +423,8 @@ class Line:
 
 
 @export
-class ILineTerminal(metaclass=ExtendedType, mixin=True):
+@mixin
+class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
 	_terminal: Terminal
