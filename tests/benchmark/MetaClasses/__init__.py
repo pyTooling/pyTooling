@@ -29,3 +29,42 @@
 # ==================================================================================================================== #
 #
 """Benchmark tests for pyTooling.MetaClasses."""
+from pytest import mark
+
+
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unitest <testcase module>'")
+	exit(1)
+
+
+class A:
+	def __init__(self, arg):
+		self.arg = arg
+
+
+class M(type):
+	def __call__(cls, *args, **kwargs):
+		newCls = cls.__new__(cls, *args, **kwargs)
+		newCls.__init__(*args, **kwargs)
+
+		return newCls
+
+
+class B(metaclass=M):
+	def __init__(self, arg):
+		self.arg = arg
+
+
+@mark.benchmark(group="A0: Create Objects")
+def test_CreateObjects_BuiltinCall(benchmark):
+	@benchmark
+	def func():
+		[A(i) for i in range(10)]
+
+
+@mark.benchmark(group="A0: Create Objects")
+def test_CreateObjects_UserDefinedCall(benchmark):
+	@benchmark
+	def func():
+		[B(i) for i in range(10)]
