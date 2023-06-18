@@ -33,10 +33,10 @@ Common platform information gathered from various sources.
 
 .. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
 """
-from enum        import Flag, auto
+from enum                  import Flag, auto
 
-from Decorators  import export
-from MetaClasses import ExtendedType
+from pyTooling.Decorators  import export
+from pyTooling.MetaClasses import ExtendedType
 
 
 @export
