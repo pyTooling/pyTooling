@@ -112,7 +112,7 @@ class IDStyle(Enum):
 
 
 @export
-class Base(metaclass=ExtendedType, useSlots=True):
+class Base(metaclass=ExtendedType, slots=True):
 	"""
 	Base-class for all GraphML data model classes.
 	"""

@@ -48,7 +48,7 @@ class PythonImplementation(Flag):
 
 
 @export
-class PythonVersion(metaclass=ExtendedType, singleton=True, useSlots=True):
+class PythonVersion(metaclass=ExtendedType, singleton=True, slots=True):
 	Major: int
 	Minor: int
 	Micro: int
@@ -113,7 +113,7 @@ class Platforms(Flag):
 
 
 @export
-class Platform(metaclass=ExtendedType, singleton=True, useSlots=True):
+class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	"""An instance of this class contains all gathered information available from various sources.
 
 	.. seealso::

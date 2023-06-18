@@ -28,7 +28,7 @@ Abstract Methods
    :ref:`@mustoverride <DECO/MustOverride>` need to use the meta-class :ref:`ExtendedType <META/ExtendedType>`.
 
    Alternatively, classes can be derived from :ref:`SlottedObject <META/SlottedObject>` or apply decorators
-   :ref:`DECO/useslots` or :ref:`DECO/mixin`.
+   :ref:`DECO/slotted` or :ref:`DECO/mixin`.
 
 .. _DECO/AbstractMethod:
 
@@ -214,10 +214,10 @@ method in the derived class.
 Performance
 ###########
 
-.. _DECO/useslots:
+.. _DECO/slotted:
 
-@useslots
-*********
+@slotted
+********
 
 The size of class instances (objects) can be reduced by using :ref:`slots`. This decreases the object creation time and
 memory footprint. In addition access to fields faster because there is no time consuming field lookup in ``__dict__``. A
@@ -228,12 +228,12 @@ The :class:`~pyTooling.MetaClasses.ExtendedType` meta-class can automatically in
 the syntax for applying a meta-class is quite heavy, this decorator simplifies the syntax.
 
 +----------------------------------------------------+-----------------------------------------------------+
-| Syntax using Decorator ``useslots``                | Syntax using meta-class ``ExtendedType``            |
+| Syntax using Decorator ``slotted``                 | Syntax using meta-class ``ExtendedType``            |
 +====================================================+=====================================================+
 | .. code-block:: Python                             | .. code-block:: Python                              |
 |                                                    |                                                     |
 |    @export                                         |    @export                                          |
-|    @useslots                                       |    class A(metaclass=ExtendedType, useSlots=True):  |
+|    @slotted                                        |    class A(metaclass=ExtendedType, slots=True):     |
 |    class A:                                        |      _field1: int                                   |
 |      _field1: int                                  |      _field2: str                                   |
 |      _field2: str                                  |                                                     |
@@ -250,7 +250,7 @@ the syntax for applying a meta-class is quite heavy, this decorator simplifies t
 @mixin
 ******
 
-The size of class instances (objects) can be reduced by using :ref:`slots` (see :ref:`DECO/useslots`). If slots are used
+The size of class instances (objects) can be reduced by using :ref:`slots` (see :ref:`DECO/slotted`). If slots are used
 in multiple inheritance scenarios, only one ancestor line can use slots. For other ancestor lines, it's allowed to
 define the slot fields in the inheriting class. Therefore pyTooling allows marking classes as
 :term:`mixin-classes <mixin-class>`.
@@ -265,8 +265,8 @@ the syntax for applying a meta-class is quite heavy, this decorator simplifies t
 | .. code-block:: Python                             | .. code-block:: Python                             |
 |                                                    |                                                    |
 |    @export                                         |                                                    |
-|    @useslots                                       |    @export                                         |
-|    class A:                                        |    class A(metaclass=ExtendedType, useSlots=True): |
+|    @slotted                                        |    @export                                         |
+|    class A:                                        |    class A(metaclass=ExtendedType, slots=True):    |
 |      _field1: int                                  |      _field1: int                                  |
 |      _field2: str                                  |      _field2: str                                  |
 |                                                    |                                                    |

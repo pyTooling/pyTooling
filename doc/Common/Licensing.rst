@@ -44,7 +44,7 @@ equality (``==``, ``!=``) based on there SPDX identifier.
 .. code-block:: python
 
    @export
-   class License(metaclass=ExtendedType, useSlots=True):
+   class License(metaclass=ExtendedType, slots=True):
      def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False):
 
       @property

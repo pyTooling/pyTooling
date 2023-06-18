@@ -199,7 +199,7 @@ class Dictionary(Node, Abstract_Dict):
 		return key in self._keys
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
-		class Iterator(metaclass=ExtendedType, useSlots=True):
+		class Iterator(metaclass=ExtendedType, slots=True):
 			_iter: typing_Iterator
 			_obj: Dictionary
 
@@ -244,7 +244,7 @@ class Sequence(Node, Abstract_Seq):
 
 		:returns: Iterator to iterate items in a sequence.
 		"""
-		class Iterator(metaclass=ExtendedType, useSlots=True):
+		class Iterator(metaclass=ExtendedType, slots=True):
 			"""Iterator to iterate sequence items."""
 
 			_i: int         #: internal iterator position

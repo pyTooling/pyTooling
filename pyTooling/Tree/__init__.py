@@ -97,7 +97,7 @@ class NotInSameTreeError(TreeException):
 
 
 @export
-class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=ExtendedType, useSlots=True):
+class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=ExtendedType, slots=True):
 	"""
 	A **tree** data structure can be constructed of ``Node`` instances.
 

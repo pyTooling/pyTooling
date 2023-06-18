@@ -99,7 +99,7 @@ PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseName] = {
 
 
 @export
-class License(metaclass=ExtendedType, useSlots=True):
+class License(metaclass=ExtendedType, slots=True):
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.

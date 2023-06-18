@@ -204,7 +204,7 @@ class CycleError(GraphException):
 @export
 class Base(
 	Generic[DictKeyType, DictValueType],
-	metaclass=ExtendedType, useSlots=True
+	metaclass=ExtendedType, slots=True
 ):
 	_dict: Dict[DictKeyType, DictValueType]  #: Dictionary to store key-value-pairs.
 
@@ -1304,7 +1304,7 @@ class Vertex(
 		# Local struct to create multiple linked-lists forming a paths from current node back to the starting point
 		# (actually a tree). Each node holds a reference to the vertex it represents.
 		# Hint: slotted classes are faster than '@dataclasses.dataclass'.
-		class Node(metaclass=ExtendedType, useSlots=True):
+		class Node(metaclass=ExtendedType, slots=True):
 			parent: 'Node'
 			ref: Vertex
 
@@ -1396,7 +1396,7 @@ class Vertex(
 		# (actually a tree). Each node holds the overall weight from start to current node and a reference to the vertex it
 		# represents.
 		# Hint: slotted classes are faster than '@dataclasses.dataclass'.
-		class Node(metaclass=ExtendedType, useSlots=True):
+		class Node(metaclass=ExtendedType, slots=True):
 			parent: 'Node'
 			distance: EdgeWeightType
 			ref: Vertex

@@ -72,7 +72,7 @@ class ObjectSizes(TestCase):
 			super().__init__(data)
 			self._data_1 = data + 1
 
-	class Slotted1(metaclass=ExtendedType, useSlots=True):
+	class Slotted1(metaclass=ExtendedType, slots=True):
 		_data_0: int
 
 		def __init__(self, data: int):
@@ -130,10 +130,10 @@ class ObjectSizes(TestCase):
 
 
 class AttributeErrors(TestCase):
-	class Data0(metaclass=ExtendedType, useSlots=True):
+	class Data0(metaclass=ExtendedType, slots=True):
 		_int_0: int
 
-	class Data1(metaclass=ExtendedType, useSlots=True):
+	class Data1(metaclass=ExtendedType, slots=True):
 		_int_1: int
 
 		def __init__(self):
@@ -145,7 +145,7 @@ class AttributeErrors(TestCase):
 		def method_12(self):
 			_ = self._int_0
 
-	class Data2(Data1):  #, useSlots=True):
+	class Data2(Data1):  #, slots=True):
 		_int_2: int
 
 		def __init__(self):
@@ -218,7 +218,7 @@ class AttributeErrors(TestCase):
 
 class Inheritance(TestCase):
 	def test_LinearInheritance_1_BaseSlotted(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -236,7 +236,7 @@ class Inheritance(TestCase):
 		self.assertEqual(1, inst._data_1)
 
 	def test_LinearInheritance_2_BaseSlotted(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -312,7 +312,7 @@ class Inheritance(TestCase):
 			self.assertEqual(3, inst._data_2)
 
 	def test_LinearInheritance_1_BaseSlottedMixin(self):
-		class Base(metaclass=ExtendedType, useSlots=True, mixin=True):
+		class Base(metaclass=ExtendedType, slots=True, mixin=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -330,7 +330,7 @@ class Inheritance(TestCase):
 		self.assertEqual(1, inst._data_1)
 
 	def test_LinearInheritance_2_BaseSlottedMixin(self):
-		class Base(metaclass=ExtendedType, useSlots=True, mixin=True):
+		class Base(metaclass=ExtendedType, slots=True, mixin=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -367,7 +367,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Final(Base, useSlots=True, mixin=False):
+		class Final(Base, slots=True, mixin=False):
 			_data_1: int
 
 			def __init__(self, data: int):
@@ -392,7 +392,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_1 = data + 1
 
-		class Final(Parent, useSlots=True, mixin=False):
+		class Final(Parent, slots=True, mixin=False):
 			_data_2: int
 
 			def __init__(self, data: int):
@@ -405,7 +405,7 @@ class Inheritance(TestCase):
 		self.assertEqual(3, inst._data_2)
 
 	def test_VInheritance_PrimaryExtended(self):
-		class Primary(metaclass=ExtendedType, useSlots=True):
+		class Primary(metaclass=ExtendedType, slots=True):
 			_data_L0: int
 
 			def __init__(self, data: int):
@@ -432,7 +432,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(4, inst._data_1)
 
 	def test_VInheritance_PrimaryExtended_Mixin(self):
-		class Primary(metaclass=ExtendedType, useSlots=True):
+		class Primary(metaclass=ExtendedType, slots=True):
 			_data_L0: int
 
 			def __init__(self, data: int):
@@ -464,7 +464,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_L0 = data
 
-		class Secondary(metaclass=ExtendedType, useSlots=True):
+		class Secondary(metaclass=ExtendedType, slots=True):
 			_data_R0: int
 
 			def __init__(self, data: int):
@@ -484,7 +484,7 @@ class Inheritance(TestCase):
 		self.assertEqual(5, inst._data_1)
 
 	def test_YInheritance_PrimaryExtended(self):
-		class Primary(metaclass=ExtendedType, useSlots=True):
+		class Primary(metaclass=ExtendedType, slots=True):
 			_data_L0: int
 
 			def __init__(self, data: int):
@@ -519,7 +519,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(7, inst._data_2)
 
 	def test_YInheritance_PrimaryExtended_Mixin(self):
-		class Primary(metaclass=ExtendedType, useSlots=True):
+		class Primary(metaclass=ExtendedType, slots=True):
 			_data_L0: int
 
 			def __init__(self, data: int):
@@ -559,7 +559,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_L0 = data
 
-		class Secondary(metaclass=ExtendedType, useSlots=True):
+		class Secondary(metaclass=ExtendedType, slots=True):
 			_data_R0: int
 
 			def __init__(self, data: int):
@@ -587,7 +587,7 @@ class Inheritance(TestCase):
 		self.assertEqual(8, inst._data_2)
 
 	def test_OInheritance_BaseExtended(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -625,7 +625,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(9, inst._data_2)
 
 	def test_OInheritance_BaseExtended_PrimaryMixin(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -663,7 +663,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(9, inst._data_2)
 
 	def test_OInheritance_BaseExtended_SecondaryMixin(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -707,7 +707,7 @@ class Inheritance(TestCase):
 				self._data_0 = data
 
 		with self.assertRaises(BaseClassWithoutSlotsError):
-			class Primary(Base, metaclass=ExtendedType, useSlots=True):
+			class Primary(Base, metaclass=ExtendedType, slots=True):
 				_data_L1: int
 
 				def __init__(self, data: int):
@@ -743,7 +743,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Primary(Base, metaclass=ExtendedType, useSlots=True):
+		class Primary(Base, metaclass=ExtendedType, slots=True):
 			_data_L1: int
 
 			def __init__(self, data: int):
@@ -786,7 +786,7 @@ class Inheritance(TestCase):
 				self._data_L1 = data + 1
 
 		with self.assertRaises(BaseClassWithoutSlotsError):
-			class Secondary(Base, metaclass=ExtendedType, useSlots=True):
+			class Secondary(Base, metaclass=ExtendedType, slots=True):
 				_data_R1: int
 
 				def __init__(self, data: int):
@@ -824,7 +824,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_L1 = data + 1
 
-		class Secondary(Base, metaclass=ExtendedType, useSlots=True):
+		class Secondary(Base, metaclass=ExtendedType, slots=True):
 			_data_R1: int
 
 			def __init__(self, data: int):
@@ -867,7 +867,7 @@ class Inheritance(TestCase):
 				self._data_R1 = data + 2
 
 		with self.assertRaises(BaseClassWithoutSlotsError):
-			class Final(Primary, Secondary, metaclass=ExtendedType, useSlots=True):
+			class Final(Primary, Secondary, metaclass=ExtendedType, slots=True):
 				_data_2: int
 
 				def __init__(self, data: int):
@@ -882,7 +882,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(12, inst._data_2)
 
 	def test_QInheritance_BaseExtended(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -926,7 +926,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(14, inst._data_3)
 
 	def test_QInheritance_BaseExtended_PrimaryMixin(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -970,7 +970,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(14, inst._data_3)
 
 	def test_QInheritance_BaseExtended_SecondaryMixin(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -1042,7 +1042,7 @@ class Inheritance(TestCase):
 				self._data_2 = data + 3
 
 		with self.assertRaises(BaseClassWithoutSlotsError):
-			class Final(Merged, metaclass=ExtendedType, useSlots=True):
+			class Final(Merged, metaclass=ExtendedType, slots=True):
 				_data_3: int
 
 				def __init__(self, data: int):
@@ -1059,7 +1059,7 @@ class Inheritance(TestCase):
 
 class Hierarchy(TestCase):
 	def test_GraphMLInheritanceHierarchy(self):
-		class Base(metaclass=ExtendedType, useSlots=True):
+		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 			def __init__(self):
@@ -1111,7 +1111,7 @@ class Hierarchy(TestCase):
 		sg.test_BaseGraph()
 
 	def test_YAMLConfigurationInheritanceHierarchy(self):
-		class Node0(metaclass=ExtendedType, useSlots=True):
+		class Node0(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
 		class Dict0(Node0, mixin=True):

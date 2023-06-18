@@ -132,7 +132,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation(metaclass=ExtendedType, useSlots=True):
+class VersionInformation(metaclass=ExtendedType, slots=True):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).

@@ -140,14 +140,14 @@ field access performance of all class instances. This behavior is automatically 
 
 .. code-block:: python
 
-   class MyClass(metaclass=ExtendedType, useSlots=True):
+   class MyClass(metaclass=ExtendedType, slots=True):
      pass
 
 .. admonition:: Example Usage
 
    .. code-block:: python
 
-      class Node(metaclass=ExtendedType, useSlots=True):
+      class Node(metaclass=ExtendedType, slots=True):
         _parent: "Node"
 
         def __init__(self, parent: "Node" = None):
@@ -165,11 +165,11 @@ A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` w
 that class and all derived classes.
 
 +----------------------------------------+----------------------------------------+----------------------------------------------------------+
-| Deriving from ``SlottedObject``        | Apply ``useslots`` Decorator           | Deriving from ``SlottedObject``                          |
+| Deriving from ``SlottedObject``        | Apply ``slotted`` Decorator            | Deriving from ``SlottedObject``                          |
 +========================================+========================================+==========================================================+
 | .. code-block:: Python                 | .. code-block:: Python                 | .. code-block:: Python                                   |
 |                                        |                                        |                                                          |
-|    class MyClass(SlottedObject):       |    @useslots                           |    class MyClass(metaclass=ExtendedType, useslots=True): |
+|    class MyClass(SlottedObject):       |    @slotted                            |    class MyClass(metaclass=ExtendedType, slots=True):    |
 |      pass                              |    class MyClass(SlottedObject):       |      pass                                                |
 |                                        |      pass                              |                                                          |
 +----------------------------------------+----------------------------------------+----------------------------------------------------------+

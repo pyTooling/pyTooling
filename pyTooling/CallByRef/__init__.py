@@ -42,7 +42,7 @@ T = TypeVar("T")
 
 
 @export
-class CallByRefParam(Generic[T], metaclass=ExtendedType, useSlots=True):
+class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 	"""
 	Implements a *call-by-reference* parameter.
 

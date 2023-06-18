@@ -50,7 +50,7 @@ class NormalNode_1:
 		self._data_0 = self._data_0 + add
 
 
-class SlottedNode_1(metaclass=ExtendedType, useSlots=True):
+class SlottedNode_1(metaclass=ExtendedType, slots=True):
 	_data_0: int
 
 	def __init__(self, data):
@@ -96,7 +96,7 @@ class NormalNode_10:
 		self._data_9 = self._data_8 + add
 
 
-class SlottedNode_10(metaclass=ExtendedType, useSlots=True):
+class SlottedNode_10(metaclass=ExtendedType, slots=True):
 	_data_0: int
 	_data_1: int
 	_data_2: int

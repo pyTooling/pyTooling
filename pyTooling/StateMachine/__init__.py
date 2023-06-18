@@ -40,7 +40,7 @@ from pyTooling.MetaClasses import ExtendedType
 
 
 @export
-class Base(metaclass=ExtendedType, useSlots=True):
+class Base(metaclass=ExtendedType, slots=True):
 	pass
 
 

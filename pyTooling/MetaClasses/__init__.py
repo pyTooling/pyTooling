@@ -204,7 +204,7 @@ M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
 @export
-def useslots(cls):
+def slotted(cls):
 	if cls.__class__ is type:
 		metacls = ExtendedType
 	elif issubclass(cls.__class__, ExtendedType):
@@ -221,7 +221,7 @@ def useslots(cls):
 		if key not in slots:
 			members[key] = value
 
-	return metacls(cls.__name__, bases, members, useSlots=True)
+	return metacls(cls.__name__, bases, members, slots=True)
 
 
 @export
@@ -242,7 +242,7 @@ def mixin(cls):
 		if key not in slots:
 			members[key] = value
 
-	return metacls(cls.__name__, bases, members, useSlots=True, mixin=True)
+	return metacls(cls.__name__, bases, members, slots=True, mixin=True)
 
 
 @export
@@ -380,17 +380,17 @@ class ExtendedType(type):
 
 		return newCls
 
-	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any], useSlots: bool = False,
-							mixin: bool = None, singleton: bool = False) -> type:
+	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
+							slots: bool = False, mixin: bool = None, singleton: bool = False) -> type:
 		"""
 		Construct a new class using this :term:`meta-class`.
 
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
-		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
+		:param slots:           If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
 		:param mixin:           If true, make the class a :term:`Mixin-Class`.
-		                        If false, create slots if ``useSlots`` is true.
+		                        If false, create slots if ``slots`` is true.
 		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
 		:returns:               The new class.
@@ -408,21 +408,21 @@ class ExtendedType(type):
 					# mixinSlots.extend(primaryBaseClass.__mixinSlots__)
 					mixin = True
 
-		# Inherit 'useSlots' feature from primary base-class
+		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
 			if isinstance(primaryBaseClass, self):
-				useSlots = primaryBaseClass.__usesSlots__
+				slots = primaryBaseClass.__usesSlots__
 
 		# Possible adds members["__slots__"]
-		mixinSlots, members = self._aggregateMixinSlots(className, baseClasses, members, mixin, useSlots)
+		mixinSlots, members = self._aggregateMixinSlots(className, baseClasses, members, mixin, slots)
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
 
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
-		newClass.__usesSlots__ = useSlots
+		newClass.__usesSlots__ = slots
 		newClass.__isMixin__ = mixin
 		newClass.__mixinSlots__ = (*mixinSlots, )
 
@@ -434,7 +434,7 @@ class ExtendedType(type):
 		return newClass
 
 	@classmethod
-	def _aggregateMixinSlots(self, className, baseClasses, members, mixin, useSlots):
+	def _aggregateMixinSlots(self, className, baseClasses, members, mixin, slots):
 		mixinSlots = []
 		if mixin:
 			if len(baseClasses) > 0:
@@ -459,7 +459,7 @@ class ExtendedType(type):
 					if baseClass.__class__ is self:
 						if baseClass.__isMixin__:
 							mixinSlots.extend(baseClass.__mixinSlots__)
-		elif useSlots:
+		elif slots:
 			if len(baseClasses) > 0:
 				primaryBaseClass = baseClasses[0]
 				if type(primaryBaseClass) is self:
@@ -494,7 +494,7 @@ class ExtendedType(type):
 			mixinSlots.extend(self.__getSlots(baseClasses, members))
 			members["__slots__"] = tuple()
 		# Check if members should be stored in slots. If so get these members from type annotated fields
-		elif useSlots:
+		elif slots:
 			# If slots are used, all base classes must use slots.
 			for baseClass in self._iterateBaseClasses(baseClasses):
 				if baseClass is object:
@@ -766,5 +766,5 @@ class ExtendedType(type):
 
 
 @export
-class SlottedObject(metaclass=ExtendedType, useSlots=True):
+class SlottedObject(metaclass=ExtendedType, slots=True):
 	"""Classes derived from this class will store all members in ``__slots__``."""

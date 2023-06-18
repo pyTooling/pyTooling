@@ -137,7 +137,7 @@ Decorators
 
 * :ref:`DECO/Performance`
 
-  * :ref:`DECO/useSlots`: Classes marked with :pycode:`@useslots` get transformed into classes using ``__slots__``. |br|
+  * :ref:`DECO/useSlots`: Classes marked with :pycode:`@slotted` get transformed into classes using ``__slots__``. |br|
     This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
   * :ref:`DECO/mixin`: Classes marked with :pycode:`@mixin` do not store their fields in ``__slots__``. |br|
     When such a :term:`mixin-class` is inherited by a class using slots, the fields of the mixin become slots.
@@ -187,14 +187,14 @@ also takes care deferred slots in multiple-inheritance scenarios by marking seco
   A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
   exist. If another instance is going to be created, a previously cached instance of that class will be returned.
 
-:pycode:`class MyClass(metaclass=ExtendedType, useSlots=True):`
+:pycode:`class MyClass(metaclass=ExtendedType, slots=True):`
   A class defined with enabled :ref:`useSlots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
   translates all type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and
   access compared to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint
   as well as the field access performance of all class instances. This behavior is automatically inherited to all
   derived classes.
 
-:pycode:`class MyClass(metaclass=ExtendedType, useSlots=True, mixin=True):`
+:pycode:`class MyClass(metaclass=ExtendedType, slots=True, mixin=True):`
   A class defined with enabled :ref:`mixin <META/Mixin>` behavior collects instance fields so they can be added to
   slots in a derived class.
 
