@@ -207,6 +207,35 @@ method in the derived class.
           pass
 
 
+.. _DECO/Performance:
+
+Performance
+###########
+
+.. _DECO/useslots:
+
+@useslots
+*********
+
+.. todo:: DECO::useslots needs documentation
+
+
+.. _DECO/mixin:
+
+@mixin
+******
+
+.. todo:: DECO::mixin needs documentation
+
+
+.. _DECO/singleton:
+
+@singleton
+**********
+
+.. todo:: DECO::singleton needs documentation
+
+
 .. _DECO/Misc:
 
 Miscellaneous

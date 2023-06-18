@@ -62,10 +62,11 @@ This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 Common Classes
 ==============
 
-* Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. This behavior can be
-  emulated with classes provided by the :mod:`pyTooling.CallByRef` module.
-* Setuptools, PyPI, and others have a varying understanding of license names. The :mod:`pyTooling.Licensing` module
-  provides :ref:`unified license names <LICENSING>` as well as license name mappings or translations.
+* Python doesn't provide :ref:`call-by-reference parameters <COMMON/CallByRef>` for simple types. |br|
+  This behavior can be emulated with classes provided by the :mod:`pyTooling.CallByRef` module.
+* Setuptools, PyPI, and others have a varying understanding of license names. |br|
+  The :mod:`pyTooling.Licensing` module provides :ref:`unified license names <LICENSING>` as well as license name
+  mappings or translations.
 * Python has many ways in figuring out the current platform using APIs from ``sys``, ``platform``, ``os``, ….
   Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
   :ref:`unified platform and environment description <COMMON/Platform>` by summarizing multiple platform APIs into a
@@ -113,16 +114,16 @@ Decorators
 
 * :ref:`META/Abstract`
 
-  * Methods marked with :ref:`DECO/AbstractMethod` are abstract and need to be overwritten in a
-    derived class. |br|
+  * :ref:`DECO/AbstractMethod`: Methods marked with :pycode:`@abstractmethod` are abstract and need to be overwritten in
+    a derived class. |br|
     An *abstract method* might be called from the overwriting method.
-  * Methods marked with :ref:`DECO/MustOverride` are abstract and need to be overridden in a
+  * :ref:`DECO/MustOverride`: Methods marked with :pycode:`@mustoverride` are abstract and need to be overridden in a
     derived class. |br|
     It's not allowed to call a *mustoverride method*.
 
 * :ref:`DECO/DataAccess`
 
-  * Methods with :ref:`DECO/readonly` decorator transform a method into a read-only property.
+  * :ref:`DECO/readonly`: Methods marked with :pycode:`@readonly` get transformed into a read-only property.
   * ⚠BROKEN⚠: Methods with :ref:`DECO/classproperty` decorator transform methods to class-properties.
 
 * :ref:`DECO/Documentation`
@@ -131,10 +132,19 @@ Decorators
     This is also used by Sphinx extensions to (auto-)document public module members.
   * Copy the doc-string from given base-class via :ref:`DECO/InheritDocString`.
 
+* :ref:`DECO/Performance`
+
+  * :ref:`DECO/useSlots`: Classes marked with :pycode:`@useslots` get transformed into classes using ``__slots__``. |br|
+    This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
+  * :ref:`DECO/mixin`: Classes marked with :pycode:`@mixin` do not store their fields in ``__slots__``. |br|
+    When such a :term:`mixin-class` is inherited by a class using slots, the fields of the mixin become slots.
+  * :ref:`DECO/useSlots`: Classes marked with :pycode:`@singleton` get transformed into singleton classes. |br|
+    This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
+
 * :ref:`DECO/Misc`
 
   * The :ref:`DECO/notimplemented` decorator replaces a callable (function or method) with a callable raising a
-    :exc:`NotImplementedError`. The original code gets unreachable.
+    :exc:`NotImplementedError`. The original code becomes unreachable.
   * If a callable gets replaced or wrapped by a e.g. a decorator, the :ref:`DECO/OriginalFunction` decorator can be used
     to preserve a reference to the original callable.
 
