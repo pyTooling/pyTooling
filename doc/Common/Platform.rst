@@ -3,7 +3,7 @@
 Platform
 ########
 
-The :class:`~pyTooling.Common.Platform.Platform` class gives detailed platform information about the environment the
+The :class:`~pyTooling.Platform.Platform` class gives detailed platform information about the environment the
 Python program or script is running in.
 
 .. contents:: Table of Contents
@@ -13,7 +13,7 @@ Python program or script is running in.
 .. admonition:: Background Information
 
    Python has several ways in finding out what platform is running underneath of Python. Some information are provided
-   via function calls, others are variables in a module. The :class:`~pyTooling.Common.Platform.Platform` class
+   via function calls, others are variables in a module. The :class:`~pyTooling.Platform.Platform` class
    unifies all these APIs into a single class instance providing access to the platform and runtime information.
    Moreover, some (older) APIs do not reflect modern platforms like Python running in a MSYS2 MinGW64 environment on a
    Windows x86-64. By combining multiple APIs, it's possible to identify also such platforms.
@@ -37,7 +37,7 @@ Current Platform
 ****************
 
 The module variable :data:`pyTooling.Common.CurrentPlatform` contains a singleton instance of
-:class:`~pyTooling.Common.Platform.Platform`, which abstracts and unifies multiple platform APIs of Python into a
+:class:`~pyTooling.Platform.Platform`, which abstracts and unifies multiple platform APIs of Python into a
 single class instance.
 
 .. rubric:: Supported platforms
@@ -60,7 +60,7 @@ single class instance.
 
 .. seealso::
 
-   :class:`~pyTooling.Common.Platform.Platform`
+   :class:`~pyTooling.Platform.Platform`
      |rarr| ``Is...`` properties describing a platform (and environment) the current Python program is running on.
 
 

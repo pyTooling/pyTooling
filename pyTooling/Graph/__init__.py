@@ -209,11 +209,17 @@ class Base(
 	_dict: Dict[DictKeyType, DictValueType]  #: Dictionary to store key-value-pairs.
 
 	def __init__(self):
-		""".. todo:: GRAPH::Base::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Base::init Needs documentation.
+
+		"""
 		self._dict = {}
 
 	def __del__(self):
-		""".. todo:: GRAPH::Base::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::Base::del Needs documentation.
+
+		"""
 		del self._dict
 
 	def Delete(self) -> None:
@@ -276,7 +282,10 @@ class BaseWithIDValueAndWeight(
 	_weight:    Nullable[WeightType]  #: Field storing the object's weight.
 
 	def __init__(self, identifier: IDType = None, value: ValueType = None, weight: WeightType = None):
-		""".. todo:: GRAPH::Vertex::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::init Needs documentation.
+
+		"""
 		super().__init__()
 
 		self._id = identifier
@@ -329,7 +338,10 @@ class BaseWithName(
 	_name: Nullable[str]  #: Field storing the object's name.
 
 	def __init__(self, name: str = None):
-		""".. todo:: GRAPH::BaseWithName::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseWithName::init Needs documentation.
+
+		"""
 		if name is not None and not isinstance(name, str):
 			raise TypeError("Parameter 'name' is not of type 'str'.")
 
@@ -377,7 +389,10 @@ class BaseWithVertices(
 								']']  #: Field storing a set of vertices.
 
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable['Vertex'] = None):
-		""".. todo:: GRAPH::Component::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Component::init Needs documentation.
+
+		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
 		if not isinstance(graph, Graph):
@@ -389,7 +404,10 @@ class BaseWithVertices(
 		self._vertices = set() if vertices is None else {v for v in vertices}
 
 	def __del__(self):
-		""".. todo:: GRAPH::BaseWithVertices::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseWithVertices::del Needs documentation.
+
+		"""
 		del self._vertices
 
 		super().__del__()
@@ -446,7 +464,10 @@ class Vertex(
 	_outboundLinks:  List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound links.
 
 	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None, subgraph: 'Subgraph' = None):
-		""".. todo:: GRAPH::Vertex::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::init Needs documentation.
+
+		"""
 		if vertexID is not None and not isinstance(vertexID, Hashable):
 			raise TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
 
@@ -482,7 +503,10 @@ class Vertex(
 		self._outboundLinks = []
 
 	def __del__(self):
-		""".. todo:: GRAPH::BaseEdge::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseEdge::del Needs documentation.
+
+		"""
 		del self._views
 		del self._inboundEdges
 		del self._outboundEdges
@@ -691,7 +715,10 @@ class Vertex(
 		return tuple([edge.Destination for edge in self._outboundEdges])
 
 	def EdgeToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		""".. todo:: GRAPH::Vertex::EdgeToVertex Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::EdgeToVertex Needs documentation.
+
+		"""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
 
@@ -722,7 +749,10 @@ class Vertex(
 		return edge
 
 	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		""".. todo:: GRAPH::Vertex::EdgeFromVertex Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::EdgeFromVertex Needs documentation.
+
+		"""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
 
@@ -753,7 +783,10 @@ class Vertex(
 		return edge
 
 	def EdgeToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, vertexWeight: VertexWeightType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		""".. todo:: GRAPH::Vertex::EdgeToNewVertex Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::EdgeToNewVertex Needs documentation.
+
+		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
@@ -786,7 +819,10 @@ class Vertex(
 		return edge
 
 	def EdgeFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, vertexWeight: VertexWeightType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
-		""".. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs documentation.
+
+		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
@@ -819,7 +855,10 @@ class Vertex(
 		return edge
 
 	def LinkToVertex(self, vertex: 'Vertex', linkID: EdgeIDType = None, linkWeight: EdgeWeightType = None, linkValue: VertexValueType = None) -> 'Link':
-		""".. todo:: GRAPH::Vertex::LinkToVertex Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::LinkToVertex Needs documentation.
+
+		"""
 		if self._subgraph is vertex._subgraph:
 			# FIXME: needs an error message
 			raise GraphException()
@@ -852,7 +891,10 @@ class Vertex(
 		return link
 
 	def LinkFromVertex(self, vertex: 'Vertex', linkID: EdgeIDType = None, linkWeight: EdgeWeightType = None, linkValue: VertexValueType = None) -> 'Edge':
-		""".. todo:: GRAPH::Vertex::LinkToVertex Needs documentation."""
+		"""
+		.. todo:: GRAPH::Vertex::LinkToVertex Needs documentation.
+
+		"""
 		if self._subgraph is vertex._subgraph:
 			# FIXME: needs an error message
 			raise GraphException()
@@ -1528,7 +1570,10 @@ class BaseEdge(
 	_destination: Vertex
 
 	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
-		""".. todo:: GRAPH::BaseEdge::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseEdge::init Needs documentation.
+
+		"""
 		super().__init__(edgeID, value, weight)
 
 		self._source = source
@@ -1580,7 +1625,10 @@ class Edge(
 	"""
 
 	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
-		""".. todo:: GRAPH::Edge::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Edge::init Needs documentation.
+
+		"""
 		if not isinstance(source, Vertex):
 			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
 		if not isinstance(destination, Vertex):
@@ -1637,7 +1685,10 @@ class Link(
 	"""
 
 	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: LinkWeightType = None):
-		""".. todo:: GRAPH::Edge::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Edge::init Needs documentation.
+
+		"""
 		if not isinstance(source, Vertex):
 			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
 		if not isinstance(destination, Vertex):
@@ -1688,7 +1739,10 @@ class BaseGraph(
 		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
 	]
 ):
-	""".. todo:: GRAPH::BaseGraph Needs documentation."""
+	"""
+	.. todo:: GRAPH::BaseGraph Needs documentation.
+
+	"""
 
 	_verticesWithID:    Dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_verticesWithoutID: List[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
@@ -1698,7 +1752,10 @@ class BaseGraph(
 	_linksWithoutID:    List[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
 	def __init__(self, name: str = None):  #, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::BaseGraph::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseGraph::init Needs documentation.
+
+		"""
 		super().__init__(name)
 
 		self._verticesWithoutID = []
@@ -1709,7 +1766,10 @@ class BaseGraph(
 		self._linksWithID = {}
 
 	def __del__(self):
-		""".. todo:: GRAPH::BaseGraph::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseGraph::del Needs documentation.
+
+		"""
 		del self._verticesWithoutID
 		del self._verticesWithID
 		del self._edgesWithoutID
@@ -2104,7 +2164,10 @@ class BaseGraph(
 					link._Delete()
 
 	def HasCycle(self) -> bool:
-		""".. todo:: GRAPH::BaseGraph::HasCycle Needs documentation."""
+		"""
+		.. todo:: GRAPH::BaseGraph::HasCycle Needs documentation.
+
+		"""
 		# IsAcyclic ?
 
 		# Handle trivial case if graph is empty
@@ -2168,12 +2231,18 @@ class Subgraph(
 		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
 	]
 ):
-	""".. todo:: GRAPH::Subgraph Needs documentation."""
+	"""
+	.. todo:: GRAPH::Subgraph Needs documentation.
+
+	"""
 
 	_graph:    'Graph'
 
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::Subgraph::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Subgraph::init Needs documentation.
+
+		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
 		if not isinstance(graph, Graph):
@@ -2186,7 +2255,10 @@ class Subgraph(
 		self._graph = graph
 
 	def __del__(self):
-		""".. todo:: GRAPH::Subgraph::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::Subgraph::del Needs documentation.
+
+		"""
 		super().__del__()
 
 	@property
@@ -2199,7 +2271,10 @@ class Subgraph(
 		return self._graph
 
 	def __str__(self) -> str:
-		""".. todo:: GRAPH::Subgraph::str Needs documentation."""
+		"""
+		.. todo:: GRAPH::Subgraph::str Needs documentation.
+
+		"""
 		return self._name if self._name is not None else "Unnamed subgraph"
 
 
@@ -2220,20 +2295,32 @@ class View(
 		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
 	]
 ):
-	""".. todo:: GRAPH::View Needs documentation."""
+	"""
+	.. todo:: GRAPH::View Needs documentation.
+
+	"""
 
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::View::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::View::init Needs documentation.
+
+		"""
 		super().__init__(graph, name, vertices)
 
 		graph._views.add(self)
 
 	def __del__(self):
-		""".. todo:: GRAPH::View::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::View::del Needs documentation.
+
+		"""
 		super().__del__()
 
 	def __str__(self) -> str:
-		""".. todo:: GRAPH::View::str Needs documentation."""
+		"""
+		.. todo:: GRAPH::View::str Needs documentation.
+
+		"""
 		return self._name if self._name is not None else "Unnamed view"
 
 
@@ -2254,20 +2341,32 @@ class Component(
 		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
 	]
 ):
-	""".. todo:: GRAPH::Component Needs documentation."""
+	"""
+	.. todo:: GRAPH::Component Needs documentation.
+
+	"""
 
 	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
-		""".. todo:: GRAPH::Component::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Component::init Needs documentation.
+
+		"""
 		super().__init__(graph, name, vertices)
 
 		graph._components.add(self)
 
 	def __del__(self):
-		""".. todo:: GRAPH::Component::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::Component::del Needs documentation.
+
+		"""
 		super().__del__()
 
 	def __str__(self) -> str:
-		""".. todo:: GRAPH::Component::str Needs documentation."""
+		"""
+		.. todo:: GRAPH::Component::str Needs documentation.
+
+		"""
 		return self._name if self._name is not None else "Unnamed component"
 
 
@@ -2299,7 +2398,10 @@ class Graph(
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
 	def __init__(self, name: str = None):
-		""".. todo:: GRAPH::Graph::init Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::init Needs documentation.
+
+		"""
 		super().__init__(name)
 
 		self._subgraphs = set()
@@ -2307,7 +2409,10 @@ class Graph(
 		self._components = set()
 
 	def __del__(self):
-		""".. todo:: GRAPH::Graph::del Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::del Needs documentation.
+
+		"""
 		del self._subgraphs
 		del self._views
 		del self._components
@@ -2357,14 +2462,20 @@ class Graph(
 		return len(self._components)
 
 	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]:
-		""".. todo:: GRAPH::Graph::iter Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::iter Needs documentation.
+
+		"""
 		def gen():
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID
 		return iter(gen())
 
 	def GetVertexByID(self, vertexID: Nullable[VertexIDType]) -> Vertex:
-		""".. todo:: GRAPH::Graph::GetVertexByID Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::GetVertexByID Needs documentation.
+
+		"""
 		if vertexID is None:
 			if len(self._verticesWithoutID) > 1:
 				raise KeyError(f"Found multiple vertices with ID `None`.")
@@ -2377,7 +2488,10 @@ class Graph(
 			return self._verticesWithID[vertexID]
 
 	def GetVertexByValue(self, value) -> Vertex:
-		""".. todo:: GRAPH::Graph::GetVertexByValue Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::GetVertexByValue Needs documentation.
+
+		"""
 		vertices = [vertex for vertex in chain(self._verticesWithID.values(), self._verticesWithoutID) if vertex._value == value]
 		if len(vertices) > 1:
 			raise KeyError(f"Found multiple vertices with Value == `{value}`.")
@@ -2462,7 +2576,10 @@ class Graph(
 	# 	# Buruvka's algorithm
 
 	def __repr__(self) -> str:
-		""".. todo:: GRAPH::Graph::repr Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::repr Needs documentation.
+
+		"""
 		statistics = f", vertices: {self.VertexCount}, edges: {self.EdgeCount}"
 		if self._name is None:
 			return f"<graph: unnamed graph{statistics}>"
@@ -2470,7 +2587,10 @@ class Graph(
 			return f"<graph: '{self._name}'{statistics}>"
 
 	def __str__(self) -> str:
-		""".. todo:: GRAPH::Graph::str Needs documentation."""
+		"""
+		.. todo:: GRAPH::Graph::str Needs documentation.
+
+		"""
 		if self._name is None:
 			return f"Graph: unnamed graph"
 		else:

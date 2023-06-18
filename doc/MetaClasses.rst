@@ -33,6 +33,17 @@ meta-class.
    class MyClass(metaclass=ExtendedType):
      pass
 
+.. _META/Slotted:
+
+Slotted
+*******
+
+.. _META/Mixin:
+
+Mixin
+*****
+
+
 .. _META/Abstract:
 
 Abstract Method

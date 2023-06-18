@@ -71,7 +71,7 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 	.. seealso::
 
 	   * :ref:`Python data model for slots <slots>`
-	   * :ref:`Glossary entry __slots__ <__slots__>`
+	   * :term:`Glossary entry __slots__ <__slots__>`
 	"""
 
 
@@ -389,7 +389,7 @@ class ExtendedType(type):
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
 		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
-		:param mixin:           If true, make the class a :term:`Mixin`.
+		:param mixin:           If true, make the class a :term:`Mixin-Class`.
 		                        If false, create slots if ``useSlots`` is true.
 		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.

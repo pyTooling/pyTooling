@@ -149,7 +149,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
 	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None):
-		""".. todo:: TREE::Node::init Needs documentation."""
+		"""
+		.. todo:: TREE::Node::init Needs documentation.
+
+		"""
 		self._id = nodeID
 		self._value = value
 		self._dict = {}
@@ -240,11 +243,17 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self._dict[key] = value
 
 	def __delitem__(self, key: DictKeyType) -> None:
-		""".. todo:: TREE::Node::__delitem__ Needs documentation."""
+		"""
+		.. todo:: TREE::Node::__delitem__ Needs documentation.
+
+		"""
 		del self._dict[key]
 
 	def __contains__(self, key: DictKeyType) -> bool:
-		""".. todo:: TREE::Node::__contains__ Needs documentation."""
+		"""
+		.. todo:: TREE::Node::__contains__ Needs documentation.
+
+		"""
 		return key in self._dict
 
 	def __len__(self) -> int:
@@ -546,19 +555,28 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._children.append(child)
 
 	def GetPath(self) -> Generator['Node', None, None]:
-		""".. todo:: TREE::Node::GetPAth Needs documentation."""
+		"""
+		.. todo:: TREE::Node::GetPAth Needs documentation.
+
+		"""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
-		""".. todo:: TREE::Node::GetAncestors Needs documentation."""
+		"""
+		.. todo:: TREE::Node::GetAncestors Needs documentation.
+
+		"""
 		node = self._parent
 		while node is not None:
 			yield node
 			node = node._parent
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
-		""".. todo:: TREE::Node::GetCommonAncestors Needs documentation."""
+		"""
+		.. todo:: TREE::Node::GetCommonAncestors Needs documentation.
+
+		"""
 		if isinstance(others, Node):
 			# Check for trivial case
 			if others is self:

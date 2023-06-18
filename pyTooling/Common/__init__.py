@@ -49,16 +49,17 @@ from typing      import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, ov
 
 try:
 	from pyTooling.Decorators import export
+	from pyTooling.Platform   import Platform
 except ModuleNotFoundError:  # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
+		from Platform   import Platform
 	except ModuleNotFoundError as ex:  # pragma: no cover
 		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
 		raise ex
 
-from pyTooling.Common.Platform import Platform
 
 __all__ = ["CurrentPlatform"]
 
