@@ -133,7 +133,7 @@ cached instance of that class will be returned.
 Slotted Type
 ************
 
-A class defined with enabled ``useSlots`` behavior stores instance fields in slots. The meta-class, translates all
+A class defined with enabled ``slots`` behavior stores instance fields in slots. The meta-class, translates all
 type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and access compared
 to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint as well as the
 field access performance of all class instances. This behavior is automatically inherited to all derived classes.

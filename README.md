@@ -135,8 +135,8 @@ pyTooling provides an [enhanced meta-class](https://pytooling.github.io/pyToolin
   allows only a single instance of that class to exist. If another instance is going to be created, a previously cached
   instance of that class will be returned.
 
-`class MyClass(metaclass=ExtendedType, useSlots=True):`
-  A class defined with enabled [useSlots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) behavior
+`class MyClass(metaclass=ExtendedType, slots=True):`
+  A class defined with enabled [slots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) behavior
   stores instance fields in slots. The meta-class, translates all type-annotated fields in a class definition into
   slots. Slots allow a more efficient field storage and access compared to dynamically stored and accessed fields hosted
   by `__dict__`. This improves the memory footprint as well as the field access performance of all class instances. This

@@ -137,11 +137,11 @@ Decorators
 
 * :ref:`DECO/Performance`
 
-  * :ref:`DECO/useSlots`: Classes marked with :pycode:`@slotted` get transformed into classes using ``__slots__``. |br|
+  * :ref:`DECO/slots`: Classes marked with :pycode:`@slotted` get transformed into classes using ``__slots__``. |br|
     This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
   * :ref:`DECO/mixin`: Classes marked with :pycode:`@mixin` do not store their fields in ``__slots__``. |br|
     When such a :term:`mixin-class` is inherited by a class using slots, the fields of the mixin become slots.
-  * :ref:`DECO/useSlots`: Classes marked with :pycode:`@singleton` get transformed into singleton classes. |br|
+  * :ref:`DECO/slots`: Classes marked with :pycode:`@singleton` get transformed into singleton classes. |br|
     This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
 
 * :ref:`DECO/Misc`
@@ -167,40 +167,42 @@ Meta-Classes
 ============
 
 pyTooling provides an :ref:`enhanced meta-class <META>` called :class:`~pyTooling.MetaClasses.ExtendedType` to replace
-the default meta-class :class:`type`. Is combines features like using slots, abstract methods and singletons in a single
-meta-class compared to Python approach in providing multiple specific meta-classes (e.g. from :mod:`abc`) that can't be
-combined to a singleton using slots.
+the default meta-class :class:`type`. It combines features like using slots, abstract methods and creating singletons by
+applying a single meta-class. In comparison, Python's approach in to provide multiple specific meta-classes (see
+:mod:`abc`) that can't be combined e.g. to a singleton using slots.
 
 :ref:`ExtendedType <META/ExtendedType>` allows to implement :ref:`slotted types <META/Slotted>`,
 :ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/Abstract>` and :ref:`singletons <META/Singleton>`,
-and combinations thereof.
+and combinations thereof. Exception messages in case of errors have been improved too.
 
 Slotted types significantly reduce the memory footprint by 4x and decrease the class field access time by 10..25%. While
-setting up slotted types needed a lot of manual coding, this is now fully automated by this meta-class. Moreover, it
-also takes care deferred slots in multiple-inheritance scenarios by marking secondary base-classes as mixins.
+setting up slotted types needed a lot of manual coding, this is now fully automated by this meta-class. It assumes,
+annotated fields are going to be slots. Moreover, it also takes care deferred slots in multiple-inheritance scenarios by
+marking secondary base-classes as mixins. This defers slot creation until a mixin is inherited.
 
 :pycode:`class MyClass(metaclass=ExtendedType):`
-  A class definition using that meta-class can implement :ref:`abstract methods <META/Abstract>` using decorators
-  :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
+  A class definition using the :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. I can now implement
+  :ref:`abstract methods <META/Abstract>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
 
 :pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
   A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
   exist. If another instance is going to be created, a previously cached instance of that class will be returned.
 
 :pycode:`class MyClass(metaclass=ExtendedType, slots=True):`
-  A class defined with enabled :ref:`useSlots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
-  translates all type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and
-  access compared to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint
+  A class defined with enabled :ref:`slots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
+  translates all type-annotated fields in the class definition to slots. Slots allow a more efficient field storage and
+  access compared to dynamically stored and accessed fields hosted in ``__dict__``. This improves the memory footprint
   as well as the field access performance of all class instances. This behavior is automatically inherited to all
   derived classes.
 
 :pycode:`class MyClass(metaclass=ExtendedType, slots=True, mixin=True):`
-  A class defined with enabled :ref:`mixin <META/Mixin>` behavior collects instance fields so they can be added to
-  slots in a derived class.
+  A class defined with enabled :ref:`mixin <META/Mixin>` behavior collects type-annotated instance fields so they can be
+  added to slots in an inherited class. Thus, slots are not created for mixin-classes but deferred in the inheritance
+  hierarchy.
 
 :pycode:`class MyClass(SlottedObject):`
   A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` will bring the slotted type behavior to
-  that class and all derived classes.
+  that class and all its derived classes.
 
 
 Packaging
