@@ -137,11 +137,11 @@ Decorators
 
 * :ref:`DECO/Performance`
 
-  * :ref:`DECO/slots`: Classes marked with :pycode:`@slotted` get transformed into classes using ``__slots__``. |br|
+  * :ref:`DECO/slotted`: Classes marked with :pycode:`@slotted` get transformed into classes using ``__slots__``. |br|
     This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
   * :ref:`DECO/mixin`: Classes marked with :pycode:`@mixin` do not store their fields in ``__slots__``. |br|
     When such a :term:`mixin-class` is inherited by a class using slots, the fields of the mixin become slots.
-  * :ref:`DECO/slots`: Classes marked with :pycode:`@singleton` get transformed into singleton classes. |br|
+  * :ref:`DECO/singleton`: Classes marked with :pycode:`@singleton` get transformed into singleton classes. |br|
     This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
 
 * :ref:`DECO/Misc`

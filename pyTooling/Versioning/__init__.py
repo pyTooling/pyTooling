@@ -41,27 +41,31 @@ from ..MetaClasses import Overloading
 
 
 @export
-class SemVersion(metaclass=Overloading):
-	"""Representation of a semantic version number like ``3.7.12``."""
+class Parts(IntEnum):
+	"""Enumeration of parts in a version number that can be presents."""
 
-	class Parts(IntEnum):
-		"""Enumeration of parts in a version number that can be presents."""
-
-		Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
-		Minor = 2       #: Minor number is present. (e.g. Y in ``v0.Y.0``).
-		Patch = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
-		Build = 8       #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
-		Pre   = 16      #: Pre-release number is present.
-		Post  = 32      #: Post-release number is present.
-		Prefix = 64     #: Prefix is present.
-		Postfix = 128   #: Postfix is present.
+	Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
+	Minor = 2       #: Minor number is present. (e.g. Y in ``v0.Y.0``).
+	Patch = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
+	Build = 8       #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
+	Pre   = 16      #: Pre-release number is present.
+	Post  = 32      #: Post-release number is present.
+	Prefix = 64     #: Prefix is present.
+	Postfix = 128   #: Postfix is present.
 #		AHead   = 256
 
-	class Flags(IntEnum):
-		"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
 
-		Clean = 1       #: A versioned build was created from a *clean* working directory.
-		Dirty = 2       #: A versioned build was created from a *dirty* working directory.
+@export
+class Flags(IntEnum):
+	"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
+
+	Clean = 1       #: A versioned build was created from a *clean* working directory.
+	Dirty = 2       #: A versioned build was created from a *dirty* working directory.
+
+
+@export
+class SemVersion(metaclass=Overloading):
+	"""Representation of a semantic version number like ``3.7.12``."""
 
 	parts   : Parts                #: Integer flag enumeration of present parts in a version number.
 	flags   : int = Flags.Clean    #: State if the version in a working directory is clean or dirty compared to a tagged version.
@@ -89,20 +93,25 @@ class SemVersion(metaclass=Overloading):
 		split = versionString.split(".")
 		length = len(split)
 		self.major = int(split[0])
+		self.parts = Parts.Major
 		if length >= 2:
 			self.minor = int(split[1])
+			self.parts |= Parts.Minor
 		if length >= 3:
 			self.patch = int(split[2])
+			self.parts |= Parts.Patch
 		if length >= 4:
 			self.build = int(split[3])
-		self.flags = self.Flags.Clean
+			self.parts |= Parts.Build
+		self.flags = Flags.Clean
 
 	def __init__(self, major: int, minor: int, patch: int = 0, build: int = 0):  # type: ignore[no-redef]
 		self.major = major
 		self.minor = minor
 		self.patch = patch
 		self.build = build
-		self.flags = self.Flags.Clean
+		self.parts = Parts.Minor | Parts.Minor | Parts.Patch | Parts.Build
+		self.flags = Flags.Clean
 
 	def __eq__(self, other: Any) -> bool:
 		"""

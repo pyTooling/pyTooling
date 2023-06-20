@@ -370,16 +370,6 @@ class ExtendedType(type):
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 	"""
 
-	def __call__(cls, *args, **kwargs):
-		if cls.__new__ is object.__new__:
-			newCls = cls.__new__(cls)
-		else:
-			newCls = cls.__new__(cls, *args, **kwargs)
-
-		cls.__init__(newCls, *args, **kwargs)
-
-		return newCls
-
 	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
 							slots: bool = False, mixin: bool = None, singleton: bool = False) -> type:
 		"""
@@ -651,7 +641,7 @@ class ExtendedType(type):
 
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
-			def new(cls, *args, **kwargs):
+			def singleton_new(cls, *args, **kwargs):
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
 						obj = oldnew(cls, *args, **kwargs)
@@ -663,7 +653,7 @@ class ExtendedType(type):
 
 			@OriginalFunction(oldinit)
 			@wraps(oldinit)
-			def init(self, *args, **kwargs):
+			def singleton_init(self, *args, **kwargs):
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
 				with cv:
@@ -677,11 +667,11 @@ class ExtendedType(type):
 						while cls.__singletonInstanceInit__:
 							cv.wait()
 
-			new.__singleton_wrapper__ = True
-			init.__singleton_wrapper__ = True
+			singleton_new.__singleton_wrapper__ = True
+			singleton_init.__singleton_wrapper__ = True
 
-			newClass.__new__ = new
-			newClass.__init__ = init
+			newClass.__new__ = singleton_new
+			newClass.__init__ = singleton_init
 			newClass.__singletonInstanceCond__ = Condition()
 			newClass.__singletonInstanceInit__ = True
 			newClass.__singletonInstanceCache__ = None
@@ -699,19 +689,19 @@ class ExtendedType(type):
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
-		if newClass.__abstractMethods__:
+		if len(newClass.__abstractMethods__) > 0:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
 				oldnew = oldnew.__orig_func__
 
 			@OriginalFunction(oldnew)
 			@wraps(oldnew)
-			def new(cls, *_, **__):
+			def abstract_new(cls, *_, **__):
 				raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
 
-			new.__raises_abstract_class_error__ = True
+			abstract_new.__raises_abstract_class_error__ = True
 
-			newClass.__new__ = new
+			newClass.__new__ = abstract_new
 			return True
 
 		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
@@ -719,7 +709,18 @@ class ExtendedType(type):
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
 				if newClass.__new__.__raises_abstract_class_error__:
-					newClass.__new__ = newClass.__new__.__orig_func__
+					origNew = newClass.__new__.__orig_func__
+
+					# WORKAROUND: __new__ checks tp_new and implements different behavior
+					#  Bugreport: https://github.com/python/cpython/issues/105888
+					if origNew is object.__new__:
+						@wraps(object.__new__)
+						def wrapped_new(inst, *_, **__):
+							return object.__new__(inst)
+
+						newClass.__new__ = wrapped_new
+					else:
+						newClass.__new__ = origNew
 				elif newClass.__new__.__isSingleton__:
 					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
 			except AttributeError as ex:
