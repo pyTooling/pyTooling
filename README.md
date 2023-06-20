@@ -21,10 +21,12 @@
 
 # pyTooling
 
-**pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
-exceptions. It also provides lots of helper functions e.g. to ease the handling of package descriptions.
+**pyTooling** is a powerful collection of arbitrary useful abstract data models, missing classes, decorators, a new
+performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
+handling of package descriptions or to unify multiple existing APIs into a single API.
 
-It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
+It's useful - if not even essential - for **any** Python-base project independent if it's a library, framework, CLI tool
+or just a "script".
 
 ## Introduction
 
@@ -44,25 +46,27 @@ This is a set of useful [helper functions](https://pytooling.github.io/pyTooling
 
 * [getsizeof](https://pytooling.github.io/pyTooling/Common/index.html#getsizeof) calculates the "real" size of a data structure.
 * [isnestedclass](https://pytooling.github.io/pyTooling/Common/index.html#isnestedclass) checks if a class is nested inside another class.
+* [firstKey](https://pytooling.github.io/pyTooling/Common/index.html#firstkey), [firstValue](https://pytooling.github.io/pyTooling/Common/index.html#firstvalue), [firstItem](https://pytooling.github.io/pyTooling/Common/index.html#firstitem) get the first key/value/item from an ordered dictionary.
 * [mergedicts](https://pytooling.github.io/pyTooling/Common/index.html#mergedicts) merges multiple dictionaries into a new dictionary.
 * [zipdicts](https://pytooling.github.io/pyTooling/Common/index.html#zipdicts) iterate multiple dictionaries simultaneously.
 
 
 ### Common Classes
 
-* Python doesn't provide [call-by-reference parameters](https://pytooling.github.io/pyTooling/Common/CallByRef.html) for
-  simple types. This behavior can be emulated with classes provided by the `pyTooling.CallByRef` module.
-* Setuptools, PyPI, and others have a varying understanding of license names. The `pyTooling.Licensing` module
-  provides [unified license names](https://pytooling.github.io/pyTooling/Common/Licensing.html) as well as license name
-  mappings or translations.
-* Python has many ways in figuring out the current platform using APIs from `sys`, `platform`, `os`, ….
-  Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
-  [unified platform and environment description](https://pytooling.github.io/pyTooling/Common/Platform.html) by
-  summarizing multiple platform APIs into a single class instance.
-* While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
-  provides such a [representations of version numbers](https://pytooling.github.io/pyTooling/Common/Versioning.html)
-  following semantic versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by the
-  `pyTooling.Versioning` module.
+* [Call-by-reference parameters](https://pytooling.github.io/pyTooling/Common/CallByRef.html): Python doesn't provide
+  *call-by-reference parameters* for simple types.  
+  This behavior can be emulated with classes provided by the `pyTooling.CallByRef` module.
+* [Unified license names](https://pytooling.github.io/pyTooling/Common/Licensing.html): Setuptools, PyPI, and others
+  have a varying understanding of license names.  
+  The `pyTooling.Licensing` module provides *unified license names* as well as license name mappings or translations.
+* [Unified platform and environment description](https://pytooling.github.io/pyTooling/Common/Platform.html): Python has
+  many ways in figuring out the current platform using APIs from `sys`, `platform`, `os`, …. Unfortunately, none of the
+  provided standard APIs offers a comprehensive answer. pyTooling provides a `CurrentPlatform` singleton summarizing
+  multiple platform APIs into a single class instance.
+* [Representations of version numbers](https://pytooling.github.io/pyTooling/Common/Versioning.html): While Python
+  itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling provides
+  such representations following semantic versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by 
+  the `pyTooling.Versioning` module.
 
 ### Configuration
 
