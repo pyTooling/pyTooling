@@ -76,18 +76,22 @@ Various file formats suitable for configuration information share the same featu
 these features. Moreover, concrete [configuration file format reader](https://pytooling.github.io/pyTooling/Configuration/FileFormats.html)
 implementations are provided as well.
 
-* [JSON configuration reader](https://pytooling.github.io/pyTooling/Configuration/JSON.html) &rarr; To be implemented.
+* [JSON configuration reader](https://pytooling.github.io/pyTooling/Configuration/JSON.html) for the JSON file format.
 * [TOML configuration reader](https://pytooling.github.io/pyTooling/Configuration/TOML.html) &rarr; To be implemented.
 * [YAML configuration reader](https://pytooling.github.io/pyTooling/Configuration/YAML.html) for the YAML file format.
 
 
 ### Data Structures
 
-pyTooling also provides fast and powerful data structures offering object-oriented APIs:
+pyTooling also provides [fast and powerful data structures](https://pytooling.github.io/pyTooling/DataStructures/index.html)
+offering object-oriented APIs:
 
 * [Graph data structure](https://pytooling.github.io/pyTooling/DataStructures/Graph.html)  
-  &rarr; A directed graph implementation using a `Vertex` and `Edge`
-  class.
+  &rarr; A directed graph implementation using a `Vertex` and an `Edge` class.
+* [Path data structure](https://pytooling.github.io/pyTooling/DataStructures/Path/index.html)  
+  &rarr; To be documented.
+* [Finite State Machine data structure](https://pytooling.github.io/pyTooling/DataStructures/StateMachine.html)  
+  &rarr; A data model for state machines using a `State` and a `Transition` class.
 * [Tree data structure](https://pytooling.github.io/pyTooling/DataStructures/Tree.html)  
   &rarr; A fast and simple implementation using a single `Node` class.
 

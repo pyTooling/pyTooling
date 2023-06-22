@@ -98,18 +98,18 @@ Data Structures
 pyTooling also provides :ref:`fast and powerful data structures <STRUCT>` offering object-oriented APIs:
 
 * :ref:`Graph data structure <STRUCT/Graph>` |br|
-  |rarr| A directed graph implementation using a :class:`pyTooling.Graph.Vertex` and :class:`pyTooling.Graph.Edge`
+  |rarr| A directed graph implementation using a :class:`~pyTooling.Graph.Vertex` and an :class:`~pyTooling.Graph.Edge`
   class.
 * :ref:`Path data structure <STRUCT/Path>` |br|
   |rarr| To be documented.
 * :ref:`Finite State Machine data structure <STRUCT/StateMachine>` |br|
-  |rarr| A data model for state machines using :class:`pyTooling.StateMachine.State` and
-  :class:`pyTooling.StateMachine.Transition` classes.
+  |rarr| A data model for state machines using a :class:`~pyTooling.StateMachine.State` and a
+  :class:`~pyTooling.StateMachine.Transition` class.
 * :ref:`Tree data structure <STRUCT/Tree>` |br|
-  |rarr| A fast and simple implementation using a single :class:`pyTooling.Tree.Node` class.
+  |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
 
 .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
-   |rarr| A fast and simple implementation using a single :class:`pyTooling.Tree.Node` class.
+   |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
 
 
 Decorators
