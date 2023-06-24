@@ -120,7 +120,7 @@ def notimplemented(message: str) -> Callable:
 	"""
 	Mark a method as *not implemented* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
 
-	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacing method. In
+	The original method is stored in ``<method>.__wrapped__`` and it's doc-string is copied to the replacing method. In
 	additional the field ``<method>.__notImplemented__`` is added.
 
 	.. admonition:: ``example.py``
@@ -143,7 +143,6 @@ def notimplemented(message: str) -> Callable:
 	"""
 
 	def decorator(method: C) -> C:
-		@OriginalFunction(method)
 		@wraps(method)
 		def func(*_, **__):
 			raise NotImplementedError(message)
@@ -193,61 +192,6 @@ def readonly(func: FunctionType) -> property:
 	prop = property(fget=func, fset=None, fdel=None, doc=func.__doc__)
 
 	return prop
-
-
-@export
-def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
-	"""
-	Store a reference to the original function/method on a new, wrapper or replacement function/method.
-
-	The function or method reference is stored in ``__orig_func__``.
-
-	.. admonition:: ``metaclass.py``
-
-	   .. code-block:: python
-
-	      from functools import wraps
-	      from pyTooling.Decorators import OriginalFunction
-
-	      class Meta(type):
-	        def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
-	          # Create a new class
-	          newClass = type.__new__(self, className, baseClasses, members)
-
-	          @OriginalFunction(newClass.__new__)
-	          @wraps(newClass.__new__)
-	          def new(cls, *args, **kwargs):
-	            # ...
-	            obj = newClass.__new__(*args, **kwargs)
-	            # ...
-	            return obj
-
-	          newClass.__new__ = new
-
-	          return newClass
-
-	:param func:       Function or method reference to be store on the decorated function or method.
-	:returns:          Decorator function that stores the function or method reference on the decorated object.
-	:raises TypeError: If original function is not callable.
-	"""
-	if not callable(func):
-		raise TypeError(f"Original function is not callable.")
-
-	def decorator(f: Func) -> Func:
-		"""
-		Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
-
-		:param f:          Function or method, where the original function or method reference is attached to.
-		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.
-		:raises TypeError: If decorated object is not callable.
-		"""
-		if not callable(f):
-			raise TypeError(f"Decorated object is not callable.")
-
-		f.__orig_func__ = func
-		return f
-
-	return decorator
 
 
 @export

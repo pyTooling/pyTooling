@@ -43,13 +43,13 @@ from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar, Generic,
 
 try:
 	from ..Exceptions import ToolingException
-	from ..Decorators import export, OriginalFunction
+	from ..Decorators import export
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Exceptions import ToolingException
-		from Decorators import export, OriginalFunction
+		from Decorators import export
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
@@ -271,7 +271,7 @@ def abstractmethod(method: M) -> M:
 	"""
 	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
 
-	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacing method. In
+	The original method is stored in ``<method>.__wrapped__`` and it's doc-string is copied to the replacing method. In
 	additional field ``<method>.__abstract__`` is added.
 
 	.. warning::
@@ -298,7 +298,6 @@ def abstractmethod(method: M) -> M:
 	   * :func:`~pyTooling.Metaclasses.mustoverride`
 	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
-	@OriginalFunction(method)
 	@wraps(method)
 	def func(self):
 		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
@@ -633,13 +632,12 @@ class ExtendedType(type):
 		if singleton:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__singleton_wrapper__"):
-				oldnew = oldnew.__orig_func__
+				oldnew = oldnew.__wrapped__
 
 			oldinit = newClass.__init__
 			if hasattr(oldinit, "__singleton_wrapper__"):
-				oldinit = oldinit.__orig_func__
+				oldinit = oldinit.__wrapped__
 
-			@OriginalFunction(oldnew)
 			@wraps(oldnew)
 			def singleton_new(cls, *args, **kwargs):
 				with cls.__singletonInstanceCond__:
@@ -651,7 +649,6 @@ class ExtendedType(type):
 
 				return obj
 
-			@OriginalFunction(oldinit)
 			@wraps(oldinit)
 			def singleton_init(self, *args, **kwargs):
 				cls = self.__class__
@@ -692,9 +689,8 @@ class ExtendedType(type):
 		if len(newClass.__abstractMethods__) > 0:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
-				oldnew = oldnew.__orig_func__
+				oldnew = oldnew.__wrapped__
 
-			@OriginalFunction(oldnew)
 			@wraps(oldnew)
 			def abstract_new(cls, *_, **__):
 				raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
@@ -709,7 +705,7 @@ class ExtendedType(type):
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
 				if newClass.__new__.__raises_abstract_class_error__:
-					origNew = newClass.__new__.__orig_func__
+					origNew = newClass.__new__.__wrapped__
 
 					# WORKAROUND: __new__ checks tp_new and implements different behavior
 					#  Bugreport: https://github.com/python/cpython/issues/105888

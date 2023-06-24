@@ -33,7 +33,7 @@ from unittest import TestCase
 
 from pytest   import mark
 
-from pyTooling.Decorators import export, InheritDocString, OriginalFunction, classproperty, readonly
+from pyTooling.Decorators import export, InheritDocString, classproperty, readonly
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -226,71 +226,3 @@ class Descriptors(TestCase):
 
 		self.assertEqual(11, Class_1.Member)
 		self.assertEqual(12, Class_2.Member)
-
-
-class OrigFunction(TestCase):
-	def test_NotCallableOriginal(self) -> None:
-		class func:
-			pass
-
-		oldfunc = func()
-		with self.assertRaises(TypeError):
-			@OriginalFunction(oldfunc)
-			def wrapper():
-				return oldfunc() + 1
-
-	def test_NotCallableWrapper(self) -> None:
-		def func():
-			return 0
-
-		oldfunc = func
-		with self.assertRaises(TypeError):
-			class Wrapper:
-				pass
-
-			func = Wrapper()
-			func = OriginalFunction(oldfunc)(func)
-
-	def test_Function(self) -> None:
-		def func():
-			return 0
-
-		oldfunc = func
-		@OriginalFunction(oldfunc)
-		def wrapper():
-			return oldfunc() + 1
-
-		func = wrapper
-
-		self.assertEqual(1, func())
-		self.assertEqual(0, func.__orig_func__())
-
-	def test_CallableObjectAsOriginal(self) -> None:
-		class func:
-			def __call__(self):
-				return 0
-
-		oldfunc = func()
-		@OriginalFunction(oldfunc)
-		def wrapper():
-			return oldfunc() + 1
-
-		func = wrapper
-
-		self.assertEqual(1, func())
-		self.assertEqual(0, func.__orig_func__())
-
-	def test_CallableObjectAsWrapper(self) -> None:
-		def func():
-			return 0
-
-		oldfunc = func
-		class Wrapper:
-			def __call__(self):
-				return oldfunc() + 1
-
-		func = Wrapper()
-		func = OriginalFunction(oldfunc)(func)
-
-		self.assertEqual(1, func())
-		self.assertEqual(0, func.__orig_func__())
