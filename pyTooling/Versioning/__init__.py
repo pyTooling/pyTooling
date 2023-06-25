@@ -34,10 +34,10 @@ Implementation of semantic and date versioning version-numbers.
 .. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
 from enum          import IntEnum
-from typing        import Optional as Nullable, Any
+from typing        import Optional as Nullable, Any, Tuple
 
 from ..Decorators  import export
-from ..MetaClasses import Overloading
+from ..MetaClasses import ExtendedType
 
 
 @export
@@ -64,19 +64,24 @@ class Flags(IntEnum):
 
 
 @export
-class SemVersion(metaclass=Overloading):
+class Version(metaclass=ExtendedType, slots=True):
+	pass
+
+
+@export
+class SemVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
 	parts   : Parts                #: Integer flag enumeration of present parts in a version number.
-	flags   : int = Flags.Clean    #: State if the version in a working directory is clean or dirty compared to a tagged version.
-	major   : int = 0              #: Major number part of the version number.
-	minor   : int = 0              #: Minor number part of the version number.
-	patch   : int = 0              #: Patch number part of the version number.
-	build   : int = 0              #: Build number part of the version number.
-	pre     : int = 0              #: Pre-release version number part.
-	post    : int = 0              #: Post-release version number part.
-	prefix  : str = ""             #: Prefix string
-	postfix : str = ""             #: Postfix string
+	flags   : int #= Flags.Clean    #: State if the version in a working directory is clean or dirty compared to a tagged version.
+	major   : int #= 0              #: Major number part of the version number.
+	minor   : int #= 0              #: Minor number part of the version number.
+	patch   : int #= 0              #: Patch number part of the version number.
+	build   : int #= 0              #: Build number part of the version number.
+	pre     : int #= 0              #: Pre-release version number part.
+	post    : int #= 0              #: Post-release version number part.
+	prefix  : str #= ""             #: Prefix string
+	postfix : str #= ""             #: Postfix string
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead   : int = 0
 
@@ -93,6 +98,9 @@ class SemVersion(metaclass=Overloading):
 		split = versionString.split(".")
 		length = len(split)
 		self.major = int(split[0])
+		self.minor = 0
+		self.patch = 0
+		self.build = 0
 		self.parts = Parts.Major
 		if length >= 2:
 			self.minor = int(split[1])
@@ -249,5 +257,5 @@ class SemVersion(metaclass=Overloading):
 
 
 @export
-class CalVersion(metaclass=Overloading):
+class CalVersion(Version):
 	"""Representation of a calendar version number like ``2021.10``."""

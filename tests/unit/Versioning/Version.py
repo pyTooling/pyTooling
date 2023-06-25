@@ -41,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Version(TestCase):
-	version : UUT
+	version: UUT
 
 	# def test_CreateFromNone(self):
 	# 	with self.assertRaises(ValueError):

@@ -123,82 +123,13 @@ class MustOverrideClassError(AbstractClassError):
 	"""
 
 
-@export
-class Overloading(type):
-	"""
-	Metaclass that allows multiple dispatch of methods based on method signatures.
-
-	.. seealso:
-
-	   `Python Cookbook - Multiple dispatch with function annotations <https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2>`__
-	"""
-
-	class DispatchDictionary(dict):
-		"""Special dictionary to build dispatchable methods in a metaclass."""
-
-		class DispatchableMethod:
-			"""Represents a single multimethod."""
-
-			def __init__(self, name):
-				self._methods: Dict[Tuple, Callable] = {}
-				self.__name__ = name
-
-			def register(self, method) -> None:
-				"""Register a new method as a dispatchable."""
-				# Build a signature from the method's type annotations
-				sig = signature(method)
-				types: List[Type] = []
-				for name, parameter in sig.parameters.items():
-					if name == "self":
-						continue
-
-					if parameter.annotation is Parameter.empty:
-						raise TypeError(f"Argument {name} must be annotated with a type.")
-					if not isinstance(parameter.annotation, type):
-						raise TypeError(f"Argument {name} annotation must be a type.")
-
-					if parameter.default is not Parameter.empty:
-						self._methods[tuple(types)] = method
-					types.append(parameter.annotation)
-
-				self._methods[tuple(types)] = method
-
-			def __call__(self, *args):
-				"""Call a method based on type signature of the arguments."""
-				types = tuple(type(arg) for arg in args[1:])
-				meth = self._methods.get(types, None)
-				if meth:
-					return meth(*args)
-				else:
-					raise TypeError(f"No matching method for types {types}.")
-
-			def __get__(self, instance, cls):
-				"""Descriptor method needed to make calls work in a class."""
-				if instance is not None:
-					return MethodType(self, instance)
-				else:
-					return self
-
-		def __setitem__(self, key, value):
-			if key in self:
-				# If key already exists, it must be a dispatchable method or callable
-				currentValue = self[key]
-				if isinstance(currentValue, self.DispatchableMethod):
-					currentValue.register(value)
-				else:
-					dispatchable = self.DispatchableMethod(key)
-					dispatchable.register(currentValue)
-					dispatchable.register(value)
-					super().__setitem__(key, dispatchable)
-			else:
-				super().__setitem__(key, value)
-
-	def __new__(cls, className, bases, classDict):
-		return type.__new__(cls, className, bases, dict(classDict))
-
-	@classmethod
-	def __prepare__(cls, classname, bases):
-		return cls.DispatchDictionary()
+# """
+# Metaclass that allows multiple dispatch of methods based on method signatures.
+#
+# .. seealso:
+#
+#    `Python Cookbook - Multiple dispatch with function annotations <https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2>`__
+# """
 
 
 M = TypeVar("M", bound=Callable)   #: A type variable for methods.
@@ -353,6 +284,79 @@ def overloadable(method: M) -> M:
 
 
 @export
+class DispatchableMethod:
+	"""Represents a single multimethod."""
+
+	_methods: Dict[Tuple, Callable]
+	__name__: str
+	__slots__ = ("_methods", "__name__")
+
+	def __init__(self, name: str):
+		self.__name__ = name
+		self._methods = {}
+
+	def __call__(self, *args):
+		"""Call a method based on type signature of the arguments."""
+		types = tuple(type(arg) for arg in args[1:])
+		meth = self._methods.get(types, None)
+		if meth:
+			return meth(*args)
+		else:
+			raise TypeError(f"No matching method for types {types}.")
+
+	def __get__(self, instance, cls):
+		"""Descriptor method needed to make calls work in a class."""
+		if instance is not None:
+			return MethodType(self, instance)
+		else:
+			return self
+
+	def register(self, method: Callable) -> None:
+		"""Register a new method as a dispatchable."""
+
+		# Build a signature from the method's type annotations
+		sig = signature(method)
+		types: List[Type] = []
+
+		for name, parameter in sig.parameters.items():
+			if name == "self":
+				continue
+
+			if parameter.annotation is Parameter.empty:
+				raise TypeError(f"Parameter '{name}' must be annotated with a type.")
+
+			if not isinstance(parameter.annotation, type):
+				raise TypeError(f"Parameter '{name}' annotation must be a type.")
+
+			if parameter.default is not Parameter.empty:
+				self._methods[tuple(types)] = method
+
+			types.append(parameter.annotation)
+
+		self._methods[tuple(types)] = method
+
+
+@export
+class DispatchDictionary(dict):
+	"""Special dictionary to build dispatchable methods in a metaclass."""
+
+	def __setitem__(self, key: str, value: Any):
+		if callable(value) and key in self:
+			# If key already exists, it must be a dispatchable method or callable
+			currentValue = self[key]
+			if isinstance(currentValue, DispatchableMethod):
+				currentValue.register(value)
+			else:
+				dispatchable = DispatchableMethod(key)
+				dispatchable.register(currentValue)
+				dispatchable.register(value)
+
+				super().__setitem__(key, dispatchable)
+		else:
+			super().__setitem__(key, value)
+
+
+@export
 class ExtendedType(type):
 	"""
 	An updates meta-class to construct new classes with an extended feature set.
@@ -369,6 +373,10 @@ class ExtendedType(type):
 
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 	"""
+
+	@classmethod
+	def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):
+		return DispatchDictionary()
 
 	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
 							slots: bool = False, mixin: bool = False, singleton: bool = False) -> type:
@@ -747,6 +755,7 @@ class ExtendedType(type):
 
 			return False
 
+			
 @export
 class SlottedObject(metaclass=ExtendedType, slots=True):
 	"""Classes derived from this class will store all members in ``__slots__``."""
