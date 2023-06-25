@@ -392,7 +392,7 @@ class BaseGraph(BaseWithData, mixin=True):
 
 
 @export
-class Graph(BaseGraph, mixin=False):
+class Graph(BaseGraph):
 	_document: 'GraphMLDocument'
 	_ids: Dict[str, Union[Node, Edge, 'Subgraph']]
 

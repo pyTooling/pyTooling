@@ -314,7 +314,7 @@ class Inheritance(TestCase):
 			self.assertEqual(3, inst._data_2)
 
 	def test_LinearInheritance_1_BaseSlottedMixin(self):
-		class Base(metaclass=ExtendedType, slots=True, mixin=True):
+		class Base(metaclass=ExtendedType, mixin=True):
 			_data_0: int
 
 			def __init__(self, data: int):
@@ -332,7 +332,7 @@ class Inheritance(TestCase):
 		self.assertEqual(1, inst._data_1)
 
 	def test_LinearInheritance_2_BaseSlottedMixin(self):
-		class Base(metaclass=ExtendedType, slots=True, mixin=True):
+		class Base(metaclass=ExtendedType, mixin=True):
 			_data_0: int
 
 			def __init__(self, data: int):

@@ -174,7 +174,7 @@ def mixin(cls):
 		if key not in slots:
 			members[key] = value
 
-	return metacls(cls.__name__, bases, members, slots=True, mixin=True)
+	return metacls(cls.__name__, bases, members, mixin=True)
 
 
 @export
@@ -755,7 +755,7 @@ class ExtendedType(type):
 
 			return False
 
-			
+
 @export
 class SlottedObject(metaclass=ExtendedType, slots=True):
 	"""Classes derived from this class will store all members in ``__slots__``."""
