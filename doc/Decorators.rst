@@ -334,30 +334,3 @@ is copied to the replacing callable. A reference to the original callable is pre
         @notimplemented("This function isn't tested yet.")
         def method(self, param: int):
           return 2 ** param
-
-
-
-.. _DECO/OriginalFunction:
-
-@OriginalFunction
-*****************
-
-The :func:`~pyTooling.MetaClasses.OriginalFunction` decorator attaches the original callable (function or method) to a
-new callable object (function or method). This is helpful when the original callable gets replaced or wrapped e.g. by a
-decorator.
-
-The original function can be accesses via :pycode:`<callable>.__orig_func__`.
-
-.. admonition:: Example
-
-   .. code-block:: Python
-
-      @export
-      def abstractmethod(method: M) -> M:
-        @OriginalFunction(method)
-        @wraps(method)
-        def func(self):
-          raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
-
-        func.__abstract__ = True
-        return func

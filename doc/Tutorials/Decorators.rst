@@ -17,11 +17,6 @@ See also :ref:`decorators offered by pyTooling <DECO>`.
    The predefined :func:`~functools.wraps` decorator should be used when creating wrapping or replacing decorators, so
    the name and doc-string of the callable is preserved and decorators can be chained.
 
-.. hint::
-
-   pyTooling offers a :func:`~pyTooling.Decorators.OriginalFunction` decorator to preserve the original function which
-   might be wrapped or replaced by the decorator annotated in a ``<callable>.__orig_func__`` field.
-
 +-------------------------------------+---------------------------------------------------+-----------------------------------------+
 | Function-based without Parameter    | Function-based with Parameter(s)                  | Class-based with Parameter(s)           |
 +=====================================+===================================================+=========================================+

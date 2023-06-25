@@ -148,8 +148,6 @@ Decorators
 
   * :ref:`DECO/notimplemented`: This decorator replaces a callable (function or method) with a callable raising a
     :exc:`NotImplementedError`. The original code becomes unreachable.
-  * :ref:`DECO/OriginalFunction`: If a callable gets replaced or wrapped by e.g. a decorator, this decorator can be used
-    to preserve a reference to the original callable.
 
 
 Exceptions
