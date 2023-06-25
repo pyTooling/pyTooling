@@ -262,13 +262,15 @@ class Inheritance(TestCase):
 		self.assertEqual(3, inst._data_2)
 
 	def test_LinearInheritance_1_BaseMixin(self):
+		print()
+
 		class Base(metaclass=ExtendedType, mixin=True):
 			_data_0: int
 
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Final(Base):
+		class Final(Base, mixin=True):
 			_data_1: int
 
 			def __init__(self, data: int):
@@ -289,14 +291,14 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Parent(Base):
+		class Parent(Base, mixin=True):
 			_data_1: int
 
 			def __init__(self, data: int):
 				super().__init__(data)
 				self._data_1 = data + 1
 
-		class Final(Parent):
+		class Final(Parent, mixin=True):
 			_data_2: int
 
 			def __init__(self, data: int):
@@ -318,7 +320,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Final(Base, mixin=False):
+		class Final(Base):
 			_data_1: int
 
 			def __init__(self, data: int):
@@ -336,14 +338,14 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Parent(Base):
+		class Parent(Base, mixin=True):
 			_data_1: int
 
 			def __init__(self, data: int):
 				super().__init__(data)
 				self._data_1 = data + 1
 
-		class Final(Parent, mixin=False):
+		class Final(Parent):
 			_data_2: int
 
 			def __init__(self, data: int):
@@ -367,7 +369,7 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Final(Base, slots=True, mixin=False):
+		class Final(Base):
 			_data_1: int
 
 			def __init__(self, data: int):
@@ -385,14 +387,14 @@ class Inheritance(TestCase):
 			def __init__(self, data: int):
 				self._data_0 = data
 
-		class Parent(Base):
+		class Parent(Base, mixin=True):
 			_data_1: int
 
 			def __init__(self, data: int):
 				super().__init__(data)
 				self._data_1 = data + 1
 
-		class Final(Parent, slots=True, mixin=False):
+		class Final(Parent):
 			_data_2: int
 
 			def __init__(self, data: int):
@@ -587,6 +589,8 @@ class Inheritance(TestCase):
 		self.assertEqual(8, inst._data_2)
 
 	def test_OInheritance_BaseExtended(self):
+		print()
+
 		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
 
@@ -607,7 +611,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassIsNotAMixinError):
+		with self.assertRaises(BaseClassWithNonEmptySlotsError):  #BaseClassIsNotAMixinError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -902,7 +906,7 @@ class Inheritance(TestCase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassIsNotAMixinError):
+		with self.assertRaises(BaseClassWithNonEmptySlotsError):  #BaseClassIsNotAMixinError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -1120,10 +1124,10 @@ class Hierarchy(TestCase):
 		class Config0(Node0, mixin=True):
 			_data_11: int
 
-		class Node(Node0, mixin=False):
+		class Node(Node0):
 			_data_2: int
 
-		class Dict(Node, Dict0, mixin=False):
+		class Dict(Node, Dict0):
 			_data_3: int
 
 		class Config(Dict, Config0):

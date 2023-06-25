@@ -39,7 +39,8 @@ from inspect    import signature, Parameter
 from sys        import version_info
 from threading  import Condition
 from types      import MethodType, FunctionType
-from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar, Generic, Generator, Set, Iterator
+from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator
+from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar
 
 try:
 	from ..Exceptions import ToolingException
@@ -370,7 +371,7 @@ class ExtendedType(type):
 	"""
 
 	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
-							slots: bool = False, mixin: bool = None, singleton: bool = False) -> type:
+							slots: bool = False, mixin: bool = False, singleton: bool = False) -> type:
 		"""
 		Construct a new class using this :term:`meta-class`.
 
@@ -386,34 +387,24 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		# If mixin isn't set explicitly (None), then check if primary base-class is a mixin.
-		#   If so, inherit that behavior.
-		#   If it's a mixin, then aggregate all mixinSlots in a list (mixinSlots)
-		if mixin is None:
-			mixin = False
-			if len(baseClasses) > 0:
-				primaryBaseClass = baseClasses[0]
-				if isinstance(primaryBaseClass, self) and primaryBaseClass.__isMixin__:
-					# mixinSlots.extend(primaryBaseClass.__mixinSlots__)
-					mixin = True
-
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
 			if isinstance(primaryBaseClass, self):
-				slots = primaryBaseClass.__usesSlots__
+				slots = primaryBaseClass.__slotted__
 
-		# Possible adds members["__slots__"]
-		mixinSlots, members = self._aggregateMixinSlots(className, baseClasses, members, mixin, slots)
+		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
+		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin)
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
 
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
-		newClass.__usesSlots__ = slots
-		newClass.__isMixin__ = mixin
-		newClass.__mixinSlots__ = (*mixinSlots, )
+
+		# Apply class fields
+		for fieldName, typeAnnotation in classFields.items():
+			setattr(newClass, fieldName, typeAnnotation)
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
@@ -423,87 +414,112 @@ class ExtendedType(type):
 		return newClass
 
 	@classmethod
-	def _aggregateMixinSlots(self, className, baseClasses, members, mixin, slots):
-		mixinSlots = []
-		if mixin:
-			if len(baseClasses) > 0:
-				inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
-				primaryInharitancePath: Set[type] = set(inheritancePaths[0])
-				for typePath in inheritancePaths[1:]:
-					for t in typePath:
-						if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
-							ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
-							ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
-							# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
-							# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
-							raise ex
-
-				# If current class is set to be a mixin, then aggregate all mixinSlots in a list.
-				#   Ensure all base-classes are either constructed
-				#     * by meta-class ExtendedType, or
-				#     * use no slots, or
-				#     * are typing.Generic
-				#   If it was constructed by ExtendedType, then ensure this class itself is a mixin-class.
-				for baseClass in baseClasses:  # type: ExtendedType
-					if baseClass.__class__ is self:
-						if baseClass.__isMixin__:
-							mixinSlots.extend(baseClass.__mixinSlots__)
-		elif slots:
-			if len(baseClasses) > 0:
-				primaryBaseClass = baseClasses[0]
-				if type(primaryBaseClass) is self:
-					mixinSlots.extend(primaryBaseClass.__mixinSlots__)
-
-				# Not a mixin, because it's a normal class in the primary inheritance path or the end (final) of a mixin hierarchy.
-				for secondaryBaseClass in baseClasses[1:]:
-					if isinstance(secondaryBaseClass, self):
-						if secondaryBaseClass.__isMixin__:
-							mixinSlots.extend(secondaryBaseClass.__mixinSlots__)
-						else:
-							ex = BaseClassIsNotAMixinError(f"Base-class '{secondaryBaseClass.__name__}' is not a mixin-class.")
-							ex.add_note(f"All secondary base-classes must be mixin-classes.")
-							raise ex
-					elif isinstance(secondaryBaseClass, type):
-						if issubclass(secondaryBaseClass, Generic):
-							pass
-						elif hasattr(secondaryBaseClass, "__slots__") and len(secondaryBaseClass.__slots__) != 0:
-							ex = BaseClassWithNonEmptySlotsError(f"Secondary base-class '{secondaryBaseClass.__name__}' has non-empty __slots__.")
-							ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
-							ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
-							ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
-							raise ex
-					else:
-						ex = ExtendedTypeError(f"Meta-class of '{secondaryBaseClass.__name__}' must be 'ExtendedType' or secondary base-class is 'typing.Generic'.")
-						ex.add_note(f"Type (meta-class) of '{secondaryBaseClass.__name__}' is '{secondaryBaseClass.__class__}'.")
-						raise ex
-
-		if mixin:
-			# If it's a mixin, __slots__ must be an empty tuple.
-			#   Collect further fields (listed in members) in the mixinSlots list
-			mixinSlots.extend(self.__getSlots(baseClasses, members))
-			members["__slots__"] = tuple()
-		# Check if members should be stored in slots. If so get these members from type annotated fields
-		elif slots:
-			# If slots are used, all base classes must use slots.
+	def _computeSlots(self, className, baseClasses, members, slots, mixin):
+		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
+		slottedFields = []
+		objectFields = {}
+		classFields = {}
+		if slots or mixin:
+			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
+				# Exclude object as a special case
 				if baseClass is object:
-					pass
-				elif not hasattr(baseClass, "__slots__"):
+					continue
+
+				if not hasattr(baseClass, "__slots__"):
 					ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
 					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
 					raise ex
 
-			mixinSlots.extend(self.__getSlots(baseClasses, members))
-			if len(set(mixinSlots)) != len(mixinSlots):
-				from collections import Counter
-				duplicates = [field for field, count in Counter(mixinSlots).items() if count > 1]
+			# FIXME: should have a check for non-empty slots on secondary base-classes too
 
-				raise DuplicateFieldInSlotsError(f"Duplicate fields in __slots__: {', '.join(duplicates)}")
+			# Copy all field names from primary base-class' __slots__, which are later needed for error checking.
+			inheritedSlottedFields = {}
+			if len(baseClasses) > 0:
+				for base in reversed(baseClasses[0].mro()):
+					# Exclude object as a special case
+					if base is object:
+						continue
 
-			members["__slots__"] = tuple(mixinSlots)
-			mixinSlots.clear()
+					for annotation in base.__slots__:
+						inheritedSlottedFields[annotation] = base
 
-		return mixinSlots, members
+			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
+			annotations: Dict[str, Any] = members.get("__annotations__", {})
+			for fieldName, typeAnnotation in annotations.items():
+				if fieldName in inheritedSlottedFields:
+					raise AttributeError(f"Slot '{fieldName}' already exists in base-class '{inheritedSlottedFields[fieldName]}'.")
+
+				slottedFields.append(fieldName)
+
+				# If annotated field is a ClassVar, and it has an initial value
+				# * copy field and initial value to classFields dictionary
+				# * remove field from members
+				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
+					classFields[fieldName] = members[fieldName]
+					del members[fieldName]
+
+				# If an annotated field has an initial value
+				# * copy field and initial value to objectFields dictionary
+				# * remove field from members
+				elif fieldName in members:
+					objectFields[fieldName] = members[fieldName]
+					del members[fieldName]
+
+			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
+
+		# FIXME: search for fields without annotation
+		if mixin:
+			mixinSlots.extend(slottedFields)
+			members["__slotted__"] = True
+			members["__slots__"] = tuple()
+			members["__isMixin__"] = True
+			members["__mixinSlots__"] = tuple(mixinSlots)
+		elif slots:
+			slottedFields.extend(mixinSlots)
+			members["__slotted__"] = True
+			members["__slots__"] = tuple(slottedFields)
+			members["__isMixin__"] = False
+			members["__mixinSlots__"] = tuple()
+		else:
+			members["__slotted__"] = False
+			# NO     __slots__
+			members["__isMixin__"] = False
+			members["__mixinSlots__"] = tuple()
+		return classFields, objectFields
+
+	@classmethod
+	def _aggregateMixinSlots(self, className, baseClasses):
+		mixinSlots = []
+		if len(baseClasses) > 0:
+			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
+			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
+			inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
+			primaryInharitancePath: Set[type] = set(inheritancePaths[0])
+			for typePath in inheritancePaths[1:]:
+				for t in typePath:
+					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
+						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
+						ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
+						# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
+						# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
+						raise ex
+
+			# If current class is set to be a mixin, then aggregate all mixinSlots in a list.
+			#   Ensure all base-classes are either constructed
+			#     * by meta-class ExtendedType, or
+			#     * use no slots, or
+			#     * are typing.Generic
+			#   If it was constructed by ExtendedType, then ensure this class itself is a mixin-class.
+			for baseClass in baseClasses:  # type: ExtendedType
+				if isinstance(baseClass, _GenericAlias) and baseClass.__origin__ is Generic:
+					pass
+				elif baseClass.__class__ is self and baseClass.__isMixin__:
+					mixinSlots.extend(baseClass.__mixinSlots__)
+				elif hasattr(baseClass, "__mixinSlots__"):
+					mixinSlots.extend(baseClass.__mixinSlots__)
+
+		return mixinSlots
 
 	@classmethod
 	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
@@ -730,37 +746,6 @@ class ExtendedType(type):
 						raise ex
 
 			return False
-
-	@classmethod
-	def __getSlots(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
-		"""
-		Get all object attributes, that should be stored in a slot.
-
-		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param members:         The dictionary of members for the constructed class.
-		:returns:               A tuple of member names to be stored in slots.
-		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
-		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
-		"""
-		annotatedFields = {}
-		for baseClass in baseClasses:
-			for base in reversed(baseClass.mro()[:-1]):
-				if not hasattr(base, "__slots__"):
-					raise AttributeError(f"Base-class '{base.__name__}' has no '__slots__'.")
-
-				for annotation in base.__slots__:
-					annotatedFields[annotation] = base
-
-		# WORKAROUND:
-		#   Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
-		#   (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
-		annotations: Dict[str, Any] = members.get("__annotations__", {})
-		for annotation in annotations:
-			if annotation in annotatedFields:
-				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
-
-		return (*members.get('__slots__', []), *annotations)
-
 
 @export
 class SlottedObject(metaclass=ExtendedType, slots=True):

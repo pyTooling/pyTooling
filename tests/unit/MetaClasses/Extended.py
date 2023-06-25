@@ -43,6 +43,23 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Normal(TestCase):
+	def test_NoInheritance(self):
+		class Base(metaclass=ExtendedType):
+			pass
+
+		inst = Base()
+		self.assertIsNotNone(inst)
+
+	def test_NoInheritance_Init1(self):
+		class Base(metaclass=ExtendedType):
+			_data_0: int
+
+			def __init__(self, data: int):
+				self._data_0 = data
+
+		inst = Base(0)
+		self.assertEqual(0, inst._data_0)
+
 	def test_LinearInheritance_1(self):
 		class Base(metaclass=ExtendedType):
 			_data_0: int
