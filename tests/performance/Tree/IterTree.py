@@ -44,10 +44,10 @@ class Tree(PerformanceTest):
 	def test_AddChildren(self):
 		def wrapper(count: int):
 			def func():
-				rootNode = iTree("root", data=0)
+				rootNode = iTree("root", value=0)
 
 				for i in range(1, count):
-					rootNode+=iTree("child", data=i)
+					rootNode+=iTree("child", value=i)
 
 			return func
 
