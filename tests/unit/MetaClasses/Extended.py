@@ -31,7 +31,10 @@
 """
 Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
+from typing                import ClassVar
 from unittest              import TestCase
+
+from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType
 
@@ -451,3 +454,212 @@ class Normal(TestCase):
 		self.assertEqual(16, inst._data_R1)
 		self.assertEqual(17, inst._data_2)
 		self.assertEqual(18, inst._data_3)
+
+
+class ObjectFieldInitializers_Extended(TestCase):
+	def test_NoInitValue_NoDunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on class 'Base'."):
+			_ = Base._data0
+
+	def test_NoInitValue_NoDunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Field '_data0' shouldn't be initialized on instance."):
+			_ = inst._data0
+
+		inst._data0 = 1
+		self.assertEqual(1, inst._data0)
+
+	def test_NoInitValue_DunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int
+
+			def __init__(self):
+				self._data0 = 1
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on class 'Base'."):
+			_ = Base._data0
+
+	def test_NoInitValue_DunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int
+
+			def __init__(self):
+				self._data0 = 1
+
+		inst = Base()
+
+		self.assertEqual(1, inst._data0)
+		inst._data0 = 2
+		self.assertEqual(2, inst._data0)
+
+	def test_InitValue_NoDunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int = 1
+
+		inst = Base()
+
+		self.assertEqual(1, inst._data0)
+		inst._data0 = 2
+		self.assertEqual(2, inst._data0)
+
+	def test_InitValue_DunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int = 1
+
+			def __init__(self):
+				pass
+
+		inst = Base()
+
+		self.assertEqual(1, inst._data0)
+		inst._data0 = 2
+		self.assertEqual(2, inst._data0)
+
+	def test_InitValue_InitOverwrite_InstCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: int = 1
+
+			def __init__(self):
+				self._data0 = 5
+
+		inst = Base()
+
+		self.assertEqual(5, inst._data0)
+		inst._data0 = 2
+		self.assertEqual(2, inst._data0)
+
+
+class ObjectFieldInitializers_Slotted(TestCase):
+	def test_NoInitValue_NoDunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Field '_data0' shouldn't be initialized on instance."):
+			_ = inst._data0
+
+		inst._data0 = 1
+		self.assertEqual(1, inst._data0)
+
+	def test_NoInitValue_DunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int
+
+			def __init__(self):
+				self._data0 = 1
+
+		inst = Base()
+
+		self.assertEqual(1, inst._data0)
+		inst._data0 = 2
+		self.assertEqual(2, inst._data0)
+
+	def test_InitValue_InitOverwrite_InstCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+			def __init__(self):
+				self._data0 = 5
+
+		inst = Base()
+
+		self.assertEqual(5, inst._data0)
+		inst._data0 = 2
+		self.assertEqual(2, inst._data0)
+
+
+class ClassFieldInitializers_Extended(TestCase):
+	def test_NoInitValue_NoDunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: ClassVar[int]
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Class field '_data0' shouldn't be initialized on class 'Base'."):
+			_ = Base._data0
+
+	def test_NoInitValue_NoDunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: ClassVar[int]
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on instance."):
+			_ = inst._data0
+
+		inst._data0 = 1
+		self.assertEqual(1, inst._data0)
+
+	def test_InitValue_NoDunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: ClassVar[int] = 1
+
+		inst = Base()
+
+		self.assertEqual(1, Base._data0)
+
+	def test_InitValue_DunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType):
+			_data0: ClassVar[int] = 1
+
+			def __init__(self):
+				pass
+
+		inst = Base()
+
+		self.assertEqual(1, Base._data0)
+
+
+class ClassFieldInitializers_Slotted(TestCase):
+	def test_NoInitValue_NoDunderInit_InstCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int]
+
+		inst = Base()
+
+		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on instance."):
+			_ = inst._data0
+
+		inst._data0 = 1
+		self.assertEqual(1, inst._data0)
+
+	def test_InitValue_NoDunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int] = 1
+
+		inst = Base()
+
+		self.assertEqual(1, Base._data0)
+
+	def test_InitValue_DunderInit_ClassCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int] = 1
+
+			def __init__(self):
+				pass
+
+		inst = Base()
+
+		self.assertEqual(1, Base._data0)
+
+	def test_InitValue_InitOverwrite_InstantiationCheck(self):
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int] = 1
+
+			def __init__(self):
+				self._data0 = 5
+
+		with self.assertRaises(AttributeError, msg="Class field '_data0' should not be accessible from within instance."):
+			_ = Base()
