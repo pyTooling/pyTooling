@@ -29,9 +29,9 @@
 # ==================================================================================================================== #
 #
 """Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest     import TestCase
+from unittest             import TestCase
 
-from pyTooling.Versioning import SemVersion as UUT
+from pyTooling.Versioning import SemanticVersion as UUT
 
 
 if __name__ == "__main__":  # pragma: no cover

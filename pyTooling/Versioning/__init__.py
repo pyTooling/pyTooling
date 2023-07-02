@@ -70,7 +70,7 @@ class Version(metaclass=ExtendedType, slots=True):
 
 
 @export
-class SemVersion(Version):
+class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
 	_parts   : Parts = Parts.Unknown  #: Integer flag enumeration of present parts in a version number.
@@ -154,7 +154,7 @@ class SemVersion(Version):
 		:returns:          ``True``, if both version numbers are equal.
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
-		if not isinstance(other, SemVersion):
+		if not isinstance(other, SemanticVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		return (
@@ -172,13 +172,13 @@ class SemVersion(Version):
 		:returns:          ``True``, if both version numbers are not equal.
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
-		if not isinstance(other, SemVersion):
+		if not isinstance(other, SemanticVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		return not self.__eq__(other)
 
 	@staticmethod
-	def __compare(left: 'SemVersion', right: 'SemVersion') -> Nullable[bool]:
+	def __compare(left: 'SemanticVersion', right: 'SemanticVersion') -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`SemVersion` instances.
 
@@ -188,24 +188,24 @@ class SemVersion(Version):
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both parameters are equal).
 		"""
-		if (left._major < right._major):
+		if left._major < right._major:
 			return True
-		if (left._major > right._major):
+		elif left._major > right._major:
 			return False
 
-		if (left._minor < right._minor):
+		if left._minor < right._minor:
 			return True
-		if (left._minor > right._minor):
+		elif left._minor > right._minor:
 			return False
 
-		if (left._patch < right._patch):
+		if left._patch < right._patch:
 			return True
-		if (left._patch > right._patch):
+		elif left._patch > right._patch:
 			return False
 
-		if (left._build < right._build):
+		if left._build < right._build:
 			return True
-		if (left._build > right._build):
+		elif left._build > right._build:
 			return False
 
 		return None
@@ -218,7 +218,7 @@ class SemVersion(Version):
 		:returns:          ``True``, if version is less than the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
-		if not isinstance(other, SemVersion):
+		if not isinstance(other, SemanticVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		result = self.__compare(self, other)
@@ -232,7 +232,7 @@ class SemVersion(Version):
 		:returns:          ``True``, if version is less than or equal to the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
-		if not isinstance(other, SemVersion):
+		if not isinstance(other, SemanticVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		result = self.__compare(self, other)
@@ -246,7 +246,7 @@ class SemVersion(Version):
 		:returns:          ``True``, if version is greater than the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
-		if not isinstance(other, SemVersion):
+		if not isinstance(other, SemanticVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		return not self.__le__(other)
@@ -259,7 +259,7 @@ class SemVersion(Version):
 		:returns:          ``True``, if version is greater than or equal to the second operand.
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
 		"""
-		if not isinstance(other, SemVersion):
+		if not isinstance(other, SemanticVersion):
 			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
 
 		return not self.__lt__(other)
@@ -282,5 +282,5 @@ class SemVersion(Version):
 
 
 @export
-class CalVersion(Version):
+class CalendarVersion(Version):
 	"""Representation of a calendar version number like ``2021.10``."""

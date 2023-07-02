@@ -37,7 +37,7 @@ from enum                  import Flag, auto
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Versioning  import SemVersion
+from pyTooling.Versioning  import SemanticVersion
 
 
 @export
@@ -49,7 +49,7 @@ class PythonImplementation(Flag):
 
 
 @export
-class PythonVersion(SemVersion):
+class PythonVersion(SemanticVersion):
 	def __init__(self):
 		from sys import version_info
 
