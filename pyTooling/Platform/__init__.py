@@ -37,6 +37,7 @@ from enum                  import Flag, auto
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Versioning  import SemVersion
 
 
 @export
@@ -48,17 +49,11 @@ class PythonImplementation(Flag):
 
 
 @export
-class PythonVersion(metaclass=ExtendedType, singleton=True, slots=True):
-	Major: int
-	Minor: int
-	Micro: int
-
+class PythonVersion(SemVersion):
 	def __init__(self):
 		from sys import version_info
 
-		self.Major = version_info.major
-		self.Minor = version_info.minor
-		self.Micro = version_info.micro
+		super().__init__(version_info.major, version_info.minor, version_info.micro)
 
 
 @export
