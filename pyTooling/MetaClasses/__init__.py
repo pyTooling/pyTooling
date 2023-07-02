@@ -475,6 +475,16 @@ class ExtendedType(type):
 					del members[fieldName]
 
 			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
+		else:
+			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
+			annotations: Dict[str, Any] = members.get("__annotations__", {})
+			for fieldName, typeAnnotation in annotations.items():
+				# If annotated field is a ClassVar, and it has an initial value
+				# * copy field and initial value to classFields dictionary
+				# * remove field from members
+				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
+					classFields[fieldName] = members[fieldName]
+					del members[fieldName]
 
 		# FIXME: search for fields without annotation
 		if mixin:
@@ -610,10 +620,10 @@ class ExtendedType(type):
 		"""
 		abstractMethods = {}
 		if baseClasses:
+			# Aggregate all abstract methods from all base-classes.
 			for baseClass in baseClasses:
 				if hasattr(baseClass, "__abstractMethods__"):
-					for key, value in baseClass.__abstractMethods__.items():
-						abstractMethods[key] = value
+					abstractMethods.update(baseClass.__abstractMethods__)
 
 			for base in baseClasses:
 				for key, value in base.__dict__.items():
@@ -628,12 +638,16 @@ class ExtendedType(type):
 
 						members[key] = outer(value)
 
+		# Check if methods are marked:
+		# * If so, add them to list of abstract methods
+		# * If not, method is now implemented and removed from list
 		for memberName, member in members.items():
-			if ((hasattr(member, "__abstract__") and member.__abstract__) or
-					(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
-				abstractMethods[memberName] = member
-			elif memberName in abstractMethods:
-				del abstractMethods[memberName]
+			if callable(member):
+				if ((hasattr(member, "__abstract__") and member.__abstract__) or
+						(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+					abstractMethods[memberName] = member
+				elif memberName in abstractMethods:
+					del abstractMethods[memberName]
 
 		return abstractMethods, members
 

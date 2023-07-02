@@ -36,7 +36,7 @@ from unittest              import TestCase
 
 from pytest                import mark
 
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -590,6 +590,9 @@ class ClassFieldInitializers_Extended(TestCase):
 		with self.assertRaises(AttributeError, msg="Class field '_data0' shouldn't be initialized on class 'Base'."):
 			_ = Base._data0
 
+		Base._data0 = 1
+		self.assertEqual(1, Base._data0)
+
 	def test_NoInitValue_NoDunderInit_InstCheck(self):
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int]
@@ -623,18 +626,6 @@ class ClassFieldInitializers_Extended(TestCase):
 
 
 class ClassFieldInitializers_Slotted(TestCase):
-	def test_NoInitValue_NoDunderInit_InstCheck(self):
-		class Base(metaclass=ExtendedType, slots=True):
-			_data0: ClassVar[int]
-
-		inst = Base()
-
-		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on instance."):
-			_ = inst._data0
-
-		inst._data0 = 1
-		self.assertEqual(1, inst._data0)
-
 	def test_InitValue_NoDunderInit_ClassCheck(self):
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
