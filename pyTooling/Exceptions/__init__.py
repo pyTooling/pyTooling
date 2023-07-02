@@ -34,6 +34,9 @@ A common set of missing exceptions in Python.
 
 .. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
+from sys    import version_info
+from typing import List
+
 try:
 	from ..Decorators import export
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
@@ -47,52 +50,29 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 
 @export
-class AbstractClassError(Exception):
-	"""
-	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
-
-	.. seealso::
-
-	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
-	      |rarr| Mark a method as *abstract*.
-	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
-	      |rarr| Mark a method as *must overrride*.
-	   :py:exc:`~MustOverrideClassError`
-	      |rarr| Exception raised, if a method is marked as *must-override*.
-	"""
-
-
-@export
-class MustOverrideClassError(AbstractClassError):
-	"""
-	The exception is raised, when a class contains methods marked with *must-override*.
-
-	.. seealso::
-
-	   :py:func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
-	      |rarr| Mark a method as *abstract*.
-	   :py:func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
-	      |rarr| Mark a method as *must overrride*.
-	   :py:exc:`~AbstractClassError`
-	      |rarr| Exception raised, if a method is marked as *abstract*.
-	"""
-
-
-@export
 class OverloadResolutionError(Exception):
 	"""
 	The exception is raised, when no matching overloaded method was found.
 
 	.. seealso::
 
-	   :py:func:`@overloadable <pyTooling.MetaClasses.overloadable>`
+	   :func:`@overloadable <pyTooling.MetaClasses.overloadable>`
 	      |rarr| Mark a method as *overloadable*.
 	"""
+	# WORKAROUND: for Python <3.11
+	# Implementing a dummy method for Python versions before
+	__notes__: List[str]
+	if version_info < (3, 11):  # pragma: no cover
+		def add_note(self, message: str):
+			try:
+				self.__notes__.append(message)
+			except AttributeError:
+				self.__notes__ = [message]
 
 
 @export
 class ExceptionBase(Exception):
-	"""Base exception derived from :py:exc:`Exception <python:Exception>` for all custom exceptions."""
+	"""Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions."""
 
 	def __init__(self, message: str = ""):
 		"""
@@ -102,6 +82,16 @@ class ExceptionBase(Exception):
 		"""
 		super().__init__()
 		self.message = message
+
+	# WORKAROUND: for Python <3.11
+	# Implementing a dummy method for Python versions before
+	__notes__: List[str]
+	if version_info < (3, 11):  # pragma: no cover
+		def add_note(self, message: str):
+			try:
+				self.__notes__.append(message)
+			except AttributeError:
+				self.__notes__ = [message]
 
 	def __str__(self) -> str:
 		"""Returns the exception's message text."""
@@ -132,4 +122,14 @@ class NotConfiguredException(ExceptionBase):
 
 @export
 class ToolingException(Exception):
-	"""the exception is raised by pyTooling internal features."""
+	"""The exception is raised by pyTooling internal features."""
+
+	# WORKAROUND: for Python <3.11
+	# Implementing a dummy method for Python versions before
+	__notes__: List[str]
+	if version_info < (3, 11):  # pragma: no cover
+		def add_note(self, message: str):
+			try:
+				self.__notes__.append(message)
+			except AttributeError:
+				self.__notes__ = [message]

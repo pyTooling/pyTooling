@@ -74,7 +74,7 @@ __all__ = [
 
 @export
 @dataclass
-class PythonLicenseNames:
+class PythonLicenseName:
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
 
 	ShortName: str    #: License's short name
@@ -90,16 +90,16 @@ class PythonLicenseNames:
 
 
 #: Mapping of SPDX identifiers to Python license names
-PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
-	"Apache-2.0":       PythonLicenseNames("Apache 2.0",       "Apache Software License"),
-	"BSD-3-Clause":     PythonLicenseNames("BSD",              "BSD License"),
-	"MIT":              PythonLicenseNames("MIT",              "MIT License"),
-	"GPL-2.0-or-later": PythonLicenseNames("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
+PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseName] = {
+	"Apache-2.0":       PythonLicenseName("Apache 2.0",       "Apache Software License"),
+	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
+	"MIT":              PythonLicenseName("MIT",              "MIT License"),
+	"GPL-2.0-or-later": PythonLicenseName("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
 }
 
 
 @export
-class License(metaclass=ExtendedType, useSlots=True):
+class License(metaclass=ExtendedType, slots=True):
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.
@@ -155,10 +155,10 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns the Python license name for this license if it's defined.
 
 		:returns: The Python license name.
-		:raises ValueError: If there is no license name defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+		:raises ValueError: If there is no license name defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
-			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
 			raise ValueError("License has no Python specify information.") from ex
 
@@ -170,14 +170,14 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns the Python package classifier for this license if it's defined.
 
 		:returns: The Python package classifier.
-		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 
 		.. seealso::
 
 		   List of `Python classifiers <https://pypi.org/classifiers/>`__
 		"""
 		try:
-			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
 			raise ValueError(f"License has no Python specify information.") from ex
 
@@ -189,7 +189,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are identical.
-		:raises TypeError: If second operand is not of type :py:class:`License`.
+		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
@@ -201,7 +201,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are not identical.
-		:raises TypeError: If second operand is not of type :py:class:`License`.
+		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier

@@ -3,7 +3,7 @@
 Versioning
 ##########
 
-The :py:mod:`pyTooling.Versioning` package provides auxiliary classes to implement
+The :mod:`pyTooling.Versioning` package provides auxiliary classes to implement
 `semantic <https://semver.org/>`__ and `calendar <https://calver.org/>`__ versioning.
 
 .. contents:: Table of Contents
@@ -15,7 +15,7 @@ The :py:mod:`pyTooling.Versioning` package provides auxiliary classes to impleme
 Semantic Versioning
 *******************
 
-The :py:class:`~pyTooling.Versioning.SemVersion` class represents of a version number like ``v3.7.12``.
+The :class:`~pyTooling.Versioning.SemVersion` class represents of a version number like ``v3.7.12``.
 
 .. admonition:: Example
 
@@ -70,7 +70,7 @@ Missing Features
 Calendar Versioning
 *******************
 
-The :py:class:`~pyTooling.Versioning.CalVersion` class represents of a version number like ``2021.10``.
+The :class:`~pyTooling.Versioning.CalVersion` class represents of a version number like ``2021.10``.
 
 .. admonition:: Example
 

@@ -31,12 +31,141 @@
 """Unit tests for Decorators."""
 from unittest import TestCase
 
-from pyTooling.Decorators import InheritDocString, OriginalFunction, classproperty
+from pytest   import mark
+
+from pyTooling.Decorators import export, InheritDocString, classproperty, readonly
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
+
+
+__all__ = []
+
+
+@export
+class ExportedClass:
+	pass
+
+
+class NotYetExportedClass:
+	pass
+
+
+class NotExportedClass:
+	pass
+
+
+@export
+def ExportedFunction():
+	pass
+
+
+def NotYetExportedFunction():
+	pass
+
+
+def NotExportedFunction():
+	pass
+
+
+L = lambda x: x
+
+
+class Export(TestCase):
+	def test_ExportedClass(self):
+		self.assertIn(ExportedClass.__name__, __all__)
+		self.assertNotIn(NotExportedClass.__name__, __all__)
+
+	def test_ExportedFunction(self):
+		self.assertIn(ExportedFunction.__name__, __all__)
+		self.assertNotIn(NotExportedFunction.__name__, __all__)
+
+	def test_ExportTopLevelClass(self):
+		export(NotYetExportedClass)
+
+	def test_ExportTopLevelFunction(self):
+		export(NotYetExportedFunction)
+
+	def test_ExportTopLevelLambda(self):
+		with self.assertRaises(TypeError):
+			export(L)
+
+	def test_ExportLocalFunction(self):
+		with self.assertRaises(TypeError):
+			@export
+			def F():
+				pass
+
+	def test_ExportLocalClass(self):
+		with self.assertRaises(TypeError):
+			@export
+			class C:
+				pass
+
+
+class ReadOnly(TestCase):
+	def test_ReadOnly(self):
+		class Data:
+			_data: int
+
+			def __init__(self, data: int):
+				self._data = data
+
+			@readonly
+			def length(self) -> int:
+				return 2 ** self._data
+
+		d = Data(2)
+		self.assertEqual(4, d.length)
+		with self.assertRaises(AttributeError):
+			d.length = 5
+		with self.assertRaises(AttributeError):
+			del d.length
+
+	# FIXME: needs to be activated and tested
+	@mark.skip("EXPECTED ERROR IS NOT RAISED")
+	def test_Setter(self):
+		with self.assertRaises(AttributeError):
+			class Data:
+				_data: int
+
+				def __init__(self, data: int):
+					self._data = data
+
+				@readonly
+				def length(self) -> int:
+					return 2 ** self._data
+
+				@length.setter
+				def length(self, value):
+					self._data = value
+
+			d = Data(6)
+			d.length = 16
+
+	# FIXME: needs to be activated and tested
+	@mark.skip("EXPECTED ERROR IS NOT RAISED")
+	def test_Deleter(self):
+		with self.assertRaises(AttributeError):
+			class Data:
+				_data: int
+
+				def __init__(self, data: int):
+					self._data = data
+
+				@readonly
+				def length(self) -> int:
+					return 2 ** self._data
+
+				@length.deleter
+				def length(self, value):
+					del self._data
+
+			d = Data(7)
+			del d.length
 
 
 class InheritDocStrings(TestCase):
@@ -97,19 +226,3 @@ class Descriptors(TestCase):
 
 		self.assertEqual(11, Class_1.Member)
 		self.assertEqual(12, Class_2.Member)
-
-
-class Original(TestCase):
-	def test_OriginalFunction(self) -> None:
-		def func():
-			return 0
-
-		oldfunc = func
-		@OriginalFunction(oldfunc)
-		def wrapper():
-			return oldfunc() + 1
-
-		func = wrapper
-
-		self.assertEqual(1, func())
-		self.assertEqual(0, func.__orig_func__())

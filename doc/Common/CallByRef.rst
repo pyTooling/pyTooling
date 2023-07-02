@@ -3,16 +3,16 @@
 CallByRef
 #########
 
-The :py:mod:`pyTooling.CallByRef` package contains auxiliary classes to implement call by reference emulation for
-function parameter handover. The callee gets enabled to return out-parameters for simple types like :py:class:`bool` and
-:py:class:`int` to the caller.
+The :mod:`pyTooling.CallByRef` package contains auxiliary classes to implement call by reference emulation for
+function parameter handover. The callee gets enabled to return out-parameters for simple types like :class:`bool` and
+:class:`int` to the caller.
 
 .. contents:: Table of Contents
    :local:
    :depth: 2
 
-By implementing a wrapper-class :py:class:`~pyTooling.CallByRef.CallByRefParam`, any type's value can be passed
-by-reference. In addition, standard types like :py:class:`int` or :py:class:`bool` can be handled
+By implementing a wrapper-class :class:`~pyTooling.CallByRef.CallByRefParam`, any type's value can be passed
+by-reference. In addition, standard types like :class:`int` or :class:`bool` can be handled
 by derived wrapper-classes.
 
 .. admonition:: Python Background
@@ -50,7 +50,7 @@ by derived wrapper-classes.
 CallByRefParam
 **************
 
-:py:class:`~pyTooling.CallByRef.CallByRefParam` implements a wrapper class for an arbitrary *call-by-reference*
+:class:`~pyTooling.CallByRef.CallByRefParam` implements a wrapper class for an arbitrary *call-by-reference*
 parameter that can be passed to a function or method.
 
 The parameter can be initialized via the constructor. If no init-value was given,
@@ -71,7 +71,7 @@ Type-Specific *call-by-reference* Classes
 CallByRefBoolParam
 ==================
 
-The class :py:class:`~pyTooling.CallByRef.CallByRefBoolParam` implements call-by-ref behavior for the boolean type
+The class :class:`~pyTooling.CallByRef.CallByRefBoolParam` implements call-by-ref behavior for the boolean type
 (:class:`bool`).
 
 Implemented operators:
@@ -84,7 +84,7 @@ Implemented operators:
 CallByRefIntParam
 =================
 
-The class :py:class:`~pyTooling.CallByRef.CallByRefIntParam` implements call-by-ref behavior for the integer type
+The class :class:`~pyTooling.CallByRef.CallByRefIntParam` implements call-by-ref behavior for the integer type
 (:class:`int`).
 
 Implemented operators:

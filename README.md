@@ -21,10 +21,12 @@
 
 # pyTooling
 
-**pyTooling** is a powerful collection of arbitrary useful abstract data models, classes, decorators, meta-classes and
-exceptions. It also provides lots of helper functions e.g. to ease the handling of package descriptions.
+**pyTooling** is a powerful collection of arbitrary useful abstract data models, missing classes, decorators, a new
+performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
+handling of package descriptions or to unify multiple existing APIs into a single API.
 
-It's useful for **any** Python-base project independent if it's a library, framework or CLI tool.
+It's useful - if not even essential - for **any** Python-base project independent if it's a library, framework, CLI tool
+or just a "script".
 
 ## Introduction
 
@@ -32,10 +34,9 @@ It's useful for **any** Python-base project independent if it's a library, frame
 can be found in sub-namespaces like:
 
 * [pyTooling.CLIAbstraction](https://github.com/pyTooling/pyTooling.CLIAbstraction)
-* [pyTooling.TerminalUI](https://github.com/pyTooling/pyTooling.TerminalUI)
 
-In addition, pyTooling provides a collection of CI job templates for GitHub Actions. This drastically simplifies
-GHA-based CI pipelines for Python projects.
+In addition, pyTooling provides a collection of [CI job templates for GitHub Actions](https://github.com/pyTooling/Actions).
+This drastically simplifies GHA-based CI pipelines for Python projects.
 
 ## Package Details
 
@@ -45,25 +46,27 @@ This is a set of useful [helper functions](https://pytooling.github.io/pyTooling
 
 * [getsizeof](https://pytooling.github.io/pyTooling/Common/index.html#getsizeof) calculates the "real" size of a data structure.
 * [isnestedclass](https://pytooling.github.io/pyTooling/Common/index.html#isnestedclass) checks if a class is nested inside another class.
+* [firstKey](https://pytooling.github.io/pyTooling/Common/index.html#firstkey), [firstValue](https://pytooling.github.io/pyTooling/Common/index.html#firstvalue), [firstItem](https://pytooling.github.io/pyTooling/Common/index.html#firstitem) get the first key/value/item from an ordered dictionary.
 * [mergedicts](https://pytooling.github.io/pyTooling/Common/index.html#mergedicts) merges multiple dictionaries into a new dictionary.
 * [zipdicts](https://pytooling.github.io/pyTooling/Common/index.html#zipdicts) iterate multiple dictionaries simultaneously.
 
 
 ### Common Classes
 
-* Python doesn't provide [call-by-reference parameters](https://pytooling.github.io/pyTooling/Common/CallByRef.html) for
-  simple types. This behavior can be emulated with classes provided by the `pyTooling.CallByRef` module.
-* Setuptools, PyPI, and others have a varying understanding of license names. The `pyTooling.Licensing` module
-  provides [unified license names](https://pytooling.github.io/pyTooling/Common/Licensing.html) as well as license name
-  mappings or translations.
-* Python has many ways in figuring out the current platform using APIs from `sys`, `platform`, `os`, ….
-  Unfortunately, none of the provided standard APIs offers a comprehensive answer. pyTooling provides a
-  [unified platform and environment description](https://pytooling.github.io/pyTooling/Common/Platform.html) by
-  summarizing multiple platform APIs into a single class instance.
-* While Python itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling
-  provides such a [representations of version numbers](https://pytooling.github.io/pyTooling/Common/Versioning.html)
-  following semantic versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by the
-  `pyTooling.Versioning` module.
+* [Call-by-reference parameters](https://pytooling.github.io/pyTooling/Common/CallByRef.html): Python doesn't provide
+  *call-by-reference parameters* for simple types.  
+  This behavior can be emulated with classes provided by the `pyTooling.CallByRef` module.
+* [Unified license names](https://pytooling.github.io/pyTooling/Common/Licensing.html): Setuptools, PyPI, and others
+  have a varying understanding of license names.  
+  The `pyTooling.Licensing` module provides *unified license names* as well as license name mappings or translations.
+* [Unified platform and environment description](https://pytooling.github.io/pyTooling/Common/Platform.html): Python has
+  many ways in figuring out the current platform using APIs from `sys`, `platform`, `os`, …. Unfortunately, none of the
+  provided standard APIs offers a comprehensive answer. pyTooling provides a `CurrentPlatform` singleton summarizing
+  multiple platform APIs into a single class instance.
+* [Representations of version numbers](https://pytooling.github.io/pyTooling/Common/Versioning.html): While Python
+  itself has a good versioning schema, there are no classes provided to abstract version numbers. pyTooling provides
+  such representations following semantic versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by 
+  the `pyTooling.Versioning` module.
 
 ### Configuration
 
@@ -73,18 +76,22 @@ Various file formats suitable for configuration information share the same featu
 these features. Moreover, concrete [configuration file format reader](https://pytooling.github.io/pyTooling/Configuration/FileFormats.html)
 implementations are provided as well.
 
-* [JSON configuration reader](https://pytooling.github.io/pyTooling/Configuration/JSON.html) &rarr; To be implemented.
+* [JSON configuration reader](https://pytooling.github.io/pyTooling/Configuration/JSON.html) for the JSON file format.
 * [TOML configuration reader](https://pytooling.github.io/pyTooling/Configuration/TOML.html) &rarr; To be implemented.
 * [YAML configuration reader](https://pytooling.github.io/pyTooling/Configuration/YAML.html) for the YAML file format.
 
 
 ### Data Structures
 
-pyTooling also provides fast and powerful data structures offering object-oriented APIs:
+pyTooling also provides [fast and powerful data structures](https://pytooling.github.io/pyTooling/DataStructures/index.html)
+offering object-oriented APIs:
 
 * [Graph data structure](https://pytooling.github.io/pyTooling/DataStructures/Graph.html)  
-  &rarr; A directed graph implementation using a `Vertex` and `Edge`
-  class.
+  &rarr; A directed graph implementation using a `Vertex` and an `Edge` class.
+* [Path data structure](https://pytooling.github.io/pyTooling/DataStructures/Path/index.html)  
+  &rarr; To be documented.
+* [Finite State Machine data structure](https://pytooling.github.io/pyTooling/DataStructures/StateMachine.html)  
+  &rarr; A data model for state machines using a `State` and a `Transition` class.
 * [Tree data structure](https://pytooling.github.io/pyTooling/DataStructures/Tree.html)  
   &rarr; A fast and simple implementation using a single `Node` class.
 
@@ -136,8 +143,8 @@ pyTooling provides an [enhanced meta-class](https://pytooling.github.io/pyToolin
   allows only a single instance of that class to exist. If another instance is going to be created, a previously cached
   instance of that class will be returned.
 
-`class MyClass(metaclass=ExtendedType, useSlots=True):`
-  A class defined with enabled [useSlots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) behavior
+`class MyClass(metaclass=ExtendedType, slots=True):`
+  A class defined with enabled [slots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) behavior
   stores instance fields in slots. The meta-class, translates all type-annotated fields in a class definition into
   slots. Slots allow a more efficient field storage and access compared to dynamically stored and accessed fields hosted
   by `__dict__`. This improves the memory footprint as well as the field access performance of all class instances. This

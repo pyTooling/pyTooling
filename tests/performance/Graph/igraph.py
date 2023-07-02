@@ -47,9 +47,10 @@ class Graph(PerformanceTest):
 		def wrapper(count: int):
 			def func():
 				g = iGraph(directed=True)
-				g.add_vertex(0)
+				g.add_vertex("0")
 
 				for i in range(1, count):
+					i = str(i)
 					g.add_vertex(i)
 					g.add_edge(0, i)
 
@@ -62,10 +63,11 @@ class Graph(PerformanceTest):
 			def func():
 				g = iGraph(directed=True)
 
-				prev = 0
+				prev = "0"
 				g.add_vertex(prev)
 
 				for i in range(1, count):
+					i = str(i)
 					g.add_vertex(i)
 					g.add_edge(prev, i)
 					prev = i
@@ -79,12 +81,12 @@ class RandomGraph(PerformanceTest):
 	def ConstructGraphFromEdgeListFile(self, file: Path, vertexCount: int) -> iGraph:
 		graph = iGraph(directed=True)
 		for v in range(vertexCount):
-			graph.add_vertex(v)
+			graph.add_vertex(str(v))
 
 		with file.open("r") as f:
 			for line in f.readlines():
 				v, u, w = line.split(" ")
-				graph.add_edge(int(v), int(u), weight=int(w))
+				graph.add_edge(v, u, weight=int(w))
 
 		return graph
 
@@ -114,7 +116,7 @@ class RandomGraph(PerformanceTest):
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
-					vertexPath = graph.distances(49, 20)
+					vertexPath = graph.distances("49", "20")
 				except KeyError:
 					pass
 
@@ -129,7 +131,7 @@ class RandomGraph(PerformanceTest):
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
-					vertexPath = graph.distances(49, 20, "weight")
+					vertexPath = graph.distances("49", "20", "weight")
 				except KeyError:
 					pass
 

@@ -42,15 +42,15 @@ T = TypeVar("T")
 
 
 @export
-class CallByRefParam(Generic[T], metaclass=ExtendedType, useSlots=True):
+class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 	"""
 	Implements a *call-by-reference* parameter.
 
 	.. seealso::
 
-	   * :py:class:`CallByRefBoolParam` |br|
+	   * :class:`CallByRefBoolParam` |br|
 	     |rarr| A special *call-by-reference* implementation for boolean reference types.
-	   * :py:class:`CallByRefIntParam` |br|
+	   * :class:`CallByRefIntParam` |br|
 	     |rarr| A special *call-by-reference* implementation for integer reference types.
 	"""
 

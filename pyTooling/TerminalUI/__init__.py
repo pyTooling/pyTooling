@@ -36,11 +36,11 @@ from platform               import system as platform_system
 from typing                 import NoReturn, Tuple, Any
 
 from pyTooling.Decorators   import export
-from pyTooling.MetaClasses  import ExtendedType
+from pyTooling.MetaClasses  import ExtendedType, mixin
 
 
 @export
-class Terminal(metaclass=ExtendedType, useSlots=True, singleton=True):
+class Terminal(metaclass=ExtendedType, singleton=True):
 	FATAL_EXIT_CODE = 255
 
 	try:
@@ -423,6 +423,7 @@ class Line:
 
 
 @export
+@mixin
 class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 

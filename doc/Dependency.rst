@@ -7,7 +7,7 @@ Dependencies
    :alt: Libraries.io status for latest release
    :height: 22
    :target: https://libraries.io/github/pyTooling/pyTooling
-.. |img-pyTooling-val-status| image:: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
+.. |img-pyTooling-vul-status| image:: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
    :alt: Snyk Vulnerabilities for GitHub Repo
    :height: 22
    :target: https://img.shields.io/snyk/vulnerabilities/github/pyTooling/pyTooling
@@ -15,7 +15,7 @@ Dependencies
 +------------------------------------------+------------------------------------------+
 | `Libraries.io <https://libraries.io/>`_  | Vulnerabilities Summary                  |
 +==========================================+==========================================+
-| |img-pyTooling-lib-status|               | |img-pyTooling-val-status|               |
+| |img-pyTooling-lib-status|               | |img-pyTooling-vul-status|               |
 +------------------------------------------+------------------------------------------+
 
 .. _dependency-package:
@@ -28,9 +28,17 @@ pyTooling Package (Mandatory)
 Use the :file:`requirements.txt` file to install all dependencies via ``pip3`` or install the package directly from
 PyPI (see :ref:`installation`).
 
-.. code-block:: shell
+.. tab:: Linux/MacOS
 
-   pip3 install -U -r requirements.txt
+   .. code-block:: bash
+
+      pip3 install -U -r requirements.txt
+
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip install -U -r requirements.txt
 
 
 .. rubric:: Dependency List
@@ -65,8 +73,11 @@ When installed as ``pyTooling[yaml]``:
 
 .. _dependency-testing:
 
+Unit Testing (Optional)
+***********************
+
 Unit Testing / Coverage / Type Checking (Optional)
-**************************************************
+==================================================
 
 Additional Python packages needed for testing, code coverage collection and static type checking. These packages are
 only needed for developers or on a CI server, thus sub-dependencies are not evaluated further.
@@ -77,28 +88,106 @@ only needed for developers or on a CI server, thus sub-dependencies are not eval
 Use the :file:`tests/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
 the mandatory dependencies too.
 
-.. code-block:: shell
+.. tab:: Linux/MacOS
 
-   pip3 install -U -r tests/requirements.txt
+   .. code-block:: bash
 
+      pip install -U -r tests/requirements.txt
 
-.. rubric:: Dependency List
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip3 install -U -r tests\requirements.txt
+
+.. rubric:: Dependency List - Unit Testing
+
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| **Package**                                                         | **Version** | **License**                                                                            | **Dependencies**     |
++=====================================================================+=============+========================================================================================+======================+
+| `pytest <https://GitHub.com/pytest-dev/pytest>`__                   | ≥7.3.1      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `pytest-cov <https://GitHub.com/pytest-dev/pytest-cov>`__           | ≥4.1.0      | `MIT <https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `Coverage <https://GitHub.com/nedbat/coveragepy>`__                 | ≥7.2        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `mypy <https://GitHub.com/python/mypy>`__                           | ≥1.2.0      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `typing-extensions <https://GitHub.com/python/typing_extensions>`__ | ≥4.6.3      | `PSF-2.0 <https://github.com/python/typing_extensions/blob/main/LICENSE>`__            | *Not yet evaluated.* |
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `lxml <https://GitHub.com/lxml/lxml>`__                             | ≥4.9        | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
++---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+
+Unit Testing with Benchmarking (Optional)
+=========================================
+
+Further Python packages are needed for benchmarking. These packages are only needed for developers or on a CI server,
+thus sub-dependencies are not evaluated further.
+
+.. rubric:: Manually Installing Benchmarking Requirements
+
+Use the :file:`tests/benchmark/requirements.txt` file to install all dependencies via ``pip3``. The file will
+recursively install the mandatory dependencies too.
+
+.. tab:: Linux/MacOS
+
+   .. code-block:: bash
+
+      pip install -U -r tests/benchmark/requirements.txt
+
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip3 install -U -r tests\benchmark\requirements.txt
+
+.. rubric:: Dependency List - With Benchmark Testing
 
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | **Package**                                                        | **Version** | **License**                                                                            | **Dependencies**     |
 +====================================================================+=============+========================================================================================+======================+
-| `pytest <https://GitHub.com/pytest-dev/pytest>`__                  | ≥7.2.0      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
-+--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `pytest-cov <https://GitHub.com/pytest-dev/pytest-cov>`__          | ≥4.0.0      | `MIT <https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
-+--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `pytest-benchmark <https://GitHub.com/ionelmc/pytest-benchmark>`__ | ≥4.0.0      | `BSD 2-Clause <https://GitHub.com/ionelmc/pytest-benchmark/blob/master/LICENSE>`__     | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `Coverage <https://GitHub.com/nedbat/coveragepy>`__                | ≥7.2        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
+
+Unit Testing with Performance Testing (Optional)
+================================================
+
+Further Python packages are needed for performance testing (comparison). These packages are only needed for developers
+or on a CI server, thus sub-dependencies are not evaluated further.
+
+.. rubric:: Manually Installing Benchmarking Requirements
+
+Use the :file:`tests/performance/requirements.txt` file to install all dependencies via ``pip3``. The file will
+recursively install the mandatory dependencies too.
+
+.. tab:: Linux/MacOS
+
+   .. code-block:: bash
+
+      pip install -U -r tests/performance/requirements.txt
+
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip3 install -U -r tests\performance\requirements.txt
+
+.. rubric:: Dependency List - With Performance Testing
+
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `mypy <https://GitHub.com/python/mypy>`__                          | ≥1.1.1      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
+| **Package**                                                        | **Version** | **License**                                                                            | **Dependencies**     |
++====================================================================+=============+========================================================================================+======================+
+| `anytree <https://GitHub.com/c0fec0de/anytree>`__                  | ≥2.9.0      | `Apache 2 <https://GitHub.com/c0fec0de/anytree/blob/main/LICENSE>`__                   | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `lxml <https://GitHub.com/lxml/lxml>`__                            | ≥4.9        | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
+| `itertree <https://GitHub.com/BR1py/itertree>`__                   | ≥1.0.5      | `MIT <https://GitHub.com/BR1py/itertree/blob/main/LICENSE>`__                          | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `treelib <https://GitHub.com/caesar0301/treelib>`__                | ≥1.6.4      | `Apache 2 <https://GitHub.com/caesar0301/treelib/blob/master/LICENSE>`__               | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `networkx <https://GitHub.com/networkx/networkx>`__                | ≥3.1        | `BSD 3-Clause <https://GitHub.com/networkx/networkx/blob/main/LICENSE.txt>`__          | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+| `igraph <https://GitHub.com/igraph/python-igraph>`__               | ≥0.10.5     | `GPL-2.0 <https://GitHub.com/igraph/python-igraph/blob/main/LICENSE>`__                | *Not yet evaluated.* |
++--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
+
 
 
 .. _dependency-documentation:
@@ -115,9 +204,17 @@ CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`doc/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
 the mandatory dependencies too.
 
-.. code-block:: shell
+.. tab:: Linux/MacOS
 
-   pip3 install -U -r doc/requirements.txt
+   .. code-block:: bash
+
+      pip install -U -r doc/requirements.txt
+
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip3 install -U -r doc\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -125,11 +222,11 @@ the mandatory dependencies too.
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                                     | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +=================================================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                                          | ≥3.0.0       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
+| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                                          | ≥4.0.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `Sphinx <https://GitHub.com/sphinx-doc/sphinx>`__                                               | ≥5.3.0       | `BSD 3-Clause <https://GitHub.com/sphinx-doc/sphinx/blob/master/LICENSE>`__                              | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `sphinxcontrib-mermaid <https://GitHub.com/mgaitan/sphinxcontrib-mermaid>`__                    | ≥0.8.1       | `BSD <https://GitHub.com/mgaitan/sphinxcontrib-mermaid/blob/master/LICENSE.rst>`__                       | *Not yet evaluated.*                                                                                                                                 |
+| `sphinxcontrib-mermaid <https://GitHub.com/mgaitan/sphinxcontrib-mermaid>`__                    | ≥0.9.2       | `BSD <https://GitHub.com/mgaitan/sphinxcontrib-mermaid/blob/master/LICENSE.rst>`__                       | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `autoapi <https://GitHub.com/carlos-jenkins/autoapi>`__                                         | ≥2.0.1       | `Apache License, 2.0 <https://GitHub.com/carlos-jenkins/autoapi/blob/master/LICENSE>`__                  | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -156,9 +253,17 @@ on a CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
 
-.. code-block:: shell
+.. tab:: Linux/MacOS
 
-   pip3 install -U -r build/requirements.txt
+   .. code-block:: bash
+
+      pip install -U -r build/requirements.txt
+
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip3 install -U -r build\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -166,7 +271,7 @@ install the mandatory dependencies too.
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +============================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                     | ≥3.0.0       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
+| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                     | ≥4.0.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `wheel <https://GitHub.com/pypa/wheel>`__                                  | ≥0.38.1      | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                                            | *Not yet evaluated.*                                                                                                                                 |
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -187,9 +292,17 @@ further.
 Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
 
-.. code-block:: shell
+.. tab:: Linux/MacOS
 
-   pip3 install -U -r dist/requirements.txt
+   .. code-block:: bash
+
+      pip install -U -r dist/requirements.txt
+
+.. tab:: Windows
+
+   .. code-block:: powershell
+
+      pip3 install -U -r dist\requirements.txt
 
 
 .. rubric:: Dependency List

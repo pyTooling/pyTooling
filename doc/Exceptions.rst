@@ -11,7 +11,7 @@ Overview
 Exception Base Classes
 ######################
 
-The :py:mod:`pyTooling.Exceptions` package provides extensible exceptions.
+The :mod:`pyTooling.Exceptions` package provides extensible exceptions.
 
 
 ExceptionBase

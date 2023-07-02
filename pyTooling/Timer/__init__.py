@@ -37,18 +37,18 @@ from time import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
 
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import ObjectWithSlots
+from pyTooling.MetaClasses import SlottedObject
 
 
 @export
-class Timer(ObjectWithSlots):
+class Timer(SlottedObject):
 	"""
 	Undocumented.
 
 	.. todo::TIMER::Timer Needs class documentation.
 	"""
 
-	_timers: Dict[str, 'Timer'] = {}
+	_timers: Dict[str, 'Timer']
 
 	_startTime: Nullable[int]
 	_resumeTime: Nullable[int]
@@ -58,6 +58,8 @@ class Timer(ObjectWithSlots):
 	_diffTimes: List[int]
 
 	def __init__(self):
+		self._timers = {}
+
 		self._startTime = None
 		self._resumeTime = None
 		self._diffTimes = []

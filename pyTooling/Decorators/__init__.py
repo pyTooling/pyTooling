@@ -33,15 +33,16 @@
 .. hint:: See :ref:`high-level help <DECO>` for explanations and usage examples.
 """
 import sys
+from functools import wraps
 from types     import FunctionType
-from typing import Union, Type, TypeVar, Callable, Any
+from typing    import Union, Type, TypeVar, Callable, Any
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
 try:
 	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
-	from typing import ParamSpec    # exists since Python 3.10
+	from typing import ParamSpec                     # WORKAROUND: exists since Python 3.10
 
 	Param = ParamSpec("Param")                       #: A parameter specification for function or method
 	RetType = TypeVar("RetType")                     #: Type variable for a return type
@@ -52,7 +53,8 @@ except ImportError:  # pragma: no cover
 	Func = Callable[..., RetType]                    #: Type specification for a function
 
 
-T = TypeVar("T", bound=Union[Type, FunctionType])  #: Type variable for a class or function
+T = TypeVar("T", bound=Union[Type, FunctionType])  #: A type variable for a classes or functions.
+C = TypeVar("C", bound=Callable)                   #: A type variable for functions or methods.
 
 
 def export(entity: T) -> T:
@@ -62,27 +64,21 @@ def export(entity: T) -> T:
 	Creates or updates the ``__all__`` attribute in the module in which the decorated entity is defined to include the
 	name of the decorated entity.
 
-	.. admonition:: ``to_export.py``
-
-	   .. code-block:: python
-
-	      from pyTooling.Decorators import export
-
-	      @export
-	      def exported():
-	        pass
-
-	      def not_exported():
-	        pass
-
-	.. admonition:: ``another_file.py``
-
-	   .. code-block:: python
-
-	      from .to_export import *
-
-	      assert "exported" in globals()
-	      assert "not_exported" not in globals()
+	+---------------------------------------------+------------------------------------------------+
+	| ``to_export.py``                            | ``another_file.py``                            |
+	+=============================================+================================================+
+	| .. code-block:: python                      | .. code-block:: python                         |
+	|                                             |                                                |
+	|    from pyTooling.Decorators import export  |    from .to_export import *                    |
+	|                                             |                                                |
+	|    @export                                  |                                                |
+	|    def exported():                          |    # 'exported' will be listed in __all__      |
+	|      pass                                   |    assert "exported"         in globals()      |
+	|                                             |                                                |
+	|    def not_exported():                      |    # 'not_exported' won't be listed in __all__ |
+	|      pass                                   |    assert "not_exported" not in globals()      |
+	|                                             |                                                |
+	+---------------------------------------------+------------------------------------------------+
 
 	:param entity:          The function or class to include in `__all__`.
 	:returns:               The unmodified function or class.
@@ -111,12 +107,50 @@ def export(entity: T) -> T:
 		raise ValueError(f"Module {entity.__module__} is not present in sys.modules. Please ensure it is in the import path before calling export().")
 
 	if hasattr(module, "__all__"):
-		if entity.__name__ not in module.__all__:	# type: ignore
-			module.__all__.append(entity.__name__)	# type: ignore
+		if entity.__name__ not in module.__all__:  # type: ignore
+			module.__all__.append(entity.__name__)   # type: ignore
 	else:
-		module.__all__ = [entity.__name__]	      # type: ignore
+		module.__all__ = [entity.__name__]         # type: ignore
 
 	return entity
+
+
+@export
+def notimplemented(message: str) -> Callable:
+	"""
+	Mark a method as *not implemented* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
+
+	The original method is stored in ``<method>.__wrapped__`` and it's doc-string is copied to the replacing method. In
+	additional the field ``<method>.__notImplemented__`` is added.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      class Data:
+	        @notimplemented
+	        def method(self) -> bool:
+	          '''This method needs to be implemented'''
+	          return True
+
+	:param method: Method that is marked as *not implemented*.
+	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+
+	.. seealso::
+
+	   * :func:`~pyTooling.Metaclasses.abstractmethod`
+	   * :func:`~pyTooling.Metaclasses.mustoverride`
+	"""
+
+	def decorator(method: C) -> C:
+		@wraps(method)
+		def func(*_, **__):
+			raise NotImplementedError(message)
+
+		func.__notImplemented__ = True
+		return func
+
+	return decorator
 
 
 @export
@@ -146,54 +180,18 @@ def classproperty(method):
 
 
 @export
-def OriginalFunction(func: FunctionType) -> Callable[[Func], Func]:
+def readonly(func: FunctionType) -> property:
 	"""
-	Store a reference to the original function/method on a new, wrapper or replacement function/method.
+	Marks a property as *read-only*.
 
-	The function or method reference is stored in ``__orig_func__``.
+	It will remove ``<property>.setter`` and ``<property>.deleter``.
 
-	.. admonition:: ``metaclass.py``
-
-	   .. code-block:: python
-
-	      from functools import wraps
-	      from pyTooling.Decorators import OriginalFunction
-
-	      class Meta(type):
-	        def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any]) -> type:
-	          # Create a new class
-	          newClass = type.__new__(self, className, baseClasses, members)
-
-	          @OriginalFunction(newClass.__new__)
-	          @wraps(newClass.__new__)
-	          def new(cls, *args, **kwargs):
-	            # ...
-	            obj = newClass.__new__(*args, **kwargs)
-	            # ...
-	            return obj
-
-	          newClass.__new__ = new
-
-	          return newClass
-
-	:param func: Function or method reference to be store on the decorated function or method.
-	:returns:    Decorator function that stores the function or method reference on the decorated object.
+	:param func:
+	:return:
 	"""
-	def decorator(f: Func) -> Func:
-		"""
-		Decorator function, which stores a reference to a function or method in a new field called ``__orig_func__``.
+	prop = property(fget=func, fset=None, fdel=None, doc=func.__doc__)
 
-		:param f:          Function or method, where the original function or method reference is attached to.
-		:returns:          Same method, but with new field ``__orig_func__`` set to the original function or method.
-		:raises TypeError: If decorated object is not callable.
-		"""
-		if not isinstance(f, Callable):
-			raise TypeError(f"Decorated object is not callable.")
-
-		f.__orig_func__ = func
-		return f
-
-	return decorator
+	return prop
 
 
 @export

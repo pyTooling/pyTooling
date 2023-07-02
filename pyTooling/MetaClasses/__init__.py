@@ -34,21 +34,23 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
-import threading
 from functools  import wraps
 from inspect    import signature, Parameter
+from sys        import version_info
+from threading  import Condition
 from types      import MethodType, FunctionType
-from typing     import Any, Tuple, List, Dict, Callable, Type, TypeVar
+from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator
+from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar
 
 try:
-	from ..Exceptions import AbstractClassError
-	from ..Decorators import export, OriginalFunction
+	from ..Exceptions import ToolingException
+	from ..Decorators import export
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Exceptions import AbstractClassError
-		from Decorators import export, OriginalFunction
+		from Exceptions import ToolingException
+		from Decorators import export
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
 		raise ex
@@ -58,97 +60,156 @@ __all__ = ["M"]
 
 
 @export
-class Overloading(type):
+class ExtendedTypeError(ToolingException):
+	"""The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`."""
+
+
+@export
+class BaseClassWithoutSlotsError(ExtendedTypeError):
 	"""
-	Metaclass that allows multiple dispatch of methods based on method signatures.
+	The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
 
-	.. seealso:
+	.. seealso::
 
-	   `Python Cookbook - Multiple dispatch with function annotations <https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2>`__
+	   * :ref:`Python data model for slots <slots>`
+	   * :term:`Glossary entry __slots__ <__slots__>`
 	"""
 
-	class DispatchDictionary(dict):
-		"""Special dictionary to build dispatchable methods in a metaclass."""
 
-		class DispatchableMethod:
-			"""Represents a single multimethod."""
+@export
+class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
+	pass
 
-			def __init__(self, name):
-				self._methods: Dict[Tuple, Callable] = {}
-				self.__name__ = name
 
-			def register(self, method) -> None:
-				"""Register a new method as a dispatchable."""
-				# Build a signature from the method's type annotations
-				sig = signature(method)
-				types: List[Type] = []
-				for name, parameter in sig.parameters.items():
-					if name == "self":
-						continue
+@export
+class BaseClassIsNotAMixinError(ExtendedTypeError):
+	pass
 
-					if parameter.annotation is Parameter.empty:
-						raise TypeError(f"Argument {name} must be annotated with a type.")
-					if not isinstance(parameter.annotation, type):
-						raise TypeError(f"Argument {name} annotation must be a type.")
 
-					if parameter.default is not Parameter.empty:
-						self._methods[tuple(types)] = method
-					types.append(parameter.annotation)
+@export
+class DuplicateFieldInSlotsError(ExtendedTypeError):
+	pass
 
-				self._methods[tuple(types)] = method
 
-			def __call__(self, *args):
-				"""Call a method based on type signature of the arguments."""
-				types = tuple(type(arg) for arg in args[1:])
-				meth = self._methods.get(types, None)
-				if meth:
-					return meth(*args)
-				else:
-					raise TypeError(f"No matching method for types {types}.")
+@export
+class AbstractClassError(ExtendedTypeError):
+	"""
+	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
 
-			def __get__(self, instance, cls):
-				"""Descriptor method needed to make calls work in a class."""
-				if instance is not None:
-					return MethodType(self, instance)
-				else:
-					return self
+	.. seealso::
 
-		def __setitem__(self, key, value):
-			if key in self:
-				# If key already exists, it must be a dispatchable method or callable
-				currentValue = self[key]
-				if isinstance(currentValue, self.DispatchableMethod):
-					currentValue.register(value)
-				else:
-					dispatchable = self.DispatchableMethod(key)
-					dispatchable.register(currentValue)
-					dispatchable.register(value)
-					super().__setitem__(key, dispatchable)
-			else:
-				super().__setitem__(key, value)
+	   :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	      |rarr| Mark a method as *abstract*.
+	   :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	      |rarr| Mark a method as *must overrride*.
+	   :exc:`~MustOverrideClassError`
+	      |rarr| Exception raised, if a method is marked as *must-override*.
+	"""
 
-	def __new__(cls, className, bases, classDict):
-		return type.__new__(cls, className, bases, dict(classDict))
 
-	@classmethod
-	def __prepare__(cls, classname, bases):
-		return cls.DispatchDictionary()
+@export
+class MustOverrideClassError(AbstractClassError):
+	"""
+	The exception is raised, when a class contains methods marked with *must-override*.
+
+	.. seealso::
+
+	   :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	      |rarr| Mark a method as *abstract*.
+	   :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	      |rarr| Mark a method as *must overrride*.
+	   :exc:`~AbstractClassError`
+	      |rarr| Exception raised, if a method is marked as *abstract*.
+	"""
+
+
+# """
+# Metaclass that allows multiple dispatch of methods based on method signatures.
+#
+# .. seealso:
+#
+#    `Python Cookbook - Multiple dispatch with function annotations <https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2>`__
+# """
 
 
 M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
 @export
+def slotted(cls):
+	if cls.__class__ is type:
+		metacls = ExtendedType
+	elif issubclass(cls.__class__, ExtendedType):
+		metacls = cls.__class__
+	else:
+		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+
+	bases = tuple(base for base in cls.__bases__ if base is not object)
+	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
+	members = {
+		"__qualname__": cls.__qualname__
+	}
+	for key, value in cls.__dict__.items():
+		if key not in slots:
+			members[key] = value
+
+	return metacls(cls.__name__, bases, members, slots=True)
+
+
+@export
+def mixin(cls):
+	if cls.__class__ is type:
+		metacls = ExtendedType
+	elif issubclass(cls.__class__, ExtendedType):
+		metacls = cls.__class__
+	else:
+		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+
+	bases = tuple(base for base in cls.__bases__ if base is not object)
+	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
+	members = {
+		"__qualname__": cls.__qualname__
+	}
+	for key, value in cls.__dict__.items():
+		if key not in slots:
+			members[key] = value
+
+	return metacls(cls.__name__, bases, members, mixin=True)
+
+
+@export
+def singleton(cls):
+	if cls.__class__ is type:
+		metacls = ExtendedType
+	elif issubclass(cls.__class__, ExtendedType):
+		metacls = cls.__class__
+	else:
+		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+
+	bases = tuple(base for base in cls.__bases__ if base is not object)
+	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
+	members = {
+		"__qualname__": cls.__qualname__
+	}
+	for key, value in cls.__dict__.items():
+		if key not in slots:
+			members[key] = value
+
+	return metacls(cls.__name__, bases, members, singleton=True)
+
+
+@export
 def abstractmethod(method: M) -> M:
 	"""
-	Mark a method as *abstract* and replace the implementation with a new method raising a :py:exc:`NotImplementedError`.
+	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
 
-	The original method is stored in ``<method>.__orig_func__`` and it's doc-string is copied to the replacement method.
+	The original method is stored in ``<method>.__wrapped__`` and it's doc-string is copied to the replacing method. In
+	additional field ``<method>.__abstract__`` is added.
 
 	.. warning::
 
-	   This decorator should be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
-	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.AbstractClassError` at
+	   This decorator should be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+	   Otherwise, an abstract class itself doesn't throw a :exc:`~pyTooling.Exceptions.AbstractClassError` at
 	   instantiation.
 
 	.. admonition:: ``example.py``
@@ -157,14 +218,18 @@ def abstractmethod(method: M) -> M:
 
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
-	        def method(self):
+	        def method(self) -> bool:
 	          '''This method needs to be implemented'''
 
 	:param method: Method that is marked as *abstract*.
-	:returns:      Replacement method, which raises a :py:exc:`NotImplementedError`. In additional field ``__abstract__``
-	               is added.
+	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+
+	.. seealso::
+
+	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
+	   * :func:`~pyTooling.Metaclasses.mustoverride`
+	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
-	@OriginalFunction(method)
 	@wraps(method)
 	def func(self):
 		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
@@ -178,12 +243,16 @@ def mustoverride(method: M) -> M:
 	"""
 	Mark a method as *must-override*.
 
-	Such methods can offer a partial implementation, which is called via ``super()...``.
+	The returned function is the original function, but with an additional field ``<method>.____mustOverride__``, so a
+	meta-class can identify a *must-override* method and raise an error. Such an error is not raised if the method is
+	overridden by an inheriting class.
+
+	A *must-override* methods can offer a partial implementation, which is called via ``super()...``.
 
 	.. warning::
 
-	   This decorator needs to be used in combination with meta-class :py:class:`~pyTooling.Metaclasses.ExtendedType`.
-	   Otherwise, an abstract class itself doesn't throw a :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` at
+	   This decorator needs to be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+	   Otherwise, an abstract class itself doesn't throw a :exc:`~pyTooling.Exceptions.MustOverrideClassError` at
 	   instantiation.
 
 	.. admonition:: ``example.py``
@@ -196,7 +265,13 @@ def mustoverride(method: M) -> M:
 	          '''This is a very basic implementation'''
 
 	:param method: Method that is marked as *must-override*.
-	:returns:      Same method, but with additional ``__mustOverride__`` field.
+	:returns:      Same method, but with additional ``<method>.__mustOverride__`` field.
+
+	.. seealso::
+
+	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`
+	   * :func:`~pyTooling.Metaclasses.abstractmethod`
+	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
 	method.__mustOverride__ = True
 	return method
@@ -208,12 +283,86 @@ def overloadable(method: M) -> M:
 	return method
 
 
-# TODO: allow __dict__ and __weakref__ if slotted is enabled
+@export
+class DispatchableMethod:
+	"""Represents a single multimethod."""
+
+	_methods: Dict[Tuple, Callable]
+	__name__: str
+	__slots__ = ("_methods", "__name__")
+
+	def __init__(self, name: str):
+		self.__name__ = name
+		self._methods = {}
+
+	def __call__(self, *args):
+		"""Call a method based on type signature of the arguments."""
+		types = tuple(type(arg) for arg in args[1:])
+		meth = self._methods.get(types, None)
+		if meth:
+			return meth(*args)
+		else:
+			raise TypeError(f"No matching method for types {types}.")
+
+	def __get__(self, instance, cls):
+		"""Descriptor method needed to make calls work in a class."""
+		if instance is not None:
+			return MethodType(self, instance)
+		else:
+			return self
+
+	def register(self, method: Callable) -> None:
+		"""Register a new method as a dispatchable."""
+
+		# Build a signature from the method's type annotations
+		sig = signature(method)
+		types: List[Type] = []
+
+		for name, parameter in sig.parameters.items():
+			if name == "self":
+				continue
+
+			if parameter.annotation is Parameter.empty:
+				raise TypeError(f"Parameter '{name}' must be annotated with a type.")
+
+			if not isinstance(parameter.annotation, type):
+				raise TypeError(f"Parameter '{name}' annotation must be a type.")
+
+			if parameter.default is not Parameter.empty:
+				self._methods[tuple(types)] = method
+
+			types.append(parameter.annotation)
+
+		self._methods[tuple(types)] = method
+
+
+@export
+class DispatchDictionary(dict):
+	"""Special dictionary to build dispatchable methods in a metaclass."""
+
+	def __setitem__(self, key: str, value: Any):
+		if callable(value) and key in self:
+			# If key already exists, it must be a dispatchable method or callable
+			currentValue = self[key]
+			if isinstance(currentValue, DispatchableMethod):
+				currentValue.register(value)
+			else:
+				dispatchable = DispatchableMethod(key)
+				dispatchable.register(currentValue)
+				dispatchable.register(value)
+
+				super().__setitem__(key, dispatchable)
+		else:
+			super().__setitem__(key, value)
+
 
 @export
 class ExtendedType(type):
 	"""
+	An updates meta-class to construct new classes with an extended feature set.
+
 	.. todo:: META::ExtendedType Needs documentation.
+	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
 
 	Features:
 
@@ -225,29 +374,35 @@ class ExtendedType(type):
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 	"""
 
-	def __new__(
-		self,
-		className: str,
-		baseClasses: Tuple[type],
-		members: Dict[str, Any],
-		singleton: bool = False,
-		useSlots: bool = False
-	) -> type:
+	@classmethod
+	def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):
+		return DispatchDictionary()
+
+	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
+							slots: bool = False, mixin: bool = False, singleton: bool = False) -> type:
 		"""
 		Construct a new class using this :term:`meta-class`.
 
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
+		:param slots:           If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
+		:param mixin:           If true, make the class a :term:`Mixin-Class`.
+		                        If false, create slots if ``slots`` is true.
+		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
-		:param useSlots:        If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		# Check if members should be stored in slots. If so get these members from type annotated fields
-		if useSlots:
-			members['__slots__'] = self.__getSlots(baseClasses, members)
+		# Inherit 'slots' feature from primary base-class
+		if len(baseClasses) > 0:
+			primaryBaseClass = baseClasses[0]
+			if isinstance(primaryBaseClass, self):
+				slots = primaryBaseClass.__slotted__
+
+		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
+		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin)
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
@@ -255,12 +410,201 @@ class ExtendedType(type):
 		# Create a new class
 		newClass = type.__new__(self, className, baseClasses, members)
 
+		# Apply class fields
+		for fieldName, typeAnnotation in classFields.items():
+			setattr(newClass, fieldName, typeAnnotation)
+
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
 		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		return newClass
+
+	@classmethod
+	def _computeSlots(self, className, baseClasses, members, slots, mixin):
+		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
+		slottedFields = []
+		objectFields = {}
+		classFields = {}
+		if slots or mixin:
+			# If slots are used, all base classes must use __slots__.
+			for baseClass in self._iterateBaseClasses(baseClasses):
+				# Exclude object as a special case
+				if baseClass is object:
+					continue
+
+				if not hasattr(baseClass, "__slots__"):
+					ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
+					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
+					raise ex
+
+			# FIXME: should have a check for non-empty slots on secondary base-classes too
+
+			# Copy all field names from primary base-class' __slots__, which are later needed for error checking.
+			inheritedSlottedFields = {}
+			if len(baseClasses) > 0:
+				for base in reversed(baseClasses[0].mro()):
+					# Exclude object as a special case
+					if base is object:
+						continue
+
+					for annotation in base.__slots__:
+						inheritedSlottedFields[annotation] = base
+
+			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
+			annotations: Dict[str, Any] = members.get("__annotations__", {})
+			for fieldName, typeAnnotation in annotations.items():
+				if fieldName in inheritedSlottedFields:
+					raise AttributeError(f"Slot '{fieldName}' already exists in base-class '{inheritedSlottedFields[fieldName]}'.")
+
+				slottedFields.append(fieldName)
+
+				# If annotated field is a ClassVar, and it has an initial value
+				# * copy field and initial value to classFields dictionary
+				# * remove field from members
+				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
+					classFields[fieldName] = members[fieldName]
+					del members[fieldName]
+
+				# If an annotated field has an initial value
+				# * copy field and initial value to objectFields dictionary
+				# * remove field from members
+				elif fieldName in members:
+					objectFields[fieldName] = members[fieldName]
+					del members[fieldName]
+
+			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
+		else:
+			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
+			annotations: Dict[str, Any] = members.get("__annotations__", {})
+			for fieldName, typeAnnotation in annotations.items():
+				# If annotated field is a ClassVar, and it has an initial value
+				# * copy field and initial value to classFields dictionary
+				# * remove field from members
+				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
+					classFields[fieldName] = members[fieldName]
+					del members[fieldName]
+
+		# FIXME: search for fields without annotation
+		if mixin:
+			mixinSlots.extend(slottedFields)
+			members["__slotted__"] = True
+			members["__slots__"] = tuple()
+			members["__isMixin__"] = True
+			members["__mixinSlots__"] = tuple(mixinSlots)
+		elif slots:
+			slottedFields.extend(mixinSlots)
+			members["__slotted__"] = True
+			members["__slots__"] = tuple(slottedFields)
+			members["__isMixin__"] = False
+			members["__mixinSlots__"] = tuple()
+		else:
+			members["__slotted__"] = False
+			# NO     __slots__
+			members["__isMixin__"] = False
+			members["__mixinSlots__"] = tuple()
+		return classFields, objectFields
+
+	@classmethod
+	def _aggregateMixinSlots(self, className, baseClasses):
+		mixinSlots = []
+		if len(baseClasses) > 0:
+			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
+			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
+			inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
+			primaryInharitancePath: Set[type] = set(inheritancePaths[0])
+			for typePath in inheritancePaths[1:]:
+				for t in typePath:
+					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
+						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
+						ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
+						# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
+						# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
+						raise ex
+
+			# If current class is set to be a mixin, then aggregate all mixinSlots in a list.
+			#   Ensure all base-classes are either constructed
+			#     * by meta-class ExtendedType, or
+			#     * use no slots, or
+			#     * are typing.Generic
+			#   If it was constructed by ExtendedType, then ensure this class itself is a mixin-class.
+			for baseClass in baseClasses:  # type: ExtendedType
+				if isinstance(baseClass, _GenericAlias) and baseClass.__origin__ is Generic:
+					pass
+				elif baseClass.__class__ is self and baseClass.__isMixin__:
+					mixinSlots.extend(baseClass.__mixinSlots__)
+				elif hasattr(baseClass, "__mixinSlots__"):
+					mixinSlots.extend(baseClass.__mixinSlots__)
+
+		return mixinSlots
+
+	@classmethod
+	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
+		if len(baseClasses) == 0:
+			return
+
+		visited:       Set[type] =            set()
+		iteratorStack: List[Iterator[type]] = list()
+
+		for baseClass in baseClasses:
+			yield baseClass
+			visited.add(baseClass)
+			iteratorStack.append(iter(baseClass.__bases__))
+
+			while True:
+				try:
+					base = next(iteratorStack[-1])  # type: type
+					if base not in visited:
+						yield base
+						if len(base.__bases__) > 0:
+							iteratorStack.append(iter(base.__bases__))
+					else:
+						continue
+
+				except StopIteration:
+					iteratorStack.pop()
+
+					if len(iteratorStack) == 0:
+						break
+
+	@classmethod
+	def _iterateBaseClassPaths(metacls, baseClasses: Tuple[type]) -> Generator[Tuple[type, ...], None, None]:
+		"""
+		Return a generator to iterate all possible inheritance paths for a given list of base-classes.
+
+		An inheritance path is expressed as a tuple of base-classes from current base-class (left-most item) to
+		:class:`object` (right-most item).
+
+		:param baseClasses: List (tuple) of base-classes.
+		:returns:           Generator to iterate all inheritance paths. An inheritance path is a tuple of types (base-classes).
+		"""
+		if len(baseClasses) == 0:
+			return
+
+		typeStack:   List[type] =           list()
+		iteratorStack: List[Iterator[type]] = list()
+
+		for baseClass in baseClasses:
+			typeStack.append(baseClass)
+			iteratorStack.append(iter(baseClass.__bases__))
+
+			while True:
+				try:
+					base = next(iteratorStack[-1])  # type: type
+					typeStack.append(base)
+					if len(base.__bases__) == 0:
+						yield tuple(typeStack)
+						typeStack.pop()
+					else:
+						iteratorStack.append(iter(base.__bases__))
+
+				except StopIteration:
+					typeStack.pop()
+					iteratorStack.pop()
+
+					if len(typeStack) == 0:
+						break
 
 	@classmethod
 	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[Dict[str, Callable], Dict[str, Any]]:
@@ -276,10 +620,10 @@ class ExtendedType(type):
 		"""
 		abstractMethods = {}
 		if baseClasses:
+			# Aggregate all abstract methods from all base-classes.
 			for baseClass in baseClasses:
 				if hasattr(baseClass, "__abstractMethods__"):
-					for key, value in baseClass.__abstractMethods__.items():
-						abstractMethods[key] = value
+					abstractMethods.update(baseClass.__abstractMethods__)
 
 			for base in baseClasses:
 				for key, value in base.__dict__.items():
@@ -294,17 +638,21 @@ class ExtendedType(type):
 
 						members[key] = outer(value)
 
+		# Check if methods are marked:
+		# * If so, add them to list of abstract methods
+		# * If not, method is now implemented and removed from list
 		for memberName, member in members.items():
-			if ((hasattr(member, "__abstract__") and member.__abstract__) or
-					(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
-				abstractMethods[memberName] = member
-			elif memberName in abstractMethods:
-				del abstractMethods[memberName]
+			if callable(member):
+				if ((hasattr(member, "__abstract__") and member.__abstract__) or
+						(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+					abstractMethods[memberName] = member
+				elif memberName in abstractMethods:
+					del abstractMethods[memberName]
 
 		return abstractMethods, members
 
-	@staticmethod
-	def _wrapNewMethodIfSingleton(newClass, singleton: bool) -> bool:
+	@classmethod
+	def _wrapNewMethodIfSingleton(metacls, newClass, singleton: bool) -> bool:
 		"""
 		If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.
 
@@ -322,15 +670,14 @@ class ExtendedType(type):
 		if singleton:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__singleton_wrapper__"):
-				oldnew = oldnew.__orig_func__
+				oldnew = oldnew.__wrapped__
 
 			oldinit = newClass.__init__
 			if hasattr(oldinit, "__singleton_wrapper__"):
-				oldinit = oldinit.__orig_func__
+				oldinit = oldinit.__wrapped__
 
-			@OriginalFunction(oldnew)
 			@wraps(oldnew)
-			def new(cls, *args, **kwargs):
+			def singleton_new(cls, *args, **kwargs):
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
 						obj = oldnew(cls, *args, **kwargs)
@@ -340,9 +687,8 @@ class ExtendedType(type):
 
 				return obj
 
-			@OriginalFunction(oldinit)
 			@wraps(oldinit)
-			def init(self, *args, **kwargs):
+			def singleton_init(self, *args, **kwargs):
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
 				with cv:
@@ -356,20 +702,20 @@ class ExtendedType(type):
 						while cls.__singletonInstanceInit__:
 							cv.wait()
 
-			new.__singleton_wrapper__ = True
-			init.__singleton_wrapper__ = True
+			singleton_new.__singleton_wrapper__ = True
+			singleton_init.__singleton_wrapper__ = True
 
-			newClass.__new__ = new
-			newClass.__init__ = init
-			newClass.__singletonInstanceCond__ = threading.Condition()
+			newClass.__new__ = singleton_new
+			newClass.__init__ = singleton_init
+			newClass.__singletonInstanceCond__ = Condition()
 			newClass.__singletonInstanceInit__ = True
 			newClass.__singletonInstanceCache__ = None
 			return True
 
 		return False
 
-	@staticmethod
-	def _wrapNewMethodIfAbstract(newClass) -> bool:
+	@classmethod
+	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
 		"""
 		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
 
@@ -378,19 +724,18 @@ class ExtendedType(type):
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
-		if newClass.__abstractMethods__:
+		if len(newClass.__abstractMethods__) > 0:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
-				oldnew = oldnew.__orig_func__
+				oldnew = oldnew.__wrapped__
 
-			@OriginalFunction(oldnew)
 			@wraps(oldnew)
-			def new(cls, *_, **__):
+			def abstract_new(cls, *_, **__):
 				raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
 
-			new.__raises_abstract_class_error__ = True
+			abstract_new.__raises_abstract_class_error__ = True
 
-			newClass.__new__ = new
+			newClass.__new__ = abstract_new
 			return True
 
 		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
@@ -398,7 +743,18 @@ class ExtendedType(type):
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
 				if newClass.__new__.__raises_abstract_class_error__:
-					newClass.__new__ = newClass.__new__.__orig_func__
+					origNew = newClass.__new__.__wrapped__
+
+					# WORKAROUND: __new__ checks tp_new and implements different behavior
+					#  Bugreport: https://github.com/python/cpython/issues/105888
+					if origNew is object.__new__:
+						@wraps(object.__new__)
+						def wrapped_new(inst, *_, **__):
+							return object.__new__(inst)
+
+						newClass.__new__ = wrapped_new
+					else:
+						newClass.__new__ = origNew
 				elif newClass.__new__.__isSingleton__:
 					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
 			except AttributeError as ex:
@@ -413,37 +769,7 @@ class ExtendedType(type):
 
 			return False
 
-	@staticmethod
-	def __getSlots(baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[str, ...]:
-		"""
-		Get all object attributes, that should be stored in a slot.
-
-		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param members:         The dictionary of members for the constructed class.
-		:returns:               A tuple of member names to be stored in slots.
-		:raises AttributeError: If the current class will use slots, but a base-class isn't using slots.
-		:raises AttributeError: If the class redefines a slotted attribute already defined in a base-class.
-		"""
-		annotatedFields = {}
-		for baseClass in baseClasses:
-			for base in reversed(baseClass.mro()[:-1]):
-				if not hasattr(base, "__slots__"):
-					raise AttributeError(f"Base-class '{base.__name__}' has no '__slots__'.")
-
-				for annotation in base.__slots__:
-					annotatedFields[annotation] = base
-
-		# WORKAROUND:
-		#   Typehint the 'annotations' variable, as long as 'TypedDict' isn't supported by all target versions.
-		#   (TypedDict was added in 3.8; see https://docs.python.org/3/library/typing.html#typing.TypedDict)
-		annotations: Dict[str, Any] = members.get("__annotations__", {})
-		for annotation in annotations:
-			if annotation in annotatedFields:
-				raise AttributeError(f"Slot '{annotation}' already exists in base-class '{annotatedFields[annotation]}'.")
-
-		return (*members.get('__slots__', []), *annotations)
-
 
 @export
-class ObjectWithSlots(metaclass=ExtendedType, useSlots=True):
+class SlottedObject(metaclass=ExtendedType, slots=True):
 	"""Classes derived from this class will store all members in ``__slots__``."""

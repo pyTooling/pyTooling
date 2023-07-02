@@ -33,10 +33,10 @@ Abstract configuration reader.
 
 .. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
 """
-from typing import Union, ClassVar, Iterator
+from typing        import Union, ClassVar, Iterator, Type
 
-from ..Decorators import export
-from ..MetaClasses import ExtendedType
+from ..Decorators  import export
+from ..MetaClasses import ExtendedType, mixin
 
 
 KeyT = Union[str, int]
@@ -45,20 +45,30 @@ ValueT = Union[NodeT, str, int, float]
 
 
 @export
-class Node(metaclass=ExtendedType, useSlots=True):
+class Node(metaclass=ExtendedType, slots=True):
 	"""Abstract node in a configuration data structure."""
 
-	DICT_TYPE: ClassVar["Dictionary"]
-	SEQ_TYPE: ClassVar["Sequence"]
-	_parent: "Dictionary"
-	_root: "Configuration"
+	DICT_TYPE: ClassVar[Type["Dictionary"]]  #: Type reference used when instantiating new dictionaries
+	SEQ_TYPE:  ClassVar[Type["Sequence"]]    #: Type reference used when instantiating new sequences
+	_root:     "Configuration"               #: Reference to the root node.
+	_parent:   "Dictionary"                  #: Reference to a parent node.
 
 	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a node.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
 		self._root = root
 		self._parent = parent
 
 	def __len__(self) -> int:
-		raise NotImplementedError()
+		"""
+		Returns the number of sub-elements.
+
+		:returns: Number of sub-elements.
+		"""
 
 	def __getitem__(self, key: KeyT) -> ValueT:
 		raise NotImplementedError()
@@ -82,16 +92,36 @@ class Node(metaclass=ExtendedType, useSlots=True):
 
 
 @export
+@mixin
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
+
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a dictionary.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
+		Node.__init__(self, root, parent)
 
 	def __contains__(self, key: KeyT) -> bool:
 		raise NotImplementedError()
 
 
 @export
+@mixin
 class Sequence(Node):
 	"""Abstract sequence node in a configuration."""
+
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a sequence.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
+		Node.__init__(self, root, parent)
 
 	def __getitem__(self, index: int) -> ValueT:
 		raise NotImplementedError()
@@ -105,8 +135,15 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
+@mixin
 class Configuration(Node):
 	"""Abstract root node in a configuration."""
 
-	def __init__(self):
-		Node.__init__(self)
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+		"""
+		Initializes a configuration.
+
+		:param root:   Reference to the root node.
+		:param parent: Reference to the parent node.
+		"""
+		Node.__init__(self, root, parent)

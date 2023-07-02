@@ -29,11 +29,12 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.Graph."""
-from typing import Any, Optional as Nullable, List, Tuple
+from typing   import Any, Optional as Nullable, List, Tuple, Callable
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex, Graph, DestinationNotReachable, Subgraph, View, GraphException, DuplicateEdgeError, \
-	Edge, NotInSameGraph, Link
+from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError, CycleError
+from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -560,6 +561,51 @@ class Names(TestCase):
 			graph.Name = 25
 
 
+class IDs(TestCase):
+	def test_VertexNoneID(self):
+		graph = Graph()
+		vertex = Vertex(graph=graph)
+
+		self.assertIsNone(vertex.ID)
+		with self.assertRaises(AttributeError):
+			vertex.ID = 5
+		self.assertIsNone(vertex.ID)
+
+		self.assertIs(vertex, graph.GetVertexByID(None))
+
+	def test_VertexID(self):
+		graph = Graph()
+		vertex = Vertex(vertexID=1, graph=graph)
+
+		self.assertEqual(1, vertex.ID)
+		self.assertIs(vertex, graph.GetVertexByID(1))
+
+	def test_GetVertexByNoneID(self):
+		graph = Graph()
+
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByID(None)
+
+		vertex = Vertex(graph=graph)
+		self.assertIs(vertex, graph.GetVertexByID(None))
+
+		vertex = Vertex(graph=graph)
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByID(None)
+
+	def test_GetVertexByID(self):
+		graph = Graph()
+
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByID(1)
+
+		vertex = Vertex(vertexID=1, graph=graph)
+		self.assertIs(vertex, graph.GetVertexByID(1))
+
+		with self.assertRaises(DuplicateVertexError):
+			vertex = Vertex(vertexID=1, graph=graph)
+
+
 class Values(TestCase):
 	def test_VertexNoneValue(self):
 		graph = Graph()
@@ -570,6 +616,7 @@ class Values(TestCase):
 		vertex.Value = 5
 
 		self.assertEqual(5, vertex.Value)
+		self.assertIs(vertex, graph.GetVertexByValue(5))
 
 	def test_VertexValue(self):
 		graph = Graph()
@@ -580,6 +627,34 @@ class Values(TestCase):
 		vertex.Value = None
 
 		self.assertIsNone(vertex.Value)
+		self.assertIs(vertex, graph.GetVertexByValue(None))
+
+	def test_GetVertexByNoneValue(self):
+		graph = Graph()
+
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByValue(None)
+
+		vertex = Vertex(graph=graph)
+		self.assertIs(vertex, graph.GetVertexByValue(None))
+
+		vertex = Vertex(graph=graph)
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByValue(None)
+
+	def test_GetVertexByValue(self):
+		graph = Graph()
+
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByValue(1)
+
+		vertex = Vertex(value=1, graph=graph)
+		self.assertIs(vertex, graph.GetVertexByValue(1))
+
+		vertex = Vertex(value=1, graph=graph)
+		with self.assertRaises(KeyError):
+			_ = graph.GetVertexByValue(1)
+
 
 	def test_EdgeNoneValue(self):
 		graph = Graph()
@@ -1276,6 +1351,37 @@ class IterateStartingFromVertex(Iterate):
 			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		self.assertListEqual([0, 1, 9, 8, 7, 3, 6, 10, 11, 2, 4, 5], [v.ID for v in v0.IterateVerticesBFS()])
+
+	def test_IterateAllOutboundPathsAsVertexList(self):
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(0, self._graph2.VertexCount)]
+		v0 = vList[0]
+
+		for u, v, w in self._graph2.Edges:
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+
+		source = vList[10]
+		paths = [path for path in source.IterateAllOutboundPathsAsVertexList()]
+		self.assertEqual(1, len(paths))
+		self.assertTupleEqual((source,), paths[0])
+
+		source = vList[7]
+		with self.assertRaises(CycleError):
+			for path in source.IterateAllOutboundPathsAsVertexList():
+				pass
+
+		# Removing a reverse edge to avoid cycles.
+		vList[11].DeleteEdgeTo(vList[4])
+
+		source = vList[7]
+		expectedPaths = (
+			(source, vList[11], vList[10]),
+			(source, vList[11], vList[14], vList[10]),
+			(source, vList[12]),
+		)
+		for i, path in enumerate(source.IterateAllOutboundPathsAsVertexList()):
+			print(f"{i}: {path}")
+			self.assertTupleEqual(expectedPaths[i], path)
 
 	def test_ShortestPathByHops(self):
 		g = Graph()

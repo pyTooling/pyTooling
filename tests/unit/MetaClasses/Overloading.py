@@ -29,11 +29,11 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for class :class:`pyTooling.MetaClasses.Overloading`.
 """
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import Overloading
+from pyTooling.MetaClasses import ExtendedType
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -42,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Application(metaclass=Overloading):
+class Application(metaclass=ExtendedType):
 	def __init__(self, x : int):
 		self.x = x
 

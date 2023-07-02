@@ -29,9 +29,9 @@
 # ==================================================================================================================== #
 #
 """Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest     import TestCase
+from unittest             import TestCase
 
-from pyTooling.Versioning import SemVersion as UUT
+from pyTooling.Versioning import SemanticVersion as UUT
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Version(TestCase):
-	version : UUT
+	version: UUT
 
 	# def test_CreateFromNone(self):
 	# 	with self.assertRaises(ValueError):
@@ -58,26 +58,26 @@ class Version(TestCase):
 	def test_CreateFromString1(self) -> None:
 		version = UUT("0.0.0")
 
-		self.assertEqual(version.major, 0, "Major number is not 0.")
-		self.assertEqual(version.minor, 0, "Minor number is not 0.")
-		self.assertEqual(version.patch, 0, "Patch number is not 0.")
-		self.assertEqual(version.build, 0, "Build number is not 0.")
+		self.assertEqual(version.Major, 0, "Major number is not 0.")
+		self.assertEqual(version.Minor, 0, "Minor number is not 0.")
+		self.assertEqual(version.Patch, 0, "Patch number is not 0.")
+		self.assertEqual(version.Build, 0, "Build number is not 0.")
 
 	def test_CreateFromIntegers1(self) -> None:
 		version = UUT(0, 0, 0)
 
-		self.assertEqual(version.major, 0, "Major number is not 0.")
-		self.assertEqual(version.minor, 0, "Minor number is not 0.")
-		self.assertEqual(version.patch, 0, "Patch number is not 0.")
-		self.assertEqual(version.build, 0, "Build number is not 0.")
+		self.assertEqual(version.Major, 0, "Major number is not 0.")
+		self.assertEqual(version.Minor, 0, "Minor number is not 0.")
+		self.assertEqual(version.Patch, 0, "Patch number is not 0.")
+		self.assertEqual(version.Build, 0, "Build number is not 0.")
 
 	def test_CreateFromIntegers2(self) -> None:
 		version = UUT(1, 2, 3, 4)
 
-		self.assertEqual(version.major, 1, "Major number is not 1.")
-		self.assertEqual(version.minor, 2, "Minor number is not 2.")
-		self.assertEqual(version.patch, 3, "Patch number is not 3.")
-		self.assertEqual(version.build, 4, "Build number is not 4.")
+		self.assertEqual(version.Major, 1, "Major number is not 1.")
+		self.assertEqual(version.Minor, 2, "Minor number is not 2.")
+		self.assertEqual(version.Patch, 3, "Patch number is not 3.")
+		self.assertEqual(version.Build, 4, "Build number is not 4.")
 
 	def test_Equal(self) -> None:
 		l = [

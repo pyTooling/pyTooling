@@ -21,7 +21,7 @@ Currently, the following meta-classes are provided:
 ExtendedType
 ############
 
-The new meta-class :py:class:`~pyTooling.MetaClasses.ExtendedType` allows to implement :ref:`singletons <META/Singleton>`,
+The new meta-class :class:`~pyTooling.MetaClasses.ExtendedType` allows to implement :ref:`singletons <META/Singleton>`,
 :ref:`slotted types <META/Slotted>` and combinations thereof.
 
 Since Python 3, meta-classes are applied in a class definition by adding a named parameter called ``metaclass`` to the
@@ -33,14 +33,25 @@ meta-class.
    class MyClass(metaclass=ExtendedType):
      pass
 
+.. _META/Slotted:
+
+Slotted
+*******
+
+.. _META/Mixin:
+
+Mixin
+*****
+
+
 .. _META/Abstract:
 
 Abstract Method
 ***************
 
-The :py:func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
-replaced by a method raising a :py:exc:`NotImplementedError`. When a class containing *abstract* methods is
-instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
+The :func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
+replaced by a method raising a :exc:`NotImplementedError`. When a class containing *abstract* methods is
+instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 
 .. rubric:: Example:
 .. code-block:: Python
@@ -65,8 +76,8 @@ instantiated, an :py:exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 MustOverwrite Method
 ********************
 
-The :py:func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
-*must override* methods is instantiated, an :py:exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
+The :func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
+*must override* methods is instantiated, an :exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
 
 In contrast to :ref:`@abstractmethod <META/Abstract>`, the method can still be called from a derived class
 implementing an overridden method.
@@ -117,26 +128,26 @@ cached instance of that class will be returned.
         def WriteLine(self, message):
           print(message)
 
-.. _META/Slotted:
+.. _META/Slottedd:
 
 Slotted Type
 ************
 
-A class defined with enabled ``useSlots`` behavior stores instance fields in slots. The meta-class, translates all
+A class defined with enabled ``slots`` behavior stores instance fields in slots. The meta-class, translates all
 type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and access compared
 to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint as well as the
 field access performance of all class instances. This behavior is automatically inherited to all derived classes.
 
 .. code-block:: python
 
-   class MyClass(metaclass=ExtendedType, useSlots=True):
+   class MyClass(metaclass=ExtendedType, slots=True):
      pass
 
 .. admonition:: Example Usage
 
    .. code-block:: python
 
-      class Node(metaclass=ExtendedType, useSlots=True):
+      class Node(metaclass=ExtendedType, slots=True):
         _parent: "Node"
 
         def __init__(self, parent: "Node" = None):
@@ -145,18 +156,23 @@ field access performance of all class instances. This behavior is automatically 
       root = Node()
       node = Node(root)
 
-.. _META/ObjectWithSlots:
+.. _META/SlottedObject:
 
-ObjectWithSlots
-===============
+SlottedObject
+=============
 
-A class definition deriving from :py:class:`~pyTooling.MetaClasses.ObjectWithSlots` will bring the slotted type
-behavior to that class and all derived classes.
+A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` will bring the slotted type behavior to
+that class and all derived classes.
 
-.. code-block:: python
-
-   class MyClass(ObjectWithSlots):
-     pass
++----------------------------------------+----------------------------------------+----------------------------------------------------------+
+| Deriving from ``SlottedObject``        | Apply ``slotted`` Decorator            | Deriving from ``SlottedObject``                          |
++========================================+========================================+==========================================================+
+| .. code-block:: Python                 | .. code-block:: Python                 | .. code-block:: Python                                   |
+|                                        |                                        |                                                          |
+|    class MyClass(SlottedObject):       |    @slotted                            |    class MyClass(metaclass=ExtendedType, slots=True):    |
+|      pass                              |    class MyClass(SlottedObject):       |      pass                                                |
+|                                        |      pass                              |                                                          |
++----------------------------------------+----------------------------------------+----------------------------------------------------------+
 
 
 .. _META/Overloading:

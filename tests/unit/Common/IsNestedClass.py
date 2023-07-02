@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :py:func:`isnestedclass`.
+Unit tests for :func:`isnestedclass`.
 """
 from unittest import TestCase
 

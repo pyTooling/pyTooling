@@ -76,7 +76,7 @@ class HelperFunctions(TestCase):
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("../doc/requirements.txt"), debug=True)
-		self.assertEqual(7, len(requirements))
+		self.assertEqual(8, len(requirements))
 
 
 class VersionInformation(TestCase):

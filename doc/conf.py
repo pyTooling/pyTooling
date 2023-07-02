@@ -188,6 +188,7 @@ extensions = [
 # Other extensions
 	"sphinx_fontawesome",
 	"sphinx_autodoc_typehints",
+	"sphinx_inline_tabs",
 	"autoapi.sphinx",
 ]
 

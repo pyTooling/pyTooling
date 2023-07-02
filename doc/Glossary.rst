@@ -106,6 +106,9 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   CopyLeft
+     ...
+
    Cygwin
      :wiki:`Cygwin` is a :wiki:`POSIX`-compatible programming and runtime environment for Windows.
 
@@ -313,6 +316,9 @@ Glossary
    MinGW
      Minimalistic GNU for Windows.
 
+   Mixin-Class
+     A *mixin classes* are classes used as secondary base-classes in multiple inheritance.
+
    MSYS2
      ...
 
@@ -368,6 +374,12 @@ Glossary
      ...
 
    Pre-Order
+     ...
+
+   PyPI
+     ...
+
+   PyPy
      ...
 
    Relative
@@ -487,7 +499,7 @@ Glossary
      Universal C Runtime
 
    Vertex
-     A vertex is a :term:`node` in a graph.
+     A vertex is a :term:`node` in a graph. Vertexes in a graph are connected using :term:`edges <edge>`.
 
    WSL
      Windows System for Linux

@@ -35,32 +35,31 @@ Common types, helper functions and classes.
 """
 __author__ =    "Patrick Lehmann"
 __email__ =     "Paebbels@gmail.com"
-__copyright__ = "2017-2022, Patrick Lehmann"
+__copyright__ = "2017-2023, Patrick Lehmann"
 __license__ =   "Apache License, Version 2.0"
-__version__ =   "4.0.1"
+__version__ =   "5.0.0"
 __keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versioning", "licensing", "overloading",
 								"singleton", "tree", "graph", "timer", "data structure", "setuptools", "wheel", "installation",
 								"packaging", "path", "generic path", "generic library", "url", "terminal", "shell", "TUI", "console",
 								"text user interface", "message logging", "abstract", "override"]
 
 from collections import deque
-from functools import reduce
-from numbers import Number
-from operator import or_
-from typing import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set
+from numbers     import Number
+from typing      import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set, Hashable, Optional
 
 try:
 	from pyTooling.Decorators import export
+	from pyTooling.Platform   import Platform
 except ModuleNotFoundError:  # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export
+		from Platform   import Platform
 	except ModuleNotFoundError as ex:  # pragma: no cover
 		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
 		raise ex
 
-from pyTooling.Common.Platform import Platform
 
 __all__ = ["CurrentPlatform"]
 
@@ -96,7 +95,7 @@ def getsizeof(obj: Any) -> int:
 
 	.. admonition:: Background Information
 
-	   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
+	   The function :func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
 	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 	.. seealso::
@@ -172,6 +171,9 @@ def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	:param d: Dictionary to get the first key from.
 	:returns: The first key.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.keys()))
 
 
@@ -183,6 +185,9 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	:param d: Dictionary to get the first value from.
 	:returns: The first value.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.values()))
 
 
@@ -194,24 +199,29 @@ def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	:param d: Dictionary to get the first key-value-pair from.
 	:returns: The first key-value-pair as tuple.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.items()))
 
 
 @overload
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
-	...
+	filter: Optional[Callable[[Hashable, Any], bool]]
+) -> Dict[Union[_DictKey1], Union[_DictValue1]]:
+#) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
+	...  # pragma: no cover
 
 
 @overload
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
-	...
+	filter: Optional[Callable[[Hashable, Any], bool]]
+) -> Dict[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]]:
+# ) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
+	...  # pragma: no cover
 
 
 @overload
@@ -219,33 +229,42 @@ def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
 	m3: Mapping[_DictKey3, _DictValue3],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
-	...
+	filter: Optional[Callable[[Hashable, Any], bool]]
+) -> Dict[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]]:
+#) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
+	...  # pragma: no cover
 
 
 @export
-def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
+def mergedicts(*dicts: Tuple[Dict, ...], filter: Callable[[Hashable, Any], bool] = None) -> Dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
-	If parameter ``func`` isn't ``None``, then this function is applied to every element during the merge operation.
+	If parameter ``filter`` isn't ``None``, then this function is applied to every element during the merge operation. If
+	it returns true, the dictionary element will be present in the resulting dictionary.
 
-	:param dicts: Tuple of dictionaries to merge as positional parameters.
-	:param func:  Optional function to apply to each dictionary element when merging.
-	:returns:     A new dictionary containing the merge result.
+	:param dicts:  Tuple of dictionaries to merge as positional parameters.
+	:param filter: Optional filter function to apply to each dictionary element when merging.
+	:returns:      A new dictionary containing the merge result.
+
+	.. seealso::
+
+	   `How do I merge two dictionaries in a single expression in Python? <https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-in-python>`__
 	"""
-	if func is None:
-		return {k: reduce(lambda d,x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
+	if len(dicts) == 0:
+		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")
+
+	if filter is None:
+		return {k: v for d in dicts for k, v in d.items()}
 	else:
-		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}
+		return {k: v for d in dicts for k, v in d.items() if filter(k, v)}
 
 
 @overload
 def zipdicts(
 	m1: Mapping[_DictKey, _DictValue1]
 ) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @overload
@@ -253,7 +272,7 @@ def zipdicts(
 	m1: Mapping[_DictKey, _DictValue1],
 	m2: Mapping[_DictKey, _DictValue2]
 ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @overload
@@ -262,7 +281,7 @@ def zipdicts(
 	m2: Mapping[_DictKey, _DictValue2],
 	m3: Mapping[_DictKey, _DictValue3]
 ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @export
@@ -280,13 +299,16 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 
 	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
 	"""
-	if not dicts:
+	if len(dicts) == 0:
 		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
 
 	length = len(dicts[0])
 	if any(len(d) != length for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
-	for key, item0 in dicts[0].items():
-		# WORKAROUND: using redundant parenthesis for Python 3.7
-		yield (key, item0, *(d[key] for d in dicts[1:]))
+	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+		for key, item0 in ds[0].items():
+			# WORKAROUND: using redundant parenthesis for Python 3.7
+			yield (key, item0, *(d[key] for d in ds[1:]))
+
+	return gen(dicts)
