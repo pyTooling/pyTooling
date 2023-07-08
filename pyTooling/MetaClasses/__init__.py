@@ -323,10 +323,10 @@ class DispatchableMethod:
 				continue
 
 			if parameter.annotation is Parameter.empty:
-				raise TypeError(f"Parameter '{name}' must be annotated with a type.")
+				raise TypeError(f"Parameter '{name}' in method '{method.__name__}' must be annotated with a type.")
 
 			if not isinstance(parameter.annotation, type):
-				raise TypeError(f"Parameter '{name}' annotation must be a type.")
+				raise TypeError(f"Parameter '{name}' in method '{method.__name__}' annotation must be a type.")
 
 			if parameter.default is not Parameter.empty:
 				self._methods[tuple(types)] = method
