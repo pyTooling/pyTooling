@@ -28,13 +28,6 @@ handling of package descriptions or to unify multiple existing APIs into a singl
 It's useful - if not even essential - for **any** Python-base project independent if it's a library, framework, CLI tool
 or just a "script".
 
-## Introduction
-
-**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. More specialized helpers
-can be found in sub-namespaces like:
-
-* [pyTooling.CLIAbstraction](https://github.com/pyTooling/pyTooling.CLIAbstraction)
-
 In addition, pyTooling provides a collection of [CI job templates for GitHub Actions](https://github.com/pyTooling/Actions).
 This drastically simplifies GHA-based CI pipelines for Python projects.
 
@@ -247,6 +240,7 @@ print(myInt.Value)
 
 * [Patrick Lehmann](https://GitHub.com/Paebbels) (Maintainer)
 * [Sven Köhler](https://GitHub.com/skoehler)
+* [Unai Martinez-Corral](https://github.com/umarcor)
 * [and more...](https://GitHub.com/pyTooling/pyTooling/graphs/contributors)
 
 
