@@ -143,7 +143,7 @@ class Program(metaclass=ExtendedType, slots=True):
 						raise CLIAbstractionException(f"Binary directory '{binaryDirectoryPath}' not found.") from FileNotFoundError(binaryDirectoryPath)
 
 				try:
-					executablePath = binaryDirectoryPath / self._executableNames[self._platform]
+					executablePath = binaryDirectoryPath / self.__class__._executableNames[self._platform]
 				except KeyError:
 					raise CLIAbstractionException(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedException(self._platform)
 

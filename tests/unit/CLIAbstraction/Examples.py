@@ -34,11 +34,14 @@ Abstracted CLI programs as examples for unit tests.
 :copyright: Copyright 2007-2023 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
+from typing import ClassVar, Dict
 
-from pyTooling.CLIAbstraction          import CLIArgument, Executable
+from pyTooling.MetaClasses                    import ExtendedType
+from pyTooling.CLIAbstraction                 import CLIArgument
+from pyTooling.CLIAbstraction.Command         import CommandArgument
+from pyTooling.CLIAbstraction.Flag            import LongFlag
 from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag
-from pyTooling.CLIAbstraction.Flag import LongFlag
-from pyTooling.CLIAbstraction.Command import CommandArgument
+
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -46,12 +49,12 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class GitArguments:
-	_executableNames = {
-		"Darwin":  "git",
-		"Linux":   "git",
-		"Windows": "git.exe"
-	}
+class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
+	# _executableNames: ClassVar[Dict[str, str]] = {
+	# 	"Darwin":  "git",
+	# 	"Linux":   "git",
+	# 	"Windows": "git.exe"
+	# }
 
 	@CLIArgument()
 	class FlagVersion(LongFlag, name="version"): ...

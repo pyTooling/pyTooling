@@ -458,8 +458,6 @@ class ExtendedType(type):
 				if fieldName in inheritedSlottedFields:
 					raise AttributeError(f"Slot '{fieldName}' already exists in base-class '{inheritedSlottedFields[fieldName]}'.")
 
-				slottedFields.append(fieldName)
-
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary
 				# * remove field from members
@@ -471,8 +469,11 @@ class ExtendedType(type):
 				# * copy field and initial value to objectFields dictionary
 				# * remove field from members
 				elif fieldName in members:
+					slottedFields.append(fieldName)
 					objectFields[fieldName] = members[fieldName]
 					del members[fieldName]
+				else:
+					slottedFields.append(fieldName)
 
 			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
 		else:
