@@ -3,7 +3,7 @@
 pyTooling >= 5.0.0, <6.0
 
 # Enforce latest version on ReadTheDocs
-sphinx >=5.3, <6.0
+sphinx >=5.3, <8.0
 
 # Sphinx Extenstions
 #sphinx.ext.coverage
