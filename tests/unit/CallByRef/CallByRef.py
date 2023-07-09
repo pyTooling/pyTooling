@@ -29,9 +29,9 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`PyTooling.CallByref`.
+Unit tests for :mod:`PyTooling.CallByRef`.
 """
-from unittest     import TestCase
+from unittest            import TestCase
 
 from pyTooling.CallByRef import CallByRefParam, CallByRefBoolParam, CallByRefIntParam
 
@@ -46,22 +46,22 @@ def func1(param : CallByRefParam) -> None:
 	param <<= (3, 4)
 
 
-def func2(param : CallByRefBoolParam, value : bool = True) -> None:
+def func2(param : CallByRefBoolParam, value: bool = True) -> None:
 	param <<= value
 
 
-def assign_42(param : CallByRefIntParam, value : int = 42) -> None:
+def assign_42(param : CallByRefIntParam, value: int = 42) -> None:
 	param <<= value
 
 
-class CallByReference_AnyParam(TestCase):
-	ref : CallByRefParam = CallByRefParam()
+class Any(TestCase):
+	ref: CallByRefParam = CallByRefParam()
 
 	def setUp(self) -> None:
 		func1(self.ref)
 
 	def test_Value(self) -> None:
-		self.assertTupleEqual(self.ref.Value, (3, 4))
+		self.assertTupleEqual((3, 4), self.ref.Value)
 
 	def test_Equal(self) -> None:
 		self.assertTrue(self.ref == (3, 4))
@@ -70,7 +70,7 @@ class CallByReference_AnyParam(TestCase):
 		self.assertTrue(self.ref != (4, 3))
 
 
-class CallByReference_BoolParam(TestCase):
+class Boolean(TestCase):
 	ref: CallByRefBoolParam = CallByRefBoolParam()
 
 	def setUp(self) -> None:
@@ -83,148 +83,148 @@ class CallByReference_BoolParam(TestCase):
 		self.assertTrue(self.ref == True)
 
 		with self.assertRaises(TypeError):
-			self.ref == "str"
+			_ = self.ref == "str"
 
 	def test_Unequal(self) -> None:
 		self.assertTrue(self.ref != False)
 
 		with self.assertRaises(TypeError):
-			self.ref != "str"
+			_ = self.ref != "str"
 
 	def test_TypeConvertToBool(self) -> None:
 		self.assertTrue(bool(self.ref))
 
 	def test_TypeConvertToInt(self) -> None:
-		self.assertEqual(int(self.ref), 1)
+		self.assertEqual(1, int(self.ref))
 
 
-class CallByReference_IntParam(TestCase):
+class Integer(TestCase):
 	ref: CallByRefIntParam = CallByRefIntParam()
 
 	def test_Value(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref.Value, 42)
+		self.assertEqual(42, self.ref.Value)
 
 	def test_Negate(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(-self.ref, -42)
+		self.assertEqual(-42, -self.ref)
 
 	def test_Positive(self) -> None:
 		assign_42(self.ref, -42)
-		self.assertEqual(+self.ref, -42)
+		self.assertEqual(-42, +self.ref)
 
 	def test_Invert(self) -> None:
 		assign_42(self.ref, 1)
-		self.assertEqual(~self.ref, -2)
+		self.assertEqual(-2, ~self.ref)
 
 	def test_GeaterThanOrEqual(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref >= 40)
 
 		with self.assertRaises(TypeError):
-			self.ref >= "str"
+			_ = self.ref >= "str"
 
 	def test_GreaterThan(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref > 41)
 
 		with self.assertRaises(TypeError):
-			self.ref > "str"
+			_ = self.ref > "str"
 
 	def test_Equal(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref == 42)
 
 		with self.assertRaises(TypeError):
-			self.ref == "str"
+			_ = self.ref == "str"
 
 	def test_Unequal(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref != 43)
 
 		with self.assertRaises(TypeError):
-			self.ref != "str"
+			_ = self.ref != "str"
 
 	def test_LessThan(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref < 44)
 
 		with self.assertRaises(TypeError):
-			self.ref < "str"
+			_ = self.ref < "str"
 
 	def test_LessThanOrEqual(self) -> None:
 		assign_42(self.ref)
 		self.assertTrue(self.ref <= 45)
 
 		with self.assertRaises(TypeError):
-			self.ref <= "str"
+			_ = self.ref <= "str"
 
 	def test_Addition(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref + 1, 43)
+		self.assertEqual(43, self.ref + 1)
 
 		with self.assertRaises(TypeError):
 			self.ref + "str"
 
 	def test_Subtraction(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref - 1, 41)
+		self.assertEqual(41, self.ref - 1)
 
 		with self.assertRaises(TypeError):
 			self.ref - "str"
 
 	def test_Multiplication(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref * 1, 42)
+		self.assertEqual(42, self.ref * 1)
 
 		with self.assertRaises(TypeError):
 			self.ref * "str"
 
 	def test_Power(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref ** 1, 42)
+		self.assertEqual(42, self.ref ** 1)
 
 		with self.assertRaises(TypeError):
 			self.ref ** "str"
 
 	def test_Division(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref / 1, 42)
+		self.assertEqual(42, self.ref / 1)
 
 		with self.assertRaises(TypeError):
 			self.ref / "str"
 
 	def test_FloorDivision(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref // 1, 42)
+		self.assertEqual(42, self.ref // 1)
 
 		with self.assertRaises(TypeError):
 			self.ref // "str"
 
 	def test_Modulo(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref % 2, 0)
+		self.assertEqual(0, self.ref % 2)
 
 		with self.assertRaises(TypeError):
 			self.ref % "str"
 
 	def test_And(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref & 2, 2)
+		self.assertEqual(2, self.ref & 2)
 
 		with self.assertRaises(TypeError):
 			self.ref & "str"
 
 	def test_Or(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref | 1, 43)
+		self.assertEqual(43, self.ref | 1)
 
 		with self.assertRaises(TypeError):
 			self.ref | "str"
 
 	def test_Xor(self) -> None:
 		assign_42(self.ref)
-		self.assertEqual(self.ref ^ 2, 40)
+		self.assertEqual(40, self.ref ^ 2)
 
 		with self.assertRaises(TypeError):
 			self.ref ^ "str"
@@ -232,7 +232,7 @@ class CallByReference_IntParam(TestCase):
 	def test_Increment(self) -> None:
 		assign_42(self.ref)
 		self.ref += 1
-		self.assertEqual(self.ref, 43)
+		self.assertEqual(43, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref += "str"
@@ -240,7 +240,7 @@ class CallByReference_IntParam(TestCase):
 	def test_Decrement(self) -> None:
 		assign_42(self.ref)
 		self.ref -= 1
-		self.assertEqual(self.ref, 41)
+		self.assertEqual(41, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref -= "str"
@@ -248,7 +248,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceMultiplication(self) -> None:
 		assign_42(self.ref)
 		self.ref *= 1
-		self.assertEqual(self.ref, 42)
+		self.assertEqual(42, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref *= "str"
@@ -256,7 +256,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplacePower(self) -> None:
 		assign_42(self.ref)
 		self.ref **= 1
-		self.assertEqual(self.ref, 42)
+		self.assertEqual(42, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref **= "str"
@@ -264,7 +264,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceDivision(self) -> None:
 		assign_42(self.ref)
 		self.ref /= 1
-		self.assertEqual(self.ref, 42)
+		self.assertEqual(42, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref /= "str"
@@ -272,7 +272,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceFloorDivision(self) -> None:
 		assign_42(self.ref)
 		self.ref //= 1
-		self.assertEqual(self.ref, 42)
+		self.assertEqual(42, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref //= "str"
@@ -280,7 +280,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceModulo(self) -> None:
 		assign_42(self.ref)
 		self.ref %= 2
-		self.assertEqual(self.ref, 0)
+		self.assertEqual(0, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref %= "str"
@@ -288,7 +288,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceAnd(self) -> None:
 		assign_42(self.ref)
 		self.ref &= 2
-		self.assertEqual(self.ref, 2)
+		self.assertEqual(2, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref &= "str"
@@ -296,7 +296,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceOr(self) -> None:
 		assign_42(self.ref)
 		self.ref |= 1
-		self.assertEqual(self.ref, 43)
+		self.assertEqual(43, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref |= "str"
@@ -304,7 +304,7 @@ class CallByReference_IntParam(TestCase):
 	def test_InplaceXor(self) -> None:
 		assign_42(self.ref)
 		self.ref ^= 2
-		self.assertEqual(self.ref, 40)
+		self.assertEqual(40, self.ref)
 
 		with self.assertRaises(TypeError):
 			self.ref ^= "str"
@@ -313,4 +313,4 @@ class CallByReference_IntParam(TestCase):
 		self.assertTrue(bool(self.ref))
 
 	def test_TypeConvertToInt(self) -> None:
-		self.assertEqual(int(self.ref), 42)
+		self.assertEqual(42, int(self.ref))
