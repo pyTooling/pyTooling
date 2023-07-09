@@ -94,7 +94,7 @@ class Classes(TestCase):
 		self.assertIs(Class1, foundClasses[0])
 
 	def test_FindSubClasses(self):
-		foundClasses = [c for c in Attribute2.GetClasses(predicate=Class1)]
+		foundClasses = [c for c in Attribute2.GetClasses(filter=Class1)]
 
 		self.assertIs(Class11, foundClasses[0])
 		self.assertIs(Class12, foundClasses[1])
