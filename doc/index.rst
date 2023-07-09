@@ -39,6 +39,11 @@ This drastically simplifies GHA-based CI pipelines for Python projects.
 Package Details
 ***************
 
+Attributes
+==========
+
+.. todo:: Attributes
+
 Common Helper Functions
 =======================
 
@@ -278,6 +283,12 @@ License
 .. raw:: latex
 
    \part{Main Documentation}
+
+.. toctree::
+   :caption: Attributes
+   :hidden:
+
+   Attributes/index
 
 .. toctree::
    :caption: Common
