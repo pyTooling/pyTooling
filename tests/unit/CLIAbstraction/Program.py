@@ -42,7 +42,7 @@ from unittest     import TestCase
 from pyTooling.CLIAbstraction import Program, CLIAbstractionException, CLIArgument
 from pyTooling.CLIAbstraction.Flag import LongFlag
 from .                        import Helper
-from .Examples                import GitArguments
+from .Examples                import GitArgumentsMixin
 
 
 if __name__ == "__main__": # pragma: no cover
@@ -51,8 +51,14 @@ if __name__ == "__main__": # pragma: no cover
 	exit(1)
 
 
-class Git(Program, GitArguments):
-	pass
+class Git(Program, GitArgumentsMixin):
+	def __new__(cls, *args, **kwargs):
+		cls._executableNames = {
+			"Darwin": "git",
+			"Linux": "git",
+			"Windows": "git.exe"
+		}
+		return super().__new__(cls)
 
 
 class Gitt(Program):
