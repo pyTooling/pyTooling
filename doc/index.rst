@@ -32,15 +32,6 @@ handling of package descriptions or to unify multiple existing APIs into a singl
 It's useful - if not even essential - for **any** Python-base project independent if it's a library, framework, CLI tool
 or just a "script".
 
-
-Introduction
-************
-
-**pyTooling** is a basic collection of powerful helpers needed by almost any Python project. More specialized helpers
-can be found in sub-namespaces like:
-
-* `pyTooling.CLIAbstraction <https://github.com/pyTooling/pyTooling.CLIAbstraction>`__
-
 In addition, pyTooling provides a collection of `CI job templates for GitHub Actions <https://github.com/pyTooling/Actions>`__.
 This drastically simplifies GHA-based CI pipelines for Python projects.
 
@@ -77,6 +68,15 @@ Common Classes
 * :ref:`Representations of version numbers <VERSIONING>`: While Python itself has a good versioning schema, there are no
   classes provided to abstract version numbers. pyTooling provides such representations following semantic versioning
   (SemVer) and calendar versioning (CalVer) schemes. It's provided by the :mod:`pyTooling.Versioning` module.
+
+
+CLI Abstraction
+===============
+
+``pyTooling.CLIAbstraction`` is an abstraction layer and wrapper for command line programs, so they can be used easily
+in Python. All parameters like ``--value=42`` are implemented as argument classes on the executable.
+
+.. todo:: CLI Abstraction
 
 
 Configuration
@@ -241,6 +241,7 @@ Contributors
 
 * `Patrick Lehmann <https://GitHub.com/Paebbels>`__ (Maintainer)
 * `Sven Köhler <https://GitHub.com/skoehler>`__
+* `Unai Martinez-Corral <https://GitHub.com/umarcor/>`__
 * `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
 
 
@@ -287,6 +288,12 @@ License
    Common/Licensing
    Common/Platform
    Common/Versioning
+
+.. toctree::
+   :caption: CLI Abstraction
+   :hidden:
+
+   CLIAbstraction/index
 
 .. toctree::
    :caption: Configuration

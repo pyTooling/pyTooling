@@ -106,6 +106,12 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   CLIOption
+     ...
+
+   CLIParameter
+     ...
+
    CopyLeft
      ...
 
@@ -195,6 +201,9 @@ Glossary
 
    Edge
      An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph`.
+
+   Executable
+     ...
 
    Exception
      ...
@@ -374,6 +383,9 @@ Glossary
      ...
 
    Pre-Order
+     ...
+
+   Program
      ...
 
    PyPI
