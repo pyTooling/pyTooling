@@ -227,22 +227,22 @@ used. On CPython 3.10 using slots, the code accessing class fields is 10..25 % f
 The :class:`~pyTooling.MetaClasses.ExtendedType` meta-class can automatically infer slots from type annotations. Because
 the syntax for applying a meta-class is quite heavy, this decorator simplifies the syntax.
 
-+----------------------------------------------------+-----------------------------------------------------+
-| Syntax using Decorator ``slotted``                 | Syntax using meta-class ``ExtendedType``            |
-+====================================================+=====================================================+
-| .. code-block:: Python                             | .. code-block:: Python                              |
-|                                                    |                                                     |
-|    @export                                         |    @export                                          |
-|    @slotted                                        |    class A(metaclass=ExtendedType, slots=True):     |
-|    class A:                                        |      _field1: int                                   |
-|      _field1: int                                  |      _field2: str                                   |
-|      _field2: str                                  |                                                     |
-|                                                    |      def __init__(self, arg1: int, arg2: str) -> None:      |
-|      def __init__(self, arg1: int, arg2: str) -> None:     |        self._field1 = arg1                          |
-|        self._field1 = arg1                         |        self._field2 = arg2                          |
-|        self._field2 = arg2                         |                                                     |
-|                                                    |                                                     |
-+----------------------------------------------------+-----------------------------------------------------+
++--------------------------------------------------------+---------------------------------------------------------+
+| Syntax using Decorator ``slotted``                     | Syntax using meta-class ``ExtendedType``                |
++========================================================+=========================================================+
+| .. code-block:: Python                                 | .. code-block:: Python                                  |
+|                                                        |                                                         |
+|    @export                                             |    @export                                              |
+|    @slotted                                            |    class A(metaclass=ExtendedType, slots=True):         |
+|    class A:                                            |      _field1: int                                       |
+|      _field1: int                                      |      _field2: str                                       |
+|      _field2: str                                      |                                                         |
+|                                                        |      def __init__(self, arg1: int, arg2: str) -> None:  |
+|      def __init__(self, arg1: int, arg2: str) -> None: |        self._field1 = arg1                              |
+|        self._field1 = arg1                             |        self._field2 = arg2                              |
+|        self._field2 = arg2                             |                                                         |
+|                                                        |                                                         |
++--------------------------------------------------------+---------------------------------------------------------+
 
 
 .. _DECO/mixin:
@@ -259,46 +259,46 @@ The :class:`~pyTooling.MetaClasses.ExtendedType` meta-class can automatically in
 class is marked as a mixin-class, the inferred slots are collected and handed over to class defining slots. Because
 the syntax for applying a meta-class is quite heavy, this decorator simplifies the syntax.
 
-+----------------------------------------------------+----------------------------------------------------+
-| Syntax using Decorator ``mixin``                   | Syntax using meta-class ``ExtendedType``           |
-+====================================================+====================================================+
-| .. code-block:: Python                             | .. code-block:: Python                             |
-|                                                    |                                                    |
-|    @export                                         |                                                    |
-|    @slotted                                        |    @export                                         |
-|    class A:                                        |    class A(metaclass=ExtendedType, slots=True):    |
-|      _field1: int                                  |      _field1: int                                  |
-|      _field2: str                                  |      _field2: str                                  |
-|                                                    |                                                    |
-|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str) -> None:     |
-|        self._field1 = arg1                         |        self._field1 = arg1                         |
-|        self._field2 = arg2                         |        self._field2 = arg2                         |
-|                                                    |                                                    |
-|    @export                                         |    @export                                         |
-|    class B(A):                                     |    class B(A):                                     |
-|      _field3: int                                  |      _field3: int                                  |
-|      _field4: str                                  |      _field4: str                                  |
-|                                                    |                                                    |
-|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str) -> None:     |
-|        self._field3 = arg1                         |        self._field3 = arg1                         |
-|        self._field4 = arg2                         |        self._field4 = arg2                         |
-|        super().__init__(arg1, arg2)                |        super().__init__(arg1, arg2)                |
-|                                                    |                                                    |
-|    @export                                         |                                                    |
-|    @mixin                                          |    @export                                         |
-|    class C(A):                                     |    class C(A, mixin=True):                         |
-|      _field5: int                                  |      _field5: int                                  |
-|      _field6: str                                  |      _field6: str                                  |
-|                                                    |                                                    |
-|      def Method(self) -> str:                      |      def Method(self) -> str:                      |
-|        return f"{self._field5} -> {self._field6}"  |        return f"{self._field5} -> {self._field6}"  |
-|                                                    |                                                    |
-|    @export                                         |    @export                                         |
-|    class D(B, C):                                  |    class D(B, C):                                  |
-|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str) -> None:     |
-|        super().__init__(arg1, arg2)                |        super().__init__(arg1, arg2)                |
-|                                                    |                                                    |
-+----------------------------------------------------+----------------------------------------------------+
++--------------------------------------------------------+--------------------------------------------------------+
+| Syntax using Decorator ``mixin``                       | Syntax using meta-class ``ExtendedType``               |
++========================================================+========================================================+
+| .. code-block:: Python                                 | .. code-block:: Python                                 |
+|                                                        |                                                        |
+|    @export                                             |                                                        |
+|    @slotted                                            |    @export                                             |
+|    class A:                                            |    class A(metaclass=ExtendedType, slots=True):        |
+|      _field1: int                                      |      _field1: int                                      |
+|      _field2: str                                      |      _field2: str                                      |
+|                                                        |                                                        |
+|      def __init__(self, arg1: int, arg2: str) -> None: |      def __init__(self, arg1: int, arg2: str) -> None: |
+|        self._field1 = arg1                             |        self._field1 = arg1                             |
+|        self._field2 = arg2                             |        self._field2 = arg2                             |
+|                                                        |                                                        |
+|    @export                                             |    @export                                             |
+|    class B(A):                                         |    class B(A):                                         |
+|      _field3: int                                      |      _field3: int                                      |
+|      _field4: str                                      |      _field4: str                                      |
+|                                                        |                                                        |
+|      def __init__(self, arg1: int, arg2: str) -> None: |      def __init__(self, arg1: int, arg2: str) -> None: |
+|        self._field3 = arg1                             |        self._field3 = arg1                             |
+|        self._field4 = arg2                             |        self._field4 = arg2                             |
+|        super().__init__(arg1, arg2)                    |        super().__init__(arg1, arg2)                    |
+|                                                        |                                                        |
+|    @export                                             |                                                        |
+|    @mixin                                              |    @export                                             |
+|    class C(A):                                         |    class C(A, mixin=True):                             |
+|      _field5: int                                      |      _field5: int                                      |
+|      _field6: str                                      |      _field6: str                                      |
+|                                                        |                                                        |
+|      def Method(self) -> str:                          |      def Method(self) -> str:                          |
+|        return f"{self._field5} -> {self._field6}"      |        return f"{self._field5} -> {self._field6}"      |
+|                                                        |                                                        |
+|    @export                                             |    @export                                             |
+|    class D(B, C):                                      |    class D(B, C):                                      |
+|      def __init__(self, arg1: int, arg2: str) -> None: |      def __init__(self, arg1: int, arg2: str) -> None: |
+|        super().__init__(arg1, arg2)                    |        super().__init__(arg1, arg2)                    |
+|                                                        |                                                        |
++--------------------------------------------------------+--------------------------------------------------------+
 
 
 .. _DECO/singleton:

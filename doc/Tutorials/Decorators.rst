@@ -17,43 +17,43 @@ See also :ref:`decorators offered by pyTooling <DECO>`.
    The predefined :func:`~functools.wraps` decorator should be used when creating wrapping or replacing decorators, so
    the name and doc-string of the callable is preserved and decorators can be chained.
 
-+-------------------------------------+---------------------------------------------------+-----------------------------------------+
-| Function-based without Parameter    | Function-based with Parameter(s)                  | Class-based with Parameter(s)           |
-+=====================================+===================================================+=========================================+
-| .. code-block:: Python              | .. code-block:: Python                            | .. code-block:: Python                  |
-|                                     |                                                   |                                         |
-|    from functools import wraps      |    from functools import wraps                    |    from functools import wraps          |
-|                                     |                                                   |                                         |
-|    F = TypeVar("F", Callable)       |    F = TypeVar("F", Callable)                     |    F = TypeVar("F", Callable)           |
-|                                     |                                                   |                                         |
-|    def decorator(func: F) -> F:     |    def decorator_factory(param: int) -> Callable: |    class decoratorclass:                |
-|      @wraps(func)                   |      def specific_decorator(func: F) -> F:        |      _param: int                        |
-|      def wrapper(*args, **kwargs):  |        @wraps(func)                               |                                         |
-|        return func(*args, **kwargs) |        def wrapper(*args, **kwargs):              |      def __init__(self, param: int) -> None:    |
-|                                     |          kwargs["param"] = param                  |        self._param = param              |
-|      return wrapper                 |          return func(*args, **kwargs)             |                                         |
-|                                     |                                                   |      def __call__(self, func: F) -> F:  |
-|                                     |        return wrapper                             |        @wraps(func)                     |
-|                                     |      return specific_Decorator                    |        def wrapper(*args, **kwargs):    |
-|                                     |                                                   |          kwargs["param"] = self._param  |
-|                                     |                                                   |          return func(*args, **kwargs)   |
-|                                     |                                                   |                                         |
-|   #                                 |    #                                              |        return wrapper                   |
-|                                     |                                                   |                                         |
-+-------------------------------------+---------------------------------------------------+-----------------------------------------+
-| .. code-block:: Python              | .. code-block:: Python                            | .. code-block:: Python                  |
-|                                     |                                                   |                                         |
-|    @decorator                       |    @decorator_factory(10)                         |    @decoratorclass(10)                  |
-|    def foo(param: int) -> bool:     |    def foo(param: int) -> bool:                   |    def foo(param: int) -> bool:         |
-|      pass                           |      pass                                         |      pass                               |
-+-------------------------------------+---------------------------------------------------+-----------------------------------------+
-| .. code-block:: Python              | .. code-block:: Python                            | .. code-block:: Python                  |
-|                                     |                                                   |                                         |
-|    def foo(param: int) -> bool:     |    def foo(param: int) -> bool:                   |    def foo(param: int) -> bool:         |
-|      pass                           |      pass                                         |      pass                               |
-|                                     |                                                   |                                         |
-|    foo = decorator(foo)             |    foo = decorator(10)(foo)                       |    foo = decoratorclass(10)(foo)        |
-+-------------------------------------+---------------------------------------------------+-----------------------------------------+
++-------------------------------------+---------------------------------------------------+-----------------------------------------------+
+| Function-based without Parameter    | Function-based with Parameter(s)                  | Class-based with Parameter(s)                 |
++=====================================+===================================================+===============================================+
+| .. code-block:: Python              | .. code-block:: Python                            | .. code-block:: Python                        |
+|                                     |                                                   |                                               |
+|    from functools import wraps      |    from functools import wraps                    |    from functools import wraps                |
+|                                     |                                                   |                                               |
+|    F = TypeVar("F", Callable)       |    F = TypeVar("F", Callable)                     |    F = TypeVar("F", Callable)                 |
+|                                     |                                                   |                                               |
+|    def decorator(func: F) -> F:     |    def decorator_factory(param: int) -> Callable: |    class decoratorclass:                      |
+|      @wraps(func)                   |      def specific_decorator(func: F) -> F:        |      _param: int                              |
+|      def wrapper(*args, **kwargs):  |        @wraps(func)                               |                                               |
+|        return func(*args, **kwargs) |        def wrapper(*args, **kwargs):              |      def __init__(self, param: int) -> None:  |
+|                                     |          kwargs["param"] = param                  |        self._param = param                    |
+|      return wrapper                 |          return func(*args, **kwargs)             |                                               |
+|                                     |                                                   |      def __call__(self, func: F) -> F:        |
+|                                     |        return wrapper                             |        @wraps(func)                           |
+|                                     |      return specific_Decorator                    |        def wrapper(*args, **kwargs):          |
+|                                     |                                                   |          kwargs["param"] = self._param        |
+|                                     |                                                   |          return func(*args, **kwargs)         |
+|                                     |                                                   |                                               |
+|   #                                 |    #                                              |        return wrapper                         |
+|                                     |                                                   |                                               |
++-------------------------------------+---------------------------------------------------+-----------------------------------------------+
+| .. code-block:: Python              | .. code-block:: Python                            | .. code-block:: Python                        |
+|                                     |                                                   |                                               |
+|    @decorator                       |    @decorator_factory(10)                         |    @decoratorclass(10)                        |
+|    def foo(param: int) -> bool:     |    def foo(param: int) -> bool:                   |    def foo(param: int) -> bool:               |
+|      pass                           |      pass                                         |      pass                                     |
++-------------------------------------+---------------------------------------------------+-----------------------------------------------+
+| .. code-block:: Python              | .. code-block:: Python                            | .. code-block:: Python                        |
+|                                     |                                                   |                                               |
+|    def foo(param: int) -> bool:     |    def foo(param: int) -> bool:                   |    def foo(param: int) -> bool:               |
+|      pass                           |      pass                                         |      pass                                     |
+|                                     |                                                   |                                               |
+|    foo = decorator(foo)             |    foo = decorator(10)(foo)                       |    foo = decoratorclass(10)(foo)              |
++-------------------------------------+---------------------------------------------------+-----------------------------------------------+
 
 
 Usecase
@@ -147,8 +147,8 @@ Wrapping Decorator
 
 
 
-Parameters
-**********
+Without Parameters
+******************
 
 Function-based without Parameters
 =================================
@@ -166,6 +166,9 @@ Function-based without Parameters
 
      return replacement
 
+
+With Parameters
+***************
 
 Function-based with Parameters
 ==============================

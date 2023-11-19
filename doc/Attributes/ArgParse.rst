@@ -18,19 +18,19 @@ possible to assign a callback function to each individual sub-command parser.
 Classic ``argparse`` Example
 ****************************
 
-.. literalinclude:: ../tests/example/OldStyle.py
+.. literalinclude:: ../../tests/example/OldStyle.py
    :language: python
    :linenos:
    :caption: tests/example/OldStyle.py
    :tab-width: 2
 
 
-New ``pyAttributes`` Approach
-*****************************
+New ``pyTooling.Attributes`` Approach
+*************************************
 
 A better and more descriptive solution could look like this:
 
-.. literalinclude:: ../tests/example/UserManager.py
+.. literalinclude:: ../../tests/example/UserManager.py
    :language: python
    :linenos:
    :caption: tests/example/UserManager.py

@@ -34,8 +34,6 @@ Abstracted CLI programs as examples for unit tests.
 :copyright: Copyright 2007-2023 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
 """
-from typing import ClassVar, Dict
-
 from pyTooling.MetaClasses                    import ExtendedType
 from pyTooling.CLIAbstraction                 import CLIArgument
 from pyTooling.CLIAbstraction.Command         import CommandArgument

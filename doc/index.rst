@@ -44,6 +44,16 @@ Attributes
 
 .. todo:: Attributes
 
+
+CLI Abstraction
+===============
+
+``pyTooling.CLIAbstraction`` is an abstraction layer and wrapper for command line programs, so they can be used easily
+in Python. All parameters like ``--value=42`` are implemented as argument classes on the executable.
+
+.. todo:: CLI Abstraction
+
+
 Common Helper Functions
 =======================
 
@@ -74,15 +84,6 @@ Common Classes
 * :ref:`Representations of version numbers <VERSIONING>`: While Python itself has a good versioning schema, there are no
   classes provided to abstract version numbers. pyTooling provides such representations following semantic versioning
   (SemVer) and calendar versioning (CalVer) schemes. It's provided by the :mod:`pyTooling.Versioning` module.
-
-
-CLI Abstraction
-===============
-
-``pyTooling.CLIAbstraction`` is an abstraction layer and wrapper for command line programs, so they can be used easily
-in Python. All parameters like ``--value=42`` are implemented as argument classes on the executable.
-
-.. todo:: CLI Abstraction
 
 
 Configuration
@@ -290,6 +291,16 @@ License
    :hidden:
 
    Attributes/index
+   Attributes/ArgParse
+
+.. toctree::
+   :caption: CLI Abstraction
+   :hidden:
+
+   CLIAbstraction/index
+   CLIAbstraction/Program
+   CLIAbstraction/Executable
+   CLIAbstraction/Arguments
 
 .. toctree::
    :caption: Common
@@ -300,12 +311,6 @@ License
    Common/Licensing
    Common/Platform
    Common/Versioning
-
-.. toctree::
-   :caption: CLI Abstraction
-   :hidden:
-
-   CLIAbstraction/index
 
 .. toctree::
    :caption: Configuration

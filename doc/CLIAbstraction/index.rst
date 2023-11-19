@@ -122,11 +122,3 @@ News
    .. rubric:: Extracted CLIAbstraction from pyIPCMI
 
 * The CLI abstraction has been extracted from `pyIPCMI <https://GitHub.com/Paebbels/pyIPCMI>`__.
-
-
-.. toctree::
-   :hidden:
-
-   Program
-   Executable
-   Arguments

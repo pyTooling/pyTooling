@@ -307,7 +307,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Low-level method for writing to ``STDOUT``.
 
 		:param message: Message to write to ``STDOUT``.
-		:param end:     Use newline character. Default: ``\n``
+		:param end:     Use newline character. Default: ``\n``.
 		:return:        Number of written characters.
 		"""
 		return self._stdout.write(message + end)
@@ -326,7 +326,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Low-level method for writing to ``STDERR``.
 
 		:param message: Message to write to ``STDERR``.
-		:param end:     Use newline character. Default: ``\n``
+		:param end:     Use newline character. Default: ``\n``.
 		:return:        Number of written characters.
 		"""
 		return self._stderr.write(message + end)

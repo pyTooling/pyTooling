@@ -48,20 +48,13 @@ A :class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of inf
    .. code-block:: TOML
 
       # one-liner style
-      section_2 = {key1 = item1, key2 = item2, key3 = item3}
-
-      # multi-line style
-      section_3 = {
-        key1 = item1,
-        key2 = item2,
-        key3 = item3
-      }
+      section_1 = {key1 = "item1", key2 = "item2", key3 = "item3"}
 
       # section style
-      [section_1]
-      key1 = item1
-      key2 = item2
-      key3 = item3
+      [section_2]
+      key1 = "item1"
+      key2 = "item2"
+      key3 = "item3"
 
 .. tab:: YAML
 
@@ -113,13 +106,13 @@ A :class:`~pyTooling.Configuration.Sequence` represents ordered information item
    .. code-block:: TOML
 
       # one-liner style
-      section_2 = [item1, item2, item3]
+      section_1 = ["item1", "item2", "item3"]
 
       # multi-line style
-      section_3 = [
-        item1,
-        item2,
-        item3
+      section_2 = [
+        "item1",
+        "item2",
+        "item3"
       ]
 
 .. tab:: YAML
@@ -177,10 +170,9 @@ dictionaries and scalar information items.
 
       version = "1.0"
 
-      settings = {
-        key1 = "item1",
-        key2 = "item2"
-      }
+      [settings]
+      key1 = "item1"
+      key2 = "item2"
 
       files = [
         "path/to/file1.ext",

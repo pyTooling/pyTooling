@@ -38,16 +38,16 @@ Possible future file formats:
 
       version = "1.0"
 
-      settings = {
-        key1 = "item1",
-        key2 = "item2"
-      }
+      [settings]
+      key1 = "item1"
+      key2 = "item2"
 
       files = [
         "path/to/file1.ext",
         "path/to/file2.ext",
         "path/to/file3.ext"
       ]
+
 
 .. tab:: YAML
 

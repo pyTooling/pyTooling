@@ -3,29 +3,30 @@
 Overview
 ########
 
+The :mod:`pyTooling.Attributes` package offers implementations of *.NET-like attributes* realized with Python
+:term:`decorators <decorator>`. While all user-defined (and pre-defined) *attributes* already offer a powerful API
+derived from :class:`~pyTooling.Attributes.Attribute`, the full potential can be experienced when used with class
+declarations using :class:`pyTooling.MetaClass.ExtendedType` as it's meta-class.
 
-Grouping Attributes
-###################
+.. code-block:: python
 
+   class Annotation(Attribute):
+     pass
 
-ArgParse
-########
+   class Application(metaclass=ExtendedType):
+     @Annotation("Some annotation data")
+     def annotatedMethod(self):
+       pass
 
-pyAttributes Documentation
-##########################
+   for method in Annotation.GetMethods():
+     pass
 
-The Python package pyAttributes offers implementations of .NET-like attributes
-realized with Python decorators. The package also offers a mixin-class to ease
-using classes having annotated methods.
+In addition, an :mod:`pyTooling.Attributes.ArgParse` module is provided, which allows users to describe complex argparse
+command line argument parser structures in a declarative way.
 
-In addition, an ArgParseAttributes module is provided, which allows users to
-describe complex argparse commond-line argument parser structures in a
-declarative way.
-
-Attributes can create a complex class hierarchy. This helps in finding and
-filtering for annotated properties and user-defined data. These search
-operations can be called globally on the attribute classes or locally within
-an annotated class. Therefore the provided helper-mixin should be inherited.
+Attributes can create a complex class hierarchy. This helps in finding and filtering for annotated properties and
+user-defined data. These search operations can be called globally on the attribute classes or locally within an
+annotated class.
 
 Use Cases
 *********
@@ -35,7 +36,7 @@ Use Cases
 .. rubric:: Derived use cases:
 
 * Describe a command line argument parser (argparse). |br|
-  See `pyAttributes Documentation -> ArgParse Examples <https://pyTooling.GitHub.io/pyAttributes/ArgParse.html>`_
+  See `pyTooling.Attributes Documentation -> ArgParse Examples <https://pyTooling.GitHub.io/pyTooling.Attributes/ArgParse.html>`_
 * Mark class members for documentation. |br|
   See `SphinxExtensions <https://sphinxextensions.readthedocs.io/en/latest/>`_ -> DocumentMemberAttribute
 
@@ -44,6 +45,9 @@ Use Cases
 * Annotate user-defined data to classes.
 * Describe test cases and test suits to get a cleaner syntax for Python's unit
   tests.
+
+Grouping Attributes
+*******************
 
 Technique
 *********
@@ -56,18 +60,11 @@ attributes can be applied to the same method.
 Common Attributes
 *****************
 
-* :class:`Attribute` class
-* :class:`AttributeHelperMixin` class
+* :class:`~pyTooling.Attributes.Attribute` class
 
 Special Attributes
 ******************
 
 This package brings special attribute implementations for:
 
-* Python's :mod:`ArgParse` including sub-parser support.
-
-
-.. toctree::
-   :hidden:
-
-   ArgParse
+* Python's :mod:`pyTooling.Attributes.ArgParse` including sub-parser support.
