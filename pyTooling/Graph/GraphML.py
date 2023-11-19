@@ -137,7 +137,7 @@ class Base(metaclass=ExtendedType, slots=True):
 class BaseWithID(Base):
 	_id: str
 
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		super().__init__()
 		self._id = identifier
 
@@ -150,7 +150,7 @@ class BaseWithID(Base):
 class BaseWithData(BaseWithID):
 	_data: List['Data']
 
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		super().__init__(identifier)
 
 		self._data = []
@@ -170,7 +170,7 @@ class Key(BaseWithID):
 	_attributeName: str
 	_attributeType: AttributeTypes
 
-	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes):
+	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes) -> None:
 		super().__init__(identifier)
 
 		self._context = context
@@ -205,7 +205,7 @@ class Data(Base):
 	_key: Key
 	_data: Any
 
-	def __init__(self, key: Key, data: Any):
+	def __init__(self, key: Key, data: Any) -> None:
 		super().__init__()
 
 		self._key = key
@@ -237,7 +237,7 @@ class Data(Base):
 
 @export
 class Node(BaseWithData):
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		super().__init__(identifier)
 
 	@property
@@ -270,7 +270,7 @@ class Edge(BaseWithData):
 	_source: Node
 	_target: Node
 
-	def __init__(self, identifier: str, source: Node, target: Node):
+	def __init__(self, identifier: str, source: Node, target: Node) -> None:
 		super().__init__(identifier)
 
 		self._source = source
@@ -319,7 +319,7 @@ class BaseGraph(BaseWithData, mixin=True):
 	_nodeIDStyle: IDStyle
 	_edgeIDStyle: IDStyle
 
-	def __init__(self, identifier: str = None):
+	def __init__(self, identifier: str = None) -> None:
 		super().__init__(identifier)
 
 		self._subgraphs = {}
@@ -396,7 +396,7 @@ class Graph(BaseGraph):
 	_document: 'GraphMLDocument'
 	_ids: Dict[str, Union[Node, Edge, 'Subgraph']]
 
-	def __init__(self, document: 'GraphMLDocument', identifier: str):
+	def __init__(self, document: 'GraphMLDocument', identifier: str) -> None:
 		super().__init__(identifier)
 		self._document = document
 		self._ids = {}
@@ -426,7 +426,7 @@ class Subgraph(Node, BaseGraph):
 	_subgraphID: str
 	_root:       Nullable[Graph]
 
-	def __init__(self, nodeIdentifier: str, graphIdentifier: str):
+	def __init__(self, nodeIdentifier: str, graphIdentifier: str) -> None:
 		super().__init__(nodeIdentifier)
 		BaseGraph.__init__(self, nodeIdentifier)
 
@@ -503,7 +503,7 @@ class GraphMLDocument(Base):
 	_graph: Graph
 	_keys: Dict[str, Key]
 
-	def __init__(self, identifier: str = "G"):
+	def __init__(self, identifier: str = "G") -> None:
 		super().__init__()
 
 		self._graph = Graph(self, identifier)

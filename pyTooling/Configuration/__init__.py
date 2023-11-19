@@ -53,7 +53,7 @@ class Node(metaclass=ExtendedType, slots=True):
 	_root:     "Configuration"               #: Reference to the root node.
 	_parent:   "Dictionary"                  #: Reference to a parent node.
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None) -> None:
 		"""
 		Initializes a node.
 
@@ -96,7 +96,7 @@ class Node(metaclass=ExtendedType, slots=True):
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None) -> None:
 		"""
 		Initializes a dictionary.
 
@@ -114,7 +114,7 @@ class Dictionary(Node):
 class Sequence(Node):
 	"""Abstract sequence node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None) -> None:
 		"""
 		Initializes a sequence.
 
@@ -139,7 +139,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 class Configuration(Node):
 	"""Abstract root node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: NodeT = None) -> None:
 		"""
 		Initializes a configuration.
 

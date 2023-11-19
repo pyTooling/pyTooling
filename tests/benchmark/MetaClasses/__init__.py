@@ -39,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class A:
-	def __init__(self, arg):
+	def __init__(self, arg) -> None:
 		self.arg = arg
 
 
@@ -52,19 +52,19 @@ class M(type):
 
 
 class B(metaclass=M):
-	def __init__(self, arg):
+	def __init__(self, arg) -> None:
 		self.arg = arg
 
 
 @mark.benchmark(group="A0: Create Objects")
-def test_CreateObjects_BuiltinCall(benchmark):
+def test_CreateObjects_BuiltinCall(benchmark) -> None:
 	@benchmark
 	def func():
 		[A(i) for i in range(10)]
 
 
 @mark.benchmark(group="A0: Create Objects")
-def test_CreateObjects_UserDefinedCall(benchmark):
+def test_CreateObjects_UserDefinedCall(benchmark) -> None:
 	@benchmark
 	def func():
 		[B(i) for i in range(10)]

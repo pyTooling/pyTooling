@@ -60,7 +60,7 @@ class Node(Abstract_Node):
 	_key:      KeyT
 	_length:   int
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]) -> None:
 		Abstract_Node.__init__(self, root, parent)
 
 		self._yamlNode = yamlNode
@@ -137,20 +137,20 @@ class Node(Abstract_Node):
 		while (len(rawValue) > 0):
 #			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
 			beginPos = rawValue.find("$")
-			if (beginPos < 0):
+			if beginPos < 0:
 				result  += rawValue
 				rawValue = ""
 			else:
 				result += rawValue[:beginPos]
-				if (rawValue[beginPos + 1] == "$"):
+				if rawValue[beginPos + 1] == "$":
 					result  += "$"
 					rawValue = rawValue[1:]
-				elif (rawValue[beginPos + 1] == "{"):
+				elif rawValue[beginPos + 1] == "{":
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
-					if (endPos < 0):
+					if endPos < 0:
 						raise Exception(f"")  # XXX: InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
-					if ((nextPos > 0) and (nextPos < endPos)):  # an embedded $-sign
+					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
 #						print(f"_ResolveVariables: path='{path}'")
 						innervalue = self._GetValueByPathExpression(self._ToPath(path))
@@ -194,7 +194,7 @@ class Dictionary(Node, Abstract_Dict):
 
 	_keys: List[KeyT]
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap) -> None:
 		Node.__init__(self, root, parent, key, yamlNode)
 
 		self._keys = [str(k) for k in yamlNode.keys()]
@@ -207,7 +207,7 @@ class Dictionary(Node, Abstract_Dict):
 			_iter: typing_Iterator
 			_obj: Dictionary
 
-			def __init__(self, obj: Dictionary):
+			def __init__(self, obj: Dictionary) -> None:
 				self._iter = iter(obj._keys)
 				self._obj = obj
 
@@ -235,12 +235,13 @@ class Dictionary(Node, Abstract_Dict):
 class Sequence(Node, Abstract_Seq):
 	"""A sequence node (ordered list) in a YAML data file."""
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq) -> None:
 		Node.__init__(self, root, parent, key, yamlNode)
 
 		self._length = len(yamlNode)
 
-	__getitem__ = Node.__getitem__
+	def __getitem__(self, key: KeyT) -> ValueT:
+		return self._GetNodeOrValue(str(key))
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
@@ -254,7 +255,7 @@ class Sequence(Node, Abstract_Seq):
 			_i: int         #: internal iterator position
 			_obj: Sequence  #: Sequence object to iterate
 
-			def __init__(self, obj: Sequence):
+			def __init__(self, obj: Sequence) -> None:
 				self._i = 0
 				self._obj = obj
 
@@ -293,7 +294,7 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 	_yamlConfig: YAML
 
-	def __init__(self, configFile: Path):
+	def __init__(self, configFile: Path) -> None:
 		"""
 		Initializes a configuration instance that reads a YAML file as input.
 

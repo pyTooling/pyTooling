@@ -208,7 +208,7 @@ class Base(
 ):
 	_dict: Dict[DictKeyType, DictValueType]  #: Dictionary to store key-value-pairs.
 
-	def __init__(self):
+	def __init__(self) -> None:
 		"""
 		.. todo:: GRAPH::Base::init Needs documentation.
 
@@ -281,7 +281,7 @@ class BaseWithIDValueAndWeight(
 	_value:     Nullable[ValueType]   #: Field storing the object's value of any type.
 	_weight:    Nullable[WeightType]  #: Field storing the object's weight.
 
-	def __init__(self, identifier: IDType = None, value: ValueType = None, weight: WeightType = None):
+	def __init__(self, identifier: IDType = None, value: ValueType = None, weight: WeightType = None) -> None:
 		"""
 		.. todo:: GRAPH::Vertex::init Needs documentation.
 
@@ -337,7 +337,7 @@ class BaseWithName(
 ):
 	_name: Nullable[str]  #: Field storing the object's name.
 
-	def __init__(self, name: str = None):
+	def __init__(self, name: str = None) -> None:
 		"""
 		.. todo:: GRAPH::BaseWithName::init Needs documentation.
 
@@ -388,7 +388,7 @@ class BaseWithVertices(
 								'LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType'
 								']']  #: Field storing a set of vertices.
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable['Vertex'] = None):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable['Vertex'] = None) -> None:
 		"""
 		.. todo:: GRAPH::Component::init Needs documentation.
 
@@ -463,7 +463,7 @@ class Vertex(
 	_inboundLinks:   List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound links.
 	_outboundLinks:  List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound links.
 
-	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None, subgraph: 'Subgraph' = None):
+	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None, subgraph: 'Subgraph' = None) -> None:
 		"""
 		.. todo:: GRAPH::Vertex::init Needs documentation.
 
@@ -1308,7 +1308,7 @@ class Vertex(
 			parent: 'Node'
 			ref: Vertex
 
-			def __init__(self, parent: 'Node', ref: Vertex):
+			def __init__(self, parent: 'Node', ref: Vertex) -> None:
 				self.parent = parent
 				self.ref = ref
 
@@ -1401,7 +1401,7 @@ class Vertex(
 			distance: EdgeWeightType
 			ref: Vertex
 
-			def __init__(self, parent: 'Node', distance: EdgeWeightType, ref: Vertex):
+			def __init__(self, parent: 'Node', distance: EdgeWeightType, ref: Vertex) -> None:
 				self.parent = parent
 				self.distance = distance
 				self.ref = ref
@@ -1569,7 +1569,7 @@ class BaseEdge(
 	_source:      Vertex
 	_destination: Vertex
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None) -> None:
 		"""
 		.. todo:: GRAPH::BaseEdge::init Needs documentation.
 
@@ -1624,7 +1624,7 @@ class Edge(
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None):
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None) -> None:
 		"""
 		.. todo:: GRAPH::Edge::init Needs documentation.
 
@@ -1684,7 +1684,7 @@ class Link(
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: LinkWeightType = None):
+	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: LinkWeightType = None) -> None:
 		"""
 		.. todo:: GRAPH::Edge::init Needs documentation.
 
@@ -1751,7 +1751,7 @@ class BaseGraph(
 	_linksWithID:       Dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_linksWithoutID:    List[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
-	def __init__(self, name: str = None):  #, vertices: Iterable[Vertex] = None):
+	def __init__(self, name: str = None):  #, vertices: Iterable[Vertex] = None) -> None:
 		"""
 		.. todo:: GRAPH::BaseGraph::init Needs documentation.
 
@@ -2238,7 +2238,7 @@ class Subgraph(
 
 	_graph:    'Graph'
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None) -> None:
 		"""
 		.. todo:: GRAPH::Subgraph::init Needs documentation.
 
@@ -2300,7 +2300,7 @@ class View(
 
 	"""
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None) -> None:
 		"""
 		.. todo:: GRAPH::View::init Needs documentation.
 
@@ -2346,7 +2346,7 @@ class Component(
 
 	"""
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None):
+	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None) -> None:
 		"""
 		.. todo:: GRAPH::Component::init Needs documentation.
 
@@ -2397,7 +2397,7 @@ class Graph(
 	_views:             Set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
-	def __init__(self, name: str = None):
+	def __init__(self, name: str = None) -> None:
 		"""
 		.. todo:: GRAPH::Graph::init Needs documentation.
 

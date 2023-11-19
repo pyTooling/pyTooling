@@ -34,9 +34,7 @@ Unit tests for attributes attached to methods.
 """
 from unittest     import TestCase
 
-from pyAttributes import Attribute, AttributeHelperMixin
-
-from .            import zip
+from pyTooling.Attributes import Attribute
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,15 +43,63 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Attribute1(Attribute):
-	pass
+class ApplyFunctionAttributes(TestCase):
+	def test_SingleFunction(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		def func1():
+			pass
+
+		foundFunctions = [c for c in AttributeA.GetFunctions()]
+
+		self.assertListEqual(foundFunctions, [func1])
+
+	def test_MultipleFunctions(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		def func1():
+			pass
+
+		@AttributeA()
+		def func2():
+			pass
+
+		foundFunctions = [c for c in AttributeA.GetFunctions()]
+
+		self.assertListEqual(foundFunctions, [func1, func2])
 
 
-@Attribute1()
-def Function1():
-	pass
+class ApplyFunctionAttributes_1(TestCase):
+	def test_SingleFunction(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		def func1():
+			pass
+
+		foundFunctions = [c for c in AttributeA.GetFunctions()]
+
+		self.assertListEqual(foundFunctions, [func1])
 
 
-class Functions(TestCase):
-	def test_FindFunctions(self):
-		pass
+class ApplyFunctionAttributes_2(TestCase):
+	def test_MultipleFunctions(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		def func1():
+			pass
+
+		@AttributeA()
+		def func2():
+			pass
+
+		foundFunctions = [c for c in AttributeA.GetFunctions()]
+
+		self.assertListEqual(foundFunctions, [func1, func2])

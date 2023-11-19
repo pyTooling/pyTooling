@@ -53,7 +53,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -70,7 +70,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -90,7 +90,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -112,7 +112,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -137,7 +137,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -162,7 +162,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod

@@ -82,37 +82,37 @@ class GitUnknownOS(Program):
 class ExplicitPathsOnLinux(TestCase, Helper):
 	_binaryDirectoryPath = Path("/usr/bin")
 
-	def test_BinaryDirectory(self):
+	def test_BinaryDirectory(self) -> None:
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 
-		executable = self.getExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\"]", repr(tool))
 		self.assertEqual(f"\"{executable}\"", str(tool))
 
-	def test_BinaryDirectory_NotAPath(self):
+	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
-	def test_BinaryDirectory_DoesNotExist(self):
+	def test_BinaryDirectory_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
-	def test_ExecutablePath(self):
+	def test_ExecutablePath(self) -> None:
 		tool = Git(executablePath=self._binaryDirectoryPath / "git")
 
-		executable = self.getExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\"]", repr(tool))
 		self.assertEqual(f"\"{executable}\"", str(tool))
 
-	def test_ExecutablePath_NotAPath(self):
+	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
 
-	def test_ExecutablePath_DoesNotExist(self):
+	def test_ExecutablePath_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
@@ -121,55 +121,55 @@ class ExplicitPathsOnLinux(TestCase, Helper):
 class ExplicitPathsOnWindows(TestCase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 
-	def test_BinaryDirectory(self):
+	def test_BinaryDirectory(self) -> None:
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 
-		executable = self.getExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\"]", repr(tool))
 		self.assertEqual(f"\"{executable}\"", str(tool))
 
-	def test_BinaryDirectory_NotAPath(self):
+	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
-	def test_BinaryDirectory_DoesNotExist(self):
+	def test_BinaryDirectory_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
-	def test_ExecutablePath(self):
+	def test_ExecutablePath(self) -> None:
 		tool = Git(executablePath=self._binaryDirectoryPath / "git.exe")
 
-		executable = self.getExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\"]", repr(tool))
 		self.assertEqual(f"\"{executable}\"", str(tool))
 
-	def test_ExecutablePath_NotAPath(self):
+	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git.exe"))
 
-	def test_ExecutablePath_DoesNotExist(self):
+	def test_ExecutablePath_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt.exe")
 
 
 class CommonOptions(TestCase, Helper):
-	def test_UnknownOS(self):
+	def test_UnknownOS(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = GitUnknownOS()
 
-	def test_BinaryDirectory_UnknownOS(self):
+	def test_BinaryDirectory_UnknownOS(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = GitUnknownOS(binaryDirectoryPath=Path(""))
 
-	def test_NotInPath(self):
+	def test_NotInPath(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = Gitt()
 
-	def test_SetUnknownFlag(self):
+	def test_SetUnknownFlag(self) -> None:
 		tool = Git()
 		with self.assertRaises(TypeError):
 			tool["version"] = True
@@ -181,7 +181,7 @@ class CommonOptions(TestCase, Helper):
 		with self.assertRaises(KeyError):
 			tool[tool.FlagVersion] = True
 
-	def test_GetUnknownFlag(self):
+	def test_GetUnknownFlag(self) -> None:
 		tool = Git()
 		with self.assertRaises(KeyError):
 			_ = tool[tool.FlagVersion]
@@ -190,37 +190,37 @@ class CommonOptions(TestCase, Helper):
 		with self.assertRaises(TypeError):
 			_ = tool["version"]
 
-	def test_VersionFlag(self):
+	def test_VersionFlag(self) -> None:
 		tool = Git()
 		tool[tool.FlagVersion] = True
 
-		executable = self.getExecutablePath("git")
+		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "--version"], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\", \"--version\"]", repr(tool))
 
-	def test_HelpFlag(self):
+	def test_HelpFlag(self) -> None:
 		tool = Git()
 		tool[tool.FlagHelp] = True
 
-		executable = self.getExecutablePath("git")
+		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "--help"], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\", \"--help\"]", repr(tool))
 
-	def test_HelpCommand(self):
+	def test_HelpCommand(self) -> None:
 		tool = Git()
 		tool[tool.CommandHelp] = True
 
-		executable = self.getExecutablePath("git")
+		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "help"], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\", \"help\"]", repr(tool))
 
 
 class Commit(TestCase, Helper):
-	def test_CommitWithMessage(self):
+	def test_CommitWithMessage(self) -> None:
 		tool = Git()
 		tool[tool.CommandCommit] = True
 		tool[tool.ValueCommitMessage] = "Initial commit."
 
-		executable = self.getExecutablePath("git")
+		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "commit", "-m", "Initial commit."], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\", \"commit\", \"-m\", \"Initial commit.\"]", repr(tool))

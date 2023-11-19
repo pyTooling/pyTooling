@@ -57,7 +57,7 @@ class Timer(SlottedObject):
 	_diffTime: int
 	_diffTimes: List[int]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self._timers = {}
 
 		self._startTime = None

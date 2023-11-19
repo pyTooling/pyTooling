@@ -50,7 +50,7 @@ class PythonImplementation(Flag):
 
 @export
 class PythonVersion(SemanticVersion):
-	def __init__(self):
+	def __init__(self) -> None:
 		from sys import version_info
 
 		super().__init__(version_info.major, version_info.minor, version_info.micro)
@@ -106,6 +106,9 @@ class Platforms(Flag):
 	Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
 	Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64   #: Group: Clang64 runtime running on Windows x86-64
 
+	Windows_Cygwin32 =      OS_Windows | ENV_Cygwin | ARCH_x86_32            #: Group: 32-bit Cygwin runtime on Windows x86-64
+	Windows_Cygwin64 =      OS_Windows | ENV_Cygwin | ARCH_x86_64            #: Group: 64-bit Cygwin runtime on Windows x86-64
+
 
 @export
 class Platform(metaclass=ExtendedType, singleton=True, slots=True):
@@ -120,7 +123,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	_pythonImplementation: PythonImplementation
 	_pythonVersion:        PythonVersion
 
-	def __init__(self):
+	def __init__(self) -> None:
 		import sys
 		import os
 		import platform
@@ -132,7 +135,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			self._pythonImplementation = PythonImplementation.CPython
 		elif pythonImplementation == "PyPy":
 			self._pythonImplementation = PythonImplementation.PyPy
-		else:
+		else:  # pragma: no cover
 			self._pythonImplementation = PythonImplementation.Unknown
 
 		# Discover the Python version
@@ -165,7 +168,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			elif sysconfig_platform.startswith("mingw"):
 				if machine == "AMD64":
 					self._platform |= Platforms.ARCH_x86_64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for Windows.")
 
 				if sysconfig_platform == "mingw_i686":
@@ -176,9 +179,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
 				elif sysconfig_platform == "mingw_x86_64_clang":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
-			else:
+			else:  # pragma: no cover
 				raise Exception(f"Unknown platform '{sysconfig_platform}' running on Windows.")
 
 		elif os.name == "posix":
@@ -189,7 +192,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ARCH_x86_64
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
 					self._platform |= Platforms.ARCH_AArch64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
 			elif sys_platform == "darwin":
@@ -209,39 +212,30 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ARCH_x86_32
 				elif machine == "x86_64":
 					self._platform |= Platforms.ARCH_x86_64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
 
 			elif sys_platform == "cygwin":
 				self._platform |= Platforms.OS_Windows
 
-				if sysconfig_platform.startswith("msys"):
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MSYS
-
-					if machine == "i686":
-						self._platform |= Platforms.ARCH_x86_32
-					elif machine == "x86_64":
-						self._platform |= Platforms.ARCH_x86_64
-					else:
-						raise Exception(f"Unknown architecture '{machine}' for MSYS2 on Windows.")
-
-				elif sysconfig_platform.startswith("mingw64"):
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64 | Platforms.ARCH_x86_64
-				else:
+				if machine == "i686":
+					self._platform |= Platforms.ARCH_x86_32
+				elif machine == "x86_64":
+					self._platform |= Platforms.ARCH_x86_64
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
 			elif sys_platform.startswith("freebsd"):
 				if machine == "amd64":
 					self._platform = Platforms.FreeBSD
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for FreeBSD.")
-			else:
+			else:  # pragma: no cover
 				raise Exception(f"Unknown POSIX platform '{sys_platform}'.")
-		else:
+		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
 		# print(self._platform)
-
 
 	@property
 	def PythonImplementation(self) -> PythonImplementation:
@@ -360,6 +354,22 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		return Platforms.Windows_MSYS2_Clang64 in self._platform
 
 	@property
+	def IsCygwin32OnWindows(self) -> bool:
+		"""Returns true, if the platform is a 32-bit Cygwin runtime on Windows.
+
+		:returns: ``True``, if the platform is a 32-bit Cygwin runtime on Windows.
+		"""
+		return Platforms.Windows_Cygwin32 in self._platform
+
+	@property
+	def IsCygwin64OnWindows(self) -> bool:
+		"""Returns true, if the platform is a 64-bit Cygwin runtime on Windows.
+
+		:returns: ``True``, if the platform is a 64-bit Cygwin runtime on Windows.
+		"""
+		return Platforms.Windows_Cygwin64 in self._platform
+
+	@property
 	def IsPOSIX(self) -> bool:
 		"""
 		Returns true, if the platform is POSIX or POSIX-like.
@@ -413,7 +423,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			return ""
 		elif Platforms.OS_MacOS in self._platform:
 			return ""
-		else:
+		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
 	@property
@@ -431,7 +441,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			return "so"
 		elif Platforms.OS_MacOS in self._platform:
 			return "lib"
-		else:
+		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
 	def __repr__(self) -> str:

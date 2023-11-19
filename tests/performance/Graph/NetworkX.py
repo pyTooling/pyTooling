@@ -44,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Graph(PerformanceTest):
-	def test_AddEdge_Flat(self):
+	def test_AddEdge_Flat(self) -> None:
 		def wrapper(count: int):
 			def func():
 				g = nx_DiGraph()
@@ -57,7 +57,7 @@ class Graph(PerformanceTest):
 
 		self.runSizedTests(wrapper, self.counts)
 
-	def test_AddEdge_Linear(self):
+	def test_AddEdge_Linear(self) -> None:
 		def wrapper(count: int):
 			def func():
 				g = nx_DiGraph()
@@ -87,7 +87,7 @@ class RandomGraph(PerformanceTest):
 
 		return graph
 
-	def test_BFS(self):
+	def test_BFS(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				bfsList = [v for v in bfs_predecessors(graph, componentStartVertex)]
@@ -98,7 +98,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_DFS(self):
+	def test_DFS(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				dfsList = [v for v in dfs_preorder_nodes(graph, componentStartVertex)]
@@ -109,7 +109,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_ShortestPathByHops(self):
+	def test_ShortestPathByHops(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
@@ -124,7 +124,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_ShortestPathByWeight(self):
+	def test_ShortestPathByWeight(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:

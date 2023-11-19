@@ -124,7 +124,7 @@ and :pycode:`deleter` can't be used.
       class Data:
         _data: int
 
-        def __init__(self, data: int):
+        def __init__(self, data: int) -> None:
           self._data = data
 
         @readonly
@@ -237,8 +237,8 @@ the syntax for applying a meta-class is quite heavy, this decorator simplifies t
 |    class A:                                        |      _field1: int                                   |
 |      _field1: int                                  |      _field2: str                                   |
 |      _field2: str                                  |                                                     |
-|                                                    |      def __init__(self, arg1: int, arg2: str):      |
-|      def __init__(self, arg1: int, arg2: str):     |        self._field1 = arg1                          |
+|                                                    |      def __init__(self, arg1: int, arg2: str) -> None:      |
+|      def __init__(self, arg1: int, arg2: str) -> None:     |        self._field1 = arg1                          |
 |        self._field1 = arg1                         |        self._field2 = arg2                          |
 |        self._field2 = arg2                         |                                                     |
 |                                                    |                                                     |
@@ -270,7 +270,7 @@ the syntax for applying a meta-class is quite heavy, this decorator simplifies t
 |      _field1: int                                  |      _field1: int                                  |
 |      _field2: str                                  |      _field2: str                                  |
 |                                                    |                                                    |
-|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str):     |
+|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str) -> None:     |
 |        self._field1 = arg1                         |        self._field1 = arg1                         |
 |        self._field2 = arg2                         |        self._field2 = arg2                         |
 |                                                    |                                                    |
@@ -279,7 +279,7 @@ the syntax for applying a meta-class is quite heavy, this decorator simplifies t
 |      _field3: int                                  |      _field3: int                                  |
 |      _field4: str                                  |      _field4: str                                  |
 |                                                    |                                                    |
-|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str):     |
+|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str) -> None:     |
 |        self._field3 = arg1                         |        self._field3 = arg1                         |
 |        self._field4 = arg2                         |        self._field4 = arg2                         |
 |        super().__init__(arg1, arg2)                |        super().__init__(arg1, arg2)                |
@@ -295,7 +295,7 @@ the syntax for applying a meta-class is quite heavy, this decorator simplifies t
 |                                                    |                                                    |
 |    @export                                         |    @export                                         |
 |    class D(B, C):                                  |    class D(B, C):                                  |
-|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str):     |
+|      def __init__(self, arg1: int, arg2: str):     |      def __init__(self, arg1: int, arg2: str) -> None:     |
 |        super().__init__(arg1, arg2)                |        super().__init__(arg1, arg2)                |
 |                                                    |                                                    |
 +----------------------------------------------------+----------------------------------------------------+

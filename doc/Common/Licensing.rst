@@ -45,7 +45,7 @@ equality (``==``, ``!=``) based on there SPDX identifier.
 
    @export
    class License(metaclass=ExtendedType, slots=True):
-     def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False):
+     def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False) -> None:
 
       @property
       def Name(self) -> str:

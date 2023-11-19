@@ -30,18 +30,39 @@
 # ==================================================================================================================== #
 #
 """A set of helpers to implement a text user interface (TUI) in a terminal."""
-
 from enum                   import Enum, unique
-from platform               import system as platform_system
-from typing                 import NoReturn, Tuple, Any
+from io                     import TextIOWrapper
+from sys                    import stdin, stdout, stderr
+from textwrap               import dedent
+from typing                 import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 
+from pyTooling.Exceptions   import PlatformNotSupportedException, ExceptionBase
 from pyTooling.Decorators   import export
 from pyTooling.MetaClasses  import ExtendedType, mixin
+from pyTooling.Common       import lastItem
+from pyTooling.Platform     import Platform
+
+try:
+	from colorama import Fore as Foreground
+except ImportError as ex:  # pragma: no cover
+	raise Exception(f"Optional dependency 'colorama' not installed. Either install pyTooling with extra dependencies 'pyTooling[terminal]' or install 'colorama' directly.") from ex
 
 
 @export
-class Terminal(metaclass=ExtendedType, singleton=True):
-	FATAL_EXIT_CODE = 255
+class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True):
+	"""
+	The class offers a basic terminal application base-class.
+
+	It offers basic colored output via `colorama <https://GitHub.com/tartley/colorama>`__ as well as retrieving the
+	terminal's width.
+	"""
+
+	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
+	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
+	PYTHON_VERSION_CHECK_FAILED_EXIT_CODE: ClassVar[int] = 254   #: Return code, if version check was not successful.
+	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
+	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
+	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
 
 	try:
 		from colorama import Fore as Foreground
@@ -89,10 +110,13 @@ class Terminal(metaclass=ExtendedType, singleton=True):
 			"WARNING":     ""
 		}               #: Terminal colors
 
-	_width:  int      #: Terminal width in characters
-	_height: int      #: Terminal height in characters
+	_stdin:  TextIOWrapper  #: STDIN
+	_stdout: TextIOWrapper  #: STDOUT
+	_stderr: TextIOWrapper  #: STDERR
+	_width:  int            #: Terminal width in characters
+	_height: int            #: Terminal height in characters
 
-	def __init__(self):
+	def __init__(self) -> None:
 		"""
 		Initialize a terminal.
 
@@ -102,123 +126,42 @@ class Terminal(metaclass=ExtendedType, singleton=True):
 		.. [#f_colorama] Colorama on Github: https://GitHub.com/tartley/colorama
 		"""
 
-		self.initColors()
+		self._stdin =  stdin
+		self._stdout = stdout
+		self._stderr = stderr
+		if stdout.isatty():
+			self.InitializeColors()
+		else:
+			self.UninitializeColors()
 		self._width, self._height = self.GetTerminalSize()
 
-	@classmethod
-	def initColors(cls) -> None:
-		"""Initialize the terminal for color support by colorama."""
+	def InitializeColors(self) -> bool:
+		"""
+		Initialize the terminal for color support by `colorama <https://GitHub.com/tartley/colorama>`__.
+
+		:returns: True, if 'colorama' package could be imported and initialized.
+		"""
 		try:
 			from colorama import init
 
-			init()#strip=False)
+			init()
+			return True
 		except ImportError:  # pragma: no cover
-			pass
+			return False
 
-	@classmethod
-	def deinitColors(cls) -> None:
-		"""Uninitialize the terminal for color support by colorama."""
+	def UninitializeColors(self) -> bool:
+		"""
+		Uninitialize the terminal for color support by `colorama <https://GitHub.com/tartley/colorama>`__.
+
+		:returns: True, if 'colorama' package could be imported and uninitialized.
+		"""
 		try:
 			from colorama import deinit
 
 			deinit()
+			return True
 		except ImportError:  # pragma: no cover
-			pass
-
-	@classmethod
-	def fatalExit(cls, returnCode:int = 0) -> NoReturn:
-		"""Exit the terminal application by uninitializing color support and returning a fatal exit code."""
-		cls.exit(cls.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
-
-	@classmethod
-	def exit(cls, returnCode:int = 0) -> NoReturn:
-		"""Exit the terminal application by uninitializing color support and returning an exit code."""
-		cls.deinitColors()
-		exit(returnCode)
-
-	@classmethod
-	def versionCheck(cls, version) -> None:
-		"""Check if the used Python interpreter fulfills the minimum version requirements."""
-
-		from sys import version_info
-
-		if version_info < version:
-			cls.initColors()
-
-			print("{RED}ERROR:{NOCOLOR} Used Python interpreter ({major}.{minor}.{micro}-{level}) is to old.".format(
-				major=version_info.major,
-				minor=version_info.minor,
-				micro=version_info.micro,
-				level=version_info.releaselevel,
-				**cls.Foreground
-			))
-			print(f"  Minimal required Python version is {version[0]}.{version[1]}.{version[2]}")
-
-			cls.exit(1)
-
-	@classmethod
-	def printException(cls, ex) -> NoReturn:
-		"""Prints an exception of type :exc:`Exception`."""
-		from traceback import print_tb, walk_tb
-
-		cls.initColors()
-
-		print("{RED}FATAL: An unknown or unhandled exception reached the topmost exception handler!{NOCOLOR}".format(**cls.Foreground))
-		print("  {YELLOW}Exception type:{NOCOLOR}      {typename}".format(typename=ex.__class__.__name__, **cls.Foreground))
-		print("  {YELLOW}Exception message:{NOCOLOR}   {message!s}".format(message=ex, **cls.Foreground))
-		frame, sourceLine = [x for x in walk_tb(ex.__traceback__)][-1]
-		filename = frame.f_code.co_filename
-		funcName = frame.f_code.co_name
-		print("  {YELLOW}Caused in:{NOCOLOR}           {function} in file '{filename}' at line {line}".format(
-			function=funcName,
-			filename=filename,
-			line=sourceLine,
-			**cls.Foreground
-		))
-		if ex.__cause__ is not None:
-			print("    {DARK_YELLOW}Caused by type:{NOCOLOR}    {typename}".format(typename=ex.__cause__.__class__.__name__, **cls.Foreground))
-			print("    {DARK_YELLOW}Caused by message:{NOCOLOR} {message!s}".format(message=ex.__cause__, **cls.Foreground))
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-		print_tb(ex.__traceback__)
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-		print(("{RED}Please report this bug at GitHub: https://GitHub.com/pyTooling/pyTooling.TerminalUI/issues{NOCOLOR}").format(**cls.Foreground))
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-
-		cls.exit(1)
-
-	@classmethod
-	def printNotImplementedError(cls, ex) -> NoReturn:
-		"""Prints a not-implemented exception of type :exc:`NotImplementedError`."""
-		from traceback import walk_tb
-
-		cls.initColors()
-
-		frame, _ = [x for x in walk_tb(ex.__traceback__)][-1]
-		filename = frame.f_code.co_filename
-		funcName = frame.f_code.co_name
-		print("{RED}NOT IMPLEMENTED:{NOCOLOR} {function} in file '{filename}': {message!s}".format(
-			function=funcName,
-		  filename=filename,
-		  message=ex,
-		  **cls.Foreground
-		))
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-		print(("{RED}Please report this bug at GitHub: https://GitHub.com/pyTooling/pyTooling.TerminalUI/issues{NOCOLOR}").format(**cls.Foreground))
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-
-		cls.exit(1)
-
-	@classmethod
-	def printExceptionBase(cls, ex) -> NoReturn:
-		cls.initColors()
-
-		print("{RED}FATAL: A known but unhandled exception reached the topmost exception handler!{NOCOLOR}".format(**cls.Foreground))
-		print("{RED}ERROR:{NOCOLOR} {message}".format(message=ex.message, **cls.Foreground))
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-		print(("{RED}Please report this bug at GitHub: https://GitHub.com/pyTooling/pyTooling.TerminalUI/issues{NOCOLOR}").format(**cls.Foreground))
-		print(("{RED}" + ("-" * 80) + "{NOCOLOR}").format(**cls.Foreground))
-
-		cls.exit(1)
+			return False
 
 	@property
 	def Width(self) -> int:
@@ -232,18 +175,20 @@ class Terminal(metaclass=ExtendedType, singleton=True):
 
 	@staticmethod
 	def GetTerminalSize() -> Tuple[int, int]:
-		"""Returns the terminal size as tuple (width, height) for Windows, Mac OS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows)."""
-		size = None
+		"""
+		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
 
-		# FIXME: improve with own platform variable / singleton.
-		platform = platform_system()
-		if platform == "Windows":
-			size = Terminal.__GetTerminalSizeOnWindows()
-		elif (platform in ["Linux", "Darwin"] or
-				platform.startswith("CYGWIN") or
-				platform.startswith("MINGW32") or
-				platform.startswith("MINGW64")):
-			size = Terminal.__GetTerminalSizeOnLinux()
+		:returns: A tuple containing width and height of the terminal's size in characters.
+		:raises PlatformNotSupportedException: When a platform is not yet supported.
+		"""
+		platform = Platform()
+		if platform.IsNativeWindows:
+			size = TerminalBaseApplication.__GetTerminalSizeOnWindows()
+		elif (platform.IsNativeLinux or platform.IsNativeMacOS or platform.IsMinGW32OnWindows or
+					platform.IsMinGW64OnWindows or platform.IsCygwin32OnWindows or platform.IsClang64OnWindows):
+			size = TerminalBaseApplication.__GetTerminalSizeOnLinux()
+		else:  # pragma: no cover
+			raise PlatformNotSupportedException(f"Platform '{platform}' not yet supported.")
 
 		if size is None:   # pragma: no cover
 			size = (80, 25)  # default size
@@ -252,7 +197,13 @@ class Terminal(metaclass=ExtendedType, singleton=True):
 
 	@staticmethod
 	def __GetTerminalSizeOnWindows() -> Tuple[int, int]:
-		"""Returns the current terminal window's size for Windows."""
+		"""
+		Returns the current terminal window's size for Windows.
+
+		``kernel32.dll:GetConsoleScreenBufferInfo()`` is used to retrieve the information.
+
+		:returns: A tuple containing width and height of the terminal's size in characters.
+		"""
 		try:
 			from ctypes import windll, create_string_buffer
 			from struct import unpack as struct_unpack
@@ -268,54 +219,248 @@ class Terminal(metaclass=ExtendedType, singleton=True):
 		except ImportError:
 			pass
 
-		return Terminal.__GetTerminalSizeWithTPut()
+		return None
+		# return Terminal.__GetTerminalSizeWithTPut()
+
+	# @staticmethod
+	# def __GetTerminalSizeWithTPut() -> Tuple[int, int]:
+	# 	"""
+	# 	Returns the current terminal window's size for Windows.
+	#
+	# 	``tput`` is used to retrieve the information.
+	#
+	# 	:returns: A tuple containing width and height of the terminal's size in characters.
+	# 	"""
+	# 	from subprocess import check_output
+	#
+	# 	try:
+	# 		width =  int(check_output(("tput", "cols")))
+	# 		height = int(check_output(("tput", "lines")))
+	# 		return (width, height)
+	# 	except:
+	# 		pass
 
 	@staticmethod
-	def __GetTerminalSizeWithTPut() -> Tuple[int, int]:
-		from shlex      import split as shlex_split
-		from subprocess import check_output
+	def __GetTerminalSizeOnLinux() -> Tuple[int, int] | None:
+		"""
+		Returns the current terminal window's size for Linux.
 
-		try:
-			width =  int(check_output(shlex_split('tput cols')))
-			height = int(check_output(shlex_split('tput lines')))
-			return (width, height)
-		except:
-			pass
+		``ioctl(TIOCGWINSZ)`` is used to retrieve the information. As a fallback, environment variables ``COLUMNS`` and
+		``LINES`` are checked.
 
-	@staticmethod
-	def __GetTerminalSizeOnLinux() -> Tuple[int, int]:
-		"""Returns the current terminal window's size for Linux."""
+		:returns: A tuple containing width and height of the terminal's size in characters.
+		"""
 		import os
 
-		def ioctl_GWINSZ(fd):
+		def ioctl_GWINSZ(fd) -> Tuple[int, int] | None:
 			"""GetWindowSize of file descriptor."""
 			try:
 				from fcntl    import ioctl      as fcntl_ioctl
 				from struct   import unpack     as struct_unpack
 				from termios  import TIOCGWINSZ
-
-				return struct_unpack('hh', fcntl_ioctl(fd, TIOCGWINSZ, '1234'))
 			except ImportError:
-				pass
-			except OSError:
-				pass
-
-		#               STDIN              STDOUT             STDERR
-		cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-		if not cr:
-			try:
-				fd = os.open(os.ctermid(), os.O_RDONLY)
-				cr = ioctl_GWINSZ(fd)
-				os.close(fd)
-			except OSError:
-				pass
-		if not cr:
-			try:
-				cr = (os.environ['LINES'], os.environ['COLUMNS'])
-			except:
 				return None
 
-		return (int(cr[1]), int(cr[0]))
+			try:
+				struct = struct_unpack('hh', fcntl_ioctl(fd, TIOCGWINSZ, '1234'))
+			except OSError:
+				return None
+			try:
+				return (int(struct[1]), int(struct[0]))
+			except TypeError:
+				return None
+
+		# STDIN, STDOUT, STDERR
+		for fd in range(3):
+			size = ioctl_GWINSZ(fd)
+			if size is not None:
+				return size
+		else:
+			try:
+				fd = os.open(os.ctermid(), os.O_RDONLY)
+				size = ioctl_GWINSZ(fd)
+				os.close(fd)
+				return size
+			except OSError:
+				pass
+
+		try:
+			columns = int(os.getenv("COLUMNS"))
+			lines = int(os.getenv("LINES"))
+			return (columns, lines)
+		except TypeError:
+			pass
+
+		return None
+
+	def WriteToStdOut(self, message: str) -> int:
+		"""
+		Low-level method for writing to ``STDOUT``.
+
+		:param message: Message to write to ``STDOUT``.
+		:return:        Number of written characters.
+		"""
+		return self._stdout.write(message)
+
+	def WriteLineToStdOut(self, message: str, end: str = "\n") -> int:
+		"""
+		Low-level method for writing to ``STDOUT``.
+
+		:param message: Message to write to ``STDOUT``.
+		:param end:     Use newline character. Default: ``\n``
+		:return:        Number of written characters.
+		"""
+		return self._stdout.write(message + end)
+
+	def WriteToStdErr(self, message: str) -> int:
+		"""
+		Low-level method for writing to ``STDERR``.
+
+		:param message: Message to write to ``STDERR``.
+		:return:        Number of written characters.
+		"""
+		return self._stderr.write(message)
+
+	def WriteLineToStdErr(self, message: str, end: str = "\n") -> int:
+		"""
+		Low-level method for writing to ``STDERR``.
+
+		:param message: Message to write to ``STDERR``.
+		:param end:     Use newline character. Default: ``\n``
+		:return:        Number of written characters.
+		"""
+		return self._stderr.write(message + end)
+
+	def FatalExit(self, returnCode:int = 0) -> NoReturn:
+		"""
+		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
+		"""
+		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
+
+	def Exit(self, returnCode:int = 0) -> NoReturn:
+		"""
+		Exit the terminal application by uninitializing color support and returning an Exit code.
+		"""
+		self.UninitializeColors()
+		exit(returnCode)
+
+	def CheckPythonVersion(self, version) -> None:
+		"""
+		Check if the used Python interpreter fulfills the minimum version requirements.
+		"""
+		from sys import version_info as info
+
+		if info < version:
+			self.InitializeColors()
+
+			self.WriteLineToStdErr(dedent(f"""\
+				{{RED}}[ERROR]{{NOCOLOR}} Used Python interpreter ({info.major}.{info.minor}.{info.micro}-{info.releaselevel}) is to old.
+				{{indent}}{{YELLOW}}Minimal required Python version is {version[0]}.{version[1]}.{version[2]}{{NOCOLOR}}\
+				""").format(indent=self.INDENT, **self.Foreground))
+
+			self.Exit(self.PYTHON_VERSION_CHECK_FAILED_EXIT_CODE)
+
+	def PrintException(self, ex: Exception) -> NoReturn:
+		"""
+		Prints an exception of type :exc:`Exception` and its traceback.
+
+		If the exception as a nested action, the cause is printed as well.
+
+		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		"""
+		from traceback import print_tb, walk_tb
+
+		frame, sourceLine = lastItem(walk_tb(ex.__traceback__))
+		filename = frame.f_code.co_filename
+		funcName = frame.f_code.co_name
+
+		self.WriteLineToStdErr(dedent(f"""\
+			{{RED}}[FATAL] An unknown or unhandled exception reached the topmost exception handler!{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{RED}}{ex.__class__.__name__}{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {ex!s}
+			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
+			""").format(indent=self.INDENT, **self.Foreground))
+
+		if ex.__cause__ is not None:
+			self.WriteLineToStdErr(dedent(f"""\
+				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{RED}}{ex.__cause__.__class__.__name__}{{NOCOLOR}}
+				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {ex.__cause__!s}\
+				""").format(indent2=self.INDENT*2, **self.Foreground))
+
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		print_tb(ex.__traceback__, file=self._stderr)
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+
+		if self.ISSUE_TRACKER_URL is not None:
+			self.WriteLineToStdErr(dedent(f"""\
+				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
+				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
+				""").format(indent=self.INDENT, **self.Foreground))
+
+		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
+
+	def PrintNotImplementedError(self, ex: NotImplementedError) -> NoReturn:
+		"""Prints a not-implemented exception of type :exc:`NotImplementedError`."""
+		from traceback import walk_tb
+
+		frame, sourceLine = lastItem(walk_tb(ex.__traceback__))
+		filename = frame.f_code.co_filename
+		funcName = frame.f_code.co_name
+
+		self.WriteLineToStdErr(dedent(f"""\
+			{{RED}}[NOT IMPLEMENTED] An unimplemented function or abstract method was called!{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Function or method:{{NOCOLOR}}   {{RED}}{funcName}(...){{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {ex!s}
+			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
+			""").format(indent=self.INDENT, **self.Foreground))
+
+		if self.ISSUE_TRACKER_URL is not None:
+			self.WriteLineToStdErr(dedent(f"""\
+				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}
+				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
+				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
+				""").format(indent=self.INDENT, **self.Foreground))
+
+		self.Exit(self.NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE)
+
+	def PrintExceptionBase(self, ex: Exception) -> NoReturn:
+		"""
+		Prints an exception of type :exc:`ExceptionBase` and its traceback.
+
+		If the exception as a nested action, the cause is printed as well.
+
+		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		"""
+		from traceback import print_tb, walk_tb
+
+		frame, sourceLine = lastItem(walk_tb(ex.__traceback__))
+		filename = frame.f_code.co_filename
+		funcName = frame.f_code.co_name
+
+		self.WriteLineToStdErr(dedent(f"""\
+			{{RED}}[FATAL] A known but unhandled exception reached the topmost exception handler!{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{RED}}{ex.__class__.__name__}{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {ex!s}
+			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
+			""").format(indent=self.INDENT, **self.Foreground))
+
+		if ex.__cause__ is not None:
+			self.WriteLineToStdErr(dedent(f"""\
+				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{RED}}{ex.__cause__.__class__.__name__}{{NOCOLOR}}
+				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {ex.__cause__!s}\
+				""").format(indent2=self.INDENT * 2, **self.Foreground))
+
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		print_tb(ex.__traceback__, file=self._stderr)
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+
+		if self.ISSUE_TRACKER_URL is not None:
+			self.WriteLineToStdErr(dedent(f"""\
+				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
+				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
+				""").format(indent=self.INDENT, **self.Foreground))
+
+		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
 
 @export
@@ -323,51 +468,93 @@ class Terminal(metaclass=ExtendedType, singleton=True):
 class Severity(Enum):
 	"""Logging message severity levels."""
 
-	Fatal =     30    #: Fatal messages
-	Error =     25    #: Error messages
-	Quiet =     20    #: Always visible messages, even in quiet mode.
-	Warning =   15    #: Warning messages
-	Info =      10    #: Informative messages
-	DryRun =     5    #: Messages visible in a dry-run
-	Normal =     4    #: Normal messages
-	Verbose =    2    #: Verbose messages
-	Debug =      1    #: Debug messages
+	Fatal =    100    #: Fatal messages
+	Error =     70    #: Error messages
+	Quiet =     60    #: Always visible messages, even in quiet mode.
+	Warning =   50    #: Warning messages
+	Info =      20    #: Informative messages
+	Normal =    10    #: Normal messages
+	DryRun =     8    #: Messages visible in a dry-run
+	Verbose =    5    #: Verbose messages
+	Debug =      2    #: Debug messages
 	All =        0    #: All messages
 
 	def __hash__(self):
 		return hash(self.name)
 
 	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two Severity instances (severity level) for equality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both severity levels are equal.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		"""
 		if isinstance(other, Severity):
 			return self.value == other.value
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
 
 	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two Severity instances (severity level) for inequality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both severity levels are unequal.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		"""
 		if isinstance(other, Severity):
 			return self.value != other.value
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
 
 	def __lt__(self, other: Any) -> bool:
+		"""
+		Compare two Severity instances (severity level) for less-than.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if severity levels is less than other severity level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		"""
 		if isinstance(other, Severity):
 			return self.value < other.value
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
 
 	def __le__(self, other: Any) -> bool:
+		"""
+		Compare two Severity instances (severity level) for less-than-or-equal.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if severity levels is less than or equal other severity level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		"""
 		if isinstance(other, Severity):
 			return self.value <= other.value
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
 
 	def __gt__(self, other: Any) -> bool:
+		"""
+		Compare two Severity instances (severity level) for greater-than.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if severity levels is greater than other severity level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		"""
 		if isinstance(other, Severity):
 			return self.value >	other.value
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
 
 	def __ge__(self, other: Any) -> bool:
+		"""
+		Compare two Severity instances (severity level) for greater-than-or-equal.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if severity levels is greater than or equal other severity level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		"""
 		if isinstance(other, Severity):
 			return self.value >= other.value
 		else:
@@ -375,47 +562,87 @@ class Severity(Enum):
 
 
 @export
-class Line:
-	"""Represents a single line message with a severity and indentation level."""
+@unique
+class Mode(Enum):
+	TextToStdOut_ErrorsToStdErr = 0
+	AllLinearToStdOut = 1
+	DataToStdOut_OtherToStdErr = 2
+
+
+@export
+class Line(metaclass=ExtendedType, slots=True):
+	"""Represents a single message line with a severity and indentation level."""
 
 	_LOG_MESSAGE_FORMAT__ = {
 		Severity.Fatal:     "FATAL: {message}",
 		Severity.Error:     "ERROR: {message}",
+		Severity.Quiet:     "{message}",
 		Severity.Warning:   "WARNING: {message}",
 		Severity.Info:      "INFO: {message}",
-		Severity.Quiet:     "{message}",
 		Severity.Normal:    "{message}",
+		Severity.DryRun:    "DRYRUN: {message}",
 		Severity.Verbose:   "VERBOSE: {message}",
 		Severity.Debug:     "DEBUG: {message}",
-		Severity.DryRun:    "DRYRUN: {message}"
-	}                     #: Terminal messages formatting rules
+	}                     #: Message line formatting rules.
 
-	def __init__(self, message: str, severity: Severity = Severity.Normal, indent: int = 0, appendLinebreak: bool = True):
+	_message:         str
+	_severity:        Severity
+	_indent:          int
+	_appendLinebreak: bool
+
+	def __init__(self, message: str, severity: Severity = Severity.Normal, indent: int = 0, appendLinebreak: bool = True) -> None:
 		"""Constructor for a new ``Line`` object."""
-		self._severity =       severity
-		self._message =        message
-		self._indent =         indent
-		self.AppendLinebreak = appendLinebreak
+		self._severity =        severity
+		self._message =         message
+		self._indent =          indent
+		self._appendLinebreak = appendLinebreak
 
+	@property
+	def Message(self) -> str:
+		"""
+		Return the indented line.
+
+		:returns: Raw message of the line.
+		"""
+		return self._message
 
 	@property
 	def Severity(self) -> Severity:
-		"""Return the line's severity level."""
+		"""
+		Return the line's severity level.
+
+		:returns: Severity level of the message line.
+		"""
 		return self._severity
 
 	@property
 	def Indent(self) -> int:
-		"""Return the line's indentation level."""
+		"""
+		Return the line's indentation level.
+
+		:returns: Indentation level.
+		"""
 		return self._indent
 
-	@property
-	def Message(self) -> str:
-		"""Return the indented line."""
-		return ("  " * self._indent) + self._message
+	def IndentBy(self, indent:int) -> int:
+		"""
+		Increase a line's indentation level.
 
-	def IndentBy(self, indent) -> None:
-		"""Increase a line's indentation level."""
-		self._indent += indent
+		:param indent: Indentation level added to the current indentation level.
+		"""
+		# TODO: used named expression starting from Python 3.8
+		indent += self._indent
+		self._indent = indent
+		return indent
+
+	@property
+	def AppendLinebreak(self) -> int:
+		"""
+		Returns if a linebreak should be added at the end of the message.
+
+		:returns: True, if a linebreak should be added.
+		"""
+		return self._appendLinebreak
 
 	def __str__(self) -> str:
 		"""Returns a formatted version of a ``Line`` objects as a string."""
@@ -427,16 +654,16 @@ class Line:
 class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
-	_terminal: Terminal
+	_terminal: TerminalBaseApplication
 
-	def __init__(self, terminal: Terminal = None):
+	def __init__(self, terminal: TerminalBaseApplication = None) -> None:
 		"""MixIn initializer."""
 		self._terminal = terminal
 
 		# FIXME: Alter methods if a terminal is present or set dummy methods
 
 	@property
-	def Terminal(self) -> Terminal:
+	def Terminal(self) -> TerminalBaseApplication:
 		"""Return the local terminal instance."""
 		return self._terminal
 
@@ -447,7 +674,7 @@ class ILineTerminal:
 		return False
 
 	# def _TryWriteLine(self, *args, condition=True, **kwargs):
-	# 	if ((self._terminal is not None) and condition):
+	# 	if (self._terminal is not None) and condition:
 	# 		return self._terminal.TryWrite(*args, **kwargs)
 	# 	return False
 
@@ -507,11 +734,39 @@ class ILineTerminal:
 
 
 @export
-class LineTerminal(Terminal, ILineTerminal):
-	def __init__(self):
+class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
+	_LOG_MESSAGE_FORMAT__ = {
+		Severity.Fatal:   "{DARK_RED}[FATAL]   {message}{NOCOLOR}",
+		Severity.Error:   "{RED}[ERROR]   {message}{NOCOLOR}",
+		Severity.Quiet:   "{WHITE}{message}{NOCOLOR}",
+		Severity.Warning: "{YELLOW}[WARNING] {message}{NOCOLOR}",
+		Severity.Info:    "{WHITE}{message}{NOCOLOR}",
+		Severity.Normal:  "{WHITE}{message}{NOCOLOR}",
+		Severity.DryRun:  "{DARK_CYAN}[DRY] {message}{NOCOLOR}",
+		Severity.Verbose: "{GRAY}{message}{NOCOLOR}",
+		Severity.Debug:   "{DARK_GRAY}{message}{NOCOLOR}"
+	}                   #: Message formatting rules.
+
+	_LOG_LEVEL_ROUTING__: Dict[Severity, Tuple[Callable[[str, str], int]]]  #: Message routing rules.
+	_verbose: bool
+	_debug: bool
+	_quiet: bool
+	_writeLevel: Severity
+	_writeToStdOut: bool
+
+	_lines: List[Line]
+	_baseIndent: int
+
+	_errorCount: int
+	_warningCount: int
+
+	def __init__(self, mode:Mode = Mode.AllLinearToStdOut) -> None:
 		"""Initializer of a line based terminal interface."""
-		Terminal.__init__(self)
-		ILineTerminal.__init__(self, self)
+		TerminalBaseApplication.__init__(self)
+		# ILineTerminal.__init__(self, self)
+
+		self._LOG_LEVEL_ROUTING__ = {}
+		self.__InitializeLogLevelRouting(mode)
 
 		self._verbose =        False
 		self._debug =          False
@@ -522,8 +777,24 @@ class LineTerminal(Terminal, ILineTerminal):
 		self._lines =          []
 		self._baseIndent =     0
 
-		self._errorCounter =   0
-		self._warningCounter = 0
+		self._errorCount =   0
+		self._warningCount = 0
+
+	def __InitializeLogLevelRouting(self, mode: Mode):
+		if mode is Mode.TextToStdOut_ErrorsToStdErr:
+			for severity in Severity:
+				if severity >= Severity.Warning and severity != Severity.Quiet:
+					self._LOG_LEVEL_ROUTING__[severity] = (self.WriteLineToStdErr,)
+				else:
+					self._LOG_LEVEL_ROUTING__[severity] = (self.WriteLineToStdOut,)
+		elif mode is Mode.AllLinearToStdOut:
+			for severity in Severity:
+				self._LOG_LEVEL_ROUTING__[severity] =   (self.WriteLineToStdOut, )
+		elif mode is Mode.DataToStdOut_OtherToStdErr:
+			for severity in Severity:
+				self._LOG_LEVEL_ROUTING__[severity] =   (self.WriteLineToStdErr, )
+		else:  # pragma: no cover
+			raise ExceptionBase(f"Unsupported mode '{mode}'.")
 
 	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True):
 		self._verbose =       True if debug else verbose
@@ -574,36 +845,35 @@ class LineTerminal(Terminal, ILineTerminal):
 	def BaseIndent(self, value: int) -> None:
 		self._baseIndent = value
 
-	_LOG_MESSAGE_FORMAT__ = {
-		Severity.Fatal:   "{DARK_RED}[FATAL]   {message}{NOCOLOR}",
-		Severity.Error:   "{RED}[ERROR]   {message}{NOCOLOR}",
-		Severity.Quiet:   "{WHITE}{message}{NOCOLOR}",
-		Severity.Warning: "{YELLOW}[WARNING] {message}{NOCOLOR}",
-		Severity.Info:    "{WHITE}{message}{NOCOLOR}",
-		Severity.DryRun:  "{DARK_CYAN}[DRY] {message}{NOCOLOR}",
-		Severity.Normal:  "{WHITE}{message}{NOCOLOR}",
-		Severity.Verbose: "{GRAY}{message}{NOCOLOR}",
-		Severity.Debug:   "{DARK_GRAY}{message}{NOCOLOR}"
-	}                   #: Message formatting rules.
+	@property
+	def WarningCount(self) -> int:
+		return self._warningCount
+
+	@property
+	def ErrorCount(self) -> int:
+		return self._errorCount
+
+	@property
+	def Lines(self) -> List[Line]:
+		return self._lines
 
 	def ExitOnPreviousErrors(self) -> None:
 		"""Exit application if errors have been printed."""
-		if self._errorCounter > 0:
+		if self._errorCount > 0:
 			self.WriteFatal("Too many errors in previous steps.")
-			self.fatalExit()
 
 	def ExitOnPreviousWarnings(self) -> None:
 		"""Exit application if warnings have been printed."""
-		if self._warningCounter > 0:
+		if self._warningCount > 0:
 			self.WriteError("Too many warnings in previous steps.")
-			self.exit()
+			self.FatalExit()
 
 	def WriteLine(self, line: Line) -> bool:
 		"""Print a formatted line to the underlying terminal/console offered by the operating system."""
 		if line.Severity >= self._writeLevel:
 			self._lines.append(line)
-			if self._writeToStdOut:
-				print(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=line.Message, **self.Foreground), end="\n" if line.AppendLinebreak else "")
+			for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
+				method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=line.Message, **self.Foreground), end="\n" if line.AppendLinebreak else "")
 			return True
 		else:
 			return False
@@ -614,15 +884,15 @@ class LineTerminal(Terminal, ILineTerminal):
 	def WriteFatal(self, message: str, indent: int = 0, appendLinebreak: bool = True, immediateExit: bool = True) -> bool:
 		ret = self.WriteLine(Line(message, Severity.Fatal, self._baseIndent + indent, appendLinebreak))
 		if immediateExit:
-			self.fatalExit()
+			self.FatalExit()
 		return ret
 
 	def WriteError(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
-		self._errorCounter += 1
+		self._errorCount += 1
 		return self.WriteLine(Line(message, Severity.Error, self._baseIndent + indent, appendLinebreak))
 
 	def WriteWarning(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
-		self._warningCounter += 1
+		self._warningCount += 1
 		return self.WriteLine(Line(message, Severity.Warning, self._baseIndent + indent, appendLinebreak))
 
 	def WriteInfo(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
@@ -632,6 +902,16 @@ class LineTerminal(Terminal, ILineTerminal):
 		return self.WriteLine(Line(message, Severity.Quiet, self._baseIndent + indent, appendLinebreak))
 
 	def WriteNormal(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
+		"""
+		Write a normal message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Indentation level of the message.
+		:param appendLinebreak: Append a linebreak after the message. Default: ``True``
+		:return:                True, if message was actually written.
+		"""
 		return self.WriteLine(Line(message, Severity.Normal, self._baseIndent + indent, appendLinebreak))
 
 	def WriteVerbose(self, message: str, indent: int = 1, appendLinebreak: bool = True) -> bool:

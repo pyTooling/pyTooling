@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 class NormalNode_1:
 	_data_0: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 
 	def inc(self, add: int):
@@ -53,7 +53,7 @@ class NormalNode_1:
 class SlottedNode_1(metaclass=ExtendedType, slots=True):
 	_data_0: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 
 	def inc(self, add: int):
@@ -72,7 +72,7 @@ class NormalNode_10:
 	_data_8: int
 	_data_9: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 		self._data_1 = data
 		self._data_2 = data
@@ -108,7 +108,7 @@ class SlottedNode_10(metaclass=ExtendedType, slots=True):
 	_data_8: int
 	_data_9: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 		self._data_1 = data
 		self._data_2 = data
@@ -133,35 +133,35 @@ class SlottedNode_10(metaclass=ExtendedType, slots=True):
 
 
 @mark.benchmark(group="B0: Create Objects with 1 slot")
-def test_CreateNormalObjects_1(benchmark):
+def test_CreateNormalObjects_1(benchmark) -> None:
 	@benchmark
 	def func():
 		[NormalNode_1(i) for i in range(1000)]
 
 
 @mark.benchmark(group="B0: Create Objects with 1 slot")
-def test_CreateSlottedObjects_1(benchmark):
+def test_CreateSlottedObjects_1(benchmark) -> None:
 	@benchmark
 	def func():
 		[SlottedNode_1(i) for i in range(1000)]
 
 
 @mark.benchmark(group="B1: Create Objects with 10 slots")
-def test_CreateObjects_10(benchmark):
+def test_CreateObjects_10(benchmark) -> None:
 	@benchmark
 	def func():
 		[NormalNode_10(i) for i in range(1000)]
 
 
 @mark.benchmark(group="B1: Create Objects with 10 slots")
-def test_CreateSlottedObjects_10(benchmark):
+def test_CreateSlottedObjects_10(benchmark) -> None:
 	@benchmark
 	def func():
 		[SlottedNode_10(i) for i in range(1000)]
 
 
 @mark.benchmark(group="B2: Accumulate a single integer slot")
-def test_Accumulate_1(benchmark):
+def test_Accumulate_1(benchmark) -> None:
 	@benchmark
 	def func():
 		node = NormalNode_1(0)
@@ -170,7 +170,7 @@ def test_Accumulate_1(benchmark):
 
 
 @mark.benchmark(group="B2: Accumulate a single integer slot")
-def test_SlottedAccumulate_1(benchmark):
+def test_SlottedAccumulate_1(benchmark) -> None:
 	@benchmark
 	def func():
 		node = SlottedNode_1(0)
@@ -179,7 +179,7 @@ def test_SlottedAccumulate_1(benchmark):
 
 
 @mark.benchmark(group="B3: Accumulate 10 integer slots")
-def test_Accumulate_10(benchmark):
+def test_Accumulate_10(benchmark) -> None:
 	@benchmark
 	def func():
 		node = NormalNode_10(0)
@@ -188,7 +188,7 @@ def test_Accumulate_10(benchmark):
 
 
 @mark.benchmark(group="B3: Accumulate 10 integer slots")
-def test_SlottedAccumulate_10(benchmark):
+def test_SlottedAccumulate_10(benchmark) -> None:
 	@benchmark
 	def func():
 		node = SlottedNode_10(0)

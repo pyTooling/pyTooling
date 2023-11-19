@@ -29,7 +29,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""List of valued flags are argument lists where each item is a valued flag (See :mod:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
+"""
+List of valued flags are argument lists where each item is a valued flag (See
+:mod:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
 
 Each list item gets translated into a ``***ValuedFlag``, with the same flag name, but differing values.
 
@@ -52,10 +54,11 @@ from pyTooling.CLIAbstraction.Argument import ValueT
 
 @export
 class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
-	"""Class and base-class for all ValuedFlagList classes, which represents a list of valued flags.
+	"""
+	Class and base-class for all ValuedFlagList classes, which represents a list of valued flags.
 
-  Each list element gets translated to a valued flag using the pattern for formatting.
-  See :mod:`~pyTooling.CLIAbstraction.ValuedFlag` for more details on valued flags.
+	Each list element gets translated to a valued flag using the pattern for formatting.
+	See :mod:`~pyTooling.CLIAbstraction.ValuedFlag` for more details on valued flags.
 
 	**Example:**
 
@@ -63,11 +66,12 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="{0}={1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -77,15 +81,26 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
 
-	def __init__(self, value: List[ValueT]):
+	def __init__(self, value: List[ValueT]) -> None:
 		super().__init__(list(value))
 
 	@property
 	def Value(self) -> List[str]:
+		"""
+		Get the internal value.
+
+		:return: Internal value.
+		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, values: Iterable[str]) -> None:
+		"""
+		Set the internal value.
+
+		:param values:       List of values to set.
+		:raises ValueError:  If a list element is not o type :class:`str`.
+		"""
 		innerList = cast(list, self._value)
 		innerList.clear()
 		for value in values:
@@ -100,22 +115,26 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		return [self._pattern.format(self._name, value) for value in self._value]
 
 	def __str__(self) -> str:
-		"""Return a string representation of this argument instance.
+		"""
+		Return a string representation of this argument instance.
 
 		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
 
 	def __repr__(self) -> str:
-		"""Return a string representation of this argument instance.
+		"""
+		Return a string representation of this argument instance.
 
 		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])
 
+
 @export
 class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
-	"""Represents a :py:class:`ValuedFlagArgument` with a single dash.
+	"""
+	Represents a :py:class:`ValuedFlagArgument` with a single dash.
 
 	**Example:**
 
@@ -123,11 +142,12 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="-{0}={1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -140,7 +160,8 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 
 @export
 class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
-	"""Represents a :py:class:`ValuedFlagArgument` with a double dash.
+	"""
+	Represents a :py:class:`ValuedFlagArgument` with a double dash.
 
 	**Example:**
 
@@ -148,11 +169,12 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="--{0}={1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -165,7 +187,8 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 
 @export
 class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
-	"""Represents a :py:class:`ValuedFlagArgument` with a single slash.
+	"""
+	Represents a :py:class:`ValuedFlagArgument` with a single slash.
 
 	**Example:**
 
@@ -174,11 +197,12 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 
 	# TODO: Is it possible to copy the doc-string from super?
 	def __init_subclass__(cls, *args, pattern="/{0}:{1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)

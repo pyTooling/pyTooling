@@ -54,7 +54,7 @@ class HelperFunctions(TestCase):
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(28, len(versionInformation.Keywords))
 
-	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
+	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
@@ -70,19 +70,43 @@ class HelperFunctions(TestCase):
 		with self.assertRaises(ValueError):
 			_ = loadReadmeFile(Path("README.rst"))
 
-	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
+	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		requirements = loadRequirementsFile(Path("../doc/requirements.txt"), debug=True)
-		self.assertEqual(8, len(requirements))
+		requirements = loadRequirementsFile(Path("../doc/requirements.txt"))
+		self.assertEqual(10, len(requirements))
+
+	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
+	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
+	def test_loadRequirementsGit(self) -> None:
+		from pyTooling.Packaging import loadRequirementsFile
+
+		requirements = loadRequirementsFile(Path("data/Requirements/requirements.Git.txt"))
+		self.assertEqual(2, len(requirements))
+
+	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
+	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
+	def test_loadRequirementsRemoteZIP(self) -> None:
+		from pyTooling.Packaging import loadRequirementsFile
+
+		requirements = loadRequirementsFile(Path("data/Requirements/requirements.HTTPS-ZIP.txt"))
+		self.assertEqual(1, len(requirements))
+
+	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
+	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
+	def test_loadRequirementsRecursive(self) -> None:
+		from pyTooling.Packaging import loadRequirementsFile
+
+		requirements = loadRequirementsFile(Path("data/Requirements/requirements.txt"), debug=True)
+		self.assertEqual(5, len(requirements))
 
 
 class VersionInformation(TestCase):
-	@mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
+	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
-	def test_VersionInformation(self):
+	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import VersionInformation
 
 		versionInfo = VersionInformation(
@@ -102,3 +126,55 @@ class VersionInformation(TestCase):
 		self.assertEqual("0.0.1", versionInfo.Version)
 		self.assertEqual("description", versionInfo.Description)
 		self.assertListEqual(["keyword1", "keyword2"], versionInfo.Keywords)
+
+
+class DescribePackage(TestCase):
+	def test_PythonPackage(self):
+		print()
+
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife")
+		)
+
+		self.assertEqual(15, len(packageInformation))
+		self.assertEqual(packageName, packageInformation["name"])
+		# TODO: more checks
+
+	def test_PythonPackageFromGitHub(self):
+		print()
+
+		from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
+
+		packageName = "pyPackage"
+		packagePath = Path(packageName)
+
+		packageInformation = DescribePythonPackageHostedOnGitHub(
+			packageName=packageName,
+			description="Swiss army knife.",
+			gitHubNamespace=packageName,
+			gitHubRepository=packageName,
+			sourceFileWithVersion=packagePath / "__init__.py",
+			requirementsFile=packagePath / "requirements.txt",
+			documentationRequirementsFile=packagePath / "requirements.Doc.txt",
+			unittestRequirementsFile=packagePath / "requirements.Test.txt",
+			packagingRequirementsFile=packagePath / "requirements.Build.txt",
+			additionalRequirements={
+				"dist": ["Wheel"],
+			}
+		)
+
+		self.assertEqual(16, len(packageInformation))
+		self.assertEqual(packageName, packageInformation["name"])
+		# TODO: more checks

@@ -31,8 +31,8 @@
 # ============================================================================
 #
 """
-pyAttributes
-############
+pyTooling.Attributes
+####################
 
 :copyright: Copyright 2007-2023 Patrick Lehmann - Bötzingen, Germany
 :license: Apache License, Version 2.0
@@ -52,8 +52,8 @@ def zip(dict1: Dict[K1, V1], dict2: Dict[K2, V2]) -> Generator[Tuple[K1, K2, V1,
 	l1 = len(dict1)
 	l2 = len(dict2)
 
-	if (l1 != l2):
-		if (l1 < l2):
+	if l1 != l2:
+		if l1 < l2:
 			raise ValueError(f"'dict1' (len={l1}) has less elements than 'dict2' (len={l2}).")
 		else:
 			raise ValueError(f"'dict1' (len={l1}) has more elements than 'dict2' (len={l2}).")

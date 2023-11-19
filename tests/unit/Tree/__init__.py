@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Construction(TestCase):
-	def test_SingleNode(self):
+	def test_SingleNode(self) -> None:
 		root: Node[Nullable[Any], int, str, Any] = Node()
 
 		self.assertIs(root, root.Root)
@@ -54,7 +54,7 @@ class Construction(TestCase):
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.IsLeaf)
 
-	def test_NewNodeWithParent(self):
+	def test_NewNodeWithParent(self) -> None:
 		root = Node()
 		children = [Node(parent=root), Node(parent=root)]
 
@@ -80,7 +80,7 @@ class Construction(TestCase):
 		self.assertListEqual(children, [child for child in root.GetChildren()])
 #		self.assertListEqual(children, [child for child in root.GetSiblings()])
 
-	def test_NewNodeWithChildren(self):
+	def test_NewNodeWithChildren(self) -> None:
 		children = [Node(), Node()]
 		root = Node(children=children)
 
@@ -106,7 +106,7 @@ class Construction(TestCase):
 		self.assertListEqual(children, [child for child in root.GetChildren()])
 		self.assertListEqual(children, [child for child in root.GetDescendants()])
 
-	def test_GrandChildren(self):
+	def test_GrandChildren(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 		grandChildren = [Node(4, parent=children[0]), Node(5, parent=children[0]), Node(6, parent=children[1]), Node(7, parent=children[1])]
@@ -145,7 +145,7 @@ class Construction(TestCase):
 			[child for child in root.GetDescendants()]
 		)
 
-	def test_AddChild(self):
+	def test_AddChild(self) -> None:
 		root = Node(1)
 		child = Node(2)
 
@@ -165,7 +165,7 @@ class Construction(TestCase):
 		self.assertFalse(child.HasChildren)
 		self.assertIs(root, child.Parent)
 
-	def test_AddChildTree(self):
+	def test_AddChildTree(self) -> None:
 		root = Node(1)
 		child = Node(2)
 		grandChild = Node(3, parent=child)
@@ -193,7 +193,7 @@ class Construction(TestCase):
 		self.assertFalse(grandChild.HasChildren)
 		self.assertIs(child, grandChild.Parent)
 
-	def test_AddChildren(self):
+	def test_AddChildren(self) -> None:
 		root = Node(1)
 		children = [Node(11), Node(12)]
 		grandChildren = [
@@ -225,7 +225,7 @@ class Construction(TestCase):
 			self.assertTrue(grandChild.IsLeaf)
 			self.assertFalse(grandChild.HasChildren)
 
-	def test_SetParent(self):
+	def test_SetParent(self) -> None:
 		root = Node(1)
 		child = Node(2)
 
@@ -247,7 +247,7 @@ class Construction(TestCase):
 
 
 class MergeTree(TestCase):
-	def test_SetParent(self):
+	def test_SetParent(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
@@ -270,7 +270,7 @@ class MergeTree(TestCase):
 
 		# check if sub trees IDs are now in main tree
 
-	def test_AddChild(self):
+	def test_AddChild(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
@@ -292,12 +292,12 @@ class MergeTree(TestCase):
 			self.assertIs(root, node.Root)
 
 	@mark.skip(reason="Not yet implemented!")
-	def test_AddChildren(self):
+	def test_AddChildren(self) -> None:
 		pass
 
 
 class SplitTree(TestCase):
-	def test_SplitTreeWithoutIDs(self):
+	def test_SplitTreeWithoutIDs(self) -> None:
 		root = Node()
 		children = [Node(parent=root), Node(parent=root)]
 
@@ -323,7 +323,7 @@ class SplitTree(TestCase):
 			self.assertIs(root1, node.Root)
 			self.assertEqual(1, node.Level)
 
-	def test_SplitTreeWithIDs(self):
+	def test_SplitTreeWithIDs(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
@@ -352,12 +352,12 @@ class SplitTree(TestCase):
 		# check if subtree's IDs are not in main tree anymore
 
 	@mark.skip(reason="Not yet implemented!")
-	def test_DeleteChild(self):
+	def test_DeleteChild(self) -> None:
 		pass
 
 
 class Loops(TestCase):
-	def test_SelfLoop(self):
+	def test_SelfLoop(self) -> None:
 		root = Node(1)
 
 		with self.assertRaises(Exception):
@@ -366,7 +366,7 @@ class Loops(TestCase):
 		with self.assertRaises(Exception):
 			root.Parent = root
 
-	def test_MinimalLoop(self):
+	def test_MinimalLoop(self) -> None:
 		root = Node(1)
 		child = Node(2, parent=root)
 
@@ -376,7 +376,7 @@ class Loops(TestCase):
 		with self.assertRaises(Exception):
 			root.Parent = child
 
-	def test_InternalLoop(self):
+	def test_InternalLoop(self) -> None:
 		root = Node(1)
 		child = Node(2, parent=root)
 		grandchild = Node(3, parent=child)
@@ -393,7 +393,7 @@ class Loops(TestCase):
 		with self.assertRaises(Exception):
 			child.Parent = grandchild
 
-	def test_SideLoop(self):
+	def test_SideLoop(self) -> None:
 		root = Node(1)
 		child = Node(2, parent=root)
 		grandchild = [Node(3, parent=child), Node(4, parent=child)]
@@ -406,7 +406,7 @@ class Loops(TestCase):
 
 
 class Features(TestCase):
-	def test_NodeWithID(self):
+	def test_NodeWithID(self) -> None:
 		root = Node(nodeID=1)
 
 		self.assertIs(1, root.ID)
@@ -414,7 +414,7 @@ class Features(TestCase):
 		with self.assertRaises(AttributeError):
 			root.ID = "2"
 
-	def test_NodeWithValue(self):
+	def test_NodeWithValue(self) -> None:
 		root = Node(value="1")
 
 		self.assertIs("1", root.Value)
@@ -422,7 +422,7 @@ class Features(TestCase):
 		root.Value = "2"
 		self.assertIs("2", root.Value)
 
-	def test_NodeWithDictionary(self):
+	def test_NodeWithDictionary(self) -> None:
 		root = Node()
 
 		# set value
@@ -437,13 +437,13 @@ class Features(TestCase):
 		with self.assertRaises(KeyError):
 			_ = root["key1"]
 
-	def test_Length(self):
+	def test_Length(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
 		self.assertEqual(len(children), len(root))
 
-	def test_Size(self):
+	def test_Size(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 		grandChildren = [
@@ -459,13 +459,13 @@ class Features(TestCase):
 		size = 1 + len(children) + len(grandChildren) + len(grandGrandChildren)
 		self.assertEqual(size, root.Size)
 
-	def test_Iterator(self):
+	def test_Iterator(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
 		self.assertListEqual(children, [node for node in root])
 
-	def test_Siblings(self):
+	def test_Siblings(self) -> None:
 		root = Node(1)
 		children = [
 			Node(11, parent=root),
@@ -477,7 +477,7 @@ class Features(TestCase):
 
 		self.assertListEqual(children[:2] + children[3:], list(children[2].Siblings))
 
-	def test_LeftSiblings(self):
+	def test_LeftSiblings(self) -> None:
 		root = Node(1)
 		children = [
 			Node(11, parent=root),
@@ -489,7 +489,7 @@ class Features(TestCase):
 
 		self.assertListEqual(children[:2], list(children[2].LeftSiblings))
 
-	def test_RightSiblings(self):
+	def test_RightSiblings(self) -> None:
 		root = Node(1)
 		children = [
 			Node(11, parent=root),
@@ -501,7 +501,7 @@ class Features(TestCase):
 
 		self.assertListEqual(children[3:], list(children[2].RightSiblings))
 
-	def test_Repr(self):
+	def test_Repr(self) -> None:
 		node = Node()
 		nodeID = Node(nodeID=2)
 		nodeValue = Node(value="2")
@@ -534,7 +534,7 @@ class Features(TestCase):
 		_ = repr(nodeValue)
 		_ = repr(nodeIDValue)
 
-	def test_Str(self):
+	def test_Str(self) -> None:
 		node = Node()
 		nodeID = Node(nodeID=1)
 		nodeValue = Node(value="1")
@@ -592,37 +592,37 @@ class Iteration(TestCase):
 		self._root = root
 		self._children = children
 
-	def test_Siblings(self):
+	def test_Siblings(self) -> None:
 		self.assertListEqual([11, 12, 14, 15], [node.ID for node in self._children[2].Siblings])
 
-	def test_LeftSiblings(self):
+	def test_LeftSiblings(self) -> None:
 		self.assertListEqual([11, 12], [node.ID for node in self._children[2].LeftSiblings])
 
-	def test_RightSiblings(self):
+	def test_RightSiblings(self) -> None:
 		self.assertListEqual([14, 15], [node.ID for node in self._children[2].RightSiblings])
 
-	def test_GetSiblings(self):
+	def test_GetSiblings(self) -> None:
 		self.assertListEqual([11, 12, 14, 15], [node.ID for node in self._children[2].GetSiblings()])
 
-	def test_GetLeftSiblings(self):
+	def test_GetLeftSiblings(self) -> None:
 		self.assertListEqual([11, 12], [node.ID for node in self._children[2].GetLeftSiblings()])
 
-	def test_GetRightSiblings(self):
+	def test_GetRightSiblings(self) -> None:
 		self.assertListEqual([14, 15], [node.ID for node in self._children[2].GetRightSiblings()])
 
-	def test_GetLeftRelatives(self):
+	def test_GetLeftRelatives(self) -> None:
 		self.assertListEqual([
 			11, 111, 1111, 112, 1121, 1122,
 			12, 121,
 		], [node.ID for node in self._children[2].GetLeftRelatives()])
 
-	def test_GetRightRelatives(self):
+	def test_GetRightRelatives(self) -> None:
 		self.assertListEqual([
 			14, 141, 142, 1421, 1422, 14221, 14222,
 			15, 151, 1511
 		], [node.ID for node in self._children[2].GetRightRelatives()])
 
-	def test_IteratePreOrder(self):
+	def test_IteratePreOrder(self) -> None:
 		self.assertListEqual([
 			1,
 			11, 111, 1111, 112, 1121, 1122,
@@ -632,7 +632,7 @@ class Iteration(TestCase):
 			15, 151, 1511
 		], [node.ID for node in self._root.IteratePreOrder()])
 
-	def test_IteratePostOrder(self):
+	def test_IteratePostOrder(self) -> None:
 		self.assertListEqual([
 			1111, 111, 1121, 1122, 112, 11,
 			121, 12,
@@ -642,7 +642,7 @@ class Iteration(TestCase):
 			1
 		], [node.ID for node in self._root.IteratePostOrder()])
 
-	def test_IterateLevelOrder(self):
+	def test_IterateLevelOrder(self) -> None:
 		self.assertListEqual([
 			1,
 			11, 12, 13, 14, 15,
@@ -651,73 +651,73 @@ class Iteration(TestCase):
 			13211, 13212, 14221, 14222,
 		], [node.ID for node in self._root.IterateLevelOrder()])
 
-	def test_IterateLeafs(self):
+	def test_IterateLeafs(self) -> None:
 		self.assertListEqual([
 			1111, 1121, 1122, 121, 1311, 1312, 13211, 13212, 1331, 141, 1421, 14221, 14222, 1511
 		], [node.ID for node in self._root.IterateLeafs()])
 
 
 class Exceptions(TestCase):
-	def test_NewNodeWithWrongParent(self):
+	def test_NewNodeWithWrongParent(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Node(parent=1)
 
-	def test_NewNodeWithDuplicateID(self):
+	def test_NewNodeWithDuplicateID(self) -> None:
 		root = Node(1)
 
 		with self.assertRaises(ValueError):
 			_ = Node(1, parent=root)
 
-	def test_NewNodeWithNonIterableChildren(self):
+	def test_NewNodeWithNonIterableChildren(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Node(children=0)
 
-	def test_NewNodeWithWrongChildInChildren(self):
+	def test_NewNodeWithWrongChildInChildren(self) -> None:
 		children = [Node(), None, Node()]
 		with self.assertRaises(TypeError):
 			_ = Node(children=children)
 
-	def test_SetWrongParent(self):
+	def test_SetWrongParent(self) -> None:
 		root = Node()
 		child = Node(parent=root)
 
 		with self.assertRaises(TypeError):
 			child.Parent = 2
 
-	def test_AddWrongChild(self):
+	def test_AddWrongChild(self) -> None:
 		root = Node()
 
 		with self.assertRaises(TypeError):
 			root.AddChild(2)
 
-	def test_AddWrongChildInChildren(self):
+	def test_AddWrongChildInChildren(self) -> None:
 		root = Node()
 		children = [Node(), None, Node()]
 
 		with self.assertRaises(TypeError):
 			root.AddChildren(children)
 
-	def test_AddExistingChildInChildren(self):
+	def test_AddExistingChildInChildren(self) -> None:
 		root = Node()
 		children = [Node(), Node(parent=root), Node()]
 
 		with self.assertRaises(AlreadyInTreeError):
 			root.AddChildren(children)
 
-	def test_SetParentWithDuplicateIDs(self):
+	def test_SetParentWithDuplicateIDs(self) -> None:
 		root = Node(1)
 		root1 = Node(1)
 
 		with self.assertRaises(ValueError):
 			root1.Parent = root
 
-	def test_GetNodeByIDNone(self):
+	def test_GetNodeByIDNone(self) -> None:
 		root = Node(1)
 
 		with self.assertRaises(ValueError):
 			root.GetNodeByID(None)
 
-	def test_GetSiblingsOfRoot(self):
+	def test_GetSiblingsOfRoot(self) -> None:
 		root = Node(1)
 
 		self.assertIsNone(root.Parent)
@@ -729,7 +729,7 @@ class Exceptions(TestCase):
 			for _ in root.GetSiblings():
 				pass
 
-	def test_GetLeftSiblingsOfRoot(self):
+	def test_GetLeftSiblingsOfRoot(self) -> None:
 		root = Node(1)
 
 		self.assertIsNone(root.Parent)
@@ -741,7 +741,7 @@ class Exceptions(TestCase):
 			for _ in root.GetLeftSiblings():
 				pass
 
-	def test_GetRightSiblingsOfRoot(self):
+	def test_GetRightSiblingsOfRoot(self) -> None:
 		root = Node(1)
 
 		self.assertIsNone(root.Parent)
@@ -772,7 +772,7 @@ class Rendering(TestCase):
 		# 13
 	)
 
-	def test_Render(self):
+	def test_Render(self) -> None:
 		root = Node(nodeID=0, value="<Root 0>")
 
 		for parentID, childID in self._tree:

@@ -1,19 +1,23 @@
 from pyTooling.Decorators import export
 
+from .Argument import NamedArgument
+
 
 @export
-class FlagAttribute(ArgParseAttribute, _HandlerMixin, _KwArgsMixin):
+class FlagArgument(NamedArgument):
 	pass
+
 
 @export
-class ShortFlag(FlagAttribute):
+class ShortFlag(FlagArgument, pattern="-{0}"):
 	pass
+
 
 @export
-class LongFlag(FlagAttribute):
+class LongFlag(FlagArgument, pattern="--{0}"):
 	pass
+
 
 @export
-class WinodwsFlag(FlagAttribute):
+class WindowsFlag(FlagArgument, pattern="/{0}"):
 	pass
-

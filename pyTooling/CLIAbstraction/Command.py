@@ -29,8 +29,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""This module implements command arguments. Usually, commands are mutually exclusive and the first argument in a list
-of arguments to a program.
+"""
+This module implements command arguments. Usually, commands are mutually exclusive and the first argument in a list of
+arguments to a program.
 
 While commands can or cannot have prefix characters, they shouldn't be confused with flag arguments or string arguments.
 
@@ -53,7 +54,8 @@ from pyTooling.CLIAbstraction.Argument import NamedArgument
 # TODO: make this class abstract
 @export
 class CommandArgument(NamedArgument):
-	"""Represents a command argument.
+	"""
+	Represents a command argument.
 
 	It is usually used to select a sub parser in a CLI argument parser or to hand over all following parameters to a
 	separate tool. An example for a command is 'checkout' in ``git.exe checkout``, which calls ``git-checkout.exe``.
@@ -71,7 +73,8 @@ class CommandArgument(NamedArgument):
 
 @export
 class ShortCommand(CommandArgument, pattern="-{0}"):
-	"""Represents a command name with a single dash.
+	"""
+	Represents a command name with a single dash.
 
 	**Example:**
 
@@ -79,11 +82,12 @@ class ShortCommand(CommandArgument, pattern="-{0}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="-{0}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -96,7 +100,8 @@ class ShortCommand(CommandArgument, pattern="-{0}"):
 
 @export
 class LongCommand(CommandArgument, pattern="--{0}"):
-	"""Represents a command name with a double dash.
+	"""
+	Represents a command name with a double dash.
 
 	**Example:**
 
@@ -104,11 +109,12 @@ class LongCommand(CommandArgument, pattern="--{0}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="--{0}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -121,7 +127,8 @@ class LongCommand(CommandArgument, pattern="--{0}"):
 
 @export
 class WindowsCommand(CommandArgument, pattern="/{0}"):
-	"""Represents a command name with a single slash.
+	"""
+	Represents a command name with a single slash.
 
 	**Example:**
 
@@ -129,11 +136,12 @@ class WindowsCommand(CommandArgument, pattern="/{0}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="/{0}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)

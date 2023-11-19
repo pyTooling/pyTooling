@@ -52,7 +52,7 @@ class Transition(Base):
 	_source:      "State"
 	_destination: "State"
 
-	def __init__(self, source: "State", destination: "State"):
+	def __init__(self, source: "State", destination: "State") -> None:
 		self._source = source
 		self._destination = destination
 
@@ -65,7 +65,7 @@ class State(Base):
 	_inboundTransitions:  List[Transition]
 	_outboundTransitions: List[Transition]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self._inboundTransitions = []
 		self._outboundTransitions = []
 
@@ -78,7 +78,7 @@ class StateMachine(Base):
 	_states:       List[State]
 	_initialState: State
 
-	def __init__(self, initialState: State):
+	def __init__(self, initialState: State) -> None:
 		self._states = []
 		self._initialState = initialState
 

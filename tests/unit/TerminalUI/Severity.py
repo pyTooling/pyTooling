@@ -32,7 +32,7 @@
 """pyTooling.TerminalUI"""
 from unittest             import TestCase
 
-from pyTooling.TerminalUI import LineTerminal
+from pyTooling.TerminalUI import Severity
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,29 +41,39 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Application(LineTerminal):
-	def __init__(self):
-		super().__init__()
+class Comparison(TestCase):
+	def test_Normal(self) -> None:
+		normal = Severity.Normal
 
-		LineTerminal.FATAL_EXIT_CODE = 0
+		self.assertLess(Severity.Debug, normal)
+		self.assertLessEqual(Severity.Debug, normal)
+		self.assertEqual(Severity.Normal, normal)
+		self.assertNotEqual(Severity.DryRun, normal)
+		self.assertGreater(Severity.Warning, normal)
+		self.assertGreaterEqual(Severity.Warning, normal)
 
 
-class Terminal(TestCase):
-	app: Application
+class Exceptions(TestCase):
+	def test_Equal(self):
+		with self.assertRaises(TypeError):
+			_ = Severity.Normal == 0
 
-	def setUp(self) -> None:
-		self.app = Application()
-		self.app.Configure(verbose=True, debug=True, quiet=False)
+	def test_Unequal(self):
+		with self.assertRaises(TypeError):
+			_ = Severity.Normal != 0
 
-	def test_Version(self) -> None:
-		Application.versionCheck((3, 7, 0))
+	def test_Less(self):
+		with self.assertRaises(TypeError):
+			_ = Severity.Normal < 0
 
-	def test_Write(self) -> None:
-		self.app.WriteQuiet("This is a quiet message.")
-		self.app.WriteNormal("This is a normal message.")
-		self.app.WriteInfo("This is an info message.")
-		self.app.WriteVerbose("This is a verbose message.")
-		self.app.WriteDebug("This is a debug message.")
-		self.app.WriteWarning("This is a warning message.")
-		self.app.WriteError("This is an error message.")
-		self.app.WriteFatal("This is a fatal message.", immediateExit=False)
+	def test_LessOrEqual(self):
+		with self.assertRaises(TypeError):
+			_ = Severity.Normal <= 0
+
+	def test_Greater(self):
+		with self.assertRaises(TypeError):
+			_ = Severity.Normal > 0
+
+	def test_GreaterOrEqual(self):
+		with self.assertRaises(TypeError):
+			_ = Severity.Normal >= 0

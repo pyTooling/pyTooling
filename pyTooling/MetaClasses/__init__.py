@@ -39,7 +39,7 @@ from inspect    import signature, Parameter
 from sys        import version_info
 from threading  import Condition
 from types      import MethodType, FunctionType
-from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator
+from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar
 
 try:
@@ -52,11 +52,18 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Exceptions import ToolingException
 		from Decorators import export
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
+		print("[pyTooling.MetaClasses] Could not import from 'Exceptions' or 'Decorators' directly!")
 		raise ex
 
 
 __all__ = ["M"]
+
+TAttr = TypeVar("TAttr")  # , bound='Attribute')
+"""A type variable for :class:`~pyTooling.Attributes.Attribute`."""
+
+TAttributeFilter = Union[TAttr, Iterable[TAttr], None]
+"""A type hint for a predicate parameter that accepts either a single :class:`~pyTooling.Attributes.Attribute` or an
+iterable of those."""
 
 
 @export
@@ -141,6 +148,8 @@ def slotted(cls):
 		metacls = ExtendedType
 	elif issubclass(cls.__class__, ExtendedType):
 		metacls = cls.__class__
+		for method in cls.__methods__:
+			delattr(method, "__classobj__")
 	else:
 		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
 
@@ -162,6 +171,8 @@ def mixin(cls):
 		metacls = ExtendedType
 	elif issubclass(cls.__class__, ExtendedType):
 		metacls = cls.__class__
+		for method in cls.__methods__:
+			delattr(method, "__classobj__")
 	else:
 		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
 
@@ -183,6 +194,8 @@ def singleton(cls):
 		metacls = ExtendedType
 	elif issubclass(cls.__class__, ExtendedType):
 		metacls = cls.__class__
+		for method in cls.__methods__:
+			delattr(method, "__classobj__")
 	else:
 		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
 
@@ -291,7 +304,7 @@ class DispatchableMethod:
 	__name__: str
 	__slots__ = ("_methods", "__name__")
 
-	def __init__(self, name: str):
+	def __init__(self, name: str) -> None:
 		self.__name__ = name
 		self._methods = {}
 
@@ -304,7 +317,7 @@ class DispatchableMethod:
 		else:
 			raise TypeError(f"No matching method for types {types}.")
 
-	def __get__(self, instance, cls):
+	def __get__(self, instance, cls):  # Starting with Python 3.11+, use typing.Self as return type
 		"""Descriptor method needed to make calls work in a class."""
 		if instance is not None:
 			return MethodType(self, instance)
@@ -419,7 +432,149 @@ class ExtendedType(type):
 		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
+		# Check methods for attributes
+		methods, methodsWithAttributes = self._findMethods(newClass, members)
+
+		# Add new fields for found methods
+		newClass.__methods__ = tuple(methods)
+		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
+
+		# Additional methods on a class
+		def HasClassAttributes(self) -> bool:
+			"""
+			Check if class has Attributes.
+
+			:return: ``True``, if the class has Attributes.
+			"""
+			try:
+				return len(self.__pyattr__) > 0
+			except AttributeError:
+				return False
+
+		def HasMethodAttributes(self) -> bool:
+			"""
+			Check if class has any method with Attributes.
+
+			:return: ``True``, if the class has any method with Attributes.
+			"""
+			try:
+				return len(self.__methodsWithAttributes__) > 0
+			except AttributeError:
+				return False
+
+		def GetMethodsWithAttributes(self, predicate: TAttributeFilter[TAttr] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
+			"""
+
+			:param predicate:
+			:return:
+			:raises ValueError:
+			:raises ValueError:
+			"""
+			try:
+				from ..Attributes import Attribute
+			except (ImportError, ModuleNotFoundError):  # pragma: no cover
+				try:
+					from Attributes import Attribute
+				except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+					raise ex
+
+			if predicate is None:
+				predicate = Attribute
+			elif isinstance(predicate, Iterable):
+				for attribute in predicate:
+					if not issubclass(attribute, Attribute):
+						raise ValueError(f"Parameter 'predicate' contains an element which is not a sub-class of 'Attribute'.")
+
+				predicate = tuple(predicate)
+			elif not issubclass(predicate, Attribute):
+				raise ValueError(f"Parameter 'predicate' is not a sub-class of 'Attribute'.")
+
+			methodAttributePairs = {}
+			for method in newClass.__methodsWithAttributes__:
+				matchingAttributes = []
+				for attribute in method.__pyattr__:
+					if isinstance(attribute, predicate):
+						matchingAttributes.append(attribute)
+
+				if len(matchingAttributes) > 0:
+					methodAttributePairs[method] = tuple(matchingAttributes)
+
+			return methodAttributePairs
+
+		newClass.HasClassAttributes = classmethod(property(HasClassAttributes, doc=HasClassAttributes.__doc__))
+		newClass.HasMethodAttributes = classmethod(property(HasMethodAttributes, doc=HasMethodAttributes.__doc__))
+		newClass.GetMethodsWithAttributes = classmethod(GetMethodsWithAttributes)
+		# GetMethods(predicate) -> dict[method, list[attribute]] / generator
+		# GetClassAtrributes -> list[attributes] / generator
+		# MethodHasAttributes(predicate) -> bool
+		# GetAttribute
+
 		return newClass
+
+	@classmethod
+	def _findMethods(self, newClass: type, members: Dict[str, Any]):
+		try:
+			from ..Attributes import Attribute
+		except (ImportError, ModuleNotFoundError):  # pragma: no cover
+			try:
+				from Attributes import Attribute
+			except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+				raise ex
+
+		# Embedded bind function due to circular dependencies.
+		def bind(instance: object, func: FunctionType, methodName: str = None):
+			if methodName is None:
+				methodName = func.__name__
+
+			boundMethod = func.__get__(instance, instance.__class__)
+			setattr(instance, methodName, boundMethod)
+
+			return boundMethod
+
+		methods = []
+		methodsWithAttributes = []
+		attributeIndex = {}
+		for memberName, member in members.items():
+			if isinstance(member, FunctionType):
+				method = newClass.__dict__[memberName]
+				if hasattr(method, "__classobj__") and getattr(method, "__classobj__") is not newClass:
+					raise TypeError(f"Method '{memberName}' is used by multiple classes: {method.__classobj__} and {newClass}.")
+				else:
+					setattr(method, "__classobj__", newClass)
+
+				def GetAttributes(inst: Any, predicate: Type[Attribute] = None) -> Tuple[Attribute, ...]:
+					results = []
+					try:
+						for attribute in inst.__pyattr__:  # type: Attribute
+							if isinstance(attribute, predicate):
+								results.append(attribute)
+						return tuple(results)
+					except AttributeError:
+						return tuple()
+
+				method.GetAttributes = bind(method, GetAttributes)
+				methods.append(method)
+
+				# print(f"  convert function: '{memberName}' to method")
+				# print(f"    {member}")
+				if "__pyattr__" in member.__dict__:
+					attributes = member.__pyattr__           # type: List[Attribute]
+					if isinstance(attributes, list) and len(attributes) > 0:
+						methodsWithAttributes.append(member)
+						for attribute in attributes:
+							attribute._functions.remove(method)
+							attribute._methods.append(method)
+
+							# print(f"    attributes: {attribute.__class__.__name__}")
+							if attribute not in attributeIndex:
+								attributeIndex[attribute] = [member]
+							else:
+								attributeIndex[attribute].append(member)
+				# else:
+				# 	print(f"    But has no attributes.")
+			# else:
+			# 	print(f"  ??        {memberName}")
+		return methods, methodsWithAttributes
 
 	@classmethod
 	def _computeSlots(self, className, baseClasses, members, slots, mixin):
@@ -456,7 +611,8 @@ class ExtendedType(type):
 			annotations: Dict[str, Any] = members.get("__annotations__", {})
 			for fieldName, typeAnnotation in annotations.items():
 				if fieldName in inheritedSlottedFields:
-					raise AttributeError(f"Slot '{fieldName}' already exists in base-class '{inheritedSlottedFields[fieldName]}'.")
+					cls = inheritedSlottedFields[fieldName]
+					raise AttributeError(f"Slot '{fieldName}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
 
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary

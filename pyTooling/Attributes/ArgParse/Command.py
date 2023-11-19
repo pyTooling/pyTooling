@@ -1,21 +1,21 @@
 from typing import Callable, TypeVar
 
 from pyTooling.Decorators import export
-from . import ArgParseAttribute
+from . import ArgParseAttribute, _HandlerMixin, _KwArgsMixin
 
 
 M = TypeVar("M", bound=Callable)
 
 
 @export
-class CommandAttribute(ArgParseAttribute, _HandlerMixin, _KwArgsMixin):
+class CommandHandler(ArgParseAttribute, _HandlerMixin, _KwArgsMixin):
 	"""Marks a handler method as responsible for the given 'command'. This constructs
 	a sub-command parser using :meth:`~ArgumentParser.add_subparsers`.
 	"""
 
 	_command: str
 
-	def __init__(self, command: str, **kwargs):
+	def __init__(self, command: str, **kwargs) -> None:
 		"""The constructor expects a 'command' and an optional list of named parameters
 		(keyword arguments) which are passed without modification to :meth:`~ArgumentParser.add_subparsers`.
 		"""

@@ -41,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Tree(PerformanceTest):
-	def test_AddChildren(self):
+	def test_AddChildren(self) -> None:
 		def wrapper(count: int):
 			def func():
 				rootNode = iTree("root", value=0)

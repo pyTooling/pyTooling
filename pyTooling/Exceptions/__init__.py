@@ -74,7 +74,7 @@ class OverloadResolutionError(Exception):
 class ExceptionBase(Exception):
 	"""Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions."""
 
-	def __init__(self, message: str = ""):
+	def __init__(self, message: str = "") -> None:
 		"""
 		ExceptionBase initializer.
 

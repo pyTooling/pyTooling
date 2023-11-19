@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Boolean flags are arguments with a name and different pattern for a positive (``True``) and negative (``False``) value.
+"""
+Boolean flags are arguments with a name and different pattern for a positive (``True``) and negative (``False``) value.
 
 .. seealso::
 
@@ -49,8 +50,9 @@ from pyTooling.CLIAbstraction.Argument import NamedArgument, ValuedArgument
 
 @export
 class BooleanFlag(NamedArgument, ValuedArgument):
-	"""Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern
-	for an enabled/positive (``True``) or disabled/negative (``False``) state.
+	"""
+	Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern for an
+	enabled/positive (``True``) or disabled/negative (``False``) state.
 
 	When deriving a subclass from an abstract BooleanFlag class, the parameters ``pattern`` and ``falsePattern`` are
 	expected.
@@ -85,7 +87,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
 
-	def __init__(self, value: bool):
+	def __init__(self, value: bool) -> None:
 		"""Initializes a BooleanFlag instance.
 
 		:param value: Initial value set for this argument instance.

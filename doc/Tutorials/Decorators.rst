@@ -29,7 +29,7 @@ See also :ref:`decorators offered by pyTooling <DECO>`.
 |    def decorator(func: F) -> F:     |    def decorator_factory(param: int) -> Callable: |    class decoratorclass:                |
 |      @wraps(func)                   |      def specific_decorator(func: F) -> F:        |      _param: int                        |
 |      def wrapper(*args, **kwargs):  |        @wraps(func)                               |                                         |
-|        return func(*args, **kwargs) |        def wrapper(*args, **kwargs):              |      def __init__(self, param: int):    |
+|        return func(*args, **kwargs) |        def wrapper(*args, **kwargs):              |      def __init__(self, param: int) -> None:    |
 |                                     |          kwargs["param"] = param                  |        self._param = param              |
 |      return wrapper                 |          return func(*args, **kwargs)             |                                         |
 |                                     |                                                   |      def __call__(self, func: F) -> F:  |
@@ -202,7 +202,7 @@ A decorator accepting parameters can also be implemented with a class providing 
    class decoratorclass:
      _param: int
 
-     def __init__(self, param: int):
+     def __init__(self, param: int) -> None:
        self._param = param
 
      def __call__(self, func: F) -> F:

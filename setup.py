@@ -31,6 +31,8 @@
 from os.path import abspath
 from sys     import path as sys_path
 
+from setuptools import setup
+
 sys_path.insert(0, abspath('./pyTooling'))
 
 from pathlib    import Path
@@ -41,7 +43,7 @@ packageName =            "pyTooling.*"
 packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
-DescribePythonPackageHostedOnGitHub(
+setup(**DescribePythonPackageHostedOnGitHub(
 	packageName=packageName,
 	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
 	gitHubNamespace=gitHubNamespace,
@@ -54,4 +56,4 @@ DescribePythonPackageHostedOnGitHub(
 	dataFiles={
 		packageName[:-2]: ["py.typed"]
 	}
-)
+))

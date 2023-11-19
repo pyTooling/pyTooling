@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Flag arguments represent simple boolean values by being present or absent.
+"""
+Flag arguments represent simple boolean values by being present or absent.
 
 .. seealso::
 
@@ -48,12 +49,13 @@ from pyTooling.CLIAbstraction import NamedAndValuedArgument
 
 
 class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
-	"""Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value
+	"""
+	Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value
 	(key-value-pairs).
 
-	An optional valued flag is a flag name followed by a value. The default delimiter sign is equal (``=``).
-	Name and value are passed as one arguments to the executable even if the delimiter sign is a whitespace
-	character. If the value is None, no delimiter sign and value is passed.
+	An optional valued flag is a flag name followed by a value. The default delimiter sign is equal (``=``). Name and
+	value are passed as one argument to the executable even if the delimiter sign is a whitespace character. If the value
+	is None, no delimiter sign and value is passed.
 
 	**Example:**
 
@@ -70,7 +72,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
 
-	def __init__(self, keyValuePairs: Dict[str, str]):
+	def __init__(self, keyValuePairs: Dict[str, str]) -> None:
 		super().__init__({})
 
 		for key, value in keyValuePairs.items():
@@ -83,7 +85,8 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 	@property
 	def Value(self) -> Dict[str, str]:
-		"""Get the internal value.
+		"""
+		Get the internal value.
 
 		:return: Internal value.
 		"""
@@ -91,10 +94,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 	@Value.setter
 	def Value(self, keyValuePairs: Dict[str, str]) -> None:
-		"""Set the internal value.
+		"""
+		Set the internal value.
 
-		:param value: Value to set.
-		:raises ValueError: If value to set is None.
+		:param keyValuePairs: Value to set.
+		:raises ValueError:   If value to set is None.
 		"""
 		innerDict = cast(Dict[str, str], self._value)
 		innerDict.clear()
@@ -107,10 +111,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 			innerDict[key] = value
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
-		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
-		on the internal name.
+		"""
+		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		the internal name.
 
-		:return: Formatted argument.
+		:return:            Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -121,7 +126,8 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 @export
 class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
-	"""Represents a :py:class:`NamedKeyValueFlagArgument` with a single dash in front of the switch name.
+	"""
+	Represents a :py:class:`NamedKeyValueFlagArgument` with a single dash in front of the switch name.
 
 	**Example:**
 
@@ -141,7 +147,8 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 
 @export
 class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
-	"""Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
+	"""
+	Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
 
 	**Example:**
 
@@ -161,7 +168,8 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 
 @export
 class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
-	"""Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
+	"""
+	Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
 
 	**Example:**
 

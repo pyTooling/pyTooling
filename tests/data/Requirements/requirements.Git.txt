@@ -1,0 +1,3 @@
+# Protocol + Git-URL @ Ref
+git+https://github.com/pyTooling/pyTooling.git
+git+https://github.com/pyTooling/pyTooling.git@dev

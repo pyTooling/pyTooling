@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Flag arguments represent simple boolean values by being present or absent.
+"""
+Flag arguments represent simple boolean values by being present or absent.
 
 .. seealso::
 
@@ -48,7 +49,8 @@ from pyTooling.CLIAbstraction.Argument import NamedArgument
 
 @export
 class FlagArgument(NamedArgument):
-	"""Base-class for all Flag classes, which represents a simple flag argument like ``-v`` or ``--verbose``.
+	"""
+	Base-class for all Flag classes, which represents a simple flag argument like ``-v`` or ``--verbose``.
 
 	A simple flag is a single value (absent/present or off/on) with no additional data (value).
 	"""
@@ -61,7 +63,8 @@ class FlagArgument(NamedArgument):
 
 @export
 class ShortFlag(FlagArgument, pattern="-{0}"):
-	"""Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single dash.
+	"""
+	Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single dash.
 
 	**Example:**
 
@@ -80,7 +83,8 @@ class ShortFlag(FlagArgument, pattern="-{0}"):
 
 @export
 class LongFlag(FlagArgument, pattern="--{0}"):
-	"""Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a double dash.
+	"""
+	Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a double dash.
 
 	**Example:**
 
@@ -99,7 +103,8 @@ class LongFlag(FlagArgument, pattern="--{0}"):
 
 @export
 class WindowsFlag(FlagArgument, pattern="/{0}"):
-	"""Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single slash.
+	"""
+	Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single slash.
 
 	**Example:**
 

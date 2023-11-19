@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Valued tuple-flag arguments represent a name and a value as a 2-tuple.
+"""
+Valued tuple-flag arguments represent a name and a value as a 2-tuple.
 
 .. seealso::
 
@@ -45,7 +46,8 @@ from pyTooling.CLIAbstraction.Argument import NamedTupledArgument
 
 @export
 class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
-	"""Represents a :class:`ValuedTupleArgument` with a single dash in front of the switch name.
+	"""
+	Represents a :class:`ValuedTupleArgument` with a single dash in front of the switch name.
 
 	**Example:**
 
@@ -63,7 +65,8 @@ class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 
 @export
 class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
-	"""Represents a :class:`ValuedTupleArgument` with a double dash in front of the switch name.
+	"""
+	Represents a :class:`ValuedTupleArgument` with a double dash in front of the switch name.
 
 	**Example:**
 
@@ -81,7 +84,8 @@ class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 
 @export
 class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
-	"""Represents a :class:`ValuedTupleArgument` with a single slash in front of the switch name.
+	"""
+	Represents a :class:`ValuedTupleArgument` with a single slash in front of the switch name.
 
 	**Example:**
 

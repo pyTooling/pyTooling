@@ -161,7 +161,7 @@ def classproperty(method):
 		_getter: Callable
 		_setter: Callable
 
-		def __init__(self, getter: Callable = None, setter: Callable = None):
+		def __init__(self, getter: Callable = None, setter: Callable = None) -> None:
 			self._getter = getter
 			self._setter = setter
 			self.__doc__ = getter.__doc__

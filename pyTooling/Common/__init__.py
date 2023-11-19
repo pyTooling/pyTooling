@@ -33,19 +33,22 @@ Common types, helper functions and classes.
 
 .. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
 """
-__author__ =    "Patrick Lehmann"
-__email__ =     "Paebbels@gmail.com"
-__copyright__ = "2017-2023, Patrick Lehmann"
-__license__ =   "Apache License, Version 2.0"
-__version__ =   "6.0.0"
-__keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versioning", "licensing", "overloading",
-								"singleton", "tree", "graph", "timer", "data structure", "setuptools", "wheel", "installation",
-								"packaging", "path", "generic path", "generic library", "url", "terminal", "shell", "TUI", "console",
-								"text user interface", "message logging", "abstract", "override"]
+__author__ =        "Patrick Lehmann"
+__email__ =         "Paebbels@gmail.com"
+__copyright__ =     "2017-2023, Patrick Lehmann"
+__license__ =       "Apache License, Version 2.0"
+__version__ =       "6.0.0"
+__keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
+										"dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
+										"iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
+										"path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
+										"timer", "tree", "TUI", "url", "versioning", "wheel"]
+__issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections import deque
 from numbers     import Number
-from typing      import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set, Hashable, Optional
+from typing      import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
+from typing      import Any, Dict, Tuple, Union, Mapping, Set, Iterable
 
 try:
 	from pyTooling.Decorators import export
@@ -154,6 +157,53 @@ def getsizeof(obj: Any) -> int:
 	return recurse(obj)
 
 
+_Element = TypeVar("Element")
+
+
+@export
+def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	return indexable[0]
+
+
+@export
+def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	return indexable[-1]
+
+
+@export
+def firstItem(iterable: Iterable[_Element]) -> _Element:
+	"""
+	Returns the first item from an iterable.
+
+	:param iterable: Iterable to get the first item from.
+	:return:         First item.
+	"""
+	i = iter(iterable)
+	try:
+		return next(i)
+	except StopIteration:
+		raise ValueError(f"Iterable contains no items.")
+
+
+@export
+def lastItem(iterable: Iterable[_Element]) -> _Element:
+	"""
+	Returns the last item from an iterable.
+
+	:param iterable: Iterable to get the last item from.
+	:return:         Last item.
+	"""
+	i = iter(iterable)
+	try:
+		element = next(i)
+	except StopIteration:
+		raise ValueError(f"Iterable contains no items.")
+
+	for element in i:
+		pass
+	return element
+
+
 _DictKey = TypeVar("_DictKey")
 _DictKey1 = TypeVar("_DictKey1")
 _DictKey2 = TypeVar("_DictKey2")
@@ -192,7 +242,7 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 
 
 @export
-def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
+def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	"""
 	Retrieves the first key-value-pair from a dictionary.
 
@@ -302,8 +352,7 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 	if len(dicts) == 0:
 		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
 
-	length = len(dicts[0])
-	if any(len(d) != length for d in dicts):
+	if any(len(d) != len(dicts[0]) for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
 	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:

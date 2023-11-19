@@ -502,9 +502,9 @@ A node object supports returning children either as a tuple via a property or as
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
 |                               | Return a Tuple                                | Return a Generator                               |
 +===============================+===============================================+==================================================+
-| Children                      | :attr:`~pyTooling.Tree.Node.Children`      | :meth:`~pyTooling.Tree.Node.GetChildren`      |
+| Children                      | :attr:`~pyTooling.Tree.Node.Children`         | :meth:`~pyTooling.Tree.Node.GetChildren`         |
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
-| Children and children thereof | — — — —                                       | :meth:`~pyTooling.Tree.Node.GetDescendants`   |
+| Children and children thereof | — — — —                                       | :meth:`~pyTooling.Tree.Node.GetDescendants`      |
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
 
 +-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
@@ -626,11 +626,11 @@ all siblings are returned or just siblings left from the current node (left sibl
 +-------------------+-----------------------------------------------+--------------------------------------------------+
 | Sibling Selection | Return a Tuple                                | Return a Generator                               |
 +===================+===============================================+==================================================+
-| Left Siblings     | :attr:`~pyTooling.Tree.Node.LeftSiblings`  | :meth:`~pyTooling.Tree.Node.GetLeftSiblings`  |
+| Left Siblings     | :attr:`~pyTooling.Tree.Node.LeftSiblings`     | :meth:`~pyTooling.Tree.Node.GetLeftSiblings`     |
 +-------------------+-----------------------------------------------+--------------------------------------------------+
-| All Siblings      | :attr:`~pyTooling.Tree.Node.Siblings`      | :meth:`~pyTooling.Tree.Node.GetSiblings`      |
+| All Siblings      | :attr:`~pyTooling.Tree.Node.Siblings`         | :meth:`~pyTooling.Tree.Node.GetSiblings`         |
 +-------------------+-----------------------------------------------+--------------------------------------------------+
-| Right Siblings    | :attr:`~pyTooling.Tree.Node.RightSiblings` | :meth:`~pyTooling.Tree.Node.GetRightSiblings` |
+| Right Siblings    | :attr:`~pyTooling.Tree.Node.RightSiblings`    | :meth:`~pyTooling.Tree.Node.GetRightSiblings`    |
 +-------------------+-----------------------------------------------+--------------------------------------------------+
 
 .. attention::
@@ -696,11 +696,11 @@ all relatives are returned or just relatives left from the current node (left re
 +--------------------+---------------------------------------------------+
 | Relative Selection | Return a Generator                                |
 +====================+===================================================+
-| Left Siblings      | :meth:`~pyTooling.Tree.Node.GetLeftRelatives`  |
+| Left Siblings      | :meth:`~pyTooling.Tree.Node.GetLeftRelatives`     |
 +--------------------+---------------------------------------------------+
-| All Siblings       | :meth:`~pyTooling.Tree.Node.GetRelatives`      |
+| All Siblings       | :meth:`~pyTooling.Tree.Node.GetRelatives`         |
 +--------------------+---------------------------------------------------+
-| Right Siblings     | :meth:`~pyTooling.Tree.Node.GetRightRelatives` |
+| Right Siblings     | :meth:`~pyTooling.Tree.Node.GetRightRelatives`    |
 +--------------------+---------------------------------------------------+
 
 .. attention::

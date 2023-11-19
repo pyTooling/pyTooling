@@ -47,7 +47,7 @@ if __name__ == "__main__":  # pragma: no cover
 class App1WithoutParameters(metaclass=ExtendedType, singleton=True):
 	X = 10
 
-	def __init__(self):
+	def __init__(self) -> None:
 		print("Instance of 'App1WithoutParameters' was created")
 
 		self.X = 11
@@ -56,7 +56,7 @@ class App1WithoutParameters(metaclass=ExtendedType, singleton=True):
 class App2WithoutParameters(metaclass=ExtendedType, singleton=True):
 	X = 20
 
-	def __init__(self):
+	def __init__(self) -> None:
 		print("Instance of 'App2WithoutParameters' was created")
 
 		self.X = 21
@@ -65,7 +65,7 @@ class App2WithoutParameters(metaclass=ExtendedType, singleton=True):
 class App3WithParameters(metaclass=ExtendedType, singleton=True):
 	X = 30
 
-	def __init__(self, x: int = 31):
+	def __init__(self, x: int = 31) -> None:
 		print("Instance of 'App1WithParameters' was created")
 
 		self.X = x
@@ -74,7 +74,7 @@ class App3WithParameters(metaclass=ExtendedType, singleton=True):
 class DerivedApp2WithoutParameters(App2WithoutParameters):
 	X = 120
 
-	def __init__(self):
+	def __init__(self) -> None:
 		super().__init__()
 		print("Instance of 'DerivedApp2WithoutParameters' was created")
 
@@ -82,7 +82,7 @@ class DerivedApp2WithoutParameters(App2WithoutParameters):
 class DerivedApp3WithInnerParameters(App3WithParameters):
 	X = 130
 
-	def __init__(self):
+	def __init__(self) -> None:
 		super().__init__(x=131)
 		print("Instance of 'DerivedApp3WithInnerParameters' was created")
 
@@ -90,7 +90,7 @@ class DerivedApp3WithInnerParameters(App3WithParameters):
 class DerivedApp3WithOuterParameters(App3WithParameters):
 	X = 135
 
-	def __init__(self, x: int = 136):
+	def __init__(self, x: int = 136) -> None:
 		super().__init__(x)
 		print("Instance of 'DerivedApp3WithOuterParameters' was created")
 
@@ -121,7 +121,7 @@ class Singleton(TestCase):
 		self.assertEqual(12, app_1.X)
 		self.assertEqual(22, app_2.X)
 
-	def test_SecondInstanceWithParameters(self):
+	def test_SecondInstanceWithParameters(self) -> None:
 		# ensure at least one instance was created
 		App1WithoutParameters()
 
@@ -130,7 +130,7 @@ class Singleton(TestCase):
 
 		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
 
-	def test_DerivedClassNoParameters(self):
+	def test_DerivedClassNoParameters(self) -> None:
 		self.assertEqual(120, DerivedApp2WithoutParameters.X)
 
 		app = DerivedApp2WithoutParameters()
@@ -145,7 +145,7 @@ class Singleton(TestCase):
 
 		self.assertEqual(120, DerivedApp2WithoutParameters.X)
 
-	def test_DerivedClassWithInnerParameters(self):
+	def test_DerivedClassWithInnerParameters(self) -> None:
 		app = DerivedApp3WithInnerParameters()
 		self.assertEqual(131, app.X)
 
@@ -153,7 +153,7 @@ class Singleton(TestCase):
 		self.assertIs(app, appSame)
 
 	@mark.xfail(reason="This case is not yet supported.")
-	def test_DerivedClassWithOuterParameters(self):
+	def test_DerivedClassWithOuterParameters(self) -> None:
 		app = DerivedApp3WithOuterParameters(x=137)
 		self.assertEqual(137, app.X)
 

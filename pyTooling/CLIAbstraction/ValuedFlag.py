@@ -29,7 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Valued flags are arguments with a name and an always present value.
+"""
+Valued flags are arguments with a name and an always present value.
 
 The usual delimiter sign between name and value is an equal sign (``=``).
 
@@ -51,10 +52,11 @@ from pyTooling.CLIAbstraction import NamedAndValuedArgument
 
 @export
 class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
-	"""Class and base-class for all ValuedFlag classes, which represents a flag argument with value.
+	"""
+	Class and base-class for all ValuedFlag classes, which represents a flag argument with value.
 
-	A valued flag is a flag name followed by a value. The default delimiter sign is equal (``=``). Name and
-	value are passed as one argument to the executable even if the delimiter sign is a whitespace character.
+	A valued flag is a flag name followed by a value. The default delimiter sign is equal (``=``). Name and value are
+	passed as one argument to the executable even if the delimiter sign is a whitespace character.
 
 	**Example:**
 
@@ -62,11 +64,12 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="{0}={1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -79,7 +82,8 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 
 @export
 class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
-	"""Represents a :py:class:`ValuedFlagArgument` with a single dash.
+	"""
+	Represents a :py:class:`ValuedFlagArgument` with a single dash.
 
 	**Example:**
 
@@ -87,11 +91,12 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="-{0}={1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -104,7 +109,8 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 
 @export
 class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
-	"""Represents a :py:class:`ValuedFlagArgument` with a double dash.
+	"""
+	Represents a :py:class:`ValuedFlagArgument` with a double dash.
 
 	**Example:**
 
@@ -112,11 +118,12 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 	"""
 
 	def __init_subclass__(cls, *args, pattern="--{0}={1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -129,7 +136,8 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 
 @export
 class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
-	"""Represents a :py:class:`ValuedFlagArgument` with a single slash.
+	"""
+	Represents a :py:class:`ValuedFlagArgument` with a single slash.
 
 	**Example:**
 
@@ -138,11 +146,12 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 
 	# TODO: Is it possible to copy the doc-string from super?
 	def __init_subclass__(cls, *args, pattern="/{0}:{1}", **kwargs):
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
+		:param args:    Any positional arguments.
 		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)

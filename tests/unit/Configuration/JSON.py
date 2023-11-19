@@ -36,7 +36,7 @@ from pyTooling.Configuration.JSON import Configuration
 
 
 class ReadingValues(TestCase):
-	def test_SimpleString(self):
+	def test_SimpleString(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		self.assertEqual("string_1", config["value_1"])
@@ -45,13 +45,13 @@ class ReadingValues(TestCase):
 		self.assertEqual("string_11", node_1["value_11"])
 		self.assertEqual("string_12", config["node_1"]["value_12"])
 
-	def test_Root(self):
+	def test_Root(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		self.assertEqual(4, len(config))
 		self.assertTrue("Install" in config)
 
-	def test_Dictionary(self):
+	def test_Dictionary(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		node_1 = config["node_1"]
@@ -64,7 +64,7 @@ class ReadingValues(TestCase):
 		second = next(iterator)
 		self.assertEqual("string_12", second)
 
-	def test_Sequence(self):
+	def test_Sequence(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		node_2 = config["node_2"]
@@ -82,19 +82,19 @@ class ReadingValues(TestCase):
 		with self.assertRaises(StopIteration):
 			_ = next(iterator)
 
-	def test_PathExpressionToNode(self):
+	def test_PathExpressionToNode(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		node = config.QueryPath("Install:VendorA:ToolA:2020")
 		self.assertEqual(r"C:\VendorA\ToolA\2020", node["InstallDir"])
 
-	def test_PathExpressionToValue(self):
+	def test_PathExpressionToValue(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		value = config.QueryPath("Install:VendorA:ToolA:2020:InstallDir")
 		self.assertEqual(r"C:\VendorA\ToolA\2020", value)
 
-	def test_Variables(self):
+	def test_Variables(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["2020"]["InstallDir"])
@@ -102,7 +102,7 @@ class ReadingValues(TestCase):
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["2020"]["BinaryDir"])
 
-	def test_NestedVariables(self):
+	def test_NestedVariables(self) -> None:
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["Defaults"]["InstallDir"])

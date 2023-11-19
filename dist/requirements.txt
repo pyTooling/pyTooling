@@ -1,2 +1,2 @@
 wheel >= 0.40.0
-twine
+twine >= 4.0.2

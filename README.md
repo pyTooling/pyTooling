@@ -39,7 +39,7 @@ This is a set of useful [helper functions](https://pytooling.github.io/pyTooling
 
 * [getsizeof](https://pytooling.github.io/pyTooling/Common/index.html#getsizeof) calculates the "real" size of a data structure.
 * [isnestedclass](https://pytooling.github.io/pyTooling/Common/index.html#isnestedclass) checks if a class is nested inside another class.
-* [firstKey](https://pytooling.github.io/pyTooling/Common/index.html#firstkey), [firstValue](https://pytooling.github.io/pyTooling/Common/index.html#firstvalue), [firstItem](https://pytooling.github.io/pyTooling/Common/index.html#firstitem) get the first key/value/item from an ordered dictionary.
+* [firstKey](https://pytooling.github.io/pyTooling/Common/index.html#firstkey), [firstValue](https://pytooling.github.io/pyTooling/Common/index.html#firstvalue), [firstPair](https://pytooling.github.io/pyTooling/Common/index.html#firstitem) get the firstItem key/value/item from an ordered dictionary.
 * [mergedicts](https://pytooling.github.io/pyTooling/Common/index.html#mergedicts) merges multiple dictionaries into a new dictionary.
 * [zipdicts](https://pytooling.github.io/pyTooling/Common/index.html#zipdicts) iterate multiple dictionaries simultaneously.
 
@@ -182,10 +182,10 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
 This is a minimal terminal application example which inherits from `LineTerminal`.
 
 ```python
-from pyTooling.TerminalUI import LineTerminal
+from pyTooling.TerminalUI import TerminalApplication
 
-class Application(LineTerminal):
-  def __init__(self):
+class Application(TerminalApplication):
+  def __init__(self) -> None:
     super().__init__()
 
   def run(self):
@@ -195,10 +195,10 @@ class Application(LineTerminal):
 
 # entry point
 if __name__ == "__main__":
-  Application.versionCheck((3, 6, 0))
+  Application.CheckPythonVersion((3, 6, 0))
   app = Application()
   app.run()
-  app.exit()
+  app.Exit()
 ```
 
 ### Timer

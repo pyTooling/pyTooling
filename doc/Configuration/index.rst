@@ -265,7 +265,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
         _configNode: Union[CommentedMap, CommentedSeq]
         # further local fields
 
-        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: Union[CommentedMap, CommentedSeq]):
+        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: Union[CommentedMap, CommentedSeq]) -> None:
           Abstract_Node.__init__(self, root, parent)
 
           self._configNode = configNode
@@ -278,7 +278,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
 
       @export
       class Dictionary(Node, Abstract_Dict):
-        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedMap):
+        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedMap) -> None:
           Node.__init__(self, root, parent, key, configNode)
 
         # Implement mandatory methods and properties
@@ -289,7 +289,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
 
       @export
       class Sequence(Node, Abstract_Seq):
-        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedSeq):
+        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedSeq) -> None:
           Node.__init__(self, root, parent, key, configNode)
 
         # Implement mandatory methods and properties
@@ -307,7 +307,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
 
       @export
       class Configuration(Dictionary, Abstract_Configuration):
-        def __init__(self, configFile: Path):
+        def __init__(self, configFile: Path) -> None:
           with configFile.open() as file:
             self._config = ...
 

@@ -148,7 +148,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
-	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None):
+	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None) -> None:
 		"""
 		.. todo:: TREE::Node::init Needs documentation.
 

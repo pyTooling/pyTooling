@@ -43,11 +43,12 @@ from pyTooling.CLIAbstraction import NamedAndValuedArgument
 
 @export
 class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
-	"""Class and base-class for all OptionalValuedFlag classes, which represents a flag argument with data.
+	"""
+	Class and base-class for all OptionalValuedFlag classes, which represents a flag argument with data.
 
-	An optional valued flag is a flag name followed by a value. The default delimiter sign is equal (``=``).
-	Name and value are passed as one arguments to the executable even if the delimiter sign is a whitespace
-	character. If the value is None, no delimiter sign and value is passed.
+	An optional valued flag is a flag name followed by a value. The default delimiter sign is equal (``=``). Name and
+	value are passed as one argument to the executable even if the delimiter sign is a whitespace character. If the value
+	is None, no delimiter sign and value is passed.
 
 	Example: ``width=100``
 	"""
@@ -63,22 +64,33 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
 
-	def __init__(self, value: str = None):
+	def __init__(self, value: str = None) -> None:
 		self._value = value
 
 	@property
 	def Value(self) -> Nullable[str]:
+		"""
+		Get the internal value.
+
+		:return: Internal value.
+		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, value: Nullable[str]) -> None:
+		"""
+		Set the internal value.
+
+		:param value: Value to set.
+		"""
 		self._value = value
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
-		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
-		on the internal name and optional value.
+		"""
+		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		the internal name and optional value.
 
-		:return: Formatted argument.
+		:return:            Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -95,7 +107,8 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 
 @export
 class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithValue="-{0}={1}"):
-	"""Represents a :py:class:`OptionalValuedFlag` with a single dash.
+	"""
+	Represents a :py:class:`OptionalValuedFlag` with a single dash.
 
 	Example: ``-optimizer=on``
 	"""
@@ -112,7 +125,8 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 
 @export
 class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithValue="--{0}={1}"):
-	"""Represents a :py:class:`OptionalValuedFlag` with a double dash.
+	"""
+	Represents a :py:class:`OptionalValuedFlag` with a double dash.
 
 	Example: ``--optimizer=on``
 	"""
@@ -129,7 +143,8 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 
 @export
 class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithValue="/{0}:{1}"):
-	"""Represents a :py:class:`OptionalValuedFlag` with a single slash.
+	"""
+	Represents a :py:class:`OptionalValuedFlag` with a single slash.
 
 	Example: ``/optimizer:on``
 	"""

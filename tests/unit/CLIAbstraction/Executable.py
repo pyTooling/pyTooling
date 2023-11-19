@@ -71,7 +71,7 @@ if __name__ == "__main__": # pragma: no cover
 class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
 	_binaryDirectoryPath = Path("/usr/bin")
 
-	def test_VersionFlag(self):
+	def test_VersionFlag(self) -> None:
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 		tool[tool.FlagVersion] = True
 
@@ -84,7 +84,7 @@ class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
 class ExplicitBinaryDirectoryOnWindows(TestCase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 
-	def test_VersionFlag(self):
+	def test_VersionFlag(self) -> None:
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 		tool[tool.FlagVersion] = True
 
@@ -94,7 +94,7 @@ class ExplicitBinaryDirectoryOnWindows(TestCase, Helper):
 
 
 class CommonOptions(TestCase, Helper):
-	def test_VersionFlag(self):
+	def test_VersionFlag(self) -> None:
 		print()
 		tool = Git()
 		tool[tool.FlagVersion] = True
@@ -105,7 +105,7 @@ class CommonOptions(TestCase, Helper):
 
 		print(output)
 
-	def test_HelpFlag(self):
+	def test_HelpFlag(self) -> None:
 		print()
 		tool = Git()
 		tool[tool.FlagHelp] = True
@@ -116,7 +116,7 @@ class CommonOptions(TestCase, Helper):
 
 		print(output)
 
-	def test_HelpCommand(self):
+	def test_HelpCommand(self) -> None:
 		print()
 		tool = Git()
 		tool[tool.CommandHelp] = True
@@ -128,10 +128,10 @@ class CommonOptions(TestCase, Helper):
 		print(output)
 
 # class Commit(TestCase, Helper):
-# 	def test_CommitWithMessage(self):
+# 	def test_CommitWithMessage(self) -> None:
 # 		tool = Git()
 # 		tool[tool.CommandCommit] = True
 # 		tool[tool.ValueCommitMessage] = "Initial commit."
 #
-# 		executable = self.getExecutablePath("git")
+# 		executable = self.GetExecutablePath("git")
 # 		tool.StartProcess()

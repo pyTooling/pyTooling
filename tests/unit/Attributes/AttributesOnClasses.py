@@ -32,10 +32,11 @@
 """
 Unit tests for attributes attached to methods.
 """
-from typing       import List, Type
 from unittest     import TestCase
 
-from pyAttributes import Attribute
+from pytest       import mark
+
+from pyTooling.Attributes import Attribute
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,61 +45,171 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Attribute1(Attribute):
-	pass
-
-class Attribute2(Attribute):
-	pass
-
-class Attribute3(Attribute):
-	pass
-
-@Attribute1()
-class Class1():
-	pass
-
-@Attribute2()
-class Class11(Class1):
-	pass
-
-@Attribute2()
-class Class12(Class11):
-	pass
-
-class Class2():
-	_cls: List[Type]
-
-	def __init__(self):
-		self._cls = []
-		for c in Attribute3.GetClasses():
-			self._cls.append(c)
-
-	@Attribute3()
-	class Class21():
-		pass
-
-	@Attribute3()
-	class Class22():
-		pass
-
-	class Class23():
-		@Attribute3()
-		class Class231():
+class ApplyClassAttributes(TestCase):
+	def test_SingleClass(self) -> None:
+		class AttributeA(Attribute):
 			pass
 
+		@AttributeA()
+		class Class1:
+			pass
 
-class Classes(TestCase):
-	def test_FindClasses(self):
-		foundClasses = [c for c in Attribute1.GetClasses()]
+		foundClasses = [c for c in AttributeA.GetClasses()]
 
-		self.assertIs(Class1, foundClasses[0])
+		self.assertListEqual(foundClasses, [Class1])
 
-	def test_FindSubClasses(self):
-		foundClasses = [c for c in Attribute2.GetClasses(filter=Class1)]
+	def test_MultipleClasses(self) -> None:
+		class AttributeA(Attribute):
+			pass
 
-		self.assertIs(Class11, foundClasses[0])
-		self.assertIs(Class12, foundClasses[1])
+		@AttributeA()
+		class Class1:
+			pass
 
-	def test_FindNestedClasses(self):
-		c = Class2()
-		self.assertEqual(3, len(c._cls))
+		@AttributeA()
+		class Class2:
+			pass
+
+		foundClasses = [c for c in AttributeA.GetClasses()]
+
+		self.assertListEqual(foundClasses, [Class1, Class2])
+
+	def test_MultipleAttributes(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		class AttributeB(Attribute):
+			pass
+
+		@AttributeA()
+		@AttributeB()
+		class Class1:
+			pass
+
+		foundClassesForA = [c for c in AttributeA.GetClasses()]
+		foundClassesForB = [c for c in AttributeB.GetClasses()]
+
+		self.assertListEqual(foundClassesForA, [Class1])
+		self.assertListEqual(foundClassesForB, [Class1])
+
+	def test_MultipleClassesAndAttributes(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		class AttributeB(Attribute):
+			pass
+
+		@AttributeA()
+		class Class1:
+			pass
+
+		@AttributeA()
+		@AttributeB()
+		class Class2:
+			pass
+
+		@AttributeB()
+		@AttributeA()
+		class Class3:
+			pass
+
+		@AttributeB()
+		class Class4:
+			pass
+
+		foundClassesForA = [c for c in AttributeA.GetClasses()]
+		foundClassesForB = [c for c in AttributeB.GetClasses()]
+
+		self.assertListEqual(foundClassesForA, [Class1, Class2, Class3])
+		self.assertListEqual(foundClassesForB, [Class2, Class3, Class4])
+
+	def test_DerivedAttributes(self) -> None:
+		class AttributeA1(Attribute):
+			pass
+
+		class AttributeA2(AttributeA1):
+			pass
+
+		@AttributeA1()
+		class Class1:
+			pass
+
+		@AttributeA2()
+		class Class2:
+			pass
+
+		foundClassesForA1 = [c for c in AttributeA1.GetClasses()]
+		foundClassesForA2 = [c for c in AttributeA2.GetClasses()]
+
+		self.assertListEqual(foundClassesForA1, [Class1])
+		self.assertListEqual(foundClassesForA2, [Class2])
+
+	def test_DoubleAppliedAttribute(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		@AttributeA()
+		class Class1:
+			pass
+
+		foundClasses = [c for c in AttributeA.GetClasses()]
+
+		self.assertListEqual(foundClasses, [Class1, Class1])
+
+	def test_AttributeAndDerivedAttribute(self) -> None:
+		class AttributeA1(Attribute):
+			pass
+
+		class AttributeA2(AttributeA1):
+			pass
+
+		@AttributeA1()
+		@AttributeA2()
+		class Class1:
+			pass
+
+		foundClassesForA1 = [c for c in AttributeA1.GetClasses()]
+		foundClassesForA2 = [c for c in AttributeA2.GetClasses()]
+
+		self.assertListEqual(foundClassesForA1, [Class1])
+		self.assertListEqual(foundClassesForA2, [Class1])
+
+
+class Filtering(TestCase):
+	def test_NoFilter(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		class Class1:
+			pass
+
+		foundClasses = [c for c in AttributeA.GetClasses()]
+
+		self.assertListEqual(foundClasses, [Class1])
+
+	@mark.xfail(reason="Attributes are not inherited (yet)")
+	def test_Predicate(self) -> None:
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		class Class1:
+			pass
+
+		class Class2(Class1):
+			pass
+
+		class Class3(Class2):
+			pass
+
+		foundClasses = [c for c in AttributeA.GetClasses()]
+		foundClassesForC1 = [c for c in AttributeA.GetClasses(predicate=Class1)]
+		foundClassesForC2 = [c for c in AttributeA.GetClasses(predicate=Class2)]
+		foundClassesForC3 = [c for c in AttributeA.GetClasses(predicate=Class3)]
+
+		self.assertListEqual(foundClasses, [Class1, Class2, Class3])
+		self.assertListEqual(foundClassesForC1, [Class1, Class2, Class3])
+		self.assertListEqual(foundClassesForC2, [Class2, Class3])
+		self.assertListEqual(foundClassesForC3, [Class3])

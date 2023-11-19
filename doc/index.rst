@@ -51,8 +51,9 @@ This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 
 * :ref:`COMMON/Helper/getsizeof` calculates the "real" size of a data structure.
 * :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
-* :ref:`COMMON/Helper/firstKey`, :ref:`COMMON/Helper/firstValue`, :ref:`COMMON/Helper/firstItem` get the first
-  key/value/item from an ordered dictionary.
+* :ref:`COMMON/Helper/firstItem`, :ref:`COMMON/Helper/lastItem` get the first/last item from an iterable.
+* :ref:`COMMON/Helper/firstKey`, :ref:`COMMON/Helper/firstValue`, :ref:`COMMON/Helper/firstPair` get the first
+  key/value/pair from an ordered dictionary.
 * :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
 * :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
 

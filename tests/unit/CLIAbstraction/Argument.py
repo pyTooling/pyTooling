@@ -54,11 +54,11 @@ if __name__ == "__main__": # pragma: no cover
 
 
 class WithoutPrefix(TestCase):
-	def test_CommandLineArgument(self):
+	def test_CommandLineArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = CommandLineArgument()
 
-	def test_ExecutableArgument(self):
+	def test_ExecutableArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ExecutableArgument("program.exe")
 
@@ -78,7 +78,7 @@ class WithoutPrefix(TestCase):
 		self.assertIs(executablePath2, argument.Executable)
 
 
-	def test_DelimiterArgument(self):
+	def test_DelimiterArgument(self) -> None:
 		pattern = "--"
 		argument = DelimiterArgument()
 
@@ -86,7 +86,7 @@ class WithoutPrefix(TestCase):
 		self.assertEqual(f"\"{pattern}\"", str(argument))
 		self.assertEqual(str(argument), repr(argument))
 
-	def test_DerivedDelimiterArgument(self):
+	def test_DerivedDelimiterArgument(self) -> None:
 		pattern = "++"
 
 		class Delimiter(DelimiterArgument, pattern=pattern):
@@ -98,11 +98,11 @@ class WithoutPrefix(TestCase):
 		self.assertEqual(f"\"{pattern}\"", str(argument))
 		self.assertEqual(str(argument), repr(argument))
 
-	def test_AbstractCommandArgument(self):
+	def test_AbstractCommandArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = CommandArgument()
 
-	def test_CommandArgument(self):
+	def test_CommandArgument(self) -> None:
 		name = "command"
 
 		class Command(CommandArgument, name=name):
@@ -118,11 +118,11 @@ class WithoutPrefix(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_NamedArgument(self):
+	def test_NamedArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = NamedArgument()
 
-	def test_DerivedNamedArgument(self):
+	def test_DerivedNamedArgument(self) -> None:
 		name = "command"
 
 		class Command(CommandArgument, name=name):
@@ -138,7 +138,7 @@ class WithoutPrefix(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "command2"
 
-	def test_ValuedArgument(self):
+	def test_ValuedArgument(self) -> None:
 		value = "value"
 		argument = ValuedArgument(value)
 
@@ -147,11 +147,11 @@ class WithoutPrefix(TestCase):
 		self.assertEqual(f"\"{value}\"", str(argument))
 		self.assertEqual(str(argument), repr(argument))
 
-	def test_NamedAndValuedArgument(self):
+	def test_NamedAndValuedArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = NamedAndValuedArgument()
 
-	def test_DerivedNamedAndValuedArgument(self):
+	def test_DerivedNamedAndValuedArgument(self) -> None:
 		name = "flag"
 		value = "value"
 
@@ -167,7 +167,7 @@ class WithoutPrefix(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_StringArgument(self):
+	def test_StringArgument(self) -> None:
 		value = "value"
 		argument = StringArgument(value)
 
@@ -180,7 +180,7 @@ class WithoutPrefix(TestCase):
 		argument.Value = value2
 		self.assertIs(value2, argument.Value)
 
-	def test_StringListArgument(self):
+	def test_StringListArgument(self) -> None:
 		values = ("value1", "value2")
 		argument = StringListArgument(values)
 
@@ -203,7 +203,7 @@ class WithoutPrefix(TestCase):
 		self.assertEqual(f"\"{values2[0]}\" \"{values2[1]}\"", str(argument))
 		self.assertEqual(f"\"{values2[0]}\", \"{values2[1]}\"", repr(argument))
 
-	def test_PathArgument(self):
+	def test_PathArgument(self) -> None:
 		path = Path("file1.txt")
 		argument = PathArgument(path)
 
@@ -216,7 +216,7 @@ class WithoutPrefix(TestCase):
 		argument.Value = path2
 		self.assertIs(path2, argument.Value)
 
-	def test_PathListArgument(self):
+	def test_PathListArgument(self) -> None:
 		values = (Path("file1.txt"), Path("file2.txt"))
 		argument = PathListArgument(values)
 
@@ -241,11 +241,11 @@ class WithoutPrefix(TestCase):
 
 
 class Commands(TestCase):
-	def test_ShortCommand(self):
+	def test_ShortCommand(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortCommand()
 
-	def test_DerivedShortCommand(self):
+	def test_DerivedShortCommand(self) -> None:
 		name = "command"
 
 		class Command(ShortCommand, name=name):
@@ -261,11 +261,11 @@ class Commands(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "command2"
 
-	def test_LongCommand(self):
+	def test_LongCommand(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongCommand()
 
-	def test_DerivedLongCommand(self):
+	def test_DerivedLongCommand(self) -> None:
 		name = "command"
 
 		class Command(LongCommand, name=name):
@@ -281,11 +281,11 @@ class Commands(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "command2"
 
-	def test_WindowsCommand(self):
+	def test_WindowsCommand(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsCommand()
 
-	def test_DerivedWindowsCommand(self):
+	def test_DerivedWindowsCommand(self) -> None:
 		name = "command"
 
 		class Command(WindowsCommand, name=name):
@@ -303,11 +303,11 @@ class Commands(TestCase):
 
 
 class Flags(TestCase):
-	def test_FlagArgument(self):
+	def test_FlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = FlagArgument()
 
-	def test_DerivedFlagArgument(self):
+	def test_DerivedFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(FlagArgument, name=name):
@@ -323,11 +323,11 @@ class Flags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_ShortFlagArgument(self):
+	def test_ShortFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortFlag()
 
-	def test_DerivedShortFlagArgument(self):
+	def test_DerivedShortFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(ShortFlag, name=name):
@@ -343,11 +343,11 @@ class Flags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_LongFlagArgument(self):
+	def test_LongFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongFlag()
 
-	def test_DerivedLongFlagArgument(self):
+	def test_DerivedLongFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(LongFlag, name=name):
@@ -363,11 +363,11 @@ class Flags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_WindowsFlagArgument(self):
+	def test_WindowsFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsFlag()
 
-	def test_DerivedWindowsFlagArgument(self):
+	def test_DerivedWindowsFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(WindowsFlag, name=name):
@@ -385,11 +385,11 @@ class Flags(TestCase):
 
 
 class BooleanFlags(TestCase):
-	def test_BooleanFlagArgument(self):
+	def test_BooleanFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = BooleanFlag()
 
-	def test_DerivedBooleanFlagArgument(self):
+	def test_DerivedBooleanFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(BooleanFlag, name=name):
@@ -412,11 +412,11 @@ class BooleanFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_ShortBooleanFlagArgument(self):
+	def test_ShortBooleanFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortBooleanFlag()
 
-	def test_DerivedShortBooleanFlagArgument(self):
+	def test_DerivedShortBooleanFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(ShortBooleanFlag, name=name):
@@ -439,11 +439,11 @@ class BooleanFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_LongBooleanFlagArgument(self):
+	def test_LongBooleanFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongBooleanFlag()
 
-	def test_DerivedLongBooleanFlagArgument(self):
+	def test_DerivedLongBooleanFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(LongBooleanFlag, name=name):
@@ -466,11 +466,11 @@ class BooleanFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_WindowsBooleanFlagArgument(self):
+	def test_WindowsBooleanFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsBooleanFlag()
 
-	def test_DerivedWindowsBooleanFlagArgument(self):
+	def test_DerivedWindowsBooleanFlagArgument(self) -> None:
 		name = "flag"
 
 		class Flag(WindowsBooleanFlag, name=name):
@@ -495,11 +495,11 @@ class BooleanFlags(TestCase):
 
 
 class OptionalValuedFlags(TestCase):
-	def test_OptionalValuedFlag(self):
+	def test_OptionalValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = OptionalValuedFlag()
 
-	def test_DerivedOptionalValuedFlag(self):
+	def test_DerivedOptionalValuedFlag(self) -> None:
 		name = "flag"
 		value = None
 
@@ -525,11 +525,11 @@ class OptionalValuedFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_ShortOptionalValuedFlag(self):
+	def test_ShortOptionalValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortOptionalValuedFlag()
 
-	def test_DerivedShortOptionalValuedFlag(self):
+	def test_DerivedShortOptionalValuedFlag(self) -> None:
 		name = "flag"
 		value = None
 
@@ -555,11 +555,11 @@ class OptionalValuedFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_LongOptionalValuedFlag(self):
+	def test_LongOptionalValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongOptionalValuedFlag()
 
-	def test_DerivedLongOptionalValuedFlag(self):
+	def test_DerivedLongOptionalValuedFlag(self) -> None:
 		name = "flag"
 		value = None
 
@@ -585,11 +585,11 @@ class OptionalValuedFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_WindowsOptionalValuedFlag(self):
+	def test_WindowsOptionalValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsOptionalValuedFlag()
 
-	def test_DerivedWindowsOptionalValuedFlag(self):
+	def test_DerivedWindowsOptionalValuedFlag(self) -> None:
 		name = "flag"
 		value = None
 
@@ -617,11 +617,11 @@ class OptionalValuedFlags(TestCase):
 
 
 class ValuedFlags(TestCase):
-	def test_ValuedFlag(self):
+	def test_ValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ValuedFlag()
 
-	def test_DerivedValuedFlag(self):
+	def test_DerivedValuedFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -647,11 +647,11 @@ class ValuedFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_ShortValuedFlag(self):
+	def test_ShortValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortValuedFlag()
 
-	def test_DerivedShortValuedFlag(self):
+	def test_DerivedShortValuedFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -677,11 +677,11 @@ class ValuedFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_LongValuedFlag(self):
+	def test_LongValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongValuedFlag()
 
-	def test_DerivedLongValuedFlag(self):
+	def test_DerivedLongValuedFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -707,11 +707,11 @@ class ValuedFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_WindowsValuedFlag(self):
+	def test_WindowsValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsValuedFlag()
 
-	def test_DerivedWindowsValuedFlag(self):
+	def test_DerivedWindowsValuedFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -739,11 +739,11 @@ class ValuedFlags(TestCase):
 
 
 class ValuedFlagLists(TestCase):
-	def test_ValuedFlagList(self):
+	def test_ValuedFlagList(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ValuedFlagList()
 
-	def test_DerivedValuedFlagList(self):
+	def test_DerivedValuedFlagList(self) -> None:
 		name = "flag"
 		values = ("42", "84")
 
@@ -775,11 +775,11 @@ class ValuedFlagLists(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_ShortValuedFlagList(self):
+	def test_ShortValuedFlagList(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortValuedFlagList()
 
-	def test_DerivedShortValuedFlagList(self):
+	def test_DerivedShortValuedFlagList(self) -> None:
 		name = "flag"
 		values = ("42", "84")
 
@@ -811,11 +811,11 @@ class ValuedFlagLists(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_LongValuedFlagList(self):
+	def test_LongValuedFlagList(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongValuedFlagList()
 
-	def test_DerivedLongValuedFlagList(self):
+	def test_DerivedLongValuedFlagList(self) -> None:
 		name = "flag"
 		values = ("42", "84")
 
@@ -848,11 +848,11 @@ class ValuedFlagLists(TestCase):
 			argument.Name = "flag2"
 
 
-	def test_WindowsValuedFlagList(self):
+	def test_WindowsValuedFlagList(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsValuedFlagList()
 
-	def test_DerivedWindowsValuedFlagList(self):
+	def test_DerivedWindowsValuedFlagList(self) -> None:
 		name = "flag"
 		values = ("42", "84")
 
@@ -886,11 +886,11 @@ class ValuedFlagLists(TestCase):
 
 
 class ValuedTupleFlags(TestCase):
-	def test_ValuedTupleArgument(self):
+	def test_ValuedTupleArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = NamedTupledArgument()
 
-	def test_DerivedValuedTupleArgument(self):
+	def test_DerivedValuedTupleArgument(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -919,11 +919,11 @@ class ValuedTupleFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_ShortTupleFlag(self):
+	def test_ShortTupleFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortTupleFlag()
 
-	def test_DerivedShortTupleFlag(self):
+	def test_DerivedShortTupleFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -952,11 +952,11 @@ class ValuedTupleFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
 
-	def test_LongTupleFlag(self):
+	def test_LongTupleFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongTupleFlag()
 
-	def test_DerivedLongTupleFlag(self):
+	def test_DerivedLongTupleFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -986,11 +986,11 @@ class ValuedTupleFlags(TestCase):
 			argument.Name = "flag2"
 
 
-	def test_WindowsTupleFlag(self):
+	def test_WindowsTupleFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsTupleFlag()
 
-	def test_DerivedWindowsTupleFlag(self):
+	def test_DerivedWindowsTupleFlag(self) -> None:
 		name = "flag"
 		value = "42"
 
@@ -1021,11 +1021,11 @@ class ValuedTupleFlags(TestCase):
 
 
 class KeyValueFlags(TestCase):
-	def test_KeyValueFlag(self):
+	def test_KeyValueFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = NamedKeyValuePairsArgument()
 
-	def test_DerivedNamedKeyValuePairsArgument(self):
+	def test_DerivedNamedKeyValuePairsArgument(self) -> None:
 		name = "g"
 		pairs = {"key1": "value1", "key2": "value2"}
 
@@ -1058,11 +1058,11 @@ class KeyValueFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "G"
 
-	def test_ShortKeyValueFlag(self):
+	def test_ShortKeyValueFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortKeyValueFlag()
 
-	def test_DerivedShortKeyValueFlag(self):
+	def test_DerivedShortKeyValueFlag(self) -> None:
 		name = "g"
 		pairs = {"key1": "value1", "key2": "value2"}
 
@@ -1095,11 +1095,11 @@ class KeyValueFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "G"
 
-	def test_LongKeyValueFlag(self):
+	def test_LongKeyValueFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = LongKeyValueFlag()
 
-	def test_DerivedLongKeyValueFlag(self):
+	def test_DerivedLongKeyValueFlag(self) -> None:
 		name = "g"
 		pairs = {"key1": "value1", "key2": "value2"}
 
@@ -1132,11 +1132,11 @@ class KeyValueFlags(TestCase):
 		with self.assertRaises(AttributeError):
 			argument.Name = "G"
 
-	def test_WindowsKeyValueFlag(self):
+	def test_WindowsKeyValueFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = WindowsKeyValueFlag()
 
-	def test_DerivedWindowsKeyValueFlag(self):
+	def test_DerivedWindowsKeyValueFlag(self) -> None:
 		name = "g"
 		pairs = {"key1": "value1", "key2": "value2"}
 

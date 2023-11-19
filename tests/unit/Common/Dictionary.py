@@ -29,11 +29,11 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`isnestedclass`.
+Unit tests for :func:`firstKey`, :func:`firstValue`, :func:`firstPair`, :func:`mergedicts` and :func:`zipdicts`.
 """
-from unittest import TestCase
+from unittest         import TestCase
 
-from pyTooling.Common import firstKey, firstValue, firstItem, mergedicts, zipdicts
+from pyTooling.Common import firstKey, firstValue, firstPair, mergedicts, zipdicts
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,70 +43,70 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class First(TestCase):
-	def test_FirstKey0(self):
+	def test_FirstKey0(self) -> None:
 		d = {}
 
 		with self.assertRaises(ValueError):
-			f = firstKey(d)
+			_ = firstKey(d)
 
-	def test_FirstKey1(self):
+	def test_FirstKey1(self) -> None:
 		d = {"1": 1}
 
 		f = firstKey(d)
 		self.assertEqual("1", f)
 
-	def test_FirstKey2(self):
+	def test_FirstKey2(self) -> None:
 		d = {"1": 1, "2": 2}
 
 		f = firstKey(d)
 		self.assertEqual("1", f)
 
-	def test_FirstValue0(self):
+	def test_FirstValue0(self) -> None:
 		d = {}
 
 		with self.assertRaises(ValueError):
-			f = firstValue(d)
+			_ = firstValue(d)
 
-	def test_FirstValue1(self):
+	def test_FirstValue1(self) -> None:
 		d = {"1": 1}
 
 		f = firstValue(d)
 		self.assertEqual(1, f)
 
-	def test_FirstValue2(self):
+	def test_FirstValue2(self) -> None:
 		d = {"1": 1, "2": 2}
 
 		f = firstValue(d)
 		self.assertEqual(1, f)
 
-	def test_FirstItem0(self):
+	def test_FirstPair0(self) -> None:
 		d = {}
 
 		with self.assertRaises(ValueError):
-			f = firstItem(d)
+			_ = firstPair(d)
 
-	def test_FirstItem1(self):
+	def test_FirstPair1(self) -> None:
 		d = {"1": 1}
 
-		f = firstItem(d)
+		f = firstPair(d)
 		self.assertTupleEqual(("1", 1), f)
 
-	def test_FirstItem2(self):
+	def test_FirstPair2(self) -> None:
 		d = {"1": 1, "2": 2}
 
-		f = firstItem(d)
+		f = firstPair(d)
 		self.assertTupleEqual(("1", 1), f)
 
 
 class Merge(TestCase):
-	def test_NoDicts(self):
+	def test_NoDicts(self) -> None:
 		with self.assertRaises(ValueError):
-			m = mergedicts()
+			_ = mergedicts()
 
 		with self.assertRaises(ValueError):
-			m = mergedicts(filter=lambda k, v: True)
+			_ = mergedicts(filter=lambda k, v: True)
 
-	def test_Merge1(self):
+	def test_Merge1(self) -> None:
 		d1 = {"1": 1, "2": 2}
 
 		expected = (
@@ -117,7 +117,7 @@ class Merge(TestCase):
 		m = mergedicts(d1)
 		self.assertTupleEqual(expected, tuple(m.items()))
 
-	def test_Merge2(self):
+	def test_Merge2(self) -> None:
 		d1 = {"1": 1, "2": 2}
 		d2 = {"3": 3, "4": 4}
 
@@ -131,7 +131,7 @@ class Merge(TestCase):
 		m = mergedicts(d1, d2)
 		self.assertTupleEqual(expected, tuple(m.items()))
 
-	def test_Merge3(self):
+	def test_Merge3(self) -> None:
 		d1 = {"1": 1, "2": 2}
 		d2 = {"3": 3, "4": 4}
 		d3 = {"5": 5, "6": 6}
@@ -148,7 +148,7 @@ class Merge(TestCase):
 		m = mergedicts(d1, d2, d3)
 		self.assertTupleEqual(expected, tuple(m.items()))
 
-	def test_Merge2Filter(self):
+	def test_Merge2Filter(self) -> None:
 		d1 = {"1": 1, "2": 2}
 		d2 = {"3": 3, "4": 4}
 
@@ -162,18 +162,18 @@ class Merge(TestCase):
 
 
 class Zip(TestCase):
-	def test_NoDicts(self):
+	def test_NoDicts(self) -> None:
 		with self.assertRaises(ValueError):
-			z = zipdicts()
+			_ = zipdicts()
 
-	def test_Zip1_2(self):
+	def test_Zip1_2(self) -> None:
 		d1 = {"a": 1}
 		d2 = {"a": "1", "b": "2"}
 
 		with self.assertRaises(ValueError):
-			z = zipdicts(d1, d2)
+			_ = zipdicts(d1, d2)
 
-	def test_Zip2_2(self):
+	def test_Zip2_2(self) -> None:
 		d1 = {"a": 1,   "b": 2}
 		d2 = {"a": "1", "b": "2"}
 

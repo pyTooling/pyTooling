@@ -43,10 +43,10 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Application(metaclass=ExtendedType):
-	def __init__(self, x : int):
+	def __init__(self, x : int) -> None:
 		self.x = x
 
-	def __init__(self, x : str):
+	def __init__(self, x : str) -> None:
 		self.x = x
 
 

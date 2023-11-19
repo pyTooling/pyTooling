@@ -30,39 +30,28 @@
 # ==================================================================================================================== #
 #
 """Basic abstraction layer for executables."""
-# __author__ =    "Patrick Lehmann"
-# __email__ =     "Paebbels@gmail.com"
-# __copyright__ = "2014-2023, Patrick Lehmann"
-# __license__ =   "Apache License, Version 2.0"
-# __version__ =   "0.4.2"
+
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
 
 from os                    import environ as os_environ
 from pathlib               import Path
 from platform              import system
 from shutil                import which as shutil_which
-from subprocess            import (
-	Popen		as Subprocess_Popen,
-	PIPE		as Subprocess_Pipe,
-	STDOUT	as Subprocess_StdOut
-)
+from subprocess            import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
 from typing                import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator
 
 from pyTooling.Decorators  import export
-from pyTooling.Exceptions  import ExceptionBase, PlatformNotSupportedException
+from pyTooling.Exceptions  import ToolingException, PlatformNotSupportedException
 from pyTooling.MetaClasses import ExtendedType
-from pyAttributes          import Attribute
+from pyTooling.Attributes  import Attribute
 
-from .Argument import (
-	CommandLineArgument, ExecutableArgument,
-	NamedAndValuedArgument, ValuedArgument, PathArgument,
-	PathListArgument, NamedTupledArgument
-)
+from .Argument   import CommandLineArgument, ExecutableArgument
+from .Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from .ValuedFlag import ValuedFlag
 
 
 @export
-class CLIAbstractionException(ExceptionBase):
+class CLIAbstractionException(ToolingException):
 	pass
 
 
@@ -80,7 +69,7 @@ class CLIArgument(Attribute):
 class Environment(metaclass=ExtendedType, slots=True):
 	_variables: Dict[str, str]
 
-	def __init__(self, variables: Dict[str, str] = None):
+	def __init__(self, variables: Dict[str, str] = None) -> None:
 		if variables is None:
 			variables = os_environ
 
@@ -121,7 +110,7 @@ class Program(metaclass=ExtendedType, slots=True):
 			cls.__cliOptions__[option] = order
 			order += 1
 
-	def __init__(self, executablePath: Path = None, binaryDirectoryPath: Path = None, dryRun: bool = False):
+	def __init__(self, executablePath: Path = None, binaryDirectoryPath: Path = None, dryRun: bool = False) -> None:
 		self._platform =    system()
 		self._dryRun =      dryRun
 
@@ -244,7 +233,7 @@ class Program(metaclass=ExtendedType, slots=True):
 
 # @export
 # class Environment:
-# 	def __init__(self):
+# 	def __init__(self) -> None:
 # 		self.Variables = {}
 
 
@@ -341,12 +330,12 @@ class Executable(Program):  # (ILogable):
 	# This is TCL specific
 	# def ReadUntilBoundary(self, indent=0):
 	# 	__indent = "  " * indent
-	# 	if (self._iterator is None):
+	# 	if self._iterator is None:
 	# 		self._iterator = iter(self.GetReader())
 	#
 	# 	for line in self._iterator:
 	# 		print(__indent + line)
-	# 		if (self._pyIPCMI_BOUNDARY in line):
+	# 		if self._pyIPCMI_BOUNDARY in line:
 	# 			break
 	# 	self.LogDebug("Quartus II is ready")
 
@@ -357,7 +346,7 @@ class OutputFilteredExecutable(Executable):
 	_hasErrors:   bool
 	_hasFatals:   bool
 
-	def __init__(self, platform, dryrun, executablePath): #, environment=None, logger=None):
+	def __init__(self, platform, dryrun, executablePath): #, environment=None, logger=None) -> None:
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 
 		self._hasOutput =   False

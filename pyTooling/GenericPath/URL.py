@@ -59,7 +59,7 @@ class Host(RootMixIn):
 	_hostname : str
 	_port :     Nullable[int]
 
-	def __init__(self, hostname: str, port: int = None):
+	def __init__(self, hostname: str, port: int = None) -> None:
 		super().__init__()
 		self._hostname = hostname
 		self._port =     port
@@ -111,7 +111,7 @@ class URL:
 	_query:     Nullable[Dict[str, str]]
 	_fragment:  Nullable[str]
 
-	def __init__(self, scheme: Protocols, path: Path, host: Host = None, user: str = None, password: str = None, query: Dict[str, str] = None, fragment: str = None):
+	def __init__(self, scheme: Protocols, path: Path, host: Host = None, user: str = None, password: str = None, query: Dict[str, str] = None, fragment: str = None) -> None:
 		self._scheme =    scheme
 		self._user =      user
 		self._password =  password
@@ -175,14 +175,14 @@ class URL:
 	@classmethod
 	def Parse(cls, path: str) -> "URL":
 		matches = regExp.match(path)
-		if (matches is not None):
+		if matches is not None:
 			scheme =    matches.group("scheme")
 			user =      None # matches.group("user")
 			password =  None # matches.group("password")
 			host =      matches.group("host")
 
 			port = matches.group("port")
-			if (port is not None):
+			if port is not None:
 				port =      int(port)
 			path =      matches.group("path")
 			query =     matches.group("query")
@@ -194,7 +194,7 @@ class URL:
 			pathObj =   Path.Parse(path, hostObj)
 
 			parameters = {}
-			if (query is not None):
+			if query is not None:
 				for pair in query.split("&"):
 					key, value = pair.split("=")
 					parameters[key] = value

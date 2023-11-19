@@ -221,11 +221,11 @@ autodoc_typehints = "both"
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-	"gh":      ("https://GitHub.com/%s", "gh:"),
-	"ghissue": ("https://GitHub.com/pyTooling/pyTooling/issues/%s", "issue #"),
-	"ghpull":  ("https://GitHub.com/pyTooling/pyTooling/pull/%s", "pull request #"),
-	"ghsrc":   ("https://GitHub.com/pyTooling/pyTooling/blob/main/%s", ""),
-	"wiki":    ("https://en.wikipedia.org/wiki/%s", ""),
+	"gh":      ("https://GitHub.com/%s", "gh:%s"),
+	"ghissue": ("https://GitHub.com/pyTooling/pyTooling/issues/%s", "issue #%s"),
+	"ghpull":  ("https://GitHub.com/pyTooling/pyTooling/pull/%s", "pull request #%s"),
+	"ghsrc":   ("https://GitHub.com/pyTooling/pyTooling/blob/main/%s", None),
+	"wiki":    ("https://en.wikipedia.org/wiki/%s", None),
 }
 
 
