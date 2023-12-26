@@ -1,11 +1,13 @@
 from argparse import ArgumentParser, Namespace
-from typing import Callable, Dict, Tuple, Any, List, Mapping, Iterable
+from typing import Callable, Dict, Tuple, Any, Mapping, Iterable, TypeVar
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import firstElement, firstPair
+from pyTooling.Attributes  import Attribute
 
-from .. import Attribute
+
+M = TypeVar("M", bound=Callable)
 
 
 #@abstract
@@ -15,8 +17,54 @@ class ArgParseAttribute(Attribute):
 	Base-class for all attributes to describe a :mod:`argparse`-base command line argument parser.
 	"""
 
+
+@export
+class _HandlerMixin(metaclass=ExtendedType, mixin=True):
+	"""
+	A mixin-class that offers a class field for a reference to a handler method and a matching property.
+	"""
+	_handler: Callable = None   #: Reference to a method that is called to handle e.g. a sub-command.
+
+	@property
+	def Handler(self) -> Callable:
+		"""Returns the handler method."""
+		return self._handler
+
+
+# FIXME: Is _HandlerMixin needed here, or for commands?
+@export
+class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
+	"""
+	Base-class for all *Argument* classes.
+
+	An argument instance can be converted via ``AsArgument`` to a single string value or a sequence of string values
+	(tuple) usable e.g. with :class:`subprocess.Popen`. Each argument class implements at least one ``pattern`` parameter
+	to specify how argument are formatted.
+
+	There are multiple derived formats supporting:
+
+	* commands |br|
+	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Command`
+	* simple names (flags) |br|
+	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Flag`, :mod:`~pyTooling.Attribute.ArgParse.BooleanFlag`
+	* simple values (vlaued flags) |br|
+	  |rarr| :class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`, :class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`
+	* names and values |br|
+	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.ValuedFlag`, :mod:`~pyTooling.Attribute.ArgParse.OptionalValuedFlag`
+	* key-value pairs |br|
+	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.NamedKeyValuePair`
+	"""
+
+	# def __init__(self, args: Iterable, kwargs: Mapping) -> None:
+	# 	"""
+	# 	The constructor expects ``args`` for positional and/or ``kwargs`` for named parameters which are passed without
+	# 	modification to :meth:`~ArgumentParser.add_argument`.
+	# 	"""
+	#
+	# 	super().__init__(*args, **kwargs)
+
 	_args:   Tuple
-	_kwargs: Mapping
+	_kwargs: Dict
 
 	def __init__(self, *args, **kwargs) -> None:
 		"""
@@ -26,6 +74,22 @@ class ArgParseAttribute(Attribute):
 		super().__init__()
 		self._args =   args
 		self._kwargs = kwargs
+
+	@property
+	def Args(self) -> Tuple:
+		"""
+		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
+		passed without modification to :class:`~ArgumentParser`.
+		"""
+		return self._args
+
+	@property
+	def KWArgs(self) -> Dict:
+		"""
+		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
+		passed without modification to :class:`~ArgumentParser`.
+		"""
+		return self._kwargs
 
 
 @export
@@ -48,50 +112,37 @@ class CommandGroupAttribute(ArgParseAttribute):
 		return self.__groupName
 
 
-@export
-class _HandlerMixin(metaclass=ExtendedType, mixin=True):
-	"""
-	A mixin-class that offers a class field for a reference to a handler method and a matching property.
-	"""
-	_handler: Callable = None   #: Reference to a method that is called to handle e.g. a sub-command.
-
-	@property
-	def Handler(self) -> Callable:
-		"""Returns the handler method."""
-		return self._handler
-
-
-@export
-class _KwArgsMixin(metaclass=ExtendedType, mixin=True):
-	"""
-	A mixin-class that offers a class field for named parameters (```**kwargs``) and a matching property.
-	"""
-	_kwargs: Dict        #: A dictionary of additional keyword parameters.
-
-	@property
-	def KWArgs(self) -> Dict:
-		"""
-		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
-		passed without modification to :class:`~ArgumentParser`.
-		"""
-		return self._kwargs
-
-
-@export
-class _ArgsMixin(_KwArgsMixin, mixin=True):
-	"""
-	A mixin-class that offers a class field for positional parameters (```*args``) and a matching property.
-	"""
-
-	_args: Tuple  #: A tuple of additional positional parameters.
-
-	@property
-	def Args(self) -> Tuple:
-		"""
-		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
-		passed without modification to :class:`~ArgumentParser`.
-		"""
-		return self._args
+# @export
+# class _KwArgsMixin(metaclass=ExtendedType, mixin=True):
+# 	"""
+# 	A mixin-class that offers a class field for named parameters (```**kwargs``) and a matching property.
+# 	"""
+# 	_kwargs: Dict        #: A dictionary of additional keyword parameters.
+#
+# 	@property
+# 	def KWArgs(self) -> Dict:
+# 		"""
+# 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
+# 		passed without modification to :class:`~ArgumentParser`.
+# 		"""
+# 		return self._kwargs
+#
+#
+# @export
+# class _ArgsMixin(_KwArgsMixin, mixin=True):
+# 	"""
+# 	A mixin-class that offers a class field for positional parameters (```*args``) and a matching property.
+# 	"""
+#
+# 	_args: Tuple  #: A tuple of additional positional parameters.
+#
+# 	@property
+# 	def Args(self) -> Tuple:
+# 		"""
+# 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
+# 		passed without modification to :class:`~ArgumentParser`.
+# 		"""
+# 		return self._args
 
 
 @export
@@ -105,6 +156,54 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 	def __call__(self, func: Callable) -> Callable:
 		self._handler = func
 		return super().__call__(func)
+
+
+@export
+class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
+	"""Marks a handler method as responsible for the given 'command'. This constructs
+	a sub-command parser using :meth:`~ArgumentParser.add_subparsers`.
+	"""
+
+	_command: str
+	# FIXME: extract to mixin?
+	_args:   Tuple
+	_kwargs: Dict
+
+	def __init__(self, command: str, **kwargs) -> None:
+		"""The constructor expects a 'command' and an optional list of named parameters
+		(keyword arguments) which are passed without modification to :meth:`~ArgumentParser.add_subparsers`.
+		"""
+		super().__init__()
+		self._command = command
+		self._args =   tuple()
+		self._kwargs = kwargs
+
+	def __call__(self, func: M) -> M:
+		self._handler = func
+		return super().__call__(func)
+
+	@property
+	def Command(self) -> str:
+		"""Returns the 'command' a sub-command parser adheres to."""
+		return self._command
+
+# FIXME: extract to mixin?
+	@property
+	def Args(self) -> Tuple:
+		"""
+		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
+		passed without modification to :class:`~ArgumentParser`.
+		"""
+		return self._args
+
+	# FIXME: extract to mixin?
+	@property
+	def KWArgs(self) -> Dict:
+		"""
+		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
+		passed without modification to :class:`~ArgumentParser`.
+		"""
+		return self._kwargs
 
 
 @export
@@ -122,7 +221,6 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.
 		"""
-		from .Command  import CommandHandler
 		from .Argument import CommandLineArgument
 
 		super().__init__()
@@ -132,6 +230,8 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 		if "formatter_class" in kwargs:
 			self._formatter = kwargs["formatter_class"]
+		if "allow_abbrev" not in kwargs:
+			kwargs["allow_abbrev"] = False
 
 		# create a commandline argument parser
 		self._mainParser = ArgumentParser(**kwargs)
@@ -149,7 +249,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			self._mainParser.set_defaults(func=firstElement(attributes).Handler)
 
 			# Add argument descriptions for the main parser
-			methodAttributes = defaultMethod.GetAttributes(ArgumentAttribute)
+			methodAttributes = defaultMethod.GetAttributes(CommandLineArgument)  # ArgumentAttribute)
 			for methodAttribute in methodAttributes:
 				self._mainParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
@@ -167,11 +267,14 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			kwArgs = attribute.KWArgs.copy()
 			if "formatter_class" not in kwArgs and self._formatter is not None:
 				kwArgs["formatter_class"] = self._formatter
+
+			kwArgs["allow_abbrev"] = False if "allow_abbrev" not in kwargs else kwargs["allow_abbrev"]
+
 			subParser = self._subParser.add_parser(attribute.Command, **kwArgs)
 			subParser.set_defaults(func=attribute.Handler)
 
 			# Add arguments for the sub-parsers
-			methodAttributes = method.GetAttributes(ArgumentAttribute)
+			methodAttributes = method.GetAttributes(CommandLineArgument)  # ArgumentAttribute)
 			for methodAttribute in methodAttributes:
 				subParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
@@ -220,47 +323,3 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 # OptionalValued --option --option=foo
 # ValuedTuple
 
-
-@export
-class ArgumentAttribute(ArgParseAttribute, _ArgsMixin):
-	"""Base-class for all attributes storing arguments."""
-
-
-@export
-class SwitchArgumentAttribute(ArgumentAttribute):
-	"""
-	Defines a switch argument like ``--help``.
-
-	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
-	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument
-	is present in the commandline arguments, otherwise ``False``.
-	"""
-
-	def __init__(self, *args, dest:str, **kwargs) -> None:
-		"""
-		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
-		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
-
-		To implement a switch argument, the following named parameters are predefined:
-
-		* ``action="store_const"``
-		* ``const=True``
-		* ``default=False``
-
-		This implements a boolean parameter passed to the handler method.
-		"""
-		kwargs['dest'] =    dest
-		kwargs['action'] =  "store_const"
-		kwargs['const'] =   True
-		kwargs['default'] = False
-		super().__init__(*args, **kwargs)
-
-
-@export
-class CommonArgumentAttribute(ArgumentAttribute):
-	pass
-
-
-@export
-class CommonSwitchArgumentAttribute(SwitchArgumentAttribute):
-	pass
