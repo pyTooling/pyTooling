@@ -40,13 +40,9 @@ pyTooling.Attributes
 from typing   import Callable, Any
 from unittest import TestCase
 
-from Attributes.ArgParse.Argument import StringArgument
-from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, ArgumentAttribute, \
-	CommonSwitchArgumentAttribute
-from pyTooling.Attributes.ArgParse.Command  import CommandHandler
-
-from . import CapturePrintContext
-
+from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
+from pyTooling.Attributes.ArgParse.Flag import FlagArgument, ShortFlag, LongFlag
+from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -272,7 +268,7 @@ class Common(TestCase):
 				self.args = args
 
 			@CommandHandler("help", help="Display help page(s) for the given command name.")
-			@ArgumentAttribute(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
+			@CommandLineArgument(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
 			def HandleHelp(self, args) -> None:
 				self.handler = self.HandleHelp
 				self.args = args
@@ -298,7 +294,7 @@ class Common(TestCase):
 				self.args = args
 
 			@CommandHandler("help", help="Display help page(s) for the given command name.")
-			@ArgumentAttribute(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
+			@CommandLineArgument(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
 			def HandleHelp(self, args) -> None:
 				self.handler = self.HandleHelp
 				self.args = args
@@ -325,7 +321,7 @@ class Common(TestCase):
 				self.args = args
 
 			@CommandHandler("help", help="Display help page(s) for the given command name.")
-			@ArgumentAttribute(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
+			@CommandLineArgument(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
 			def HandleHelp(self, args) -> None:
 				self.handler = self.HandleHelp
 				self.args = args
@@ -391,7 +387,7 @@ class Common(TestCase):
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@ArgumentAttribute("-v", "--verbose", dest="verbose", action="store_const", const=True, default=False, help="Show verbose messages.")
+			@CommandLineArgument("-v", "--verbose", dest="verbose", action="store_const", const=True, default=False, help="Show verbose messages.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -413,7 +409,7 @@ class Common(TestCase):
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@ArgumentAttribute("-v", "--verbose", dest="verbose", action="store_const", const=True, default=False, help="Show verbose messages.")
+			@CommandLineArgument("-v", "--verbose", dest="verbose", action="store_const", const=True, default=False, help="Show verbose messages.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -429,3 +425,549 @@ class Common(TestCase):
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(True, prog.args.verbose)
+
+
+class Flags(TestCase):
+	def test_DefaultHandler_ShortAndLong(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["-v"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["-V"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+		# Checking long parameter
+		arguments = ["--verbose"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["--ver"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_DefaultHandler_Short(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@ShortFlag("-v", dest="verbose", help="Show verbose messages.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["-v"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["-V"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_DefaultHandler_Long(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongFlag("--verbose", dest="verbose", help="Show verbose messages.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking long parameter
+		arguments = ["--verbose"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["--ver"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_CommandHandler_ShortAndLong(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+			@CommandHandler("cmd", help="Command")
+			@FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
+			def CmdHandler(self, args) -> None:
+				self.handler = self.CmdHandler
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["cmd", "-v"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "-V"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+		# Checking long parameter
+		arguments = ["cmd", "--verbose"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "--ver"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_CommandHandler_Short(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+			@CommandHandler("cmd", help="Command")
+			@ShortFlag("-v", dest="verbose", help="Show verbose messages.")
+			def CmdHandler(self, args) -> None:
+				self.handler = self.CmdHandler
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["cmd", "-v"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "-V"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_CommandHandler_Long(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+			@CommandHandler("cmd", help="Command")
+			@LongFlag("--verbose", dest="verbose", help="Show verbose messages.")
+			def CmdHandler(self, args) -> None:
+				self.handler = self.CmdHandler
+				self.args = args
+
+		prog = Program()
+
+		# Checking long parameter
+		arguments = ["cmd", "--verbose"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "--ver"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+
+class KeyValueFlags(TestCase):
+	def test_DefaultHandler_ShortAndLong(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@NamedKeyValuePairsArgument(short="-c", long="--count", dest="verbose", help="Show verbose messages.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["-c", "1"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["-C", "2"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+		# Checking long parameter
+		arguments = ["--count", "3"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["--cnt", "4"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_DefaultHandler_Short(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@ShortKeyValueFlag("-c", dest="verbose", help="Show verbose messages.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["-c", "6"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["-C", "7"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_DefaultHandler_Long(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongKeyValueFlag("--count", dest="verbose", help="Show verbose messages.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking long parameter
+		arguments = ["--count", "8"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["--cnt", "9"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments, nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_CommandHandler_ShortAndLong(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+			@CommandHandler("cmd", help="Command")
+			@NamedKeyValuePairsArgument(short="-c", long="--count", dest="verbose", help="Show verbose messages.")
+			def CmdHandler(self, args) -> None:
+				self.handler = self.CmdHandler
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["cmd", "-c", "11"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "-C", "12"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+		# Checking long parameter
+		arguments = ["cmd", "--count", "13"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "--cnt", "14"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_CommandHandler_Short(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+			@CommandHandler("cmd", help="Command")
+			@ShortKeyValueFlag("-c", dest="verbose", help="Show verbose messages.")
+			def CmdHandler(self, args) -> None:
+				self.handler = self.CmdHandler
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["cmd", "-c", "15"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "-C", "16"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)
+
+	def test_CommandHandler_Long(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+			@CommandHandler("cmd", help="Command")
+			@LongKeyValueFlag("--count", dest="verbose", help="Show verbose messages.")
+			def CmdHandler(self, args) -> None:
+				self.handler = self.CmdHandler
+				self.args = args
+
+		prog = Program()
+
+		# Checking long parameter
+		arguments = ["cmd", "--count", "17"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(True, prog.args.verbose)
+
+		# Checking wrong parameter
+		arguments = ["cmd", "--cnt", "18"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(1, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertListEqual(arguments[1:], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.CmdHandler)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual(False, prog.args.verbose)

@@ -1,40 +1,5 @@
-from typing import Tuple, Mapping
-
 from pyTooling.Decorators import export
-
-from . import ArgParseAttribute, _HandlerMixin
-
-
-@export
-class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
-	"""
-	Base-class for all *Argument* classes.
-
-	An argument instance can be converted via ``AsArgument`` to a single string value or a sequence of string values
-	(tuple) usable e.g. with :class:`subprocess.Popen`. Each argument class implements at least one ``pattern`` parameter
-	to specify how argument are formatted.
-
-	There are multiple derived formats supporting:
-
-	* commands |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Command`
-	* simple names (flags) |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Flag`, :mod:`~pyTooling.Attribute.ArgParse.BooleanFlag`
-	* simple values (vlaued flags) |br|
-	  |rarr| :class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`, :class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`
-	* names and values |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.ValuedFlag`, :mod:`~pyTooling.Attribute.ArgParse.OptionalValuedFlag`
-	* key-value pairs |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.NamedKeyValuePair`
-	"""
-
-	def __init__(self, args: Tuple, kwargs: Mapping) -> None:
-		"""
-		The constructor expects ``args`` for positional and/or ``kwargs`` for named parameters which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
-		"""
-
-		super().__init__(*args, **kwargs)
+from . import CommandLineArgument
 
 
 @export
