@@ -34,6 +34,7 @@ Auxiliary classes to implement call-by-reference.
 .. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """
 from decimal       import Decimal
+from sys           import version_info           # needed for versions before Python 3.11
 from typing        import Any, Generic, TypeVar
 
 from ..Decorators  import export
@@ -135,7 +136,8 @@ class CallByRefBoolParam(CallByRefParam):
 			return self.Value == other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
-			ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
 
 	def __ne__(self, other) -> bool:
@@ -152,7 +154,8 @@ class CallByRefBoolParam(CallByRefParam):
 			return self.Value != other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
-			ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
 
 	# Type conversion operators
@@ -359,7 +362,8 @@ class CallByRefIntParam(CallByRefParam):
 			return self.Value == other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __ne__(self, other) -> bool:
@@ -376,7 +380,8 @@ class CallByRefIntParam(CallByRefParam):
 			return self.Value != other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __lt__(self, other: Any) -> bool:
@@ -393,7 +398,8 @@ class CallByRefIntParam(CallByRefParam):
 			return self.Value < other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
@@ -410,7 +416,8 @@ class CallByRefIntParam(CallByRefParam):
 			return self.Value <= other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __gt__(self, other: Any) -> bool:
@@ -427,7 +434,8 @@ class CallByRefIntParam(CallByRefParam):
 			return self.Value > other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __ge__(self, other: Any) -> bool:
@@ -444,7 +452,8 @@ class CallByRefIntParam(CallByRefParam):
 			return self.Value >= other.Value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	# Type conversion operators

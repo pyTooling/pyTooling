@@ -35,6 +35,7 @@ A timer and stopwatch to measure execution time.
 """
 from time import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
+# Python 3.11: use Self if returning the own object: , Self
 
 from pyTooling.Decorators import export
 from pyTooling.MetaClasses import SlottedObject
@@ -64,7 +65,7 @@ class Timer(SlottedObject):
 		self._resumeTime = None
 		self._diffTimes = []
 
-	def __enter__(self):
+	def __enter__(self):  # Python 3.11: -> Self:
 		self.Start()
 		return self
 
