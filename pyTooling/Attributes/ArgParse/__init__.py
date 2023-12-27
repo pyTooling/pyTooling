@@ -225,6 +225,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 		super().__init__()
 
+		self._subParser = None
 		self._subParsers = {}
 		self._formatter = kwargs["formatter_class"] if "formatter_class" in kwargs else None
 
@@ -235,8 +236,6 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 		# create a commandline argument parser
 		self._mainParser = ArgumentParser(**kwargs)
-		# TODO: only if subcommands are present
-		self._subParser = self._mainParser.add_subparsers(help='sub-command help')
 
 		# Search for 'DefaultHandler' marked method
 		methods = self.GetMethodsWithAttributes(predicate=DefaultHandler)
@@ -259,6 +258,9 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		# Search for 'CommandHandler' marked methods
 		methods: Dict[Callable, Tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
 		for method, attributes in methods.items():
+			if self._subParser is None:
+				self._subParser = self._mainParser.add_subparsers(help='sub-command help')
+
 			if len(attributes) > 1:
 				raise Exception("Marked command handler multiple times with 'CommandHandler'.")
 

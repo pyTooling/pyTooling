@@ -41,6 +41,7 @@ from typing   import Callable, Any
 from unittest import TestCase
 
 from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
+from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.Attributes.ArgParse.Flag import FlagArgument, ShortFlag, LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
 from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
@@ -280,6 +281,31 @@ class Common(TestCase):
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(True, prog.args.verbose)
+
+
+class Values(TestCase):
+	def test_String(self):
+		print()
+
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@StringArgument(dest="username", metaName="username", help="Name of the user.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		# Checking short parameter
+		arguments = ["paebbels"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual("paebbels", prog.args.username)
 
 
 class Flags(TestCase):
@@ -1098,7 +1124,7 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments[1:], nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 
 class UserManager(TestCase):
@@ -1113,7 +1139,7 @@ class UserManager(TestCase):
 				self.args = args
 
 			@CommandHandler("new-user", help="Add a new user.")
-			# name
+			@StringArgument(dest="username", metaName="username", help="Name of the new user.")
 			@LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
 			def NewUserHandler(self, args) -> None:
 				self.handler = self.NewUserHandler
@@ -1134,4 +1160,12 @@ class UserManager(TestCase):
 		prog = Program()
 
 		# Checking long parameter
-		arguments = ["cmd", "--count", "17"]
+		arguments = ["new-user", "username", "--quota=17"]
+
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
+		self.assertIs(prog.handler.__func__, Program.NewUserHandler)
+		self.assertEqual(3 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual("17", prog.args.quota)

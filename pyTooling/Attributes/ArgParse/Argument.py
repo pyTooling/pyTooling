@@ -3,33 +3,33 @@ from . import CommandLineArgument
 
 
 @export
-class DelimiterArgument(CommandLineArgument):  # , pattern="--"):
+class DelimiterArgument(CommandLineArgument):
 	"""
 	Represents a delimiter symbol like ``--``.
 	"""
 
 
 @export
-class NamedArgument(CommandLineArgument):  # , pattern="{0}"):
+class NamedArgument(CommandLineArgument):
 	"""
 	Base-class for all command line arguments with a name.
 	"""
 
 
 @export
-class ValuedArgument(CommandLineArgument):  # , pattern="{0}"):
+class ValuedArgument(CommandLineArgument):
 	"""
 	Base-class for all command line arguments with a value.
 	"""
 
 
-class NamedAndValuedArgument(NamedArgument, ValuedArgument):  # , pattern="{0}={1}"):
+class NamedAndValuedArgument(NamedArgument, ValuedArgument):
 	"""
 	Base-class for all command line arguments with a name and a value.
 	"""
 
 
-class NamedTupledArgument(NamedArgument, ValuedArgument):  # , pattern="{0}"):
+class NamedTupledArgument(NamedArgument, ValuedArgument):
 	"""
 	Class and base-class for all TupleFlag classes, which represents an argument with separate value.
 
@@ -43,28 +43,29 @@ class NamedTupledArgument(NamedArgument, ValuedArgument):  # , pattern="{0}"):
 
 
 @export
-class StringArgument(ValuedArgument):  # , pattern="{0}"):
+class StringArgument(ValuedArgument):
 	"""
 	Represents a simple string argument.
 
 	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
 	"""
 
-	def __init__(self, name: str, metaName: str, help: str = "", optional: bool = False) -> None:
+	def __init__(self, dest: str, metaName: str, help: str = "", optional: bool = False) -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
 		"""
 		args = []
 		kwargs = {
+			"dest":    dest,
 			"metavar": metaName,
-			"dest":    name,
 			"type":    str,
-			"nargs":   "?" if optional else "1",
 			"help":    help
 		}
+		if optional:
+			kwargs["nargs"] = "?"
 
-		super().__init__(args, kwargs)
+		super().__init__(*args, **kwargs)
 
 
 @export
