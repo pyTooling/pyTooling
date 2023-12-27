@@ -13,7 +13,7 @@ class ValuedFlag(NamedAndValuedArgument):
 	is present in the commandline arguments, otherwise ``False``.
 	"""
 
-	def __init__(self, short: str = None, long: str = None, dest: str = None, help: str = None):
+	def __init__(self, short: str = None, long: str = None, dest: str = None, metavar: str = None, help: str = None):
 		"""
 		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
 		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
@@ -34,9 +34,8 @@ class ValuedFlag(NamedAndValuedArgument):
 
 		kwargs = {
 			"dest":    dest,
-			"action":  "store_const",
-			"const":   True,
-			"default": False,
+			"metavar": metavar,
+			"default": None,
 			"help":    help,
 		}
 		super().__init__(*args, **kwargs)

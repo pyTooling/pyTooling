@@ -42,6 +42,7 @@ from unittest import TestCase
 
 from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
 from pyTooling.Attributes.ArgParse.Flag import FlagArgument, ShortFlag, LongFlag
+from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
 from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
 
 if __name__ == "__main__":  # pragma: no cover
@@ -833,7 +834,7 @@ class ValuedFlags(TestCase):
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@NamedKeyValuePairsArgument(short="-c", long="--count", dest="verbose", help="Show verbose messages.")
+			@ValuedFlag(short="-c", long="--count", dest="count", help="Number of elements.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -849,7 +850,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("1", prog.args.count)
 
 		# Checking wrong parameter
 		arguments = ["-C=2"]
@@ -861,7 +862,7 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments, nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 		# Checking long parameter
 		arguments = ["--count=3"]
@@ -872,7 +873,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("3", prog.args.count)
 
 		# Checking wrong parameter
 		arguments = ["--cnt=4"]
@@ -884,14 +885,14 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments, nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 	def test_DefaultHandler_Short(self):
 		print()
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@ShortKeyValueFlag("-c", dest="verbose", help="Show verbose messages.")
+			@ShortValuedFlag("-c", dest="count", help="Number of elements.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -899,7 +900,7 @@ class ValuedFlags(TestCase):
 		prog = Program()
 
 		# Checking short parameter
-		arguments = ["-c=6"]
+		arguments = ["-c=5"]
 
 		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
 		prog._RouteToHandler(parsed)
@@ -907,10 +908,10 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("5", prog.args.count)
 
 		# Checking wrong parameter
-		arguments = ["-C=7"]
+		arguments = ["-C=6"]
 
 		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
 		prog._RouteToHandler(parsed)
@@ -919,14 +920,14 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments, nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 	def test_DefaultHandler_Long(self):
 		print()
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@LongKeyValueFlag("--count", dest="verbose", help="Show verbose messages.")
+			@LongValuedFlag("--count", dest="count", help="Number of elements.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -934,7 +935,7 @@ class ValuedFlags(TestCase):
 		prog = Program()
 
 		# Checking long parameter
-		arguments = ["--count=8"]
+		arguments = ["--count=7"]
 
 		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
 		prog._RouteToHandler(parsed)
@@ -942,10 +943,10 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("7", prog.args.count)
 
 		# Checking wrong parameter
-		arguments = ["--cnt=9"]
+		arguments = ["--cnt=8"]
 
 		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
 		prog._RouteToHandler(parsed)
@@ -954,7 +955,7 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments, nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 	def test_CommandHandler_ShortAndLong(self):
 		print()
@@ -966,7 +967,7 @@ class ValuedFlags(TestCase):
 				self.args = args
 
 			@CommandHandler("cmd", help="Command")
-			@NamedKeyValuePairsArgument(short="-c", long="--count", dest="verbose", help="Show verbose messages.")
+			@ValuedFlag(short="-c", long="--count", dest="count", help="Number of elements.")
 			def CmdHandler(self, args) -> None:
 				self.handler = self.CmdHandler
 				self.args = args
@@ -982,7 +983,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("11", prog.args.count)
 
 		# Checking wrong parameter
 		arguments = ["cmd", "-C=12"]
@@ -994,7 +995,7 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments[1:], nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 		# Checking long parameter
 		arguments = ["cmd", "--count=13"]
@@ -1005,7 +1006,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("13", prog.args.count)
 
 		# Checking wrong parameter
 		arguments = ["cmd", "--cnt=14"]
@@ -1017,7 +1018,7 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments[1:], nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 	def test_CommandHandler_Short(self):
 		print()
@@ -1029,7 +1030,7 @@ class ValuedFlags(TestCase):
 				self.args = args
 
 			@CommandHandler("cmd", help="Command")
-			@ShortKeyValueFlag("-c", dest="verbose", help="Show verbose messages.")
+			@ShortValuedFlag("-c", dest="count", help="Number of elements.")
 			def CmdHandler(self, args) -> None:
 				self.handler = self.CmdHandler
 				self.args = args
@@ -1045,7 +1046,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("15", prog.args.count)
 
 		# Checking wrong parameter
 		arguments = ["cmd", "-C=16"]
@@ -1057,7 +1058,7 @@ class ValuedFlags(TestCase):
 		self.assertListEqual(arguments[1:], nonProcessedArgs)
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(False, prog.args.verbose)
+		self.assertIsNone(prog.args.count)
 
 	def test_CommandHandler_Long(self):
 		print()
@@ -1069,7 +1070,7 @@ class ValuedFlags(TestCase):
 				self.args = args
 
 			@CommandHandler("cmd", help="Command")
-			@LongKeyValueFlag("--count", dest="verbose", help="Show verbose messages.")
+			@LongValuedFlag("--count", dest="count", help="Number of elements.")
 			def CmdHandler(self, args) -> None:
 				self.handler = self.CmdHandler
 				self.args = args
@@ -1085,7 +1086,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual(True, prog.args.verbose)
+		self.assertEqual("17", prog.args.count)
 
 		# Checking wrong parameter
 		arguments = ["cmd", "--cnt=18"]
@@ -1113,7 +1114,7 @@ class UserManager(TestCase):
 
 			@CommandHandler("new-user", help="Add a new user.")
 			# name
-			@LongKeyValueFlag("--quota", dest="quota", help="Max usable disk space.")
+			@LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
 			def NewUserHandler(self, args) -> None:
 				self.handler = self.NewUserHandler
 				self.args = args
