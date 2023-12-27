@@ -241,7 +241,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	# 		pass
 
 	@staticmethod
-	def __GetTerminalSizeOnLinux() -> Tuple[int, int] | None:
+	def __GetTerminalSizeOnLinux() -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
 		"""
 		Returns the current terminal window's size for Linux.
 
@@ -252,7 +252,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		import os
 
-		def ioctl_GWINSZ(fd) -> Tuple[int, int] | None:
+		def ioctl_GWINSZ(fd) -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
 			"""GetWindowSize of file descriptor."""
 			try:
 				from fcntl    import ioctl      as fcntl_ioctl
