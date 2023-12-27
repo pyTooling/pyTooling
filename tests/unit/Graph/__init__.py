@@ -1193,7 +1193,7 @@ class GraphOperations(Iterate):
 
 			self.assertEqual((vList[u], vList[v], w), (edge.Source, edge.Destination, edge.Weight))
 
-	def test_RemoveEdges(self):
+	def test_RemoveEdges(self) -> None:
 		g = Graph()
 		vList = [Vertex(value=i, graph=g) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
 
@@ -1215,7 +1215,7 @@ class GraphOperations(Iterate):
 
 		self.assertEqual(0, g.EdgeCount)
 
-	def test_CopyVertices(self):
+	def test_CopyVertices(self) -> None:
 		g0 = Graph()
 		vList = [Vertex(value=i, graph=g0) if i % 2 == 0 else Vertex(vertexID=i, value=i, graph=g0) for i in range(0, self._graph0.VertexCount)]
 

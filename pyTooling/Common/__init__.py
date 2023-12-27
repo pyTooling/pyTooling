@@ -139,15 +139,22 @@ def getsizeof(obj: Any) -> int:
 				size += recurse(item)
 		# Handle mappings
 		elif isinstance(obj, Mapping) or hasattr(obj, 'items'):
-			for key, value in getattr(obj, 'items')():
+			items = getattr(obj, 'items')
+			# Check if obj.items is a bound method.
+			if hasattr(items, "__self__"):
+				itemView = items()
+			else:
+				itemView = {}  # bind(obj, items)
+			for key, value in itemView:
 				size += recurse(key) + recurse(value)
 
 		# Accumulate members from __dict__
 		if hasattr(obj, '__dict__'):
-			size += recurse(vars(obj))
+			v = vars(obj)
+			size += recurse(v)
 
 		# Accumulate members from __slots__
-		if hasattr(obj, '__slots__'):
+		if hasattr(obj, '__slots__') and obj.__slots__ is not None:
 			for slot in obj.__slots__:
 				if hasattr(obj, slot):
 					size += recurse(getattr(obj, slot))

@@ -8,15 +8,15 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 
 @export
-class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-{0}"):
+class ShortBooleanFlag(BooleanFlag):  #, pattern="-with-{0}", falsePattern="-without-{0}"):
 	pass
 
 
 @export
-class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without-{0}"):
+class LongBooleanFlag(BooleanFlag):  #, pattern="--with-{0}", falsePattern="--without-{0}"):
 	pass
 
 
 @export
-class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/without-{0}"):
+class WindowsBooleanFlag(BooleanFlag):  #, pattern="/with-{0}", falsePattern="/without-{0}"):
 	pass

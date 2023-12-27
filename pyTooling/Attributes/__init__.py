@@ -43,7 +43,6 @@ called ``__pyattr__``.
 from types  import MethodType, FunctionType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
 
-from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Decorators  import export
 
 

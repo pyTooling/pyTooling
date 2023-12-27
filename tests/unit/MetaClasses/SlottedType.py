@@ -33,11 +33,10 @@ Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
 from unittest              import TestCase
 
-from pytest import mark
+from pytest                import mark
 
+from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
 from pyTooling.Common      import getsizeof, CurrentPlatform
-from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, \
-	BaseClassWithoutSlotsError
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")

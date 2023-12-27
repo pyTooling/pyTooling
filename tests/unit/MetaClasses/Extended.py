@@ -503,7 +503,7 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_NoDunderInit_InstCheck(self):
+	def test_InitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int = 1
 
@@ -513,11 +513,11 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_DunderInit_InstCheck(self):
+	def test_InitValue_DunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				pass
 
 		inst = Base()
@@ -526,11 +526,11 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_InitOverwrite_InstCheck(self):
+	def test_InitValue_InitOverwrite_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 5
 
 		inst = Base()
@@ -541,7 +541,7 @@ class ObjectFieldInitializers_Extended(TestCase):
 
 
 class ObjectFieldInitializers_Slotted(TestCase):
-	def test_NoInitValue_NoDunderInit_InstCheck(self):
+	def test_NoInitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int
 
@@ -553,11 +553,11 @@ class ObjectFieldInitializers_Slotted(TestCase):
 		inst._data0 = 1
 		self.assertEqual(1, inst._data0)
 
-	def test_NoInitValue_DunderInit_InstCheck(self):
+	def test_NoInitValue_DunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 1
 
 		inst = Base()
@@ -566,11 +566,11 @@ class ObjectFieldInitializers_Slotted(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_InitOverwrite_InstCheck(self):
+	def test_InitValue_InitOverwrite_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 5
 
 		inst = Base()
@@ -605,7 +605,7 @@ class ClassFieldInitializers_Extended(TestCase):
 		inst._data0 = 1
 		self.assertEqual(1, inst._data0)
 
-	def test_InitValue_NoDunderInit_ClassCheck(self):
+	def test_InitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int] = 1
 
@@ -613,7 +613,7 @@ class ClassFieldInitializers_Extended(TestCase):
 
 		self.assertEqual(1, Base._data0)
 
-	def test_InitValue_DunderInit_ClassCheck(self):
+	def test_InitValue_DunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int] = 1
 
@@ -626,7 +626,7 @@ class ClassFieldInitializers_Extended(TestCase):
 
 
 class ClassFieldInitializers_Slotted(TestCase):
-	def test_InitValue_NoDunderInit_ClassCheck(self):
+	def test_InitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
@@ -634,22 +634,22 @@ class ClassFieldInitializers_Slotted(TestCase):
 
 		self.assertEqual(1, Base._data0)
 
-	def test_InitValue_DunderInit_ClassCheck(self):
+	def test_InitValue_DunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				pass
 
 		inst = Base()
 
 		self.assertEqual(1, Base._data0)
 
-	def test_InitValue_InitOverwrite_InstantiationCheck(self):
+	def test_InitValue_InitOverwrite_InstantiationCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 5
 
 		with self.assertRaises(AttributeError, msg="Class field '_data0' should not be accessible from within instance."):
