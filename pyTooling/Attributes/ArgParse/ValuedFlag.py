@@ -4,7 +4,7 @@ from .Argument import NamedAndValuedArgument
 
 
 @export
-class NamedKeyValuePairsArgument(NamedAndValuedArgument):
+class ValuedFlag(NamedAndValuedArgument):
 	"""
 	Defines a switch argument like ``--help``.
 
@@ -43,12 +43,12 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 
 
 @export
-class ShortKeyValueFlag(NamedKeyValuePairsArgument):
+class ShortValuedFlag(ValuedFlag):
 	def __init__(self, short: str = None, dest: str = None, help: str = None):
 		super().__init__(short=short, dest=dest, help=help)
 
 
 @export
-class LongKeyValueFlag(NamedKeyValuePairsArgument):
+class LongValuedFlag(ValuedFlag):
 	def __init__(self, long: str = None, dest: str = None, help: str = None):
 		super().__init__(long=long, dest=dest, help=help)
