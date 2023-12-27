@@ -204,7 +204,7 @@ class Dictionary(Node, Abstract_Dict):
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		class Iterator(metaclass=ExtendedType, slots=True):
-			_iter: typing_Iterator
+			_iter: typing_Iterator[ValueT]
 			_obj: Dictionary
 
 			def __init__(self, obj: Dictionary) -> None:
