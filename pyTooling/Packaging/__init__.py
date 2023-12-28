@@ -287,7 +287,7 @@ STATUS: Dict[str, str] = {
 }
 
 DEFAULT_LICENSE =     Apache_2_0_License
-DEFAULT_PY_VERSIONS = ("3.7", "3.8", "3.9", "3.10", "3.11")
+DEFAULT_PY_VERSIONS = ("3.8", "3.9", "3.10", "3.11", "3.12")
 DEFAULT_CLASSIFIERS = (
 		"Operating System :: OS Independent",
 		"Intended Audience :: Developers",
