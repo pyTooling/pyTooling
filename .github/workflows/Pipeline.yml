@@ -104,7 +104,7 @@ jobs:
 #      - Coverage
     with:
 #      coverage_sqlite_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}
-#      coverage_xml_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_xml }}
+      coverage_xml_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_xml }}
 #      coverage_json_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}
       coverage_html_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
     secrets:
