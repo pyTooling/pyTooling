@@ -281,7 +281,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 				size = ioctl_GWINSZ(fd)
 				os.close(fd)
 				return size
-			except OSError:
+			except (OSError, AttributeError):
 				pass
 
 		try:
