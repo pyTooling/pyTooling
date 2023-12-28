@@ -37,6 +37,9 @@ from pyTooling.Configuration.JSON import Configuration
 
 class ReadingValues(TestCase):
 	def test_SimpleString(self) -> None:
+		print()
+		print(Path.cwd())
+		print(Path("unit/Configuration/config.json").resolve())
 		config = Configuration(Path("unit/Configuration/config.json"))
 
 		self.assertEqual("string_1", config["value_1"])
