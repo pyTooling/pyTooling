@@ -275,6 +275,8 @@ class Executable(Program):  # (ILogable):
 		else:
 			envVariables = None
 
+		print(self._workingDirectory)
+
 		# FIXME: verbose log start process
 		# FIXME: debug log - parameter list
 		try:
