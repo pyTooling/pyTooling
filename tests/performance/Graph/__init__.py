@@ -95,7 +95,7 @@ class PerformanceTest(TestCase):
 		print()
 		print(f"         min           mean          median        max           construct")
 		for edgeFile in edgeFiles:
-			file = Path("data/Graph/EdgeLists") / edgeFile.file
+			file = Path("tests/data/Graph/EdgeLists") / edgeFile.file
 
 			start = perf_counter_ns()
 			graph = setup(file, edgeFile.vertexCount)
