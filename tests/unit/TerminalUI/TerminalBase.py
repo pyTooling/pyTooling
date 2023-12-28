@@ -164,7 +164,7 @@ class Exiting(TestCase):
 		class Application(TerminalBaseApplication):
 			def __init__(self) -> None:
 				super().__init__()
-				super().CheckPythonVersion((3, 9, 0))
+				super().CheckPythonVersion((3, 8, 0))
 
 		_ = Application()
 
