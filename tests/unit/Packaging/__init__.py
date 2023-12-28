@@ -50,7 +50,7 @@ class HelperFunctions(TestCase):
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
-		versionInformation = extractVersionInformation(Path("../pyTooling/Common/__init__.py"))
+		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(36, len(versionInformation.Keywords))
 
@@ -59,7 +59,7 @@ class HelperFunctions(TestCase):
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
-		readme = loadReadmeFile(Path("../README.md"))
+		readme = loadReadmeFile(Path("README.md"))
 		self.assertIn("# pyTooling", readme.Content)
 		self.assertEqual("text/markdown", readme.MimeType)
 
@@ -75,7 +75,7 @@ class HelperFunctions(TestCase):
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		requirements = loadRequirementsFile(Path("../doc/requirements.txt"))
+		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
 		self.assertEqual(10, len(requirements))
 
 	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
@@ -83,7 +83,7 @@ class HelperFunctions(TestCase):
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		requirements = loadRequirementsFile(Path("data/Requirements/requirements.Git.txt"))
+		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.Git.txt"))
 		self.assertEqual(2, len(requirements))
 
 	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
@@ -91,7 +91,7 @@ class HelperFunctions(TestCase):
 	def test_loadRequirementsRemoteZIP(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		requirements = loadRequirementsFile(Path("data/Requirements/requirements.HTTPS-ZIP.txt"))
+		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.HTTPS-ZIP.txt"))
 		self.assertEqual(1, len(requirements))
 
 	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
@@ -99,7 +99,7 @@ class HelperFunctions(TestCase):
 	def test_loadRequirementsRecursive(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
-		requirements = loadRequirementsFile(Path("data/Requirements/requirements.txt"), debug=True)
+		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.txt"), debug=True)
 		self.assertEqual(5, len(requirements))
 
 
@@ -135,7 +135,7 @@ class DescribePackage(TestCase):
 		from pyTooling.Packaging import DescribePythonPackage
 
 		packageName = "pyPackage.Tool"
-		packagePath = Path(packageName)
+		packagePath = Path("tests") / Path(packageName)
 
 		packageInformation = DescribePythonPackage(
 			packageName=packageName,
@@ -148,7 +148,7 @@ class DescribePackage(TestCase):
 			keywords=("Swiss", "Knife")
 		)
 
-		self.assertEqual(15, len(packageInformation))
+		self.assertEqual(16, len(packageInformation))
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
 
@@ -158,7 +158,7 @@ class DescribePackage(TestCase):
 		from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
 		packageName = "pyPackage"
-		packagePath = Path(packageName)
+		packagePath = Path("tests") / Path(packageName)
 
 		packageInformation = DescribePythonPackageHostedOnGitHub(
 			packageName=packageName,
