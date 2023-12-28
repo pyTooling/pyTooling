@@ -54,7 +54,6 @@ class HelperFunctions(TestCase):
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(36, len(versionInformation.Keywords))
 
-	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
@@ -70,7 +69,6 @@ class HelperFunctions(TestCase):
 		with self.assertRaises(ValueError):
 			_ = loadReadmeFile(Path("README.rst"))
 
-	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
@@ -78,7 +76,6 @@ class HelperFunctions(TestCase):
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
 		self.assertEqual(10, len(requirements))
 
-	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
@@ -86,7 +83,6 @@ class HelperFunctions(TestCase):
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.Git.txt"))
 		self.assertEqual(2, len(requirements))
 
-	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadRequirementsRemoteZIP(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
@@ -94,7 +90,6 @@ class HelperFunctions(TestCase):
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.HTTPS-ZIP.txt"))
 		self.assertEqual(1, len(requirements))
 
-	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_loadRequirementsRecursive(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
@@ -104,7 +99,6 @@ class HelperFunctions(TestCase):
 
 
 class VersionInformation(TestCase):
-	# @mark.skipif(version_info < (3, 7), reason="Not supported on Python 3.6, due to dataclass usage in pyTooling.Packaging.")
 	@mark.xfail(CurrentPlatform.IsMinGW64OnWindows and version_info > (3, 9), reason="Can fail on MinGW64 with Python 3.10.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import VersionInformation

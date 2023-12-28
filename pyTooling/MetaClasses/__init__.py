@@ -586,7 +586,7 @@ class ExtendedType(type):
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
 				# Exclude object as a special case
-				if baseClass is object:
+				if baseClass is object or baseClass is Generic:
 					continue
 
 				if not hasattr(baseClass, "__slots__"):
@@ -601,7 +601,7 @@ class ExtendedType(type):
 			if len(baseClasses) > 0:
 				for base in reversed(baseClasses[0].mro()):
 					# Exclude object as a special case
-					if base is object:
+					if base is object or base is Generic:
 						continue
 
 					for annotation in base.__slots__:
