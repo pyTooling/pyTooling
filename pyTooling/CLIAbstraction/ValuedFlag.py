@@ -45,6 +45,8 @@ The usual delimiter sign between name and value is an equal sign (``=``).
    * For list of valued flags. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlagList`
 """
+from typing import Tuple, Any, Dict
+
 from pyTooling.Decorators import export
 
 from pyTooling.CLIAbstraction import NamedAndValuedArgument
@@ -63,7 +65,7 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 	* ``width=100``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "{0}={1}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -74,7 +76,7 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -90,7 +92,7 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 	* ``-optimizer=on``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="-{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "-{0}={1}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -101,7 +103,7 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ShortValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -117,7 +119,7 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 	* ``--optimizer=on``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="--{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--{0}={1}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -128,7 +130,7 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -145,7 +147,7 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 	"""
 
 	# TODO: Is it possible to copy the doc-string from super?
-	def __init_subclass__(cls, *args, pattern="/{0}:{1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "/{0}:{1}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -156,7 +158,7 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is WindowsValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

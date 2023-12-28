@@ -41,7 +41,7 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import Union, Iterable, ClassVar, Dict, cast
+from typing import Union, Iterable, ClassVar, Dict, cast, Tuple, Any
 
 from pyTooling.Decorators import export
 
@@ -62,12 +62,12 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	* ``-gWidth=100``
 	"""
 
-	def __init_subclass__(cls, *args, name: str = None, pattern="{0}{1}={2}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}{1}={2}", **kwargs: Dict[str, Any]):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is NamedKeyValuePairsArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -134,12 +134,12 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 	* ``-DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args, name: str = None, pattern="-{0}{1}={2}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "-{0}{1}={2}", **kwargs: Dict[str, Any]):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ShortKeyValueFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -155,12 +155,12 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 	* ``--DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args, name: str = None, pattern="--{0}{1}={2}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "--{0}{1}={2}", **kwargs: Dict[str, Any]):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongKeyValueFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -176,12 +176,12 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 	* ``--DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args, name: str = None, pattern="/{0}:{1}={2}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "/{0}:{1}={2}", **kwargs: Dict[str, Any]):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongKeyValueFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

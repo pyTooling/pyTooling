@@ -66,7 +66,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	_args:   Tuple
 	_kwargs: Dict
 
-	def __init__(self, *args, **kwargs) -> None:
+	def __init__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
@@ -169,7 +169,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	_args:   Tuple
 	_kwargs: Dict
 
-	def __init__(self, command: str, **kwargs) -> None:
+	def __init__(self, command: str, **kwargs: Dict[str, Any]) -> None:
 		"""The constructor expects a 'command' and an optional list of named parameters
 		(keyword arguments) which are passed without modification to :meth:`~ArgumentParser.add_subparsers`.
 		"""
@@ -216,7 +216,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 	_subParser:  Any   # TODO: Find type
 	_subParsers: Dict  # TODO: Find type
 
-	def __init__(self, **kwargs) -> None:
+	def __init__(self, **kwargs: Dict[str, Any]) -> None:
 		"""
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.

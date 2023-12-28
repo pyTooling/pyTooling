@@ -308,7 +308,7 @@ class DispatchableMethod:
 		self.__name__ = name
 		self._methods = {}
 
-	def __call__(self, *args):
+	def __call__(self, *args: Tuple[Any, ...]):
 		"""Call a method based on type signature of the arguments."""
 		types = tuple(type(arg) for arg in args[1:])
 		meth = self._methods.get(types, None)
@@ -788,7 +788,7 @@ class ExtendedType(type):
 						not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__"))):
 						def outer(method):
 							@wraps(method)
-							def inner(cls, *args, **kwargs):
+							def inner(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 								return method(cls, *args, **kwargs)
 
 							return inner
@@ -834,7 +834,7 @@ class ExtendedType(type):
 				oldinit = oldinit.__wrapped__
 
 			@wraps(oldnew)
-			def singleton_new(cls, *args, **kwargs):
+			def singleton_new(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
 						obj = oldnew(cls, *args, **kwargs)
@@ -845,7 +845,7 @@ class ExtendedType(type):
 				return obj
 
 			@wraps(oldinit)
-			def singleton_init(self, *args, **kwargs):
+			def singleton_init(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
 				with cv:

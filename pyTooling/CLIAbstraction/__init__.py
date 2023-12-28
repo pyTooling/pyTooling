@@ -38,7 +38,7 @@ from pathlib               import Path
 from platform              import system
 from shutil                import which as shutil_which
 from subprocess            import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
-from typing                import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator
+from typing                import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any
 
 from pyTooling.Decorators  import export
 from pyTooling.Exceptions  import ToolingException, PlatformNotSupportedException
@@ -96,7 +96,7 @@ class Program(metaclass=ExtendedType, slots=True):
 	__cliOptions__:    ClassVar[Dict[Type[CommandLineArgument], int]]                 #: List of all possible CLI options.
 	__cliParameters__: Dict[Type[CommandLineArgument], Nullable[CommandLineArgument]] #: List of all CLI parameters (used CLI options).
 
-	def __init_subclass__(cls, *args, **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		"""
 		Whenever a subclass is derived from :class:``Program``, all nested classes declared within ``Program`` and which are
 		marked with pyAttribute ``CLIOption`` are collected and then listed in the ``__cliOptions__`` dictionary.

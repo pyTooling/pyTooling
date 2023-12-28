@@ -29,6 +29,8 @@
 # ==================================================================================================================== #
 #
 """Benchmark tests for pyTooling.MetaClasses."""
+from typing import Tuple, Any, Dict
+
 from pytest import mark
 
 
@@ -44,7 +46,7 @@ class A:
 
 
 class M(type):
-	def __call__(cls, *args, **kwargs):
+	def __call__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		newCls = cls.__new__(cls, *args, **kwargs)
 		newCls.__init__(*args, **kwargs)
 

@@ -34,7 +34,7 @@
 .. TODO:: Write module documentation.
 
 """
-from typing import ClassVar, Optional as Nullable, Union, Iterable
+from typing import ClassVar, Optional as Nullable, Union, Iterable, Tuple, Any, Dict
 
 from pyTooling.Decorators import export
 
@@ -54,12 +54,12 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 	"""
 	_patternWithValue: ClassVar[str]
 
-	def __init_subclass__(cls, *args, pattern="{0}", patternWithValue: str = "{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._patternWithValue = patternWithValue
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is OptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -112,12 +112,12 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 
 	Example: ``-optimizer=on``
 	"""
-	def __init_subclass__(cls, *args, pattern="-{0}", patternWithValue="-{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "-{0}", patternWithValue: str = "-{0}={1}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ShortOptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -130,12 +130,12 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 
 	Example: ``--optimizer=on``
 	"""
-	def __init_subclass__(cls, *args, pattern="--{0}", patternWithValue="--{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--{0}", patternWithValue: str = "--{0}={1}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongOptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -148,12 +148,12 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 
 	Example: ``/optimizer:on``
 	"""
-	def __init_subclass__(cls, *args, pattern="/{0}", patternWithValue="/{0}:{1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "/{0}", patternWithValue: str = "/{0}:{1}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is WindowsOptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

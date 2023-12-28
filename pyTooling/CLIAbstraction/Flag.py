@@ -41,6 +41,7 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
+from typing import Tuple, Any, Dict
 
 from pyTooling.Decorators import export
 
@@ -55,7 +56,7 @@ class FlagArgument(NamedArgument):
 	A simple flag is a single value (absent/present or off/on) with no additional data (value).
 	"""
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is FlagArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -71,11 +72,11 @@ class ShortFlag(FlagArgument, pattern="-{0}"):
 	* ``-optimize``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="-{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "-{0}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ShortFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -91,11 +92,11 @@ class LongFlag(FlagArgument, pattern="--{0}"):
 	* ``--optimize``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="--{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--{0}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -111,11 +112,11 @@ class WindowsFlag(FlagArgument, pattern="/{0}"):
 	* ``/optimize``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="/{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "/{0}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is WindowsFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

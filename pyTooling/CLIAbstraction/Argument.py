@@ -34,9 +34,9 @@ This module implements command line arguments without prefix character(s).
 
 
 """
-from abc import abstractmethod
+from abc     import abstractmethod
 from pathlib import Path
-from typing import ClassVar, List, Union, Iterable, TypeVar, Generic
+from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Tuple, Any, Dict
 
 from pyTooling.Decorators import export
 
@@ -72,7 +72,7 @@ class CommandLineArgument:
 
 	_pattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args, pattern: str = None, **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = None, **kwargs: Dict[str, Any]):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -82,7 +82,7 @@ class CommandLineArgument:
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is CommandLineArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 
@@ -193,7 +193,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 	Represents a delimiter symbol like ``--``.
 	"""
 
-	def __init_subclass__(cls, *args, pattern: str = "--", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -231,7 +231,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	_name: ClassVar[str]
 
-	def __init_subclass__(cls, *args, name: str = None, pattern: str = "{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -244,7 +244,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		super().__init_subclass__(*args, **kwargs)
 		cls._name = name
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is NamedArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -290,7 +290,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 
 	_value: ValueT
 
-	def __init_subclass__(cls, *args, pattern: str = "{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -360,7 +360,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	Base-class for all command line arguments with a name and a value.
 	"""
 
-	def __init_subclass__(cls, *args, name: str = None, pattern: str = "{0}={1}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}={1}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -417,13 +417,13 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 	_valuePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args, name: str = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Dict[str, Any]):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._valuePattern = valuePattern
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is NamedTupledArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -481,7 +481,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 	A list of strings is available as :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`.
 	"""
 
-	def __init_subclass__(cls, *args, pattern: str = "{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 

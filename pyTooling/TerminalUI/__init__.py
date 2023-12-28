@@ -673,60 +673,60 @@ class ILineTerminal:
 			return self._terminal.WriteLine(line)
 		return False
 
-	# def _TryWriteLine(self, *args, condition=True, **kwargs):
+	# def _TryWriteLine(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]):
 	# 	if (self._terminal is not None) and condition:
 	# 		return self._terminal.TryWrite(*args, **kwargs)
 	# 	return False
 
-	def WriteFatal(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteFatal(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a fatal message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteFatal(*args, **kwargs)
 		return False
 
-	def WriteError(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteError(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write an error message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteError(*args, **kwargs)
 		return False
 
-	def WriteWarning(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteWarning(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a warning message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteWarning(*args, **kwargs)
 		return False
 
-	def WriteInfo(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteInfo(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write an info message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteInfo(*args, **kwargs)
 		return False
 
-	def WriteQuiet(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteQuiet(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a message even in quiet mode if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteQuiet(*args, **kwargs)
 		return False
 
-	def WriteNormal(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteNormal(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a *normal* message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteNormal(*args, **kwargs)
 		return False
 
-	def WriteVerbose(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteVerbose(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a verbose message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteVerbose(*args, **kwargs)
 		return False
 
-	def WriteDebug(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteDebug(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a debug message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteDebug(*args, **kwargs)
 		return False
 
-	def WriteDryRun(self, *args, condition: bool = True, **kwargs) -> bool:
+	def WriteDryRun(self, *args: Tuple[Any, ...], condition: bool = True, **kwargs: Dict[str, Any]) -> bool:
 		"""Write a dry-run message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteDryRun(*args, **kwargs)

@@ -39,6 +39,8 @@ Valued tuple-flag arguments represent a name and a value as a 2-tuple.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
+from typing import Tuple, Any, Dict
+
 from pyTooling.Decorators import export
 
 from pyTooling.CLIAbstraction.Argument import NamedTupledArgument
@@ -53,11 +55,11 @@ class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 
 	* ``-file file1.txt``
 	"""
-	def __init_subclass__(cls, *args, pattern="-{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "-{0}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ShortTupleFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -72,11 +74,11 @@ class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 
 	* ``--file file1.txt``
 	"""
-	def __init_subclass__(cls, *args, pattern="--{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--{0}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongTupleFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -91,11 +93,11 @@ class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
 
 	* ``/file file1.txt``
 	"""
-	def __init_subclass__(cls, *args, pattern="/{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "/{0}", **kwargs: Dict[str, Any]):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is WindowsTupleFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

@@ -46,6 +46,8 @@ While commands can or cannot have prefix characters, they shouldn't be confused 
    * For string arguments. |br|
      |rarr| :class:`~pyTooling.CLIAbstraction.Argument.StringArgument`
 """
+from typing import Tuple, Any, Dict
+
 from pyTooling.Decorators import export
 
 from pyTooling.CLIAbstraction.Argument import NamedArgument
@@ -65,7 +67,7 @@ class CommandArgument(NamedArgument):
 	* ``command``
 	"""
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is CommandArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -81,7 +83,7 @@ class ShortCommand(CommandArgument, pattern="-{0}"):
 	* ``-command``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="-{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "-{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -92,7 +94,7 @@ class ShortCommand(CommandArgument, pattern="-{0}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is ShortCommand:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -108,7 +110,7 @@ class LongCommand(CommandArgument, pattern="--{0}"):
 	* ``--command``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="--{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -119,7 +121,7 @@ class LongCommand(CommandArgument, pattern="--{0}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is LongCommand:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -135,7 +137,7 @@ class WindowsCommand(CommandArgument, pattern="/{0}"):
 	* ``/command``
 	"""
 
-	def __init_subclass__(cls, *args, pattern="/{0}", **kwargs):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "/{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -146,7 +148,7 @@ class WindowsCommand(CommandArgument, pattern="/{0}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args, **kwargs):
+	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		if cls is WindowsCommand:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
