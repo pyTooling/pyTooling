@@ -30,21 +30,23 @@
 # ==================================================================================================================== #
 #
 """
-This Python module offers the base implementation of .NET-like attributes realized with Python decorators. This module
-comes also with a mixin-class to ease using classes having annotated methods.
+This Python module offers the base implementation of .NET-like attributes realized with class-based Python decorators.
+This module comes also with a mixin-class to ease using classes having annotated methods.
 
-The decorators in pyTooling.Attributes are implemented as class-based decorators.
+The annotated data is stored as instances of :class:`~pyTooling.Attributes.Attribute` classes in an additional field per
+class, method or function. By default, this field is called ``__pyattr__``.
 
-The annotated data is stored in an additional ``__dict__`` entry for each annotated method. By default, the entry is
-called ``__pyattr__``.
+.. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
 
 # load dependencies
 from types  import MethodType, FunctionType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators import export
 
+
+__all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
 
 Entity = TypeVar("Entity", bound=Union[Type, Callable])
 """A type variable for functions, methods or classes."""
@@ -52,14 +54,17 @@ Entity = TypeVar("Entity", bound=Union[Type, Callable])
 TAttr = TypeVar("TAttr", bound='Attribute')
 """A type variable for :class:`~pyTooling.Attributes.Attribute`."""
 
-TAttributeFilter = Union[TAttr, Iterable[TAttr], None]
+TAttributeFilter = Union[Type[TAttr], Iterable[Type[TAttr]], None]
 """A type hint for a predicate parameter that accepts either a single :class:`~pyTooling.Attributes.Attribute` or an
 iterable of those."""
+
+ATTRIBUTES_MEMBER_NAME: str = "__pyattr__"
+"""Field name on entities (function, class, method) to store pyTooling.Attributes."""
 
 
 @export
 class Attribute:  # (metaclass=ExtendedType, slots=True):
-	"""Base-class for all pyTooling.Attributes."""
+	"""Base-class for all pyTooling attributes."""
 #	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"    #: Field name on entities (function, class, method) to store pyTooling.Attributes.
 	_functions:               ClassVar[List[Any]] = []              #: List of functions, this Attribute was attached to.
 	_classes:                 ClassVar[List[Any]] = []              #: List of classes, this Attribute was attached to.
@@ -80,6 +85,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		"""
 		Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
 		lookups.
+
+		:param entity:     Entity (function, class, method), to attach an attribute to.
+		:returns:          Same entity, with attached attribute.
+		:raises TypeError: If parameter 'entity' is not a function, class nor method.
 		"""
 		if isinstance(entity, MethodType):
 			self._methods.append(entity)
@@ -90,21 +99,25 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		else:
 			raise TypeError(f"Parameter 'entity' is not a function, class nor method.")
 
-		if "__pyattr__" in entity.__dict__:
-			entity.__pyattr__.insert(0, self)
+		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):
+			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, self)
 		else:
-			entity.__pyattr__ = [self, ]
+			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [self, ])
 
 		return entity
 
 	@classmethod
-	def GetFunctions(cls, scope: Type = None, predicate: Union[Type, Tuple] = None) -> Generator[Type, None, None]:
+	def GetFunctions(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
 		"""
-		Return a generator for all functions, where this attribute was attached to.
+		Return a generator for all functions, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 		 * ``predicate`` - when the item is a subclass of ``predicate``.
+
+		:param scope:     Undocumented.
+		:param predicate: An attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:returns:         A sequence of functions where this attribute is attached to.
 		"""
 		if scope is None:
 			if predicate is None:
@@ -128,13 +141,17 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetClasses(cls, scope: Type = None, predicate: Union[Type, Tuple] = None) -> Generator[Type, None, None]:
+	def GetClasses(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
 		"""
-		Return a generator for all classes, where this attribute was attached to.
+		Return a generator for all classes, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 		 * ``predicate`` - when the item is a subclass of ``predicate``.
+
+		:param scope:     Undocumented.
+		:param predicate: An attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:returns:         A sequence of classes where this attribute is attached to.
 		"""
 		from pyTooling.Common import isnestedclass
 
@@ -156,13 +173,17 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetMethods(cls, scope: Type = None, predicate: Union[Type, Tuple] = None) -> Generator[Type, None, None]:
+	def GetMethods(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
 		"""
-		Return a generator for all methods, where this attribute was attached to.
+		Return a generator for all methods, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 		 * ``predicate`` - when the item is a subclass of ``predicate``.
+
+		:param scope:     Undocumented.
+		:param predicate: An attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:returns:         A sequence of methods where this attribute is attached to.
 		"""
 		from pyTooling.Common import isnestedclass
 
@@ -184,7 +205,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetMethods2(cls, inst: Any, includeDerivedAttributes: bool=True) -> Dict[Callable, List['Attribute']]:
+	def GetMethods2(cls, inst: Any, includeDerivedAttributes: bool = True) -> Dict[Callable, List['Attribute']]:
 		methods = {}
 		# print("-----------------------------------")
 		# print(inst)
@@ -203,7 +224,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 				if callable(function):
 					# try to read '__pyattr__'
 					try:
-						attributes = function.__dict__["__pyattr__"]
+						attributes = getattr(function, ATTRIBUTES_MEMBER_NAME)
 						# print(attributes)
 						if includeDerivedAttributes:
 							for attribute in attributes:
@@ -228,19 +249,19 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return methods
 
 	@classmethod
-	def GetAttributes(cls, method: MethodType, includeSubClasses: bool=True) -> Tuple['Attribute', ...]:
+	def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> Tuple['Attribute', ...]:
 		"""
-		Returns attached attributes for a given method.
+		Returns attached attributes of this kind for a given method.
 
 		:param method:
 		:param includeSubClasses:
 		:return:
 		:raises TypeError:
 		"""
-		if "__pyattr__" in method.__dict__:
-			attributes = method.__pyattr__
+		if hasattr(method, ATTRIBUTES_MEMBER_NAME):
+			attributes = getattr(method, ATTRIBUTES_MEMBER_NAME)
 			if isinstance(attributes, list):
 				return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
 			else:
-				raise TypeError(f"Method '{method.__class__.__name__}{method.__name__}' has a '__pyattr__' field, but it's not a list of Attributes.")
+				raise TypeError(f"Method '{method.__class__.__name__}{method.__name__}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's not a list of Attributes.")
 		return tuple()

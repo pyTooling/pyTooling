@@ -186,7 +186,8 @@ extensions = [
 # SphinxContrib extensions
 	"sphinxcontrib.mermaid",
 # Other extensions
-	"sphinx_fontawesome",
+	"sphinx_design",
+	# "sphinx_fontawesome",
 	"sphinx_autodoc_typehints",
 	"sphinx_inline_tabs",
 	"autoapi.sphinx",
@@ -268,6 +269,12 @@ todo_link_only = True
 # Sphinx.Ext.Coverage
 # ==============================================================================
 coverage_show_missing_items = True
+
+
+# ==============================================================================
+# Sphinx_Design
+# ==============================================================================
+sd_fontawesome_latex = True
 
 
 # ==============================================================================

@@ -1,3 +1,5 @@
+.. _ATTR/ArgParse:
+
 ArgParse
 ########
 
