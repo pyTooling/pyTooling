@@ -18,133 +18,168 @@ Users of pyTooling can select if the want to install a basic variant of pyToolin
 for colored console/terminal outputs (``terminal``) and/or support for YAML configuration files (``yaml``). In these
 cases additional dependencies might be installed. See :ref:`dependency` for more details.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. tab:: Normal Installation
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      .. code-block:: bash
+      .. tab-set::
 
-         # Basic pyTooling package
-         pip3 install pyTooling
+         .. tab-item:: Normal Installation
+            :sync: Normal
 
-   .. tab:: With Colored Console/Terminal Support
+            .. code-block:: bash
 
-      .. code-block:: bash
+               # Basic pyTooling package
+               pip3 install pyTooling
 
-         # With color support for pyTooling.TerminalUI
-         pip3 install pyTooling[terminal]
+         .. tab-item:: With Colored Console/Terminal Support
+            :sync: Terminal
 
-   .. tab:: With YAML Support for Configuration Files
+            .. code-block:: bash
 
-      .. code-block:: bash
+               # With color support for pyTooling.TerminalUI
+               pip3 install pyTooling[terminal]
 
-         # With YAML support for pyTooling.Configuration.YAML
-         pip3 install pyTooling[yaml]
+         .. tab-item:: With YAML Support for Configuration Files
+            :sync: YAML
 
-.. tab:: Windows
+            .. code-block:: bash
 
-   .. tab:: Normal Installation
+               # With YAML support for pyTooling.Configuration.YAML
+               pip3 install pyTooling[yaml]
 
-      .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-         # Basic pyTooling package
-         pip install pyTooling
+      .. tab-set::
 
-   .. tab:: With Colored Console/Terminal Support
+         .. tab-item:: Normal Installation
+            :sync: Normal
 
-      .. code-block:: powershell
+            .. code-block:: powershell
 
-         # With color support for pyTooling.TerminalUI
-         pip install pyTooling[terminal]
+               # Basic pyTooling package
+               pip install pyTooling
 
-   .. tab:: With YAML Support for Configuration Files
+         .. tab-item:: With Colored Console/Terminal Support
+            :sync: Terminal
 
-      .. code-block:: powershell
+            .. code-block:: powershell
 
-         # With YAML support for pyTooling.Configuration.YAML
-         pip install pyTooling[yaml]
+               # With color support for pyTooling.TerminalUI
+               pip install pyTooling[terminal]
+
+         .. tab-item:: With YAML Support for Configuration Files
+            :sync: YAML
+
+            .. code-block:: powershell
+
+               # With YAML support for pyTooling.Configuration.YAML
+               pip install pyTooling[yaml]
 
 Developers can install further dependencies for documentation generation (``doc``) or running unit tests (``test``) or
 just all (``all``) dependencies.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. tab:: With Documentation Dependencies
-      :new-set:
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      .. code-block:: bash
+      .. tab-set::
 
-         # Install with dependencies to generate documentation
-         pip3 install pyTooling[doc]
+         .. tab-item:: With Documentation Dependencies
+           :sync: Doc
 
-   .. tab:: With Unit Testing Dependencies
+            .. code-block:: bash
 
-      .. code-block:: bash
+               # Install with dependencies to generate documentation
+               pip3 install pyTooling[doc]
 
-         # Install with dependencies to run unit tests
-         pip3 install pyTooling[test]
+         .. tab-item:: With Unit Testing Dependencies
+           :sync: Unit
 
-   .. tab:: All Developer Dependencies
+            .. code-block:: bash
 
-      .. code-block:: bash
+               # Install with dependencies to run unit tests
+               pip3 install pyTooling[test]
 
-         # Install with all developer dependencies
-         pip install pyTooling[all]
+         .. tab-item:: All Developer Dependencies
+           :sync: All
 
-.. tab:: Windows
+            .. code-block:: bash
 
-   .. tab:: With Documentation Dependencies
+               # Install with all developer dependencies
+               pip install pyTooling[all]
 
-      .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-         # Install with dependencies to generate documentation
-         pip install pyTooling[doc]
+      .. tab-set::
 
-   .. tab:: With Unit Testing Dependencies
+         .. tab-item:: With Documentation Dependencies
+           :sync: Doc
 
-      .. code-block:: powershell
+            .. code-block:: powershell
 
-         # Install with dependencies to run unit tests
-         pip install pyTooling[test]
+               # Install with dependencies to generate documentation
+               pip install pyTooling[doc]
 
-   .. tab:: All Developer Dependencies
+         .. tab-item:: With Unit Testing Dependencies
+           :sync: Unit
 
-      .. code-block:: powershell
+            .. code-block:: powershell
 
-         # Install with all developer dependencies
-         pip install pyTooling[all]
+               # Install with dependencies to run unit tests
+               pip install pyTooling[test]
+
+         .. tab-item:: All Developer Dependencies
+           :sync: All
+
+            .. code-block:: powershell
+
+               # Install with all developer dependencies
+               pip install pyTooling[all]
 
 
 Updating from PyPI using PIP
 ============================
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U pyTooling
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U pyTooling
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U pyTooling
+      .. code-block:: powershell
+
+         pip3 install -U pyTooling
 
 
 Uninstallation using PIP
 ========================
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip uninstall pyTooling
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip uninstall pyTooling
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 uninstall pyTooling
+      .. code-block:: powershell
+
+         pip3 uninstall pyTooling
 
 
 .. _installation-setup:
@@ -175,33 +210,36 @@ will not detect a new version and thus not overwrite/reinstall the updated packa
 
 Ensure :ref:`packaging requirements <dependency-packaging>` are installed.
 
-.. tab:: Linux/MacOS
-   :new-set:
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      cd <pyTooling>
+      .. code-block:: bash
 
-      # Package the code in a wheel (*.whl)
-      python -m build --wheel
+         cd <pyTooling>
 
-      # Uninstall the old package
-      python -m pip uninstall -y pyTooling
+         # Package the code in a wheel (*.whl)
+         python -m build --wheel
 
-      # Install from wheel
-      python -m pip install ./dist/pyTooling-4.1.0-py3-none-any.whl
+         # Uninstall the old package
+         python -m pip uninstall -y pyTooling
 
-.. tab:: Windows
+         # Install from wheel
+         python -m pip install ./dist/pyTooling-4.1.0-py3-none-any.whl
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      cd <pyTooling>
+      .. code-block:: powershell
 
-      # Package the code in a wheel (*.whl)
-      py -m build --wheel
+         cd <pyTooling>
 
-      # Uninstall the old package
-      py -m pip uninstall -y pyTooling
+         # Package the code in a wheel (*.whl)
+         py -m build --wheel
 
-      # Install from wheel
-      py -m pip install .\dist\pyTooling-4.1.0-py3-none-any.whl
+         # Uninstall the old package
+         py -m pip uninstall -y pyTooling
+
+         # Install from wheel
+         py -m pip install .\dist\pyTooling-4.1.0-py3-none-any.whl

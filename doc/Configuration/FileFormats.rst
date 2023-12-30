@@ -13,74 +13,80 @@ Possible future file formats:
 * :ref:`CONFIG/FileFormat/TOML` - Tom's Obvious, Minimal Language
 * :ref:`CONFIG/FileFormat/XML` - Extensible Markup Language
 
-.. tab:: JSON
+.. tab-set::
 
-   .. code-block:: JSON
+   .. tab-item:: JSON
+      :sync: JSON
 
-      {
-        "version": "1.0",
-        "settings": {
-          "key1": "item1",
-          "key2": "item2"
-        },
-        "files": [
-          "path/to/file1.ext",
-          "path/to/file2.ext",
-          "path/to/file3.ext"
-        ]
-      }
+      .. code-block:: JSON
 
-.. tab:: TOML
+         {
+           "version": "1.0",
+           "settings": {
+             "key1": "item1",
+             "key2": "item2"
+           },
+           "files": [
+             "path/to/file1.ext",
+             "path/to/file2.ext",
+             "path/to/file3.ext"
+           ]
+         }
 
-   .. attention:: Not yet implemented.
+   .. tab-item:: TOML
+      :sync: TOML
 
-   .. code-block:: TOML
+      .. attention:: Not yet implemented.
 
-      version = "1.0"
+      .. code-block:: TOML
 
-      [settings]
-      key1 = "item1"
-      key2 = "item2"
+         version = "1.0"
 
-      files = [
-        "path/to/file1.ext",
-        "path/to/file2.ext",
-        "path/to/file3.ext"
-      ]
+         [settings]
+         key1 = "item1"
+         key2 = "item2"
 
-
-.. tab:: YAML
-
-   .. code-block:: YAML
-
-      version: "1.0"
-      settings:
-        key1: item1
-        key2: item2
-      files:
-        - path/to/file1.ext
-        - path/to/file2.ext
-        - path/to/file3.ext
+         files = [
+           "path/to/file1.ext",
+           "path/to/file2.ext",
+           "path/to/file3.ext"
+         ]
 
 
-.. tab:: XML
+   .. tab-item:: YAML
+      :sync: YAML
 
-   .. attention:: Not yet implemented.
+      .. code-block:: YAML
 
-   .. code-block:: XML
+         version: "1.0"
+         settings:
+           key1: item1
+           key2: item2
+         files:
+           - path/to/file1.ext
+           - path/to/file2.ext
+           - path/to/file3.ext
 
-      <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-      <configuration version="1.0">
-        <settings>
-          <setting key="key1">item1</setting>
-          <setting key="key2">item2</setting>
-        </settings>
-        <files>
-          <file>path/to/file1.ext</file>
-          <file>path/to/file2.ext</file>
-          <file>path/to/file3.ext</file>
-        </files>
-      </configuration>
+
+   .. tab-item:: XML
+      :sync: XML
+
+      .. attention:: Not yet implemented.
+
+      .. code-block:: XML
+
+         <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+         <configuration version="1.0">
+           <settings>
+             <setting key="key1">item1</setting>
+             <setting key="key2">item2</setting>
+           </settings>
+           <files>
+             <file>path/to/file1.ext</file>
+             <file>path/to/file2.ext</file>
+             <file>path/to/file3.ext</file>
+           </files>
+         </configuration>
 
 
 .. toctree::

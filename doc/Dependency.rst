@@ -28,17 +28,21 @@ pyTooling Package (Mandatory)
 Use the :file:`requirements.txt` file to install all dependencies via ``pip3`` or install the package directly from
 PyPI (see :ref:`installation`).
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip3 install -U -r requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip3 install -U -r requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip install -U -r requirements.txt
+      .. code-block:: powershell
+
+         pip install -U -r requirements.txt
 
 
 .. rubric:: Dependency List
@@ -88,17 +92,21 @@ only needed for developers or on a CI server, thus sub-dependencies are not eval
 Use the :file:`tests/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
 the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r tests/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r tests/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r tests\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r tests\requirements.txt
 
 .. rubric:: Dependency List - Unit Testing
 
@@ -129,17 +137,21 @@ thus sub-dependencies are not evaluated further.
 Use the :file:`tests/benchmark/requirements.txt` file to install all dependencies via ``pip3``. The file will
 recursively install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r tests/benchmark/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r tests/benchmark/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r tests\benchmark\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r tests\benchmark\requirements.txt
 
 .. rubric:: Dependency List - With Benchmark Testing
 
@@ -160,17 +172,21 @@ or on a CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`tests/performance/requirements.txt` file to install all dependencies via ``pip3``. The file will
 recursively install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r tests/performance/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r tests/performance/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r tests\performance\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r tests\performance\requirements.txt
 
 .. rubric:: Dependency List - With Performance Testing
 
@@ -204,17 +220,21 @@ CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`doc/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
 the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r doc/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r doc/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r doc\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r doc\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -253,17 +273,21 @@ on a CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r build/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r build/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r build\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r build\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -292,17 +316,21 @@ further.
 Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r dist/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r dist/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r dist\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r dist\requirements.txt
 
 
 .. rubric:: Dependency List
