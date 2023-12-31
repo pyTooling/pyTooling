@@ -33,8 +33,9 @@ Unit tests for :func:`firstKey`, :func:`firstValue`, :func:`firstPair`, :func:`m
 """
 from unittest         import TestCase
 
-from pyTooling.Common import firstKey, firstValue, firstPair, mergedicts, zipdicts
+from pytest           import mark
 
+from pyTooling.Common import firstKey, firstValue, firstPair, mergedicts, zipdicts, CurrentPlatform
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -166,6 +167,8 @@ class Zip(TestCase):
 		with self.assertRaises(ValueError):
 			_ = zipdicts()
 
+	# FIXME: check for pypy version
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="Syntax in generator is broken in pypy-3.10.")
 	def test_Zip1_1(self) -> None:
 		d1 = {"a": 1}
 		d2 = {"b": "2"}

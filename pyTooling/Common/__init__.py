@@ -396,6 +396,7 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 
 	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 		for key, item0 in ds[0].items():
-			yield key, item0, *(d[key] for d in ds[1:])
+			# WORKAROUND: using redundant parenthesis for Python 3.7 and pypy-3.10
+			yield (key, item0, *(d[key] for d in ds[1:]))
 
 	return gen(dicts)
