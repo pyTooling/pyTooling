@@ -189,11 +189,23 @@ _Element = TypeVar("Element")
 
 @export
 def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	"""
+	Returns the first element from an indexable.
+
+	:param indexable: Indexable to get the first element from.
+	:return:          First element.
+	"""
 	return indexable[0]
 
 
 @export
 def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	"""
+	Returns the last element from an indexable.
+
+	:param indexable: Indexable to get the last element from.
+	:return:          Last element.
+	"""
 	return indexable[-1]
 
 
@@ -384,7 +396,6 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 
 	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 		for key, item0 in ds[0].items():
-			# WORKAROUND: using redundant parenthesis for Python 3.7
-			yield (key, item0, *(d[key] for d in ds[1:]))
+			yield key, item0, *(d[key] for d in ds[1:])
 
 	return gen(dicts)

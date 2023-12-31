@@ -166,9 +166,24 @@ class Zip(TestCase):
 		with self.assertRaises(ValueError):
 			_ = zipdicts()
 
+	def test_Zip1_1(self) -> None:
+		d1 = {"a": 1}
+		d2 = {"b": "2"}
+
+		with self.assertRaises(KeyError):
+			for key, valueA, valueB in zipdicts(d1, d2):
+				pass
+
 	def test_Zip1_2(self) -> None:
 		d1 = {"a": 1}
 		d2 = {"a": "1", "b": "2"}
+
+		with self.assertRaises(ValueError):
+			_ = zipdicts(d1, d2)
+
+	def test_Zip2_1(self) -> None:
+		d1 = {"a": 1,   "b": 2}
+		d2 = {"a": "1"}
 
 		with self.assertRaises(ValueError):
 			_ = zipdicts(d1, d2)
@@ -184,3 +199,17 @@ class Zip(TestCase):
 
 		z = zipdicts(d1, d2)
 		self.assertTupleEqual(expected, tuple(z))
+
+	def test_Iterate(self) -> None:
+		d1 = {"a": 1,   "b": 2}
+		d2 = {"a": "1", "b": "2"}
+
+		expected = (
+			("a", 1, "1"),
+			("b", 2, "2"),
+		)
+
+		i = 0
+		for key, value1, value2 in zipdicts(d1, d2):
+			self.assertTupleEqual(expected[i], (key, value1, value2))
+			i += 1
