@@ -88,6 +88,9 @@ if (ROOT / "_theme").is_dir():
 #		"body_max_width": None
 #		"navigation_depth": 5,
 	}
+	html_css_files = [
+		'css/override.css',
+	]
 elif find_spec("sphinx_rtd_theme") is not None:
 	html_theme = "sphinx_rtd_theme"
 	html_theme_options = {
