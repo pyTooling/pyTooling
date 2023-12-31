@@ -311,12 +311,14 @@ Glossary
           T(type)
           ET(MetaClass)
           B(BaseClass)
+          M(MixIn)
           C(Class)
           I1(Instance);I2(Instance)
 
           T --> T
-          T:::mark1 --> ET:::mark1 -.class definition..-> B
-          B:::mark2 --> C:::mark2 -.instantiation..-> I1 & I2
+          T:::mark1 --> ET:::mark1 -.class definition.-> B
+          B:::mark2 --inheritance--> C:::mark2 -.instantiation..-> I1 & I2
+          M --inheritance--> C
 
           classDef node font-size:smaller;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;

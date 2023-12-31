@@ -50,24 +50,65 @@ Attributes
    .. grid-item::
       :columns: 6
 
-      The :mod:`pyTooling.Attributes` module offers the base implementation of *.NET-like attributes* realized with
-      Python decorators. The annotated data is stored as instances of :class:`~pyTooling.Attributes.Attribute` classes
-      in an additional field per class, method or function.
+      The :mod:`pyTooling.Attributes` module offers the base implementation of `.NET-like attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__
+      realized with Python decorators. The annotated and declarative data is stored as instances of :class:`~pyTooling.Attributes.Attribute`
+      classes in an additional ``__pyattr__`` field per class, method or function.
+
+      The annotation syntax allows users to attache any structured data to classes, methods or functions. In many cases,
+      a user will derive a custom attribute from :class:`~pyTooling.Attributes.Attribute` and override the ``__init__``
+      method, so user-defined parameters can be accepted when the attribute is constructed.
+
+      Later, classes, methods or functions can be searched for by querying the attribute for usage locations (see
+      example to the right). Another option for class and method attributes is defining a new classes using pyTooling's
+      :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. here the class itself offers helper methods for
+      discovering annotated methods.
 
    .. grid-item::
       :columns: 6
 
-      .. code-block:: Python
+      .. tab-set::
 
-         from pyTooling.Attributes import Attribute
+         .. tab-item:: Function Attributes
 
-         @Attribute(short="-v", long="--verbose", param="verbose", help="Default handler.")
-         def Handler(self, args):
-           pass
+            .. code-block:: Python
 
-         for function in Attribute.GetFunctions():
-           pass
+               from pyTooling.Attributes import Attribute
 
+               class Command(Attribute):
+                 def __init__(self, cmd: str, help: str = ""):
+                   pass
+
+               class Flag(Attribute):
+                 def __init__(self, param: str, short: str = None, long: str = None, help: str = ""):
+                   pass
+
+               @Command(cmd="version", help="Print version information.")
+               @Flag(param="verbose", short="-v", long="--verbose", help="Default handler.")
+               def Handler(self, args):
+                 pass
+
+               for function in Command.GetFunctions():
+                 pass
+
+         .. tab-item:: Method Attributes
+
+            .. code-block:: Python
+
+               from pyTooling.Attributes import Attribute
+               from pyTooling.MetaClasses import ExtendedType
+
+               class TestCase(Attribute):
+                 def __init__(self, name: str):
+                   pass
+
+               class Program(metaclass=ExtendedType):
+                  @TestCase(name="Handler routine")
+                  def Handler(self, args):
+                    pass
+
+               prog = Program()
+               for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
+                 pass
 
 ArgParse
 --------
@@ -81,39 +122,76 @@ ArgParse
       This means code executed in-order defines how the parser will accept inputs. Then more user-defined code is needed
       to dispatch the collected and type-converted arguments to handler routines.
 
-      In contrast, :mod:`~pyTooling.Attributes.ArgParse` allows the definition of commands, arguments and flags as
-      declarative code attached to handler routines using attributes.
+      In contrast, :mod:`pyTooling.Attributes.ArgParse` allows the definition of commands, arguments and flags as
+      declarative code attached to handler routines using pyTooling's attributes. This allows for
 
    .. grid-item::
       :columns: 6
 
-      .. code-block:: Python
+      .. tab-set::
 
-         class Program(ProgramBase):
-           @DefaultHandler()
-           @FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
-           def HandleDefault(self, args) -> None:
-             self.handler = self.HandleDefault
-             self.args = args
+         .. tab-item:: Traditional ArgParse
 
-           @CommandHandler("new-user", help="Add a new user.")
-           @StringArgument(dest="username", metaName="username", help="Name of the new user.")
-           @LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
-           def NewUserHandler(self, args) -> None:
-             self.handler = self.NewUserHandler
-             self.args = args
+            .. code-block:: Python
 
-           @CommandHandler("delete-user", help="Delete a user.")
-           @StringArgument(dest="username", metaName="username", help="Name of the new user.")
-           @FlagArgument(short="-f", long="--force", dest="force", help="Ignore internal checks.")
-           def DeleteUserHandler(self, args) -> None:
-             self.handler = self.DeleteUserHandler
-             self.args = args
+               class Program:
+                 def __init__(self):
+                   mainParser = argparse.ArgumentParser()
+		             mainParser.set_defaults(func=self.HandleDefault)
+                   mainParser.add_argument("-v", "--verbose")
+                   subParsers = mainParser.add_subparsers()
 
-           @CommandHandler("list-user", help="Add a new user.")
-           def ListUserHandler(self, args) -> None:
-             self.handler = self.ListUserHandler
-             self.args = args
+                   newUserParser = subParsers.add_parser("new-user", help="Add a new user.")
+                   newUserParser.add_argument(dest="username", metaName="username", help="Name of the new user.")
+                   newUserParser.add_argument("--quota", dest="quota", help="Max usable disk space.")
+                   newUserParser.set_defaults(func=self.NewUserHandler)
+
+                   deleteUserParser = subParsers.add_parser("delete-user", help="Delete a user.")
+                   deleteUserParser.add_argument(dest="username", metaName="username", help="Name of the user.")
+                   deleteUserParser.add_argument("-f", "--force", dest="force", help="Ignore internal checks.")
+                   deleteUserParser.set_defaults(func=self.DeleteUserHandler)
+
+                   listUserParser = subParsers.add_parser("list-user", help="List all users.")
+                   listUserParser.set_defaults(func=self.ListUserHandler)
+
+                 def HandleDefault(self, args) -> None:
+                   pass
+
+                 def NewUserHandler(self, args) -> None:
+                   pass
+
+                 def DeleteUserHandler(self, args) -> None:
+                   pass
+
+                 def ListUserHandler(self, args) -> None:
+                   pass
+
+         .. tab-item:: pyTooling.Attributes.ArgParse
+            :selected:
+
+            .. code-block:: Python
+
+               class Program:
+                 @DefaultHandler()
+                 @FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
+                 def HandleDefault(self, args) -> None:
+                   pass
+
+                 @CommandHandler("new-user", help="Add a new user.")
+                 @StringArgument(dest="username", metaName="username", help="Name of the new user.")
+                 @LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
+                 def NewUserHandler(self, args) -> None:
+                   pass
+
+                 @CommandHandler("delete-user", help="Delete a user.")
+                 @StringArgument(dest="username", metaName="username", help="Name of the user.")
+                 @FlagArgument(short="-f", long="--force", dest="force", help="Ignore internal checks.")
+                 def DeleteUserHandler(self, args) -> None:
+                   pass
+
+                 @CommandHandler("list-user", help="List all users.")
+                 def ListUserHandler(self, args) -> None:
+                   pass
 
 CLI Abstraction
 ===============
@@ -171,20 +249,72 @@ Common Helper Functions
 
       This is a set of useful :ref:`helper functions <COMMON/HelperFunctions>`:
 
-      * :ref:`COMMON/Helper/getsizeof` calculates the "real" size of a data structure.
-      * :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
+      * :ref:`COMMON/Helper/firstElement`, :ref:`COMMON/Helper/lastElement` get the first/last element from an indexable.
       * :ref:`COMMON/Helper/firstItem`, :ref:`COMMON/Helper/lastItem` get the first/last item from an iterable.
       * :ref:`COMMON/Helper/firstKey`, :ref:`COMMON/Helper/firstValue`, :ref:`COMMON/Helper/firstPair` get the first
         key/value/pair from an ordered dictionary.
+      * :ref:`COMMON/Helper/getsizeof` calculates the "real" size of a data structure.
+      * :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
       * :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
       * :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
 
    .. grid-item::
       :columns: 6
 
-      .. code-block:: Python
+      .. tab-set::
 
-         pass
+         .. tab-item:: firstItem
+
+            .. code-block:: Python
+
+               def myFunction(condition: bool) -> Iterable:
+                 myList = [3, 21, 5, 7]
+                 if condition:
+                   return myList[0:2]
+                 else
+                   return myList[1:3]
+
+               beginOfSequence = myFunction(True)
+               first = firstItem(beginOfSequence)
+
+
+               # 3
+
+         .. tab-item:: mergedicts
+
+            .. code-block:: Python
+
+               from pyTooling.Common import mergedicts
+
+               dictA = {"a": 11, "b": 12}
+               dictB = {"x": 21, "y": 22}
+
+               for key, value in mergedicts(dictA, dictB):
+                 pass
+
+               # ("a", 11)
+               # ("b", 12)
+               # ("x", 21)
+               # ("y", 22)
+
+         .. tab-item:: zipdicts
+            :selected:
+
+            .. code-block:: Python
+
+               from pyTooling.Common import zipdicts
+
+               dictA = {"a": 11, "b": 12, "c": 13}
+               dictB = {"a": 21, "b": 22, "c": 23}
+
+               for key, valueA, valueB in zipdicts(dictA, dictB):
+                 pass
+
+
+               # ("a", 11, 21)
+               # ("a", 12, 22)
+               # ("a", 13, 23)
+
 
 Common Classes
 ==============
@@ -237,29 +367,29 @@ Configuration
 
       .. tab-set::
 
-          .. tab-item:: JSON
+         .. tab-item:: JSON
 
-             .. code-block:: Python
+            .. code-block:: Python
 
-                pass
+               pass
 
-          .. tab-item:: TOML
+         .. tab-item:: TOML
 
-             .. code-block:: Python
+            .. code-block:: Python
 
-                pass
+               pass
 
-          .. tab-item:: YAML
+         .. tab-item:: YAML
 
-             .. code-block:: Python
+            .. code-block:: Python
 
-                pass
+               pass
 
-          .. tab-item:: XML
+         .. tab-item:: XML
 
-             .. code-block:: Python
+            .. code-block:: Python
 
-                pass
+               pass
 
 
 Data Structures
@@ -291,85 +421,98 @@ Data Structures
 
       .. tab-set::
 
-         .. tab-item:: Graph
+          .. tab-item:: Graph
 
-            .. mermaid::
-               :caption: A directed graph with backward-edges denoted by dotted vertex relations.
+             .. code-block:: Python
 
-               %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
-               graph LR
-                 A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
+                pass
 
-                 A --> B --> E
-                 G --> F
-                 A --> C --> G --> H --> D
-                 D -.-> A
-                 D & F -.-> B
-                 I ---> E --> F --> D
+          .. tab-item:: Statemachine
 
-                 classDef node fill:#eee,stroke:#777,font-size:smaller;
-                 classDef node fill:#eee,stroke:#777,font-size:smaller;
-                 classDef node fill:#eee,stroke:#777,font-size:smaller;
+             .. code-block:: Python
 
-         .. tab-item:: Statemachine
+                pass
 
-            .. mermaid::
-               :caption: A statemachine graph.
+          .. tab-item:: Tree
 
-               %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
-               graph TD
-                 A(Idle); B(Check); C(Prepare); D(Read); E(Finished); F(Write) ; G(Retry); H(WriteWait); I(ReadWait)
+             .. code-block:: Python
 
-                 A:::mark1 --> B --> C --> F
-                 F --> H --> E:::cur
-                 B --> G --> B
-                 G -.-> A --> C
-                 D -.-> A
-                 C ---> D --> I --> E -.-> A
+                pass
 
-                 classDef node fill:#eee,stroke:#777,font-size:smaller;
-                 classDef cur fill:#9e9,stroke:#6e6;
-                 classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+.. grid:: 3
 
-         .. tab-item:: Tree
+   .. grid-item:: Graph
+      :columns: 4
 
-            .. mermaid::
-               :caption: Root of the current node are marked in blue.
+      .. mermaid::
+         :caption: A directed graph with backward-edges denoted by dotted vertex relations.
 
-               %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
-               graph TD
-                 R(Root)
-                 A(...)
-                 BL(Node); B(GrandParent); BR(Node)
-                 CL(Uncle); C(Parent); CR(Aunt)
-                 DL(Sibling); D(Node);  DR(Sibling)
-                 ELN1(Niece); ELN2(Nephew)
-                 EL(Child);   E(Child); ER(Child);
-                 ERN1(Niece);ERN2(Nephew)
-                 F1(GrandChild); F2(GrandChild)
+         %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+         graph LR
+           A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
 
-                 R:::mark1 --> A
-                 A --> BL & B & BR
-                 B --> CL & C & CR
-                 C --> DL & D & DR
-                 DL --> ELN1 & ELN2
-                 D:::cur --> EL & E & ER
-                 DR --> ERN1 & ERN2
-                 E --> F1 & F2
+           A --> B --> E
+           G --> F
+           A --> C --> G --> H --> D
+           D -.-> A
+           D & F -.-> B
+           I ---> E --> F --> D
 
-                 classDef node fill:#eee,stroke:#777,font-size:smaller;
-                 classDef cur fill:#9e9,stroke:#6e6;
-                 classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+           classDef node fill:#eee,stroke:#777,font-size:smaller;
+           classDef node fill:#eee,stroke:#777,font-size:smaller;
+           classDef node fill:#eee,stroke:#777,font-size:smaller;
 
+   .. grid-item:: Statemachine
+      :columns: 4
 
+      .. mermaid::
+         :caption: A statemachine graph.
 
+         %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+         graph TD
+           A(Idle); B(Check); C(Prepare); D(Read); E(Finished); F(Write) ; G(Retry); H(WriteWait); I(ReadWait)
 
+           A:::mark1 --> B --> C --> F
+           F --> H --> E:::cur
+           B --> G --> B
+           G -.-> A --> C
+           D -.-> A
+           C ---> D --> I --> E -.-> A
 
+           classDef node fill:#eee,stroke:#777,font-size:smaller;
+           classDef cur fill:#9e9,stroke:#6e6;
+           classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 
+   .. grid-item:: Tree
+      :columns: 4
 
+      .. mermaid::
+         :caption: Root of the current node are marked in blue.
 
+         %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
+         graph TD
+           R(Root)
+           A(...)
+           BL(Node); B(GrandParent); BR(Node)
+           CL(Uncle); C(Parent); CR(Aunt)
+           DL(Sibling); D(Node);  DR(Sibling)
+           ELN1(Niece); ELN2(Nephew)
+           EL(Child);   E(Child); ER(Child);
+           ERN1(Niece);ERN2(Nephew)
+           F1(GrandChild); F2(GrandChild)
 
+           R:::mark1 --> A
+           A --> BL & B & BR
+           B --> CL & C & CR
+           C --> DL & D & DR
+           DL --> ELN1 & ELN2
+           D:::cur --> EL & E & ER
+           DR --> ERN1 & ERN2
+           E --> F1 & F2
 
+           classDef node fill:#eee,stroke:#777,font-size:smaller;
+           classDef cur fill:#9e9,stroke:#6e6;
+           classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 
 
 Decorators
@@ -449,63 +592,101 @@ setting up slotted types needed a lot of manual coding, this is now fully automa
 annotated fields are going to be slots. Moreover, it also takes care deferred slots in multiple-inheritance scenarios by
 marking secondary base-classes as mixins. This defers slot creation until a mixin is inherited.
 
-:pycode:`class MyClass(metaclass=ExtendedType):`
-  A class definition using the :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. I can now implement
-  :ref:`abstract methods <META/Abstract>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
+.. grid:: 2
 
-:pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
-  A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
-  exist. If another instance is going to be created, a previously cached instance of that class will be returned.
+   .. grid-item::
+      :columns: 6
 
-:pycode:`class MyClass(metaclass=ExtendedType, slots=True):`
-  A class defined with enabled :ref:`slots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
-  translates all type-annotated fields in the class definition to slots. Slots allow a more efficient field storage and
-  access compared to dynamically stored and accessed fields hosted in ``__dict__``. This improves the memory footprint
-  as well as the field access performance of all class instances. This behavior is automatically inherited to all
-  derived classes.
+      :pycode:`class MyClass(metaclass=ExtendedType):`
+        A class definition using the :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. I can now implement
+        :ref:`abstract methods <META/Abstract>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
 
-:pycode:`class MyClass(metaclass=ExtendedType, slots=True, mixin=True):`
-  A class defined with enabled :ref:`mixin <META/Mixin>` behavior collects type-annotated instance fields so they can be
-  added to slots in an inherited class. Thus, slots are not created for mixin-classes but deferred in the inheritance
-  hierarchy.
+      :pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
+        A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
+        exist. If another instance is going to be created, a previously cached instance of that class will be returned.
 
-:pycode:`class MyClass(SlottedObject):`
-  A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` will bring the slotted type behavior to
-  that class and all its derived classes.
+      :pycode:`class MyClass(metaclass=ExtendedType, slots=True):`
+        A class defined with enabled :ref:`slots <META/Slotted>` behavior stores instance fields in slots. The meta-class,
+        translates all type-annotated fields in the class definition to slots. Slots allow a more efficient field storage and
+        access compared to dynamically stored and accessed fields hosted in ``__dict__``. This improves the memory footprint
+        as well as the field access performance of all class instances. This behavior is automatically inherited to all
+        derived classes.
+
+      :pycode:`class MyClass(metaclass=ExtendedType, slots=True, mixin=True):`
+        A class defined with enabled :ref:`mixin <META/Mixin>` behavior collects type-annotated instance fields so they can be
+        added to slots in an inherited class. Thus, slots are not created for mixin-classes but deferred in the inheritance
+        hierarchy.
+
+      :pycode:`class MyClass(SlottedObject):`
+        A class definition deriving from :class:`~pyTooling.MetaClasses.SlottedObject` will bring the slotted type behavior to
+        that class and all its derived classes.
+
+   .. grid-item::
+      :columns: 6
+
+      TBD
 
 
 Packaging
 =========
 
-A set of helper functions to describe a Python package for setuptools.
+.. grid:: 2
 
-* Helper Functions:
+   .. grid-item::
+      :columns: 6
 
-  * :func:`pyTooling.Packaging.loadReadmeFile` |br|
-    Load a ``README.md`` file from disk and provide the content as long description for setuptools.
-  * :func:`pyTooling.Packaging.loadRequirementsFile` |br|
-    Load a ``requirements.txt`` file from disk and provide the content for setuptools.
-  * :func:`pyTooling.Packaging.extractVersionInformation` |br|
-    Extract version information from Python source files and provide the data to setuptools.
+      A set of helper functions to describe a Python package for setuptools.
 
-* Package Descriptions
+      * Helper Functions:
 
-  * :func:`pyTooling.Packaging.DescribePythonPackage` |br|
-    tbd
-  * :func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
-    tbd
+        * :func:`pyTooling.Packaging.loadReadmeFile` |br|
+          Load a ``README.md`` file from disk and provide the content as long description for setuptools.
+        * :func:`pyTooling.Packaging.loadRequirementsFile` |br|
+          Load a ``requirements.txt`` file from disk and provide the content for setuptools.
+        * :func:`pyTooling.Packaging.extractVersionInformation` |br|
+          Extract version information from Python source files and provide the data to setuptools.
+
+      * Package Descriptions
+
+        * :func:`pyTooling.Packaging.DescribePythonPackage` |br|
+          tbd
+        * :func:`pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` |br|
+          tbd
+
+   .. grid-item::
+      :columns: 6
+
+      TBD
 
 
 Terminal
 ========
 
-*tbd*
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      .. todo:: Terminal helpers.
+
+   .. grid-item::
+      :columns: 6
+
+      TBD
 
 Timer
 =====
 
-A :class:`~pyTooling.Timer.Timer` class to measure and accumulate code execution times.
 
+   .. grid-item::
+      :columns: 6
+
+      A :class:`~pyTooling.Timer.Timer` class to measure and accumulate code execution times.
+
+   .. grid-item::
+      :columns: 6
+
+      TBD
 
 Contributors
 ************

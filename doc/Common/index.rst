@@ -73,6 +73,38 @@ class.
    print(isnestedclass(N, A))
 
 
+.. _COMMON/Helper/firstElement:
+
+firstElement
+************
+
+:func:`~pyTooling.Common.firstElement` returns the first element from an iterable.
+
+.. code-block:: Python
+
+   lst = [1, 2, 3]
+
+   f = firstElement(lst)
+   # 1
+
+
+.. _COMMON/Helper/lastElement:
+
+lastElement
+***********
+
+:func:`~pyTooling.Common.lastElement` returns the last element from an iterable.
+
+.. code-block:: Python
+
+   lst = [1, 2, 3]
+
+   l = lastElement(lst)
+   # 3
+
+
+
+
 .. _COMMON/Helper/firstItem:
 
 firstItem
