@@ -25,7 +25,7 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful abstract data models, missing classes, decorators, a new
+**pyTooling** is a powerful collection of arbitrary useful abstract data models, lacking classes, decorators, a new
 performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
 handling of package descriptions or to unify multiple existing APIs into a single API.
 
@@ -341,9 +341,23 @@ Common Classes
    .. grid-item::
       :columns: 6
 
-      .. code-block:: Python
+      .. tab-set::
 
-         pass
+         .. tab-item:: Platform
+
+            .. todo:: Needs example code
+
+            .. code-block:: Python
+
+               def
+
+         .. tab-item:: SemanticVersion
+
+            .. todo:: Needs example code
+
+            .. code-block:: Python
+
+               def
 
 Configuration
 =============
@@ -369,11 +383,15 @@ Configuration
 
          .. tab-item:: JSON
 
+            .. todo:: Needs example code
+
             .. code-block:: Python
 
                pass
 
          .. tab-item:: TOML
+
+            .. todo:: Needs example code
 
             .. code-block:: Python
 
@@ -381,11 +399,15 @@ Configuration
 
          .. tab-item:: YAML
 
+            .. todo:: Needs example code
+
             .. code-block:: Python
 
                pass
 
          .. tab-item:: XML
+
+            .. todo:: Needs example code
 
             .. code-block:: Python
 
@@ -423,17 +445,23 @@ Data Structures
 
           .. tab-item:: Graph
 
+            .. todo:: Needs example code
+
              .. code-block:: Python
 
                 pass
 
           .. tab-item:: Statemachine
 
+            .. todo:: Needs example code
+
              .. code-block:: Python
 
                 pass
 
           .. tab-item:: Tree
+
+            .. todo:: Needs example code
 
              .. code-block:: Python
 
@@ -560,6 +588,8 @@ Decorators
    .. grid-item::
       :columns: 6
 
+      .. todo:: Needs example code
+
       .. code-block:: Python
 
          pass
@@ -624,7 +654,31 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
    .. grid-item::
       :columns: 6
 
-      TBD
+      .. tab-set::
+
+         .. tab-item:: Singleton
+
+            .. todo:: Needs example code
+
+            .. code-block:: Python
+
+               def
+
+         .. tab-item:: Slotted Class
+
+            .. todo:: Needs example code
+
+            .. code-block:: Python
+
+               def
+
+         .. tab-item:: MixIn Class
+
+            .. todo:: Needs example code
+
+            .. code-block:: Python
+
+               def
 
 
 Packaging
@@ -656,7 +710,7 @@ Packaging
    .. grid-item::
       :columns: 6
 
-      TBD
+      .. todo:: Needs example code
 
 
 Terminal
@@ -672,11 +726,12 @@ Terminal
    .. grid-item::
       :columns: 6
 
-      TBD
+      .. todo:: Needs example code
 
 Timer
 =====
 
+.. grid:: 2
 
    .. grid-item::
       :columns: 6
@@ -686,7 +741,7 @@ Timer
    .. grid-item::
       :columns: 6
 
-      TBD
+      .. todo:: Needs example code
 
 Contributors
 ************
