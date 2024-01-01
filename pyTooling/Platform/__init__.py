@@ -58,7 +58,7 @@ class PythonVersion(SemanticVersion):
 	def __eq__(self, other):
 		parts = other.split(".")
 		for a, b in zip(parts, (self._major, self._minor, self._patch)):
-			if a != b:
+			if int(a) != b:
 				return False
 
 		return True
