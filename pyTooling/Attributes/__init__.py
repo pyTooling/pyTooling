@@ -43,8 +43,7 @@ class, method or function. By default, this field is called ``__pyattr__``.
 from types  import MethodType, FunctionType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
 
-from pyTooling.Decorators import export
-
+from pyTooling.Decorators import export, readonly
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
 
@@ -63,14 +62,14 @@ ATTRIBUTES_MEMBER_NAME: str = "__pyattr__"
 
 
 @export
-class Attribute:  # (metaclass=ExtendedType, slots=True):
+class BaseAttribute:  # (metaclass=ExtendedType, slots=True):
 	"""Base-class for all pyTooling attributes."""
 #	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"    #: Field name on entities (function, class, method) to store pyTooling.Attributes.
 	_functions:               ClassVar[List[Any]] = []              #: List of functions, this Attribute was attached to.
 	_classes:                 ClassVar[List[Any]] = []              #: List of classes, this Attribute was attached to.
 	_methods:                 ClassVar[List[Any]] = []              #: List of methods, this Attribute was attached to.
 
-	def __init_subclass__(cls, **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:
 		"""
 		Ensure each derived class has its own instance of ``_functions``, ``_classes`` and ``_methods`` to register the
 		usage of that Attribute.
@@ -265,3 +264,21 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			else:
 				raise TypeError(f"Method '{method.__class__.__name__}{method.__name__}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's not a list of Attributes.")
 		return tuple()
+
+
+@export
+class Attribute(BaseAttribute):
+	_args: Tuple[Any, ...]
+	_kwargs: Dict[str, Any]
+
+	def __init__(self, *args, **kwargs) -> None:
+		self._args = args
+		self._kwargs = kwargs
+
+	@readonly
+	def Args(self) -> Tuple[Any, ...]:
+		return self._args
+
+	@readonly
+	def KwArgs(self) -> Dict[str, Any]:
+		return self._kwargs

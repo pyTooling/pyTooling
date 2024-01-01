@@ -51,16 +51,17 @@ Attributes
       :columns: 6
 
       The :mod:`pyTooling.Attributes` module offers the base implementation of `.NET-like attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__
-      realized with Python decorators. The annotated and declarative data is stored as instances of :class:`~pyTooling.Attributes.Attribute`
-      classes in an additional ``__pyattr__`` field per class, method or function.
+      realized with :term:`Python decorators <decorator>`. The annotated and declarative data is stored as instances of
+      :class:`~pyTooling.Attributes.Attribute` classes in an additional ``__pyattr__`` field per class, method or
+      function.
 
       The annotation syntax allows users to attache any structured data to classes, methods or functions. In many cases,
       a user will derive a custom attribute from :class:`~pyTooling.Attributes.Attribute` and override the ``__init__``
       method, so user-defined parameters can be accepted when the attribute is constructed.
 
-      Later, classes, methods or functions can be searched for by querying the attribute for usage locations (see
-      example to the right). Another option for class and method attributes is defining a new classes using pyTooling's
-      :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. here the class itself offers helper methods for
+      Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance
+      usage locations (see example to the right). Another option for class and method attributes is defining a new
+      classes using pyTooling's :ref:`META/ExtendedType` meta-class. Here the class itself offers helper methods for
       discovering annotated methods.
 
    .. grid-item::
@@ -105,6 +106,8 @@ Attributes
                   @TestCase(name="Handler routine")
                   def Handler(self, args):
                     pass
+
+
 
                prog = Program()
                for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):

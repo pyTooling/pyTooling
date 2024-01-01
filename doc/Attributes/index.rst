@@ -3,8 +3,68 @@
 Overview
 ########
 
-The :mod:`pyTooling.Attributes` package offers implementations of *.NET-like attributes* realized with Python
-:term:`decorators <decorator>`. While all user-defined (and pre-defined) *attributes* already offer a powerful API
+The :mod:`pyTooling.Attributes` package offers the base implementation of `.NET-like attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__
+realized with :term:`Python decorators <decorator>`. The annotated and declarative data is stored as instances of
+:class:`~pyTooling.Attributes.Attribute` classes in an additional ``__pyattr__`` field per class, method or function.
+
+The annotation syntax allows users to attache any structured data to classes, methods or functions. In many cases, a
+user will derive a custom attribute from :class:`~pyTooling.Attributes.Attribute` and override the ``__init__`` method,
+so user-defined parameters can be accepted when the attribute is constructed.
+
+Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance usage
+locations (see example). Another option for class and method attributes is defining a new classes using pyTooling’s
+:ref:`META/ExtendedType` meta-class. Here the class itself offers helper methods for discovering annotated methods.
+
+.. grid:: 2
+
+   .. grid-item:: **Function Attributes**
+      :columns: 6
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+         class Command(Attribute):
+           def __init__(self, cmd: str, help: str = ""):
+             pass
+
+         class Flag(Attribute):
+           def __init__(self, param: str, short: str = None, long: str = None, help: str = ""):
+             pass
+
+         @Command(cmd="version", help="Print version information.")
+         @Flag(param="verbose", short="-v", long="--verbose", help="Default handler.")
+         def Handler(self, args):
+           pass
+
+         for function in Command.GetFunctions():
+           pass
+
+   .. grid-item:: **Method Attributes**
+      :columns: 6
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+         from pyTooling.MetaClasses import ExtendedType
+
+         class TestCase(Attribute):
+           def __init__(self, name: str):
+             pass
+
+         class Program(metaclass=ExtendedType):
+            @TestCase(name="Handler routine")
+            def Handler(self, args):
+              pass
+
+
+
+         prog = Program()
+         for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
+           pass
+
+
+While all user-defined (and pre-defined) *attributes* already offer a powerful API
 derived from :class:`~pyTooling.Attributes.Attribute`, the full potential can be experienced when used with class
 declarations using :class:`pyTooling.MetaClass.ExtendedType` as it's meta-class.
 
