@@ -167,8 +167,7 @@ class Zip(TestCase):
 		with self.assertRaises(ValueError):
 			_ = zipdicts()
 
-	# FIXME: check for pypy version
-	@mark.skipif(CurrentPlatform.IsPyPy, reason="Syntax in generator is broken in pypy-3.10.")
+	@mark.skipif(CurrentPlatform.IsPyPy and CurrentPlatform.PythonVersion == "3.10", reason="Syntax in generator is broken in pypy-3.10.")
 	def test_Zip1_1(self) -> None:
 		d1 = {"a": 1}
 		d2 = {"b": "2"}

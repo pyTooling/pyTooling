@@ -55,6 +55,14 @@ class PythonVersion(SemanticVersion):
 
 		super().__init__(version_info.major, version_info.minor, version_info.micro)
 
+	def __eq__(self, other):
+		parts = other.split(".")
+		for a, b in zip(parts, (self._major, self._minor, self._patch)):
+			if a != b:
+				return False
+
+		return True
+
 
 @export
 class Platforms(Flag):
