@@ -135,19 +135,110 @@ argparse command line argument parser structures in a declarative way.
    :parts: 1
 
 
-**Condensed definition of class** :class:`~pyTooling.Attributes.Attribute`:
+.. _ATTR/Predefined/Attribute:
 
-.. code-block:: python
+Attribute
+=========
 
-   class Attribute:  # (metaclass=ExtendedType, slots=True):
-      # Ensure each derived class has its own instances of class variables.
-      def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:
-        ...
+The :class:`~pyTooling.Attributes.Attribute` class implements half of the attribute's feature set. It implements the
+instantiation and storage of attribute internal values as well as the search and lookup methods to find attributes. The
+second half is implemented in the :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. It adds attribute specific
+methods to each class created by that meta-class.
 
-      # Make all classes derived from Attribute callable, so they can be used as a decorator.
-      def __call__(self, entity: Entity) -> Entity:
-        ...
+Any attribute is applied on a class, method or function using Python's decorator syntax, because every attribute is
+actually a decorator. In addition, such a decorator accepts parameters, which are used to instantiate an attribute class
+and handover the parameters to that attribute instance.
 
+Every instance of an attribute is registered at its class in a class variable. Further more, these instances are
+distinguished if they are applied to a class, method or function.
+
+* :meth:`~pyTooling.Attributes.Attribute.GetClasses` returns a generator to iterate all classes, this attribute was
+  applied to.
+* :meth:`~pyTooling.Attributes.Attribute.GetMethods` returns a generator to iterate all methods, this attribute was
+  applied to.
+* :meth:`~pyTooling.Attributes.Attribute.GetFunctions` returns a generator to iterate all functions, this attribute was
+  applied to.
+* :meth:`~pyTooling.Attributes.Attribute.GetAttributes` returns a tuple of applied attributes to the given method.
+
+
+.. grid:: 3
+
+   .. grid-item:: **Apply a class attribute**
+      :columns: 4
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+
+         @Attribute()
+         class MyClass:
+           pass
+
+   .. grid-item:: **Apply a method attribute**
+      :columns: 4
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+         class MyClass:
+           @Attribute()
+           def MyMethod(self):
+             pass
+
+   .. grid-item:: **Apply a function attribute**
+      :columns: 4
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+
+         @Attribute()
+         def MyFunction(param):
+           pass
+
+
+
+.. grid:: 3
+
+   .. grid-item:: **Find attribute usages of class attributes**
+      :columns: 4
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+         for cls in Attribute.GetClasses():
+           pass
+
+   .. grid-item:: **Find attribute usages of method attributes**
+      :columns: 4
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+         for method in Attribute.GetMethods():
+           pass
+
+   .. grid-item:: **Find attribute usages of function attributes**
+      :columns: 4
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes import Attribute
+
+         for function in Attribute.GetFunctions():
+           pass
+
+
+.. rubric:: Condensed definition of class :class:`~pyTooling.Attributes.Attribute`
+
+.. code-block:: Python
+
+   class Attribute:
       @classmethod
       def GetFunctions(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
         ...
@@ -163,6 +254,36 @@ argparse command line argument parser structures in a declarative way.
       @classmethod
       def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> Tuple['Attribute', ...]:
         ...
+
+.. rubric:: Planned Features
+
+* Allow limitation of attributes to classes, methods or functions, so an attribute meant for methods can't be applied to
+  a function or class.
+* Allow filtering attribute with a predicate function, so values of an attribute instance can be checked too.
+
+
+.. _ATTR/Predefined/SimpleAttribute:
+
+SimpleAttribute
+===============
+
+The :class:`~pyTooling.Attributes.SimpleAttribute` class accepts any positional and any keyword arguments as data. That
+data is made available via :attr:`~pyTooling.Attributes.SimpleAttribute.Args` and :attr:`~pyTooling.Attributes.SimpleAttribute.KwArgs`
+properties.
+
+.. code-block:: Python
+
+   from pyTooling.Attributes import SimpleAttribute
+
+   @SimpleAttribute(kind="testsuite")
+   class MyClass:
+     @SimpleAttribute(kind="testcase", id=1, description="Test and operator")
+     def test_and(self):
+       ...
+
+     @SimpleAttribute(kind="testcase", id=2, description="Test xor operator")
+     def test_xor(self):
+       ...
 
 **Condensed definition of class** :class:`~pyTooling.Attributes.SimpleAttribute`:
 
@@ -186,20 +307,45 @@ argparse command line argument parser structures in a declarative way.
 User-Defined Attributes
 ***********************
 
+It's recommended to derive user-defined attributes from :class:`~pyTooling.Attributes.Attribute`, so the ``__init__``
+method can be overriden to accept a well defined parameter list including type hints.
+
+The example defines an ``Annotation`` attribute, which accepts a single string parameter. When the attribute is applied,
+the parameter is stored in an  instance. The inner field is then accessible via readonly ``Annotation`` property.
+
+.. grid:: 2
+
+   .. grid-item:: **Find attribute usages of class attributes**
+      :columns: 6
+
+      .. code-block:: Python
+
+         class Application(metaclass=ExtendedType):
+           @Annotation("Some annotation data")
+           def AnnotatedMethod(self):
+             pass
+
+         for method in Annotation.GetMethods():
+           pass
+
+   .. grid-item:: **Find attribute usages of class attributes**
+      :columns: 6
+
+      .. code-block:: python
+
+         from pyTooling.Attributes import Attribute
+
+         class Annotation(Attribute):
+           _annotation: str
+
+           def __init__(self, annotation: str):
+             self._annotation = annotation
+
+           @readonly
+           def Annotation(self) -> str:
+             return self._annotation
 
 
-.. code-block:: python
-
-   class Annotation(Attribute):
-     pass
-
-   class Application(metaclass=ExtendedType):
-     @Annotation("Some annotation data")
-     def annotatedMethod(self):
-       pass
-
-   for method in Annotation.GetMethods():
-     pass
 
 
 .. _ATTR/Searching:
