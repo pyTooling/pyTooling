@@ -361,6 +361,12 @@ Searching Attributes
 Filtering Attributes
 ********************
 
+Methods :meth:`~pyTooling.Attributes.Attribute.GetClasses`, :meth:`~pyTooling.Attributes.Attribute.GetMethods`
+:meth:`~pyTooling.Attributes.Attribute.GetFunctions`, :meth:`~pyTooling.Attributes.Attribute.GetAttributes` accept an
+optional ``predicate`` parameter, which needs to be a subclass of :class:`~pyTooling.Attributes.Attribute`.
+
+
+
 .. todo:: Attributes:: Filtering Attributes
 
 
@@ -379,6 +385,7 @@ Implementation Details
 
 .. todo:: Attributes:: Implementation details
 
+:data:`~pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME`
 
 The annotated data is stored in an additional ``__dict__`` entry for each
 annotated method. By default the entry is called ``__pyattr__``. Multiple

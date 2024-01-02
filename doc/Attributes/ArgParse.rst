@@ -16,6 +16,9 @@ possible to assign a callback function to each individual sub-command parser.
 * Complex parsers can be distributed accross multiple classes and merged via multiple inheritance.
 * Pre-defined argument templates like switch parameters (``--help``).
 
+
+.. _ATTR/ArgParse/Comparison:
+
 Comparison
 **********
 
@@ -86,23 +89,45 @@ Comparison
 
 
 
-
+.. _ATTR/ArgParse/Arguments:
 
 Arguments
 *********
 
+.. _ATTR/ArgParse/Flags:
+
 Flags
 =====
+
+.. _ATTR/ArgParse/ValuedFlags:
 
 ValuedFlags
 ===========
 
+.. _ATTR/ArgParse/ValuedTupleFlags:
+
+ValuedTupleFlags
+================
+
+.. _ATTR/ArgParse/Lists:
 
 Argument Lists
 **************
 
+.. _ATTR/ArgParse/Commands:
+
 Commands
 ********
+
+.. _ATTR/ArgParse/Grouping:
+
+Grouping Arguments
+******************
+
+.. _ATTR/ArgParse/MixIn:
+
+Split Handlers into multiple classes
+************************************
 
 
 Classic ``argparse`` Example

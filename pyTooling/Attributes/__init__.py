@@ -69,6 +69,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	_classes:                 ClassVar[List[Any]] = []              #: List of classes, this Attribute was attached to.
 	_methods:                 ClassVar[List[Any]] = []              #: List of methods, this Attribute was attached to.
 
+	# Ensure each derived class has its own instances of class variables.
 	def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:
 		"""
 		Ensure each derived class has its own instance of ``_functions``, ``_classes`` and ``_methods`` to register the

@@ -50,19 +50,24 @@ Attributes
    .. grid-item::
       :columns: 6
 
-      The :mod:`pyTooling.Attributes` module offers the base implementation of `.NET-like attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__
+      The :ref:`pyTooling.Attributes <ATTR>` module offers the base implementation of
+      `.NET-like attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__
       realized with :term:`Python decorators <decorator>`. The annotated and declarative data is stored as instances of
-      :class:`~pyTooling.Attributes.Attribute` classes in an additional ``__pyattr__`` field per class, method or
+      :ref:`Attribute <ATTR/Predefined/Attribute>` classes in an additional ``__pyattr__`` field per class, method or
       function.
 
-      The annotation syntax allows users to attache any structured data to classes, methods or functions. In many cases,
-      a user will derive a custom attribute from :class:`~pyTooling.Attributes.Attribute` and override the ``__init__``
-      method, so user-defined parameters can be accepted when the attribute is constructed.
+      The annotation syntax (decorator syntax) allows users to attache any structured data to classes, methods or
+      functions. In many cases, a user will derive a custom attribute from :ref:`Attribute <ATTR/Predefined/Attribute>`
+      and override the ``__init__`` method, so user-defined parameters can be accepted when the attribute is constructed.
 
       Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance
-      usage locations (see example to the right). Another option for class and method attributes is defining a new
-      classes using pyTooling's :ref:`META/ExtendedType` meta-class. Here the class itself offers helper methods for
-      discovering annotated methods.
+      usage locations (see example to the right). Another option for class and method attributes is declaring a classes
+      using pyTooling's :ref:`META/ExtendedType` meta-class. Here the class itself offers helper methods for discovering
+      annotated methods.
+
+      A :ref:`SimpleAttribute <ATTR/Predefined/SimpleAttribute>` class is offered accepting any positional and keyword
+      parameters. In a more advanced use case, users are encouraged to derive their own attribute class hierarchy from
+      :ref:`Attribute <ATTR/Predefined/Attribute>`.
 
    .. grid-item::
       :columns: 6
@@ -121,12 +126,21 @@ ArgParse
    .. grid-item::
       :columns: 6
 
-      Defining commands, arguments or flags for a command line argument parser like :mod:`ArgParse` is done imperatively.
+      Defining commands, arguments or flags for a command line argument parser like :mod:`argparse` is done imperatively.
       This means code executed in-order defines how the parser will accept inputs. Then more user-defined code is needed
-      to dispatch the collected and type-converted arguments to handler routines.
+      to dispatch the collected and type-converted arguments to handler routines. See an example to the right as
+      "Traditional argparse".
 
-      In contrast, :mod:`pyTooling.Attributes.ArgParse` allows the definition of commands, arguments and flags as
-      declarative code attached to handler routines using pyTooling's attributes. This allows for
+      In contrast, :ref:`pyTooling.Attributes.ArgParse <ATTR/ArgParse>` allows the definition of :ref:`commands <ATTR/ArgParse/Commands>`,
+      :ref:`arguments <ATTR/ArgParse/Arguments>` or :ref:`flags <ATTR/ArgParse/Flags>` as declarative code attached to
+      handler routines using pyTooling's attributes. This allow a cleaner and more readable coding style. Also
+      maintainability is improved, as arguments are defined using clear attribute names attached to the matching handler
+      routine. Thus parser and handler code is not separated.
+
+      If the command line interface uses many commands, handlers and their arguments can be spread across
+      :ref:`mixin classes <ATTR/ArgParse/MixIn>`. Later, the whole CLI is assembled by using multiple inheritance. In
+      case handlers use shared argument sets, arguments can be :ref:`grouped <ATTR/ArgParse/Grouping>` and shared by
+      defining grouping attributes.
 
    .. grid-item::
       :columns: 6
@@ -204,8 +218,15 @@ CLI Abstraction
    .. grid-item::
       :columns: 6
 
-      :mod:`pyTooling.CLIAbstraction` offers an abstraction layer and wrapper for command line programs, so they can be
-      used easily in Python. All parameters like ``--value=42`` are implemented as argument classes on the executable.
+      :ref:`pyTooling.CLIAbstraction <CLIABS>` offers an abstraction layer for command line programs, so they can be
+      used easily in Python. There is no need for manually assembling parameter lists or considering the order of
+      parameters. All parameters like ``-v`` or ``--value=42`` are described using nested classes on a
+      :ref:`Program <CLIABS/Program>` class. Each nested class derived from predefined argument classes knows about the
+      correct formatting pattern, character escaping, and if needed about necessary type conversions.
+
+      Such an instance of a program can be converted to an argument list suitable for :class:`subprocess.Popen`.
+      In stead of deriving from :ref:`Program <CLIABS/Program>`, abstracted command line tools can derive from
+      :ref:`Executable <CLIABS/Executable>` which offers embedded :class:`~subprocess.Popen` behavior.
 
    .. grid-item::
       :columns: 6
