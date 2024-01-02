@@ -3,122 +3,182 @@
 Overview
 ########
 
-pyTooling.CLIAbstraction is an abstraction layer and wrapper for command line programs, so they can be used easily in
-Python. All parameters like ``--value=42`` are implemented as argument classes on the executable.
+:mod:`~pyTooling.CLIAbstraction` offers an abstraction layer for command line programs, so they can be used easily in
+Python. There is no need for manually assembling parameter lists or considering the order of parameters. All parameters
+like ``-v`` or ``--value=42`` are described as :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument` instances
+on a :class:`~pyTooling.CLIAbstraction.Program` class. Each argument class like :class:`~pyTooling.CLIAbstraction.Flag.ShortFlag`
+or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, character
+escaping, and if needed about necessary type conversions. A program instance can be converted to an argument list
+suitable for :class:`subprocess.Popen`.
+
+While a user-defined command line program abstraction derived from :class:`~pyTooling.CLIAbstraction.Program` only
+takes care of maintaining and assembling parameter lists, a more advanced base-class, called :class:`~pyTooling.CLIAbstraction.Executable`,
+is offered with embedded :class:`~subprocess.Popen` behavior.
 
 
-.. _CLIABS:Goals:
+.. _CLIABS/Goals:
 
-Main Goals
-**********
+Design Goals
+************
+
+The main design goals are:
 
 * Offer access to CLI programs as Python classes.
 * Abstract CLI arguments (a.k.a. parameter, option, flag, ...) as members on such a Python class.
+* Abstract differences in operating systems like argument pattern (POSIX: ``-h`` vs. Windows: ``/h``), path delimiter
+  signs (POSIX: ``/`` vs. Windows: ``\``) or executable names.
 * Derive program variants from existing programs.
-* Assemble parameters in list format for handover to :class:`subprocess.Popen` with proper escaping and quoting.
+* Assemble parameters as list for handover to :class:`subprocess.Popen` with proper escaping and quoting.
 * Launch a program with :class:`~subprocess.Popen` and hide the complexity of Popen.
 * Get a generator object for line-by-line output reading to enable postprocessing of outputs.
 
 
-.. _CLIABS:Usecases:
-
-Use Cases
-*********
-
-* Wrap command line interfaces of EDA tools (Electronic Design Automation) in Python classes.
-
+.. _CLIABS/Example:
 
 Example
 *******
 
 The following example implements a portion of the ``git`` program and its ``commit`` sub-command.
 
-.. rubric:: Program Definition
+1. A new class ``Git`` is derived from :class:`pyTooling.CLIAbstraction.Executable`.
+2. A class variable ``_executableNames`` is set, to specify different executable names based on the operating system.
+3. Nested classes are used to describe arguments and flags for the Git program.
+4. These nested classes are annotated with the ``@CLIArgument`` attribute, which is used to register the nested classes
+   in an ordered lookup structure. This declaration order is also used to order arguments when converting to a list for
+   :class:`~subprocess.Popen`.
+
+.. grid:: 2
+
+   .. grid-item:: **Usage of** ``Git``
+      :columns: 6
+
+      .. code-block:: Python
+
+         # Create a program instance and set common parameters.
+         git = Git()
+         git[git.FlagVerbose] = True
+
+         # Derive a variant of that pre-configured program.
+         commit = git.getCommitTool()
+         commit[commit.ValueCommitMessage] = "Bumped dependencies."
+
+         # Launch the program and parse outputs line-by-line.
+         commit.StartProcess()
+         for line in commit.GetLineReader():
+           print(line)
+
+   .. grid-item:: **Declaration of ``Git``**
+      :columns: 6
+
+      .. code-block:: Python
+
+         from pyTooling.CLIAbstraction import Executable
+         from pyTooling.CLIAbstraction.Command import CommandArgument
+         from pyTooling.CLIAbstraction.Flag import LongFlag
+         from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag
+
+         class Git(Executable):
+           _executableNames: ClassVar[Dict[str, str]] = {
+             "Darwin":  "git",
+             "Linux":   "git",
+             "Windows": "git.exe"
+           }
+
+           @CLIArgument()
+           class FlagVerbose(LongFlag, name="verbose"):
+             """Print verbose messages."""
+
+           @CLIArgument()
+           class CommandCommit(CommandArgument, name="commit"):
+             """Command to commit staged files."""
+
+           @CLIArgument()
+           class ValueCommitMessage(ShortTupleFlag, name="m"):
+             """Specify the commit message."""
+
+           def GetCommitTool(self):
+             """Derive a new program from a configured program."""
+             tool = self.__class__(executablePath=self._executablePath)
+             tool[tool.CommandCommit] = True
+             self._CopyParameters(tool)
+
+             return tool
+
+
+.. _CLIABS/ProgramAPI:
+
+Programm API
+************
+
+**Condensed definition of class** :class:`~pyTooling.CLIAbstraction.Program`:
 
 .. code-block:: Python
-   :name: HOME:Example
-   :caption: Git program defining commit argument.
 
-   # Definition
-   # ======================================
-   class Git(Executable):
-     _executableNames: ClassVar[Dict[str, str]] = {
-       "Darwin":  "git",
-       "Linux":   "git",
-       "Windows": "git.exe"
-     }
+   class Program(metaclass=ExtendedType, slots=True):
+      # Register @CLIArgument marked nested classes in `__cliOptions__
+      def __init_subclass__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+        ...
 
-     @CLIArgument()
-     class FlagVerbose(LongFlag, name="verbose"):
-       """Print verbose messages."""
+      def __init__(self, executablePath: Path = None, binaryDirectoryPath: Path = None, dryRun: bool = False) -> None:
+        ...
 
-     @CLIArgument()
-     class CommandCommit(CommandArgument, name="commit"):
-       """Command to commit staged files."""
+      @staticmethod
+      def _NeedsParameterInitialization(key):
+         ...
 
-     @CLIArgument()
-     class ValueCommitMessage(ShortTupleFlag, name="m"):
-       """Specify the commit message."""
+      # Implement indexed access operators: prog[...]
+      def __getitem__(self, key):
+         ...
+      def __setitem__(self, key, value):
+         ...
 
-     def GetCommitTool(self):
-       """Derive a new program from a configured program."""
-       tool = self.__class__(executablePath=self._executablePath)
-       tool[tool.CommandCommit] = True
-       self._CopyParameters(tool)
+      @readonly
+      def Path(self) -> Path:
+         ...
 
-       return tool
+      def ToArgumentList(self) -> List[str]:
+         ...
 
-   # Usage
-   # ======================================
-   # Create a program instance and set common parameters.
-   git = Git()
-   git[git.FlagVerbose] = True
+      def __repr__(self):
+         ...
 
-   # Derive a variant of that pre-configured program.
-   commit = git.getCommitTool()
-   commit[commit.ValueCommitMessage] = "Bumped dependencies."
+      def __str__(self):
+         ...
 
-   # Launch the program and parse outputs line-by-line.
-   commit.StartProcess()
-   for line in commit.GetLineReader():
-     print(line)
 
+.. _CLIABS/ExecutableAPI:
+
+Executable API
+**************
+
+**Condensed definition of class** :class:`~pyTooling.CLIAbstraction.Executable`:
+
+.. code-block:: Python
+
+   class Executable(Program):
+      def __init__( self, executablePath: Path = None, binaryDirectoryPath: Path = None, workingDirectory: Path = None, # environment: Environment = None, dryRun: bool = False):
+         ...
+
+      def StartProcess(self):
+         ...
+
+      def Send(self, line: str, end: str="\n") -> None:
+         ...
+
+      def GetLineReader(self) -> Generator[str, None, None]:
+         ...
+
+      @readonly
+      def ExitCode(self) -> int:
+         ...
+
+
+.. _CLIABS/Consumers:
 
 Consumers
 *********
 
-This layer is used by:
+This abstraction layer is used by:
 
-* ✅ `pyEDAA.CLITool <https://github.com/edaa-org/pyEDAA.CLITool>`__
-
-
-.. _news:
-
-News
-****
-
-.. only:: html
-
-   Feb. 2022 - Major Update
-   ========================
-
-.. only:: latex
-
-   .. rubric:: Major Update
-
-* Reworked names of Argument classes.
-* Added missing argument formats like PathArgument.
-* Added more unit tests and improved code-coverage.
-* Added doc-strings and extended documentation pages.
-
-
-.. only:: html
-
-   Dec. 2021 - Extracted CLIAbstraction from pyIPCMI
-   =================================================
-
-.. only:: latex
-
-   .. rubric:: Extracted CLIAbstraction from pyIPCMI
-
-* The CLI abstraction has been extracted from `pyIPCMI <https://GitHub.com/Paebbels/pyIPCMI>`__.
+* ✅ Wrap command line interfaces of EDA tools (Electronic Design Automation) in Python classes. |br|
+  `pyEDAA.CLITool <https://github.com/edaa-org/pyEDAA.CLITool>`__

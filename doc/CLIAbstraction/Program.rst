@@ -1,4 +1,4 @@
-.. _CLIABS:Program:
+.. _CLIABS/Program:
 
 Program
 #######
@@ -10,7 +10,7 @@ define and enable command line arguments.
 
 * Abstract a command line program as a Python class.
 * Abstract arguments of that program as nested classes derived from pre-defined Argument classes. |br|
-  See :ref:`CLIABS:Arguments`.
+  See :ref:`CLIABS/Arguments`.
 * Construct a list of arguments in correct order and with proper escaping ready to be used with e.g. :mod:`subprocess`.
 
 Simple Example
@@ -62,6 +62,13 @@ Defining Arguments on a Program
    * use decorator ``CLIArgument``
    * usage of nested classes
    * parametrize nested classes with class-arguments
+
+.. _CLIABS/CLIArgument:
+
+CLIArgument
+===========
+
+CLIArgument attribute
 
 Setting Arguments on a Program
 ******************************

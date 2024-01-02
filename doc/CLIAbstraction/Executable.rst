@@ -1,4 +1,4 @@
-.. _CLIABS:Executable:
+.. _CLIABS/Executable:
 
 Executable
 ##########

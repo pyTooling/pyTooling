@@ -781,6 +781,7 @@ License
    :caption: Overview
    :hidden:
 
+   News
    Installation
    Dependency
    Tutorials/index

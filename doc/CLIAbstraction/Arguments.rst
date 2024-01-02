@@ -1,4 +1,4 @@
-.. _CLIABS:Arguments:
+.. _CLIABS/Arguments:
 
 Arguments
 #########
@@ -10,7 +10,7 @@ Arguments
    * Character prefixes |rarr| Short, Long, Windows
 
 
-.. _CLIABS:Arguments:Overview:
+.. _CLIABS/Arguments:Overview:
 
 Overview
 ********
@@ -79,7 +79,7 @@ Overview
      NVA --> NOVFA
 
 
-.. _CLIABS:Arguments:WithPrefix:
+.. _CLIABS/Arguments/WithPrefix:
 
 Without Prefix Character(s)
 ***************************
@@ -164,7 +164,7 @@ List of Paths
 Like :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` but supporting a list of paths.
 
 
-.. _CLIABS:Arguments:WithoutPrefix:
+.. _CLIABS/Arguments/WithoutPrefix:
 
 With Prefix Character(s)
 ************************

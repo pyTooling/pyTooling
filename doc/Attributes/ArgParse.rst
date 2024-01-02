@@ -16,6 +16,94 @@ possible to assign a callback function to each individual sub-command parser.
 * Complex parsers can be distributed accross multiple classes and merged via multiple inheritance.
 * Pre-defined argument templates like switch parameters (``--help``).
 
+Comparison
+**********
+
+
+.. grid:: 2
+
+   .. grid-item:: **pyTooling.Attributes.ArgParse**
+
+      .. code-block:: Python
+
+         class Program:
+           @DefaultHandler()
+           @FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
+           def HandleDefault(self, args) -> None:
+             pass
+
+           @CommandHandler("new-user", help="Add a new user.")
+           @StringArgument(dest="username", metaName="username", help="Name of the new user.")
+           @LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
+           def NewUserHandler(self, args) -> None:
+             pass
+
+           @CommandHandler("delete-user", help="Delete a user.")
+           @StringArgument(dest="username", metaName="username", help="Name of the user.")
+           @FlagArgument(short="-f", long="--force", dest="force", help="Ignore internal checks.")
+           def DeleteUserHandler(self, args) -> None:
+             pass
+
+           @CommandHandler("list-user", help="List all users.")
+           def ListUserHandler(self, args) -> None:
+             pass
+
+   .. grid-item:: **Traditional ArgParse**
+
+      .. code-block:: Python
+
+         class Program:
+           def __init__(self):
+             mainParser = argparse.ArgumentParser()
+             mainParser.set_defaults(func=self.HandleDefault)
+             mainParser.add_argument("-v", "--verbose")
+             subParsers = mainParser.add_subparsers()
+
+             newUserParser = subParsers.add_parser("new-user", help="Add a new user.")
+             newUserParser.add_argument(dest="username", metaName="username", help="Name of the new user.")
+             newUserParser.add_argument("--quota", dest="quota", help="Max usable disk space.")
+             newUserParser.set_defaults(func=self.NewUserHandler)
+
+             deleteUserParser = subParsers.add_parser("delete-user", help="Delete a user.")
+             deleteUserParser.add_argument(dest="username", metaName="username", help="Name of the user.")
+             deleteUserParser.add_argument("-f", "--force", dest="force", help="Ignore internal checks.")
+             deleteUserParser.set_defaults(func=self.DeleteUserHandler)
+
+             listUserParser = subParsers.add_parser("list-user", help="List all users.")
+             listUserParser.set_defaults(func=self.ListUserHandler)
+
+           def HandleDefault(self, args) -> None:
+             pass
+
+           def NewUserHandler(self, args) -> None:
+             pass
+
+           def DeleteUserHandler(self, args) -> None:
+             pass
+
+           def ListUserHandler(self, args) -> None:
+             pass
+
+
+
+
+
+Arguments
+*********
+
+Flags
+=====
+
+ValuedFlags
+===========
+
+
+Argument Lists
+**************
+
+Commands
+********
+
 
 Classic ``argparse`` Example
 ****************************

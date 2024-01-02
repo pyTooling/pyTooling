@@ -62,7 +62,7 @@ ATTRIBUTES_MEMBER_NAME: str = "__pyattr__"
 
 
 @export
-class BaseAttribute:  # (metaclass=ExtendedType, slots=True):
+class Attribute:  # (metaclass=ExtendedType, slots=True):
 	"""Base-class for all pyTooling attributes."""
 #	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"    #: Field name on entities (function, class, method) to store pyTooling.Attributes.
 	_functions:               ClassVar[List[Any]] = []              #: List of functions, this Attribute was attached to.
@@ -267,7 +267,7 @@ class BaseAttribute:  # (metaclass=ExtendedType, slots=True):
 
 
 @export
-class Attribute(BaseAttribute):
+class SimpleAttribute(Attribute):
 	_args: Tuple[Any, ...]
 	_kwargs: Dict[str, Any]
 
