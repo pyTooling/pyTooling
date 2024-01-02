@@ -40,18 +40,17 @@ from setuptools      import (
 	find_packages as setuptools_find_packages,
 	find_namespace_packages as setuptools_find_namespace_packages
 )
-from sys             import version_info
 from typing          import List, Iterable, Dict, Sequence, Any
 
 try:
-	from ..Decorators import export, readonly
+	from ..Decorators  import export, readonly
 	from ..MetaClasses import ExtendedType
 	from ..Licensing   import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators  import export
+		from Decorators  import export, readonly
 		from MetaClasses import ExtendedType
 		from Licensing   import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
