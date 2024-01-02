@@ -38,8 +38,7 @@ from abc     import abstractmethod
 from pathlib import Path
 from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Tuple, Any, Dict
 
-from pyTooling.Decorators import export
-
+from pyTooling.Decorators import export, readonly
 
 __all__ = ["ValueT"]
 
@@ -249,7 +248,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
 
-	@property
+	@readonly
 	def Name(self) -> str:
 		"""
 		Get the internal name.

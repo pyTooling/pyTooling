@@ -32,7 +32,7 @@ from enum     import IntFlag
 from re       import compile as re_compile
 from typing   import Dict, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 
 from .        import RootMixIn, ElementMixIn, PathMixIn
 
@@ -64,12 +64,12 @@ class Host(RootMixIn):
 		self._hostname = hostname
 		self._port =     port
 
-	@property
+	@readonly
 	def Hostname(self) -> str:
 		"""Hostname or IP address as string."""
 		return self._hostname
 
-	@property
+	@readonly
 	def Port(self) -> Nullable[int]:
 		"""Port number as integer."""
 		return self._port
@@ -143,31 +143,31 @@ class URL:
 
 		return result
 
-	@property
+	@readonly
 	def Scheme(self) -> Protocols:
 		return self._scheme
 
-	@property
+	@readonly
 	def User(self) -> Nullable[str]:
 		return self._user
 
-	@property
+	@readonly
 	def Password(self) -> Nullable[str]:
 		return self._password
 
-	@property
+	@readonly
 	def Host(self) -> Nullable[Host]:
 		return self._host
 
-	@property
+	@readonly
 	def Path(self) -> Path:
 		return self._path
 
-	@property
+	@readonly
 	def Query(self) -> Nullable[Dict[str, str]]:
 		return self._query
 
-	@property
+	@readonly
 	def Fragment(self) -> Nullable[str]:
 		return self._fragment
 

@@ -40,7 +40,7 @@ from shutil                import which as shutil_which
 from subprocess            import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
 from typing                import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException, PlatformNotSupportedException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Attributes  import Attribute
@@ -99,11 +99,11 @@ class Program(metaclass=ExtendedType, slots=True):
 	def __init_subclass__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
 		"""
 		Whenever a subclass is derived from :class:``Program``, all nested classes declared within ``Program`` and which are
-		marked with pyAttribute ``CLIOption`` are collected and then listed in the ``__cliOptions__`` dictionary.
+		marked with attribute ``CLIArgument`` are collected and then listed in the ``__cliOptions__`` dictionary.
 		"""
 		super().__init_subclass__(*args, **kwargs)
 
-		# register all available CLI options (nested classes marked with attribute 'CLIOption')
+		# register all available CLI options (nested classes marked with attribute 'CLIArgument')
 		cls.__cliOptions__: Dict[Type[CommandLineArgument], int] = {}
 		order: int = 0
 		for option in CLIArgument.GetClasses(scope=cls):
@@ -201,7 +201,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		else:
 			self.__cliParameters__[key] = key()
 
-	@property
+	@readonly
 	def Path(self) -> Path:
 		return self._executablePath
 
@@ -229,12 +229,6 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def __str__(self):
 		return " ".join([f"\"{item}\"" for item in self.ToArgumentList()])
-
-
-# @export
-# class Environment:
-# 	def __init__(self) -> None:
-# 		self.Variables = {}
 
 
 @export
@@ -318,7 +312,7 @@ class Executable(Program):  # (ILogable):
 	def Terminate(self):
 		self._process.terminate()
 
-	@property
+	@readonly
 	def ExitCode(self) -> int:
 		if self._process is None:
 			raise CLIAbstractionException(f"Process not yet started, thus no exit code.")
@@ -340,6 +334,7 @@ class Executable(Program):  # (ILogable):
 	# 	self.LogDebug("Quartus II is ready")
 
 
+@export
 class OutputFilteredExecutable(Executable):
 	_hasOutput:   bool
 	_hasWarnings: bool
@@ -354,17 +349,17 @@ class OutputFilteredExecutable(Executable):
 		self._hasErrors =   False
 		self._hasFatals =   False
 
-	@property
+	@readonly
 	def HasWarnings(self):
 		"""True if warnings were found while processing the output stream."""
 		return self._hasWarnings
 
-	@property
+	@readonly
 	def HasErrors(self):
 		"""True if errors were found while processing the output stream."""
 		return self._hasErrors
 
-	@property
+	@readonly
 	def HasFatals(self):
 		"""True if fatals were found while processing the output stream."""
 		return self._hasErrors

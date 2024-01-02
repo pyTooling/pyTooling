@@ -190,7 +190,7 @@ class Descriptors(TestCase):
 			def __init__(self, value: int) -> None:
 				self._value = value
 
-			@property
+			@readonly
 			def Value(self):
 				return self._value
 

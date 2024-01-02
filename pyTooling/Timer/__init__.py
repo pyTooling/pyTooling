@@ -37,7 +37,7 @@ from time import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
 # Python 3.11: use Self if returning the own object: , Self
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 
 
@@ -99,14 +99,14 @@ class Timer(SlottedObject):
 	def Continue(self):
 		self._resumeTime = perf_counter_ns()
 
-	@property
+	@readonly
 	def Duration(self) -> float:
 		return self._diffTime / 1e9
 
-	@property
+	@readonly
 	def DurationMS(self) -> float:
 		return self._diffTime / 1e6
 
-	@property
+	@readonly
 	def DurationUS(self) -> float:
 		return self._diffTime / 1e3

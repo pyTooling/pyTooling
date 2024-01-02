@@ -32,6 +32,7 @@
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 from unittest import TestCase
 
+from pyTooling.Decorators import readonly
 from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError, CycleError
 from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 
@@ -1012,15 +1013,15 @@ class Iterate(TestCase):
 			self._edgeCount = len(edges)
 			self._edges = edges
 
-		@property
+		@readonly
 		def VertexCount(self) -> int:
 			return self._vertexCount
 
-		@property
+		@readonly
 		def EdgeCount(self) -> int:
 			return self._edgeCount
 
-		@property
+		@readonly
 		def Edges(self) -> List[Tuple[int, int, int]]:
 			return self._edges
 

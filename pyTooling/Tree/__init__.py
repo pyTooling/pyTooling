@@ -34,7 +34,7 @@ from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional a
 	Union, Deque, Iterator
 
 from ..Exceptions  import ToolingException
-from ..Decorators  import export
+from ..Decorators import export, readonly
 from ..MetaClasses import ExtendedType
 
 IDType = TypeVar("IDType", bound=Hashable)
@@ -198,7 +198,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 				child.Parent = self
 
-	@property
+	@readonly
 	def ID(self) -> Nullable[IDType]:
 		"""
 		Read-only property to access the unique ID of a node (:attr:`_id`).
@@ -264,7 +264,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return len(self._dict)
 
-	@property
+	@readonly
 	def Root(self) -> 'Node':
 		"""
 		Read-only property to access the tree's root node (:attr:`_root`).
@@ -334,7 +334,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._nodesWithID = self._nodesWithoutID = None
 			parent._children.append(self)
 
-	@property
+	@readonly
 	def Siblings(self) -> Tuple['Node', ...]:
 		"""
 		A read-only property to return a tuple of all siblings from the current node.
@@ -351,7 +351,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		return tuple([node for node in self._parent if node is not self])
 
-	@property
+	@readonly
 	def LeftSiblings(self) -> Tuple['Node', ...]:
 		"""
 		A read-only property to return a tuple of all siblings left from the current node.
@@ -377,7 +377,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		return tuple(result)
 
-	@property
+	@readonly
 	def RightSiblings(self) -> Tuple['Node', ...]:
 		"""
 		A read-only property to return a tuple of all siblings right from the current node.
@@ -421,7 +421,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		return path
 
-	@property
+	@readonly
 	def Path(self) -> Tuple['Node']:
 		"""
 		Read-only property to return the path from root node to the node as a tuple of nodes.
@@ -430,7 +430,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return tuple(self._GetPathAsLinkedList())
 
-	@property
+	@readonly
 	def Level(self) -> int:
 		"""
 		Read-only property to return a node's level in the tree.
@@ -441,7 +441,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return self._level
 
-	@property
+	@readonly
 	def Size(self) -> int:
 		"""
 		Read-only property to return the size of the tree.
@@ -450,7 +450,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return len(self._root._nodesWithID) + len(self._root._nodesWithoutID)
 
-	@property
+	@readonly
 	def IsRoot(self) -> bool:
 		"""
 		Returns true, if the node is the root node (representative node of the tree).
@@ -459,7 +459,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return self._parent is None
 
-	@property
+	@readonly
 	def IsLeaf(self) -> bool:
 		"""
 		Returns true, if the node is a leaf node (has no children).
@@ -468,7 +468,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return len(self._children) == 0
 
-	@property
+	@readonly
 	def HasChildren(self) -> bool:
 		"""
 		Returns true, if the node has child nodes.

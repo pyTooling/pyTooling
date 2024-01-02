@@ -35,7 +35,7 @@ This packages provides a data structure to describe statemachines.
 """
 from typing import List
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 
 
@@ -88,6 +88,6 @@ class StateMachine(Base):
 		else:
 			raise ValueError(f"State '{state}' was already added to this statemachine.")
 
-	@property
+	@readonly
 	def States(self) -> List[State]:
 		return self._states

@@ -44,7 +44,7 @@ from sys             import version_info
 from typing          import List, Iterable, Dict, Sequence, Any
 
 try:
-	from ..Decorators  import export
+	from ..Decorators import export, readonly
 	from ..MetaClasses import ExtendedType
 	from ..Licensing   import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
@@ -150,37 +150,37 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		self._description = description
 		self._keywords =    [k for k in keywords]
 
-	@property
+	@readonly
 	def Author(self) -> str:
 		"""Name(s) of the package author(s)."""
 		return self._author
 
-	@property
+	@readonly
 	def Copyright(self) -> str:
 		"""Copyright information."""
 		return self._copyright
 
-	@property
+	@readonly
 	def Description(self) -> str:
 		"""Package description text."""
 		return self._description
 
-	@property
+	@readonly
 	def Email(self) -> str:
 		"""Email address of the author."""
 		return self._email
 
-	@property
+	@readonly
 	def Keywords(self) -> List[str]:
 		"""List of keywords."""
 		return self._keywords
 
-	@property
+	@readonly
 	def License(self) -> str:
 		"""License name."""
 		return self._license
 
-	@property
+	@readonly
 	def Version(self) -> str:
 		"""Version number."""
 		return self._version

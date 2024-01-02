@@ -37,7 +37,7 @@ from textwrap               import dedent
 from typing                 import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 
 from pyTooling.Exceptions   import PlatformNotSupportedException, ExceptionBase
-from pyTooling.Decorators   import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.MetaClasses  import ExtendedType, mixin
 from pyTooling.Common       import lastItem
 from pyTooling.Platform     import Platform
@@ -163,12 +163,12 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		except ImportError:  # pragma: no cover
 			return False
 
-	@property
+	@readonly
 	def Width(self) -> int:
 		"""Returns the current terminal window's width."""
 		return self._width
 
-	@property
+	@readonly
 	def Height(self) -> int:
 		"""Returns the current terminal window's height."""
 		return self._height
@@ -597,7 +597,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		self._indent =          indent
 		self._appendLinebreak = appendLinebreak
 
-	@property
+	@readonly
 	def Message(self) -> str:
 		"""
 		Return the indented line.
@@ -606,7 +606,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		"""
 		return self._message
 
-	@property
+	@readonly
 	def Severity(self) -> Severity:
 		"""
 		Return the line's severity level.
@@ -615,7 +615,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		"""
 		return self._severity
 
-	@property
+	@readonly
 	def Indent(self) -> int:
 		"""
 		Return the line's indentation level.
@@ -635,8 +635,8 @@ class Line(metaclass=ExtendedType, slots=True):
 		self._indent = indent
 		return indent
 
-	@property
-	def AppendLinebreak(self) -> int:
+	@readonly
+	def AppendLinebreak(self) -> bool:
 		"""
 		Returns if a linebreak should be added at the end of the message.
 
@@ -662,7 +662,7 @@ class ILineTerminal:
 
 		# FIXME: Alter methods if a terminal is present or set dummy methods
 
-	@property
+	@readonly
 	def Terminal(self) -> TerminalBaseApplication:
 		"""Return the local terminal instance."""
 		return self._terminal
@@ -812,17 +812,17 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 		self._writeToStdOut = writeToStdOut
 
-	@property
+	@readonly
 	def Verbose(self) -> bool:
 		"""Returns true, if verbose messages are enabled."""
 		return self._verbose
 
-	@property
+	@readonly
 	def Debug(self) -> bool:
 		"""Returns true, if debug messages are enabled."""
 		return self._debug
 
-	@property
+	@readonly
 	def Quiet(self) -> bool:
 		"""Returns true, if quiet mode is enabled."""
 		return self._quiet
@@ -845,15 +845,15 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	def BaseIndent(self, value: int) -> None:
 		self._baseIndent = value
 
-	@property
+	@readonly
 	def WarningCount(self) -> int:
 		return self._warningCount
 
-	@property
+	@readonly
 	def ErrorCount(self) -> int:
 		return self._errorCount
 
-	@property
+	@readonly
 	def Lines(self) -> List[Line]:
 		return self._lines
 

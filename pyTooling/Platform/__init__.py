@@ -35,7 +35,7 @@ Common platform information gathered from various sources.
 """
 from enum                  import Flag, auto
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Versioning  import SemanticVersion
 
@@ -245,11 +245,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 		# print(self._platform)
 
-	@property
+	@readonly
 	def PythonImplementation(self) -> PythonImplementation:
 		return self._pythonImplementation
 
-	@property
+	@readonly
 	def IsCPython(self) -> bool:
 		"""Returns true, if the Python implementation is a :term:`CPython`.
 
@@ -257,7 +257,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return self._pythonImplementation is PythonImplementation.CPython
 
-	@property
+	@readonly
 	def IsPyPy(self) -> bool:
 		"""Returns true, if the Python implementation is a :term:`PyPy`.
 
@@ -265,15 +265,15 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return self._pythonImplementation is PythonImplementation.PyPy
 
-	@property
+	@readonly
 	def PythonVersion(self) -> PythonVersion:
 		return self._pythonVersion
 
-	@property
+	@readonly
 	def HostOperatingSystem(self) -> Platforms:
 		return self._platform & Platforms.OperatingSystem
 
-	@property
+	@readonly
 	def IsNativePlatform(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` platform.
 
@@ -281,7 +281,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.ENV_Native in self._platform
 
-	@property
+	@readonly
 	def IsNativeWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` Windows x86-64 platform.
 
@@ -289,7 +289,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows in self._platform
 
-	@property
+	@readonly
 	def IsNativeLinux(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` Linux x86-64 platform.
 
@@ -297,7 +297,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Linux in self._platform
 
-	@property
+	@readonly
 	def IsNativeMacOS(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` macOS x86-64 platform.
 
@@ -305,7 +305,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.MacOS in self._platform
 
-	@property
+	@readonly
 	def IsMSYS2Environment(self) -> bool:
 		"""Returns true, if the platform is a :term:`MSYS2` environment on Windows.
 
@@ -313,7 +313,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.ENV_MSYS2 in self._platform
 
-	@property
+	@readonly
 	def IsMSYSOnWindows(self) -> bool:
 		"""Returns true, if the platform is a MSYS runtime on Windows.
 
@@ -321,7 +321,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_MSYS in self._platform
 
-	@property
+	@readonly
 	def IsMinGW32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`MinGW32 <MinGW>` runtime on Windows.
 
@@ -329,7 +329,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_MinGW32 in self._platform
 
-	@property
+	@readonly
 	def IsMinGW64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`MinGW64 <MinGW>` runtime on Windows.
 
@@ -337,7 +337,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_MinGW64 in self._platform
 
-	@property
+	@readonly
 	def IsUCRT64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`UCRT64 <UCRT>` runtime on Windows.
 
@@ -345,7 +345,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_UCRT64 in self._platform
 
-	@property
+	@readonly
 	def IsClang32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a Clang32 runtime on Windows.
 
@@ -353,7 +353,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_Clang32 in self._platform
 
-	@property
+	@readonly
 	def IsClang64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a Clang64 runtime on Windows.
 
@@ -361,7 +361,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_Clang64 in self._platform
 
-	@property
+	@readonly
 	def IsCygwin32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a 32-bit Cygwin runtime on Windows.
 
@@ -369,7 +369,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_Cygwin32 in self._platform
 
-	@property
+	@readonly
 	def IsCygwin64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a 64-bit Cygwin runtime on Windows.
 
@@ -377,7 +377,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_Cygwin64 in self._platform
 
-	@property
+	@readonly
 	def IsPOSIX(self) -> bool:
 		"""
 		Returns true, if the platform is POSIX or POSIX-like.
@@ -386,7 +386,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.SEP_WindowsPath not in self._platform
 
-	@property
+	@readonly
 	def PathSeperator(self) -> str:
 		"""
 		Returns the path element separation character (e.g. for directories).
@@ -401,7 +401,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		else:
 			return "/"
 
-	@property
+	@readonly
 	def ValueSeperator(self) -> str:
 		"""
 		Returns the value separation character (e.g. for paths in PATH).
@@ -416,7 +416,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		else:
 			return ":"
 
-	@property
+	@readonly
 	def ExecutableExtension(self) -> str:
 		"""
 		Returns the file extension for an executable.
@@ -434,7 +434,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
-	@property
+	@readonly
 	def SharedLibraryExtension(self) -> str:
 		"""
 		Returns the file extension for a shared library.

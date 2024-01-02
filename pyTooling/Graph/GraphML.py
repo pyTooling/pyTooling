@@ -39,7 +39,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Any, List, Dict, Union, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
 from pyTooling.Tree import Node as pyToolingNode
@@ -116,7 +116,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	"""
 	Base-class for all GraphML data model classes.
 	"""
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return True
 
@@ -141,7 +141,7 @@ class BaseWithID(Base):
 		super().__init__()
 		self._id = identifier
 
-	@property
+	@readonly
 	def ID(self) -> str:
 		return self._id
 
@@ -155,7 +155,7 @@ class BaseWithData(BaseWithID):
 
 		self._data = []
 
-	@property
+	@readonly
 	def Data(self) -> List['Data']:
 		return self._data
 
@@ -177,19 +177,19 @@ class Key(BaseWithID):
 		self._attributeName = name
 		self._attributeType = type
 
-	@property
+	@readonly
 	def Context(self) -> AttributeContext:
 		return self._context
 
-	@property
+	@readonly
 	def AttributeName(self) -> str:
 		return self._attributeName
 
-	@property
+	@readonly
 	def AttributeType(self) -> AttributeTypes:
 		return self._attributeType
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return False
 
@@ -211,15 +211,15 @@ class Data(Base):
 		self._key = key
 		self._data = data
 
-	@property
+	@readonly
 	def Key(self) -> Key:
 		return self._key
 
-	@property
+	@readonly
 	def Data(self) -> Any:
 		return self._data
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return False
 
@@ -240,7 +240,7 @@ class Node(BaseWithData):
 	def __init__(self, identifier: str) -> None:
 		super().__init__(identifier)
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
 
@@ -276,15 +276,15 @@ class Edge(BaseWithData):
 		self._source = source
 		self._target = target
 
-	@property
+	@readonly
 	def Source(self) -> Node:
 		return self._source
 
-	@property
+	@readonly
 	def Target(self) -> Node:
 		return self._target
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
 
@@ -330,15 +330,15 @@ class BaseGraph(BaseWithData, mixin=True):
 		self._nodeIDStyle = IDStyle.Free
 		self._edgeIDStyle = IDStyle.Free
 
-	@property
+	@readonly
 	def Subgraphs(self) -> Dict[str, 'Subgraph']:
 		return self._subgraphs
 
-	@property
+	@readonly
 	def Nodes(self) -> Dict[str, Node]:
 		return self._nodes
 
-	@property
+	@readonly
 	def Edges(self) -> Dict[str, Edge]:
 		return self._edges
 
@@ -433,15 +433,15 @@ class Subgraph(Node, BaseGraph):
 		self._subgraphID = graphIdentifier
 		self._root = None
 
-	@property
+	@readonly
 	def RootGraph(self) -> Graph:
 		return self._root
 
-	@property
+	@readonly
 	def SubgraphID(self) -> str:
 		return self._subgraphID
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return True
 
@@ -509,11 +509,11 @@ class GraphMLDocument(Base):
 		self._graph = Graph(self, identifier)
 		self._keys = {}
 
-	@property
+	@readonly
 	def Graph(self) -> BaseGraph:
 		return self._graph
 
-	@property
+	@readonly
 	def Keys(self) -> Dict[str, Key]:
 		return self._keys
 

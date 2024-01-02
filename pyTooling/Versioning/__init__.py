@@ -36,6 +36,8 @@ Implementation of semantic and date versioning version-numbers.
 from enum          import IntEnum
 from typing        import Optional as Nullable, Any
 
+from pyTooling.Decorators import readonly
+
 from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
@@ -122,27 +124,27 @@ class SemanticVersion(Version):
 		self._parts = Parts.Minor | Parts.Minor | Parts.Patch | Parts.Build
 		self._flags = Flags.Clean
 
-	@property
+	@readonly
 	def Major(self) -> int:
 		return self._major
 
-	@property
+	@readonly
 	def Minor(self) -> int:
 		return self._minor
 
-	@property
+	@readonly
 	def Patch(self) -> int:
 		return self._patch
 
-	@property
+	@readonly
 	def Build(self) -> int:
 		return self._build
 
-	@property
+	@readonly
 	def Parts(self) -> Parts:
 		return self._parts
 
-	@property
+	@readonly
 	def Flags(self) -> Flags:
 		return self._flags
 

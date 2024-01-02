@@ -32,7 +32,7 @@
 from argparse import ArgumentParser, Namespace
 from typing import Callable, Dict, Tuple, Any, TypeVar
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import firstElement, firstPair
 from pyTooling.Attributes  import Attribute
@@ -56,7 +56,7 @@ class _HandlerMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	_handler: Callable = None   #: Reference to a method that is called to handle e.g. a sub-command.
 
-	@property
+	@readonly
 	def Handler(self) -> Callable:
 		"""Returns the handler method."""
 		return self._handler
@@ -106,7 +106,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		self._args =   args
 		self._kwargs = kwargs
 
-	@property
+	@readonly
 	def Args(self) -> Tuple:
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
@@ -114,7 +114,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		"""
 		return self._args
 
-	@property
+	@readonly
 	def KWArgs(self) -> Dict:
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
@@ -137,7 +137,7 @@ class CommandGroupAttribute(ArgParseAttribute):
 		super().__init__()
 		self.__groupName = groupName
 
-	@property
+	@readonly
 	def GroupName(self) -> str:
 		"""Returns the name of the command group."""
 		return self.__groupName
@@ -150,7 +150,7 @@ class CommandGroupAttribute(ArgParseAttribute):
 # 	"""
 # 	_kwargs: Dict        #: A dictionary of additional keyword parameters.
 #
-# 	@property
+# 	@readonly
 # 	def KWArgs(self) -> Dict:
 # 		"""
 # 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
@@ -167,7 +167,7 @@ class CommandGroupAttribute(ArgParseAttribute):
 #
 # 	_args: Tuple  #: A tuple of additional positional parameters.
 #
-# 	@property
+# 	@readonly
 # 	def Args(self) -> Tuple:
 # 		"""
 # 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
@@ -213,13 +213,13 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		self._handler = func
 		return super().__call__(func)
 
-	@property
+	@readonly
 	def Command(self) -> str:
 		"""Returns the 'command' a sub-command parser adheres to."""
 		return self._command
 
 # FIXME: extract to mixin?
-	@property
+	@readonly
 	def Args(self) -> Tuple:
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
@@ -228,7 +228,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		return self._args
 
 	# FIXME: extract to mixin?
-	@property
+	@readonly
 	def KWArgs(self) -> Dict:
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
@@ -335,12 +335,12 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		# because func is a function (unbound to an object), it MUST be called with self as a first parameter
 		args.func(self, args)
 
-	@property
+	@readonly
 	def MainParser(self) -> ArgumentParser:
 		"""Returns the main parser."""
 		return self._mainParser
 
-	@property
+	@readonly
 	def SubParsers(self) -> Dict:
 		"""Returns the sub-parsers."""
 		return self._subParsers

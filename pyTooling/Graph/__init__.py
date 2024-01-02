@@ -58,7 +58,7 @@ from itertools   import chain
 from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
 from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Tree        import Node
@@ -292,7 +292,7 @@ class BaseWithIDValueAndWeight(
 		self._value = value
 		self._weight = weight
 
-	@property
+	@readonly
 	def ID(self) -> Nullable[IDType]:
 		"""
 		Read-only property to access the unique ID (:attr:`_id`).
@@ -412,7 +412,7 @@ class BaseWithVertices(
 
 		super().__del__()
 
-	@property
+	@readonly
 	def Graph(self) -> 'Graph':
 		"""
 		Read-only property to access the graph, this object is associated to (:attr:`_graph`).
@@ -421,7 +421,7 @@ class BaseWithVertices(
 		"""
 		return self._graph
 
-	@property
+	@readonly
 	def Vertices(self) -> Set['Vertex']:
 		"""
 		Read-only property to access the vertices in this component (:attr:`_vertices`).
@@ -430,7 +430,7 @@ class BaseWithVertices(
 		"""
 		return self._vertices
 
-	@property
+	@readonly
 	def VertexCount(self) -> int:
 		"""
 		Read-only property to access the number of vertices referenced by this object.
@@ -548,7 +548,7 @@ class Vertex(
 		super().Delete()
 		assert getrefcount(self) == 1
 
-	@property
+	@readonly
 	def Graph(self) -> 'Graph':
 		"""
 		Read-only property to access the graph, this vertex is associated to (:attr:`_graph`).
@@ -557,7 +557,7 @@ class Vertex(
 		"""
 		return self._graph
 
-	@property
+	@readonly
 	def Component(self) -> 'Component':
 		"""
 		Read-only property to access the component, this vertex is associated to (:attr:`_component`).
@@ -566,7 +566,7 @@ class Vertex(
 		"""
 		return self._component
 
-	@property
+	@readonly
 	def InboundEdges(self) -> Tuple['Edge', ...]:
 		"""
 		Read-only property to get a tuple of inbound edges (:attr:`_inboundEdges`).
@@ -575,7 +575,7 @@ class Vertex(
 		"""
 		return tuple(self._inboundEdges)
 
-	@property
+	@readonly
 	def OutboundEdges(self) -> Tuple['Edge', ...]:
 		"""
 		Read-only property to get a tuple of outbound edges (:attr:`_outboundEdges`).
@@ -584,7 +584,7 @@ class Vertex(
 		"""
 		return tuple(self._outboundEdges)
 
-	@property
+	@readonly
 	def InboundLinks(self) -> Tuple['Link', ...]:
 		"""
 		Read-only property to get a tuple of inbound links (:attr:`_inboundLinks`).
@@ -593,7 +593,7 @@ class Vertex(
 		"""
 		return tuple(self._inboundLinks)
 
-	@property
+	@readonly
 	def OutboundLinks(self) -> Tuple['Link', ...]:
 		"""
 		Read-only property to get a tuple of outbound links (:attr:`_outboundLinks`).
@@ -602,7 +602,7 @@ class Vertex(
 		"""
 		return tuple(self._outboundLinks)
 
-	@property
+	@readonly
 	def EdgeCount(self) -> int:
 		"""
 		Read-only property to get the number of all edges (inbound and outbound).
@@ -611,7 +611,7 @@ class Vertex(
 		"""
 		return len(self._inboundEdges) + len(self._outboundEdges)
 
-	@property
+	@readonly
 	def InboundEdgeCount(self) -> int:
 		"""
 		Read-only property to get the number of inbound edges.
@@ -620,7 +620,7 @@ class Vertex(
 		"""
 		return len(self._inboundEdges)
 
-	@property
+	@readonly
 	def OutboundEdgeCount(self) -> int:
 		"""
 		Read-only property to get the number of outbound edges.
@@ -629,7 +629,7 @@ class Vertex(
 		"""
 		return len(self._outboundEdges)
 
-	@property
+	@readonly
 	def LinkCount(self) -> int:
 		"""
 		Read-only property to get the number of all links (inbound and outbound).
@@ -638,7 +638,7 @@ class Vertex(
 		"""
 		return len(self._inboundLinks) + len(self._outboundLinks)
 
-	@property
+	@readonly
 	def InboundLinkCount(self) -> int:
 		"""
 		Read-only property to get the number of inbound links.
@@ -647,7 +647,7 @@ class Vertex(
 		"""
 		return len(self._inboundLinks)
 
-	@property
+	@readonly
 	def OutboundLinkCount(self) -> int:
 		"""
 		Read-only property to get the number of outbound links.
@@ -656,7 +656,7 @@ class Vertex(
 		"""
 		return len(self._outboundLinks)
 
-	@property
+	@readonly
 	def IsRoot(self) -> bool:
 		"""
 		Read-only property to check if this vertex is a root vertex in the graph.
@@ -676,7 +676,7 @@ class Vertex(
 		"""
 		return len(self._inboundEdges) == 0
 
-	@property
+	@readonly
 	def IsLeaf(self) -> bool:
 		"""
 		Read-only property to check if this vertex is a leaf vertex in the graph.
@@ -696,7 +696,7 @@ class Vertex(
 		"""
 		return len(self._outboundEdges) == 0
 
-	@property
+	@readonly
 	def Predecessors(self) -> Tuple['Vertex', ...]:
 		"""
 		Read-only property to get a tuple of predecessor vertices.
@@ -705,7 +705,7 @@ class Vertex(
 		"""
 		return tuple([edge.Source for edge in self._inboundEdges])
 
-	@property
+	@readonly
 	def Successors(self) -> Tuple['Vertex', ...]:
 		"""
 		Read-only property to get a tuple of successor vertices.
@@ -1589,7 +1589,7 @@ class BaseEdge(
 			component._graph._components.remove(oldComponent)
 			del oldComponent
 
-	@property
+	@readonly
 	def Source(self) -> Vertex:
 		"""
 		Read-only property to get the source (:attr:`_source`) of an edge.
@@ -1598,7 +1598,7 @@ class BaseEdge(
 		"""
 		return self._source
 
-	@property
+	@readonly
 	def Destination(self) -> Vertex:
 		"""
 		Read-only property to get the destination (:attr:`_destination`) of an edge.
@@ -1779,21 +1779,21 @@ class BaseGraph(
 
 		super().__del__()
 
-	@property
+	@readonly
 	def VertexCount(self) -> int:
 		"""Read-only property to access the number of vertices in this graph.
 
 		:returns: The number of vertices in this graph."""
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
 
-	@property
+	@readonly
 	def EdgeCount(self) -> int:
 		"""Read-only property to access the number of edges in this graph.
 
 		:returns: The number of edges in this graph."""
 		return len(self._edgesWithoutID) + len(self._edgesWithID)
 
-	@property
+	@readonly
 	def LinkCount(self) -> int:
 		"""Read-only property to access the number of links in this graph.
 
@@ -2261,7 +2261,7 @@ class Subgraph(
 		"""
 		super().__del__()
 
-	@property
+	@readonly
 	def Graph(self) -> 'Graph':
 		"""
 		Read-only property to access the graph, this subgraph is associated to (:attr:`_graph`).
@@ -2419,42 +2419,42 @@ class Graph(
 
 		super().__del__()
 
-	@property
+	@readonly
 	def Subgraphs(self) -> Set[Subgraph]:
 		"""Read-only property to access the subgraphs in this graph (:attr:`_subgraphs`).
 
 		:returns: The set of subgraphs in this graph."""
 		return self._subgraphs
 
-	@property
+	@readonly
 	def Views(self) -> Set[View]:
 		"""Read-only property to access the views in this graph (:attr:`_views`).
 
 		:returns: The set of views in this graph."""
 		return self._views
 
-	@property
+	@readonly
 	def Components(self) -> Set[Component]:
 		"""Read-only property to access the components in this graph (:attr:`_components`).
 
 		:returns: The set of components in this graph."""
 		return self._components
 
-	@property
+	@readonly
 	def SubgraphCount(self) -> int:
 		"""Read-only property to access the number of subgraphs in this graph.
 
 		:returns: The number of subgraphs in this graph."""
 		return len(self._subgraphs)
 
-	@property
+	@readonly
 	def ViewCount(self) -> int:
 		"""Read-only property to access the number of views in this graph.
 
 		:returns: The number of views in this graph."""
 		return len(self._views)
 
-	@property
+	@readonly
 	def ComponentCount(self) -> int:
 		"""Read-only property to access the number of components in this graph.
 
