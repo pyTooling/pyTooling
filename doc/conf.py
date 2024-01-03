@@ -172,6 +172,7 @@ extensions = [
 	"sphinxcontrib.mermaid",
 # Other extensions
 	"sphinx_design",
+	"sphinx_copybutton",
 	# "sphinx_fontawesome",
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
