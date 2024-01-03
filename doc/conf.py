@@ -73,33 +73,15 @@ except Exception as ex:
 # ==============================================================================
 # Options for HTML output
 # ==============================================================================
-html_context = {}
-ctx = ROOT / "context.json"
-if ctx.is_file():
-	html_context.update(loads(ctx.open('r').read()))
-
-if (ROOT / "_theme").is_dir():
-	html_theme_path = ["."]
-	html_theme = "_theme"
-	html_theme_options = {
-		"logo_only": True,
-		"home_breadcrumbs": True,
-		"vcs_pageview_mode": 'blob',
-#		"body_max_width": None
-#		"navigation_depth": 5,
-	}
-	html_css_files = [
-		'css/override.css',
-	]
-elif find_spec("sphinx_rtd_theme") is not None:
-	html_theme = "sphinx_rtd_theme"
-	html_theme_options = {
-		"logo_only": True,
-		"vcs_pageview_mode": 'blob',
-#		"navigation_depth": 5,
-	}
-else:
-	html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
+html_theme_options = {
+	"logo_only": True,
+	"vcs_pageview_mode": 'blob',
+	"navigation_depth": 5,
+}
+html_css_files = [
+	'css/override.css',
+]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

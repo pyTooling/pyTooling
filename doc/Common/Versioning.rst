@@ -15,17 +15,17 @@ The :mod:`pyTooling.Versioning` package provides auxiliary classes to implement
 Semantic Versioning
 *******************
 
-The :class:`~pyTooling.Versioning.SemVersion` class represents of a version number like ``v3.7.12``.
+The :class:`~pyTooling.Versioning.SemanticVersion` class represents of a version number like ``v3.7.12``.
 
 .. admonition:: Example
 
    .. code-block:: python
 
       # Construct from string
-      version1 = SemVersion("0.22.8")
+      version1 = SemanticVersion("0.22.8")
 
       # Construct from numbers
-      version2 = SemVersion(1, 3, 0)
+      version2 = SemanticVersion(1, 3, 0)
 
       # Compare versions
       isNewer = version2 > version1
@@ -70,11 +70,11 @@ Missing Features
 Calendar Versioning
 *******************
 
-The :class:`~pyTooling.Versioning.CalVersion` class represents of a version number like ``2021.10``.
+The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version number like ``2021.10``.
 
 .. admonition:: Example
 
    .. code-block:: python
 
       # Construct from string
-      version1 = CalVersion("2018.3")
+      version1 = CalendarVersion("2018.3")

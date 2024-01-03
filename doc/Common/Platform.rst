@@ -88,6 +88,10 @@ Usecase: Platform Specific Tests
 
    .. code-block:: python
 
+      from unittest import TestCase
+
+      from pytest import mark
+
       from pyTooling.Common import CurrentPlatform
 
       class MyTestCase(TestCase):

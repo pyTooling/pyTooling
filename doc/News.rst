@@ -11,8 +11,8 @@ Jan. 2024 - Version 6
 
 **Release Page:** `v6.0.0 <https://github.com/pyTooling/pyTooling/releases/v6.0.0>`__
 
-* Integrated ``pyAttributes`` as :mod:`pyTooling.Attributes`.
-* Integrated :mod:`pyTooling.CLIAbstraction`.
+* Integrated ``pyAttributes`` v2.5.1 as :mod:`pyTooling.Attributes`.
+* Integrated :mod:`pyTooling.CLIAbstraction` v0.4.1.
 
 Jul. 2023 - Version 5
 *********************

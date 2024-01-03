@@ -369,19 +369,36 @@ Common Classes
 
          .. tab-item:: Platform
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               def
+               from pytest import mark
+               from unitest import TestCase
+
+               from pyTooling.Common import CurrentPlatform
+
+               class MyTests(TestCase):
+                 @mark.skipif(not CurrentPlatform.IsNativeWindows, reason="Skipped, if platform isn't native Windows.")
+                 def test_OnlyNativeWindows(self):
+                   pass
+
+                 @mark.skipif(not CurrentPlatform.IsMinGW64OnWindows, reason="Skipped, if platform isn't MinGW64.")
+                 def test_OnlyMinGW64(self):
+                   pass
+
+                 @mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
+                 def test_ObjectSize(self):
+                   pass
 
          .. tab-item:: SemanticVersion
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               def
+               from pyTooling.Versioning import SemanticVersion
+
+               version = SemanticVersion("2.5.4")
+
+            .. todo:: Needs example code
+
 
 Configuration
 =============
