@@ -257,6 +257,7 @@ distinguished if they are applied to a class, method or function.
 
 .. rubric:: Planned Features
 
+* Allow attributes to be applied only once per kind.
 * Allow limitation of attributes to classes, methods or functions, so an attribute meant for methods can't be applied to
   a function or class.
 * Allow filtering attribute with a predicate function, so values of an attribute instance can be checked too.

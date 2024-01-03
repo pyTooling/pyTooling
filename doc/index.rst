@@ -745,6 +745,13 @@ Terminal
    .. grid-item::
       :columns: 6
 
+      The :ref:`pyTooling.TerminalUI <TERM>` package offers a set of helpers to implement a text user interface (TUI) in
+      a terminal. It's designed on the idea that command line programs emit one line of text per message. Each message
+      can be categorized as normal text, warnings, errors, and many more.
+
+      Therefore, this package offers a :ref:`LineTerminal <TERM/LineTerminal>` implementation, derived from a basic
+      :ref:`Terminal <TERM/Terminal>` class. Of cause, it also includes colored outputs based on `colorama`.
+
       .. todo:: Terminal helpers.
 
    .. grid-item::

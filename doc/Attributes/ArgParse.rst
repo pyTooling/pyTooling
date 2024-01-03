@@ -150,3 +150,14 @@ A better and more descriptive solution could look like this:
    :linenos:
    :caption: tests/example/UserManager.py
    :tab-width: 2
+
+
+.. _ATTR/ArgParse/Consumers:
+
+Consumers
+*********
+
+This package is used by:
+
+* ✅ . |br|
+  :ref:`pyTooling.Attributes.ArgParse <ATTR/ArgParse>`
