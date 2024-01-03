@@ -75,6 +75,10 @@ section > p,
   background-color:  #333333 /* #2980b9 */;
 }
 
+.wy-nav-content {
+  max-width: 1600px /* 800px */ ;
+}
+
 .wy-nav-top {
   background:  #333333 /* #2980b9 */;
 }
