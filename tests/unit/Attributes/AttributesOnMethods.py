@@ -967,33 +967,12 @@ class GetAttributesFiltering(TestCase):
 	# tuple filter (or)
 
 
-class GetFunctionsFiltering(TestCase):
-	pass
-
-	# default filter
-	# no filter
-	# subclasses
-	# tuple filter (or)
-
-
-class GetClassesFiltering(TestCase):
-	pass
-
-	# default filter
-	# no filter
-	# subclasses
-	# tuple filter (or)
-
-
-class Attribute_GetMethods_Filtering(TestCase):
-	def test_1(self) -> None:
+class Filtering(TestCase):
+	def test_Scope_Class(self) -> None:
 		class AttributeA(Attribute):
 			pass
 
 		class AttributeAA(AttributeA):
-			pass
-
-		class AttributeB(Attribute):
 			pass
 
 		class Class1(metaclass=ExtendedType):
@@ -1008,20 +987,32 @@ class Attribute_GetMethods_Filtering(TestCase):
 			def meth2(self):
 				pass
 
-			@AttributeB()
-			def meth3(self):
+		class Class2(metaclass=ExtendedType):
+			def meth0(self):
+				pass
+
+			@AttributeA()
+			def meth1(self):
+				pass
+
+			@AttributeAA()
+			def meth2(self):
 				pass
 
 		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
 		foundMethodsOnAttributeAA = [m for m in AttributeAA.GetMethods()]
-		foundMethodsOnAttributeB = [m for m in AttributeB.GetMethods()]
 
-		self.assertEqual(1, len(foundMethodsOnAttributeA))
-		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1])
-		self.assertEqual(1, len(foundMethodsOnAttributeAA))
-		self.assertListEqual(foundMethodsOnAttributeAA, [Class1.meth2])
-		self.assertEqual(1, len(foundMethodsOnAttributeB))
-		self.assertListEqual(foundMethodsOnAttributeB, [Class1.meth3])
+		self.assertEqual(2, len(foundMethodsOnAttributeA))
+		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1, Class2.meth1])
+		self.assertEqual(2, len(foundMethodsOnAttributeAA))
+		self.assertListEqual(foundMethodsOnAttributeAA, [Class1.meth2, Class2.meth2])
+
+		foundMethodsOnAttributeAScopedToClass1 = [m for m in AttributeA.GetMethods(scope=Class1)]
+		foundMethodsOnAttributeAScopedToClass2 = [m for m in AttributeA.GetMethods(scope=Class2)]
+
+		self.assertListEqual(foundMethodsOnAttributeAScopedToClass1, [Class1.meth1])
+		self.assertListEqual(foundMethodsOnAttributeAScopedToClass2, [Class2.meth1])
+
 
 
 class Attribute_GetAttributes_Filtering(TestCase):

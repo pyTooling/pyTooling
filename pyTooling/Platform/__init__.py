@@ -35,7 +35,7 @@ Common platform information gathered from various sources.
 """
 from enum                  import Flag, auto
 
-from pyTooling.Decorators import export, readonly
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Versioning  import SemanticVersion
 

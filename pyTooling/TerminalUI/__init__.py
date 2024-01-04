@@ -331,13 +331,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		return self._stderr.write(message + end)
 
-	def FatalExit(self, returnCode:int = 0) -> NoReturn:
+	def FatalExit(self, returnCode: int = 0) -> NoReturn:
 		"""
 		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
 		"""
 		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
 
-	def Exit(self, returnCode:int = 0) -> NoReturn:
+	def Exit(self, returnCode: int = 0) -> NoReturn:
 		"""
 		Exit the terminal application by uninitializing color support and returning an Exit code.
 		"""
@@ -624,7 +624,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		"""
 		return self._indent
 
-	def IndentBy(self, indent:int) -> int:
+	def IndentBy(self, indent: int) -> int:
 		"""
 		Increase a line's indentation level.
 
@@ -760,7 +760,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_errorCount: int
 	_warningCount: int
 
-	def __init__(self, mode:Mode = Mode.AllLinearToStdOut) -> None:
+	def __init__(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
 		"""Initializer of a line based terminal interface."""
 		TerminalBaseApplication.__init__(self)
 		# ILineTerminal.__init__(self, self)

@@ -149,11 +149,11 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
-		 * ``predicate`` - when the item is a subclass of ``predicate``.
+		 * ``subclassOf`` - when the item is a subclass of ``subclassOf``.
 
-		:param scope:     Undocumented.
-		:param predicate: An attribute class or tuple thereof, to filter for that attribute type or subtype.
-		:returns:         A sequence of classes where this attribute is attached to.
+		:param scope:      Undocumented.
+		:param subclassOf: An attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:returns:          A sequence of classes where this attribute is attached to.
 		"""
 		from pyTooling.Common import isnestedclass
 
@@ -181,36 +181,23 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetMethods(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
+	def GetMethods(cls, scope: Nullable[Type] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all methods, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
-		 * ``predicate`` - when the item is a subclass of ``predicate``.
 
 		:param scope:     Undocumented.
-		:param predicate: An attribute class or tuple thereof, to filter for that attribute type or subtype.
 		:returns:         A sequence of methods where this attribute is attached to.
 		"""
-		from pyTooling.Common import isnestedclass
-
 		if scope is None:
-			if predicate is None:
-				for c in cls._methods:
-					yield c
-			else:
-				for c in cls._classes:
-					if issubclass(c, predicate):
-						yield c
-		elif predicate is None:
-			for c in cls._classes:
-				if isnestedclass(c, scope):
-					yield c
+			for c in cls._methods:
+				yield c
 		else:
-			for c in cls._classes:
-				if isnestedclass(c, scope) and issubclass(c, predicate):
-					yield c
+			for m in cls._methods:
+				if m.__classobj__ is scope:
+					yield m
 
 	@classmethod
 	def GetMethods2(cls, inst: Any, includeDerivedAttributes: bool = True) -> Dict[Callable, List['Attribute']]:
