@@ -5,6 +5,7 @@ Param(
 
   # Commands
   [switch]$all,
+  [switch]$copyall,
 
   [switch]$doc,
   [switch]$livedoc,
@@ -33,7 +34,7 @@ $EnableVerbose =      [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -o
 
 # Display help if no command was selected
 $help = $help -or ( -not(
-  $all -or
+  $all -or $copyall -or
     $clean -or
     $doc -or $livedoc -or
     $unit -or $liveunit -or $copyunit -or
@@ -59,6 +60,11 @@ if ($all)
 	$copycov =  $true
 	$type =     $true
 	$copytype = $true
+}
+if ($copyall)
+{ $copyunit = $true
+  $copycov =  $true
+  $copytype = $true
 }
 
 if ($clean)
@@ -93,7 +99,7 @@ if ($liveunit)
 { Write-Host -ForegroundColor DarkYellow "[live][UNIT] Running Unit Tests using pytest ..."
 
   $env:ENVIRONMENT_NAME = "Windows (x86-64)"
-  pytest -rA --color=yes --junitxml=report/unit/unitests.xml --template=html1/index.html --report=report/unit/html/index.html --split-report tests/unit
+  pytest -raP --color=yes --junitxml=report/unit/unitests.xml --template=html1/index.html --report=report/unit/html/index.html --split-report tests/unit
 
   if ($copyunit)
   { cp -Recurse -Force .\report\unit\html\* .\doc\_build\html\unittests
@@ -109,7 +115,7 @@ elseif ($unit)
   # Run unit tests
   $runUnitFunc = {
     $env:ENVIRONMENT_NAME = "Windows (x86-64)"
-    pytest -rA --color = yes --junitxml=report/unit/unitests.xml --template=html1/index.html --report=report/unit/html/index.html --split-report tests/unit
+    pytest -raP --color = yes --junitxml=report/unit/unitests.xml --template=html1/index.html --report=report/unit/html/index.html --split-report tests/unit
   }
   $unitJob = Start-Job -Name "UnitTests" -ScriptBlock $runUnitFunc
   $jobs += $unitJob

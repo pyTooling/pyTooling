@@ -38,7 +38,8 @@ class, method or function. By default, this field is called ``__pyattr__``.
 
 .. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
-from types  import MethodType, FunctionType
+from enum   import IntFlag
+from types import MethodType, FunctionType, ModuleType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
@@ -60,12 +61,21 @@ ATTRIBUTES_MEMBER_NAME: str = "__pyattr__"
 
 
 @export
+class AttributeScope(IntFlag):
+	Class = 1
+	Method = 2
+	Function = 4
+	All = Class + Method + Function
+
+
+@export
 class Attribute:  # (metaclass=ExtendedType, slots=True):
 	"""Base-class for all pyTooling attributes."""
-#	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"    #: Field name on entities (function, class, method) to store pyTooling.Attributes.
-	_functions:               ClassVar[List[Any]] = []              #: List of functions, this Attribute was attached to.
-	_classes:                 ClassVar[List[Any]] = []              #: List of classes, this Attribute was attached to.
-	_methods:                 ClassVar[List[Any]] = []              #: List of methods, this Attribute was attached to.
+#	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"             #: Field name on entities (function, class, method) to store pyTooling.Attributes.
+	_functions:               ClassVar[List[Any]] = []                       #: List of functions, this Attribute was attached to.
+	_classes:                 ClassVar[List[Any]] = []                       #: List of classes, this Attribute was attached to.
+	_methods:                 ClassVar[List[Any]] = []                       #: List of methods, this Attribute was attached to.
+	_scope:                   ClassVar[AttributeScope] = AttributeScope.All  #: Allowed language construct this attribute can be used with.
 
 	# Ensure each derived class has its own instances of class variables.
 	def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:
@@ -105,6 +115,11 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return entity
 
 	@classmethod
+	@property
+	def Scope(cls) -> AttributeScope:
+		return cls._scope
+
+	@classmethod
 	def GetFunctions(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all functions, where this attribute is attached to.
@@ -139,7 +154,8 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
+	def GetClasses(cls, scope: Nullable[Type] = None, subclassOf: Nullable[Type] = None) -> Generator[TAttr, None, None]:
+	# def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.
 
@@ -154,20 +170,26 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		from pyTooling.Common import isnestedclass
 
 		if scope is None:
-			if predicate is None:
+			if subclassOf is None:
 				for c in cls._classes:
 					yield c
 			else:
 				for c in cls._classes:
-					if issubclass(c, predicate):
+					if issubclass(c, subclassOf):
 						yield c
-		elif predicate is None:
-			for c in cls._classes:
-				if isnestedclass(c, scope):
-					yield c
+		elif subclassOf is None:
+			if isinstance(scope, ModuleType):
+				elementsInScope = set(c for c in scope.__dict__.values() if isinstance(c, type))
+				for c in cls._classes:
+					if c in elementsInScope:
+						yield c
+			else:
+				for c in cls._classes:
+					if isnestedclass(c, scope):
+						yield c
 		else:
 			for c in cls._classes:
-				if isnestedclass(c, scope) and issubclass(c, predicate):
+				if isnestedclass(c, scope) and issubclass(c, subclassOf):
 					yield c
 
 	@classmethod

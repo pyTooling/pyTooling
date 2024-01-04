@@ -34,6 +34,7 @@ Unit tests for attributes attached to methods.
 """
 from unittest     import TestCase
 
+from pyTooling.MetaClasses import ExtendedType
 from pytest       import mark
 
 from pyTooling.Attributes import Attribute
@@ -176,6 +177,25 @@ class ApplyClassAttributes(TestCase):
 		self.assertListEqual(foundClassesForA2, [Class1])
 
 
+class ModuleAttribute(Attribute):
+	pass
+
+
+class GlobalAttribute(Attribute):
+	pass
+
+
+@ModuleAttribute()
+@GlobalAttribute()
+class ModuleClass:
+	pass
+
+	@ModuleAttribute()
+	@GlobalAttribute()
+	class InnerClass:
+		pass
+
+
 class Filtering(TestCase):
 	def test_NoFilter(self) -> None:
 		class AttributeA(Attribute):
@@ -189,13 +209,12 @@ class Filtering(TestCase):
 
 		self.assertListEqual(foundClasses, [Class1])
 
-	@mark.xfail(reason="Attributes are not inherited (yet)")
-	def test_Predicate(self) -> None:
+	def test_SubclassOf(self) -> None:
 		class AttributeA(Attribute):
 			pass
 
 		@AttributeA()
-		class Class1:
+		class Class1(metaclass=ExtendedType):
 			pass
 
 		class Class2(Class1):
@@ -205,11 +224,64 @@ class Filtering(TestCase):
 			pass
 
 		foundClasses = [c for c in AttributeA.GetClasses()]
-		foundClassesForC1 = [c for c in AttributeA.GetClasses(predicate=Class1)]
-		foundClassesForC2 = [c for c in AttributeA.GetClasses(predicate=Class2)]
-		foundClassesForC3 = [c for c in AttributeA.GetClasses(predicate=Class3)]
+		foundClassesForC1 = [c for c in AttributeA.GetClasses(subclassOf=Class1)]
+		foundClassesForC2 = [c for c in AttributeA.GetClasses(subclassOf=Class2)]
+		foundClassesForC3 = [c for c in AttributeA.GetClasses(subclassOf=Class3)]
 
 		self.assertListEqual(foundClasses, [Class1, Class2, Class3])
 		self.assertListEqual(foundClassesForC1, [Class1, Class2, Class3])
 		self.assertListEqual(foundClassesForC2, [Class2, Class3])
 		self.assertListEqual(foundClassesForC3, [Class3])
+
+	def test_Scope_Module(self) -> None:
+		from sys import modules
+
+		foundClasses = [c for c in ModuleAttribute.GetClasses()]
+		foundModuleClasses = [c for c in ModuleAttribute.GetClasses(scope=modules[ModuleClass.__module__])]
+
+		self.assertListEqual(foundClasses, [ModuleClass.InnerClass, ModuleClass])
+		self.assertListEqual(foundModuleClasses, [ModuleClass])
+
+	@mark.skip(reason="Unclear how to get a local scope object.")
+	def test_Scope_Local(self) -> None:
+		from sys import modules
+
+		class LocalAttribute(Attribute):
+			pass
+
+		@LocalAttribute()
+		class LocalClass:
+			pass
+
+			@LocalAttribute()
+			class NestedClass:
+				pass
+
+		l = locals()
+
+		foundClasses = [c for c in LocalAttribute.GetClasses()]
+		foundLocalClasses = [c for c in LocalAttribute.GetClasses(scope=l)]
+
+		self.assertListEqual(foundClasses, [LocalClass.NestedClass, LocalClass])
+		self.assertListEqual(foundLocalClasses, [LocalClass])
+
+	def test_Scope_Nested(self) -> None:
+		from sys import modules
+
+		@GlobalAttribute()
+		class LocalClass:
+			pass
+
+			@GlobalAttribute()
+			class NestedClass:
+				pass
+
+		l = locals()
+
+		foundClasses = [c for c in GlobalAttribute.GetClasses()]
+		foundInnerClasses = [c for c in GlobalAttribute.GetClasses(scope=ModuleClass)]
+		foundNestedClasses = [c for c in GlobalAttribute.GetClasses(scope=LocalClass)]
+
+		self.assertListEqual(foundClasses, [ModuleClass.InnerClass, ModuleClass, LocalClass.NestedClass, LocalClass])
+		self.assertListEqual(foundInnerClasses, [ModuleClass.InnerClass])
+		self.assertListEqual(foundNestedClasses, [LocalClass.NestedClass])
