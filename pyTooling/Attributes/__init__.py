@@ -120,41 +120,29 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return cls._scope
 
 	@classmethod
-	def GetFunctions(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
+	def GetFunctions(cls, scope: Nullable[Type] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all functions, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
-		 * ``predicate`` - when the item is a subclass of ``predicate``.
 
 		:param scope:     Undocumented.
-		:param predicate: An attribute class or tuple thereof, to filter for that attribute type or subtype.
 		:returns:         A sequence of functions where this attribute is attached to.
 		"""
 		if scope is None:
-			if predicate is None:
-				for c in cls._functions:
-					yield c
-			elif issubclass(predicate, Attribute):
-				for c in cls._functions:
-					if issubclass(c, predicate):
-						yield c
-			else:
-				raise TypeError(f"Parameter 'predicate' is not an Attribute or derived class.")
-		elif predicate is None:
-			raise NotImplementedError(f"Parameter 'scope' isn't supported yet.")
-			# for c in cls._functions:
-			# 	if isnestedclass(c, scope):
-			# 		yield c
-		else:
 			for c in cls._functions:
-				# if isnestedclass(c, scope) and issubclass(c, predicate):
-				if issubclass(c, predicate):
+				yield c
+		elif isinstance(scope, ModuleType):
+			elementsInScope = set(c for c in scope.__dict__.values() if isinstance(c, FunctionType))
+			for c in cls._functions:
+				if c in elementsInScope:
 					yield c
+		else:
+			raise NotImplementedError(f"Parameter 'scope' is a class isn't supported yet.")
 
 	@classmethod
-	def GetClasses(cls, scope: Nullable[Type] = None, subclassOf: Nullable[Type] = None) -> Generator[TAttr, None, None]:
+	def GetClasses(cls, scope: Union[Type, ModuleType, None] = None, subclassOf: Nullable[Type] = None) -> Generator[TAttr, None, None]:
 	# def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.

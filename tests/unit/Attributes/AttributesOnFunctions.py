@@ -1,10 +1,10 @@
 # ==================================================================================================================== #
-#                  _   _   _        _ _           _                                                                    #
-#   _ __  _   _   / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___                                                         #
-#  | '_ \| | | | / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|                                                        #
-#  | |_) | |_| |/ ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \                                                        #
-#  | .__/ \__, /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/                                                        #
-#  |_|    |___/                                                                                                        #
+#             _____           _ _                  _   _   _        _ _           _                                    #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _     / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___                         #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |   / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|                        #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_ / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \                        #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/                        #
+# |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
@@ -33,6 +33,8 @@
 Unit tests for attributes attached to methods.
 """
 from unittest     import TestCase
+
+from pytest       import mark
 
 from pyTooling.Attributes import Attribute
 
@@ -73,33 +75,79 @@ class ApplyFunctionAttributes(TestCase):
 		self.assertListEqual(foundFunctions, [func1, func2])
 
 
-class ApplyFunctionAttributes_1(TestCase):
-	def test_SingleFunction(self) -> None:
-		class AttributeA(Attribute):
+class ModuleAttribute(Attribute):
+	pass
+
+
+class GlobalAttribute(Attribute):
+	pass
+
+
+@ModuleAttribute()
+@GlobalAttribute()
+def ModuleFunction():
+	pass
+
+	@GlobalAttribute()
+	def NestedFunction():
+		pass
+
+	return NestedFunction
+
+
+moduleNestedFunction = ModuleFunction()
+
+
+class Filtering(TestCase):
+	def test_Scope_Module(self) -> None:
+		from sys import modules
+
+		foundFunctions = [c for c in ModuleAttribute.GetFunctions()]
+		foundModuleFunctions = [c for c in ModuleAttribute.GetFunctions(scope=modules[ModuleFunction.__module__])]
+
+		self.assertListEqual(foundFunctions, [ModuleFunction])
+		self.assertListEqual(foundModuleFunctions, [ModuleFunction])
+
+	@mark.skip(reason="Unclear how to get a local scope object.")
+	def test_Scope_Local(self) -> None:
+		class LocalAttribute(Attribute):
 			pass
 
-		@AttributeA()
-		def func1():
+		@LocalAttribute()
+		def LocalFunction():
 			pass
 
-		foundFunctions = [c for c in AttributeA.GetFunctions()]
+			@LocalAttribute()
+			def NestedFunction():
+				pass
 
-		self.assertListEqual(foundFunctions, [func1])
+			return NestedFunction
 
+		nestedFunction = LocalFunction()
 
-class ApplyFunctionAttributes_2(TestCase):
-	def test_MultipleFunctions(self) -> None:
-		class AttributeA(Attribute):
+		# l = locals()
+
+		foundFunctions = [c for c in LocalAttribute.GetFunctions()]
+		# foundLocalClasses = [c for c in LocalAttribute.GetClasses(scope=l)]
+
+		self.assertListEqual(foundFunctions, [nestedFunction, LocalFunction])
+		# self.assertListEqual(foundLocalClasses, [LocalClass])
+
+	def test_Scope_Nested(self) -> None:
+		@GlobalAttribute()
+		def LocalFunction():
 			pass
 
-		@AttributeA()
-		def func1():
-			pass
+			@GlobalAttribute()
+			def NestedFunction():
+				pass
 
-		@AttributeA()
-		def func2():
-			pass
+			return NestedFunction
 
-		foundFunctions = [c for c in AttributeA.GetFunctions()]
+		nestedFunction = LocalFunction()
+		l = locals()
 
-		self.assertListEqual(foundFunctions, [func1, func2])
+		foundFunctions = [c for c in GlobalAttribute.GetFunctions()]
+
+		self.assertListEqual(foundFunctions, [ModuleFunction, moduleNestedFunction, LocalFunction, nestedFunction])
+

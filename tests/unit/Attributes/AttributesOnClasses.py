@@ -1,10 +1,10 @@
 # ==================================================================================================================== #
-#                  _   _   _        _ _           _                                                                    #
-#   _ __  _   _   / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___                                                         #
-#  | '_ \| | | | / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|                                                        #
-#  | |_) | |_| |/ ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \                                                        #
-#  | .__/ \__, /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/                                                        #
-#  |_|    |___/                                                                                                        #
+#             _____           _ _                  _   _   _        _ _           _                                    #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _     / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___                         #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |   / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|                        #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_ / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \                        #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/                        #
+# |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
@@ -197,18 +197,6 @@ class ModuleClass:
 
 
 class Filtering(TestCase):
-	def test_NoFilter(self) -> None:
-		class AttributeA(Attribute):
-			pass
-
-		@AttributeA()
-		class Class1:
-			pass
-
-		foundClasses = [c for c in AttributeA.GetClasses()]
-
-		self.assertListEqual(foundClasses, [Class1])
-
 	def test_SubclassOf(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -244,8 +232,6 @@ class Filtering(TestCase):
 
 	@mark.skip(reason="Unclear how to get a local scope object.")
 	def test_Scope_Local(self) -> None:
-		from sys import modules
-
 		class LocalAttribute(Attribute):
 			pass
 
@@ -266,8 +252,6 @@ class Filtering(TestCase):
 		self.assertListEqual(foundLocalClasses, [LocalClass])
 
 	def test_Scope_Nested(self) -> None:
-		from sys import modules
-
 		@GlobalAttribute()
 		class LocalClass:
 			pass
@@ -285,3 +269,28 @@ class Filtering(TestCase):
 		self.assertListEqual(foundClasses, [ModuleClass.InnerClass, ModuleClass, LocalClass.NestedClass, LocalClass])
 		self.assertListEqual(foundInnerClasses, [ModuleClass.InnerClass])
 		self.assertListEqual(foundNestedClasses, [LocalClass.NestedClass])
+
+	def test_Scope_SubclassOf_Nested(self) -> None:
+		class LocalAttribute(Attribute):
+			pass
+
+		class Base:
+			pass
+
+		@LocalAttribute()
+		class LocalClass:
+			pass
+
+			@LocalAttribute()
+			class NestedClass1:
+				pass
+
+			@LocalAttribute()
+			class NestedClass2(Base):
+				pass
+
+		foundClasses = [c for c in LocalAttribute.GetClasses()]
+		foundNestedClasses = [c for c in LocalAttribute.GetClasses(scope=LocalClass, subclassOf=Base)]
+
+		self.assertListEqual(foundClasses, [LocalClass.NestedClass1, LocalClass.NestedClass2, LocalClass])
+		self.assertListEqual(foundNestedClasses, [LocalClass.NestedClass2])

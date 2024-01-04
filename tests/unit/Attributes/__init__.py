@@ -1,43 +1,37 @@
-# =============================================================================
-#                  _   _   _        _ _           _
-#   _ __  _   _   / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___
-#  | '_ \| | | | / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|
-#  | |_) | |_| |/ ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \
-#  | .__/ \__, /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/
-#  |_|    |___/
-# =============================================================================
-# Authors:            Patrick Lehmann
-#
-# Python unittest:    Helper functions for unittests
-#
-# License:
-# ============================================================================
-# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany
-# Copyright 2007-2016 Patrick Lehmann - Dresden, Germany
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# SPDX-License-Identifier: Apache-2.0
-# ============================================================================
+# ==================================================================================================================== #
+#             _____           _ _                  _   _   _        _ _           _                                    #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _     / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___                         #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |   / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|                        #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_ / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \                        #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/                        #
+# |_|    |___/                          |___/                                                                          #
+# ==================================================================================================================== #
+# Authors:                                                                                                             #
+#   Patrick Lehmann                                                                                                    #
+#                                                                                                                      #
+# License:                                                                                                             #
+# ==================================================================================================================== #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2007-2016 Patrick Lehmann - Dresden, Germany                                                               #
+#                                                                                                                      #
+# Licensed under the Apache License, Version 2.0 (the "License");                                                      #
+# you may not use this file except in compliance with the License.                                                     #
+# You may obtain a copy of the License at                                                                              #
+#                                                                                                                      #
+#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
+#                                                                                                                      #
+# Unless required by applicable law or agreed to in writing, software                                                  #
+# distributed under the License is distributed on an "AS IS" BASIS,                                                    #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #
+# See the License for the specific language governing permissions and                                                  #
+# limitations under the License.                                                                                       #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
 #
 """
-pyTooling.Attributes
-####################
-
-:copyright: Copyright 2007-2024 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
+Helper functions for unittests.
 """
-
 from contextlib import contextmanager
 from io         import StringIO
 import sys      as _sys
@@ -47,6 +41,7 @@ K1 = TypeVar("K1")
 V1 = TypeVar("V1")
 K2 = TypeVar("K2")
 V2 = TypeVar("V2")
+
 
 def zip(dict1: Dict[K1, V1], dict2: Dict[K2, V2]) -> Generator[Tuple[K1, K2, V1, V2], None, None]:
 	l1 = len(dict1)
@@ -66,7 +61,7 @@ def zip(dict1: Dict[K1, V1], dict2: Dict[K2, V2]) -> Generator[Tuple[K1, K2, V1,
 			key1, value1 = next(iter1)
 			key2, value2 = next(iter2)
 
-			yield (key1, key2, value1, value2)
+			yield key1, key2, value1, value2
 
 	except StopIteration:
 		return
