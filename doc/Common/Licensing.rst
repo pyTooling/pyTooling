@@ -6,7 +6,7 @@ Licensing
 The :mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses and mappings
 of their names, because some tools use differing names for the same license.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 

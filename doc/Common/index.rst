@@ -7,7 +7,7 @@ Common Helper Functions
 The :mod:`pyTooling.Common` package contains several useful helper functions, which are explained in the following
 sections.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 

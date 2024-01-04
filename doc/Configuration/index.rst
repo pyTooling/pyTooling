@@ -5,7 +5,7 @@ Configuration
 
 Module :mod:`~pyTooling.Configuration` provides an abstract configuration reader.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 

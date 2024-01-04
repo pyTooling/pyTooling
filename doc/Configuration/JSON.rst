@@ -5,7 +5,7 @@ JSON
 
 Module :mod:`~pyTooling.Configuration.JSON` provides a configuration reader implementation for the JSON format.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 

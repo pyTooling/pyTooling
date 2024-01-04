@@ -1,7 +1,7 @@
 Decorators
 ##########
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 2
 

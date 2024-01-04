@@ -16,7 +16,7 @@ The :mod:`pyTooling.Tree` package provides fast and simple tree data structure b
    **treelib**
       :gh:`treelib <caesar0301/treelib>`
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 3
 

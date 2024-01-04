@@ -5,7 +5,7 @@ Overview
 
 Currently, the following meta-classes are provided:
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :depth: 3
 
 .. seealso::

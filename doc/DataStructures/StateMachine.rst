@@ -5,7 +5,7 @@ StateMachine
 
 The :mod:`pyTooling.StateMachine` package
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 2
 

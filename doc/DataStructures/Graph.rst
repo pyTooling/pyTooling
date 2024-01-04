@@ -7,7 +7,7 @@ The :mod:`pyTooling.Graph` package provides a directed graph data structure. Com
 :ref:`NetworkX <STRUCT/Graph/NetworkX>` and :ref:`igraph <STRUCT/Graph/igraph>`, this implementation provides an
 object-oriented API.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 2
 

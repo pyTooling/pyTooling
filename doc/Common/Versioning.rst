@@ -6,7 +6,7 @@ Versioning
 The :mod:`pyTooling.Versioning` package provides auxiliary classes to implement
 `semantic <https://semver.org/>`__ and `calendar <https://calver.org/>`__ versioning.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 

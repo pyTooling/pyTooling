@@ -5,7 +5,7 @@ YAML
 
 Module :mod:`~pyTooling.Configuration.YAML` provides a configuration reader implementation for the YAML format.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 
