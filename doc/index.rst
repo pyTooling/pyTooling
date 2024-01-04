@@ -118,6 +118,28 @@ Attributes
                for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
                  pass
 
+         .. tab-item:: Class Attributes
+
+            .. code-block:: Python
+
+               from pyTooling.Attributes import Attribute
+               from pyTooling.MetaClasses import ExtendedType
+
+               class TestSuite(Attribute):
+                 def __init__(self, name: str):
+                   pass
+
+               @TestSuite(name="Command line interface tests")
+               class Program(metaclass=ExtendedType):
+                  def Handler(self, args):
+                    pass
+
+               prog = Program()
+
+
+               for testsuite in TestSuite.GetClasses():
+                 pass
+
 ArgParse
 --------
 

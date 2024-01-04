@@ -69,7 +69,7 @@ class CLIArgument(Attribute):
 class Environment(metaclass=ExtendedType, slots=True):
 	_variables: Dict[str, str]
 
-	def __init__(self, variables: Dict[str, str] = None) -> None:
+	def __init__(self, variables: Nullable[Dict[str, str]] = None) -> None:
 		if variables is None:
 			variables = os_environ
 
@@ -110,7 +110,7 @@ class Program(metaclass=ExtendedType, slots=True):
 			cls.__cliOptions__[option] = order
 			order += 1
 
-	def __init__(self, executablePath: Path = None, binaryDirectoryPath: Path = None, dryRun: bool = False) -> None:
+	def __init__(self, executablePath: Nullable[Path] = None, binaryDirectoryPath: Nullable[Path] = None, dryRun: bool = False) -> None:
 		self._platform =    system()
 		self._dryRun =      dryRun
 
@@ -286,7 +286,7 @@ class Executable(Program):  # (ILogable):
 		except OSError as ex:
 			raise CLIAbstractionException(f"Error while launching a process for '{self._executablePath}'.") from ex
 
-	def Send(self, line: str, end: str="\n") -> None:
+	def Send(self, line: str, end: str = "\n") -> None:
 		try:
 			self._process.stdin.write(line + end)
 			self._process.stdin.flush()

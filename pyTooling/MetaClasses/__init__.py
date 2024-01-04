@@ -36,11 +36,10 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 """
 from functools  import wraps
 from inspect    import signature, Parameter
-from sys        import version_info
 from threading  import Condition
 from types      import MethodType, FunctionType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
-from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar
+from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 try:
 	from ..Exceptions import ToolingException
@@ -462,7 +461,7 @@ class ExtendedType(type):
 			except AttributeError:
 				return False
 
-		def GetMethodsWithAttributes(self, predicate: TAttributeFilter[TAttr] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
+		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
 			"""
 
 			:param predicate:
@@ -522,7 +521,7 @@ class ExtendedType(type):
 				raise ex
 
 		# Embedded bind function due to circular dependencies.
-		def bind(instance: object, func: FunctionType, methodName: str = None):
+		def bind(instance: object, func: FunctionType, methodName: Nullable[str] = None):
 			if methodName is None:
 				methodName = func.__name__
 
@@ -542,7 +541,7 @@ class ExtendedType(type):
 				else:
 					setattr(method, "__classobj__", newClass)
 
-				def GetAttributes(inst: Any, predicate: Type[Attribute] = None) -> Tuple[Attribute, ...]:
+				def GetAttributes(inst: Any, predicate: Nullable[Type[Attribute]] = None) -> Tuple[Attribute, ...]:
 					results = []
 					try:
 						for attribute in inst.__pyattr__:  # type: Attribute

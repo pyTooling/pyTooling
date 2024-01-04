@@ -281,7 +281,7 @@ class BaseWithIDValueAndWeight(
 	_value:     Nullable[ValueType]   #: Field storing the object's value of any type.
 	_weight:    Nullable[WeightType]  #: Field storing the object's weight.
 
-	def __init__(self, identifier: IDType = None, value: ValueType = None, weight: WeightType = None) -> None:
+	def __init__(self, identifier: Nullable[IDType] = None, value: Nullable[ValueType] = None, weight: Nullable[WeightType] = None) -> None:
 		"""
 		.. todo:: GRAPH::Vertex::init Needs documentation.
 
@@ -337,7 +337,7 @@ class BaseWithName(
 ):
 	_name: Nullable[str]  #: Field storing the object's name.
 
-	def __init__(self, name: str = None) -> None:
+	def __init__(self, name: Nullable[str] = None) -> None:
 		"""
 		.. todo:: GRAPH::BaseWithName::init Needs documentation.
 
@@ -388,7 +388,7 @@ class BaseWithVertices(
 								'LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType'
 								']']  #: Field storing a set of vertices.
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable['Vertex'] = None) -> None:
+	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable['Vertex']] = None) -> None:
 		"""
 		.. todo:: GRAPH::Component::init Needs documentation.
 
@@ -463,7 +463,7 @@ class Vertex(
 	_inboundLinks:   List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound links.
 	_outboundLinks:  List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound links.
 
-	def __init__(self, vertexID: VertexIDType = None, value: VertexValueType = None, weight: VertexWeightType = None, graph: 'Graph' = None, subgraph: 'Subgraph' = None) -> None:
+	def __init__(self, vertexID: Nullable[VertexIDType] = None, value: Nullable[VertexValueType] = None, weight: Nullable[VertexWeightType] = None, graph: Nullable['Graph'] = None, subgraph: Nullable['Subgraph'] = None) -> None:
 		"""
 		.. todo:: GRAPH::Vertex::init Needs documentation.
 
@@ -714,7 +714,7 @@ class Vertex(
 		"""
 		return tuple([edge.Destination for edge in self._outboundEdges])
 
-	def EdgeToVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeToVertex(self, vertex: 'Vertex', edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
 		"""
 		.. todo:: GRAPH::Vertex::EdgeToVertex Needs documentation.
 
@@ -748,7 +748,7 @@ class Vertex(
 
 		return edge
 
-	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
 		"""
 		.. todo:: GRAPH::Vertex::EdgeFromVertex Needs documentation.
 
@@ -782,7 +782,7 @@ class Vertex(
 
 		return edge
 
-	def EdgeToNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, vertexWeight: VertexWeightType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeToNewVertex(self, vertexID: Nullable[VertexIDType] = None, vertexValue: Nullable[VertexValueType] = None, vertexWeight: Nullable[VertexWeightType] = None, edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
 		"""
 		.. todo:: GRAPH::Vertex::EdgeToNewVertex Needs documentation.
 
@@ -818,7 +818,7 @@ class Vertex(
 
 		return edge
 
-	def EdgeFromNewVertex(self, vertexID: VertexIDType = None, vertexValue: VertexValueType = None, vertexWeight: VertexWeightType = None, edgeID: EdgeIDType = None, edgeWeight: EdgeWeightType = None, edgeValue: VertexValueType = None) -> 'Edge':
+	def EdgeFromNewVertex(self, vertexID: Nullable[VertexIDType] = None, vertexValue: Nullable[VertexValueType] = None, vertexWeight: Nullable[VertexWeightType] = None, edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
 		"""
 		.. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs documentation.
 
@@ -854,7 +854,7 @@ class Vertex(
 
 		return edge
 
-	def LinkToVertex(self, vertex: 'Vertex', linkID: EdgeIDType = None, linkWeight: EdgeWeightType = None, linkValue: VertexValueType = None) -> 'Link':
+	def LinkToVertex(self, vertex: 'Vertex', linkID: Nullable[EdgeIDType] = None, linkWeight: Nullable[EdgeWeightType] = None, linkValue: Nullable[VertexValueType] = None) -> 'Link':
 		"""
 		.. todo:: GRAPH::Vertex::LinkToVertex Needs documentation.
 
@@ -890,7 +890,7 @@ class Vertex(
 
 		return link
 
-	def LinkFromVertex(self, vertex: 'Vertex', linkID: EdgeIDType = None, linkWeight: EdgeWeightType = None, linkValue: VertexValueType = None) -> 'Edge':
+	def LinkFromVertex(self, vertex: 'Vertex', linkID: Nullable[EdgeIDType] = None, linkWeight: Nullable[EdgeWeightType] = None, linkValue: Nullable[VertexValueType] = None) -> 'Edge':
 		"""
 		.. todo:: GRAPH::Vertex::LinkToVertex Needs documentation.
 
@@ -1050,7 +1050,7 @@ class Vertex(
 
 		link.Delete()
 
-	def Copy(self, graph: Graph, copyDict: bool = False, linkingKeyToOriginalVertex: str = None, linkingKeyFromOriginalVertex: str = None) -> 'Vertex':
+	def Copy(self, graph: Graph, copyDict: bool = False, linkingKeyToOriginalVertex: Nullable[str] = None, linkingKeyFromOriginalVertex: Nullable[str] = None) -> 'Vertex':
 		"""
 		Creates a copy of this vertex in another graph.
 
@@ -1078,7 +1078,7 @@ class Vertex(
 
 		return vertex
 
-	def IterateOutboundEdges(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Edge', None, None]:
+	def IterateOutboundEdges(self, predicate: Nullable[Callable[['Edge'], bool]] = None) -> Generator['Edge', None, None]:
 		"""
 		Iterate all or selected outbound edges of this vertex.
 
@@ -1095,7 +1095,7 @@ class Vertex(
 				if predicate(edge):
 					yield edge
 
-	def IterateInboundEdges(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Edge', None, None]:
+	def IterateInboundEdges(self, predicate: Nullable[Callable[['Edge'], bool]] = None) -> Generator['Edge', None, None]:
 		"""
 		Iterate all or selected inbound edges of this vertex.
 
@@ -1112,7 +1112,7 @@ class Vertex(
 				if predicate(edge):
 					yield edge
 
-	def IterateOutboundLinks(self, predicate: Callable[['Link'], bool] = None) -> Generator['Link', None, None]:
+	def IterateOutboundLinks(self, predicate: Nullable[Callable[['Link'], bool]] = None) -> Generator['Link', None, None]:
 		"""
 		Iterate all or selected outbound links of this vertex.
 
@@ -1129,7 +1129,7 @@ class Vertex(
 				if predicate(link):
 					yield link
 
-	def IterateInboundLinks(self, predicate: Callable[['Link'], bool] = None) -> Generator['Link', None, None]:
+	def IterateInboundLinks(self, predicate: Nullable[Callable[['Link'], bool]] = None) -> Generator['Link', None, None]:
 		"""
 		Iterate all or selected inbound links of this vertex.
 
@@ -1146,7 +1146,7 @@ class Vertex(
 				if predicate(link):
 					yield link
 
-	def IterateSuccessorVertices(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Vertex', None, None]:
+	def IterateSuccessorVertices(self, predicate: Nullable[Callable[['Edge'], bool]] = None) -> Generator['Vertex', None, None]:
 		"""
 		Iterate all or selected successor vertices of this vertex.
 
@@ -1163,7 +1163,7 @@ class Vertex(
 				if predicate(edge):
 					yield edge.Destination
 
-	def IteratePredecessorVertices(self, predicate: Callable[['Edge'], bool] = None) -> Generator['Vertex', None, None]:
+	def IteratePredecessorVertices(self, predicate: Nullable[Callable[['Edge'], bool]] = None) -> Generator['Vertex', None, None]:
 		"""
 		Iterate all or selected predecessor vertices of this vertex.
 
@@ -1569,7 +1569,7 @@ class BaseEdge(
 	_source:      Vertex
 	_destination: Vertex
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None) -> None:
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: Nullable[EdgeIDType] = None, value: Nullable[EdgeValueType] = None, weight: Nullable[EdgeWeightType] = None) -> None:
 		"""
 		.. todo:: GRAPH::BaseEdge::init Needs documentation.
 
@@ -1624,7 +1624,7 @@ class Edge(
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: EdgeIDType = None, value: EdgeValueType = None, weight: EdgeWeightType = None) -> None:
+	def __init__(self, source: Vertex, destination: Vertex, edgeID: Nullable[EdgeIDType] = None, value: Nullable[EdgeValueType] = None, weight: Nullable[EdgeWeightType] = None) -> None:
 		"""
 		.. todo:: GRAPH::Edge::init Needs documentation.
 
@@ -1684,7 +1684,7 @@ class Link(
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: LinkWeightType = None) -> None:
+	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: Nullable[LinkWeightType] = None) -> None:
 		"""
 		.. todo:: GRAPH::Edge::init Needs documentation.
 
@@ -1751,7 +1751,7 @@ class BaseGraph(
 	_linksWithID:       Dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_linksWithoutID:    List[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
-	def __init__(self, name: str = None):  #, vertices: Iterable[Vertex] = None) -> None:
+	def __init__(self, name: Nullable[str] = None):  #, vertices: Nullable[Iterable[Vertex]] = None) -> None:
 		"""
 		.. todo:: GRAPH::BaseGraph::init Needs documentation.
 
@@ -1800,7 +1800,7 @@ class BaseGraph(
 		:returns: The number of links in this graph."""
 		return len(self._linksWithoutID) + len(self._linksWithID)
 
-	def IterateVertices(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices of a graph.
 
@@ -1822,7 +1822,7 @@ class BaseGraph(
 				if predicate(vertex):
 					yield vertex
 
-	def IterateRoots(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateRoots(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -1857,7 +1857,7 @@ class BaseGraph(
 				if len(vertex._inboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	def IterateLeafs(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLeafs(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -1892,13 +1892,13 @@ class BaseGraph(
 				if len(vertex._outboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	# def IterateBFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	# def IterateBFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 	# 	raise NotImplementedError()
 	#
-	# def IterateDFS(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	# def IterateDFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 	# 	raise NotImplementedError()
 
-	def IterateTopologically(self, predicate: Callable[[Vertex], bool] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateTopologically(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices in topological order.
 
@@ -1959,7 +1959,7 @@ class BaseGraph(
 
 		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
 
-	def IterateEdges(self, predicate: Callable[[Edge], bool] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected edges of a graph.
 
@@ -1981,7 +1981,7 @@ class BaseGraph(
 				if predicate(edge):
 					yield edge
 
-	def IterateLinks(self, predicate: Callable[[Link], bool] = None) -> Generator[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected links of a graph.
 
@@ -2003,7 +2003,7 @@ class BaseGraph(
 				if predicate(link):
 					yield link
 
-	def ReverseEdges(self, predicate: Callable[[Edge], bool] = None) -> None:
+	def ReverseEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> None:
 		"""
 		Reverse all or selected edges of a graph.
 
@@ -2040,7 +2040,7 @@ class BaseGraph(
 				if predicate(edge):
 					edge.Reverse()
 
-	def ReverseLinks(self, predicate: Callable[[Link], bool] = None) -> None:
+	def ReverseLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> None:
 		"""
 		Reverse all or selected links of a graph.
 
@@ -2077,7 +2077,7 @@ class BaseGraph(
 				if predicate(link):
 					link.Reverse()
 
-	def RemoveEdges(self, predicate: Callable[[Edge], bool] = None):
+	def RemoveEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None):
 		"""
 		Remove all or selected edges of a graph.
 
@@ -2120,7 +2120,7 @@ class BaseGraph(
 					edge._destination._inboundEdges.remove(edge)
 					edge._Delete()
 
-	def RemoveLinks(self, predicate: Callable[[Link], bool] = None):
+	def RemoveLinks(self, predicate: Nullable[Callable[[Link], bool]] = None):
 		"""
 		Remove all or selected links of a graph.
 
@@ -2238,7 +2238,7 @@ class Subgraph(
 
 	_graph:    'Graph'
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None) -> None:
+	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable[Vertex]] = None) -> None:
 		"""
 		.. todo:: GRAPH::Subgraph::init Needs documentation.
 
@@ -2300,7 +2300,7 @@ class View(
 
 	"""
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None) -> None:
+	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable[Vertex]] = None) -> None:
 		"""
 		.. todo:: GRAPH::View::init Needs documentation.
 
@@ -2346,7 +2346,7 @@ class Component(
 
 	"""
 
-	def __init__(self, graph: 'Graph', name: str = None, vertices: Iterable[Vertex] = None) -> None:
+	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable[Vertex]] = None) -> None:
 		"""
 		.. todo:: GRAPH::Component::init Needs documentation.
 
@@ -2397,7 +2397,7 @@ class Graph(
 	_views:             Set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
-	def __init__(self, name: str = None) -> None:
+	def __init__(self, name: Nullable[str] = None) -> None:
 		"""
 		.. todo:: GRAPH::Graph::init Needs documentation.
 
@@ -2504,7 +2504,7 @@ class Graph(
 	def CopyGraph(self) -> 'Graph':
 		raise NotImplementedError()
 
-	def CopyVertices(self, predicate: Callable[[Vertex], bool] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':
+	def CopyVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':
 		"""
 		Create a new graph and copy all or selected vertices of the original graph.
 

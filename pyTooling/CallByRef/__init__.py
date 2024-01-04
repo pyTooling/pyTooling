@@ -35,7 +35,7 @@ Auxiliary classes to implement call-by-reference.
 """
 from decimal       import Decimal
 from sys           import version_info           # needed for versions before Python 3.11
-from typing        import Any, Generic, TypeVar
+from typing        import Any, Generic, TypeVar, Optional as Nullable
 
 from ..Decorators  import export
 from ..MetaClasses import ExtendedType
@@ -58,7 +58,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 	Value: T    #: internal value
 
-	def __init__(self, value: T = None) -> None:
+	def __init__(self, value: Nullable[T] = None) -> None:
 		"""Constructs a *call-by-reference* object for any type.
 
 		:param value: The value to be set as an initial value.

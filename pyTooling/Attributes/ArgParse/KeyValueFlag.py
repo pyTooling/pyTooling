@@ -29,6 +29,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+from typing   import Optional as Nullable
+
 from pyTooling.Decorators import export
 
 from .Argument import NamedAndValuedArgument
@@ -44,7 +46,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 	is present in the commandline arguments, otherwise ``False``.
 	"""
 
-	def __init__(self, short: str = None, long: str = None, dest: str = None, help: str = None):
+	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None):
 		"""
 		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
 		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
@@ -75,11 +77,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 
 @export
 class ShortKeyValueFlag(NamedKeyValuePairsArgument):
-	def __init__(self, short: str = None, dest: str = None, help: str = None):
+	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None):
 		super().__init__(short=short, dest=dest, help=help)
 
 
 @export
 class LongKeyValueFlag(NamedKeyValuePairsArgument):
-	def __init__(self, long: str = None, dest: str = None, help: str = None):
+	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None):
 		super().__init__(long=long, dest=dest, help=help)

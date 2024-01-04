@@ -313,7 +313,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 			self._subParsers[attribute.Command] = subParser
 
-	def Run(self, enableAutoComplete: bool=True) -> None:
+	def Run(self, enableAutoComplete: bool = True) -> None:
 		if enableAutoComplete:
 			self._EnabledAutoComplete()
 

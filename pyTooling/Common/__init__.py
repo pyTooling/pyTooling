@@ -48,7 +48,7 @@ __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 from collections import deque
 from numbers     import Number
 from typing      import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
-from typing      import Any, Dict, Tuple, Union, Mapping, Set, Iterable
+from typing      import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
 
 try:
 	from pyTooling.Decorators import export
@@ -164,7 +164,7 @@ def getsizeof(obj: Any) -> int:
 	return recurse(obj)
 
 
-def bind(instance, func, methodName=None):
+def bind(instance, func, methodName: Nullable[str] = None):
 	"""
 	Bind the function *func* to *instance*, with either provided name *as_name*
 	or the existing name of *func*. The provided *func* should accept the
@@ -325,7 +325,7 @@ def mergedicts(
 
 
 @export
-def mergedicts(*dicts: Tuple[Dict, ...], filter: Callable[[Hashable, Any], bool] = None) -> Dict:
+def mergedicts(*dicts: Tuple[Dict, ...], filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 

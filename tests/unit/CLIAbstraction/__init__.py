@@ -29,15 +29,16 @@
 # ==================================================================================================================== #
 #
 """Helper classes for unit tests."""
-from pathlib import Path
+from pathlib  import Path
 from platform import system
+from typing   import Optional as Nullable
 
 
 class Helper:
 	_system = system()
 
 	@classmethod
-	def GetExecutablePath(cls, programName: str, binaryDirectory: Path = None) -> str:
+	def GetExecutablePath(cls, programName: str, binaryDirectory: Nullable[Path] = None) -> str:
 		extensions = ".exe" if cls._system == "Windows" else ""
 		programName = f"{programName}{extensions}"
 		if binaryDirectory is not None:

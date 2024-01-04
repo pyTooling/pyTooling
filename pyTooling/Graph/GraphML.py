@@ -35,14 +35,14 @@ A data model to write out GraphML XML files.
 
    * http://graphml.graphdrawing.org/primer/graphml-primer.html
 """
-from enum import Enum, auto
+from enum    import Enum, auto
 from pathlib import Path
-from typing import Any, List, Dict, Union, Optional as Nullable
+from typing  import Any, List, Dict, Union, Optional as Nullable
 
-from pyTooling.Decorators import export, readonly
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Graph import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
-from pyTooling.Tree import Node as pyToolingNode
+from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+from pyTooling.Tree        import Node as pyToolingNode
 
 
 @export
@@ -319,7 +319,7 @@ class BaseGraph(BaseWithData, mixin=True):
 	_nodeIDStyle: IDStyle
 	_edgeIDStyle: IDStyle
 
-	def __init__(self, identifier: str = None) -> None:
+	def __init__(self, identifier: Nullable[str] = None) -> None:
 		super().__init__(identifier)
 
 		self._subgraphs = {}

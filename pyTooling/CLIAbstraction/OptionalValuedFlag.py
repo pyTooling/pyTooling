@@ -34,7 +34,7 @@
 .. TODO:: Write module documentation.
 
 """
-from typing import ClassVar, Optional as Nullable, Union, Iterable, Tuple, Any, Dict
+from typing import ClassVar, Optional as Nullable, Union, Iterable, Tuple, Any, Dict, Optional as Nullable
 
 from pyTooling.Decorators import export
 
@@ -64,7 +64,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
 
-	def __init__(self, value: str = None) -> None:
+	def __init__(self, value: Nullable[str] = None) -> None:
 		self._value = value
 
 	@property

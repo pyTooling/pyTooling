@@ -36,7 +36,7 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Tuple, Any, Dict
+from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Tuple, Any, Dict, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 
@@ -71,7 +71,7 @@ class CommandLineArgument:
 
 	_pattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = None, **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: Nullable[str] = None, **kwargs: Dict[str, Any]):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -230,7 +230,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	_name: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -359,7 +359,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	Base-class for all command line arguments with a name and a value.
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}={1}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Dict[str, Any]):
 		"""
 		This method is called when a class is derived.
 
@@ -416,7 +416,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 	_valuePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Dict[str, Any]):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)

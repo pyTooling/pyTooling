@@ -29,12 +29,11 @@
 # ==================================================================================================================== #
 #
 """A powerful tree data structure for Python."""
-from collections import deque
-from typing import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, \
-	Union, Deque, Iterator
+from collections   import deque
+from typing        import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union, Deque, Iterator
 
 from ..Exceptions  import ToolingException
-from ..Decorators import export, readonly
+from ..Decorators  import export, readonly
 from ..MetaClasses import ExtendedType
 
 IDType = TypeVar("IDType", bound=Hashable)
@@ -148,7 +147,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
-	def __init__(self, nodeID: IDType = None, value: ValueType = None, parent: 'Node' = None, children: List['Node'] = None) -> None:
+	def __init__(self, nodeID: Nullable[IDType] = None, value: Nullable[ValueType] = None, parent: 'Node' = None, children: Nullable[List['Node']] = None) -> None:
 		"""
 		.. todo:: TREE::Node::init Needs documentation.
 

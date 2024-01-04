@@ -37,7 +37,7 @@ from textwrap               import dedent
 from typing                 import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 
 from pyTooling.Exceptions   import PlatformNotSupportedException, ExceptionBase
-from pyTooling.Decorators import export, readonly
+from pyTooling.Decorators   import export, readonly
 from pyTooling.MetaClasses  import ExtendedType, mixin
 from pyTooling.Common       import lastItem
 from pyTooling.Platform     import Platform
@@ -656,7 +656,7 @@ class ILineTerminal:
 
 	_terminal: TerminalBaseApplication
 
-	def __init__(self, terminal: TerminalBaseApplication = None) -> None:
+	def __init__(self, terminal: Nullable[TerminalBaseApplication] = None) -> None:
 		"""MixIn initializer."""
 		self._terminal = terminal
 

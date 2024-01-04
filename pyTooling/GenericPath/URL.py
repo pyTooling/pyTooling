@@ -59,7 +59,7 @@ class Host(RootMixIn):
 	_hostname : str
 	_port :     Nullable[int]
 
-	def __init__(self, hostname: str, port: int = None) -> None:
+	def __init__(self, hostname: str, port: Nullable[int] = None) -> None:
 		super().__init__()
 		self._hostname = hostname
 		self._port =     port
@@ -95,7 +95,7 @@ class Path(PathMixIn):
 	ROOT_DELIMITER =    "/"   #: Delimiter symbol in URLs between root element and first path element.
 
 	@classmethod
-	def Parse(cls, path: str, root: Host = None) -> "Path":
+	def Parse(cls, path: str, root: Nullable[Host] = None) -> "Path":
 		return super().Parse(path, root, cls, Element)
 
 
@@ -111,7 +111,7 @@ class URL:
 	_query:     Nullable[Dict[str, str]]
 	_fragment:  Nullable[str]
 
-	def __init__(self, scheme: Protocols, path: Path, host: Host = None, user: str = None, password: str = None, query: Dict[str, str] = None, fragment: str = None) -> None:
+	def __init__(self, scheme: Protocols, path: Path, host: Nullable[Host] = None, user: Nullable[str] = None, password: Nullable[str] = None, query: Nullable[Dict[str, str]] = None, fragment: Nullable[str] = None) -> None:
 		self._scheme =    scheme
 		self._user =      user
 		self._password =  password

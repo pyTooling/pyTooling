@@ -38,10 +38,8 @@ class, method or function. By default, this field is called ``__pyattr__``.
 
 .. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
-
-# load dependencies
 from types  import MethodType, FunctionType
-from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
+from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 
@@ -107,7 +105,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return entity
 
 	@classmethod
-	def GetFunctions(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
+	def GetFunctions(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all functions, where this attribute is attached to.
 
@@ -141,7 +139,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetClasses(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
+	def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.
 
@@ -173,7 +171,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetMethods(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
+	def GetMethods(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all methods, where this attribute is attached to.
 

@@ -41,7 +41,7 @@ Boolean flags are arguments with a name and different pattern for a positive (``
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import ClassVar, Union, Iterable, Tuple, Any, Dict
+from typing import ClassVar, Union, Iterable, Tuple, Any, Dict, Optional as Nullable
 
 from pyTooling.Decorators import export
 
@@ -65,7 +65,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 	_falsePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Dict[str, Any]):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -118,7 +118,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 	* False: ``-without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Dict[str, Any]):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -147,7 +147,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 	* False: ``--without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Dict[str, Any]):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -176,7 +176,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 	* False: ``/without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: str = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Dict[str, Any]):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.

@@ -31,6 +31,7 @@
 """
 Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
+from typing                import Optional as Nullable
 from unittest              import TestCase
 
 from pytest                import mark
@@ -1093,7 +1094,7 @@ class Hierarchy(TestCase):
 		class BaseGraph(WithData, mixin=True):
 			_data_4: int
 
-			def __init__(self, param: str = None) -> None:
+			def __init__(self, param: Nullable[str] = None) -> None:
 				if param is not None:
 					super().__init__()
 
