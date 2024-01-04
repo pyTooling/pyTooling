@@ -220,7 +220,10 @@ class Base(
 		.. todo:: GRAPH::Base::del Needs documentation.
 
 		"""
-		del self._dict
+		try:
+			del self._dict
+		except AttributeError:
+			pass
 
 	def Delete(self) -> None:
 		self._dict = None
@@ -408,7 +411,10 @@ class BaseWithVertices(
 		.. todo:: GRAPH::BaseWithVertices::del Needs documentation.
 
 		"""
-		del self._vertices
+		try:
+			del self._vertices
+		except AttributeError:
+			pass
 
 		super().__del__()
 
@@ -507,11 +513,14 @@ class Vertex(
 		.. todo:: GRAPH::BaseEdge::del Needs documentation.
 
 		"""
-		del self._views
-		del self._inboundEdges
-		del self._outboundEdges
-		del self._inboundLinks
-		del self._outboundLinks
+		try:
+			del self._views
+			del self._inboundEdges
+			del self._outboundEdges
+			del self._inboundLinks
+			del self._outboundLinks
+		except AttributeError:
+			pass
 
 		super().__del__()
 
@@ -1770,12 +1779,15 @@ class BaseGraph(
 		.. todo:: GRAPH::BaseGraph::del Needs documentation.
 
 		"""
-		del self._verticesWithoutID
-		del self._verticesWithID
-		del self._edgesWithoutID
-		del self._edgesWithID
-		del self._linksWithoutID
-		del self._linksWithID
+		try:
+			del self._verticesWithoutID
+			del self._verticesWithID
+			del self._edgesWithoutID
+			del self._edgesWithID
+			del self._linksWithoutID
+			del self._linksWithID
+		except AttributeError:
+			pass
 
 		super().__del__()
 
@@ -2413,9 +2425,12 @@ class Graph(
 		.. todo:: GRAPH::Graph::del Needs documentation.
 
 		"""
-		del self._subgraphs
-		del self._views
-		del self._components
+		try:
+			del self._subgraphs
+			del self._views
+			del self._components
+		except AttributeError:
+			pass
 
 		super().__del__()
 
