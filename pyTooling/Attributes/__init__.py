@@ -39,7 +39,7 @@ class, method or function. By default, this field is called ``__pyattr__``.
 .. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
 from enum   import IntFlag
-from types import MethodType, FunctionType, ModuleType
+from types  import MethodType, FunctionType, ModuleType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
@@ -198,50 +198,6 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			for m in cls._methods:
 				if m.__classobj__ is scope:
 					yield m
-
-	@classmethod
-	def GetMethods2(cls, inst: Any, includeDerivedAttributes: bool = True) -> Dict[Callable, List['Attribute']]:
-		methods = {}
-		# print("-----------------------------------")
-		# print(inst)
-		classOfInst = inst.__class__
-		if classOfInst is type:
-			classOfInst = inst
-
-		mro = classOfInst.mro()
-
-		# print(mro)
-
-		# search in method-resolution-order (MRO)
-		for c in mro:
-			for function in c.__dict__.values():
-				# print(functionName, function)
-				if callable(function):
-					# try to read '__pyattr__'
-					try:
-						attributes = getattr(function, ATTRIBUTES_MEMBER_NAME)
-						# print(attributes)
-						if includeDerivedAttributes:
-							for attribute in attributes:
-								if isinstance(attribute, cls):
-									try:
-										methods[function].append(attribute)
-									except KeyError:
-										methods[function] = [attribute]
-						else:
-							for attribute in attributes:
-								if type(attribute) is cls:
-									try:
-										methods[function].append(attribute)
-									except KeyError:
-										methods[function] = [attribute]
-
-					except AttributeError:
-						pass
-					except KeyError:
-						pass
-
-		return methods
 
 	@classmethod
 	def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> Tuple['Attribute', ...]:
