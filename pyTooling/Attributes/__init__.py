@@ -98,21 +98,25 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		:returns:          Same entity, with attached attribute.
 		:raises TypeError: If parameter 'entity' is not a function, class nor method.
 		"""
+		self._AppendAttribute(entity, self)
+
+		return entity
+
+	@staticmethod
+	def _AppendAttribute(entity: Entity, attribute: "Attribute"):
 		if isinstance(entity, MethodType):
-			self._methods.append(entity)
+			attribute._methods.append(entity)
 		elif isinstance(entity, FunctionType):
-			self._functions.append(entity)
+			attribute._functions.append(entity)
 		elif isinstance(entity, type):
-			self._classes.append(entity)
+			attribute._classes.append(entity)
 		else:
 			raise TypeError(f"Parameter 'entity' is not a function, class nor method.")
 
 		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):
-			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, self)
+			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, attribute)
 		else:
-			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [self, ])
-
-		return entity
+			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [attribute, ])
 
 	@classmethod
 	@property

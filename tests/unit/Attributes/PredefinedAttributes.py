@@ -34,10 +34,9 @@ Unit tests for attributes attached to methods.
 """
 from unittest              import TestCase
 
-from pyTooling.Common import firstItem
-
+from pyTooling.Common      import firstItem
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Attributes  import SimpleAttribute
+from pyTooling.Attributes  import SimpleAttribute, Attribute, Entity
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -104,3 +103,30 @@ class Simple(TestCase):
 			attr = firstItem(cls.__pyattr__)
 			self.assertTupleEqual(expected[0], attr.Args)
 			self.assertDictEqual(expected[1], attr.KwArgs)
+
+
+class GroupAttribute(Attribute):
+	_id: str
+
+	def __init__(self, id: str):
+		self._id = id
+
+	def __call__(self, entity: Entity) -> Entity:
+		self._AppendAttribute(entity, SimpleAttribute(3, 4, id=self._id, name="attr1"))
+		self._AppendAttribute(entity, SimpleAttribute(5, 6, id=self._id, name="attr2"))
+
+		return entity
+
+
+class Grouped(TestCase):
+	def test_Group_Simple(self) -> None:
+		@SimpleAttribute(1, 2, id="my", name="Class1")
+		@GroupAttribute("grp")
+		class MyClass1:
+			pass
+
+		foundClasses = [c for c in SimpleAttribute.GetClasses()]
+
+		self.assertEqual(3, len(foundClasses))
+		for c in foundClasses:
+			self.assertIs(MyClass1, c)
