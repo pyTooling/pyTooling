@@ -44,12 +44,14 @@ from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional
 try:
 	from ..Exceptions import ToolingException
 	from ..Decorators import export
+	from ..Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Exceptions import ToolingException
 		from Decorators import export
+		from Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import from 'Exceptions' or 'Decorators' directly!")
 		raise ex
@@ -430,6 +432,17 @@ class ExtendedType(type):
 		newClass.__abstractMethods__ = abstractMethods
 		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		# Check for inherited class attributes
+		attributes = []
+		setattr(newClass, ATTRIBUTES_MEMBER_NAME, attributes)
+		for base in baseClasses:
+			if hasattr(base, ATTRIBUTES_MEMBER_NAME):
+				pyAttr = getattr(base, ATTRIBUTES_MEMBER_NAME)
+				for att in pyAttr:
+					if AttributeScope.Class in att.Scope:
+						attributes.append(att)
+						att.__class__._classes.append(newClass)
 
 		# Check methods for attributes
 		methods, methodsWithAttributes = self._findMethods(newClass, members)
