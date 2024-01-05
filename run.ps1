@@ -24,6 +24,9 @@ Param(
 
   [switch]$nooutput,
 
+  [switch]$build,
+  [switch]$install,
+
 	# Display this help"
 	[switch]$help
 )
@@ -39,7 +42,8 @@ $help = $help -or ( -not(
     $doc -or $livedoc -or
     $unit -or $liveunit -or $copyunit -or
     $cov -or $livecov -or $copycov -or
-    $type -or $livetype -or $copytype
+    $type -or $livetype -or $copytype -or
+    $build -or $install
   )
 )
 
@@ -71,6 +75,31 @@ if ($clean)
 { Write-Host -ForegroundColor DarkYellow "[live][DOC]  Cleaning documentation build directories ..."
   rm .\doc\pyTooling\*
   .\doc\make.bat clean
+}
+
+if ($build)
+{ Write-Host -ForegroundColor Yellow     "[live][BUILD] Building pyTooling package as wheel ..."
+  py -3.12 -m build --wheel
+
+  Write-Host -ForegroundColor Yellow     "[live][BUILD] Building wheel finished"
+}
+if ($install)
+{ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+  { Write-Host -ForegroundColor Yellow   "[live][INSTALL]    Installing pyTooling with administrator rights ..."
+    $proc = Start-Process pwsh.exe "-NoProfile -ExecutionPolicy Bypass -WorkingDirectory `"$PSScriptRoot`" -File `"$PSCommandPath`" `"-install`"" -Verb RunAs -Wait
+
+#    Write-Host -ForegroundColor Yellow   "[live][INSTALL]    Wait on administrator console ..."
+#    Wait-Process -Id $proc.Id
+  }
+  else
+  { Write-Host -ForegroundColor Cyan     "[ADMIN][UNINSTALL] Uninstalling pyTooling ..."
+    py -3.12 -m pip uninstall -y pyTooling
+    Write-Host -ForegroundColor Cyan     "[ADMIN][INSTALL]   Installing pyTooling from wheel ..."
+    py -3.12 -m pip install .\dist\pyTooling-6.0.0-py3-none-any.whl
+
+    Write-Host -ForegroundColor Cyan     "[ADMIN][INSTALL]   Closing window in 5 seconds ..."
+    Start-Sleep -Seconds 5
+  }
 }
 
 $jobs = @()
