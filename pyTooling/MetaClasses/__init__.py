@@ -516,6 +516,7 @@ class ExtendedType(type):
 		newClass.HasClassAttributes = classmethod(property(HasClassAttributes, doc=HasClassAttributes.__doc__))
 		newClass.HasMethodAttributes = classmethod(property(HasMethodAttributes, doc=HasMethodAttributes.__doc__))
 		newClass.GetMethodsWithAttributes = classmethod(GetMethodsWithAttributes)
+		GetMethodsWithAttributes.__qualname__ = f"{className}.{GetMethodsWithAttributes.__name__}"
 		# GetMethods(predicate) -> dict[method, list[attribute]] / generator
 		# GetClassAtrributes -> list[attributes] / generator
 		# MethodHasAttributes(predicate) -> bool
