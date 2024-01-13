@@ -47,6 +47,11 @@ ValueT = Union[NodeT, str, int, float]
 
 
 @export
+class ConfigurationException(ToolingException):
+	pass
+
+
+@export
 class Node(metaclass=ExtendedType, slots=True):
 	"""Abstract node in a configuration data structure."""
 

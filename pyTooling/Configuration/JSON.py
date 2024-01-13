@@ -40,12 +40,13 @@ from typing        import Dict, List, Union, Iterator as typing_Iterator
 from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
-from . import (
+from pyTooling.Configuration import (
+	ConfigurationException,
 	Node as Abstract_Node,
 	Dictionary as Abstract_Dict,
 	Sequence as Abstract_Seq,
 	Configuration as Abstract_Configuration,
-	KeyT, NodeT, ValueT, ConfigurationException
+	KeyT, NodeT, ValueT
 )
 
 

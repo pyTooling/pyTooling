@@ -44,12 +44,13 @@ try:
 except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'ruamel.yaml' not installed. Either install pyTooling with extra dependencies 'pyTooling[yaml]' or install 'ruamel.yaml' directly.") from ex
 
-from . import (
+from pyTooling.Configuration  import (
+	ConfigurationException,
 	Node as Abstract_Node,
 	Dictionary as Abstract_Dict,
 	Sequence as Abstract_Seq,
 	Configuration as Abstract_Configuration,
-	KeyT, NodeT, ValueT, ConfigurationException
+	KeyT, NodeT, ValueT
 )
 
 
