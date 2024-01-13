@@ -49,12 +49,12 @@ from .Examples                import GitArgumentsMixin
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Git(Executable, GitArgumentsMixin):
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		cls._executableNames = {
 			"Darwin": "git",
 			"Linux": "git",
@@ -65,7 +65,7 @@ class Git(Executable, GitArgumentsMixin):
 
 if __name__ == "__main__": # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 

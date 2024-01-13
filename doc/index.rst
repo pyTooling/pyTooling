@@ -394,7 +394,7 @@ Common Classes
             .. code-block:: Python
 
                from pytest import mark
-               from unitest import TestCase
+               from unittest import TestCase
 
                from pyTooling.Common import CurrentPlatform
 
@@ -937,8 +937,9 @@ License
    :hidden:
 
    pyTooling/pyTooling
-   Unittest Report ➚ <unittests/index>
-   Coverage Report ➚ <coverage/index>
+   unittests/index
+   coverage/index
+   Doc. Coverage Report <DocCoverage>
    Static Type Check Report ➚ <typing/index>
 
 .. raw:: latex

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent
 sys_path.insert(0, abspath("."))
 sys_path.insert(0, abspath(".."))
 sys_path.insert(0, abspath("../pyTooling"))
-sys_path.insert(0, abspath("_extensions"))
+# sys_path.insert(0, abspath("_extensions"))
 
 
 # ==============================================================================
@@ -159,7 +159,6 @@ latex_documents = [
 extensions = [
 # Standard Sphinx extensions
 	"sphinx.ext.autodoc",
-	"sphinx.ext.coverage",
 	"sphinx.ext.extlinks",
 	"sphinx.ext.intersphinx",
 	"sphinx.ext.inheritance_diagram",
@@ -173,9 +172,10 @@ extensions = [
 # Other extensions
 	"sphinx_design",
 	"sphinx_copybutton",
-	# "sphinx_fontawesome",
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
+	"sphinx_reports",
+# User defined extensions
 ]
 
 
@@ -251,9 +251,39 @@ todo_link_only = True
 
 
 # ==============================================================================
-# Sphinx.Ext.Coverage
+# sphinx-reports
 # ==============================================================================
-coverage_show_missing_items = True
+_coverageLevels = {
+	30:      {"class": "report-cov-below30",  "desc": "almost undocumented"},
+	50:      {"class": "report-cov-below50",  "desc": "poorly documented"},
+	80:      {"class": "report-cov-below80",  "desc": "roughly documented"},
+	90:      {"class": "report-cov-below90",  "desc": "well documented"},
+	100:     {"class": "report-cov-below100", "desc": "excellent documented"},
+	"error": {"class": "report-cov-error",    "desc": "internal error"},
+}
+
+report_unittest_testsuites = {
+	"src": {
+		"name":        "pyTooling",
+		"xml_report":  "../report/unit/unittest.xml",
+	}
+}
+report_codecov_packages = {
+	"src": {
+		"name":        "pyTooling",
+		"json_report": "../report/coverage/coverage.json",
+		"fail_below":  80,
+		"levels":      _coverageLevels
+	}
+}
+report_doccov_packages = {
+	"src": {
+		"name":       "pyTooling",
+		"directory":  "../pyTooling",
+		"fail_below": 80,
+		"levels":     _coverageLevels
+	}
+}
 
 
 # ==============================================================================
@@ -268,15 +298,15 @@ sd_fontawesome_latex = True
 autoapi_modules = {
 	"pyTooling":  {
 		"template": "package",
-		"output": "pyTooling",
+		"output":   project,
 		"override": True
 	}
 }
 
-for directory in [mod for mod in Path("../pyTooling").iterdir() if mod.is_dir() and mod.name != "__pycache__"]:
+for directory in [mod for mod in Path(f"../{project}").iterdir() if mod.is_dir() and mod.name != "__pycache__"]:
 	print(f"Adding module rule for '{project}.{directory.name}'")
 	autoapi_modules[f"{project}.{directory.name}"] = {
 		"template": "module",
-		"output": "pyTooling",
+		"output":   project,
 		"override": True
 	}

@@ -378,6 +378,30 @@ Grouping Attributes
 
 .. todo:: Attributes:: Grouping Attributes
 
+.. code-block:: Python
+
+   from pyTooling.Attributes import Attribute, SimpleAttribute
+
+   class GroupAttribute(Attribute):
+      _id: str
+
+      def __init__(self, id: str):
+         self._id = id
+
+      def __call__(self, entity: Entity) -> Entity:
+         self._AppendAttribute(entity, SimpleAttribute(3, 4, id=self._id, name="attr1"))
+         self._AppendAttribute(entity, SimpleAttribute(5, 6, id=self._id, name="attr2"))
+
+         return entity
+
+
+   class Grouped(TestCase):
+      def test_Group_Simple(self) -> None:
+         @SimpleAttribute(1, 2, id="my", name="Class1")
+         @GroupAttribute("grp")
+         class MyClass1:
+            pass
+
 
 .. _ATTR/Details:
 

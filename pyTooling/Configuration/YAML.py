@@ -49,7 +49,7 @@ from . import (
 	Dictionary as Abstract_Dict,
 	Sequence as Abstract_Seq,
 	Configuration as Abstract_Configuration,
-	KeyT, NodeT, ValueT
+	KeyT, NodeT, ValueT, ConfigurationException
 )
 
 
@@ -302,10 +302,14 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		:param configFile: Configuration file to read and parse.
 		"""
+		if not configFile.exists():
+			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+
 		with configFile.open() as file:
 			self._yamlConfig = YAML().load(file)
 
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
+		Abstract_Configuration.__init__(self, configFile)
 
 	def __getitem__(self, key: str) -> ValueT:
 		"""

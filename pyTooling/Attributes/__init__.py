@@ -62,10 +62,16 @@ ATTRIBUTES_MEMBER_NAME: str = "__pyattr__"
 
 @export
 class AttributeScope(IntFlag):
-	Class = 1
-	Method = 2
-	Function = 4
-	All = Class + Method + Function
+	"""
+	An enumeration of possible entities an attribute can be applied to.
+
+	Values of this enumeration can be merged (or-ed) if an attribute can be applied to multiple language entities.
+	Supported language entities are: classes, methods or functions. Class fields or module variables are not supported.
+	"""
+	Class =    1                     #: Attribute can be applied to classes.
+	Method =   2                     #: Attribute can be applied to methods.
+	Function = 4                     #: Attribute can be applied to functions.
+	Any = Class + Method + Function  #: Attribute can be applied to any language entity.
 
 
 @export
@@ -75,10 +81,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	_functions:               ClassVar[List[Any]] = []                       #: List of functions, this Attribute was attached to.
 	_classes:                 ClassVar[List[Any]] = []                       #: List of classes, this Attribute was attached to.
 	_methods:                 ClassVar[List[Any]] = []                       #: List of methods, this Attribute was attached to.
-	_scope:                   ClassVar[AttributeScope] = AttributeScope.All  #: Allowed language construct this attribute can be used with.
+	_scope:                   ClassVar[AttributeScope] = AttributeScope.Any  #: Allowed language construct this attribute can be used with.
 
 	# Ensure each derived class has its own instances of class variables.
-	def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:
+	def __init_subclass__(cls, **kwargs: Any) -> None:
 		"""
 		Ensure each derived class has its own instance of ``_functions``, ``_classes`` and ``_methods`` to register the
 		usage of that Attribute.
@@ -103,7 +109,27 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return entity
 
 	@staticmethod
-	def _AppendAttribute(entity: Entity, attribute: "Attribute"):
+	def _AppendAttribute(entity: Entity, attribute: "Attribute") -> None:
+		"""
+		Append an attribute to a language entity (class, method, function).
+
+		.. hint::
+
+		   This method can be used in attribute groups to apply multiple attributes within ``__call__`` method.
+
+		   .. code-block:: Python
+
+		      class GroupAttribute(Attribute):
+		        def __call__(self, entity: Entity) -> Entity:
+		          self._AppendAttribute(entity, SimpleAttribute(...))
+		          self._AppendAttribute(entity, SimpleAttribute(...))
+
+		          return entity
+
+		:param entity:     Entity, the attribute is attached to.
+		:param attribute:  Attribute to attach.
+		:raises TypeError: If parameter 'entity' is not a class, method or function.
+		"""
 		if isinstance(entity, MethodType):
 			attribute._methods.append(entity)
 		elif isinstance(entity, FunctionType):

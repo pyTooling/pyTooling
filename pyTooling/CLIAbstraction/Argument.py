@@ -71,7 +71,7 @@ class CommandLineArgument:
 
 	_pattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: Nullable[str] = None, **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -81,7 +81,7 @@ class CommandLineArgument:
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is CommandLineArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 
@@ -91,7 +91,7 @@ class CommandLineArgument:
 	# TODO: Add property to read pattern
 
 	@abstractmethod
-	def AsArgument(self) -> Union[str, Iterable[str]]:
+	def AsArgument(self) -> Union[str, Iterable[str]]:  # type: ignore[empty-body]
 		"""
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name and value.
@@ -102,7 +102,7 @@ class CommandLineArgument:
 		raise NotImplementedError(f"Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
 
 	@abstractmethod
-	def __str__(self) -> str:
+	def __str__(self) -> str:  # type: ignore[empty-body]
 		"""
 		Return a string representation of this argument instance.
 
@@ -112,7 +112,7 @@ class CommandLineArgument:
 		raise NotImplementedError(f"Method '__str__' is an abstract method and must be implemented by a subclass.")
 
 	@abstractmethod
-	def __repr__(self) -> str:
+	def __repr__(self) -> str:  # type: ignore[empty-body]
 		"""
 		Return a string representation of this argument instance.
 
@@ -192,7 +192,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 	Represents a delimiter symbol like ``--``.
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--", **kwargs: Any):
 		"""
 		This method is called when a class is derived.
 
@@ -230,7 +230,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	_name: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any):
 		"""
 		This method is called when a class is derived.
 
@@ -243,7 +243,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		super().__init_subclass__(*args, **kwargs)
 		cls._name = name
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is NamedArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -289,7 +289,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 
 	_value: ValueT
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any):
 		"""
 		This method is called when a class is derived.
 
@@ -359,7 +359,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	Base-class for all command line arguments with a name and a value.
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Any):
 		"""
 		This method is called when a class is derived.
 
@@ -416,13 +416,13 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 	_valuePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._valuePattern = valuePattern
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is NamedTupledArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -480,7 +480,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 	A list of strings is available as :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`.
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any):
 		"""
 		This method is called when a class is derived.
 

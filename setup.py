@@ -49,8 +49,9 @@ setup(**DescribePythonPackageHostedOnGitHub(
 	gitHubNamespace=gitHubNamespace,
 	unittestRequirementsFile=Path("tests/requirements.txt"),
 	additionalRequirements={
-		"terminal": ["colorama>=0.4.6"],
-		"yaml":     ["ruamel.yaml>=0.17"],
+		"packaging": ["setuptools>=69.0.0"],
+		"terminal":  ["colorama>=0.4.6"],
+		"yaml":      ["ruamel.yaml>=0.18"],
 	},
 	sourceFileWithVersion=packageInformationFile,
 	dataFiles={

@@ -62,12 +62,12 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	* ``-gWidth=100``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "{0}{1}={2}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}{1}={2}", **kwargs: Any):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is NamedKeyValuePairsArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -134,12 +134,12 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 	* ``-DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "-{0}{1}={2}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-{0}{1}={2}", **kwargs: Any):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is ShortKeyValueFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -155,12 +155,12 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 	* ``--DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "--{0}{1}={2}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--{0}{1}={2}", **kwargs: Any):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is LongKeyValueFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -176,12 +176,12 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 	* ``--DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "/{0}:{1}={2}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/{0}:{1}={2}", **kwargs: Any):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is LongKeyValueFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

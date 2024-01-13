@@ -1,9 +1,9 @@
-.. _installation:
+.. _INSTALL:
 
 Installation/Updates
 ####################
 
-.. _installation-pip:
+.. _INSTALL/pip:
 
 Using PIP to Install from PyPI
 ******************************
@@ -11,12 +11,15 @@ Using PIP to Install from PyPI
 The following instruction are using PIP (Package Installer for Python) as a package manager and PyPI (Python Package
 Index) as a source of Python packages.
 
+
+.. _INSTALL/pip/install:
+
 Installing a Wheel Package from PyPI using PIP
 ==============================================
 
 Users of pyTooling can select if the want to install a basic variant of pyTooling or an enhanced variant with support
 for colored console/terminal outputs (``terminal``) and/or support for YAML configuration files (``yaml``). In these
-cases additional dependencies might be installed. See :ref:`dependency` for more details.
+cases additional dependencies might be installed. See :ref:`DEP` for more details.
 
 .. tab-set::
 
@@ -32,6 +35,14 @@ cases additional dependencies might be installed. See :ref:`dependency` for more
 
                # Basic pyTooling package
                pip3 install pyTooling
+
+         .. tab-item:: With Packaging Support
+            :sync: Packaging
+
+            .. code-block:: bash
+
+               # With setuptools support for pyTooling.Packaging
+               pip3 install pyTooling[packaging]
 
          .. tab-item:: With Colored Console/Terminal Support
             :sync: Terminal
@@ -61,6 +72,14 @@ cases additional dependencies might be installed. See :ref:`dependency` for more
 
                # Basic pyTooling package
                pip install pyTooling
+
+         .. tab-item:: With Packaging Support
+            :sync: Packaging
+
+            .. code-block:: powershell
+
+               # With setuptools support for pyTooling.Packaging
+               pip install pyTooling[packaging]
 
          .. tab-item:: With Colored Console/Terminal Support
             :sync: Terminal
@@ -142,6 +161,8 @@ just all (``all``) dependencies.
                pip install pyTooling[all]
 
 
+.. _INSTALL/pip/update:
+
 Updating from PyPI using PIP
 ============================
 
@@ -161,6 +182,8 @@ Updating from PyPI using PIP
 
          pip3 install -U pyTooling
 
+
+.. _INSTALL/pip/uninstall:
 
 Uninstallation using PIP
 ========================
@@ -182,7 +205,7 @@ Uninstallation using PIP
          pip3 uninstall pyTooling
 
 
-.. _installation-setup:
+.. _INSTALL/setup:
 
 Using ``setup.py`` (legacy)
 ***************************
@@ -197,7 +220,7 @@ Installation using ``setup.py``
    setup.py install
 
 
-.. _installation-building:
+.. _INSTALL/building:
 
 Local Packaging and Installation via PIP
 ****************************************
@@ -208,7 +231,7 @@ install it. As a user might have a pyTooling installation from PyPI, it's recomm
 pyTooling packages. (This step is also needed if installing an updated local wheel file with same version number. PIP
 will not detect a new version and thus not overwrite/reinstall the updated package contents.)
 
-Ensure :ref:`packaging requirements <dependency-packaging>` are installed.
+Ensure :ref:`packaging requirements <DEP/packaging>` are installed.
 
 .. tab-set::
 

@@ -65,7 +65,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 	_falsePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -82,7 +82,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 		cls._falsePattern = falsePattern
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is BooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -118,7 +118,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 	* False: ``-without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Any):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -131,7 +131,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is ShortBooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -147,7 +147,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 	* False: ``--without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Any):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -160,7 +160,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is LongBooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -176,7 +176,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 	* False: ``/without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], name: Nullable[str] = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Any):
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -189,7 +189,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is WindowsBooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

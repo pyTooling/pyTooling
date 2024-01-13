@@ -96,7 +96,7 @@ class Program(metaclass=ExtendedType, slots=True):
 	__cliOptions__:    ClassVar[Dict[Type[CommandLineArgument], int]]                 #: List of all possible CLI options.
 	__cliParameters__: Dict[Type[CommandLineArgument], Nullable[CommandLineArgument]] #: List of all CLI parameters (used CLI options).
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, **kwargs: Any):
 		"""
 		Whenever a subclass is derived from :class:``Program``, all nested classes declared within ``Program`` and which are
 		marked with attribute ``CLIArgument`` are collected and then listed in the ``__cliOptions__`` dictionary.

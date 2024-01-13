@@ -30,6 +30,14 @@ filterwarnings = [
 	"error::PendingDeprecationWarning"
 ]
 
+[tool.interrogate]
+color = true
+verbose = 1             # possible values: 0 (minimal output), 1 (-v), 2 (-vv)
+fail-under = 59
+generate-badge = "."
+badge-format = "png"
+ignore-setters = true
+
 [tool.coverage.run]
 branch = true
 relative_files = true

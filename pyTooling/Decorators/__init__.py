@@ -180,7 +180,7 @@ def classproperty(method):
 
 
 @export
-def readonly(func: FunctionType) -> property:
+def readonly(func: Callable) -> property:
 	"""
 	Marks a property as *read-only*.
 

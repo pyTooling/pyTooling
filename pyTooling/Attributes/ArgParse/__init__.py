@@ -97,7 +97,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	_args:   Tuple
 	_kwargs: Dict
 
-	def __init__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> None:
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
@@ -196,18 +196,22 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	"""
 
 	_command: str
+	_help: str
 	# FIXME: extract to mixin?
 	_args:   Tuple
 	_kwargs: Dict
 
-	def __init__(self, command: str, **kwargs: Dict[str, Any]) -> None:
+	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
 		"""The constructor expects a 'command' and an optional list of named parameters
 		(keyword arguments) which are passed without modification to :meth:`~ArgumentParser.add_subparsers`.
 		"""
 		super().__init__()
 		self._command = command
+		self._help = help
 		self._args =   tuple()
 		self._kwargs = kwargs
+
+		self._kwargs["help"] = help
 
 	def __call__(self, func: M) -> M:
 		self._handler = func
@@ -247,7 +251,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 	_subParser:  Any   # TODO: Find type
 	_subParsers: Dict  # TODO: Find type
 
-	def __init__(self, **kwargs: Dict[str, Any]) -> None:
+	def __init__(self, **kwargs: Any) -> None:
 		"""
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.

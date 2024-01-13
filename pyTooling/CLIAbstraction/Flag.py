@@ -56,7 +56,7 @@ class FlagArgument(NamedArgument):
 	A simple flag is a single value (absent/present or off/on) with no additional data (value).
 	"""
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is FlagArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -72,11 +72,11 @@ class ShortFlag(FlagArgument, pattern="-{0}"):
 	* ``-optimize``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "-{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", **kwargs: Any):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is ShortFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -92,11 +92,11 @@ class LongFlag(FlagArgument, pattern="--{0}"):
 	* ``--optimize``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "--{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", **kwargs: Any):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is LongFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -112,11 +112,11 @@ class WindowsFlag(FlagArgument, pattern="/{0}"):
 	* ``/optimize``
 	"""
 
-	def __init_subclass__(cls, *args: Tuple[Any, ...], pattern: str = "/{0}", **kwargs: Dict[str, Any]):
+	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", **kwargs: Any):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+	def __new__(cls, *args: Any, **kwargs: Any):
 		if cls is WindowsFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

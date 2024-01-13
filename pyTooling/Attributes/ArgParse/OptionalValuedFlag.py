@@ -29,9 +29,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from pyTooling.Decorators import export
+from typing import Optional as Nullable
 
-from .Argument import NamedAndValuedArgument
+from pyTooling.Decorators import export
+from pyTooling.Attributes.ArgParse.Argument import NamedAndValuedArgument
 
 
 @export

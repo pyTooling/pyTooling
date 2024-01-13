@@ -41,7 +41,7 @@ from pyTooling.Common import CurrentPlatform
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
@@ -74,7 +74,7 @@ class HelperFunctions(TestCase):
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
-		self.assertEqual(12, len(requirements))
+		self.assertEqual(10, len(requirements))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsGit(self) -> None:

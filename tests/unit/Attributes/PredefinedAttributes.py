@@ -40,7 +40,7 @@ from pyTooling.Attributes  import SimpleAttribute, Attribute, Entity
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
@@ -105,27 +105,31 @@ class Simple(TestCase):
 			self.assertDictEqual(expected[1], attr.KwArgs)
 
 
+class MySimpleAttribute(SimpleAttribute):
+	pass
+
+
 class GroupAttribute(Attribute):
 	_id: str
 
-	def __init__(self, id: str):
-		self._id = id
+	def __init__(self, identifier: str):
+		self._id = identifier
 
 	def __call__(self, entity: Entity) -> Entity:
-		self._AppendAttribute(entity, SimpleAttribute(3, 4, id=self._id, name="attr1"))
-		self._AppendAttribute(entity, SimpleAttribute(5, 6, id=self._id, name="attr2"))
+		self._AppendAttribute(entity, MySimpleAttribute(3, 4, id=self._id, name="attr1"))
+		self._AppendAttribute(entity, MySimpleAttribute(5, 6, id=self._id, name="attr2"))
 
 		return entity
 
 
 class Grouped(TestCase):
 	def test_Group_Simple(self) -> None:
-		@SimpleAttribute(1, 2, id="my", name="Class1")
+		@MySimpleAttribute(1, 2, id="my", name="Class1")
 		@GroupAttribute("grp")
 		class MyClass1:
 			pass
 
-		foundClasses = [c for c in SimpleAttribute.GetClasses()]
+		foundClasses = [c for c in MySimpleAttribute.GetClasses()]
 
 		self.assertEqual(3, len(foundClasses))
 		for c in foundClasses:

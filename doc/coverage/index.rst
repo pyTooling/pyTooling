@@ -1,4 +1,7 @@
-Coverage Report
-###############
+Code Coverage Report
+####################
 
-*Placeholder for the Code Coverage report generated with* ``pytest`` *and* ``coverage.py``.
+Code coverage report generated with ``pytest`` *and* ``coverage.py``.
+
+.. report:code-coverage::
+   :packageid: src

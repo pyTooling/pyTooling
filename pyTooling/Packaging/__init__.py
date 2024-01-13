@@ -36,14 +36,12 @@ A set of helper functions to describe a Python package for setuptools.
 from dataclasses     import dataclass
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from pathlib         import Path
-from setuptools      import (
-	find_packages as setuptools_find_packages,
-	find_namespace_packages as setuptools_find_namespace_packages
-)
 from typing          import List, Iterable, Dict, Sequence, Any
+
 
 try:
 	from ..Decorators  import export, readonly
+	from ..Exceptions  import ToolingException
 	from ..MetaClasses import ExtendedType
 	from ..Licensing   import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
@@ -51,10 +49,11 @@ except (ImportError, ModuleNotFoundError):                                      
 
 	try:
 		from Decorators  import export, readonly
+		from Exceptions  import ToolingException
 		from MetaClasses import ExtendedType
 		from Licensing   import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
-		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
+		print("[pyTooling.Packaging] Could not import from 'Decorators', 'Exceptions', 'MetaClasses' or 'Licensing' directly!")
 		raise ex
 
 
@@ -310,6 +309,11 @@ def DescribePythonPackage(
 	consoleScripts: Dict[str, str] = None,
 	dataFiles: Dict[str, List[str]] = None
 ) -> Dict[str, Any]:
+	try:
+		from setuptools import find_packages, find_namespace_packages
+	except ImportError as ex:
+		raise ToolingException(f"Optional dependency 'setuptools' is not available.") from ex
+
 	# Read README for upload to PyPI
 	readme = loadReadmeFile(readmeFile)
 
@@ -335,11 +339,11 @@ def DescribePythonPackage(
 	# Scan for packages and source files
 	exclude = ["build", "build.*", "dist", "dist.*", "doc", "doc.*", "tests", "tests.*"]
 	if "." in packageName:
-		packages = setuptools_find_namespace_packages(exclude=exclude)
+		packages = find_namespace_packages(exclude=exclude)
 		if packageName.endswith(".*"):
 			packageName = packageName[:-2]
 	else:
-		packages = setuptools_find_packages(exclude=exclude)
+		packages = find_packages(exclude=exclude)
 
 	if keywords is None:
 		keywords = versionInformation.Keywords
