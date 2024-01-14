@@ -74,7 +74,7 @@ class HelperFunctions(TestCase):
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
-		self.assertEqual(10, len(requirements))
+		self.assertEqual(11, len(requirements))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsGit(self) -> None:
