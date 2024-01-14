@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2020-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2020-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,6 +35,8 @@ Implementation of semantic and date versioning version-numbers.
 """
 from enum          import IntEnum
 from typing        import Optional as Nullable, Any
+
+from pyTooling.Decorators import readonly
 
 from ..Decorators  import export
 from ..MetaClasses import ExtendedType
@@ -86,7 +88,7 @@ class SemanticVersion(Version):
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead   : int = 0
 
-	def __init__(self, versionString : str):
+	def __init__(self, versionString : str) -> None:
 		if versionString == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 		elif versionString is None:
@@ -114,7 +116,7 @@ class SemanticVersion(Version):
 			self._parts |= Parts.Build
 		self._flags = Flags.Clean
 
-	def __init__(self, major: int, minor: int, patch: int = 0, build: int = 0):  # type: ignore[no-redef]
+	def __init__(self, major: int, minor: int, patch: int = 0, build: int = 0) -> None:  # type: ignore[no-redef]
 		self._major = major
 		self._minor = minor
 		self._patch = patch
@@ -122,27 +124,27 @@ class SemanticVersion(Version):
 		self._parts = Parts.Minor | Parts.Minor | Parts.Patch | Parts.Build
 		self._flags = Flags.Clean
 
-	@property
+	@readonly
 	def Major(self) -> int:
 		return self._major
 
-	@property
+	@readonly
 	def Minor(self) -> int:
 		return self._minor
 
-	@property
+	@readonly
 	def Patch(self) -> int:
 		return self._patch
 
-	@property
+	@readonly
 	def Build(self) -> int:
 		return self._build
 
-	@property
+	@readonly
 	def Parts(self) -> Parts:
 		return self._parts
 
-	@property
+	@readonly
 	def Flags(self) -> Flags:
 		return self._flags
 
@@ -152,10 +154,10 @@ class SemanticVersion(Version):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both version numbers are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
 
 		return (
 			(self._major == other._major) and
@@ -170,17 +172,17 @@ class SemanticVersion(Version):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both version numbers are not equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
 
 		return not self.__eq__(other)
 
 	@staticmethod
 	def __compare(left: 'SemanticVersion', right: 'SemanticVersion') -> Nullable[bool]:
 		"""
-		Private helper method to compute the comparison of two :class:`SemVersion` instances.
+		Private helper method to compute the comparison of two :class:`SemanticVersion` instances.
 
 		:param left:  Left parameter.
 		:param right: Right parameter.
@@ -216,10 +218,10 @@ class SemanticVersion(Version):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is less than the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
 
 		result = self.__compare(self, other)
 		return result if result is not None else False
@@ -230,10 +232,10 @@ class SemanticVersion(Version):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is less than or equal to the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
 
 		result = self.__compare(self, other)
 		return result if result is not None else True
@@ -244,10 +246,10 @@ class SemanticVersion(Version):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is greater than the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
 
 		return not self.__le__(other)
 
@@ -257,10 +259,10 @@ class SemanticVersion(Version):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if version is greater than or equal to the second operand.
-		:raises TypeError: If parameter ``other`` is not of type :class:`SemVersion`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemVersion'.")
+			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
 
 		return not self.__lt__(other)
 

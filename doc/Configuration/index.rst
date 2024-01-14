@@ -5,7 +5,7 @@ Configuration
 
 Module :mod:`~pyTooling.Configuration` provides an abstract configuration reader.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 
@@ -29,61 +29,60 @@ Dictionary
 
 A :class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of information.
 
-.. tab:: JSON
+.. tab-set::
 
-   .. code-block:: JSON
+   .. tab-item:: JSON
+      :sync: JSON
 
-      // one-liner style
-      {"key1": "item1", "key2": "item2", "key3": "item3"}
+      .. code-block:: JSON
 
-      // multi-line style
-      {
-        "key1": "item1",
-        "key2": "item2",
-        "key3": "item3"
-      }
+         // one-liner style
+         {"key1": "item1", "key2": "item2", "key3": "item3"}
 
-.. tab:: TOML
+         // multi-line style
+         {
+           "key1": "item1",
+           "key2": "item2",
+           "key3": "item3"
+         }
 
-   .. code-block:: TOML
+   .. tab-item:: TOML
+      :sync: TOML
 
-      # one-liner style
-      section_2 = {key1 = item1, key2 = item2, key3 = item3}
+      .. code-block:: TOML
 
-      # multi-line style
-      section_3 = {
-        key1 = item1,
-        key2 = item2,
-        key3 = item3
-      }
+         # one-liner style
+         section_1 = {key1 = "item1", key2 = "item2", key3 = "item3"}
 
-      # section style
-      [section_1]
-      key1 = item1
-      key2 = item2
-      key3 = item3
+         # section style
+         [section_2]
+         key1 = "item1"
+         key2 = "item2"
+         key3 = "item3"
 
-.. tab:: YAML
+   .. tab-item:: YAML
+      :sync: YAML
 
-   .. code-block:: YAML
+      .. code-block:: YAML
 
-      # one-liner style
-      {key1: item1, key2: item2, key3: item3}
+         # one-liner style
+         {key1: item1, key2: item2, key3: item3}
 
-      # multi-line style
-      key1: item1
-      key2: item2
-      key3: item3
+         # multi-line style
+         key1: item1
+         key2: item2
+         key3: item3
 
-.. tab:: XML
+   .. tab-item:: XML
+      :sync: XML
 
-   .. code-block:: XML
+      .. code-block:: XML
 
-      <items>
-        <item key="key1">item1</item>
-        <item key="key2">item2</item>
-        <item key="key3">item3</item>
-      </items>
+         <items>
+           <item key="key1">item1</item>
+           <item key="key2">item2</item>
+           <item key="key3">item3</item>
+         </items>
 
 
 .. todo:: CONFIG:: Needs documentation for Dictionary
@@ -94,55 +93,61 @@ Sequences
 
 A :class:`~pyTooling.Configuration.Sequence` represents ordered information items.
 
-.. tab:: JSON
+.. tab-set::
 
-   .. code-block:: JSON
+   .. tab-item:: JSON
+      :sync: JSON
 
-      // one-liner style
-      ["item1", "item2", "item3"]
+      .. code-block:: JSON
 
-      // multi-line style
-      [
-        "item1",
-        "item2",
-        "item3"
-      ]
+         // one-liner style
+         ["item1", "item2", "item3"]
 
-.. tab:: TOML
+         // multi-line style
+         [
+           "item1",
+           "item2",
+           "item3"
+         ]
 
-   .. code-block:: TOML
+   .. tab-item:: TOML
+      :sync: TOML
 
-      # one-liner style
-      section_2 = [item1, item2, item3]
+      .. code-block:: TOML
 
-      # multi-line style
-      section_3 = [
-        item1,
-        item2,
-        item3
-      ]
+         # one-liner style
+         section_1 = ["item1", "item2", "item3"]
 
-.. tab:: YAML
+         # multi-line style
+         section_2 = [
+           "item1",
+           "item2",
+           "item3"
+         ]
 
-   .. code-block:: YAML
+   .. tab-item:: YAML
+      :sync: YAML
 
-      # one-liner style
-      [item1, item2, item3]
+      .. code-block:: YAML
 
-      # multi-line style
-      - item1
-      - item2
-      - item3
+         # one-liner style
+         [item1, item2, item3]
 
-.. tab:: XML
+         # multi-line style
+         - item1
+         - item2
+         - item3
 
-   .. code-block:: XML
+   .. tab-item:: XML
+      :sync: XML
 
-      <items>
-        <item>item1</item>
-        <item>item2</item>
-        <item>item3</item>
-      </items>
+      .. code-block:: XML
+
+         <items>
+           <item>item1</item>
+           <item>item2</item>
+           <item>item3</item>
+         </items>
 
 .. todo:: CONFIG:: Needs documentation for Sequences
 
@@ -153,72 +158,77 @@ Configuration
 A :class:`~pyTooling.Configuration.Configuration` represents the whole configuration (file) made of sequences,
 dictionaries and scalar information items.
 
-.. tab:: JSON
+.. tab-set::
 
-   .. code-block:: JSON
+   .. tab-item:: JSON
+      :sync: JSON
 
-      { "version": "1.0",
-        "settings": {
-          "key1": "item1",
-          "key2": "item2"
-        },
-        "files": [
-          "path/to/file1.ext",
-          "path/to/file2.ext",
-          "path/to/file3.ext"
-        ]
-      }
+      .. code-block:: JSON
 
-.. tab:: TOML
+         { "version": "1.0",
+           "settings": {
+             "key1": "item1",
+             "key2": "item2"
+           },
+           "files": [
+             "path/to/file1.ext",
+             "path/to/file2.ext",
+             "path/to/file3.ext"
+           ]
+         }
 
-   .. attention:: Not yet implemented.
+   .. tab-item:: TOML
+      :sync: TOML
 
-   .. code-block:: TOML
+      .. attention:: Not yet implemented.
 
-      version = "1.0"
+      .. code-block:: TOML
 
-      settings = {
-        key1 = "item1",
-        key2 = "item2"
-      }
+         version = "1.0"
 
-      files = [
-        "path/to/file1.ext",
-        "path/to/file2.ext",
-        "path/to/file3.ext"
-      ]
+         [settings]
+         key1 = "item1"
+         key2 = "item2"
 
-.. tab:: YAML
+         files = [
+           "path/to/file1.ext",
+           "path/to/file2.ext",
+           "path/to/file3.ext"
+         ]
 
-   .. code-block:: YAML
+   .. tab-item:: YAML
+      :sync: YAML
 
-      version: "1.0"
-      settings:
-        key1: item1
-        key2: item2
-      files:
-        - path/to/file1.ext
-        - path/to/file2.ext
-        - path/to/file3.ext
+      .. code-block:: YAML
 
-.. tab:: XML
+         version: "1.0"
+         settings:
+           key1: item1
+           key2: item2
+         files:
+           - path/to/file1.ext
+           - path/to/file2.ext
+           - path/to/file3.ext
 
-   .. attention:: Not yet implemented.
+   .. tab-item:: XML
+      :sync: XML
 
-   .. code-block:: XML
+      .. attention:: Not yet implemented.
 
-      <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-      <configuration version="1.0">
-        <settings>
-          <setting key="key1">item1</setting>
-          <setting key="key2">item2</setting>
-        </settings>
-        <files>
-          <file>path/to/file1.ext</file>
-          <file>path/to/file2.ext</file>
-          <file>path/to/file3.ext</file>
-        </files>
-      </configuration>
+      .. code-block:: XML
+
+         <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+         <configuration version="1.0">
+           <settings>
+             <setting key="key1">item1</setting>
+             <setting key="key2">item2</setting>
+           </settings>
+           <files>
+             <file>path/to/file1.ext</file>
+             <file>path/to/file2.ext</file>
+             <file>path/to/file3.ext</file>
+           </files>
+         </configuration>
 
 .. todo:: CONFIG:: Needs documentation for Configuration
 
@@ -265,7 +275,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
         _configNode: Union[CommentedMap, CommentedSeq]
         # further local fields
 
-        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: Union[CommentedMap, CommentedSeq]):
+        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: Union[CommentedMap, CommentedSeq]) -> None:
           Abstract_Node.__init__(self, root, parent)
 
           self._configNode = configNode
@@ -278,7 +288,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
 
       @export
       class Dictionary(Node, Abstract_Dict):
-        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedMap):
+        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedMap) -> None:
           Node.__init__(self, root, parent, key, configNode)
 
         # Implement mandatory methods and properties
@@ -289,7 +299,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
 
       @export
       class Sequence(Node, Abstract_Seq):
-        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedSeq):
+        def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, configNode: CommentedSeq) -> None:
           Node.__init__(self, root, parent, key, configNode)
 
         # Implement mandatory methods and properties
@@ -307,7 +317,7 @@ Follow these steps to derive a concrete implementation of the abstract configura
 
       @export
       class Configuration(Dictionary, Abstract_Configuration):
-        def __init__(self, configFile: Path):
+        def __init__(self, configFile: Path) -> None:
           with configFile.open() as file:
             self._config = ...
 

@@ -6,7 +6,7 @@ Licensing
 The :mod:`pyTooling.Licensing` package provides auxiliary classes to represent commonly known licenses and mappings
 of their names, because some tools use differing names for the same license.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 
@@ -45,7 +45,7 @@ equality (``==``, ``!=``) based on there SPDX identifier.
 
    @export
    class License(metaclass=ExtendedType, slots=True):
-     def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False):
+     def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False) -> None:
 
       @property
       def Name(self) -> str:

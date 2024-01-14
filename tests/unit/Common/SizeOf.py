@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -40,13 +40,13 @@ from pyTooling.Common import getsizeof, CurrentPlatform
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class ObjectSizes(TestCase):
 	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
-	def test_EmptyClass(self):
+	def test_EmptyClass(self) -> None:
 		class C:
 			pass
 
@@ -55,9 +55,9 @@ class ObjectSizes(TestCase):
 		self.assertLessEqual(getsizeof(c), 360)
 
 	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
-	def test_ClassWith2DictMembers(self):
+	def test_ClassWith2DictMembers(self) -> None:
 		class C:
-			def __init__(self):
+			def __init__(self) -> None:
 				self._a = 1
 				self._b = 2
 
@@ -66,11 +66,11 @@ class ObjectSizes(TestCase):
 		self.assertLessEqual(getsizeof(c), 520)
 
 	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
-	def test_ClassWith2SlotMembers(self):
+	def test_ClassWith2SlotMembers(self) -> None:
 		class C:
 			__slots__ = ("_a", "_b")
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._a = 1
 				self._b = 2
 

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -42,7 +42,7 @@ class Base:
 
 	_parent: Nullable["Base"]
 
-	def __init__(self, parent: Nullable["Base"]):
+	def __init__(self, parent: Nullable["Base"]) -> None:
 		self._parent = parent
 
 
@@ -50,7 +50,7 @@ class Base:
 class RootMixIn(Base):
 	"""Mixin-class for root elements in a path system."""
 
-	def __init__(self):
+	def __init__(self) -> None:
 		super().__init__(None)
 
 
@@ -60,7 +60,7 @@ class ElementMixIn(Base):
 
 	_elementName: str
 
-	def __init__(self, parent: Base, elementName: str):
+	def __init__(self, parent: Base, elementName: str) -> None:
 		super().__init__(parent)
 		self._elementName = elementName
 
@@ -78,7 +78,7 @@ class PathMixIn:
 	_isAbsolute: bool
 	_elements:   List[ElementMixIn]
 
-	def __init__(self, elements: List[ElementMixIn], isAbsolute: bool):
+	def __init__(self, elements: List[ElementMixIn], isAbsolute: bool) -> None:
 		self._isAbsolute = isAbsolute
 		self._elements =   elements
 
@@ -93,7 +93,7 @@ class PathMixIn:
 	def __str__(self) -> str:
 		result = self.ROOT_DELIMITER if self._isAbsolute else ""
 
-		if (len(self._elements) > 0):
+		if len(self._elements) > 0:
 			result = result + str(self._elements[0])
 
 			for element in self._elements[1:]:

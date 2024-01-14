@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -36,7 +36,7 @@ from pyTooling.Common import mergedicts
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
@@ -57,56 +57,56 @@ dictD_1000 = {str(i): i for i in range(3000, 1000)}
 
 
 @mark.benchmark(group="E0: Merge dictionaries with 10 items")
-def test_Merge1x10(benchmark):
+def test_Merge1x10(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_10)
 
 
 @mark.benchmark(group="E0: Merge dictionaries with 10 items")
-def test_Merge2x10(benchmark):
+def test_Merge2x10(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_10, dictB_10)
 
 
 @mark.benchmark(group="E0: Merge dictionaries with 10 items")
-def test_Merge3x10(benchmark):
+def test_Merge3x10(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_10, dictB_10, dictC_10)
 
 
 @mark.benchmark(group="E0: Merge dictionaries with 10 items")
-def test_Merge4x10(benchmark):
+def test_Merge4x10(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_10, dictB_10, dictC_10, dictD_10)
 
 
 @mark.benchmark(group="E1: Merge dictionaries with 100 items")
-def test_Merge2x100(benchmark):
+def test_Merge2x100(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_100, dictB_100)
 
 
 @mark.benchmark(group="E1: Merge dictionaries with 100 items")
-def test_Merge4x100(benchmark):
+def test_Merge4x100(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_100, dictB_100, dictC_100, dictD_100)
 
 
 @mark.benchmark(group="E2: Merge dictionaries with 1000 items")
-def test_Merge2x1000(benchmark):
+def test_Merge2x1000(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_1000, dictB_1000)
 
 
 @mark.benchmark(group="E2: Merge dictionaries with 1000 items")
-def test_Merge4x1000(benchmark):
+def test_Merge4x1000(benchmark) -> None:
 	@benchmark
 	def func():
 		z = mergedicts(dictA_1000, dictB_1000, dictC_1000, dictD_1000)

@@ -6,7 +6,7 @@ Platform
 The :class:`~pyTooling.Platform.Platform` class gives detailed platform information about the environment the
 Python program or script is running in.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 
@@ -87,6 +87,10 @@ Usecase: Platform Specific Tests
 .. admonition:: unittest.py
 
    .. code-block:: python
+
+      from unittest import TestCase
+
+      from pytest import mark
 
       from pyTooling.Common import CurrentPlatform
 

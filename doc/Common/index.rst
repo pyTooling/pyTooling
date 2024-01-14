@@ -7,7 +7,7 @@ Common Helper Functions
 The :mod:`pyTooling.Common` package contains several useful helper functions, which are explained in the following
 sections.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 
@@ -25,7 +25,7 @@ structures.
    class A:
      _data : int
 
-     def __init__(self):
+     def __init__(self) -> None:
        _data = 5
 
    from pyTooling.Common import getsizeof
@@ -66,11 +66,73 @@ class.
      class N:
        _data : int
 
-       def __init__(self):
+       def __init__(self) -> None:
          _data = 5
 
    N = A.N
    print(isnestedclass(N, A))
+
+
+.. _COMMON/Helper/firstElement:
+
+firstElement
+************
+
+:func:`~pyTooling.Common.firstElement` returns the first element from an iterable.
+
+.. code-block:: Python
+
+   lst = [1, 2, 3]
+
+   f = firstElement(lst)
+   # 1
+
+
+.. _COMMON/Helper/lastElement:
+
+lastElement
+***********
+
+:func:`~pyTooling.Common.lastElement` returns the last element from an iterable.
+
+.. code-block:: Python
+
+   lst = [1, 2, 3]
+
+   l = lastElement(lst)
+   # 3
+
+
+
+
+.. _COMMON/Helper/firstItem:
+
+firstItem
+*********
+
+:func:`~pyTooling.Common.firstItem` returns the first item from an iterable.
+
+.. code-block:: Python
+
+   lst = [1, 2, 3]
+
+   f = firstItem(lst)
+   # 1
+
+
+.. _COMMON/Helper/lastItem:
+
+lastItem
+********
+
+:func:`~pyTooling.Common.lastItem` returns the last item from an iterable.
+
+.. code-block:: Python
+
+   lst = [1, 2, 3]
+
+   l = lastItem(lst)
+   # 3
 
 
 .. _COMMON/Helper/firstKey:
@@ -90,7 +152,7 @@ firstKey
    # "a"
 
 .. hint:: The dictionary should be an order preserving dictionary, otherwise the "first" item is not defined and can
-   return any item.
+   return any key.
 
 
 .. _COMMON/Helper/firstValue:
@@ -110,15 +172,15 @@ firstValue
    # 1
 
 .. hint:: The dictionary should be an order preserving dictionary, otherwise the "first" item is not defined and can
-   return any item.
+   return any value.
 
 
-.. _COMMON/Helper/firstItem:
+.. _COMMON/Helper/firstPair:
 
-firstItem
+firstPair
 *********
 
-:func:`~pyTooling.Common.firstItem` returns the first item (key-value-pair tuple) from a dictionary.
+:func:`~pyTooling.Common.firstPair` returns the first pair (key-value-pair tuple) from a dictionary.
 
 .. code-block:: Python
 
@@ -126,11 +188,11 @@ firstItem
    d["a"] = 1
    d["b"] = 2
 
-   k = firstItem(d)
+   k = firstPair(d)
    # ("a", 1)
 
 .. hint:: The dictionary should be an order preserving dictionary, otherwise the "first" item is not defined and can
-   return any item.
+   return any pair.
 
 
 .. _COMMON/Helper/mergedicts:

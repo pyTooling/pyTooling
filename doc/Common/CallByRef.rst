@@ -3,11 +3,11 @@
 CallByRef
 #########
 
-The :mod:`pyTooling.CallByRef` package contains auxiliary classes to implement call by reference emulation for
+The :mod:`pyTooling.CallByRef` package contains auxiliary classes to implement *call-by-reference* emulation for
 function parameter handover. The callee gets enabled to return out-parameters for simple types like :class:`bool` and
 :class:`int` to the caller.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 2
 

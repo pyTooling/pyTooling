@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2021-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,15 +33,22 @@ Abstract configuration reader.
 
 .. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
 """
-from typing        import Union, ClassVar, Iterator, Type
+from pathlib       import Path
+from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
 
-from ..Decorators  import export
+from ..Decorators  import export, readonly
+from ..Exceptions  import ToolingException
 from ..MetaClasses import ExtendedType, mixin
 
 
 KeyT = Union[str, int]
 NodeT = Union["Dictionary", "Sequence"]
 ValueT = Union[NodeT, str, int, float]
+
+
+@export
+class ConfigurationException(ToolingException):
+	pass
 
 
 @export
@@ -53,7 +60,7 @@ class Node(metaclass=ExtendedType, slots=True):
 	_root:     "Configuration"               #: Reference to the root node.
 	_parent:   "Dictionary"                  #: Reference to a parent node.
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a node.
 
@@ -63,20 +70,20 @@ class Node(metaclass=ExtendedType, slots=True):
 		self._root = root
 		self._parent = parent
 
-	def __len__(self) -> int:
+	def __len__(self) -> int:  # type: ignore[empty-body]
 		"""
 		Returns the number of sub-elements.
 
 		:returns: Number of sub-elements.
 		"""
 
-	def __getitem__(self, key: KeyT) -> ValueT:
+	def __getitem__(self, key: KeyT) -> ValueT:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
-	def __setitem__(self, key: KeyT, value: ValueT) -> None:
+	def __setitem__(self, key: KeyT, value: ValueT) -> None:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
-	def __iter__(self) -> Iterator[ValueT]:
+	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
 	@property
@@ -87,7 +94,7 @@ class Node(metaclass=ExtendedType, slots=True):
 	def Key(self, value: KeyT):
 		raise NotImplementedError()
 
-	def QueryPath(self, query: str) -> ValueT:
+	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
 
@@ -96,7 +103,7 @@ class Node(metaclass=ExtendedType, slots=True):
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a dictionary.
 
@@ -105,7 +112,7 @@ class Dictionary(Node):
 		"""
 		Node.__init__(self, root, parent)
 
-	def __contains__(self, key: KeyT) -> bool:
+	def __contains__(self, key: KeyT) -> bool:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
 
@@ -114,7 +121,7 @@ class Dictionary(Node):
 class Sequence(Node):
 	"""Abstract sequence node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	def __init__(self, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a sequence.
 
@@ -123,10 +130,10 @@ class Sequence(Node):
 		"""
 		Node.__init__(self, root, parent)
 
-	def __getitem__(self, index: int) -> ValueT:
+	def __getitem__(self, index: int) -> ValueT:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
-	def __setitem__(self, index: int, value: ValueT) -> None:
+	def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
 		raise NotImplementedError()
 
 
@@ -139,11 +146,19 @@ setattr(Node, "SEQ_TYPE", Sequence)
 class Configuration(Node):
 	"""Abstract root node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: NodeT = None):
+	_configFile:   Path
+
+	def __init__(self, configFile: Path, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a configuration.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param configFile: Configuration file.
+		:param root:       Reference to the root node.
+		:param parent:     Reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
+		self._configFile = configFile
+
+	@readonly
+	def ConfigFile(self) -> Path:
+		return self._configFile

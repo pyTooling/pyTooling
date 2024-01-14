@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -29,22 +29,24 @@
 # ==================================================================================================================== #
 #
 """Benchmark tests for pyTooling.MetaClasses."""
+from typing import Tuple, Any, Dict
+
 from pytest import mark
 
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class A:
-	def __init__(self, arg):
+	def __init__(self, arg) -> None:
 		self.arg = arg
 
 
 class M(type):
-	def __call__(cls, *args, **kwargs):
+	def __call__(cls, *args: Any, **kwargs: Any):
 		newCls = cls.__new__(cls, *args, **kwargs)
 		newCls.__init__(*args, **kwargs)
 
@@ -52,19 +54,19 @@ class M(type):
 
 
 class B(metaclass=M):
-	def __init__(self, arg):
+	def __init__(self, arg) -> None:
 		self.arg = arg
 
 
 @mark.benchmark(group="A0: Create Objects")
-def test_CreateObjects_BuiltinCall(benchmark):
+def test_CreateObjects_BuiltinCall(benchmark) -> None:
 	@benchmark
 	def func():
 		[A(i) for i in range(10)]
 
 
 @mark.benchmark(group="A0: Create Objects")
-def test_CreateObjects_UserDefinedCall(benchmark):
+def test_CreateObjects_UserDefinedCall(benchmark) -> None:
 	@benchmark
 	def func():
 		[B(i) for i in range(10)]

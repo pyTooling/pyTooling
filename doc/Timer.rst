@@ -3,7 +3,7 @@
 Timer
 #####
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :depth: 1
 
 .. todo::

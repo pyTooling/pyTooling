@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -41,39 +41,39 @@ from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Normal(TestCase):
-	def test_NoInheritance(self):
+	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType):
 			pass
 
 		inst = Base()
 		self.assertIsNotNone(inst)
 
-	def test_NoInheritance_Init1(self):
+	def test_NoInheritance_Init1(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		inst = Base(0)
 		self.assertEqual(0, inst._data_0)
 
-	def test_LinearInheritance_1(self):
+	def test_LinearInheritance_1(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Final(Base):
 			_data_1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_1 = data + 1
 
@@ -81,24 +81,24 @@ class Normal(TestCase):
 		self.assertEqual(0, inst._data_0)
 		self.assertEqual(1, inst._data_1)
 
-	def test_LinearInheritance_2(self):
+	def test_LinearInheritance_2(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Parent(Base):
 			_data_1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_1 = data + 1
 
 		class Final(Parent):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_2 = data + 2
 
@@ -107,23 +107,23 @@ class Normal(TestCase):
 		self.assertEqual(2, inst._data_1)
 		self.assertEqual(3, inst._data_2)
 
-	def test_VInheritance_PrimaryExtended(self):
+	def test_VInheritance_PrimaryExtended(self) -> None:
 		class Primary(metaclass=ExtendedType):
 			_data_L0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_L0 = data
 
 		class Secondary:
 			_data_R0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_R0 = data + 1
 
 		class Final(Primary, Secondary):
 			_data_1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_1 = data + 2
@@ -133,23 +133,23 @@ class Normal(TestCase):
 		self.assertEqual(3, inst._data_R0)
 		self.assertEqual(4, inst._data_1)
 
-	def test_VInheritance_SecondaryExtended(self):
+	def test_VInheritance_SecondaryExtended(self) -> None:
 		class Primary:
 			_data_L0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_L0 = data
 
 		class Secondary(metaclass=ExtendedType):
 			_data_R0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_R0 = data + 1
 
 		class Final(Primary, Secondary):
 			_data_1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_1 = data + 2
@@ -159,23 +159,23 @@ class Normal(TestCase):
 		self.assertEqual(4, inst._data_R0)
 		self.assertEqual(5, inst._data_1)
 
-	def test_YInheritance_PrimaryExtended(self):
+	def test_YInheritance_PrimaryExtended(self) -> None:
 		class Primary(metaclass=ExtendedType):
 			_data_L0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_L0 = data
 
 		class Secondary:
 			_data_R0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_R0 = data + 1
 
 		class Merged(Primary, Secondary):
 			_data_1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_1 = data + 2
@@ -183,7 +183,7 @@ class Normal(TestCase):
 		class Final(Merged):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_2 = data + 3
 
@@ -193,23 +193,23 @@ class Normal(TestCase):
 		self.assertEqual(6, inst._data_1)
 		self.assertEqual(7, inst._data_2)
 
-	def test_YInheritance_SecondaryExtended(self):
+	def test_YInheritance_SecondaryExtended(self) -> None:
 		class Primary:
 			_data_L0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_L0 = data
 
 		class Secondary(metaclass=ExtendedType):
 			_data_R0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_R0 = data + 1
 
 		class Merged(Primary, Secondary):
 			_data_1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_1 = data + 2
@@ -217,7 +217,7 @@ class Normal(TestCase):
 		class Final(Merged):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_2 = data + 3
 
@@ -227,31 +227,31 @@ class Normal(TestCase):
 		self.assertEqual(7, inst._data_1)
 		self.assertEqual(8, inst._data_2)
 
-	def test_OInheritance_BaseExtended(self):
+	def test_OInheritance_BaseExtended(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Primary(Base):
 			_data_L1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_L1 = data + 1
 
 		class Secondary(Base):
 			_data_R1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_R1 = data + 2
 
 		class Final(Primary, Secondary):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
@@ -264,31 +264,31 @@ class Normal(TestCase):
 		self.assertEqual(8, inst._data_R1)
 		self.assertEqual(9, inst._data_2)
 
-	def test_OInheritance_PrimaryExtended(self):
+	def test_OInheritance_PrimaryExtended(self) -> None:
 		class Base:
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Primary(Base, metaclass=ExtendedType):
 			_data_L1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_L1 = data + 1
 
 		class Secondary(Base):
 			_data_R1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_R1 = data + 2
 
 		class Final(Primary, Secondary):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
@@ -299,31 +299,31 @@ class Normal(TestCase):
 		self.assertEqual(9, inst._data_R1)
 		self.assertEqual(10, inst._data_2)
 
-	def test_OInheritance_SecondaryExtended(self):
+	def test_OInheritance_SecondaryExtended(self) -> None:
 		class Base:
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Primary(Base):
 			_data_L1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_L1 = data + 1
 
 		class Secondary(Base, metaclass=ExtendedType):
 			_data_R1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_R1 = data + 2
 
 		class Final(Primary, Secondary):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
@@ -334,31 +334,31 @@ class Normal(TestCase):
 		self.assertEqual(10, inst._data_R1)
 		self.assertEqual(11, inst._data_2)
 
-	def test_OInheritance_MergedExtended(self):
+	def test_OInheritance_MergedExtended(self) -> None:
 		class Base:
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Primary(Base):
 			_data_L1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_L1 = data + 1
 
 		class Secondary(Base):
 			_data_R1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_R1 = data + 2
 
 		class Final(Primary, Secondary, metaclass=ExtendedType):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
@@ -369,31 +369,31 @@ class Normal(TestCase):
 		self.assertEqual(11, inst._data_R1)
 		self.assertEqual(12, inst._data_2)
 
-	def test_QInheritance_BaseExtended(self):
+	def test_QInheritance_BaseExtended(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Primary(Base):
 			_data_L1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_L1 = data + 1
 
 		class Secondary(Base):
 			_data_R1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_R1 = data + 2
 
 		class Merged(Primary, Secondary):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
@@ -401,7 +401,7 @@ class Normal(TestCase):
 		class Final(Merged):
 			_data_3: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_3 = data + 4
 
@@ -412,31 +412,31 @@ class Normal(TestCase):
 		self.assertEqual(13, inst._data_2)
 		self.assertEqual(14, inst._data_3)
 
-	def test_QInheritance_FinalExtended(self):
+	def test_QInheritance_FinalExtended(self) -> None:
 		class Base:
 			_data_0: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data_0 = data
 
 		class Primary(Base):
 			_data_L1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_L1 = data + 1
 
 		class Secondary(Base):
 			_data_R1: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_R1 = data + 2
 
 		class Merged(Primary, Secondary):
 			_data_2: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				Secondary.__init__(self, data)
 				self._data_2 = data + 3
@@ -444,7 +444,7 @@ class Normal(TestCase):
 		class Final(Merged, metaclass=ExtendedType):
 			_data_3: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				super().__init__(data)
 				self._data_3 = data + 4
 
@@ -457,7 +457,7 @@ class Normal(TestCase):
 
 
 class ObjectFieldInitializers_Extended(TestCase):
-	def test_NoInitValue_NoDunderInit_ClassCheck(self):
+	def test_NoInitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int
 
@@ -466,7 +466,7 @@ class ObjectFieldInitializers_Extended(TestCase):
 		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on class 'Base'."):
 			_ = Base._data0
 
-	def test_NoInitValue_NoDunderInit_InstCheck(self):
+	def test_NoInitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int
 
@@ -478,11 +478,11 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 1
 		self.assertEqual(1, inst._data0)
 
-	def test_NoInitValue_DunderInit_ClassCheck(self):
+	def test_NoInitValue_DunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 1
 
 		inst = Base()
@@ -490,11 +490,11 @@ class ObjectFieldInitializers_Extended(TestCase):
 		with self.assertRaises(AttributeError, msg="Field '_data0' should not exist on class 'Base'."):
 			_ = Base._data0
 
-	def test_NoInitValue_DunderInit_InstCheck(self):
+	def test_NoInitValue_DunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 1
 
 		inst = Base()
@@ -503,7 +503,7 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_NoDunderInit_InstCheck(self):
+	def test_InitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int = 1
 
@@ -513,11 +513,11 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_DunderInit_InstCheck(self):
+	def test_InitValue_DunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				pass
 
 		inst = Base()
@@ -526,11 +526,11 @@ class ObjectFieldInitializers_Extended(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_InitOverwrite_InstCheck(self):
+	def test_InitValue_InitOverwrite_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 5
 
 		inst = Base()
@@ -541,7 +541,7 @@ class ObjectFieldInitializers_Extended(TestCase):
 
 
 class ObjectFieldInitializers_Slotted(TestCase):
-	def test_NoInitValue_NoDunderInit_InstCheck(self):
+	def test_NoInitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int
 
@@ -553,11 +553,11 @@ class ObjectFieldInitializers_Slotted(TestCase):
 		inst._data0 = 1
 		self.assertEqual(1, inst._data0)
 
-	def test_NoInitValue_DunderInit_InstCheck(self):
+	def test_NoInitValue_DunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 1
 
 		inst = Base()
@@ -566,11 +566,11 @@ class ObjectFieldInitializers_Slotted(TestCase):
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
 
-	def test_InitValue_InitOverwrite_InstCheck(self):
+	def test_InitValue_InitOverwrite_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 5
 
 		inst = Base()
@@ -581,7 +581,7 @@ class ObjectFieldInitializers_Slotted(TestCase):
 
 
 class ClassFieldInitializers_Extended(TestCase):
-	def test_NoInitValue_NoDunderInit_ClassCheck(self):
+	def test_NoInitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int]
 
@@ -593,7 +593,7 @@ class ClassFieldInitializers_Extended(TestCase):
 		Base._data0 = 1
 		self.assertEqual(1, Base._data0)
 
-	def test_NoInitValue_NoDunderInit_InstCheck(self):
+	def test_NoInitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int]
 
@@ -605,7 +605,7 @@ class ClassFieldInitializers_Extended(TestCase):
 		inst._data0 = 1
 		self.assertEqual(1, inst._data0)
 
-	def test_InitValue_NoDunderInit_ClassCheck(self):
+	def test_InitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int] = 1
 
@@ -613,11 +613,11 @@ class ClassFieldInitializers_Extended(TestCase):
 
 		self.assertEqual(1, Base._data0)
 
-	def test_InitValue_DunderInit_ClassCheck(self):
+	def test_InitValue_DunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int] = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				pass
 
 		inst = Base()
@@ -626,7 +626,7 @@ class ClassFieldInitializers_Extended(TestCase):
 
 
 class ClassFieldInitializers_Slotted(TestCase):
-	def test_InitValue_NoDunderInit_ClassCheck(self):
+	def test_InitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
@@ -634,22 +634,22 @@ class ClassFieldInitializers_Slotted(TestCase):
 
 		self.assertEqual(1, Base._data0)
 
-	def test_InitValue_DunderInit_ClassCheck(self):
+	def test_InitValue_DunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				pass
 
 		inst = Base()
 
 		self.assertEqual(1, Base._data0)
 
-	def test_InitValue_InitOverwrite_InstantiationCheck(self):
+	def test_InitValue_InitOverwrite_InstantiationCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
-			def __init__(self):
+			def __init__(self) -> None:
 				self._data0 = 5
 
 		with self.assertRaises(AttributeError, msg="Class field '_data0' should not be accessible from within instance."):

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -42,7 +42,7 @@ from pyTooling.Graph import Graph as pt_Graph
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
@@ -95,7 +95,7 @@ class PerformanceTest(TestCase):
 		print()
 		print(f"         min           mean          median        max           construct")
 		for edgeFile in edgeFiles:
-			file = Path("data/Graph/EdgeLists") / edgeFile.file
+			file = Path("tests/data/Graph/EdgeLists") / edgeFile.file
 
 			start = perf_counter_ns()
 			graph = setup(file, edgeFile.vertexCount)

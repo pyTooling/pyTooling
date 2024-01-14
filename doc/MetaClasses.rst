@@ -5,7 +5,7 @@ Overview
 
 Currently, the following meta-classes are provided:
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :depth: 3
 
 .. seealso::
@@ -122,7 +122,7 @@ cached instance of that class will be returned.
    .. code-block:: python
 
       class Terminal(metaclass=ExtendedType, singleton=True):
-        def __init__(self):
+        def __init__(self) -> None:
           pass
 
         def WriteLine(self, message):
@@ -150,7 +150,7 @@ field access performance of all class instances. This behavior is automatically 
       class Node(metaclass=ExtendedType, slots=True):
         _parent: "Node"
 
-        def __init__(self, parent: "Node" = None):
+        def __init__(self, parent: "Node" = None) -> None:
           self._parent = parent
 
       root = Node()
@@ -192,10 +192,10 @@ annotations.
       class A(metaclass=Overloading):
         value = None
 
-        def __init__(self, value : int = 0):
+        def __init__(self, value : int = 0) -> None:
           self.value = value
 
-        def __init__(self, value : str):
+        def __init__(self, value : str) -> None:
           self.value = int(value)
 
       a = A()

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,14 +35,14 @@ A data model to write out GraphML XML files.
 
    * http://graphml.graphdrawing.org/primer/graphml-primer.html
 """
-from enum import Enum, auto
+from enum    import Enum, auto
 from pathlib import Path
-from typing import Any, List, Dict, Union, Optional as Nullable
+from typing  import Any, List, Dict, Union, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Graph import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
-from pyTooling.Tree import Node as pyToolingNode
+from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+from pyTooling.Tree        import Node as pyToolingNode
 
 
 @export
@@ -116,7 +116,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	"""
 	Base-class for all GraphML data model classes.
 	"""
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return True
 
@@ -137,11 +137,11 @@ class Base(metaclass=ExtendedType, slots=True):
 class BaseWithID(Base):
 	_id: str
 
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		super().__init__()
 		self._id = identifier
 
-	@property
+	@readonly
 	def ID(self) -> str:
 		return self._id
 
@@ -150,12 +150,12 @@ class BaseWithID(Base):
 class BaseWithData(BaseWithID):
 	_data: List['Data']
 
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		super().__init__(identifier)
 
 		self._data = []
 
-	@property
+	@readonly
 	def Data(self) -> List['Data']:
 		return self._data
 
@@ -170,26 +170,26 @@ class Key(BaseWithID):
 	_attributeName: str
 	_attributeType: AttributeTypes
 
-	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes):
+	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes) -> None:
 		super().__init__(identifier)
 
 		self._context = context
 		self._attributeName = name
 		self._attributeType = type
 
-	@property
+	@readonly
 	def Context(self) -> AttributeContext:
 		return self._context
 
-	@property
+	@readonly
 	def AttributeName(self) -> str:
 		return self._attributeName
 
-	@property
+	@readonly
 	def AttributeType(self) -> AttributeTypes:
 		return self._attributeType
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return False
 
@@ -205,21 +205,21 @@ class Data(Base):
 	_key: Key
 	_data: Any
 
-	def __init__(self, key: Key, data: Any):
+	def __init__(self, key: Key, data: Any) -> None:
 		super().__init__()
 
 		self._key = key
 		self._data = data
 
-	@property
+	@readonly
 	def Key(self) -> Key:
 		return self._key
 
-	@property
+	@readonly
 	def Data(self) -> Any:
 		return self._data
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return False
 
@@ -237,10 +237,10 @@ class Data(Base):
 
 @export
 class Node(BaseWithData):
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		super().__init__(identifier)
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
 
@@ -270,21 +270,21 @@ class Edge(BaseWithData):
 	_source: Node
 	_target: Node
 
-	def __init__(self, identifier: str, source: Node, target: Node):
+	def __init__(self, identifier: str, source: Node, target: Node) -> None:
 		super().__init__(identifier)
 
 		self._source = source
 		self._target = target
 
-	@property
+	@readonly
 	def Source(self) -> Node:
 		return self._source
 
-	@property
+	@readonly
 	def Target(self) -> Node:
 		return self._target
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return len(self._data) > 0
 
@@ -319,7 +319,7 @@ class BaseGraph(BaseWithData, mixin=True):
 	_nodeIDStyle: IDStyle
 	_edgeIDStyle: IDStyle
 
-	def __init__(self, identifier: str = None):
+	def __init__(self, identifier: Nullable[str] = None) -> None:
 		super().__init__(identifier)
 
 		self._subgraphs = {}
@@ -330,15 +330,15 @@ class BaseGraph(BaseWithData, mixin=True):
 		self._nodeIDStyle = IDStyle.Free
 		self._edgeIDStyle = IDStyle.Free
 
-	@property
+	@readonly
 	def Subgraphs(self) -> Dict[str, 'Subgraph']:
 		return self._subgraphs
 
-	@property
+	@readonly
 	def Nodes(self) -> Dict[str, Node]:
 		return self._nodes
 
-	@property
+	@readonly
 	def Edges(self) -> Dict[str, Edge]:
 		return self._edges
 
@@ -396,7 +396,7 @@ class Graph(BaseGraph):
 	_document: 'GraphMLDocument'
 	_ids: Dict[str, Union[Node, Edge, 'Subgraph']]
 
-	def __init__(self, document: 'GraphMLDocument', identifier: str):
+	def __init__(self, document: 'GraphMLDocument', identifier: str) -> None:
 		super().__init__(identifier)
 		self._document = document
 		self._ids = {}
@@ -426,22 +426,22 @@ class Subgraph(Node, BaseGraph):
 	_subgraphID: str
 	_root:       Nullable[Graph]
 
-	def __init__(self, nodeIdentifier: str, graphIdentifier: str):
+	def __init__(self, nodeIdentifier: str, graphIdentifier: str) -> None:
 		super().__init__(nodeIdentifier)
 		BaseGraph.__init__(self, nodeIdentifier)
 
 		self._subgraphID = graphIdentifier
 		self._root = None
 
-	@property
+	@readonly
 	def RootGraph(self) -> Graph:
 		return self._root
 
-	@property
+	@readonly
 	def SubgraphID(self) -> str:
 		return self._subgraphID
 
-	@property
+	@readonly
 	def HasClosingTag(self) -> bool:
 		return True
 
@@ -503,17 +503,17 @@ class GraphMLDocument(Base):
 	_graph: Graph
 	_keys: Dict[str, Key]
 
-	def __init__(self, identifier: str = "G"):
+	def __init__(self, identifier: str = "G") -> None:
 		super().__init__()
 
 		self._graph = Graph(self, identifier)
 		self._keys = {}
 
-	@property
+	@readonly
 	def Graph(self) -> BaseGraph:
 		return self._graph
 
-	@property
+	@readonly
 	def Keys(self) -> Dict[str, Key]:
 		return self._keys
 

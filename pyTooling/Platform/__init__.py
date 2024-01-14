@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,7 +35,7 @@ Common platform information gathered from various sources.
 """
 from enum                  import Flag, auto
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Versioning  import SemanticVersion
 
@@ -50,10 +50,18 @@ class PythonImplementation(Flag):
 
 @export
 class PythonVersion(SemanticVersion):
-	def __init__(self):
+	def __init__(self) -> None:
 		from sys import version_info
 
 		super().__init__(version_info.major, version_info.minor, version_info.micro)
+
+	def __eq__(self, other):
+		parts = other.split(".")
+		for a, b in zip(parts, (self._major, self._minor, self._patch)):
+			if int(a) != b:
+				return False
+
+		return True
 
 
 @export
@@ -106,6 +114,9 @@ class Platforms(Flag):
 	Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
 	Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64   #: Group: Clang64 runtime running on Windows x86-64
 
+	Windows_Cygwin32 =      OS_Windows | ENV_Cygwin | ARCH_x86_32            #: Group: 32-bit Cygwin runtime on Windows x86-64
+	Windows_Cygwin64 =      OS_Windows | ENV_Cygwin | ARCH_x86_64            #: Group: 64-bit Cygwin runtime on Windows x86-64
+
 
 @export
 class Platform(metaclass=ExtendedType, singleton=True, slots=True):
@@ -120,7 +131,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	_pythonImplementation: PythonImplementation
 	_pythonVersion:        PythonVersion
 
-	def __init__(self):
+	def __init__(self) -> None:
 		import sys
 		import os
 		import platform
@@ -132,7 +143,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			self._pythonImplementation = PythonImplementation.CPython
 		elif pythonImplementation == "PyPy":
 			self._pythonImplementation = PythonImplementation.PyPy
-		else:
+		else:  # pragma: no cover
 			self._pythonImplementation = PythonImplementation.Unknown
 
 		# Discover the Python version
@@ -165,7 +176,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			elif sysconfig_platform.startswith("mingw"):
 				if machine == "AMD64":
 					self._platform |= Platforms.ARCH_x86_64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for Windows.")
 
 				if sysconfig_platform == "mingw_i686":
@@ -176,9 +187,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
 				elif sysconfig_platform == "mingw_x86_64_clang":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
-			else:
+			else:  # pragma: no cover
 				raise Exception(f"Unknown platform '{sysconfig_platform}' running on Windows.")
 
 		elif os.name == "posix":
@@ -189,7 +200,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ARCH_x86_64
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
 					self._platform |= Platforms.ARCH_AArch64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
 			elif sys_platform == "darwin":
@@ -209,45 +220,36 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ARCH_x86_32
 				elif machine == "x86_64":
 					self._platform |= Platforms.ARCH_x86_64
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
 
 			elif sys_platform == "cygwin":
 				self._platform |= Platforms.OS_Windows
 
-				if sysconfig_platform.startswith("msys"):
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MSYS
-
-					if machine == "i686":
-						self._platform |= Platforms.ARCH_x86_32
-					elif machine == "x86_64":
-						self._platform |= Platforms.ARCH_x86_64
-					else:
-						raise Exception(f"Unknown architecture '{machine}' for MSYS2 on Windows.")
-
-				elif sysconfig_platform.startswith("mingw64"):
-					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64 | Platforms.ARCH_x86_64
-				else:
+				if machine == "i686":
+					self._platform |= Platforms.ARCH_x86_32
+				elif machine == "x86_64":
+					self._platform |= Platforms.ARCH_x86_64
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
 			elif sys_platform.startswith("freebsd"):
 				if machine == "amd64":
 					self._platform = Platforms.FreeBSD
-				else:
+				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for FreeBSD.")
-			else:
+			else:  # pragma: no cover
 				raise Exception(f"Unknown POSIX platform '{sys_platform}'.")
-		else:
+		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system '{os.name}'.")
 
 		# print(self._platform)
 
-
-	@property
+	@readonly
 	def PythonImplementation(self) -> PythonImplementation:
 		return self._pythonImplementation
 
-	@property
+	@readonly
 	def IsCPython(self) -> bool:
 		"""Returns true, if the Python implementation is a :term:`CPython`.
 
@@ -255,7 +257,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return self._pythonImplementation is PythonImplementation.CPython
 
-	@property
+	@readonly
 	def IsPyPy(self) -> bool:
 		"""Returns true, if the Python implementation is a :term:`PyPy`.
 
@@ -263,15 +265,15 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return self._pythonImplementation is PythonImplementation.PyPy
 
-	@property
+	@readonly
 	def PythonVersion(self) -> PythonVersion:
 		return self._pythonVersion
 
-	@property
+	@readonly
 	def HostOperatingSystem(self) -> Platforms:
 		return self._platform & Platforms.OperatingSystem
 
-	@property
+	@readonly
 	def IsNativePlatform(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` platform.
 
@@ -279,7 +281,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.ENV_Native in self._platform
 
-	@property
+	@readonly
 	def IsNativeWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` Windows x86-64 platform.
 
@@ -287,7 +289,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows in self._platform
 
-	@property
+	@readonly
 	def IsNativeLinux(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` Linux x86-64 platform.
 
@@ -295,7 +297,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Linux in self._platform
 
-	@property
+	@readonly
 	def IsNativeMacOS(self) -> bool:
 		"""Returns true, if the platform is a :term:`native` macOS x86-64 platform.
 
@@ -303,7 +305,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.MacOS in self._platform
 
-	@property
+	@readonly
 	def IsMSYS2Environment(self) -> bool:
 		"""Returns true, if the platform is a :term:`MSYS2` environment on Windows.
 
@@ -311,7 +313,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.ENV_MSYS2 in self._platform
 
-	@property
+	@readonly
 	def IsMSYSOnWindows(self) -> bool:
 		"""Returns true, if the platform is a MSYS runtime on Windows.
 
@@ -319,7 +321,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_MSYS in self._platform
 
-	@property
+	@readonly
 	def IsMinGW32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`MinGW32 <MinGW>` runtime on Windows.
 
@@ -327,7 +329,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_MinGW32 in self._platform
 
-	@property
+	@readonly
 	def IsMinGW64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`MinGW64 <MinGW>` runtime on Windows.
 
@@ -335,7 +337,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_MinGW64 in self._platform
 
-	@property
+	@readonly
 	def IsUCRT64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a :term:`UCRT64 <UCRT>` runtime on Windows.
 
@@ -343,7 +345,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_UCRT64 in self._platform
 
-	@property
+	@readonly
 	def IsClang32OnWindows(self) -> bool:
 		"""Returns true, if the platform is a Clang32 runtime on Windows.
 
@@ -351,7 +353,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_Clang32 in self._platform
 
-	@property
+	@readonly
 	def IsClang64OnWindows(self) -> bool:
 		"""Returns true, if the platform is a Clang64 runtime on Windows.
 
@@ -359,7 +361,23 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.Windows_MSYS2_Clang64 in self._platform
 
-	@property
+	@readonly
+	def IsCygwin32OnWindows(self) -> bool:
+		"""Returns true, if the platform is a 32-bit Cygwin runtime on Windows.
+
+		:returns: ``True``, if the platform is a 32-bit Cygwin runtime on Windows.
+		"""
+		return Platforms.Windows_Cygwin32 in self._platform
+
+	@readonly
+	def IsCygwin64OnWindows(self) -> bool:
+		"""Returns true, if the platform is a 64-bit Cygwin runtime on Windows.
+
+		:returns: ``True``, if the platform is a 64-bit Cygwin runtime on Windows.
+		"""
+		return Platforms.Windows_Cygwin64 in self._platform
+
+	@readonly
 	def IsPOSIX(self) -> bool:
 		"""
 		Returns true, if the platform is POSIX or POSIX-like.
@@ -368,7 +386,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		return Platforms.SEP_WindowsPath not in self._platform
 
-	@property
+	@readonly
 	def PathSeperator(self) -> str:
 		"""
 		Returns the path element separation character (e.g. for directories).
@@ -383,7 +401,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		else:
 			return "/"
 
-	@property
+	@readonly
 	def ValueSeperator(self) -> str:
 		"""
 		Returns the value separation character (e.g. for paths in PATH).
@@ -398,7 +416,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		else:
 			return ":"
 
-	@property
+	@readonly
 	def ExecutableExtension(self) -> str:
 		"""
 		Returns the file extension for an executable.
@@ -413,10 +431,10 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			return ""
 		elif Platforms.OS_MacOS in self._platform:
 			return ""
-		else:
+		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
-	@property
+	@readonly
 	def SharedLibraryExtension(self) -> str:
 		"""
 		Returns the file extension for a shared library.
@@ -431,7 +449,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			return "so"
 		elif Platforms.OS_MacOS in self._platform:
 			return "lib"
-		else:
+		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
 	def __repr__(self) -> str:

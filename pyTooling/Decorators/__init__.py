@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,7 +35,7 @@
 import sys
 from functools import wraps
 from types     import FunctionType
-from typing    import Union, Type, TypeVar, Callable, Any
+from typing    import Union, Type, TypeVar, Callable, Any, Optional as Nullable
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
@@ -161,12 +161,12 @@ def classproperty(method):
 		_getter: Callable
 		_setter: Callable
 
-		def __init__(self, getter: Callable = None, setter: Callable = None):
+		def __init__(self, getter: Nullable[Callable] = None, setter: Nullable[Callable] = None) -> None:
 			self._getter = getter
 			self._setter = setter
 			self.__doc__ = getter.__doc__
 
-		def __get__(self, instance: Any, owner: type = None) -> Any:
+		def __get__(self, instance: Any, owner: Nullable[type] = None) -> Any:
 			return self._getter(owner)
 
 		def __set__(self, instance: Any, value: Any) -> None:
@@ -180,7 +180,7 @@ def classproperty(method):
 
 
 @export
-def readonly(func: FunctionType) -> property:
+def readonly(func: Callable) -> property:
 	"""
 	Marks a property as *read-only*.
 

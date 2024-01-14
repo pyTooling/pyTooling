@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,7 +35,7 @@ This packages provides a data structure to describe statemachines.
 """
 from typing import List
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 
 
@@ -52,7 +52,7 @@ class Transition(Base):
 	_source:      "State"
 	_destination: "State"
 
-	def __init__(self, source: "State", destination: "State"):
+	def __init__(self, source: "State", destination: "State") -> None:
 		self._source = source
 		self._destination = destination
 
@@ -65,7 +65,7 @@ class State(Base):
 	_inboundTransitions:  List[Transition]
 	_outboundTransitions: List[Transition]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self._inboundTransitions = []
 		self._outboundTransitions = []
 
@@ -78,7 +78,7 @@ class StateMachine(Base):
 	_states:       List[State]
 	_initialState: State
 
-	def __init__(self, initialState: State):
+	def __init__(self, initialState: State) -> None:
 		self._states = []
 		self._initialState = initialState
 
@@ -88,6 +88,6 @@ class StateMachine(Base):
 		else:
 			raise ValueError(f"State '{state}' was already added to this statemachine.")
 
-	@property
+	@readonly
 	def States(self) -> List[State]:
 		return self._states

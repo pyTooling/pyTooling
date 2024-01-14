@@ -1,4 +1,4 @@
-.. _dependency:
+.. _DEP:
 
 Dependencies
 ############
@@ -18,7 +18,7 @@ Dependencies
 | |img-pyTooling-lib-status|               | |img-pyTooling-vul-status|               |
 +------------------------------------------+------------------------------------------+
 
-.. _dependency-package:
+.. _DEP/package:
 
 pyTooling Package (Mandatory)
 *****************************
@@ -26,19 +26,23 @@ pyTooling Package (Mandatory)
 .. rubric:: Manually Installing Package Requirements
 
 Use the :file:`requirements.txt` file to install all dependencies via ``pip3`` or install the package directly from
-PyPI (see :ref:`installation`).
+PyPI (see :ref:`INSTALL`).
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip3 install -U -r requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip3 install -U -r requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip install -U -r requirements.txt
+      .. code-block:: powershell
+
+         pip install -U -r requirements.txt
 
 
 .. rubric:: Dependency List
@@ -51,6 +55,16 @@ When installed as ``pyTooling``:
 | *No dependencies*                                               | — — — —     | — — — —                                                                                   | — — — —                                                                                                                                                |
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+
+When installed as ``pyTooling[packaging]``:
+
++-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Package**                                                     | **Version** | **License**                                                                               | **Dependencies**                                                                                                                                       |
++=================================================================+=============+===========================================================================================+========================================================================================================================================================+
+| `setuptools <https://GitHub.com/tartley/colorama>`__            | ≥69.0.0     | `BSD-3-Clause  <https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt>`__           | None                                                                                                                                                   |
++-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. todo:: investigate dependencies and licenses of setuptools.
 
 When installed as ``pyTooling[terminal]``:
 
@@ -66,12 +80,13 @@ When installed as ``pyTooling[yaml]``:
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                     | **Version** | **License**                                                                               | **Dependencies**                                                                                                                                       |
 +=================================================================+=============+===========================================================================================+========================================================================================================================================================+
-| `ruamel.yaml <https://sourceforge.net/projects/ruamel-yaml/>`__ | ≥0.17       | `MIT <https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/LICENSE>`__              | *Not yet evaluated.*                                                                                                                                   |
+| `ruamel.yaml <https://sourceforge.net/projects/ruamel-yaml/>`__ | ≥0.18       | `MIT <https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/LICENSE>`__              | *Not yet evaluated.*                                                                                                                                   |
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+.. todo:: investigate dependencies and licenses of ruamel.yaml.
 
 
-.. _dependency-testing:
+.. _DEP/testing:
 
 Unit Testing (Optional)
 ***********************
@@ -88,34 +103,38 @@ only needed for developers or on a CI server, thus sub-dependencies are not eval
 Use the :file:`tests/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
 the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r tests/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r tests/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r tests\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r tests\requirements.txt
 
 .. rubric:: Dependency List - Unit Testing
 
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | **Package**                                                         | **Version** | **License**                                                                            | **Dependencies**     |
 +=====================================================================+=============+========================================================================================+======================+
-| `pytest <https://GitHub.com/pytest-dev/pytest>`__                   | ≥7.3.1      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
+| `pytest <https://GitHub.com/pytest-dev/pytest>`__                   | ≥7.4.0      | `MIT <https://GitHub.com/pytest-dev/pytest/blob/master/LICENSE>`__                     | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `pytest-cov <https://GitHub.com/pytest-dev/pytest-cov>`__           | ≥4.1.0      | `MIT <https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE>`__                 | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `Coverage <https://GitHub.com/nedbat/coveragepy>`__                 | ≥7.2        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
+| `Coverage <https://GitHub.com/nedbat/coveragepy>`__                 | ≥7.4        | `Apache License, 2.0 <https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt>`__ | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `mypy <https://GitHub.com/python/mypy>`__                           | ≥1.2.0      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
+| `mypy <https://GitHub.com/python/mypy>`__                           | ≥1.8.0      | `MIT <https://GitHub.com/python/mypy/blob/master/LICENSE>`__                           | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `typing-extensions <https://GitHub.com/python/typing_extensions>`__ | ≥4.6.3      | `PSF-2.0 <https://github.com/python/typing_extensions/blob/main/LICENSE>`__            | *Not yet evaluated.* |
+| `typing-extensions <https://GitHub.com/python/typing_extensions>`__ | ≥4.9.0      | `PSF-2.0 <https://github.com/python/typing_extensions/blob/main/LICENSE>`__            | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `lxml <https://GitHub.com/lxml/lxml>`__                             | ≥4.9        | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
+| `lxml <https://GitHub.com/lxml/lxml>`__                             | ≥5.0        | `BSD 3-Clause <https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt>`__                | *Not yet evaluated.* |
 +---------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 
 Unit Testing with Benchmarking (Optional)
@@ -129,17 +148,21 @@ thus sub-dependencies are not evaluated further.
 Use the :file:`tests/benchmark/requirements.txt` file to install all dependencies via ``pip3``. The file will
 recursively install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r tests/benchmark/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r tests/benchmark/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r tests\benchmark\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r tests\benchmark\requirements.txt
 
 .. rubric:: Dependency List - With Benchmark Testing
 
@@ -160,17 +183,21 @@ or on a CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`tests/performance/requirements.txt` file to install all dependencies via ``pip3``. The file will
 recursively install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r tests/performance/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r tests/performance/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r tests\performance\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r tests\performance\requirements.txt
 
 .. rubric:: Dependency List - With Performance Testing
 
@@ -185,12 +212,12 @@ recursively install the mandatory dependencies too.
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `networkx <https://GitHub.com/networkx/networkx>`__                | ≥3.1        | `BSD 3-Clause <https://GitHub.com/networkx/networkx/blob/main/LICENSE.txt>`__          | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `igraph <https://GitHub.com/igraph/python-igraph>`__               | ≥0.10.5     | `GPL-2.0 <https://GitHub.com/igraph/python-igraph/blob/main/LICENSE>`__                | *Not yet evaluated.* |
+| `igraph <https://GitHub.com/igraph/python-igraph>`__               | ≥0.10.6     | `GPL-2.0 <https://GitHub.com/igraph/python-igraph/blob/main/LICENSE>`__                | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 
 
 
-.. _dependency-documentation:
+.. _DEP/documentation:
 
 Sphinx Documentation (Optional)
 *******************************
@@ -204,17 +231,21 @@ CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`doc/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively install
 the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r doc/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r doc/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r doc\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r doc\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -222,7 +253,7 @@ the mandatory dependencies too.
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                                     | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +=================================================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                                          | ≥4.0.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
+| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                                          | ≥5.0.0       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `Sphinx <https://GitHub.com/sphinx-doc/sphinx>`__                                               | ≥5.3.0       | `BSD 3-Clause <https://GitHub.com/sphinx-doc/sphinx/blob/master/LICENSE>`__                              | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -232,14 +263,16 @@ the mandatory dependencies too.
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `sphinx_btd_theme <https://GitHub.com/buildthedocs/sphinx.theme>`__                             | ≥0.5.2       | `MIT <https://GitHub.com/buildthedocs/sphinx.theme/blob/master/LICENSE>`__                               | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| !! `sphinx_fontawesome <https://GitHub.com/fraoustin/sphinx_fontawesome>`__                     | ≥0.0.6       | `GPL 2.0 <https://GitHub.com/fraoustin/sphinx_fontawesome/blob/master/LICENSE>`__                        | *Not yet evaluated.*                                                                                                                                 |
+| `sphinx_design <https://GitHub.com/executablebooks/sphinx-design>`__                            | ≥0.5.0       | `MIT <https://GitHub.com/executablebooks/sphinx-design/blob/main/LICENSE>`__                             | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `sphinx_autodoc_typehints <https://GitHub.com/agronholm/sphinx-autodoc-typehints>`__            | ≥1.19.5      | `MIT <https://GitHub.com/agronholm/sphinx-autodoc-typehints/blob/master/LICENSE>`__                      | *Not yet evaluated.*                                                                                                                                 |
+| `sphinx-copybutton <https://GitHub.com/executablebooks/sphinx-copybutton>`__                    | ≥0.5.2       | `MIT <https://GitHub.com/executablebooks/sphinx-copybutton/blob/master/LICENSE>`__                        | *Not yet evaluated.*                                                                                                                                |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `ruamel.yaml <https://sourceforge.net/projects/ruamel-yaml/>`__                                 | ≥0.17        | `MIT <https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/LICENSE>`__                             | *Not yet evaluated.*                                                                                                                                 |
+| `sphinx_autodoc_typehints <https://GitHub.com/agronholm/sphinx-autodoc-typehints>`__            | ≥1.25.2      | `MIT <https://GitHub.com/agronholm/sphinx-autodoc-typehints/blob/master/LICENSE>`__                      | *Not yet evaluated.*                                                                                                                                 |
++-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+| `ruamel.yaml <https://sourceforge.net/projects/ruamel-yaml/>`__                                 | ≥0.18        | `MIT <https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/LICENSE>`__                             | *Not yet evaluated.*                                                                                                                                 |
 +-------------------------------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _dependency-packaging:
+.. _DEP/packaging:
 
 Packaging (Optional)
 ********************
@@ -253,17 +286,21 @@ on a CI server, thus sub-dependencies are not evaluated further.
 Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r build/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r build/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r build\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r build\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -271,13 +308,13 @@ install the mandatory dependencies too.
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                                | **Version**  | **License**                                                                                              | **Dependencies**                                                                                                                                     |
 +============================================================================+==============+==========================================================================================================+======================================================================================================================================================+
-| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                     | ≥4.0.1       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
+| `pyTooling <https://GitHub.com/pyTooling/pyTooling>`__                     | ≥5.0.0       | `Apache License, 2.0 <https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md>`__                    | *None*                                                                                                                                               |
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `wheel <https://GitHub.com/pypa/wheel>`__                                  | ≥0.38.1      | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                                            | *Not yet evaluated.*                                                                                                                                 |
+| `wheel <https://GitHub.com/pypa/wheel>`__                                  | ≥0.40.0      | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                                            | *Not yet evaluated.*                                                                                                                                 |
 +----------------------------------------------------------------------------+--------------+----------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
-.. _dependency-publishing:
+.. _DEP/publishing:
 
 Publishing (CI-Server only)
 ***************************
@@ -292,17 +329,21 @@ further.
 Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
 install the mandatory dependencies too.
 
-.. tab:: Linux/MacOS
+.. tab-set::
 
-   .. code-block:: bash
+   .. tab-item:: Linux/MacOS
+      :sync: Linux
 
-      pip install -U -r dist/requirements.txt
+      .. code-block:: bash
 
-.. tab:: Windows
+         pip install -U -r dist/requirements.txt
 
-   .. code-block:: powershell
+   .. tab-item:: Windows
+      :sync: Windows
 
-      pip3 install -U -r dist\requirements.txt
+      .. code-block:: powershell
+
+         pip3 install -U -r dist\requirements.txt
 
 
 .. rubric:: Dependency List
@@ -310,7 +351,7 @@ install the mandatory dependencies too.
 +----------------------------------------------------------+--------------+-------------------------------------------------------------------------------------------+----------------------+
 | **Package**                                              | **Version**  | **License**                                                                               | **Dependencies**     |
 +==========================================================+==============+===========================================================================================+======================+
-| `wheel <https://GitHub.com/pypa/wheel>`__                | ≥0.38.1      | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                             | *Not yet evaluated.* |
+| `wheel <https://GitHub.com/pypa/wheel>`__                | ≥0.40.0      | `MIT <https://github.com/pypa/wheel/blob/main/LICENSE.txt>`__                             | *Not yet evaluated.* |
 +----------------------------------------------------------+--------------+-------------------------------------------------------------------------------------------+----------------------+
-| `Twine <https://GitHub.com/pypa/twine/>`__               | any          | `Apache License, 2.0 <https://github.com/pypa/twine/blob/main/LICENSE>`__                 | *Not yet evaluated.* |
+| `Twine <https://GitHub.com/pypa/twine/>`__               | ≥4.0.2       | `Apache License, 2.0 <https://github.com/pypa/twine/blob/main/LICENSE>`__                 | *Not yet evaluated.* |
 +----------------------------------------------------------+--------------+-------------------------------------------------------------------------------------------+----------------------+

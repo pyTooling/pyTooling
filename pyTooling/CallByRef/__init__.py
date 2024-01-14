@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,9 +33,11 @@ Auxiliary classes to implement call-by-reference.
 
 .. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """
-from typing import Any, Generic, TypeVar
+from decimal       import Decimal
+from sys           import version_info           # needed for versions before Python 3.11
+from typing        import Any, Generic, TypeVar, Optional as Nullable
 
-from ..Decorators import export
+from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
 T = TypeVar("T")
@@ -56,14 +58,14 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 	Value: T    #: internal value
 
-	def __init__(self, value: T = None):
+	def __init__(self, value: Nullable[T] = None) -> None:
 		"""Constructs a *call-by-reference* object for any type.
 
 		:param value: The value to be set as an initial value.
 		"""
 		self.Value = value
 
-	def __ilshift__(self, other: T) -> 'CallByRefParam[T]':
+	def __ilshift__(self, other: T) -> 'CallByRefParam[T]':  # Starting with Python 3.11+, use typing.Self as return type
 		"""Assigns a value to the *call-by-reference* object.
 
 		:param other: The value to be assigned to this *call-by-reference* object.
@@ -74,20 +76,44 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 	# binary operators - comparison
 	def __eq__(self, other: Any) -> bool:
-		"""Equality: self == other."""
-		return self.Value == other
+		"""
+		Compare a CallByRefParam wrapped value with another instances (CallbyRefParam) or non-wrapped value for equality.
+
+		:param other: Parameter to compare against.
+		:returns:     ``True``, if both values are equal.
+		"""
+		if isinstance(other, CallByRefParam):
+			return self.Value == other.Value
+		else:
+			return self.Value == other
 
 	def __ne__(self, other) -> bool:
-		"""Inequality: self != other."""
-		return self.Value != other
+		"""
+		Compare a CallByRefParam wrapped value with another instances (CallbyRefParam) or non-wrapped value for inequality.
+
+		:param other: Parameter to compare against.
+		:returns:     ``True``, if both values are unequal.
+		"""
+		if isinstance(other, CallByRefParam):
+			return self.Value != other.Value
+		else:
+			return self.Value != other
 
 	# Type conversion operators
 	def __repr__(self) -> str:
-		"""Returns the wrapped object's string representation."""
+		"""
+		Returns the wrapped object's string representation.
+
+		:returns: The string representation of the wrapped value.
+		"""
 		return repr(self.Value)
 
 	def __str__(self) -> str:
-		"""Returns the wrapped object's string equivalent."""
+		"""
+		Returns the wrapped object's string equivalent.
+
+		:returns: The string equivalent of the wrapped value.
+		"""
 		return str(self.Value)
 
 
@@ -97,26 +123,56 @@ class CallByRefBoolParam(CallByRefParam):
 
 	# Binary operators - comparison
 	def __eq__(self, other: Any) -> bool:
-		"""Equality: self == other."""
+		"""
+		Compare a CallByRefBoolParam wrapped boolean value with another instances (CallByRefBoolParam) or non-wrapped boolean value for equality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both values are equal.
+		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.
+		"""
 		if isinstance(other, bool):
 			return self.Value == other
+		elif isinstance(other, CallByRefBoolParam):
+			return self.Value == other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
+			raise ex
 
 	def __ne__(self, other) -> bool:
-		"""Inequality: self != other."""
+		"""
+		Compare a CallByRefBoolParam wrapped boolean value with another instances (CallByRefBoolParam) or non-wrapped boolean value for inequality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both values are unequal.
+		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.
+		"""
 		if isinstance(other, bool):
 			return self.Value != other
+		elif isinstance(other, CallByRefBoolParam):
+			return self.Value != other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
+			raise ex
 
 	# Type conversion operators
 	def __bool__(self) -> bool:
-		"""Type conversion to :class:`bool`."""
+		"""
+		Type conversion to :class:`bool`.
+
+		:returns: The wrapped value.
+		"""
 		return self.Value
 
 	def __int__(self) -> int:
-		"""Type conversion to :class:`int`."""
+		"""
+		Type conversion to :class:`int`.
+
+		:returns: The integer representation of the wrapped boolean value.
+		"""
 		return int(self.Value)
 
 
@@ -160,7 +216,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
 
 	# Binary inplace operators
-	def __iand__(self, other: Any) -> 'CallByRefIntParam':
+	def __iand__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
 		"""Inplace and: self &= other."""
 		if isinstance(other, int):
 			self.Value &= other
@@ -168,7 +224,7 @@ class CallByRefIntParam(CallByRefParam):
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by &= operator.")
 
-	def __ior__(self, other: Any) -> 'CallByRefIntParam':
+	def __ior__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
 		r"""Inplace or: self \|= other."""
 		if isinstance(other, int):
 			self.Value |= other
@@ -176,7 +232,7 @@ class CallByRefIntParam(CallByRefParam):
 		else:
 			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by |= operator.")
 
-	def __ixor__(self, other: Any) -> 'CallByRefIntParam':
+	def __ixor__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
 		r"""Inplace or: self \|= other."""
 		if isinstance(other, int):
 			self.Value ^= other
@@ -293,52 +349,133 @@ class CallByRefIntParam(CallByRefParam):
 
 	# Binary operators - comparison
 	def __eq__(self, other: Any) -> bool:
-		"""Equality: self == other."""
-		if isinstance(other, int):
+		"""
+		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for equality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both values are equal.
+		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		"""
+		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value == other
+		elif isinstance(other, CallByRefIntParam):
+			return self.Value == other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			raise ex
 
 	def __ne__(self, other) -> bool:
-		"""Inequality: self != other."""
-		if isinstance(other, int):
+		"""
+		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for inequality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both values are unequal.
+		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		"""
+		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value != other
+		elif isinstance(other, CallByRefIntParam):
+			return self.Value != other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			raise ex
 
 	def __lt__(self, other: Any) -> bool:
-		"""Less-than: self < other."""
-		if isinstance(other, int):
+		"""
+		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for less-than.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if the wrapped value is less than the other value.
+		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		"""
+		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value < other
+		elif isinstance(other, CallByRefIntParam):
+			return self.Value < other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			raise ex
 
 	def __le__(self, other: Any) -> bool:
-		"""Less-equal: self <= other."""
-		if isinstance(other, int):
+		"""
+		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for less-than-or-equal.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if the wrapped value is less than or equal the other value.
+		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		"""
+		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value <= other
+		elif isinstance(other, CallByRefIntParam):
+			return self.Value <= other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			raise ex
 
 	def __gt__(self, other: Any) -> bool:
-		"""Greater-than: self > other."""
-		if isinstance(other, int):
+		"""
+		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for geater-than.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if the wrapped value is greater than the other value.
+		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		"""
+		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value > other
+		elif isinstance(other, CallByRefIntParam):
+			return self.Value > other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			raise ex
 
 	def __ge__(self, other: Any) -> bool:
-		"""Greater-equal: self >= other."""
-		if isinstance(other, int):
+		"""
+		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for greater-than-or-equal.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if the wrapped value is greater than or equal the other value.
+		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		"""
+		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value >= other
+		elif isinstance(other, CallByRefIntParam):
+			return self.Value >= other.Value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			raise ex
 
 	# Type conversion operators
 	def __bool__(self) -> bool:
-		"""Type conversion to :class:`bool`."""
+		"""
+		Type conversion to :class:`bool`.
+
+		:returns: The boolean representation of the wrapped integer value.
+		"""
 		return bool(self.Value)
 
 	def __int__(self) -> int:
-		"""Type conversion to :class:`int`."""
+		"""
+		Type conversion to :class:`int`.
+
+		:returns: The wrapped value."""
 		return self.Value
+
+	def __float__(self):
+		"""
+		Type conversion to :class:`float`.
+
+		:returns: The float representation of the wrapped integer value.
+		"""
+		return float(self.Value)

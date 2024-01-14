@@ -5,6 +5,28 @@ Terminal
 
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
+
+
+
+.. _TERM/Terminal:
+
+Terminal
+********
+
+.. _TERM/LineTerminal:
+
+LineTerminal
+************
+
+
+
+
+
+
+
+
+
+
 Introduction
 ************
 
@@ -27,7 +49,7 @@ Example
    from pyTooling.TerminalUI import LineTerminal
 
    class Application(LineTerminal):
-     def __init__(self):
+     def __init__(self) -> None:
        super().__init__(verbose=True, debug=True, quiet=False)
 
      def run(self):
@@ -41,10 +63,10 @@ Example
 
    # entry point
    if __name__ == "__main__":
-     Application.versionCheck((3,6,0))
+     Application.CheckPythonVersion((3,6,0))
      app = Application()
      app.run()
-     app.exit()
+     app.Exit()
 
 
 Line

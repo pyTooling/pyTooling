@@ -12,7 +12,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -74,7 +74,7 @@ class OverloadResolutionError(Exception):
 class ExceptionBase(Exception):
 	"""Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions."""
 
-	def __init__(self, message: str = ""):
+	def __init__(self, message: str = "") -> None:
 		"""
 		ExceptionBase initializer.
 

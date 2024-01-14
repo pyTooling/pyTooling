@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -44,7 +44,7 @@ from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, Ab
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
@@ -53,7 +53,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -70,7 +70,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -90,7 +90,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -112,7 +112,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -137,7 +137,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod
@@ -162,7 +162,7 @@ class AbstractMethod(TestCase):
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@abstractmethod

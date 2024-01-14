@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -31,6 +31,8 @@
 from os.path import abspath
 from sys     import path as sys_path
 
+from setuptools import setup
+
 sys_path.insert(0, abspath('./pyTooling'))
 
 from pathlib    import Path
@@ -41,17 +43,18 @@ packageName =            "pyTooling.*"
 packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
-DescribePythonPackageHostedOnGitHub(
+setup(**DescribePythonPackageHostedOnGitHub(
 	packageName=packageName,
 	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
 	gitHubNamespace=gitHubNamespace,
 	unittestRequirementsFile=Path("tests/requirements.txt"),
 	additionalRequirements={
-		"terminal": ["colorama>=0.4.6"],
-		"yaml":     ["ruamel.yaml>=0.17"],
+		"packaging": ["setuptools>=69.0.0"],
+		"terminal":  ["colorama>=0.4.6"],
+		"yaml":      ["ruamel.yaml>=0.18"],
 	},
 	sourceFileWithVersion=packageInformationFile,
 	dataFiles={
 		packageName[:-2]: ["py.typed"]
 	}
-)
+))

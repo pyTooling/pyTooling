@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -38,7 +38,7 @@ from pyTooling.Decorators import export, InheritDocString, classproperty, readon
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
@@ -75,31 +75,31 @@ L = lambda x: x
 
 
 class Export(TestCase):
-	def test_ExportedClass(self):
+	def test_ExportedClass(self) -> None:
 		self.assertIn(ExportedClass.__name__, __all__)
 		self.assertNotIn(NotExportedClass.__name__, __all__)
 
-	def test_ExportedFunction(self):
+	def test_ExportedFunction(self) -> None:
 		self.assertIn(ExportedFunction.__name__, __all__)
 		self.assertNotIn(NotExportedFunction.__name__, __all__)
 
-	def test_ExportTopLevelClass(self):
+	def test_ExportTopLevelClass(self) -> None:
 		export(NotYetExportedClass)
 
-	def test_ExportTopLevelFunction(self):
+	def test_ExportTopLevelFunction(self) -> None:
 		export(NotYetExportedFunction)
 
-	def test_ExportTopLevelLambda(self):
+	def test_ExportTopLevelLambda(self) -> None:
 		with self.assertRaises(TypeError):
 			export(L)
 
-	def test_ExportLocalFunction(self):
+	def test_ExportLocalFunction(self) -> None:
 		with self.assertRaises(TypeError):
 			@export
 			def F():
 				pass
 
-	def test_ExportLocalClass(self):
+	def test_ExportLocalClass(self) -> None:
 		with self.assertRaises(TypeError):
 			@export
 			class C:
@@ -107,11 +107,11 @@ class Export(TestCase):
 
 
 class ReadOnly(TestCase):
-	def test_ReadOnly(self):
+	def test_ReadOnly(self) -> None:
 		class Data:
 			_data: int
 
-			def __init__(self, data: int):
+			def __init__(self, data: int) -> None:
 				self._data = data
 
 			@readonly
@@ -127,12 +127,12 @@ class ReadOnly(TestCase):
 
 	# FIXME: needs to be activated and tested
 	@mark.skip("EXPECTED ERROR IS NOT RAISED")
-	def test_Setter(self):
+	def test_Setter(self) -> None:
 		with self.assertRaises(AttributeError):
 			class Data:
 				_data: int
 
-				def __init__(self, data: int):
+				def __init__(self, data: int) -> None:
 					self._data = data
 
 				@readonly
@@ -148,12 +148,12 @@ class ReadOnly(TestCase):
 
 	# FIXME: needs to be activated and tested
 	@mark.skip("EXPECTED ERROR IS NOT RAISED")
-	def test_Deleter(self):
+	def test_Deleter(self) -> None:
 		with self.assertRaises(AttributeError):
 			class Data:
 				_data: int
 
-				def __init__(self, data: int):
+				def __init__(self, data: int) -> None:
 					self._data = data
 
 				@readonly
@@ -183,14 +183,14 @@ class InheritDocStrings(TestCase):
 
 
 class Descriptors(TestCase):
-	def test_ClassProperty(self):
+	def test_ClassProperty(self) -> None:
 		class Content:
 			_value: int
 
-			def __init__(self, value: int):
+			def __init__(self, value: int) -> None:
 				self._value = value
 
-			@property
+			@readonly
 			def Value(self):
 				return self._value
 

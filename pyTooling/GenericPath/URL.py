@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -32,7 +32,7 @@ from enum     import IntFlag
 from re       import compile as re_compile
 from typing   import Dict, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 
 from .        import RootMixIn, ElementMixIn, PathMixIn
 
@@ -59,17 +59,17 @@ class Host(RootMixIn):
 	_hostname : str
 	_port :     Nullable[int]
 
-	def __init__(self, hostname: str, port: int = None):
+	def __init__(self, hostname: str, port: Nullable[int] = None) -> None:
 		super().__init__()
 		self._hostname = hostname
 		self._port =     port
 
-	@property
+	@readonly
 	def Hostname(self) -> str:
 		"""Hostname or IP address as string."""
 		return self._hostname
 
-	@property
+	@readonly
 	def Port(self) -> Nullable[int]:
 		"""Port number as integer."""
 		return self._port
@@ -95,7 +95,7 @@ class Path(PathMixIn):
 	ROOT_DELIMITER =    "/"   #: Delimiter symbol in URLs between root element and first path element.
 
 	@classmethod
-	def Parse(cls, path: str, root: Host = None) -> "Path":
+	def Parse(cls, path: str, root: Nullable[Host] = None) -> "Path":
 		return super().Parse(path, root, cls, Element)
 
 
@@ -111,7 +111,7 @@ class URL:
 	_query:     Nullable[Dict[str, str]]
 	_fragment:  Nullable[str]
 
-	def __init__(self, scheme: Protocols, path: Path, host: Host = None, user: str = None, password: str = None, query: Dict[str, str] = None, fragment: str = None):
+	def __init__(self, scheme: Protocols, path: Path, host: Nullable[Host] = None, user: Nullable[str] = None, password: Nullable[str] = None, query: Nullable[Dict[str, str]] = None, fragment: Nullable[str] = None) -> None:
 		self._scheme =    scheme
 		self._user =      user
 		self._password =  password
@@ -143,31 +143,31 @@ class URL:
 
 		return result
 
-	@property
+	@readonly
 	def Scheme(self) -> Protocols:
 		return self._scheme
 
-	@property
+	@readonly
 	def User(self) -> Nullable[str]:
 		return self._user
 
-	@property
+	@readonly
 	def Password(self) -> Nullable[str]:
 		return self._password
 
-	@property
+	@readonly
 	def Host(self) -> Nullable[Host]:
 		return self._host
 
-	@property
+	@readonly
 	def Path(self) -> Path:
 		return self._path
 
-	@property
+	@readonly
 	def Query(self) -> Nullable[Dict[str, str]]:
 		return self._query
 
-	@property
+	@readonly
 	def Fragment(self) -> Nullable[str]:
 		return self._fragment
 
@@ -175,14 +175,14 @@ class URL:
 	@classmethod
 	def Parse(cls, path: str) -> "URL":
 		matches = regExp.match(path)
-		if (matches is not None):
+		if matches is not None:
 			scheme =    matches.group("scheme")
 			user =      None # matches.group("user")
 			password =  None # matches.group("password")
 			host =      matches.group("host")
 
 			port = matches.group("port")
-			if (port is not None):
+			if port is not None:
 				port =      int(port)
 			path =      matches.group("path")
 			query =     matches.group("query")
@@ -194,7 +194,7 @@ class URL:
 			pathObj =   Path.Parse(path, hostObj)
 
 			parameters = {}
-			if (query is not None):
+			if query is not None:
 				for pair in query.split("&"):
 					key, value = pair.split("=")
 					parameters[key] = value

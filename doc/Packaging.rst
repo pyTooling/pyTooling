@@ -3,7 +3,7 @@
 Overview
 ########
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :depth: 2
 
 .. _PACKAGING/Helper:
@@ -64,7 +64,7 @@ information as properties.
 
       __author__ =    "Patrick Lehmann"
       __email__ =     "Paebbels@gmail.com"
-      __copyright__ = "2017-2022, Patrick Lehmann"
+      __copyright__ = "2017-2024, Patrick Lehmann"
       __license__ =   "Apache License, Version 2.0"
       __version__ =   "1.10.1"
       __keywords__ =  ["decorators", "meta classes", "exceptions", "platform", "versioning"]

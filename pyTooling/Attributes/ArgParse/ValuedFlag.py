@@ -1,17 +1,17 @@
 # ==================================================================================================================== #
-#             _____           _ _             _____                   _             _ _   _ ___                        #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _|__ _ __ _ __ ___ (_)_ __   __ _| | | | |_ _|                       #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | | | | || |                        #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  __/ |  | | | | | | | | | | (_| | | |_| || |                        #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_|\___/|___|                       #
-# |_|    |___/                          |___/                                                                          #
+#            _   _   _        _ _           _                 _              ____                                      #
+#           / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___     / \   _ __ __ _|  _ \ __ _ _ __ ___  ___                  #
+#          / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|   / _ \ | '__/ _` | |_) / _` | '__/ __|/ _ \                 #
+#   _ _ _ / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \_ / ___ \| | | (_| |  __/ (_| | |  \__ \  __/                 #
+#  (_|_|_)_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___(_)_/   \_\_|  \__, |_|   \__,_|_|  |___/\___|                 #
+#                                                                      |___/                                           #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 # Copyright 2007-2016 Patrick Lehmann - Dresden, Germany                                                               #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
@@ -29,41 +29,58 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
-from unittest             import TestCase
+from typing   import Optional as Nullable
 
-from pyTooling.TerminalUI import LineTerminal
+from pyTooling.Decorators import export
 
-
-if __name__ == "__main__":  # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
-	exit(1)
+from .Argument import NamedAndValuedArgument
 
 
-class Application(LineTerminal):
-	def __init__(self):
-		super().__init__()
+@export
+class ValuedFlag(NamedAndValuedArgument):
+	"""
+	Defines a switch argument like ``--help``.
 
-		LineTerminal.FATAL_EXIT_CODE = 0
+	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
+	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument
+	is present in the commandline arguments, otherwise ``False``.
+	"""
+
+	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, help: Nullable[str] = None):
+		"""
+		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
+		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
+
+		To implement a switch argument, the following named parameters are predefined:
+
+		* ``action="store_const"``
+		* ``const=True``
+		* ``default=False``
+
+		This implements a boolean parameter passed to the handler method.
+		"""
+		args = []
+		if short is not None:
+			args.append(short)
+		if long is not None:
+			args.append(long)
+
+		kwargs = {
+			"dest":    dest,
+			"metavar": metaName,
+			"default": None,
+			"help":    help,
+		}
+		super().__init__(*args, **kwargs)
 
 
-class Terminal(TestCase):
-	app: Application
+@export
+class ShortValuedFlag(ValuedFlag):
+	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, help: Nullable[str] = None):
+		super().__init__(short=short, dest=dest, metaName=metaName, help=help)
 
-	def setUp(self) -> None:
-		self.app = Application()
-		self.app.Configure(verbose=True, debug=True, quiet=False)
 
-	def test_Version(self) -> None:
-		Application.versionCheck((3, 7, 0))
-
-	def test_Write(self) -> None:
-		self.app.WriteQuiet("This is a quiet message.")
-		self.app.WriteNormal("This is a normal message.")
-		self.app.WriteInfo("This is an info message.")
-		self.app.WriteVerbose("This is a verbose message.")
-		self.app.WriteDebug("This is a debug message.")
-		self.app.WriteWarning("This is a warning message.")
-		self.app.WriteError("This is an error message.")
-		self.app.WriteFatal("This is a fatal message.", immediateExit=False)
+@export
+class LongValuedFlag(ValuedFlag):
+	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, help: Nullable[str] = None):
+		super().__init__(long=long, dest=dest, metaName=metaName, help=help)

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,19 +33,22 @@ Common types, helper functions and classes.
 
 .. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
 """
-__author__ =    "Patrick Lehmann"
-__email__ =     "Paebbels@gmail.com"
-__copyright__ = "2017-2023, Patrick Lehmann"
-__license__ =   "Apache License, Version 2.0"
-__version__ =   "5.0.0"
-__keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versioning", "licensing", "overloading",
-								"singleton", "tree", "graph", "timer", "data structure", "setuptools", "wheel", "installation",
-								"packaging", "path", "generic path", "generic library", "url", "terminal", "shell", "TUI", "console",
-								"text user interface", "message logging", "abstract", "override"]
+__author__ =        "Patrick Lehmann"
+__email__ =         "Paebbels@gmail.com"
+__copyright__ =     "2017-2024, Patrick Lehmann"
+__license__ =       "Apache License, Version 2.0"
+__version__ =       "6.0.0"
+__keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
+										"dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
+										"iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
+										"path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
+										"timer", "tree", "TUI", "url", "versioning", "wheel"]
+__issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections import deque
 from numbers     import Number
-from typing      import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set, Hashable, Optional
+from typing      import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
+from typing      import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
 
 try:
 	from pyTooling.Decorators import export
@@ -136,15 +139,22 @@ def getsizeof(obj: Any) -> int:
 				size += recurse(item)
 		# Handle mappings
 		elif isinstance(obj, Mapping) or hasattr(obj, 'items'):
-			for key, value in getattr(obj, 'items')():
+			items = getattr(obj, 'items')
+			# Check if obj.items is a bound method.
+			if hasattr(items, "__self__"):
+				itemView = items()
+			else:
+				itemView = {}  # bind(obj, items)
+			for key, value in itemView:
 				size += recurse(key) + recurse(value)
 
 		# Accumulate members from __dict__
 		if hasattr(obj, '__dict__'):
-			size += recurse(vars(obj))
+			v = vars(obj)
+			size += recurse(v)
 
 		# Accumulate members from __slots__
-		if hasattr(obj, '__slots__'):
+		if hasattr(obj, '__slots__') and obj.__slots__ is not None:
 			for slot in obj.__slots__:
 				if hasattr(obj, slot):
 					size += recurse(getattr(obj, slot))
@@ -152,6 +162,85 @@ def getsizeof(obj: Any) -> int:
 		return size
 
 	return recurse(obj)
+
+
+def bind(instance, func, methodName: Nullable[str] = None):
+	"""
+	Bind the function *func* to *instance*, with either provided name *as_name*
+	or the existing name of *func*. The provided *func* should accept the
+	instance as the first argument, i.e. "self".
+
+	:param instance:
+	:param func:
+	:param methodName:
+	:return:
+	"""
+	if methodName is None:
+		methodName = func.__name__
+
+	boundMethod = func.__get__(instance, instance.__class__)
+	setattr(instance, methodName, boundMethod)
+
+	return boundMethod
+
+
+_Element = TypeVar("Element")
+
+
+@export
+def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	"""
+	Returns the first element from an indexable.
+
+	:param indexable: Indexable to get the first element from.
+	:return:          First element.
+	"""
+	return indexable[0]
+
+
+@export
+def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	"""
+	Returns the last element from an indexable.
+
+	:param indexable: Indexable to get the last element from.
+	:return:          Last element.
+	"""
+	return indexable[-1]
+
+
+@export
+def firstItem(iterable: Iterable[_Element]) -> _Element:
+	"""
+	Returns the first item from an iterable.
+
+	:param iterable: Iterable to get the first item from.
+	:return:         First item.
+	"""
+	i = iter(iterable)
+	try:
+		return next(i)
+	except StopIteration:
+		raise ValueError(f"Iterable contains no items.")
+
+
+@export
+def lastItem(iterable: Iterable[_Element]) -> _Element:
+	"""
+	Returns the last item from an iterable.
+
+	:param iterable: Iterable to get the last item from.
+	:return:         Last item.
+	"""
+	i = iter(iterable)
+	try:
+		element = next(i)
+	except StopIteration:
+		raise ValueError(f"Iterable contains no items.")
+
+	for element in i:
+		pass
+	return element
 
 
 _DictKey = TypeVar("_DictKey")
@@ -192,7 +281,7 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 
 
 @export
-def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
+def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	"""
 	Retrieves the first key-value-pair from a dictionary.
 
@@ -236,7 +325,7 @@ def mergedicts(
 
 
 @export
-def mergedicts(*dicts: Tuple[Dict, ...], filter: Callable[[Hashable, Any], bool] = None) -> Dict:
+def mergedicts(*dicts: Tuple[Dict, ...], filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
@@ -302,13 +391,12 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 	if len(dicts) == 0:
 		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
 
-	length = len(dicts[0])
-	if any(len(d) != length for d in dicts):
+	if any(len(d) != len(dicts[0]) for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
 	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 		for key, item0 in ds[0].items():
-			# WORKAROUND: using redundant parenthesis for Python 3.7
+			# WORKAROUND: using redundant parenthesis for Python 3.7 and pypy-3.10
 			yield (key, item0, *(d[key] for d in ds[1:]))
 
 	return gen(dicts)

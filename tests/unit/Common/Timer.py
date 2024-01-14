@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -38,12 +38,12 @@ from pyTooling.Timer import Timer
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Timing(TestCase):
-	def test_StartStop(self):
+	def test_StartStop(self) -> None:
 		delay = 0.1
 		inaccuracy = 3.0 if CurrentPlatform.IsNativeMacOS else 0.5
 
@@ -56,7 +56,7 @@ class Timing(TestCase):
 		print(f"Duration for 'sleep({delay:0.3f})': {diff:0.6f} us")
 		self.assertLessEqual(diff, delay + (delay * inaccuracy))
 
-	def test_PauseResume(self):
+	def test_PauseResume(self) -> None:
 		delay = 0.1
 		inaccuracy = 4.0 if CurrentPlatform.IsNativeMacOS else 0.5
 
@@ -80,7 +80,7 @@ class Timing(TestCase):
 		print(f"Duration for '2x sleep({delay:0.3f}) + 1x pause({delay * 5:0.3f})': {total:0.6f} us")
 		self.assertLessEqual(total, (7 * delay) + (delay * inaccuracy))
 
-	def test_ContextManager(self):
+	def test_ContextManager(self) -> None:
 		delay = 0.1
 		inaccuracy = 3.0 if CurrentPlatform.IsNativeMacOS else 0.5
 

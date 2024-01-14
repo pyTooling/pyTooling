@@ -7,4 +7,4 @@ treelib>=1.6.4
 
 # For performance testing of Vertex (graph)
 networkx>=3.1
-igraph>=0.10.5
+igraph>=0.10.6

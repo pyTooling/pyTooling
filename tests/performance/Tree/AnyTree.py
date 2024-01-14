@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -36,12 +36,12 @@ from . import PerformanceTest
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Tree(PerformanceTest):
-	def test_SetParent(self):
+	def test_SetParent(self) -> None:
 		def wrapper(count: int):
 			def func():
 				rootNode = Node(0)
@@ -53,7 +53,7 @@ class Tree(PerformanceTest):
 
 		self.runTests(wrapper, self.counts[:-1])
 
-	def test_AddFlatTree(self):
+	def test_AddFlatTree(self) -> None:
 		def run(count: int):
 			def func():
 				trees = []

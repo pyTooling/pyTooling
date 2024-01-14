@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2021-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -40,7 +40,8 @@ from typing        import Dict, List, Union, Iterator as typing_Iterator
 from ..Decorators  import export
 from ..MetaClasses import ExtendedType
 
-from . import (
+from pyTooling.Configuration import (
+	ConfigurationException,
 	Node as Abstract_Node,
 	Dictionary as Abstract_Dict,
 	Sequence as Abstract_Seq,
@@ -56,7 +57,7 @@ class Node(Abstract_Node):
 	_key:      KeyT
 	_length:   int
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, jsonNode: Union[Dict, List]):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, jsonNode: Union[Dict, List]) -> None:
 		Abstract_Node.__init__(self, root, parent)
 
 		self._jsonNode = jsonNode
@@ -133,20 +134,20 @@ class Node(Abstract_Node):
 		while (len(rawValue) > 0):
 #			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
 			beginPos = rawValue.find("$")
-			if (beginPos < 0):
+			if beginPos < 0:
 				result  += rawValue
 				rawValue = ""
 			else:
 				result += rawValue[:beginPos]
-				if (rawValue[beginPos + 1] == "$"):
+				if rawValue[beginPos + 1] == "$":
 					result  += "$"
 					rawValue = rawValue[1:]
-				elif (rawValue[beginPos + 1] == "{"):
+				elif rawValue[beginPos + 1] == "{":
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
-					if (endPos < 0):
+					if endPos < 0:
 						raise Exception(f"")  # XXX: InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
-					if ((nextPos > 0) and (nextPos < endPos)):  # an embedded $-sign
+					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
 #						print(f"_ResolveVariables: path='{path}'")
 						innervalue = self._GetValueByPathExpression(self._ToPath(path))
@@ -190,7 +191,7 @@ class Dictionary(Node, Abstract_Dict):
 
 	_keys: List[KeyT]
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, jsonNode: Dict):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, jsonNode: Dict) -> None:
 		Node.__init__(self, root, parent, key, jsonNode)
 
 		self._keys = [str(k) for k in jsonNode.keys()]
@@ -203,7 +204,7 @@ class Dictionary(Node, Abstract_Dict):
 			_iter: typing_Iterator
 			_obj: Dictionary
 
-			def __init__(self, obj: Dictionary):
+			def __init__(self, obj: Dictionary) -> None:
 				self._iter = iter(obj._keys)
 				self._obj = obj
 
@@ -231,12 +232,13 @@ class Dictionary(Node, Abstract_Dict):
 class Sequence(Node, Abstract_Seq):
 	"""A sequence node (ordered list) in a JSON data file."""
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, jsonNode: List):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, jsonNode: List) -> None:
 		Node.__init__(self, root, parent, key, jsonNode)
 
 		self._length = len(jsonNode)
 
-	__getitem__ = Node.__getitem__
+	def __getitem__(self, key: KeyT) -> ValueT:
+		return self._GetNodeOrValue(str(key))
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
@@ -250,7 +252,7 @@ class Sequence(Node, Abstract_Seq):
 			_i: int         #: internal iterator position
 			_obj: Sequence  #: Sequence object to iterate
 
-			def __init__(self, obj: Sequence):
+			def __init__(self, obj: Sequence) -> None:
 				self._i = 0
 				self._obj = obj
 
@@ -289,7 +291,7 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 	_jsonConfig: Dict
 
-	def __init__(self, configFile: Path):
+	def __init__(self, configFile: Path) -> None:
 		"""
 		Initializes a configuration instance that reads a JSON file as input.
 
@@ -297,10 +299,14 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		:param configFile: Configuration file to read and parse.
 		"""
+		if not configFile.exists():
+			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+
 		with configFile.open() as file:
 			self._jsonConfig = load(file)
 
 		Dictionary.__init__(self, self, self, None, self._jsonConfig)
+		Abstract_Configuration.__init__(self, configFile)
 
 	def __getitem__(self, key: str) -> ValueT:
 		"""

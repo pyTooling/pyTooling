@@ -3,27 +3,30 @@ name: Pipeline
 on:
   push:
   workflow_dispatch:
+  schedule:
+# Every Friday at 22:00 - rerun pipeline to check for dependency-based issues
+    - cron: '0 22 * * 5'
 
 jobs:
   UnitTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: pyTooling
-      python_version_list: "3.7 3.8 pypy-3.8 3.9 pypy-3.9 3.10 3.11"
-      exclude_list: "windows:pypy-3.8 windows:pypy-3.9"
-#      disable_list: "windows:3.11"
+      python_version_list: "3.8 3.9 3.10 3.11 3.12 pypy-3.8 pypy-3.9 pypy-3.10"
+#      disable_list: "windows:pypy-3.8 windows:pypy-3.9"
 
   PerformanceTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Performance
-      python_version_list: ""
+      python_version_list: "3.11 3.12"  # pypy-3.10"
       system_list: "ubuntu windows macos"
 
   BenchmarkingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Benchmark
+      python_version_list: "3.11 3.12 pypy-3.10"
 
   PlatformTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
@@ -38,7 +41,10 @@ jobs:
       - UnitTestingParams
     with:
       jobs: ${{ needs.UnitTestingParams.outputs.python_jobs }}
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
+      requirements: "-r tests/unit/requirements.txt"
+      pacboy: "msys/git"
+      unittest_xml_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
+      coverage_sqlite_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}
 
   PerformanceTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
@@ -47,7 +53,7 @@ jobs:
     with:
       jobs: ${{ needs.PerformanceTestingParams.outputs.python_jobs }}
       requirements: '-r tests/performance/requirements.txt'
-#      artifact: ${{ fromJson(needs.Params.outputs.artifact_names).unittesting_xml }}
+#      unittest_xml_artifact: ${{ fromJson(needs.Params.outputs.artifact_names).unittesting_xml }}
       unittest_directory: 'performance'
 
   Benchmarking:
@@ -57,7 +63,7 @@ jobs:
     with:
       jobs: ${{ needs.BenchmarkingParams.outputs.python_jobs }}
       requirements: '-r tests/benchmark/requirements.txt'
-#      artifact: ${{ fromJson(needs.BenchmarkingParams.outputs.artifact_names).unittesting_xml }}
+#      unittest_xml_artifact: ${{ fromJson(needs.BenchmarkingParams.outputs.artifact_names).unittesting_xml }}
       unittest_directory: 'benchmark'
 
   PlatformTesting:
@@ -66,19 +72,9 @@ jobs:
       - PlatformTestingParams
     with:
       jobs: ${{ needs.PlatformTestingParams.outputs.python_jobs }}
-      tests_directory: ""
-      unittest_directory: tests/unit/Platform
-      artifact: ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).unittesting_xml }}
-
-  Coverage:
-    uses: pyTooling/Actions/.github/workflows/CoverageCollection.yml@dev
-    needs:
-      - UnitTestingParams
-    with:
-      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
-    secrets:
-      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+      unittest_directory: unit/Platform
+      unittest_xml_artifact: ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).unittesting_xml }}
+      coverage_sqlite_artifact: ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_sqlite }}
 
   StaticTypeCheck:
     uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@dev
@@ -92,45 +88,60 @@ jobs:
       html_report: 'htmlmypy'
       html_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
 
-  PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+  DocCoverage:
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@dev
     needs:
-      - UnitTesting
-      - PerformanceTesting
-      - Benchmarking
+      - UnitTestingParams
+    with:
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
+      directory: sphinx_reports
+#      fail_below: 70
 
   Package:
     uses: pyTooling/Actions/.github/workflows/Package.yml@dev
     needs:
       - UnitTestingParams
-      - Coverage
+      - UnitTesting
       - PlatformTesting
     with:
       python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
 
-  Release:
-    uses: pyTooling/Actions/.github/workflows/Release.yml@dev
-    if: startsWith(github.ref, 'refs/tags')
-    needs:
-      - UnitTesting
-      - Coverage
-      - StaticTypeCheck
-      - Package
-
-  PublishOnPyPI:
-    uses: pyTooling/Actions/.github/workflows/PublishOnPyPI.yml@dev
-    if: startsWith(github.ref, 'refs/tags')
+  PublishCoverageResults:
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@dev
     needs:
       - UnitTestingParams
-      - Release
-      - Package
+      - UnitTesting
+      - PlatformTesting
     with:
-      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
-      requirements: -r dist/requirements.txt
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
+#      coverage_sqlite_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}
+#      coverage_xml_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_xml }}
+      coverage_json_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}
+      coverage_html_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
     secrets:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  PublishTestResults:
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    needs:
+      - UnitTestingParams
+      - UnitTesting
+#      - PerformanceTesting
+      - Benchmarking
+      - PlatformTesting
+    with:
+      merged_junit_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
+
+  IntermediateCleanUp:
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@dev
+    needs:
+      - UnitTestingParams
+      - PublishCoverageResults
+      - PublishTestResults
+      - HTMLDocumentation
+    with:
+      sqlite_coverage_artifacts_prefix: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}-
+      xml_unittest_artifacts_prefix: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}-
 
 #  VerifyDocs:
 #    uses: pyTooling/Actions/.github/workflows/VerifyDocs.yml@dev
@@ -139,43 +150,102 @@ jobs:
 #    with:
 #      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
 
-  BuildTheDocs:
-    uses: pyTooling/Actions/.github/workflows/BuildTheDocs.yml@dev
+
+  HTMLDocumentation:
+    uses: pyTooling/Actions/.github/workflows/SphinxDocumentation.yml@dev
     needs:
       - UnitTestingParams
+      - PublishTestResults
+      - PublishCoverageResults
 #      - VerifyDocs
     with:
-      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
+      unittest_xml_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}-ubuntu-native-3.12
+      coverage_json_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}
+      html_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
+      latex_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_latex }}
+
+#  PDFDocumentation:
+#    uses: pyTooling/Actions/.github/workflows/LaTeXDocumentation.yml@dev
+#    needs:
+#      - UnitTestingParams
+#      - HTMLDocumentation
+#    with:
+#      document: sphinx_reports
+#      latex_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_latex }}
+#      pdf_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_pdf }}
 
   PublishToGitHubPages:
     uses: pyTooling/Actions/.github/workflows/PublishToGitHubPages.yml@dev
     needs:
       - UnitTestingParams
-      - BuildTheDocs
-      - Coverage
+      - HTMLDocumentation
+#      - PDFDocumentation
+      - PublishCoverageResults
       - StaticTypeCheck
     with:
       doc: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
-      coverage: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
+#      coverage: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
       typing: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
+
+  ReleasePage:
+    uses: pyTooling/Actions/.github/workflows/Release.yml@dev
+    if: startsWith(github.ref, 'refs/tags')
+    needs:
+      - Package
+      - PublishToGitHubPages
+
+  PublishOnPyPI:
+    uses: pyTooling/Actions/.github/workflows/PublishOnPyPI.yml@dev
+    if: startsWith(github.ref, 'refs/tags')
+    needs:
+      - UnitTestingParams
+      - ReleasePage
+    with:
+      python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
+      requirements: -r dist/requirements.txt
+      artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   ArtifactCleanUp:
     uses: pyTooling/Actions/.github/workflows/ArtifactCleanUp.yml@dev
     needs:
       - UnitTestingParams
+      - PlatformTestingParams
       - UnitTesting
       - PerformanceTesting
       - Benchmarking
-      - PlatformTesting
-      - Coverage
       - StaticTypeCheck
-      - BuildTheDocs
-      - PublishToGitHubPages
+      - PlatformTesting
+      - HTMLDocumentation
+#      - PDFDocumentation
       - PublishTestResults
+      - PublishCoverageResults
+      - PublishToGitHubPages
+#      - PublishOnPyPI
     with:
       package: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
       remaining: |
         ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_html }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_xml }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}-*
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_html }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_xml }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}
         ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
         ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
         ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
+        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_latex }}
+        ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).unittesting_xml }}-*
+        ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).unittesting_html }}-*
+        ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_sqlite }}-*
+        ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_xml }}-*
+        ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_json }}-*
+        ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_html }}-*
+#        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_pdf }}

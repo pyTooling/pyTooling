@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -43,17 +43,17 @@ The Licensing module implements mapping tables for various license names and ide
 .. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
-from typing       import Any, Dict
+from typing       import Any, Dict, Optional as Nullable
 
 
 try:
-	from ..Decorators import export
+	from ..Decorators  import export, readonly
 	from ..MetaClasses import ExtendedType
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
+		from Decorators  import export, readonly
 		from MetaClasses import ExtendedType
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
@@ -113,7 +113,7 @@ class License(metaclass=ExtendedType, slots=True):
 		self._osiApproved = osiApproved
 		self._fsfApproved = fsfApproved
 
-	@property
+	@readonly
 	def Name(self) -> str:
 		"""
 		Returns the license' name.
@@ -122,7 +122,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		return self._name
 
-	@property
+	@readonly
 	def SPDXIdentifier(self) -> str:
 		"""
 		Returns the license' unique `SPDX identifier <https://spdx.org/licenses/>`__.
@@ -131,7 +131,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		return self._spdxIdentifier
 
-	@property
+	@readonly
 	def OSIApproved(self) -> bool:
 		"""
 		Returns true, if the license is approved by OSI (`Open Source Initiative <https://opensource.org/>`__).
@@ -140,7 +140,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		return self._osiApproved
 
-	@property
+	@readonly
 	def FSFApproved(self) -> bool:
 		"""
 		Returns true, if the license is approved by FSF (`Free Software Foundation <https://www.fsf.org/>`__).
@@ -149,7 +149,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		return self._fsfApproved
 
-	@property
+	@readonly
 	def PythonLicenseName(self) -> str:
 		"""
 		Returns the Python license name for this license if it's defined.
@@ -164,7 +164,7 @@ class License(metaclass=ExtendedType, slots=True):
 
 		return item.ShortName
 
-	@property
+	@readonly
 	def PythonClassifier(self) -> str:
 		"""
 		Returns the Python package classifier for this license if it's defined.
