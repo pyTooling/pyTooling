@@ -39,6 +39,7 @@ class, method or function. By default, this field is called ``__pyattr__``.
 .. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
 from enum   import IntFlag
+from sys    import version_info
 from types  import MethodType, FunctionType, ModuleType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar, Optional as Nullable
 
@@ -144,10 +145,16 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		else:
 			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [attribute, ])
 
-	@classmethod
-	@property
-	def Scope(cls) -> AttributeScope:
-		return cls._scope
+	if version_info < (3, 9):  # pragma: no cover
+		@property
+		def Scope(cls) -> AttributeScope:
+			return cls._scope
+
+	else:
+		@classmethod
+		@property
+		def Scope(cls) -> AttributeScope:
+			return cls._scope
 
 	@classmethod
 	def GetFunctions(cls, scope: Nullable[Type] = None) -> Generator[TAttr, None, None]:
