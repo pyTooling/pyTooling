@@ -81,7 +81,7 @@ The following example code demonstrates a few features in a compact form:
    )
    axi.AddChildren(axiProtocols)
 
-   # Create another standalone node and attache it later to a tree.
+   # Create another standalone node and attach it later to a tree.
    uart = Node(value="UART")
    uart.Parent = vcs
 

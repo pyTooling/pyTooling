@@ -56,7 +56,7 @@ Attributes
       :ref:`Attribute <ATTR/Predefined/Attribute>` classes in an additional ``__pyattr__`` field per class, method or
       function.
 
-      The annotation syntax (decorator syntax) allows users to attache any structured data to classes, methods or
+      The annotation syntax (decorator syntax) allows users to attach any structured data to classes, methods or
       functions. In many cases, a user will derive a custom attribute from :ref:`Attribute <ATTR/Predefined/Attribute>`
       and override the ``__init__`` method, so user-defined parameters can be accepted when the attribute is constructed.
 

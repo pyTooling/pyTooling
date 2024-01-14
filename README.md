@@ -33,6 +33,83 @@ This drastically simplifies GHA-based CI pipelines for Python projects.
 
 ## Package Details
 
+### Attributes
+
+The [pyTooling.Attributes] module offers the base implementation of *.NET-like attributes* realized with Python
+decorators. The annotated and declarative data is stored as instances of Attribute classes in an additional field per
+class, method or function.
+
+The annotation syntax (decorator syntax) allows users to attach any structured data to classes, methods or functions. In
+many cases, a user will derive a custom attribute from Attribute and override the __init__ method, so user-defined
+parameters can be accepted when the attribute is constructed.
+
+Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance usage
+locations (see example to the right). Another option for class and method attributes is declaring a classes using
+pyTooling’s `ExtendedType` meta-class. Here the class itself offers helper methods for discovering annotated methods.
+
+A `SimpleAttribute` class is offered accepting any positional and keyword parameters. In a more advanced use case, users
+are encouraged to derive their own attribute class hierarchy from `Attribute`.
+
+
+#### Use Cases
+
+In general all classes, methods and functions can be annotated with additional meta-data. It depends on the application,
+framework or library to decide if annotations should be applied imperatively as regular code or declaratively as
+attributes via Python decorators.
+
+**With this in mind, the following use-cases and ideas can be derived:**
+
+* Describe a command line argument parser (like ArgParse) in a declarative form. |br|
+  See [pyTooling.Attributes.ArgParse Package and Examples](https://pytooling.github.io/pyTooling/Attributes/ArgParse.html)
+* Mark nested classes, so later when the outer class gets instantiated, these nested classes are indexed or
+  automatically registered.  
+  See [CLIAbstraction](https://pytooling.github.io/pyTooling/CLIAbstraction/index.html) &rarr; [CLIABS/CLIArgument]
+* Mark methods in a class as test cases and classes as test suites, so test cases and suites are not identified based on
+  a magic method name.  
+  *Investigation ongoing / planned feature.*
+
+
+#### Using `SimpleAttribute`
+
+````Python
+from pyTooling.Attributes import SimpleAttribute
+
+@SimpleAttribute(kind="testsuite")
+class MyClass:
+  @SimpleAttribute(kind="testcase", id=1, description="Test and operator")
+  def test_and(self):
+    ...
+
+  @SimpleAttribute(kind="testcase", id=2, description="Test xor operator")
+  def test_xor(self):
+    ...
+````
+
+
+### CLI Abstraction
+
+[pyTooling.CLIAbstraction] offers an abstraction layer for command line programs, so they can be used easily in Python.
+There is no need for manually assembling parameter lists or considering the order of parameters. All parameters like
+`-v` or `--value=42` are described as [CommandLineArgument] instances on a [Program] class. Each argument class like
+[ShortFlag] or [PathArgument] knows about the correct formatting pattern, character escaping, and if needed about
+necessary type conversions. A program instance can be converted to an argument list suitable for [subprocess.Popen].
+
+While a user-defined command line program abstraction derived from [Program] only
+takes care of maintaining and assembling parameter lists, a more advanced base-class, called [Executable],
+is offered with embedded [subprocess.Popen] behavior.
+
+#### Design Goals
+
+* Offer access to CLI programs as Python classes.
+* Abstract CLI arguments (a.k.a. parameter, option, flag, ...) as members on such a Python class.
+* Abstract differences in operating systems like argument pattern (POSIX: `-h` vs. Windows: `/h`), path delimiter
+  signs (POSIX: `/` vs. Windows: `\`) or executable names.
+* Derive program variants from existing programs.
+* Assemble parameters as list for handover to [subprocess.Popen] with proper escaping and quoting.
+* Launch a program with :class:[subprocess.Popen] and hide the complexity of Popen.
+* Get a generator object for line-by-line output reading to enable postprocessing of outputs.
+
+
 ### Common Helper Functions
 
 This is a set of useful [helper functions](https://pytooling.github.io/pyTooling/Common/index.html#common-helperfunctions):
