@@ -28,12 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from os.path import abspath
-from sys     import path as sys_path
+"""
+Package installer for 'pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and
+exceptions.'.
+"""
+# Add package itself to PYTHON_PATH, so it can be used to package itself.
+from os.path    import abspath
+from sys        import path as sys_path
+sys_path.insert(0, abspath('./pyTooling'))
 
 from setuptools import setup
-
-sys_path.insert(0, abspath('./pyTooling'))
 
 from pathlib    import Path
 from Packaging  import DescribePythonPackageHostedOnGitHub

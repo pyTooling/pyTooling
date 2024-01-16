@@ -30,22 +30,35 @@
 # ==================================================================================================================== #
 #
 """A set of helpers to implement a text user interface (TUI) in a terminal."""
-from enum                   import Enum, unique
-from io                     import TextIOWrapper
-from sys                    import stdin, stdout, stderr
-from textwrap               import dedent
-from typing                 import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
-
-from pyTooling.Exceptions   import PlatformNotSupportedException, ExceptionBase
-from pyTooling.Decorators   import export, readonly
-from pyTooling.MetaClasses  import ExtendedType, mixin
-from pyTooling.Common       import lastItem
-from pyTooling.Platform     import Platform
+from enum                    import Enum, unique
+from io                      import TextIOWrapper
+from sys                     import stdin, stdout, stderr
+from textwrap                import dedent
+from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 
 try:
 	from colorama import Fore as Foreground
 except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'colorama' not installed. Either install pyTooling with extra dependencies 'pyTooling[terminal]' or install 'colorama' directly.") from ex
+
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType, mixin
+	from pyTooling.Exceptions  import PlatformNotSupportedException, ExceptionBase
+	from pyTooling.Common      import lastItem
+	from pyTooling.Platform    import Platform
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.TerminalUI] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType, mixin
+		from Exceptions          import PlatformNotSupportedException, ExceptionBase
+		from Common              import lastItem
+		from Platform            import Platform
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.TerminalUI] Could not import directly!")
+		raise ex
 
 
 @export

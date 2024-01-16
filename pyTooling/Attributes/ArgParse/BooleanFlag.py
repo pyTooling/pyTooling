@@ -29,8 +29,18 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from pyTooling.Decorators import export
-from .Argument import NamedArgument, ValuedArgument
+try:
+	from pyTooling.Decorators                   import export
+	from pyTooling.Attributes.ArgParse.Argument import NamedArgument, ValuedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Attributes.ArgParse.BooleanFlag] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators                           import export
+		from Attributes.ArgParse.Argument         import NamedArgument, ValuedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Attributes.ArgParse.BooleanFlag] Could not import directly!")
+		raise ex
 
 
 @export

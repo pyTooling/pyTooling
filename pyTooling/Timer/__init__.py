@@ -33,12 +33,22 @@ A timer and stopwatch to measure execution time.
 
 .. hint:: See :ref:`high-level help <TIMER>` for explanations and usage examples.
 """
-from time import perf_counter_ns
+from time   import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
 # Python 3.11: use Self if returning the own object: , Self
 
-from pyTooling.Decorators import export, readonly
-from pyTooling.MetaClasses import SlottedObject
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import SlottedObject
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Timer] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import SlottedObject
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Timer] Could not import directly!")
+		raise ex
 
 
 @export

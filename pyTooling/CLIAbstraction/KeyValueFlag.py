@@ -41,13 +41,23 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import Union, Iterable, Dict, cast, Tuple, Any, Optional as Nullable
+from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable
 
-from pyTooling.Decorators     import export
+try:
+	from pyTooling.Decorators              import export
+	from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from pyTooling.CLIAbstraction import NamedAndValuedArgument
+	try:
+		from Decorators                      import export
+		from CLIAbstraction.Argument         import NamedAndValuedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
+@export
 class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	"""
 	Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value

@@ -38,14 +38,14 @@ from sys    import version_info
 from typing import List
 
 try:
-	from ..Decorators import export
+	from pyTooling.Decorators import export
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
+	print("[pyTooling.Exceptions] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
+		from Decorators         import export
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.MetaClasses] Could not import from 'Decorators' directly!")
+		print("[pyTooling.Exceptions] Could not import from 'Decorators' directly!")
 		raise ex
 
 

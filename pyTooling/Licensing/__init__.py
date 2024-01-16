@@ -47,16 +47,16 @@ from typing       import Any, Dict, Optional as Nullable
 
 
 try:
-	from ..Decorators  import export, readonly
-	from ..MetaClasses import ExtendedType
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators  import export, readonly
-		from MetaClasses import ExtendedType
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
+		print("[pyTooling.Licensing] Could not import directly!")
 		raise ex
 
 

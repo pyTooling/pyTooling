@@ -33,11 +33,22 @@ Common platform information gathered from various sources.
 
 .. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
 """
-from enum                  import Flag, auto
+from enum                    import Flag, auto
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Versioning  import SemanticVersion
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Versioning  import SemanticVersion
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Platform] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType, mixin
+		from Versioning          import SemanticVersion
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Platform] Could not import directly!")
+		raise ex
 
 
 @export

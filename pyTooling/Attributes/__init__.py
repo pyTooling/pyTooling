@@ -43,7 +43,17 @@ from sys    import version_info
 from types  import MethodType, FunctionType, ModuleType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar, Optional as Nullable
 
-from pyTooling.Decorators import export, readonly
+try:
+	from pyTooling.Decorators import export, readonly
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Attributes] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators import export, readonly
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Attributes] Could not import directly!")
+		raise ex
+
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
 

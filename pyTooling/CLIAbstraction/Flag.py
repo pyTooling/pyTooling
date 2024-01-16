@@ -41,11 +41,20 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import Tuple, Any, Dict
+from typing import Any
 
-from pyTooling.Decorators import export
+try:
+	from pyTooling.Decorators              import export
+	from pyTooling.CLIAbstraction.Argument import NamedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from pyTooling.CLIAbstraction.Argument import NamedArgument
+	try:
+		from Decorators                      import export
+		from CLIAbstraction.Argument         import NamedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
 @export

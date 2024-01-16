@@ -45,11 +45,20 @@ The usual delimiter sign between name and value is an equal sign (``=``).
    * For list of valued flags. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlagList`
 """
-from typing import Tuple, Any, Dict
+from typing import Any
 
-from pyTooling.Decorators import export
+try:
+	from pyTooling.Decorators              import export
+	from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from pyTooling.CLIAbstraction import NamedAndValuedArgument
+	try:
+		from Decorators                      import export
+		from CLIAbstraction.Argument         import NamedAndValuedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
 @export

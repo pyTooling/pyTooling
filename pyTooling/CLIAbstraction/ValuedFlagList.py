@@ -44,12 +44,20 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
    * For list of paths. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
 """
-from typing import List, Union, Iterable, cast, Tuple, Any, Dict
+from typing import List, Union, Iterable, cast, Any
 
-from pyTooling.Decorators import export
+try:
+	from pyTooling.Decorators              import export
+	from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from pyTooling.CLIAbstraction import NamedAndValuedArgument
-from pyTooling.CLIAbstraction.Argument import ValueT
+	try:
+		from Decorators                      import export
+		from CLIAbstraction.Argument         import ValueT, NamedAndValuedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
 @export

@@ -40,14 +40,28 @@ from shutil                import which as shutil_which
 from subprocess            import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
 from typing                import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException, PlatformNotSupportedException
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Attributes  import Attribute
+try:
+	from pyTooling.Decorators                import export, readonly
+	from pyTooling.MetaClasses               import ExtendedType
+	from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedException
+	from pyTooling.Attributes                import Attribute
+	from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
+	from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
+	from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.CLIAbstraction] Could not import from 'pyTooling.*'!")
 
-from .Argument   import CommandLineArgument, ExecutableArgument
-from .Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
-from .ValuedFlag import ValuedFlag
+	try:
+		from Decorators                import export, readonly
+		from MetaClasses               import ExtendedType
+		from Exceptions                import ToolingException, PlatformNotSupportedException
+		from Attributes                import Attribute
+		from CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
+		from CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
+		from CLIAbstraction.ValuedFlag import ValuedFlag
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.CLIAbstraction] Could not import directly!")
+		raise ex
 
 
 @export

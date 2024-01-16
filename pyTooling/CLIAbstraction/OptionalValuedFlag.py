@@ -34,11 +34,20 @@
 .. TODO:: Write module documentation.
 
 """
-from typing import ClassVar, Optional as Nullable, Union, Iterable, Tuple, Any, Dict, Optional as Nullable
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
 
-from pyTooling.Decorators import export
+try:
+	from pyTooling.Decorators              import export
+	from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from pyTooling.CLIAbstraction import NamedAndValuedArgument
+	try:
+		from Decorators                      import export
+		from CLIAbstraction.Argument         import NamedAndValuedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
 @export
