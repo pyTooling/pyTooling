@@ -55,13 +55,26 @@ starting vertex are provided as methods on a vertex.
 import heapq
 from collections import deque
 from itertools   import chain
-from typing import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
-from typing import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
+from typing      import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
+from typing      import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Tree        import Node
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.Tree        import Node
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Graph] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType, mixin
+		from Exceptions          import ToolingException
+		from Tree                import Node
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Graph] Could not import directly!")
+		raise ex
+
 
 DictKeyType = TypeVar("DictKeyType", bound=Hashable)
 """A type variable for dictionary keys."""

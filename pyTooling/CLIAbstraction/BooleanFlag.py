@@ -41,11 +41,20 @@ Boolean flags are arguments with a name and different pattern for a positive (``
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import ClassVar, Union, Iterable, Tuple, Any, Dict, Optional as Nullable
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
 
-from pyTooling.Decorators import export
+try:
+	from pyTooling.Decorators              import export
+	from pyTooling.CLIAbstraction.Argument import NamedArgument, ValuedArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from pyTooling.CLIAbstraction.Argument import NamedArgument, ValuedArgument
+	try:
+		from Decorators                      import export
+		from CLIAbstraction.Argument         import NamedArgument, ValuedArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
 @export

@@ -97,12 +97,14 @@ PackageDescriptions
 
 .. code-block:: Python
 
+   from setuptools          import setup
+
    from pathlib             import Path
    from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
    packageName = "pyTooling.Packaging"
 
-   DescribePythonPackageHostedOnGitHub(
+   setup(**DescribePythonPackageHostedOnGitHub(
      packageName=packageName,
      description="A set of helper functions to describe a Python package for setuptools.",
      gitHubNamespace="pyTooling",
@@ -110,7 +112,7 @@ PackageDescriptions
      sourceFileWithVersion=Path(f"{packageName.replace('.', '/')}/__init__.py"),
      developmentStatus="beta",
      pythonVersions=("3.8", "3.9", "3.10")
-   )
+   ))
 
 
 .. _PACKAGING/Descriptions/Python:

@@ -37,12 +37,12 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2024, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "6.0.0"
+__version__ =       "6.0.1"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
-										"dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
-										"iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
-										"path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
-										"timer", "tree", "TUI", "url", "versioning", "wheel"]
+					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
+					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
+					  "path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
+					  "timer", "tree", "TUI", "url", "versioning", "wheel"]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections import deque
@@ -54,13 +54,13 @@ try:
 	from pyTooling.Decorators import export
 	from pyTooling.Platform   import Platform
 except ModuleNotFoundError:  # pragma: no cover
-	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
+	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
-		from Platform   import Platform
+		from Decorators         import export
+		from Platform           import Platform
 	except ModuleNotFoundError as ex:  # pragma: no cover
-		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
+		print("[pyTooling.Common] Could not import directly!")
 		raise ex
 
 

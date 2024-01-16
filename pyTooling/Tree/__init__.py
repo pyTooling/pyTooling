@@ -32,9 +32,21 @@
 from collections   import deque
 from typing        import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union, Deque, Iterator
 
-from ..Exceptions  import ToolingException
-from ..Decorators  import export, readonly
-from ..MetaClasses import ExtendedType
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Exceptions  import ToolingException
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Tree] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType, mixin
+		from Exceptions          import ToolingException
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Tree] Could not import directly!")
+		raise ex
+
 
 IDType = TypeVar("IDType", bound=Hashable)
 """A type variable for a tree's ID."""

@@ -31,7 +31,16 @@
 """A generic path to derive domain specific path libraries."""
 from typing import List, Optional as Nullable
 
-from pyTooling.Decorators import export
+try:
+	from pyTooling.Decorators import export
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.GenericPath] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators         import export
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.GenericPath] Could not import directly!")
+		raise ex
 
 
 @export

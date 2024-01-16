@@ -32,9 +32,18 @@ from enum     import IntFlag
 from re       import compile as re_compile
 from typing   import Dict, Optional as Nullable
 
-from pyTooling.Decorators import export, readonly
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.GenericPath import RootMixIn, ElementMixIn, PathMixIn
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.GenericPath.URL] Could not import from 'pyTooling.*'!")
 
-from .        import RootMixIn, ElementMixIn, PathMixIn
+	try:
+		from Decorators         import export, readonly
+		from GenericPath        import RootMixIn, ElementMixIn, PathMixIn
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.GenericPath.URL] Could not import directly!")
+		raise ex
 
 
 regExp = re_compile(r"^(?:(?P<scheme>\w+)://)?(?:(?P<host>(?:\w+|\.)+)(?:\:(?P<port>\d+))?)?(?P<path>[^?#]*)(?:\?(?P<query>[^#]+))?(?:#(?P<fragment>.+))?$")

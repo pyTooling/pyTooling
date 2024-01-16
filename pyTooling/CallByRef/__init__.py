@@ -37,8 +37,19 @@ from decimal       import Decimal
 from sys           import version_info           # needed for versions before Python 3.11
 from typing        import Any, Generic, TypeVar, Optional as Nullable
 
-from ..Decorators  import export
-from ..MetaClasses import ExtendedType
+try:
+	from pyTooling.Decorators  import export
+	from pyTooling.MetaClasses import ExtendedType
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.CallByRef] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export
+		from MetaClasses         import ExtendedType
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.CallByRef] Could not import directly!")
+		raise ex
+
 
 T = TypeVar("T")
 

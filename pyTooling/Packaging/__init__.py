@@ -38,22 +38,21 @@ from ast             import parse as ast_parse, iter_child_nodes, Assign, Consta
 from pathlib         import Path
 from typing          import List, Iterable, Dict, Sequence, Any
 
-
 try:
-	from ..Decorators  import export, readonly
-	from ..Exceptions  import ToolingException
-	from ..MetaClasses import ExtendedType
-	from ..Licensing   import License, Apache_2_0_License
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Licensing   import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators  import export, readonly
-		from Exceptions  import ToolingException
-		from MetaClasses import ExtendedType
-		from Licensing   import License, Apache_2_0_License
+		from Decorators          import export, readonly
+		from Exceptions          import ToolingException
+		from MetaClasses         import ExtendedType
+		from Licensing           import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
-		print("[pyTooling.Packaging] Could not import from 'Decorators', 'Exceptions', 'MetaClasses' or 'Licensing' directly!")
+		print("[pyTooling.Packaging] Could not import directly!")
 		raise ex
 
 

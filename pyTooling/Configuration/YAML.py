@@ -36,22 +36,33 @@ Configuration reader for YAML files.
 from pathlib       import Path
 from typing        import Dict, List, Union, Iterator as typing_Iterator
 
-from ..Decorators  import export
-from ..MetaClasses import ExtendedType
-
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'ruamel.yaml' not installed. Either install pyTooling with extra dependencies 'pyTooling[yaml]' or install 'ruamel.yaml' directly.") from ex
 
-from pyTooling.Configuration  import (
-	ConfigurationException,
-	Node as Abstract_Node,
-	Dictionary as Abstract_Dict,
-	Sequence as Abstract_Seq,
-	Configuration as Abstract_Configuration,
-	KeyT, NodeT, ValueT
-)
+try:
+	from pyTooling.Decorators      import export
+	from pyTooling.MetaClasses     import ExtendedType
+	from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
+	from pyTooling.Configuration   import Node as Abstract_Node
+	from pyTooling.Configuration   import Dictionary as Abstract_Dict
+	from pyTooling.Configuration   import Sequence as Abstract_Seq
+	from pyTooling.Configuration   import Configuration as Abstract_Configuration
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Configuration.YAML] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators              import export
+		from MetaClasses             import ExtendedType
+		from pyTooling.Configuration import ConfigurationException, KeyT, NodeT, ValueT
+		from pyTooling.Configuration import Node as Abstract_Node
+		from pyTooling.Configuration import Dictionary as Abstract_Dict
+		from pyTooling.Configuration import Sequence as Abstract_Seq
+		from pyTooling.Configuration import Configuration as Abstract_Configuration
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Configuration.YAML] Could not import directly!")
+		raise ex
 
 
 @export

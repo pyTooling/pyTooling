@@ -39,10 +39,22 @@ from enum    import Enum, auto
 from pathlib import Path
 from typing  import Any, List, Dict, Union, Optional as Nullable
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
-from pyTooling.Tree        import Node as pyToolingNode
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+	from pyTooling.Tree        import Node as pyToolingNode
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Graph.GraphML] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType, mixin
+		from Graph               import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+		from Tree                import Node as pyToolingNode
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Graph.GraphML] Could not import directly!")
+		raise ex
 
 
 @export

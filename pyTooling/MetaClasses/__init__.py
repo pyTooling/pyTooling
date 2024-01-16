@@ -42,9 +42,9 @@ from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterato
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 try:
-	from ..Exceptions import ToolingException
-	from ..Decorators import export
-	from ..Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
+	from pyTooling.Exceptions import ToolingException
+	from pyTooling.Decorators import export
+	from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
@@ -53,7 +53,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Decorators import export
 		from Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.MetaClasses] Could not import from 'Exceptions' or 'Decorators' directly!")
+		print("[pyTooling.MetaClasses] Could not import directly!")
 		raise ex
 
 

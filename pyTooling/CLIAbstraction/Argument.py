@@ -36,9 +36,19 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Tuple, Any, Dict, Optional as Nullable
+from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 
-from pyTooling.Decorators import export, readonly
+try:
+	from pyTooling.Decorators  import export, readonly
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
+
 
 __all__ = ["ValueT"]
 

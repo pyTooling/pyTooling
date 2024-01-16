@@ -36,10 +36,18 @@ Implementation of semantic and date versioning version-numbers.
 from enum          import IntEnum
 from typing        import Optional as Nullable, Any
 
-from pyTooling.Decorators import readonly
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
-from ..Decorators  import export
-from ..MetaClasses import ExtendedType
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Versioning] Could not import directly!")
+		raise ex
 
 
 @export

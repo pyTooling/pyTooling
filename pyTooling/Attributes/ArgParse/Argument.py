@@ -32,8 +32,18 @@
 from pathlib import Path
 from typing import Type
 
-from pyTooling.Decorators import export
-from . import CommandLineArgument
+try:
+	from pyTooling.Decorators          import export
+	from pyTooling.Attributes.ArgParse import CommandLineArgument
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Attributes.ArgParse.Argument] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators                  import export
+		from Attributes.ArgParse         import CommandLineArgument
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Attributes.ArgParse.Argument] Could not import directly!")
+		raise ex
 
 
 @export
