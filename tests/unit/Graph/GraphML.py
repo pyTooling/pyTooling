@@ -31,9 +31,9 @@
 """Unit tests for pyTooling.Graph.GraphML."""
 from unittest import TestCase
 
-from pyTooling.Graph import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
+from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
-from pyTooling.Tree import Node as pyToolingNode
+from pyTooling.Tree          import Node as pyToolingNode
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -96,7 +96,16 @@ class SemanticVersion(Version):
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead   : int = 0
 
-	def __init__(self, versionString : str) -> None:
+	def __init__(self, major: int, minor: int, patch: int = 0, build: int = 0, flags: Flags = Flags.Clean) -> None:
+		self._major = major
+		self._minor = minor
+		self._patch = patch
+		self._build = build
+		self._parts = Parts.Minor | Parts.Minor | Parts.Patch | Parts.Build
+		self._flags = flags
+
+	@classmethod
+	def Parse(cls, versionString : str) -> "SemanticVersion":
 		if versionString == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 		elif versionString is None:
@@ -108,29 +117,23 @@ class SemanticVersion(Version):
 
 		split = versionString.split(".")
 		length = len(split)
-		self._major = int(split[0])
-		self._minor = 0
-		self._patch = 0
-		self._build = 0
-		self._parts = Parts.Major
+		major = int(split[0])
+		minor = 0
+		patch = 0
+		build = 0
+		parts = Parts.Major
 		if length >= 2:
-			self._minor = int(split[1])
-			self._parts |= Parts.Minor
+			minor = int(split[1])
+			parts |= Parts.Minor
 		if length >= 3:
-			self._patch = int(split[2])
-			self._parts |= Parts.Patch
+			patch = int(split[2])
+			parts |= Parts.Patch
 		if length >= 4:
-			self._build = int(split[3])
-			self._parts |= Parts.Build
-		self._flags = Flags.Clean
+			build = int(split[3])
+			parts |= Parts.Build
+		flags = Flags.Clean
 
-	def __init__(self, major: int, minor: int, patch: int = 0, build: int = 0) -> None:  # type: ignore[no-redef]
-		self._major = major
-		self._minor = minor
-		self._patch = patch
-		self._build = build
-		self._parts = Parts.Minor | Parts.Minor | Parts.Patch | Parts.Build
-		self._flags = Flags.Clean
+		return cls(major, minor, patch, build, flags)
 
 	@readonly
 	def Major(self) -> int:
