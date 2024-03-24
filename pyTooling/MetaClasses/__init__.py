@@ -35,9 +35,9 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
 from functools  import wraps
-from inspect    import signature, Parameter
+# from inspect    import signature, Parameter
 from threading  import Condition
-from types      import MethodType, FunctionType
+from types      import FunctionType  #, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
@@ -291,83 +291,83 @@ def mustoverride(method: M) -> M:
 	return method
 
 
-@export
-def overloadable(method: M) -> M:
-	method.__overloadable__ = True
-	return method
+# @export
+# def overloadable(method: M) -> M:
+# 	method.__overloadable__ = True
+# 	return method
 
 
-@export
-class DispatchableMethod:
-	"""Represents a single multimethod."""
+# @export
+# class DispatchableMethod:
+# 	"""Represents a single multimethod."""
+#
+# 	_methods: Dict[Tuple, Callable]
+# 	__name__: str
+# 	__slots__ = ("_methods", "__name__")
+#
+# 	def __init__(self, name: str) -> None:
+# 		self.__name__ = name
+# 		self._methods = {}
+#
+# 	def __call__(self, *args: Any):
+# 		"""Call a method based on type signature of the arguments."""
+# 		types = tuple(type(arg) for arg in args[1:])
+# 		meth = self._methods.get(types, None)
+# 		if meth:
+# 			return meth(*args)
+# 		else:
+# 			raise TypeError(f"No matching method for types {types}.")
+#
+# 	def __get__(self, instance, cls):  # Starting with Python 3.11+, use typing.Self as return type
+# 		"""Descriptor method needed to make calls work in a class."""
+# 		if instance is not None:
+# 			return MethodType(self, instance)
+# 		else:
+# 			return self
+#
+# 	def register(self, method: Callable) -> None:
+# 		"""Register a new method as a dispatchable."""
+#
+# 		# Build a signature from the method's type annotations
+# 		sig = signature(method)
+# 		types: List[Type] = []
+#
+# 		for name, parameter in sig.parameters.items():
+# 			if name == "self":
+# 				continue
+#
+# 			if parameter.annotation is Parameter.empty:
+# 				raise TypeError(f"Parameter '{name}' in method '{method.__name__}' must be annotated with a type.")
+#
+# 			if not isinstance(parameter.annotation, type):
+# 				raise TypeError(f"Parameter '{name}' in method '{method.__name__}' annotation must be a type.")
+#
+# 			if parameter.default is not Parameter.empty:
+# 				self._methods[tuple(types)] = method
+#
+# 			types.append(parameter.annotation)
+#
+# 		self._methods[tuple(types)] = method
 
-	_methods: Dict[Tuple, Callable]
-	__name__: str
-	__slots__ = ("_methods", "__name__")
 
-	def __init__(self, name: str) -> None:
-		self.__name__ = name
-		self._methods = {}
-
-	def __call__(self, *args: Any):
-		"""Call a method based on type signature of the arguments."""
-		types = tuple(type(arg) for arg in args[1:])
-		meth = self._methods.get(types, None)
-		if meth:
-			return meth(*args)
-		else:
-			raise TypeError(f"No matching method for types {types}.")
-
-	def __get__(self, instance, cls):  # Starting with Python 3.11+, use typing.Self as return type
-		"""Descriptor method needed to make calls work in a class."""
-		if instance is not None:
-			return MethodType(self, instance)
-		else:
-			return self
-
-	def register(self, method: Callable) -> None:
-		"""Register a new method as a dispatchable."""
-
-		# Build a signature from the method's type annotations
-		sig = signature(method)
-		types: List[Type] = []
-
-		for name, parameter in sig.parameters.items():
-			if name == "self":
-				continue
-
-			if parameter.annotation is Parameter.empty:
-				raise TypeError(f"Parameter '{name}' in method '{method.__name__}' must be annotated with a type.")
-
-			if not isinstance(parameter.annotation, type):
-				raise TypeError(f"Parameter '{name}' in method '{method.__name__}' annotation must be a type.")
-
-			if parameter.default is not Parameter.empty:
-				self._methods[tuple(types)] = method
-
-			types.append(parameter.annotation)
-
-		self._methods[tuple(types)] = method
-
-
-@export
-class DispatchDictionary(dict):
-	"""Special dictionary to build dispatchable methods in a metaclass."""
-
-	def __setitem__(self, key: str, value: Any):
-		if callable(value) and key in self:
-			# If key already exists, it must be a dispatchable method or callable
-			currentValue = self[key]
-			if isinstance(currentValue, DispatchableMethod):
-				currentValue.register(value)
-			else:
-				dispatchable = DispatchableMethod(key)
-				dispatchable.register(currentValue)
-				dispatchable.register(value)
-
-				super().__setitem__(key, dispatchable)
-		else:
-			super().__setitem__(key, value)
+# @export
+# class DispatchDictionary(dict):
+# 	"""Special dictionary to build dispatchable methods in a metaclass."""
+#
+# 	def __setitem__(self, key: str, value: Any):
+# 		if callable(value) and key in self:
+# 			# If key already exists, it must be a dispatchable method or callable
+# 			currentValue = self[key]
+# 			if isinstance(currentValue, DispatchableMethod):
+# 				currentValue.register(value)
+# 			else:
+# 				dispatchable = DispatchableMethod(key)
+# 				dispatchable.register(currentValue)
+# 				dispatchable.register(value)
+#
+# 				super().__setitem__(key, dispatchable)
+# 		else:
+# 			super().__setitem__(key, value)
 
 
 @export
@@ -388,12 +388,12 @@ class ExtendedType(type):
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 	"""
 
-	@classmethod
-	def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):
-		return DispatchDictionary()
+	# @classmethod
+	# def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):
+	# 	return DispatchDictionary()
 
 	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
-							slots: bool = False, mixin: bool = False, singleton: bool = False) -> type:
+							slots: bool = False, mixin: bool = False, singleton: bool = False) -> "ExtendedType":
 		"""
 		Construct a new class using this :term:`meta-class`.
 
@@ -525,7 +525,7 @@ class ExtendedType(type):
 		return newClass
 
 	@classmethod
-	def _findMethods(self, newClass: type, members: Dict[str, Any]):
+	def _findMethods(self, newClass: "ExtendedType", members: Dict[str, Any]):
 		try:
 			from ..Attributes import Attribute
 		except (ImportError, ModuleNotFoundError):  # pragma: no cover
