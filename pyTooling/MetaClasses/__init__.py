@@ -445,7 +445,7 @@ class ExtendedType(type):
 						att.__class__._classes.append(newClass)
 
 		# Check methods for attributes
-		methods, methodsWithAttributes = self._findMethods(newClass, members)
+		methods, methodsWithAttributes = self._findMethods(newClass, baseClasses, members)
 
 		# Add new fields for found methods
 		newClass.__methods__ = tuple(methods)
@@ -525,7 +525,7 @@ class ExtendedType(type):
 		return newClass
 
 	@classmethod
-	def _findMethods(self, newClass: "ExtendedType", members: Dict[str, Any]):
+	def _findMethods(self, newClass: "ExtendedType", baseClasses: Tuple[type], members: Dict[str, Any]):
 		try:
 			from ..Attributes import Attribute
 		except (ImportError, ModuleNotFoundError):  # pragma: no cover
@@ -547,6 +547,11 @@ class ExtendedType(type):
 		methods = []
 		methodsWithAttributes = []
 		attributeIndex = {}
+
+		for base in baseClasses:
+			if hasattr(base, "__methodsWithAttributes__"):
+				methodsWithAttributes.extend(base.__methodsWithAttributes__)
+
 		for memberName, member in members.items():
 			if isinstance(member, FunctionType):
 				method = newClass.__dict__[memberName]
