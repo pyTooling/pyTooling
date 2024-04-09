@@ -23,6 +23,7 @@ sys_path.insert(0, abspath("../pyTooling"))
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
+githubNamespace = "pyTooling"
 project = "pyTooling"
 
 packageInformationFile = Path(f"../{project}/Common/__init__.py")
@@ -92,7 +93,7 @@ html_logo = str(Path(html_static_path[0]) / "logo.png")
 html_favicon = str(Path(html_static_path[0]) / "icon.png")
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "pyToolingDoc"
+htmlhelp_basename = f"{project}Doc"
 
 # If not None, a 'Last updated on:' timestamp is inserted at every page
 # bottom, using the given strftime format.
@@ -145,10 +146,10 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
 	( master_doc,
-		"pyTooling.tex",
-		"The pyTooling Documentation",
-		"Patrick Lehmann",
-		"manual"
+		f"{project}.tex",
+		f"The {project} Documentation",
+		f"Patrick Lehmann",
+		f"manual"
 	),
 ]
 
@@ -207,11 +208,11 @@ autodoc_typehints = "both"
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-	"gh":      ("https://GitHub.com/%s", "gh:%s"),
-	"ghissue": ("https://GitHub.com/pyTooling/pyTooling/issues/%s", "issue #%s"),
-	"ghpull":  ("https://GitHub.com/pyTooling/pyTooling/pull/%s", "pull request #%s"),
-	"ghsrc":   ("https://GitHub.com/pyTooling/pyTooling/blob/main/%s", None),
-	"wiki":    ("https://en.wikipedia.org/wiki/%s", None),
+	"gh":      (f"https://GitHub.com/%s", "gh:%s"),
+	"ghissue": (f"https://GitHub.com/{githubNamespace}/{project}/issues/%s", "issue #%s"),
+	"ghpull":  (f"https://GitHub.com/{githubNamespace}/{project}/pull/%s", "pull request #%s"),
+	"ghsrc":   (f"https://GitHub.com/{githubNamespace}/{project}/blob/main/%s", None),
+	"wiki":    (f"https://en.wikipedia.org/wiki/%s", None),
 }
 
 
@@ -264,13 +265,13 @@ _coverageLevels = {
 
 report_unittest_testsuites = {
 	"src": {
-		"name":        "pyTooling",
+		"name":        f"{project}",
 		"xml_report":  "../report/unit/TestReportSummary.xml",
 	}
 }
 report_codecov_packages = {
 	"src": {
-		"name":        "pyTooling",
+		"name":        f"{project}",
 		"json_report": "../report/coverage/coverage.json",
 		"fail_below":  80,
 		"levels":      _coverageLevels
@@ -278,8 +279,8 @@ report_codecov_packages = {
 }
 report_doccov_packages = {
 	"src": {
-		"name":       "pyTooling",
-		"directory":  "../pyTooling",
+		"name":       f"{project}",
+		"directory":  f"../{project}",
 		"fail_below": 80,
 		"levels":     _coverageLevels
 	}
@@ -296,7 +297,7 @@ sd_fontawesome_latex = True
 # AutoAPI.Sphinx
 # ==============================================================================
 autoapi_modules = {
-	"pyTooling":  {
+	f"{project}":  {
 		"template": "package",
 		"output":   project,
 		"override": True

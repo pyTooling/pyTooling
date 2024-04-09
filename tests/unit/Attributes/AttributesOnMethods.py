@@ -1014,7 +1014,6 @@ class Filtering(TestCase):
 		self.assertListEqual(foundMethodsOnAttributeAScopedToClass2, [Class2.meth1])
 
 
-
 class Attribute_GetAttributes_Filtering(TestCase):
 	def test_1(self) -> None:
 		class AttributeA(Attribute):
@@ -1064,6 +1063,39 @@ class Attribute_GetAttributes_Filtering(TestCase):
 		self.assertEqual(0, len(foundAttributesBOnClass1Meth2))
 		self.assertEqual(1, len(foundAttributesBOnClass1Meth3))
 		self.assertListEqual(foundAttributesBOnClass1Meth3, [AttributeB])
+
+
+class MultipleInheritance(TestCase):
+	def test_1(self):
+		class AttributeA(Attribute):
+			pass
+
+		class Part_A(metaclass=ExtendedType, mixin=True):
+			@AttributeA()
+			def meth1(self):
+				pass
+
+		class Part_B(metaclass=ExtendedType, mixin=True):
+			@AttributeA()
+			def meth2(self):
+				pass
+
+		class Common(Part_A, Part_B, metaclass=ExtendedType, slots=True):
+			@AttributeA()
+			def meth0(self):
+				pass
+
+		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+
+		self.assertEqual(3, len(foundMethodsOnAttributeA))
+		self.assertListEqual(foundMethodsOnAttributeA, [Part_A.meth1, Part_B.meth2, Common.meth0])
+
+		common = Common()
+
+		foundMethodsUsingAttributeA = common.GetMethodsWithAttributes(AttributeA)
+
+		self.assertEqual(3, len(foundMethodsUsingAttributeA))
+		self.assertListEqual(list(foundMethodsUsingAttributeA), [Part_A.meth1, Part_B.meth2, Common.meth0])
 
 	# default filter
 	# no filter
