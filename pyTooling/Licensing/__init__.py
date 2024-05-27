@@ -43,6 +43,7 @@ The Licensing module implements mapping tables for various license names and ide
 .. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
+from sys          import version_info           # needed for versions before Python 3.11
 from typing       import Any, Dict, Optional as Nullable
 
 
@@ -194,7 +195,10 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: License, str")
+			raise ex
 
 	def __ne__(self, other: Any) -> bool:
 		"""
@@ -206,7 +210,10 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: License, str")
+			raise ex
 
 	def __le__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are compatible."""

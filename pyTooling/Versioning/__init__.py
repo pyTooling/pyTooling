@@ -33,8 +33,9 @@ Implementation of semantic and date versioning version-numbers.
 
 .. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
-from enum          import IntEnum
-from typing        import Optional as Nullable, Any
+from enum   import IntEnum
+from sys    import version_info           # needed for versions before Python 3.11
+from typing import Optional as Nullable, Any
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -168,7 +169,10 @@ class SemanticVersion(Version):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: SemanticVersion")
+			raise ex
 
 		return (
 			(self._major == other._major) and
@@ -186,7 +190,10 @@ class SemanticVersion(Version):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: SemanticVersion")
+			raise ex
 
 		return not self.__eq__(other)
 
@@ -232,7 +239,10 @@ class SemanticVersion(Version):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: SemanticVersion")
+			raise ex
 
 		result = self.__compare(self, other)
 		return result if result is not None else False
@@ -246,7 +256,10 @@ class SemanticVersion(Version):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: SemanticVersion")
+			raise ex
 
 		result = self.__compare(self, other)
 		return result if result is not None else True
@@ -260,7 +273,10 @@ class SemanticVersion(Version):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: SemanticVersion")
+			raise ex
 
 		return not self.__le__(other)
 
@@ -273,7 +289,10 @@ class SemanticVersion(Version):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.
 		"""
 		if not isinstance(other, SemanticVersion):
-			raise TypeError(f"Parameter 'other' is not of type 'SemanticVersion'.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: SemanticVersion")
+			raise ex
 
 		return not self.__lt__(other)
 

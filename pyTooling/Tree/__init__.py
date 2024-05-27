@@ -30,12 +30,14 @@
 #
 """A powerful tree data structure for Python."""
 from collections   import deque
+from sys           import version_info           # needed for versions before Python 3.11
 from typing        import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union, Deque, Iterator
 
 try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType
 	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.Common      import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Tree] Could not import from 'pyTooling.*'!")
 
@@ -43,6 +45,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Decorators          import export, readonly
 		from MetaClasses         import ExtendedType, mixin
 		from Exceptions          import ToolingException
+		from Common              import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Tree] Could not import directly!")
 		raise ex
@@ -169,7 +172,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self._dict = {}
 
 		if parent is not None and not isinstance(parent, Node):
-			raise TypeError(f"Parameter 'parent' is not of type 'Node'.")
+			ex = TypeError(f"Parameter 'parent' is not of type 'Node'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 
 		if parent is None:
 			self._root = self
@@ -201,11 +207,17 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		if children is not None:
 			if not isinstance(children, Iterable):
-				raise TypeError(f"Parameter 'children' is not iterable.")
+				ex = TypeError(f"Parameter 'children' is not iterable.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(children)}'.")
+				raise ex
 
 			for child in children:
 				if not isinstance(child, Node):
-					raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
+					ex = TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
+					if version_info >= (3, 11):  # pragma: no cover
+						ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+					raise ex
 
 				child.Parent = self
 
@@ -331,7 +343,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._root = self
 			self._parent = None
 		elif not isinstance(parent, Node):
-			raise TypeError(f"Parameter 'parent' is not of type 'Node'.")
+			ex = TypeError(f"Parameter 'parent' is not of type 'Node'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 		else:
 			if parent._root is self._root:
 				raise AlreadyInTreeError(f"Parent '{parent}' is already a child node in this tree.")
@@ -519,7 +534,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Add multiple children at once.
 		"""
 		if not isinstance(child, Node):
-			raise TypeError(f"Parameter 'child' is not of type 'Node'.")
+			ex = TypeError(f"Parameter 'child' is not of type 'Node'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+			raise ex
 
 		if child._root is self._root:
 			raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
@@ -550,7 +568,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		for child in children:
 			if not isinstance(child, Node):
-				raise TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
+				ex = TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+				raise ex
 
 			if child._root is self._root:
 				# TODO: create a more specific exception

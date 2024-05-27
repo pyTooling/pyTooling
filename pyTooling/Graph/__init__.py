@@ -55,6 +55,7 @@ starting vertex are provided as methods on a vertex.
 import heapq
 from collections import deque
 from itertools   import chain
+from sys         import version_info           # needed for versions before Python 3.11
 from typing      import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
 from typing      import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
 
@@ -62,6 +63,7 @@ try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType
 	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.Common      import getFullyQualifiedName
 	from pyTooling.Tree        import Node
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Graph] Could not import from 'pyTooling.*'!")
@@ -70,6 +72,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Decorators          import export, readonly
 		from MetaClasses         import ExtendedType, mixin
 		from Exceptions          import ToolingException
+		from Common              import getFullyQualifiedName
 		from Tree                import Node
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Graph] Could not import directly!")
@@ -359,7 +362,10 @@ class BaseWithName(
 
 		"""
 		if name is not None and not isinstance(name, str):
-			raise TypeError("Parameter 'name' is not of type 'str'.")
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
 
 		super().__init__()
 
@@ -377,7 +383,10 @@ class BaseWithName(
 	@Name.setter
 	def Name(self, value: str) -> None:
 		if not isinstance(value, str):
-			raise TypeError("Name is not of type 'str'.")
+			ex = TypeError("Name is not of type 'str'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
 
 		self._name = value
 
@@ -412,7 +421,10 @@ class BaseWithVertices(
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
 		if not isinstance(graph, Graph):
-			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+			ex = TypeError("Parameter 'graph' is not of type 'Graph'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+			raise ex
 
 		super().__init__(name)
 
@@ -488,7 +500,10 @@ class Vertex(
 
 		"""
 		if vertexID is not None and not isinstance(vertexID, Hashable):
-			raise TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
+			ex = TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(vertexID)}'.")
+			raise ex
 
 		super().__init__(vertexID, value, weight)
 
@@ -1652,15 +1667,27 @@ class Edge(
 
 		"""
 		if not isinstance(source, Vertex):
-			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
+			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
+			raise ex
 		if not isinstance(destination, Vertex):
-			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
+			ex = TypeError("Parameter 'destination' is not of type 'Vertex'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(destination)}'.")
+			raise ex
 		if edgeID is not None and not isinstance(edgeID, Hashable):
-			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
+			ex = TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(edgeID)}'.")
+			raise ex
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if weight is not None and not isinstance(weight, (int, float)):
-			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
+			raise ex
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
@@ -1712,15 +1739,27 @@ class Link(
 
 		"""
 		if not isinstance(source, Vertex):
-			raise TypeError("Parameter 'source' is not of type 'Vertex'.")
+			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
+			raise ex
 		if not isinstance(destination, Vertex):
-			raise TypeError("Parameter 'destination' is not of type 'Vertex'.")
+			ex = TypeError("Parameter 'destination' is not of type 'Vertex'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(destination)}'.")
+			raise ex
 		if linkID is not None and not isinstance(linkID, Hashable):
-			raise TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
+			ex = TypeError("Parameter 'linkID' is not of type 'LinkIDType'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(linkID)}'.")
+			raise ex
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if weight is not None and not isinstance(weight, (int, float)):
-			raise TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
+			raise ex
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
@@ -1937,15 +1976,13 @@ class BaseGraph(
 		leafVertices = []
 
 		for vertex in self._verticesWithoutID:
-			count = len(vertex._outboundEdges)
-			if count == 0:
+			if (count := len(vertex._outboundEdges)) == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
 
 		for vertex in self._verticesWithID.values():
-			count = len(vertex._outboundEdges)
-			if count == 0:
+			if (count := len(vertex._outboundEdges)) == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
@@ -2203,15 +2240,13 @@ class BaseGraph(
 		leafVertices = []
 
 		for vertex in self._verticesWithoutID:
-			count = len(vertex._outboundEdges)
-			if count == 0:
+			if (count := len(vertex._outboundEdges)) == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
 
 		for vertex in self._verticesWithID.values():
-			count = len(vertex._outboundEdges)
-			if count == 0:
+			if (count := len(vertex._outboundEdges)) == 0:
 				leafVertices.append(vertex)
 			else:
 				outboundEdgeCounts[vertex] = count
@@ -2271,7 +2306,10 @@ class Subgraph(
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
 		if not isinstance(graph, Graph):
-			raise TypeError("Parameter 'graph' is not of type 'Graph'.")
+			ex = TypeError("Parameter 'graph' is not of type 'Graph'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+			raise ex
 
 		super().__init__(name)
 

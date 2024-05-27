@@ -45,10 +45,14 @@ __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "consol
 					  "timer", "tree", "TUI", "url", "versioning", "wheel"]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
-from collections import deque
-from numbers     import Number
-from typing      import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
-from typing      import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
+from collections         import deque
+from importlib.resources import files
+from numbers             import Number
+from pathlib             import Path
+from types               import ModuleType
+from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
+from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
+
 
 try:
 	from pyTooling.Decorators import export
@@ -67,6 +71,40 @@ except ModuleNotFoundError:  # pragma: no cover
 __all__ = ["CurrentPlatform"]
 
 CurrentPlatform = Platform()     #: Gathered information for the current platform.
+
+
+@export
+def getFullyQualifiedName(obj: Any):
+	try:
+		module = obj.__module__             # for class or function
+	except AttributeError:
+		module = obj.__class__.__module__
+
+	try:
+		name = obj.__qualname__             # for class or function
+	except AttributeError:
+		name = obj.__class__.__qualname__
+
+	# If obj is a method of builtin class, then module will be None
+	if module == "builtins" or module is None:
+		return name
+
+	return f"{module}.{name}"
+
+
+@export
+def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
+	resourcePath = files(module) / filename
+	# TODO: files() has wrong TypeHint Traversible vs. Path
+	if not resourcePath.exists():
+		from pyTooling.Exceptions import ToolingException
+		raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
+	return resourcePath
+
+
+@export
+def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
+	return files(module).joinpath(filename).read_text()
 
 
 @export

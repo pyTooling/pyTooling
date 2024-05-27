@@ -36,15 +36,18 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
+from sys     import version_info           # needed for versions before Python 3.11
 from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 
 try:
 	from pyTooling.Decorators  import export, readonly
+	from pyTooling.Common      import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators          import export, readonly
+		from Common              import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Versioning] Could not import directly!")
 		raise ex
@@ -150,7 +153,10 @@ class ExecutableArgument(CommandLineArgument):
 		:raises TypeError: If parameter 'executable' is not of type :class:`~pathlib.Path`.
 		"""
 		if not isinstance(executable, Path):
-			raise TypeError("Parameter 'executable' is not of type 'Path'.")
+			ex = TypeError("Parameter 'executable' is not of type 'Path'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(executable)}'.")
+			raise ex
 
 		self._executable = executable
 
@@ -172,7 +178,10 @@ class ExecutableArgument(CommandLineArgument):
 		:raises TypeError: If value is not of type :class:`~pathlib.Path`.
 		"""
 		if not isinstance(value, Path):
-			raise TypeError("Parameter 'value' is not of type 'Path'.")
+			ex = TypeError("Parameter 'value' is not of type 'Path'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
 
 		self._executable = value
 
@@ -318,7 +327,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		:raises TypeError: If parameter 'value' is None.
 		"""
 		if value is None:
-			raise TypeError("Parameter 'value' is None.")
+			raise ValueError("Parameter 'value' is None.")
 
 		self._value = value
 
@@ -517,7 +526,10 @@ class StringListArgument(ValuedArgument):
 		self._values = []
 		for value in values:
 			if not isinstance(value, str):
-				raise TypeError(f"Parameter 'values' contains elements which are not of type 'str'.")
+				ex = TypeError(f"Parameter 'values' contains elements which are not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(values)}'.")
+				raise ex
 
 			self._values.append(value)
 
@@ -543,7 +555,10 @@ class StringListArgument(ValuedArgument):
 		self._values.clear()
 		for value in value:
 			if not isinstance(value, str):
-				raise TypeError(f"Value contains elements which are not of type 'str'.")
+				ex = TypeError(f"Value contains elements which are not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
 			self._values.append(value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
@@ -591,7 +606,10 @@ class PathArgument(CommandLineArgument):
 		:raises TypeError: If parameter 'path' is not of type :class:`~pathlib.Path`.
 		"""
 		if not isinstance(path, Path):
-			raise TypeError("Parameter 'path' is not of type 'Path'.")
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
 		self._path = path
 
 	@property
@@ -612,7 +630,10 @@ class PathArgument(CommandLineArgument):
 		:raises TypeError: If value is not of type :class:`~pathlib.Path`.
 		"""
 		if not isinstance(value, Path):
-			raise TypeError("Parameter 'value' is not of type 'Path'.")
+			ex = TypeError("Value is not of type 'Path'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
 
 		self._path = value
 
@@ -654,7 +675,10 @@ class PathListArgument(CommandLineArgument):
 		self._paths = []
 		for path in paths:
 			if not isinstance(path, Path):
-				raise TypeError(f"Parameter 'paths' contains elements which are not of type 'Path'.")
+				ex = TypeError(f"Parameter 'paths' contains elements which are not of type 'Path'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+				raise ex
 
 			self._paths.append(path)
 
@@ -680,7 +704,10 @@ class PathListArgument(CommandLineArgument):
 		self._paths.clear()
 		for path in value:
 			if not isinstance(path, Path):
-				raise TypeError(f"Value contains elements which are not of type 'Path'.")
+				ex = TypeError(f"Value contains elements which are not of type 'Path'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+				raise ex
 			self._paths.append(path)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:

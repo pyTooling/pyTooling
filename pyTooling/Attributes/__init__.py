@@ -45,11 +45,13 @@ from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tu
 
 try:
 	from pyTooling.Decorators import export, readonly
+	from pyTooling.Common     import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Attributes] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export, readonly
+		from Common     import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Attributes] Could not import directly!")
 		raise ex
@@ -148,7 +150,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		elif isinstance(entity, type):
 			attribute._classes.append(entity)
 		else:
-			raise TypeError(f"Parameter 'entity' is not a function, class nor method.")
+			ex = TypeError(f"Parameter 'entity' is not a function, class nor method.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
+			raise ex
 
 		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):
 			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, attribute)

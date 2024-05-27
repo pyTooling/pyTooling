@@ -32,7 +32,7 @@
 """A set of helpers to implement a text user interface (TUI) in a terminal."""
 from enum                    import Enum, unique
 from io                      import TextIOWrapper
-from sys                     import stdin, stdout, stderr
+from sys                     import stdin, stdout, stderr, version_info           # needed for versions before Python 3.11
 from textwrap                import dedent
 from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 
@@ -506,7 +506,10 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value == other.value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: Severity")
+			raise ex
 
 	def __ne__(self, other: Any) -> bool:
 		"""
@@ -519,7 +522,10 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value != other.value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: Severity")
+			raise ex
 
 	def __lt__(self, other: Any) -> bool:
 		"""
@@ -532,7 +538,10 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value < other.value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: Severity")
+			raise ex
 
 	def __le__(self, other: Any) -> bool:
 		"""
@@ -545,7 +554,10 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value <= other.value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: Severity")
+			raise ex
 
 	def __gt__(self, other: Any) -> bool:
 		"""
@@ -558,7 +570,10 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >	other.value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: Severity")
+			raise ex
 
 	def __ge__(self, other: Any) -> bool:
 		"""
@@ -571,7 +586,10 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >= other.value
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: Severity")
+			raise ex
 
 
 @export
