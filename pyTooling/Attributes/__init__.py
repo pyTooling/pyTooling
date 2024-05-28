@@ -45,13 +45,13 @@ from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tu
 
 try:
 	from pyTooling.Decorators import export, readonly
-	from pyTooling.Common     import getFullyQualifiedName
+	# from pyTooling.Common     import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Attributes] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators import export, readonly
-		from Common     import getFullyQualifiedName
+		# from Common     import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Attributes] Could not import directly!")
 		raise ex
