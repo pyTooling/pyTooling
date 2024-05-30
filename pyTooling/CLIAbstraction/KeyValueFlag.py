@@ -41,16 +41,19 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
+from sys    import version_info           # needed for versions before Python 3.11
 from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable
 
 try:
 	from pyTooling.Decorators              import export
+	from pyTooling.Common                  import getFullyQualifiedName
 	from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators                      import export
+		from Common                          import getFullyQualifiedName
 		from CLIAbstraction.Argument         import NamedAndValuedArgument
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Versioning] Could not import directly!")
@@ -87,9 +90,15 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
-				raise TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
+				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+				raise ex
 			elif not isinstance(value, str):
-				raise TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
+				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
 
 			self._value[key] = value
 
@@ -114,9 +123,15 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		innerDict.clear()
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
-				raise TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
+				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+				raise ex
 			elif not isinstance(value, str):
-				raise TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
+				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
 
 			innerDict[key] = value
 

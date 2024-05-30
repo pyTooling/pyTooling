@@ -37,7 +37,9 @@ from unittest              import TestCase
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.Common      import getsizeof, CurrentPlatform
+from pyTooling.Common      import getsizeof
+from pyTooling.Platform    import CurrentPlatform
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")

@@ -44,14 +44,12 @@ from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional
 try:
 	from pyTooling.Exceptions import ToolingException
 	from pyTooling.Decorators import export
-	from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Exceptions import ToolingException
 		from Decorators import export
-		from Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import directly!")
 		raise ex
@@ -409,6 +407,11 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
+		try:
+			from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
+		except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+			from Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
+
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]

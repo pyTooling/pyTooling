@@ -44,16 +44,19 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
    * For list of paths. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
 """
+from sys    import version_info           # needed for versions before Python 3.11
 from typing import List, Union, Iterable, cast, Any
 
 try:
 	from pyTooling.Decorators              import export
+	from pyTooling.Common                  import getFullyQualifiedName
 	from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators                      import export
+		from Common                          import getFullyQualifiedName
 		from CLIAbstraction.Argument         import ValueT, NamedAndValuedArgument
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Versioning] Could not import directly!")
@@ -113,7 +116,10 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		innerList.clear()
 		for value in values:
 			if not isinstance(value, str):
-				raise TypeError(f"Value contains elements which are not of type 'str'.")
+				ex = TypeError(f"Value contains elements which are not of type 'str'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
 			innerList.append(value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:

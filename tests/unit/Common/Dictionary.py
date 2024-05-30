@@ -31,11 +31,13 @@
 """
 Unit tests for :func:`firstKey`, :func:`firstValue`, :func:`firstPair`, :func:`mergedicts` and :func:`zipdicts`.
 """
-from unittest         import TestCase
+from unittest           import TestCase
 
-from pytest           import mark
+from pytest             import mark
 
-from pyTooling.Common import firstKey, firstValue, firstPair, mergedicts, zipdicts, CurrentPlatform
+from pyTooling.Common   import firstKey, firstValue, firstPair, mergedicts, zipdicts
+from pyTooling.Platform import CurrentPlatform
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")

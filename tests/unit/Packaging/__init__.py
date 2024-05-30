@@ -36,7 +36,7 @@ from unittest import TestCase
 from pytest   import mark
 from sys      import version_info
 
-from pyTooling.Common import CurrentPlatform
+from pyTooling.Platform import CurrentPlatform
 
 
 if __name__ == "__main__":  # pragma: no cover

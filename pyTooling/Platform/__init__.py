@@ -51,6 +51,9 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		raise ex
 
 
+__all__ = ["CurrentPlatform"]
+
+
 @export
 class PythonImplementation(Flag):
 	Unknown = 0
@@ -515,3 +518,6 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			architecture = "arch:dec-err"
 
 		return f"{platform}{environment} ({architecture}){runtime}"
+
+
+CurrentPlatform = Platform()     #: Gathered information for the current platform.

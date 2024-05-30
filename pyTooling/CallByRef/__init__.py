@@ -210,21 +210,30 @@ class CallByRefIntParam(CallByRefParam):
 		if isinstance(other, int):
 			return self.Value & other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by and operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by and operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __or__(self, other: Any) -> int:
 		"""Or: self | other."""
 		if isinstance(other, int):
 			return self.Value | other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by or operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by or operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __xor__(self, other: Any) -> int:
 		"""Xor: self ^ other."""
 		if isinstance(other, int):
 			return self.Value ^ other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	# Binary inplace operators
 	def __iand__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
@@ -233,7 +242,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value &= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by &= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by &= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __ior__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
 		r"""Inplace or: self \|= other."""
@@ -241,7 +253,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value |= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by |= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by |= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __ixor__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
 		r"""Inplace or: self \|= other."""
@@ -249,7 +264,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value ^= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ^= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ^= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	# Binary operators - arithmetic
 	def __add__(self, other: Any) -> int:
@@ -257,49 +275,70 @@ class CallByRefIntParam(CallByRefParam):
 		if isinstance(other, int):
 			return self.Value + other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by + operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by + operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __sub__(self, other: Any) -> int:
 		"""Subtraction: self - other."""
 		if isinstance(other, int):
 			return self.Value - other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by - operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by - operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __truediv__(self, other: Any) -> int:
 		"""Division: self / other."""
 		if isinstance(other, int):
 			return self.Value / other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by / operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by / operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __floordiv__(self, other: Any) -> int:
 		"""Floor division: self // other."""
 		if isinstance(other, int):
 			return self.Value // other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by // operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by // operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __mul__(self, other: Any) -> int:
 		"""Multiplication: self * other."""
 		if isinstance(other, int):
 			return self.Value * other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by * operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by * operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __mod__(self, other: Any) -> int:
 		"""Modulo: self % other."""
 		if isinstance(other, int):
 			return self.Value % other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by % operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by % operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __pow__(self, other: Any) -> int:
 		"""Power: self ** other."""
 		if isinstance(other, int):
 			return self.Value ** other
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ** operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ** operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	# Binary inplace operators - arithmetic
 	def __iadd__(self, other: Any) -> 'CallByRefIntParam':
@@ -308,7 +347,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value += other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __isub__(self, other: Any) -> 'CallByRefIntParam':
 		"""Subtraction: self -= other."""
@@ -316,7 +358,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value -= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __idiv__(self, other: Any) -> 'CallByRefIntParam':
 		"""Division: self /= other."""
@@ -324,7 +369,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value /= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __ifloordiv__(self, other: Any) -> 'CallByRefIntParam':
 		"""Floor division: self // other."""
@@ -332,7 +380,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value //= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __imul__(self, other: Any) -> 'CallByRefIntParam':
 		r"""Multiplication: self \*= other."""
@@ -340,7 +391,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value *= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __imod__(self, other: Any) -> 'CallByRefIntParam':
 		"""Modulo: self %= other."""
@@ -348,7 +402,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value %= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	def __ipow__(self, other: Any) -> 'CallByRefIntParam':
 		r"""Power: self \*\*= other."""
@@ -356,7 +413,10 @@ class CallByRefIntParam(CallByRefParam):
 			self.Value **= other
 			return self
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: int")
+			raise ex
 
 	# Binary operators - comparison
 	def __eq__(self, other: Any) -> bool:

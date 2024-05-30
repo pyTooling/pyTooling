@@ -31,11 +31,12 @@
 """
 Unit tests for :func:`isnestedclass`.
 """
-from unittest import TestCase
+from unittest           import TestCase
 
-from pytest import mark
+from pytest             import mark
 
-from pyTooling.Common import getsizeof, CurrentPlatform
+from pyTooling.Common   import getsizeof
+from pyTooling.Platform import CurrentPlatform
 
 
 if __name__ == "__main__":  # pragma: no cover

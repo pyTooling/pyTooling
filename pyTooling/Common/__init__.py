@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2024, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "6.1.0"
+__version__ =       "6.2.0"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
@@ -45,28 +45,66 @@ __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "consol
 					  "timer", "tree", "TUI", "url", "versioning", "wheel"]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
-from collections import deque
-from numbers     import Number
-from typing      import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
-from typing      import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
+from collections         import deque
+from numbers             import Number
+from pathlib             import Path
+from sys                 import version_info
+from types               import ModuleType
+from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
+from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
+
 
 try:
 	from pyTooling.Decorators import export
-	from pyTooling.Platform   import Platform
 except ModuleNotFoundError:  # pragma: no cover
 	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators         import export
-		from Platform           import Platform
 	except ModuleNotFoundError as ex:  # pragma: no cover
 		print("[pyTooling.Common] Could not import directly!")
 		raise ex
 
 
-__all__ = ["CurrentPlatform"]
+@export
+def getFullyQualifiedName(obj: Any):
+	try:
+		module = obj.__module__             # for class or function
+	except AttributeError:
+		module = obj.__class__.__module__
 
-CurrentPlatform = Platform()     #: Gathered information for the current platform.
+	try:
+		name = obj.__qualname__             # for class or function
+	except AttributeError:
+		name = obj.__class__.__qualname__
+
+	# If obj is a method of builtin class, then module will be None
+	if module == "builtins" or module is None:
+		return name
+
+	return f"{module}.{name}"
+
+
+if version_info >= (3, 9):  # pragma: no cover
+	@export
+	def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
+		from importlib.resources import files  # TODO: can be used as regular import > 3.8
+
+		# TODO: files() has wrong TypeHint Traversible vs. Path
+		resourcePath: Path = files(module) / filename
+		if not resourcePath.exists():
+			from pyTooling.Exceptions import ToolingException
+
+			raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
+
+		return resourcePath
+
+
+	@export
+	def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
+		from importlib.resources import files
+
+		return files(module).joinpath(filename).read_text()
 
 
 @export

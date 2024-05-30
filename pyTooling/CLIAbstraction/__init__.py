@@ -33,17 +33,19 @@
 
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
 
-from os                    import environ as os_environ
-from pathlib               import Path
-from platform              import system
-from shutil                import which as shutil_which
-from subprocess            import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
-from typing                import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any
+from os         import environ as os_environ
+from pathlib    import Path
+from platform   import system
+from shutil     import which as shutil_which
+from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
+from sys        import version_info           # needed for versions before Python 3.11
+from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any
 
 try:
 	from pyTooling.Decorators                import export, readonly
 	from pyTooling.MetaClasses               import ExtendedType
 	from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedException
+	from pyTooling.Common                    import getFullyQualifiedName
 	from pyTooling.Attributes                import Attribute
 	from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
 	from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
@@ -55,6 +57,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Decorators                import export, readonly
 		from MetaClasses               import ExtendedType
 		from Exceptions                import ToolingException, PlatformNotSupportedException
+		from Common                    import getFullyQualifiedName
 		from Attributes                import Attribute
 		from CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
 		from CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
@@ -136,7 +139,10 @@ class Program(metaclass=ExtendedType, slots=True):
 					else:
 						raise CLIAbstractionException(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
-				raise TypeError(f"Parameter 'executablePath' is not of type 'Path'.")
+				ex = TypeError(f"Parameter 'executablePath' is not of type 'Path'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(executablePath)}'.")
+				raise ex
 		elif binaryDirectoryPath is not None:
 			if isinstance(binaryDirectoryPath, Path):
 				if not binaryDirectoryPath.exists():
@@ -156,7 +162,10 @@ class Program(metaclass=ExtendedType, slots=True):
 					else:
 						raise CLIAbstractionException(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
-				raise TypeError(f"Parameter 'binaryDirectoryPath' is not of type 'Path'.")
+				ex = TypeError(f"Parameter 'binaryDirectoryPath' is not of type 'Path'.")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(binaryDirectoryPath)}'.")
+				raise ex
 		else:
 			try:
 				executablePath = Path(self._executableNames[self._platform])
@@ -197,14 +206,20 @@ class Program(metaclass=ExtendedType, slots=True):
 	def __getitem__(self, key):
 		"""Access to a CLI parameter by CLI option (key must be of type :class:`CommandLineArgument`), which is already used."""
 		if not issubclass(key, CommandLineArgument):
-			raise TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
+			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+			raise ex
 
 		# TODO: is nested check
 		return self.__cliParameters__[key]
 
 	def __setitem__(self, key, value):
 		if not issubclass(key, CommandLineArgument):
-			raise TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
+			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+			raise ex
 		elif key not in self.__cliOptions__:
 			raise KeyError(f"Option '{key}' is not allowed on executable '{self.__class__.__name__}'")
 		elif key in self.__cliParameters__:
