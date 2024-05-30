@@ -409,6 +409,11 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
+		try:
+			from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
+		except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+			from Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
+
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
