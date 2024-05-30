@@ -5,18 +5,40 @@ Terminal
 
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
+
+
+
+.. _TERM/Terminal:
+
+Terminal
+********
+
+.. _TERM/LineTerminal:
+
+LineTerminal
+************
+
+
+
+
+
+
+
+
+
+
 Introduction
 ************
 
-This package offers a :py:class:`pyTooling.TerminalUI.LineTerminal` implementation, derived from a basic
-:py:class:`pyTooling.TerminalUI.Terminal` class. It eases the creation of simple terminal/console applications. It
+This package offers a :class:`pyTooling.TerminalUI.LineTerminal` implementation, derived from a basic
+:class:`pyTooling.TerminalUI.Terminal` class. It eases the creation of simple terminal/console applications. It
 includes colored outputs based on `colorama`.
 
 List of base-classes
 ********************
 
-* :py:class:`pyTooling.TerminalUI.Terminal`
-* :py:class:`pyTooling.TerminalUI.LineTerminal`
+* :class:`pyTooling.TerminalUI.Terminal`
+* :class:`pyTooling.TerminalUI.LineTerminal`
 
 
 Example
@@ -27,7 +49,7 @@ Example
    from pyTooling.TerminalUI import LineTerminal
 
    class Application(LineTerminal):
-     def __init__(self):
+     def __init__(self) -> None:
        super().__init__(verbose=True, debug=True, quiet=False)
 
      def run(self):
@@ -41,10 +63,10 @@ Example
 
    # entry point
    if __name__ == "__main__":
-     Application.versionCheck((3,6,0))
+     Application.CheckPythonVersion((3,6,0))
      app = Application()
      app.run()
-     app.exit()
+     app.Exit()
 
 
 Line

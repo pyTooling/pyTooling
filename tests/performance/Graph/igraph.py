@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -38,18 +38,19 @@ from . import PerformanceTest
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Graph(PerformanceTest):
-	def test_AddEdge_Flat(self):
+	def test_AddEdge_Flat(self) -> None:
 		def wrapper(count: int):
 			def func():
 				g = iGraph(directed=True)
-				g.add_vertex(0)
+				g.add_vertex("0")
 
 				for i in range(1, count):
+					i = str(i)
 					g.add_vertex(i)
 					g.add_edge(0, i)
 
@@ -57,15 +58,16 @@ class Graph(PerformanceTest):
 
 		self.runSizedTests(wrapper, self.counts[:-1])
 
-	def test_AddEdge_Linear(self):
+	def test_AddEdge_Linear(self) -> None:
 		def wrapper(count: int):
 			def func():
 				g = iGraph(directed=True)
 
-				prev = 0
+				prev = "0"
 				g.add_vertex(prev)
 
 				for i in range(1, count):
+					i = str(i)
 					g.add_vertex(i)
 					g.add_edge(prev, i)
 					prev = i
@@ -79,16 +81,16 @@ class RandomGraph(PerformanceTest):
 	def ConstructGraphFromEdgeListFile(self, file: Path, vertexCount: int) -> iGraph:
 		graph = iGraph(directed=True)
 		for v in range(vertexCount):
-			graph.add_vertex(v)
+			graph.add_vertex(str(v))
 
 		with file.open("r") as f:
 			for line in f.readlines():
 				v, u, w = line.split(" ")
-				graph.add_edge(int(v), int(u), weight=int(w))
+				graph.add_edge(v, u, weight=int(w))
 
 		return graph
 
-	def test_BFS(self):
+	def test_BFS(self) -> None:
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				bfsList = [v for v in graph.bfsiter(componentStartVertex)]
@@ -99,7 +101,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_DFS(self):
+	def test_DFS(self) -> None:
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				dfsList = [v for v in graph.dfsiter(componentStartVertex)]
@@ -110,11 +112,11 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_ShortestPathByHops(self):
+	def test_ShortestPathByHops(self) -> None:
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
-					vertexPath = graph.distances(49, 20)
+					vertexPath = graph.distances("49", "20")
 				except KeyError:
 					pass
 
@@ -125,11 +127,11 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_ShortestPathByWeight(self):
+	def test_ShortestPathByWeight(self) -> None:
 		def wrapper(graph: iGraph, componentStartVertex: int, componentSize: int):
 			def func():
 				try:
-					vertexPath = graph.distances(49, 20, "weight")
+					vertexPath = graph.distances("49", "20", "weight")
 				except KeyError:
 					pass
 

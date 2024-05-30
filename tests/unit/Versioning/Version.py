@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2020-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2020-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -29,55 +29,53 @@
 # ==================================================================================================================== #
 #
 """Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest     import TestCase
+from unittest             import TestCase
 
-from pyTooling.Versioning import SemVersion as UUT
+from pyTooling.Versioning import SemanticVersion
 
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Version(TestCase):
-	version : UUT
-
-	# def test_CreateFromNone(self):
+	# def test_CreateFromNone(self) -> None:
 	# 	with self.assertRaises(ValueError):
 	# 		version = Version(versionString=None)
 
 	def test_CreateFromEmptyString(self) -> None:
 		with self.assertRaises(ValueError):
-			UUT("")
+			SemanticVersion.Parse("")
 
 	def test_CreateFromSomeString(self) -> None:
 		with self.assertRaises(ValueError):
-			UUT("None")
+			SemanticVersion.Parse("None")
 
 	def test_CreateFromString1(self) -> None:
-		version = UUT("0.0.0")
+		version = SemanticVersion.Parse("0.0.0")
 
-		self.assertEqual(version.major, 0, "Major number is not 0.")
-		self.assertEqual(version.minor, 0, "Minor number is not 0.")
-		self.assertEqual(version.patch, 0, "Patch number is not 0.")
-		self.assertEqual(version.build, 0, "Build number is not 0.")
+		self.assertEqual(version.Major, 0, "Major number is not 0.")
+		self.assertEqual(version.Minor, 0, "Minor number is not 0.")
+		self.assertEqual(version.Patch, 0, "Patch number is not 0.")
+		self.assertEqual(version.Build, 0, "Build number is not 0.")
 
 	def test_CreateFromIntegers1(self) -> None:
-		version = UUT(0, 0, 0)
+		version = SemanticVersion(0, 0, 0)
 
-		self.assertEqual(version.major, 0, "Major number is not 0.")
-		self.assertEqual(version.minor, 0, "Minor number is not 0.")
-		self.assertEqual(version.patch, 0, "Patch number is not 0.")
-		self.assertEqual(version.build, 0, "Build number is not 0.")
+		self.assertEqual(version.Major, 0, "Major number is not 0.")
+		self.assertEqual(version.Minor, 0, "Minor number is not 0.")
+		self.assertEqual(version.Patch, 0, "Patch number is not 0.")
+		self.assertEqual(version.Build, 0, "Build number is not 0.")
 
 	def test_CreateFromIntegers2(self) -> None:
-		version = UUT(1, 2, 3, 4)
+		version = SemanticVersion(1, 2, 3, 4)
 
-		self.assertEqual(version.major, 1, "Major number is not 1.")
-		self.assertEqual(version.minor, 2, "Minor number is not 2.")
-		self.assertEqual(version.patch, 3, "Patch number is not 3.")
-		self.assertEqual(version.build, 4, "Build number is not 4.")
+		self.assertEqual(version.Major, 1, "Major number is not 1.")
+		self.assertEqual(version.Minor, 2, "Minor number is not 2.")
+		self.assertEqual(version.Patch, 3, "Patch number is not 3.")
+		self.assertEqual(version.Build, 4, "Build number is not 4.")
 
 	def test_Equal(self) -> None:
 		l = [
@@ -92,8 +90,8 @@ class Version(TestCase):
 
 		for t in l:
 			with self.subTest(equal=t):
-				v1 = UUT(t[0])
-				v2 = UUT(t[1])
+				v1 = SemanticVersion.Parse(t[0])
+				v2 = SemanticVersion.Parse(t[1])
 				self.assertEqual(v1, v2)
 
 	def test_Unequal(self) -> None:
@@ -110,8 +108,8 @@ class Version(TestCase):
 
 		for t in l:
 			with self.subTest(unequal=t):
-				v1 = UUT(t[0])
-				v2 = UUT(t[1])
+				v1 = SemanticVersion.Parse(t[0])
+				v2 = SemanticVersion.Parse(t[1])
 				self.assertNotEqual(v1, v2)
 
 	def test_LessThan(self) -> None:
@@ -125,8 +123,8 @@ class Version(TestCase):
 
 		for t in l:
 			with self.subTest(lessthan=t):
-				v1 = UUT(t[0])
-				v2 = UUT(t[1])
+				v1 = SemanticVersion.Parse(t[0])
+				v2 = SemanticVersion.Parse(t[1])
 				self.assertLess(v1, v2)
 
 	def test_LessEqual(self) -> None:
@@ -141,8 +139,8 @@ class Version(TestCase):
 
 		for t in l:
 			with self.subTest(lessequal=t):
-				v1 = UUT(t[0])
-				v2 = UUT(t[1])
+				v1 = SemanticVersion.Parse(t[0])
+				v2 = SemanticVersion.Parse(t[1])
 				self.assertLessEqual(v1, v2)
 
 	def test_GreaterThan(self) -> None:
@@ -156,8 +154,8 @@ class Version(TestCase):
 
 		for t in l:
 			with self.subTest(greaterthan=t):
-				v1 = UUT(t[0])
-				v2 = UUT(t[1])
+				v1 = SemanticVersion.Parse(t[0])
+				v2 = SemanticVersion.Parse(t[1])
 				self.assertGreater(v1, v2)
 
 	def test_GreaterEqual(self) -> None:
@@ -172,6 +170,6 @@ class Version(TestCase):
 
 		for t in l:
 			with self.subTest(greaterequal=t):
-				v1 = UUT(t[0])
-				v2 = UUT(t[1])
+				v1 = SemanticVersion.Parse(t[0])
+				v2 = SemanticVersion.Parse(t[1])
 				self.assertGreaterEqual(v1, v2)

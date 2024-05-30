@@ -10,6 +10,9 @@ Tutorials
 .. toctree::
    :hidden:
 
-   ExceptionHierarchy
+   Attributes
+   CLIAbstraction
    Decorators
+   ExceptionHierarchy
    MetaClasses
+   TerminalApplication

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -29,24 +29,24 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :py:class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for class :class:`pyTooling.MetaClasses.Overloading`.
 """
 from unittest       import TestCase
 
-from pyTooling.MetaClasses import Overloading
+from pyTooling.MetaClasses import ExtendedType
 
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
-class Application(metaclass=Overloading):
-	def __init__(self, x : int):
+class Application(metaclass=ExtendedType):
+	def __init__(self, x : int) -> None:
 		self.x = x
 
-	def __init__(self, x : str):
+	def __init__(self, x : str) -> None:
 		self.x = x
 
 

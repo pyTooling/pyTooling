@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -31,19 +31,19 @@
 """Unit tests for pyTooling.Graph.GraphML."""
 from unittest import TestCase
 
-from pyTooling.Graph import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
+from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
-from pyTooling.Tree import Node as pyToolingNode
+from pyTooling.Tree          import Node as pyToolingNode
 
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class Construction(TestCase):
-	def test_Key(self):
+	def test_Key(self) -> None:
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
 
 		self.assertEqual("k1", key.ID)
@@ -60,7 +60,7 @@ class Construction(TestCase):
 		for line in key.ToStringLines():
 			print(line, end="")
 
-	def test_Data(self):
+	def test_Data(self) -> None:
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
 		data = Data(key, "violet")
 
@@ -77,7 +77,7 @@ class Construction(TestCase):
 		for line in data.ToStringLines():
 			print(line, end="")
 
-	def test_Node(self):
+	def test_Node(self) -> None:
 		node = Node("n1")
 
 		self.assertEqual("n1", node.ID)
@@ -92,7 +92,7 @@ class Construction(TestCase):
 		for line in node.ToStringLines():
 			print(line, end="")
 
-	def test_NodeWithData(self):
+	def test_NodeWithData(self) -> None:
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
 
 		node = Node("n1")
@@ -113,7 +113,7 @@ class Construction(TestCase):
 		for line in node.ToStringLines():
 			print(line, end="")
 
-	def test_Edge(self):
+	def test_Edge(self) -> None:
 		node1 = Node("n1")
 		node2 = Node("n2")
 		edge = Edge("e1", node1, node2)
@@ -128,7 +128,7 @@ class Construction(TestCase):
 		for line in edge.ToStringLines():
 			print(line, end="")
 
-	def test_EdgeWithData(self):
+	def test_EdgeWithData(self) -> None:
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
 
 		node1 = Node("n1")
@@ -151,7 +151,7 @@ class Construction(TestCase):
 		for line in edge.ToStringLines():
 			print(line, end="")
 
-	def test_Graph(self):
+	def test_Graph(self) -> None:
 		graph = Graph(None, "g1")
 
 		self.assertTrue(graph.HasClosingTag)
@@ -180,7 +180,7 @@ class Construction(TestCase):
 		for line in graph.ToStringLines():
 			print(line, end="")
 
-	def test_GraphWithNodesAndEdges(self):
+	def test_GraphWithNodesAndEdges(self) -> None:
 		graph = Graph(None, "g1")
 
 		graph.AddNode(Node("n1"))
@@ -216,7 +216,7 @@ class Construction(TestCase):
 		for line in graph.ToStringLines():
 			print(line, end="")
 
-	def test_GraphWithSubgraph(self):
+	def test_GraphWithSubgraph(self) -> None:
 		graph = Graph(None, "g1")
 
 		graph.AddNode(Node("n1"))
@@ -244,7 +244,7 @@ class Construction(TestCase):
 		for line in graph.ToStringLines():
 			print(line, end="")
 
-	def test_GraphML(self):
+	def test_GraphML(self) -> None:
 		doc = GraphMLDocument("g1")
 
 		self.assertIsInstance(doc._graph, Graph)
@@ -255,7 +255,7 @@ class Construction(TestCase):
 
 
 class pyToolingGraph(TestCase):
-	def test_ConvertGraph(self):
+	def test_ConvertGraph(self) -> None:
 		graph = pyTooling_Graph(name="g1")
 
 		vertex1 = Vertex(vertexID="n1", value="v1", graph=graph)
@@ -273,7 +273,7 @@ class pyToolingGraph(TestCase):
 		for line in doc.ToStringLines():
 			print(line, end="")
 
-	def test_ConvertSubgraph(self):
+	def test_ConvertSubgraph(self) -> None:
 		graph = pyTooling_Graph(name="g1")
 		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
 		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
@@ -307,7 +307,7 @@ class pyToolingGraph(TestCase):
 
 
 class pyToolingTree(TestCase):
-	def test_Conversion(self):
+	def test_Conversion(self) -> None:
 		root = pyToolingNode(nodeID="n0", value="v0")
 		child1 = pyToolingNode("n1", "v1", parent=root)
 		child2 = pyToolingNode("n2", "v2", parent=root)

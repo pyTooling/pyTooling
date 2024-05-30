@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -43,20 +43,21 @@ The Licensing module implements mapping tables for various license names and ide
 .. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
-from typing       import Any, Dict
+from sys          import version_info           # needed for versions before Python 3.11
+from typing       import Any, Dict, Optional as Nullable
 
 
 try:
-	from ..Decorators import export
-	from ..MetaClasses import ExtendedType
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Licensing] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
-		from MetaClasses import ExtendedType
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Licensing] Could not import from 'Decorators' directly!")
+		print("[pyTooling.Licensing] Could not import directly!")
 		raise ex
 
 
@@ -74,7 +75,7 @@ __all__ = [
 
 @export
 @dataclass
-class PythonLicenseNames:
+class PythonLicenseName:
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
 
 	ShortName: str    #: License's short name
@@ -90,16 +91,16 @@ class PythonLicenseNames:
 
 
 #: Mapping of SPDX identifiers to Python license names
-PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseNames] = {
-	"Apache-2.0":       PythonLicenseNames("Apache 2.0",       "Apache Software License"),
-	"BSD-3-Clause":     PythonLicenseNames("BSD",              "BSD License"),
-	"MIT":              PythonLicenseNames("MIT",              "MIT License"),
-	"GPL-2.0-or-later": PythonLicenseNames("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
+PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseName] = {
+	"Apache-2.0":       PythonLicenseName("Apache 2.0",       "Apache Software License"),
+	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
+	"MIT":              PythonLicenseName("MIT",              "MIT License"),
+	"GPL-2.0-or-later": PythonLicenseName("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
 }
 
 
 @export
-class License(metaclass=ExtendedType, useSlots=True):
+class License(metaclass=ExtendedType, slots=True):
 	"""Representation of a license."""
 
 	_spdxIdentifier: str  #: Unique SPDX identifier.
@@ -113,7 +114,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		self._osiApproved = osiApproved
 		self._fsfApproved = fsfApproved
 
-	@property
+	@readonly
 	def Name(self) -> str:
 		"""
 		Returns the license' name.
@@ -122,7 +123,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		return self._name
 
-	@property
+	@readonly
 	def SPDXIdentifier(self) -> str:
 		"""
 		Returns the license' unique `SPDX identifier <https://spdx.org/licenses/>`__.
@@ -131,7 +132,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		return self._spdxIdentifier
 
-	@property
+	@readonly
 	def OSIApproved(self) -> bool:
 		"""
 		Returns true, if the license is approved by OSI (`Open Source Initiative <https://opensource.org/>`__).
@@ -140,7 +141,7 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		return self._osiApproved
 
-	@property
+	@readonly
 	def FSFApproved(self) -> bool:
 		"""
 		Returns true, if the license is approved by FSF (`Free Software Foundation <https://www.fsf.org/>`__).
@@ -149,35 +150,35 @@ class License(metaclass=ExtendedType, useSlots=True):
 		"""
 		return self._fsfApproved
 
-	@property
+	@readonly
 	def PythonLicenseName(self) -> str:
 		"""
 		Returns the Python license name for this license if it's defined.
 
 		:returns: The Python license name.
-		:raises ValueError: If there is no license name defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+		:raises ValueError: If there is no license name defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
-			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
 			raise ValueError("License has no Python specify information.") from ex
 
 		return item.ShortName
 
-	@property
+	@readonly
 	def PythonClassifier(self) -> str:
 		"""
 		Returns the Python package classifier for this license if it's defined.
 
 		:returns: The Python package classifier.
-		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :py:data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
+		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 
 		.. seealso::
 
 		   List of `Python classifiers <https://pypi.org/classifiers/>`__
 		"""
 		try:
-			item: PythonLicenseNames = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
+			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
 			raise ValueError(f"License has no Python specify information.") from ex
 
@@ -189,24 +190,30 @@ class License(metaclass=ExtendedType, useSlots=True):
 		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are identical.
-		:raises TypeError: If second operand is not of type :py:class:`License`.
+		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: License, str")
+			raise ex
 
 	def __ne__(self, other: Any) -> bool:
 		"""
 		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are not identical.
-		:raises TypeError: If second operand is not of type :py:class:`License`.
+		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
-			raise TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: License, str")
+			raise ex
 
 	def __le__(self, other: Any) -> bool:
 		"""Returns true, if both licenses are compatible."""

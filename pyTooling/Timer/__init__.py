@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,22 +33,33 @@ A timer and stopwatch to measure execution time.
 
 .. hint:: See :ref:`high-level help <TIMER>` for explanations and usage examples.
 """
-from time import perf_counter_ns
+from time   import perf_counter_ns
 from typing import List, Optional as Nullable, Dict
+# Python 3.11: use Self if returning the own object: , Self
 
-from pyTooling.Decorators import export
-from pyTooling.MetaClasses import ObjectWithSlots
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import SlottedObject
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Timer] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import SlottedObject
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Timer] Could not import directly!")
+		raise ex
 
 
 @export
-class Timer(ObjectWithSlots):
+class Timer(SlottedObject):
 	"""
 	Undocumented.
 
 	.. todo::TIMER::Timer Needs class documentation.
 	"""
 
-	_timers: Dict[str, 'Timer'] = {}
+	_timers: Dict[str, 'Timer']
 
 	_startTime: Nullable[int]
 	_resumeTime: Nullable[int]
@@ -57,12 +68,14 @@ class Timer(ObjectWithSlots):
 	_diffTime: int
 	_diffTimes: List[int]
 
-	def __init__(self):
+	def __init__(self) -> None:
+		self._timers = {}
+
 		self._startTime = None
 		self._resumeTime = None
 		self._diffTimes = []
 
-	def __enter__(self):
+	def __enter__(self):  # Python 3.11: -> Self:
 		self.Start()
 		return self
 
@@ -96,14 +109,14 @@ class Timer(ObjectWithSlots):
 	def Continue(self):
 		self._resumeTime = perf_counter_ns()
 
-	@property
+	@readonly
 	def Duration(self) -> float:
 		return self._diffTime / 1e9
 
-	@property
+	@readonly
 	def DurationMS(self) -> float:
 		return self._diffTime / 1e6
 
-	@property
+	@readonly
 	def DurationUS(self) -> float:
 		return self._diffTime / 1e3

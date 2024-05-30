@@ -106,6 +106,15 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   CLIOption
+     ...
+
+   CLIParameter
+     ...
+
+   CopyLeft
+     ...
+
    Cygwin
      :wiki:`Cygwin` is a :wiki:`POSIX`-compatible programming and runtime environment for Windows.
 
@@ -192,6 +201,9 @@ Glossary
 
    Edge
      An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph`.
+
+   Executable
+     ...
 
    Exception
      ...
@@ -299,12 +311,14 @@ Glossary
           T(type)
           ET(MetaClass)
           B(BaseClass)
+          M(MixIn)
           C(Class)
           I1(Instance);I2(Instance)
 
           T --> T
-          T:::mark1 --> ET:::mark1 -.class definition..-> B
-          B:::mark2 --> C:::mark2 -.instantiation..-> I1 & I2
+          T:::mark1 --> ET:::mark1 -.class definition.-> B
+          B:::mark2 --inheritance--> C:::mark2 -.instantiation..-> I1 & I2
+          M --inheritance--> C
 
           classDef node font-size:smaller;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
@@ -312,6 +326,9 @@ Glossary
 
    MinGW
      Minimalistic GNU for Windows.
+
+   Mixin-Class
+     A *mixin classes* are classes used as secondary base-classes in multiple inheritance.
 
    MSYS2
      ...
@@ -368,6 +385,15 @@ Glossary
      ...
 
    Pre-Order
+     ...
+
+   Program
+     ...
+
+   PyPI
+     ...
+
+   PyPy
      ...
 
    Relative
@@ -487,7 +513,7 @@ Glossary
      Universal C Runtime
 
    Vertex
-     A vertex is a :term:`node` in a graph.
+     A vertex is a :term:`node` in a graph. Vertexes in a graph are connected using :term:`edges <edge>`.
 
    WSL
      Windows System for Linux

@@ -3,9 +3,9 @@
 YAML
 ****
 
-Module :py:mod:`~pyTooling.Configuration.YAML` provides a configuration reader implementation for the YAML format.
+Module :mod:`~pyTooling.Configuration.YAML` provides a configuration reader implementation for the YAML format.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 1
 
@@ -30,6 +30,16 @@ Module :py:mod:`~pyTooling.Configuration.YAML` provides a configuration reader i
             dict:
               key_10: value_10
               key_11: value_11
+
+.. seealso::
+
+   YAML Standard 1.2.2
+     https://yaml.org/spec/1.2.2/
+   Official YAML Website
+     https://yaml.org/
+   Wikipedia
+     https://en.wikipedia.org/wiki/YAML
+
 
 Reading a YAML Formatted Config File
 ====================================

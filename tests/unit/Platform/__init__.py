@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               ____                                                                   #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|___  _ __ ___  _ __ ___   ___  _ __                               #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \                              #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_) | | | | | | | | | | | (_) | | | |                             #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\___/|_| |_| |_|_| |_| |_|\___/|_| |_|                             #
+#             _____           _ _               ____  _       _    __                                                  #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \| | __ _| |_ / _| ___  _ __ _ __ ___                              #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |_) | |/ _` | __| |_ / _ \| '__| '_ ` _ \                             #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  __/| | (_| | |_|  _| (_) | |  | | | | | |                            #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|   |_|\__,_|\__|_|  \___/|_|  |_| |_| |_|                            #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,29 +33,30 @@ from os       import getenv as os_getenv
 from pytest   import mark
 from unittest import TestCase
 
-from pyTooling.Common import CurrentPlatform
-from pyTooling.Common.Platform import Platform
+from pyTooling.Common   import CurrentPlatform
+from pyTooling.Platform import Platforms, Platform
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class AnyPlatform(TestCase):
 	expected = os_getenv("ENVIRONMENT_NAME", default="Windows (x86-64)")
 
-	@mark.skipif(os_getenv("ENVIRONMENT_NAME", "skip") == "skip", reason="Skipped when environment variable 'ENVIRONMENT_NAME' isn't set.")
+	@mark.skipif(os_getenv("ENVIRONMENT_NAME", "skip") == "skip", reason="Skipped, if environment variable 'ENVIRONMENT_NAME' isn't set.")
 	def test_PlatformString(self) -> None:
 		platform = CurrentPlatform
 
 		self.assertEqual(self.expected, str(platform))
 
-	@mark.skipif("Linux (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeLinux' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Linux (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeLinux', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_NativeLinux(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Linux), repr(platform))
+		self.assertEqual(str(Platforms.Linux), repr(platform))
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertTrue(platform.IsNativeLinux)
@@ -72,13 +73,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("", platform.ExecutableExtension)
 		self.assertEqual("so", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("MacOS (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("MacOS (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_NativeMacOS(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.MacOS), repr(platform))
+		self.assertEqual(str(Platforms.MacOS), repr(platform))
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
@@ -95,13 +96,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("", platform.ExecutableExtension)
 		self.assertEqual("lib", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeWindows' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeWindows', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_NativeWindows(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows), repr(platform))
+		self.assertEqual(str(Platforms.Windows), repr(platform))
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertTrue(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
@@ -118,13 +119,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MSYS' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MSYS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_MSYS(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows_MSYS2_MSYS), repr(platform))
+		self.assertEqual(str(Platforms.Windows_MSYS2_MSYS), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -140,13 +141,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MinGW32' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MinGW32', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_MinGW32(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows_MSYS2_MinGW32), repr(platform))
+		self.assertEqual(str(Platforms.Windows_MSYS2_MinGW32), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -162,13 +163,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MinGW64' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MinGW64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_MinGW64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows_MSYS2_MinGW64), repr(platform))
+		self.assertEqual(str(Platforms.Windows_MSYS2_MinGW64), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -184,13 +185,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_UCRT64' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_UCRT64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_UCRT64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows_MSYS2_UCRT64), repr(platform))
+		self.assertEqual(str(Platforms.Windows_MSYS2_UCRT64), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -206,13 +207,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_Clang32' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_Clang32', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_Clang32(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows_MSYS2_Clang32), repr(platform))
+		self.assertEqual(str(Platforms.Windows_MSYS2_Clang32), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -228,13 +229,13 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_Clang64' when environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_Clang64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_Clang64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(platform.Platforms.Windows_MSYS2_Clang64), repr(platform))
+		self.assertEqual(str(Platforms.Windows_MSYS2_Clang64), repr(platform))
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -250,4 +251,4 @@ class AnyPlatform(TestCase):
 		self.assertTrue(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
 		self.assertEqual("dll", platform.SharedLibraryExtension)
-		self.assertNotIn(platform.Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)

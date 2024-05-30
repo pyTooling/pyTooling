@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -38,12 +38,12 @@ from . import PerformanceTest
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class EdgeLinking(PerformanceTest):
-	def test_LinkNewVertex_Flat(self):
+	def test_LinkNewVertex_Flat(self) -> None:
 		def wrapper(count: int):
 			def func():
 				rootVertex = pt_Vertex(0)
@@ -55,7 +55,7 @@ class EdgeLinking(PerformanceTest):
 
 		self.runSizedTests(wrapper, self.counts)
 
-	def test_LinkNewVertex_Linear(self):
+	def test_LinkNewVertex_Linear(self) -> None:
 		def wrapper(count: int):
 			def func():
 				vertex = pt_Vertex(0)
@@ -91,7 +91,7 @@ class RandomGraph(PerformanceTest):
 
 		return graph
 
-	def test_BFS(self):
+	def test_BFS(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
 			def func():
 				rootVertex = graph._verticesWithID[componentStartVertex]
@@ -103,7 +103,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_DFS(self):
+	def test_DFS(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
 			def func():
 				rootVertex = graph._verticesWithID[componentStartVertex]
@@ -115,7 +115,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_ShortestPathByHops(self):
+	def test_ShortestPathByHops(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
 			def func():
 				startVertex = graph._verticesWithID[49]
@@ -133,7 +133,7 @@ class RandomGraph(PerformanceTest):
 
 		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
 
-	def test_ShortestPathByWeight(self):
+	def test_ShortestPathByWeight(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
 			def func():
 				startVertex = graph._verticesWithID[49]

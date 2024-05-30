@@ -3,11 +3,11 @@
 Graph
 #####
 
-The :py:mod:`pyTooling.Graph` package provides a directed graph data structure. Compared to
+The :mod:`pyTooling.Graph` package provides a directed graph data structure. Compared to
 :ref:`NetworkX <STRUCT/Graph/NetworkX>` and :ref:`igraph <STRUCT/Graph/igraph>`, this implementation provides an
 object-oriented API.
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :local:
    :depth: 2
 
@@ -31,9 +31,9 @@ object-oriented API.
 
 .. rubric:: Graph Properties:
 
-A **graph** data structure is represented by an instance of :py:class:`~pyTooling.Graph.Graph` holding references to all
-nodes. Nodes are instances of :py:class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are made of
-:py:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value pairs.
+A **graph** data structure is represented by an instance of :class:`~pyTooling.Graph.Graph` holding references to all
+nodes. Nodes are instances of :class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are made of
+:class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value pairs.
 
 Graph algorithms using all vertexes are provided as methods on the graph instance. Whereas graph algorithms based on a
 starting vertex are provided as methods on a vertex.
@@ -117,11 +117,11 @@ By Feature
 Unique ID
 =========
 
-A vertex can be created with a unique ID when the object is created. Afterwards, the :py:attr:`~pyTooling.Graph.Vertex.ID`
+A vertex can be created with a unique ID when the object is created. Afterwards, the :attr:`~pyTooling.Graph.Vertex.ID`
 is a readonly property. Any hashable object can be used as an ID. The ID must be unique per graph. If graphs are merged
 or vertexes are added to an existing graph, the newly added graph's ID(s) are checked and might cause an exception.
 
-Also edges can be created with a unique ID when the object is created. Afterwards, the :py:attr:`~pyTooling.Graph.Edge.ID`
+Also edges can be created with a unique ID when the object is created. Afterwards, the :attr:`~pyTooling.Graph.Edge.ID`
 is a readonly property. Any hashable object can be used as an ID. The ID must be unique per graph. If graphs are merged
 or vertexes are added to an existing graph, the newly added graph's ID(s) are checked and might cause an exception.
 
@@ -141,8 +141,8 @@ Value
 =====
 
 A vertex's value can be given at vertex creating time or it can be set ant any later time via property
-:py:attr:`~pyTooling.Graph.Vertex.Value`. Any data type is accepted. The internally stored value can be retrieved by
-the same property. If a vertex's string representation is requested via :py:meth:`~pyTooling.Graph.Vertex.__str__` and a
+:attr:`~pyTooling.Graph.Vertex.Value`. Any data type is accepted. The internally stored value can be retrieved by
+the same property. If a vertex's string representation is requested via :meth:`~pyTooling.Graph.Vertex.__str__` and a
 vertex's value isn't None, then the value's string representation is returned.
 
 .. todo:: GRAPH: setting / getting an edge's values

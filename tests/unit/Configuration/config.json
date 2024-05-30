@@ -1,0 +1,48 @@
+{
+	"value_1": "string_1",
+	"node_1": {
+		"value_11": "string_11",
+		"value_12": "string_12"
+	},
+	"node_2": [
+		{
+			"list_211": {
+				"key_2111": "string_2111",
+				"key_2112": "string_2112"
+			},
+			"list_212": "string_212"
+		},
+		{
+			"list_221": {
+				"key_2211": "string_2211",
+				"key_2212": "string_2212"
+			}
+		}
+	],
+	"Install": {
+		"VendorA": {
+			"InstallDir": "C:\\VendorA",
+			"ToolA": {
+				"InstallDir": "${..:InstallDir}\\ToolA",
+				"Defaults": {
+					"Version": 2020,
+					"InstallDir": "${..:${Version}:InstallDir}",
+					"BinaryDir": "${..:${Version}:BinaryDir}"
+				},
+				"2020": {
+					"Version": 2020,
+					"InstallDir": "${..:InstallDir}\\${Version}",
+					"BinaryDir": "${InstallDir}\\bin"
+				},
+				"2021.10": {
+					"Version": "2021.10",
+					"InstallDir": "${..:..:InstallDir}\\Tool_A\\${Version}",
+					"BinaryDir": "${InstallDir}\\bin"
+				}
+			}
+		},
+		"VendorB": {
+			"InstallDir": "C:\\VendorB"
+		}
+	}
+}

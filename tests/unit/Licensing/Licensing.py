@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,28 +35,28 @@ from pyTooling.Licensing import PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
 class LicenseDataClass(TestCase):
-	def test_Properies(self):
+	def test_Properies(self) -> None:
 		license = License("spdx", "License Name", False, False)
 		self.assertEqual("spdx", license.SPDXIdentifier)
 		self.assertEqual("License Name", license.Name)
 		self.assertEqual(False, license.OSIApproved)
 		self.assertEqual(False, license.FSFApproved)
 
-	def test_ClassifierConversion(self):
+	def test_ClassifierConversion(self) -> None:
 		license = License("Apache-2.0", "License Name", True, False)
 		self.assertEqual("License :: OSI Approved :: Apache Software License", license.PythonClassifier)
 
-	def test_ClassifierConversionException(self):
+	def test_ClassifierConversionException(self) -> None:
 		license = License("spdx", "License Name", False, False)
 		with self.assertRaises(ValueError):
 			_ = license.PythonClassifier
 
-	def test_Equalality(self):
+	def test_Equalality(self) -> None:
 		license1 = License("spdx", "License Name", False, False)
 		license2 = License("spdx", "License Name", False, False)
 		license3 = License("SPDX", "License Name", False, False)
@@ -68,7 +68,7 @@ class LicenseDataClass(TestCase):
 		with self.assertRaises(TypeError):
 			_ = license1 != "spdx"
 
-	def test_Compatibility(self):
+	def test_Compatibility(self) -> None:
 		license1 = License("spdx", "License Name", False, False)
 		license2 = License("spdx", "License Name", False, False)
 		with self.assertRaises(NotImplementedError):
@@ -77,7 +77,7 @@ class LicenseDataClass(TestCase):
 		with self.assertRaises(NotImplementedError):
 			_ = license1 >= license2
 
-	def test_ToString(self):
+	def test_ToString(self) -> None:
 		license = License("spdx", "License Name", False, False)
 
 		self.assertEqual("spdx", f"{license!r}")

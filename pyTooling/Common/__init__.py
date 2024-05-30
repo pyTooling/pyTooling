@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,38 +33,83 @@ Common types, helper functions and classes.
 
 .. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
 """
-__author__ =    "Patrick Lehmann"
-__email__ =     "Paebbels@gmail.com"
-__copyright__ = "2017-2022, Patrick Lehmann"
-__license__ =   "Apache License, Version 2.0"
-__version__ =   "4.1.0"
-__keywords__ =  ["decorators", "meta-classes", "exceptions", "platform", "versioning", "licensing", "overloading",
-								"singleton", "tree", "graph", "timer", "data structure", "setuptools", "wheel", "installation",
-								"packaging", "path", "generic path", "generic library", "url", "terminal", "shell", "TUI", "console",
-								"text user interface", "message logging", "abstract", "override"]
+__author__ =        "Patrick Lehmann"
+__email__ =         "Paebbels@gmail.com"
+__copyright__ =     "2017-2024, Patrick Lehmann"
+__license__ =       "Apache License, Version 2.0"
+__version__ =       "6.2.0"
+__keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
+					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
+					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
+					  "path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
+					  "timer", "tree", "TUI", "url", "versioning", "wheel"]
+__issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
-from collections import deque
-from functools import reduce
-from numbers import Number
-from operator import or_
-from typing import Type, Any, Callable, Dict, Generator, Tuple, TypeVar, overload, Union, Mapping, Set
+from collections         import deque
+from numbers             import Number
+from pathlib             import Path
+from sys                 import version_info
+from types               import ModuleType
+from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
+from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
+
 
 try:
 	from pyTooling.Decorators import export
+	from pyTooling.Platform   import Platform
 except ModuleNotFoundError:  # pragma: no cover
-	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
+	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
+		from Decorators         import export
+		from Platform           import Platform
 	except ModuleNotFoundError as ex:  # pragma: no cover
-		print("[pyTooling.Packaging] Could not import from 'Decorators' or 'Licensing' directly!")
+		print("[pyTooling.Common] Could not import directly!")
 		raise ex
 
-from pyTooling.Common.Platform import Platform
 
 __all__ = ["CurrentPlatform"]
 
 CurrentPlatform = Platform()     #: Gathered information for the current platform.
+
+
+@export
+def getFullyQualifiedName(obj: Any):
+	try:
+		module = obj.__module__             # for class or function
+	except AttributeError:
+		module = obj.__class__.__module__
+
+	try:
+		name = obj.__qualname__             # for class or function
+	except AttributeError:
+		name = obj.__class__.__qualname__
+
+	# If obj is a method of builtin class, then module will be None
+	if module == "builtins" or module is None:
+		return name
+
+	return f"{module}.{name}"
+
+
+if version_info >= (3, 8):  # pragma: no cover
+	@export
+	def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
+		from importlib.resources import files  # TODO: can be used as regular import > 3.8
+
+		resourcePath = files(module) / filename
+		# TODO: files() has wrong TypeHint Traversible vs. Path
+		if not resourcePath.exists():
+			from pyTooling.Exceptions import ToolingException
+			raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
+		return resourcePath
+
+
+	@export
+	def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
+		from importlib.resources import files
+
+		return files(module).joinpath(filename).read_text()
 
 
 @export
@@ -96,7 +141,7 @@ def getsizeof(obj: Any) -> int:
 
 	.. admonition:: Background Information
 
-	   The function :py:func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
+	   The function :func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
 	   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
 
 	.. seealso::
@@ -137,15 +182,22 @@ def getsizeof(obj: Any) -> int:
 				size += recurse(item)
 		# Handle mappings
 		elif isinstance(obj, Mapping) or hasattr(obj, 'items'):
-			for key, value in getattr(obj, 'items')():
+			items = getattr(obj, 'items')
+			# Check if obj.items is a bound method.
+			if hasattr(items, "__self__"):
+				itemView = items()
+			else:
+				itemView = {}  # bind(obj, items)
+			for key, value in itemView:
 				size += recurse(key) + recurse(value)
 
 		# Accumulate members from __dict__
 		if hasattr(obj, '__dict__'):
-			size += recurse(vars(obj))
+			v = vars(obj)
+			size += recurse(v)
 
 		# Accumulate members from __slots__
-		if hasattr(obj, '__slots__'):
+		if hasattr(obj, '__slots__') and obj.__slots__ is not None:
 			for slot in obj.__slots__:
 				if hasattr(obj, slot):
 					size += recurse(getattr(obj, slot))
@@ -153,6 +205,85 @@ def getsizeof(obj: Any) -> int:
 		return size
 
 	return recurse(obj)
+
+
+def bind(instance, func, methodName: Nullable[str] = None):
+	"""
+	Bind the function *func* to *instance*, with either provided name *as_name*
+	or the existing name of *func*. The provided *func* should accept the
+	instance as the first argument, i.e. "self".
+
+	:param instance:
+	:param func:
+	:param methodName:
+	:return:
+	"""
+	if methodName is None:
+		methodName = func.__name__
+
+	boundMethod = func.__get__(instance, instance.__class__)
+	setattr(instance, methodName, boundMethod)
+
+	return boundMethod
+
+
+_Element = TypeVar("Element")
+
+
+@export
+def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	"""
+	Returns the first element from an indexable.
+
+	:param indexable: Indexable to get the first element from.
+	:return:          First element.
+	"""
+	return indexable[0]
+
+
+@export
+def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+	"""
+	Returns the last element from an indexable.
+
+	:param indexable: Indexable to get the last element from.
+	:return:          Last element.
+	"""
+	return indexable[-1]
+
+
+@export
+def firstItem(iterable: Iterable[_Element]) -> _Element:
+	"""
+	Returns the first item from an iterable.
+
+	:param iterable: Iterable to get the first item from.
+	:return:         First item.
+	"""
+	i = iter(iterable)
+	try:
+		return next(i)
+	except StopIteration:
+		raise ValueError(f"Iterable contains no items.")
+
+
+@export
+def lastItem(iterable: Iterable[_Element]) -> _Element:
+	"""
+	Returns the last item from an iterable.
+
+	:param iterable: Iterable to get the last item from.
+	:return:         Last item.
+	"""
+	i = iter(iterable)
+	try:
+		element = next(i)
+	except StopIteration:
+		raise ValueError(f"Iterable contains no items.")
+
+	for element in i:
+		pass
+	return element
 
 
 _DictKey = TypeVar("_DictKey")
@@ -172,6 +303,9 @@ def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	:param d: Dictionary to get the first key from.
 	:returns: The first key.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.keys()))
 
 
@@ -183,35 +317,43 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	:param d: Dictionary to get the first value from.
 	:returns: The first value.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.values()))
 
 
 @export
-def firstItem(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
+def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	"""
 	Retrieves the first key-value-pair from a dictionary.
 
 	:param d: Dictionary to get the first key-value-pair from.
 	:returns: The first key-value-pair as tuple.
 	"""
+	if len(d) == 0:
+		raise ValueError(f"Dictionary is empty.")
+
 	return next(iter(d.items()))
 
 
 @overload
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
-	...
+	filter: Optional[Callable[[Hashable, Any], bool]]
+) -> Dict[Union[_DictKey1], Union[_DictValue1]]:
+#) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
+	...  # pragma: no cover
 
 
 @overload
 def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
-	...
+	filter: Optional[Callable[[Hashable, Any], bool]]
+) -> Dict[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]]:
+# ) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
+	...  # pragma: no cover
 
 
 @overload
@@ -219,33 +361,42 @@ def mergedicts(
 	m1: Mapping[_DictKey1, _DictValue1],
 	m2: Mapping[_DictKey2, _DictValue2],
 	m3: Mapping[_DictKey3, _DictValue3],
-	func: Callable
-) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
-	...
+	filter: Optional[Callable[[Hashable, Any], bool]]
+) -> Dict[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]]:
+#) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
+	...  # pragma: no cover
 
 
 @export
-def mergedicts(*dicts: Tuple[Dict, ...], func: Callable = None) -> Dict:
+def mergedicts(*dicts: Tuple[Dict, ...], filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
-	If parameter ``func`` isn't ``None``, then this function is applied to every element during the merge operation.
+	If parameter ``filter`` isn't ``None``, then this function is applied to every element during the merge operation. If
+	it returns true, the dictionary element will be present in the resulting dictionary.
 
-	:param dicts: Tuple of dictionaries to merge as positional parameters.
-	:param func:  Optional function to apply to each dictionary element when merging.
-	:returns:     A new dictionary containing the merge result.
+	:param dicts:  Tuple of dictionaries to merge as positional parameters.
+	:param filter: Optional filter function to apply to each dictionary element when merging.
+	:returns:      A new dictionary containing the merge result.
+
+	.. seealso::
+
+	   `How do I merge two dictionaries in a single expression in Python? <https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-in-python>`__
 	"""
-	if func is None:
-		return {k: reduce(lambda d,x: x.get(k, d), dicts, None) for k in reduce(or_, map(lambda x: x.keys(), dicts), set()) }
+	if len(dicts) == 0:
+		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")
+
+	if filter is None:
+		return {k: v for d in dicts for k, v in d.items()}
 	else:
-		return {k: reduce(lambda x: func(*x) if (len(x) > 1) else x[0])([d[k] for d in dicts if k in d]) for k in reduce(or_, map(lambda x: x.keys(), dicts), set())}
+		return {k: v for d in dicts for k, v in d.items() if filter(k, v)}
 
 
 @overload
 def zipdicts(
 	m1: Mapping[_DictKey, _DictValue1]
 ) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @overload
@@ -253,7 +404,7 @@ def zipdicts(
 	m1: Mapping[_DictKey, _DictValue1],
 	m2: Mapping[_DictKey, _DictValue2]
 ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @overload
@@ -262,7 +413,7 @@ def zipdicts(
 	m2: Mapping[_DictKey, _DictValue2],
 	m3: Mapping[_DictKey, _DictValue3]
 ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
-	...
+	...  # pragma: no cover
 
 
 @export
@@ -280,13 +431,15 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 
 	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
 	"""
-	if not dicts:
+	if len(dicts) == 0:
 		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
 
-	length = len(dicts[0])
-	if any(len(d) != length for d in dicts):
+	if any(len(d) != len(dicts[0]) for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
-	for key, item0 in dicts[0].items():
-		# WORKAROUND: using redundant parenthesis for Python 3.7
-		yield (key, item0, *(d[key] for d in dicts[1:]))
+	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+		for key, item0 in ds[0].items():
+			# WORKAROUND: using redundant parenthesis for Python 3.7 and pypy-3.10
+			yield (key, item0, *(d[key] for d in ds[1:]))
+
+	return gen(dicts)

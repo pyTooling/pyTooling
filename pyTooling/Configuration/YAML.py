@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2021-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,35 +33,48 @@ Configuration reader for YAML files.
 
 .. hint:: See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
-from pathlib import Path
-from typing import Dict, List, Union, Iterator as typing_Iterator
-
-from ..Decorators import export
-from ..MetaClasses import ExtendedType
+from pathlib       import Path
+from typing        import Dict, List, Union, Iterator as typing_Iterator
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'ruamel.yaml' not installed. Either install pyTooling with extra dependencies 'pyTooling[yaml]' or install 'ruamel.yaml' directly.") from ex
 
-from . import (
-	Node as Abstract_Node,
-	Dictionary as Abstract_Dict,
-	Sequence as Abstract_Seq,
-	Configuration as Abstract_Configuration,
-	KeyT, NodeT, ValueT
-)
+try:
+	from pyTooling.Decorators      import export
+	from pyTooling.MetaClasses     import ExtendedType
+	from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
+	from pyTooling.Configuration   import Node as Abstract_Node
+	from pyTooling.Configuration   import Dictionary as Abstract_Dict
+	from pyTooling.Configuration   import Sequence as Abstract_Seq
+	from pyTooling.Configuration   import Configuration as Abstract_Configuration
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.Configuration.YAML] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators              import export
+		from MetaClasses             import ExtendedType
+		from pyTooling.Configuration import ConfigurationException, KeyT, NodeT, ValueT
+		from pyTooling.Configuration import Node as Abstract_Node
+		from pyTooling.Configuration import Dictionary as Abstract_Dict
+		from pyTooling.Configuration import Sequence as Abstract_Seq
+		from pyTooling.Configuration import Configuration as Abstract_Configuration
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.Configuration.YAML] Could not import directly!")
+		raise ex
 
 
 @export
 class Node(Abstract_Node):
 	_yamlNode: Union[CommentedMap, CommentedSeq]
-	_cache: Dict[str, ValueT]
-	_key: KeyT
-	_length: int
+	_cache:    Dict[str, ValueT]
+	_key:      KeyT
+	_length:   int
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]):
-		super().__init__(root, parent)
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]) -> None:
+		Abstract_Node.__init__(self, root, parent)
+
 		self._yamlNode = yamlNode
 		self._cache = {}
 		self._key = key
@@ -136,20 +149,20 @@ class Node(Abstract_Node):
 		while (len(rawValue) > 0):
 #			print(f"_ResolveVariables: LOOP    rawValue='{rawValue}'")
 			beginPos = rawValue.find("$")
-			if (beginPos < 0):
+			if beginPos < 0:
 				result  += rawValue
 				rawValue = ""
 			else:
 				result += rawValue[:beginPos]
-				if (rawValue[beginPos + 1] == "$"):
+				if rawValue[beginPos + 1] == "$":
 					result  += "$"
 					rawValue = rawValue[1:]
-				elif (rawValue[beginPos + 1] == "{"):
+				elif rawValue[beginPos + 1] == "{":
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
-					if (endPos < 0):
+					if endPos < 0:
 						raise Exception(f"")  # XXX: InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
-					if ((nextPos > 0) and (nextPos < endPos)):  # an embedded $-sign
+					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
 #						print(f"_ResolveVariables: path='{path}'")
 						innervalue = self._GetValueByPathExpression(self._ToPath(path))
@@ -188,24 +201,25 @@ class Node(Abstract_Node):
 
 
 @export
-class Dictionary(Abstract_Dict, Node):
+class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
 	_keys: List[KeyT]
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap) -> None:
 		Node.__init__(self, root, parent, key, yamlNode)
+
 		self._keys = [str(k) for k in yamlNode.keys()]
 
 	def __contains__(self, key: KeyT) -> bool:
 		return key in self._keys
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
-		class Iterator(metaclass=ExtendedType, useSlots=True):
-			_iter: typing_Iterator
+		class Iterator(metaclass=ExtendedType, slots=True):
+			_iter: typing_Iterator[ValueT]
 			_obj: Dictionary
 
-			def __init__(self, obj: Dictionary):
+			def __init__(self, obj: Dictionary) -> None:
 				self._iter = iter(obj._keys)
 				self._obj = obj
 
@@ -215,7 +229,7 @@ class Dictionary(Abstract_Dict, Node):
 
 				:returns: Itself.
 				"""
-				return self
+				return self  # pragma: no cover
 
 			def __next__(self) -> ValueT:
 				"""
@@ -230,14 +244,16 @@ class Dictionary(Abstract_Dict, Node):
 
 
 @export
-class Sequence(Abstract_Seq, Node):
+class Sequence(Node, Abstract_Seq):
 	"""A sequence node (ordered list) in a YAML data file."""
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq):
+	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq) -> None:
 		Node.__init__(self, root, parent, key, yamlNode)
+
 		self._length = len(yamlNode)
 
-	__getitem__ = Node.__getitem__
+	def __getitem__(self, key: KeyT) -> ValueT:
+		return self._GetNodeOrValue(str(key))
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
@@ -245,13 +261,13 @@ class Sequence(Abstract_Seq, Node):
 
 		:returns: Iterator to iterate items in a sequence.
 		"""
-		class Iterator(metaclass=ExtendedType, useSlots=True):
+		class Iterator(metaclass=ExtendedType, slots=True):
 			"""Iterator to iterate sequence items."""
 
 			_i: int         #: internal iterator position
 			_obj: Sequence  #: Sequence object to iterate
 
-			def __init__(self, obj: Sequence):
+			def __init__(self, obj: Sequence) -> None:
 				self._i = 0
 				self._obj = obj
 
@@ -261,7 +277,7 @@ class Sequence(Abstract_Seq, Node):
 
 				:returns: Itself.
 				"""
-				return self
+				return self  # pragma: no cover
 
 			def __next__(self) -> ValueT:
 				"""
@@ -285,12 +301,12 @@ setattr(Node, "SEQ_TYPE", Sequence)
 
 
 @export
-class Configuration(Abstract_Configuration, Dictionary):
+class Configuration(Dictionary, Abstract_Configuration):
 	"""A configuration read from a YAML file."""
 
 	_yamlConfig: YAML
 
-	def __init__(self, configFile: Path):
+	def __init__(self, configFile: Path) -> None:
 		"""
 		Initializes a configuration instance that reads a YAML file as input.
 
@@ -298,12 +314,14 @@ class Configuration(Abstract_Configuration, Dictionary):
 
 		:param configFile: Configuration file to read and parse.
 		"""
-		Abstract_Configuration.__init__(self)
+		if not configFile.exists():
+			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open() as file:
 			self._yamlConfig = YAML().load(file)
 
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
+		Abstract_Configuration.__init__(self, configFile)
 
 	def __getitem__(self, key: str) -> ValueT:
 		"""

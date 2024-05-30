@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _             _____                   _             _ _   _ ___                        #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _|__ _ __ _ __ ___ (_)_ __   __ _| | | | |_ _|                       #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | | | | || |                        #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  __/ |  | | | | | | | | | | (_| | | |_| || |                        #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_|\___/|___|                       #
+#             _____           _ _               ____  _        _       __  __            _     _                       #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|| |_ __ _| |_ ___|  \/  | __ _  ___| |__ (_)_ __   ___            #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | \___ \| __/ _` | __/ _ \ |\/| |/ _` |/ __| '_ \| | '_ \ / _ \           #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_ ___) | || (_| | ||  __/ |  | | (_| | (__| | | | | | | |  __/           #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \__\__,_|\__\___|_|  |_|\__,_|\___|_| |_|_|_| |_|\___|           #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -11,8 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
-# Copyright 2007-2016 Patrick Lehmann - Dresden, Germany                                                               #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -29,41 +28,76 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
-from unittest             import TestCase
+"""
+This packages provides a data structure to describe statemachines.
 
-from pyTooling.TerminalUI import LineTerminal
+.. hint:: See :ref:`high-level help <STRUCT/StateMachine>` for explanations and usage examples.
+"""
+from typing import List
+
+try:
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.MetaClasses import ExtendedType
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.StateMachine] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators          import export, readonly
+		from MetaClasses         import ExtendedType, mixin
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.StateMachine] Could not import directly!")
+		raise ex
 
 
-if __name__ == "__main__":  # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
-	exit(1)
+@export
+class Base(metaclass=ExtendedType, slots=True):
+	pass
 
 
-class Application(LineTerminal):
-	def __init__(self):
-		super().__init__()
+@export
+class Transition(Base):
+	"""
+	Represents a transition (edge) in a statemachine diagram (directed graph).
+	"""
+	_source:      "State"
+	_destination: "State"
 
-		LineTerminal.FATAL_EXIT_CODE = 0
+	def __init__(self, source: "State", destination: "State") -> None:
+		self._source = source
+		self._destination = destination
 
 
-class Terminal(TestCase):
-	app: Application
+@export
+class State(Base):
+	"""
+	Represents a state (node/vertex) in a statemachine diagram (directed graph).
+	"""
+	_inboundTransitions:  List[Transition]
+	_outboundTransitions: List[Transition]
 
-	def setUp(self) -> None:
-		self.app = Application()
-		self.app.Configure(verbose=True, debug=True, quiet=False)
+	def __init__(self) -> None:
+		self._inboundTransitions = []
+		self._outboundTransitions = []
 
-	def test_Version(self) -> None:
-		Application.versionCheck((3, 7, 0))
 
-	def test_Write(self) -> None:
-		self.app.WriteQuiet("This is a quiet message.")
-		self.app.WriteNormal("This is a normal message.")
-		self.app.WriteInfo("This is an info message.")
-		self.app.WriteVerbose("This is a verbose message.")
-		self.app.WriteDebug("This is a debug message.")
-		self.app.WriteWarning("This is a warning message.")
-		self.app.WriteError("This is an error message.")
-		self.app.WriteFatal("This is a fatal message.", immediateExit=False)
+@export
+class StateMachine(Base):
+	"""
+	Represents a statemachine (graph) in a statemachine diagram (directed graph).
+	"""
+	_states:       List[State]
+	_initialState: State
+
+	def __init__(self, initialState: State) -> None:
+		self._states = []
+		self._initialState = initialState
+
+	def AddState(self, state: State):
+		if state not in self._states:    # TODO: use a set to check for double added states?
+			self._states.append(state)
+		else:
+			raise ValueError(f"State '{state}' was already added to this statemachine.")
+
+	@readonly
+	def States(self) -> List[State]:
+		return self._states

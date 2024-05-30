@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2021-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2021-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -33,31 +33,26 @@ A set of helper functions to describe a Python package for setuptools.
 
 .. hint:: See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
 """
-from dataclasses  import dataclass
-from ast import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List, Str
-from pathlib      import Path
-from setuptools   import (
-	setup as setuptools_setup,
-	find_packages as setuptools_find_packages,
-	find_namespace_packages as setuptools_find_namespace_packages
-)
-from sys          import version_info
-from typing       import List, Iterable, Dict, Sequence
-
+from dataclasses     import dataclass
+from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
+from pathlib         import Path
+from typing          import List, Iterable, Dict, Sequence, Any
 
 try:
-	from ..Decorators import export
-	from ..MetaClasses import ExtendedType
-	from ..Licensing  import License, Apache_2_0_License
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	from pyTooling.Decorators  import export, readonly
+	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Licensing   import License, Apache_2_0_License
+except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators import export
-		from MetaClasses import ExtendedType
-		from Licensing import License, Apache_2_0_License
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Packaging] Could not import from 'Decorators', 'MetaClasses' or 'Licensing' directly!")
+		from Decorators          import export, readonly
+		from Exceptions          import ToolingException
+		from MetaClasses         import ExtendedType
+		from Licensing           import License, Apache_2_0_License
+	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
+		print("[pyTooling.Packaging] Could not import directly!")
 		raise ex
 
 
@@ -88,7 +83,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 				Content=file.read(),
 				MimeType="text/markdown"
 			)
-	else:
+	else:                                                                              # pragma: no cover
 		raise ValueError("Unsupported README format.")
 
 
@@ -132,7 +127,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 
 @export
-class VersionInformation(metaclass=ExtendedType, useSlots=True):
+class VersionInformation(metaclass=ExtendedType, slots=True):
 	"""Encapsulates version information extracted from a Python source file."""
 
 	_author: str          #: Author name(s).
@@ -143,46 +138,46 @@ class VersionInformation(metaclass=ExtendedType, useSlots=True):
 	_description: str     #: Description of the package.
 	_version: str         #: Version number.
 
-	def __init__(self, author: str, email: str, copyright: str, license: str, version: str, description: str, keywords: List[str]):
+	def __init__(self, author: str, email: str, copyright: str, license: str, version: str, description: str, keywords: Iterable[str]) -> None:
 		self._author =      author
 		self._email =       email
 		self._copyright =   copyright
 		self._license =     license
 		self._version =     version
 		self._description = description
-		self._keywords =    keywords
+		self._keywords =    [k for k in keywords]
 
-	@property
+	@readonly
 	def Author(self) -> str:
 		"""Name(s) of the package author(s)."""
 		return self._author
 
-	@property
+	@readonly
 	def Copyright(self) -> str:
 		"""Copyright information."""
 		return self._copyright
 
-	@property
+	@readonly
 	def Description(self) -> str:
 		"""Package description text."""
 		return self._description
 
-	@property
+	@readonly
 	def Email(self) -> str:
 		"""Email address of the author."""
 		return self._email
 
-	@property
+	@readonly
 	def Keywords(self) -> List[str]:
 		"""List of keywords."""
 		return self._keywords
 
-	@property
+	@readonly
 	def License(self) -> str:
 		"""License name."""
 		return self._license
 
-	@property
+	@readonly
 	def Version(self) -> str:
 		"""Version number."""
 		return self._version
@@ -226,43 +221,29 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 				if isinstance(target, Name) and target.id == "__author__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_author = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
-						_author = value.s
 				if isinstance(target, Name) and target.id == "__copyright__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_copyright = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
-						_copyright = value.s
 				if isinstance(target, Name) and target.id == "__email__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_email = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
-						_email = value.s
 				if isinstance(target, Name) and target.id == "__keywords__":
-					if isinstance(value, Constant) and isinstance(value.value, str):
-						raise TypeError(f"Variable '__keywords__' should be a list of strings.")
-					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
+					if isinstance(value, Constant) and isinstance(value.value, str):           # pragma: no cover
 						raise TypeError(f"Variable '__keywords__' should be a list of strings.")
 					elif isinstance(value, ast_List):
 						for const in value.elts:
 							if isinstance(const, Constant) and isinstance(const.value, str):
 								_keywords.append(const.value)
-							elif (version_info < (3, 8)) and isinstance(const, Str):               # pragma: no cover
-								_keywords.append(const.s)
-							else:
+							else:                                                                  # pragma: no cover
 								raise TypeError(f"List elements in '__keywords__' should be strings.")
-					else:
+					else:                                                                      # pragma: no cover
 						raise TypeError(f"Used unsupported type for variable '__keywords__'.")
 				if isinstance(target, Name) and target.id == "__license__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_license = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
-						_license = value.s
 				if isinstance(target, Name) and target.id == "__version__":
 					if isinstance(value, Constant) and isinstance(value.value, str):
 						_version = value.value
-					elif (version_info < (3, 8)) and isinstance(value, Str):                   # pragma: no cover
-						_version = value.s
 
 	if _author is None:
 		raise AssertionError(f"Could not extract '__author__' from '{sourceFile}'.")     # pragma: no cover
@@ -289,7 +270,7 @@ STATUS: Dict[str, str] = {
 }
 
 DEFAULT_LICENSE =     Apache_2_0_License
-DEFAULT_PY_VERSIONS = ("3.7", "3.8", "3.9", "3.10", "3.11")
+DEFAULT_PY_VERSIONS = ("3.8", "3.9", "3.10", "3.11", "3.12")
 DEFAULT_CLASSIFIERS = (
 		"Operating System :: OS Independent",
 		"Intended Audience :: Developers",
@@ -303,6 +284,7 @@ DEFAULT_TEST_REQUIREMENTS = Path("test/requirements.txt")
 DEFAULT_PACKAGING_REQUIREMENTS = Path("build/requirements.txt")
 DEFAULT_VERSION_FILE = Path("__init__.py")
 
+
 @export
 def DescribePythonPackage(
 	packageName: str,
@@ -311,7 +293,7 @@ def DescribePythonPackage(
 	sourceCodeURL: str,
 	documentationURL: str,
 	issueTrackerCodeURL: str,
-	keywords: str = None,
+	keywords: Iterable[str] = None,
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = DEFAULT_README,
 	requirementsFile: Path = DEFAULT_REQUIREMENTS,
@@ -325,7 +307,12 @@ def DescribePythonPackage(
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
 	consoleScripts: Dict[str, str] = None,
 	dataFiles: Dict[str, List[str]] = None
-) -> None:
+) -> Dict[str, Any]:
+	try:
+		from setuptools import find_packages, find_namespace_packages
+	except ImportError as ex:
+		raise ToolingException(f"Optional dependency 'setuptools' is not available.") from ex
+
 	# Read README for upload to PyPI
 	readme = loadReadmeFile(readmeFile)
 
@@ -351,11 +338,11 @@ def DescribePythonPackage(
 	# Scan for packages and source files
 	exclude = ["build", "build.*", "dist", "dist.*", "doc", "doc.*", "tests", "tests.*"]
 	if "." in packageName:
-		packages = setuptools_find_namespace_packages(exclude=exclude)
+		packages = find_namespace_packages(exclude=exclude)
 		if packageName.endswith(".*"):
 			packageName = packageName[:-2]
 	else:
-		packages = setuptools_find_packages(exclude=exclude)
+		packages = find_packages(exclude=exclude)
 
 	if keywords is None:
 		keywords = versionInformation.Keywords
@@ -374,7 +361,7 @@ def DescribePythonPackage(
 	# Translate status to classifier
 	try:
 		classifiers.append(f"Development Status :: {STATUS[developmentStatus.lower()]}")
-	except KeyError:
+	except KeyError:                                                                   # pragma: no cover
 		raise ValueError(f"Unsupported development status '{developmentStatus}'.")
 
 	# Assemble all package information
@@ -397,7 +384,7 @@ def DescribePythonPackage(
 		"classifiers": classifiers,
 		"keywords": keywords,
 		"python_requires": f">={pythonVersions[0]}",
-	  "install_requires": requirements,
+		"install_requires": requirements,
 	}
 
 	if len(extraRequirements) > 0:
@@ -415,7 +402,8 @@ def DescribePythonPackage(
 	if dataFiles:
 		parameters["package_data"] = dataFiles
 
-	setuptools_setup(**parameters)
+	return parameters
+
 
 @export
 def DescribePythonPackageHostedOnGitHub(
@@ -424,7 +412,7 @@ def DescribePythonPackageHostedOnGitHub(
 	gitHubNamespace: str,
 	gitHubRepository: str = None,
 	projectURL: str = None,
-	keywords: str = None,
+	keywords: Iterable[str] = None,
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = DEFAULT_README,
 	requirementsFile: Path = DEFAULT_REQUIREMENTS,
@@ -438,7 +426,7 @@ def DescribePythonPackageHostedOnGitHub(
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
 	consoleScripts: Dict[str, str] = None,
 	dataFiles: Dict[str, List[str]] = None
-):
+) -> Dict[str, Any]:
 	gitHubRepository = gitHubRepository if gitHubRepository is not None else packageName
 
 	# Derive URLs
@@ -448,7 +436,7 @@ def DescribePythonPackageHostedOnGitHub(
 
 	projectURL = projectURL if projectURL is not None else sourceCodeURL
 
-	DescribePythonPackage(
+	return DescribePythonPackage(
 		packageName=packageName,
 		description=description,
 		keywords=keywords,

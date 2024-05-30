@@ -3,7 +3,7 @@
 Overview
 ########
 
-.. contents:: Table of Contents
+.. #contents:: Table of Contents
    :depth: 2
 
 .. _EXECPTION/Base:
@@ -11,7 +11,7 @@ Overview
 Exception Base Classes
 ######################
 
-The :py:mod:`pyTooling.Exceptions` package provides extensible exceptions.
+The :mod:`pyTooling.Exceptions` package provides extensible exceptions.
 
 
 ExceptionBase

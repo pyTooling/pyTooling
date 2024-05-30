@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2023 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for ExtendedType."""
+"""Benchmark tests for pyTooling.MetaClasses.ExtendedType."""
 from pytest import mark
 
 from pyTooling.MetaClasses import ExtendedType
@@ -36,31 +36,31 @@ from pyTooling.MetaClasses import ExtendedType
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unitest <testcase module>'")
+	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
 
-class Node_1:
+class NormalNode_1:
 	_data_0: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 
 	def inc(self, add: int):
 		self._data_0 = self._data_0 + add
 
 
-class SlottedNode_1(metaclass=ExtendedType, useSlots=True):
+class SlottedNode_1(metaclass=ExtendedType, slots=True):
 	_data_0: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 
 	def inc(self, add: int):
 		self._data_0 = self._data_0 + add
 
 
-class Node_10:
+class NormalNode_10:
 	_data_0: int
 	_data_1: int
 	_data_2: int
@@ -72,7 +72,7 @@ class Node_10:
 	_data_8: int
 	_data_9: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 		self._data_1 = data
 		self._data_2 = data
@@ -96,7 +96,7 @@ class Node_10:
 		self._data_9 = self._data_8 + add
 
 
-class SlottedNode_10(metaclass=ExtendedType, useSlots=True):
+class SlottedNode_10(metaclass=ExtendedType, slots=True):
 	_data_0: int
 	_data_1: int
 	_data_2: int
@@ -108,7 +108,7 @@ class SlottedNode_10(metaclass=ExtendedType, useSlots=True):
 	_data_8: int
 	_data_9: int
 
-	def __init__(self, data):
+	def __init__(self, data) -> None:
 		self._data_0 = data
 		self._data_1 = data
 		self._data_2 = data
@@ -132,45 +132,45 @@ class SlottedNode_10(metaclass=ExtendedType, useSlots=True):
 		self._data_9 = self._data_8 + add
 
 
-@mark.benchmark(group="Create Objects with 1 slot")
-def test_CreateObjects_1(benchmark):
+@mark.benchmark(group="B0: Create Objects with 1 slot")
+def test_CreateNormalObjects_1(benchmark) -> None:
 	@benchmark
 	def func():
-		[Node_1(i) for i in range(1000)]
+		[NormalNode_1(i) for i in range(1000)]
 
 
-@mark.benchmark(group="Create Objects with 1 slot")
-def test_CreateSlottedObjects_1(benchmark):
+@mark.benchmark(group="B0: Create Objects with 1 slot")
+def test_CreateSlottedObjects_1(benchmark) -> None:
 	@benchmark
 	def func():
 		[SlottedNode_1(i) for i in range(1000)]
 
 
-@mark.benchmark(group="Create Objects with 10 slots")
-def test_CreateObjects_10(benchmark):
+@mark.benchmark(group="B1: Create Objects with 10 slots")
+def test_CreateObjects_10(benchmark) -> None:
 	@benchmark
 	def func():
-		[Node_10(i) for i in range(1000)]
+		[NormalNode_10(i) for i in range(1000)]
 
 
-@mark.benchmark(group="Create Objects with 10 slots")
-def test_CreateSlottedObjects_10(benchmark):
+@mark.benchmark(group="B1: Create Objects with 10 slots")
+def test_CreateSlottedObjects_10(benchmark) -> None:
 	@benchmark
 	def func():
 		[SlottedNode_10(i) for i in range(1000)]
 
 
-@mark.benchmark(group="Accumulate a single integer slot")
-def test_Accumulate_1(benchmark):
+@mark.benchmark(group="B2: Accumulate a single integer slot")
+def test_Accumulate_1(benchmark) -> None:
 	@benchmark
 	def func():
-		node = Node_1(0)
+		node = NormalNode_1(0)
 		for i in range(1000):
 			node.inc(i)
 
 
-@mark.benchmark(group="Accumulate a single integer slot")
-def test_SlottedAccumulate_1(benchmark):
+@mark.benchmark(group="B2: Accumulate a single integer slot")
+def test_SlottedAccumulate_1(benchmark) -> None:
 	@benchmark
 	def func():
 		node = SlottedNode_1(0)
@@ -178,17 +178,17 @@ def test_SlottedAccumulate_1(benchmark):
 			node.inc(i)
 
 
-@mark.benchmark(group="Accumulate 10 integer slots")
-def test_Accumulate_10(benchmark):
+@mark.benchmark(group="B3: Accumulate 10 integer slots")
+def test_Accumulate_10(benchmark) -> None:
 	@benchmark
 	def func():
-		node = Node_10(0)
+		node = NormalNode_10(0)
 		for i in range(1000):
 			node.inc(i)
 
 
-@mark.benchmark(group="Accumulate 10 integer slots")
-def test_SlottedAccumulate_10(benchmark):
+@mark.benchmark(group="B3: Accumulate 10 integer slots")
+def test_SlottedAccumulate_10(benchmark) -> None:
 	@benchmark
 	def func():
 		node = SlottedNode_10(0)
