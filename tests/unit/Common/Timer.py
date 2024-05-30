@@ -29,11 +29,11 @@
 # ==================================================================================================================== #
 #
 """Unit tests for TBD."""
-from time import sleep
-from unittest import TestCase
+from time               import sleep
+from unittest           import TestCase
 
-from pyTooling.Common import CurrentPlatform
-from pyTooling.Timer import Timer
+from pyTooling.Platform import CurrentPlatform
+from pyTooling.Timer    import Timer
 
 
 if __name__ == "__main__":  # pragma: no cover

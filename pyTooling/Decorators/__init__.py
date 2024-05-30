@@ -153,6 +153,12 @@ def notimplemented(message: str) -> Callable:
 	return decorator
 
 
+# Further Reading:
+# * https://github.com/python/cpython/issues/89519#issuecomment-1397534245
+# * https://stackoverflow.com/questions/128573/using-property-on-classmethods/64738850#64738850
+# * https://stackoverflow.com/questions/128573/using-property-on-classmethods
+# * https://stackoverflow.com/questions/5189699/how-to-make-a-class-property
+
 @export
 def classproperty(method):
 

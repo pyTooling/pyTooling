@@ -33,8 +33,7 @@ from os       import getenv as os_getenv
 from pytest   import mark
 from unittest import TestCase
 
-from pyTooling.Common   import CurrentPlatform
-from pyTooling.Platform import Platforms, Platform
+from pyTooling.Platform import Platforms, Platform, CurrentPlatform
 
 
 if __name__ == "__main__":  # pragma: no cover
