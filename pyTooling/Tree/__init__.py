@@ -31,7 +31,8 @@
 """A powerful tree data structure for Python."""
 from collections   import deque
 from sys           import version_info           # needed for versions before Python 3.11
-from typing        import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union, Deque, Iterator
+from typing        import TypeVar, Generic, List, Tuple, Dict, Deque, Union, Optional as Nullable
+from typing        import Callable, Iterator, Generator, Iterable, Mapping, Hashable
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -162,14 +163,27 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
-	def __init__(self, nodeID: Nullable[IDType] = None, value: Nullable[ValueType] = None, parent: 'Node' = None, children: Nullable[List['Node']] = None) -> None:
+	def __init__(
+		self,
+		nodeID: Nullable[IDType] = None,
+		value: Nullable[ValueType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		parent: 'Node' = None,
+		children: Nullable[Iterable['Node']] = None
+	) -> None:
 		"""
 		.. todo:: TREE::Node::init Needs documentation.
 
+		:param nodeID:        The optional unique ID of a node within the whole tree data structure.
+		:param value:         The optional value of the node.
+		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs.
+		:param parent:        The optional parent node in the tree.
+		:param children:      An optional list of child nodes.
 		"""
+
 		self._id = nodeID
 		self._value = value
-		self._dict = {}
+		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
 
 		if parent is not None and not isinstance(parent, Node):
 			ex = TypeError(f"Parameter 'parent' is not of type 'Node'.")
@@ -204,7 +218,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			parent._children.append(self)
 
 		self._children = []
-
 		if children is not None:
 			if not isinstance(children, Iterable):
 				ex = TypeError(f"Parameter 'children' is not iterable.")
@@ -941,7 +954,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		else:
 			return self.__repr__()
 
-	def Render(self, prefix: str = "", lineend: str = "\n", nodeMarker: str = "o-- ", bypassMarker: str = "|   ") -> str:
+	def Render(
+		self,
+		prefix: str = "",
+		lineend: str = "\n",
+		nodeMarker: str = "o-- ",
+		bypassMarker: str = "|   "
+	) -> str:
 		"""
 		Render the tree as ASCII art.
 

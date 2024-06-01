@@ -779,5 +779,6 @@ class Rendering(TestCase):
 			Node(nodeID=childID, value=f"<Node {childID}>", parent=root.GetNodeByID(parentID))
 
 		rendering = root.Render()
+		print(rendering)
 
 		self.assertEqual(len(self._tree) + 2, len(rendering.split("\n")))
