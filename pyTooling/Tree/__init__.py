@@ -31,7 +31,8 @@
 """A powerful tree data structure for Python."""
 from collections   import deque
 from sys           import version_info           # needed for versions before Python 3.11
-from typing        import List, Generator, Iterable, TypeVar, Generic, Dict, Optional as Nullable, Hashable, Tuple, Callable, Union, Deque, Iterator
+from typing        import TypeVar, Generic, List, Tuple, Dict, Deque, Union, Optional as Nullable
+from typing        import Callable, Iterator, Generator, Iterable, Mapping, Hashable
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -162,14 +163,38 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
 	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
-	def __init__(self, nodeID: Nullable[IDType] = None, value: Nullable[ValueType] = None, parent: 'Node' = None, children: Nullable[List['Node']] = None) -> None:
+	_format: Nullable[Callable[["Node"], str]]    #: A node formatting function returning a one-line representation for tree-rendering.
+
+	def __init__(
+		self,
+		nodeID: Nullable[IDType] = None,
+		value: Nullable[ValueType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		parent: 'Node' = None,
+		children: Nullable[Iterable['Node']] = None,
+		format: Nullable[Callable[["Node"], str]] = None
+	) -> None:
 		"""
 		.. todo:: TREE::Node::init Needs documentation.
 
+		:param nodeID:        The optional unique ID of a node within the whole tree data structure.
+		:param value:         The optional value of the node.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param parent:        The optional parent node in the tree.
+		:param children:      The optional list of child nodes.
+		:param format:        The optional node formatting function returning a one-line representation for tree-rendering.
+
+		:raises TypeError:    If parameter parent is not an instance of Node.
+		:raises ValueError:   If nodeID already exists in the tree.
+		:raises TypeError:    If parameter children is not iterable.
+		:raises ValueError:   If an element of children is not an instance of Node.
 		"""
+
 		self._id = nodeID
 		self._value = value
-		self._dict = {}
+		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
+
+		self._format = format
 
 		if parent is not None and not isinstance(parent, Node):
 			ex = TypeError(f"Parameter 'parent' is not of type 'Node'.")
@@ -204,7 +229,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			parent._children.append(self)
 
 		self._children = []
-
 		if children is not None:
 			if not isinstance(children, Iterable):
 				ex = TypeError(f"Parameter 'children' is not iterable.")
@@ -941,15 +965,23 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		else:
 			return self.__repr__()
 
-	def Render(self, prefix: str = "", lineend: str = "\n", nodeMarker: str = "o-- ", bypassMarker: str = "|   ") -> str:
+	def Render(
+		self,
+		prefix: str = "",
+		lineend: str = "\n",
+		nodeMarker: str = "├─",
+		lastNodeMarker: str = "└─",
+		bypassMarker: str = "│ "
+	) -> str:
 		"""
 		Render the tree as ASCII art.
 
-		:param prefix:       A string printed in front of every line, e.g. for indentation. Default: ``""``.
-		:param lineend:      A string printed at the end of every line. Default: ``"\\n"``.
-		:param nodeMarker:   A string printed before every tree node. Default: ``"o-- "``.
-		:param bypassMarker: A string printed when there are further nodes in the parent level. Default: ``"|   "``.
-		:return:             A rendered tree as multiline string.
+		:param prefix:         A string printed in front of every line, e.g. for indentation. Default: ``""``.
+		:param lineend:        A string printed at the end of every line. Default: ``"\\n"``.
+		:param nodeMarker:     A string printed before every non-last tree node. Default: ``"├─"``.
+		:param lastNodeMarker: A string printed before every last tree node. Default: ``"└─"``.
+		:param bypassMarker:   A string printed when there are further nodes in the parent level. Default: ``"│ "``.
+		:return:               A rendered tree as multiline string.
 		"""
 		emptyMarker = " " * len(bypassMarker)
 
@@ -958,21 +990,21 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 			if node.HasChildren:
 				for child in node._children[:-1]:
-					result.append(f"{prefix}{markers}{nodeMarker}{child}{lineend}")
+					nodeRepresentation = child._format(child) if child._format else str(child)
+					result.append(f"{prefix}{markers}{nodeMarker}{nodeRepresentation}{lineend}")
 					result.extend(_render(child, markers + bypassMarker))
-				result.append(f"{prefix}{markers}{nodeMarker}{node._children[-1]}{lineend}")
-				result.extend(_render(node._children[-1], markers + emptyMarker))
+
+				# last child node
+				child = node._children[-1]
+				nodeRepresentation = child._format(child) if child._format else str(child)
+				result.append(f"{prefix}{markers}{lastNodeMarker}{nodeRepresentation}{lineend}")
+				result.extend(_render(child, markers + emptyMarker))
 
 			return result
 
 		# Root element
-		result = [f"{prefix}{self}{lineend}"]
-
-		if self.HasChildren:
-			for child in self._children[:-1]:
-				result.append(f"{prefix}{nodeMarker}{child}{lineend}")
-				result.extend(_render(child, bypassMarker))
-			result.append(f"{prefix}{nodeMarker}{self._children[-1]}{lineend}")
-			result.extend(_render(self._children[-1], emptyMarker))
+		nodeRepresentation = self._format(self) if self._format else str(self)
+		result = [f"{prefix}{nodeRepresentation}{lineend}"]
+		result.extend(_render(self, ""))
 
 		return "".join(result)

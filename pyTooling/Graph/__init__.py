@@ -56,8 +56,8 @@ import heapq
 from collections import deque
 from itertools   import chain
 from sys         import version_info           # needed for versions before Python 3.11
-from typing      import TypeVar, Generic, Optional as Nullable, Iterable, Hashable, Generator, Callable
-from typing      import List, Union, Dict, Iterator as typing_Iterator, Set, Deque, Tuple
+from typing      import TypeVar, Generic, List, Tuple, Dict, Set, Deque, Union, Optional as Nullable
+from typing      import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -222,14 +222,18 @@ class Base(
 	Generic[DictKeyType, DictValueType],
 	metaclass=ExtendedType, slots=True
 ):
-	_dict: Dict[DictKeyType, DictValueType]  #: Dictionary to store key-value-pairs.
+	_dict: Dict[DictKeyType, DictValueType]  #: A dictionary to store arbitrary key-value-pairs.
 
-	def __init__(self) -> None:
+	def __init__(
+		self,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Base::init Needs documentation.
 
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
-		self._dict = {}
+		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
 
 	def __del__(self):
 		"""
@@ -300,12 +304,22 @@ class BaseWithIDValueAndWeight(
 	_value:     Nullable[ValueType]   #: Field storing the object's value of any type.
 	_weight:    Nullable[WeightType]  #: Field storing the object's weight.
 
-	def __init__(self, identifier: Nullable[IDType] = None, value: Nullable[ValueType] = None, weight: Nullable[WeightType] = None) -> None:
+	def __init__(
+		self,
+		identifier: Nullable[IDType] = None,
+		value: Nullable[ValueType] = None,
+		weight: Nullable[WeightType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Vertex::init Needs documentation.
 
+		:param identifier:    The optional unique ID.
+		:param value:         The optional value.
+		:param weight:        The optional weight.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
-		super().__init__()
+		super().__init__(keyValuePairs)
 
 		self._id = identifier
 		self._value = value
@@ -356,10 +370,16 @@ class BaseWithName(
 ):
 	_name: Nullable[str]  #: Field storing the object's name.
 
-	def __init__(self, name: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		name: Nullable[str] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+	) -> None:
 		"""
 		.. todo:: GRAPH::BaseWithName::init Needs documentation.
 
+		:param name:          The optional name.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
 		if name is not None and not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -367,7 +387,7 @@ class BaseWithName(
 				ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 			raise ex
 
-		super().__init__()
+		super().__init__(keyValuePairs)
 
 		self._name = name
 
@@ -413,20 +433,30 @@ class BaseWithVertices(
 								'LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType'
 								']']  #: Field storing a set of vertices.
 
-	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable['Vertex']] = None) -> None:
+	def __init__(
+		self,
+		graph: 'Graph',
+		name: Nullable[str] = None,
+		vertices: Nullable[Iterable['Vertex']] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Component::init Needs documentation.
 
+		:param graph:         The reference to the graph.
+		:param name:          The optional name.
+		:param vertices:      The optional list of vertices.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
-		if not isinstance(graph, Graph):
+		elif not isinstance(graph, Graph):
 			ex = TypeError("Parameter 'graph' is not of type 'Graph'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
 			raise ex
 
-		super().__init__(name)
+		super().__init__(name, keyValuePairs)
 
 		self._graph = graph
 		self._vertices = set() if vertices is None else {v for v in vertices}
@@ -494,10 +524,24 @@ class Vertex(
 	_inboundLinks:   List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound links.
 	_outboundLinks:  List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound links.
 
-	def __init__(self, vertexID: Nullable[VertexIDType] = None, value: Nullable[VertexValueType] = None, weight: Nullable[VertexWeightType] = None, graph: Nullable['Graph'] = None, subgraph: Nullable['Subgraph'] = None) -> None:
+	def __init__(
+		self,
+		vertexID: Nullable[VertexIDType] = None,
+		value: Nullable[VertexValueType] = None,
+		weight: Nullable[VertexWeightType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		graph: Nullable['Graph'] = None,
+		subgraph: Nullable['Subgraph'] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Vertex::init Needs documentation.
 
+		:param vertexID:      The optional ID for the new vertex.
+		:param value:         The optional value for the new vertex.
+		:param weight:        The optional weight for the new vertex.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param graph:         The optional reference to the graph.
+		:param subgraph:      undocumented
 		"""
 		if vertexID is not None and not isinstance(vertexID, Hashable):
 			ex = TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
@@ -505,7 +549,7 @@ class Vertex(
 				ex.add_note(f"Got type '{getFullyQualifiedName(vertexID)}'.")
 			raise ex
 
-		super().__init__(vertexID, value, weight)
+		super().__init__(vertexID, value, weight, keyValuePairs)
 
 		if subgraph is None:
 			self._graph = graph if graph is not None else Graph()
@@ -1606,12 +1650,26 @@ class BaseEdge(
 	_source:      Vertex
 	_destination: Vertex
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: Nullable[EdgeIDType] = None, value: Nullable[EdgeValueType] = None, weight: Nullable[EdgeWeightType] = None) -> None:
+	def __init__(
+		self,
+		source: Vertex,
+		destination: Vertex,
+		edgeID: Nullable[EdgeIDType] = None,
+		value: Nullable[EdgeValueType] = None,
+		weight: Nullable[EdgeWeightType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::BaseEdge::init Needs documentation.
 
+		:param source:        The source of the new edge.
+		:param destination:   The destination of the new edge.
+		:param edgeID:        The optional unique ID for the new edge.
+		:param value:         The optional value for the new edge.
+		:param weight:        The optional weight for the new edge.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
-		super().__init__(edgeID, value, weight)
+		super().__init__(edgeID, value, weight, keyValuePairs)
 
 		self._source = source
 		self._destination = destination
@@ -1661,10 +1719,24 @@ class Edge(
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, edgeID: Nullable[EdgeIDType] = None, value: Nullable[EdgeValueType] = None, weight: Nullable[EdgeWeightType] = None) -> None:
+	def __init__(
+		self,
+		source: Vertex,
+		destination: Vertex,
+		edgeID: Nullable[EdgeIDType] = None,
+		value: Nullable[EdgeValueType] = None,
+		weight: Nullable[EdgeWeightType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Edge::init Needs documentation.
 
+		:param source:        The source of the new edge.
+		:param destination:   The destination of the new edge.
+		:param edgeID:        The optional unique ID for the new edge.
+		:param value:         The optional value for the new edge.
+		:param weight:        The optional weight for the new edge.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
 		if not isinstance(source, Vertex):
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
@@ -1691,7 +1763,7 @@ class Edge(
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, edgeID, value, weight)
+		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
 		# Remove from Source and Destination
@@ -1733,10 +1805,24 @@ class Link(
 	directed.
 	"""
 
-	def __init__(self, source: Vertex, destination: Vertex, linkID: LinkIDType = None, value: LinkValueType = None, weight: Nullable[LinkWeightType] = None) -> None:
+	def __init__(
+		self,
+		source: Vertex,
+		destination: Vertex,
+		linkID: LinkIDType = None,
+		value: LinkValueType = None,
+		weight: Nullable[LinkWeightType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Edge::init Needs documentation.
 
+		:param source:        The source of the new link.
+		:param destination:   The destination of the new link.
+		:param linkID:        The optional unique ID for the new link.
+		:param value:         The optional value for the new v.
+		:param weight:        The optional weight for the new link.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
 		if not isinstance(source, Vertex):
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
@@ -1763,7 +1849,7 @@ class Link(
 		if source._graph is not destination._graph:
 			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, linkID, value, weight)
+		super().__init__(source, destination, linkID, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
 		self._source._outboundEdges.remove(self)
@@ -1812,12 +1898,19 @@ class BaseGraph(
 	_linksWithID:       Dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_linksWithoutID:    List[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
-	def __init__(self, name: Nullable[str] = None):  #, vertices: Nullable[Iterable[Vertex]] = None) -> None:
+	def __init__(
+		self,
+		name: Nullable[str] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+		#, vertices: Nullable[Iterable[Vertex]] = None) -> None:
+	):
 		"""
 		.. todo:: GRAPH::BaseGraph::init Needs documentation.
 
+		:param name:          The optional name of the graph.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
-		super().__init__(name)
+		super().__init__(name, keyValuePairs)
 
 		self._verticesWithoutID = []
 		self._verticesWithID = {}
@@ -2298,10 +2391,19 @@ class Subgraph(
 
 	_graph:    'Graph'
 
-	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable[Vertex]] = None) -> None:
+	def __init__(
+		self,
+		graph: 'Graph',
+		name: Nullable[str] = None,
+		# vertices: Nullable[Iterable[Vertex]] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Subgraph::init Needs documentation.
 
+		:param graph:         The reference to the graph.
+		:param name:          The optional name of the new sub-graph.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
@@ -2311,7 +2413,7 @@ class Subgraph(
 				ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
 			raise ex
 
-		super().__init__(name)
+		super().__init__(name, keyValuePairs)
 
 		graph._subgraphs.add(self)
 
@@ -2363,12 +2465,22 @@ class View(
 
 	"""
 
-	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable[Vertex]] = None) -> None:
+	def __init__(
+		self,
+		graph: 'Graph',
+		name: Nullable[str] = None,
+		vertices: Nullable[Iterable[Vertex]] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::View::init Needs documentation.
 
+		:param graph:         The reference to the graph.
+		:param name:          The optional name of the new view.
+		:param vertices:      The optional list of vertices in the new view.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
-		super().__init__(graph, name, vertices)
+		super().__init__(graph, name, vertices, keyValuePairs)
 
 		graph._views.add(self)
 
@@ -2409,12 +2521,22 @@ class Component(
 
 	"""
 
-	def __init__(self, graph: 'Graph', name: Nullable[str] = None, vertices: Nullable[Iterable[Vertex]] = None) -> None:
+	def __init__(
+		self,
+		graph: 'Graph',
+		name: Nullable[str] = None,
+		vertices: Nullable[Iterable[Vertex]] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Component::init Needs documentation.
 
+		:param graph:         The reference to the graph.
+		:param name:          The optional name of the new component.
+		:param vertices:      The optional list of vertices in the new component.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
 		"""
-		super().__init__(graph, name, vertices)
+		super().__init__(graph, name, vertices, keyValuePairs)
 
 		graph._components.add(self)
 
@@ -2460,12 +2582,18 @@ class Graph(
 	_views:             Set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]
 
-	def __init__(self, name: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		name: Nullable[str] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> None:
 		"""
 		.. todo:: GRAPH::Graph::init Needs documentation.
 
+		:param name:          The optional name of the new graph.
+		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.#
 		"""
-		super().__init__(name)
+		super().__init__(name, keyValuePairs)
 
 		self._subgraphs = set()
 		self._views = set()
