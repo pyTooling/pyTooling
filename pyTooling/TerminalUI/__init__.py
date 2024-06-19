@@ -189,16 +189,17 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	@staticmethod
 	def GetTerminalSize() -> Tuple[int, int]:
 		"""
-		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
+		Returns the terminal size as tuple (width, height) for FreeBSD, Linux, macOS (Darwin), Windows, cygwin (Windows), MinGW32/64 (Windows).
 
 		:returns: A tuple containing width and height of the terminal's size in characters.
-		:raises PlatformNotSupportedException: When a platform is not yet supported.
+		:raises   PlatformNotSupportedException: When a platform is not yet supported.
 		"""
 		platform = Platform()
 		if platform.IsNativeWindows:
 			size = TerminalBaseApplication.__GetTerminalSizeOnWindows()
-		elif (platform.IsNativeLinux or platform.IsNativeMacOS or platform.IsMinGW32OnWindows or platform.IsMinGW64OnWindows
-					or platform.IsUCRT64OnWindows or platform.IsCygwin32OnWindows or platform.IsClang64OnWindows):
+		elif (platform.IsNativeFreeBSD or platform.IsNativeLinux or platform.IsNativeMacOS or platform.IsMinGW32OnWindows
+					or platform.IsMinGW64OnWindows or platform.IsUCRT64OnWindows or platform.IsCygwin32OnWindows
+					or platform.IsClang64OnWindows):
 			size = TerminalBaseApplication.__GetTerminalSizeOnLinux()
 		else:  # pragma: no cover
 			raise PlatformNotSupportedException(f"Platform '{platform}' not yet supported.")
