@@ -80,6 +80,7 @@ The following example implements a portion of the ``git`` program and its ``comm
          class Git(Executable):
            _executableNames: ClassVar[Dict[str, str]] = {
              "Darwin":  "git",
+             "FreeBSD": "git",
              "Linux":   "git",
              "Windows": "git.exe"
            }

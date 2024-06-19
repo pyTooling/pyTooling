@@ -56,8 +56,9 @@ if __name__ == "__main__": # pragma: no cover
 class Git(Program, GitArgumentsMixin):
 	def __new__(cls, *args: Any, **kwargs: Any):
 		cls._executableNames = {
-			"Darwin": "git",
-			"Linux": "git",
+			"Darwin":  "git",
+			"FreeBSD": "git",
+			"Linux":   "git",
 			"Windows": "git.exe"
 		}
 		return super().__new__(cls)
@@ -66,6 +67,7 @@ class Git(Program, GitArgumentsMixin):
 class Gitt(Program):
 	_executableNames = {
 		"Darwin":  "gitt",
+		"FreeBSD": "gitt",
 		"Linux":   "gitt",
 		"Windows": "gitt.exe"
 	}
