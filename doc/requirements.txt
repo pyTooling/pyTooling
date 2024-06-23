@@ -26,3 +26,4 @@ sphinx_autodoc_typehints ~= 2.1
 sphinx_reports ~= 0.6
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
