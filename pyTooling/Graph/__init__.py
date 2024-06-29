@@ -1544,10 +1544,10 @@ class Vertex(
 			previousNode = node
 
 		# Scan reversed linked-list and yield referenced vertices
-		yield (startNode.ref, startNode.distance)
+		yield startNode.ref, startNode.distance
 		node = startNode.parent
 		while node is not None:
-			yield (node.ref, node.distance)
+			yield node.ref, node.distance
 			node = node.parent
 
 		# Other possible algorithms:
