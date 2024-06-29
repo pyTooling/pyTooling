@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.Tree."""
-from typing import Any, Optional as Nullable, List
+from typing   import Any, Optional as Nullable, List, Tuple, Dict
 from unittest import TestCase
 
 from pytest   import mark
@@ -800,7 +800,7 @@ class Rendering(TestCase):
 		print()
 
 		def format(node: Node) -> str:
-			return f"{node._id}: {node._value} - {','.join(f"{k}:{v}" for k, v in node._dict.items())}"
+			return f"{node._id}: {node._value} - {','.join(f'{k}:{v}' for k, v in node._dict.items())}"
 
 		root = Node(nodeID=0, value="<Root 0>", keyValuePairs={"time": 85.3}, format=format)
 		for parentID, childID, kvp in self._tree:
