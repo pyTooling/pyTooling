@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Versioning &mdash; pyTooling 6.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=77553476" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.e44b1595f1e09d5e109d001839ba3f42.css?v=0b41afa8" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=d48d1b8b" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=0eb1ae0c"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                6.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Timer</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Timer.html">Timer</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.Versioning</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Versioning</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _           __     __            _             _                                       #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ \ \   / /__ _ __ ___(_) ___  _ __ (_)_ __   __ _                           #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` \ \ / / _ \ &#39;__/ __| |/ _ \| &#39;_ \| | &#39;_ \ / _` |                          #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |\ V /  __/ |  \__ \ | (_) | | | | | | | | (_| |                          #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_/ \___|_|  |___/_|\___/|_| |_|_|_| |_|\__, |                          #</span>
+<span class="c1"># |_|    |___/                          |___/                                          |___/                           #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2020-2024 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Implementation of semantic and date versioning version-numbers.</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;VERSIONING&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">enum</span>   <span class="kn">import</span> <span class="n">IntEnum</span>
+<span class="kn">from</span> <span class="nn">sys</span>    <span class="kn">import</span> <span class="n">version_info</span>           <span class="c1"># needed for versions before Python 3.11</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span> <span class="nn">pyTooling.Decorators</span>  <span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="kn">from</span> <span class="nn">pyTooling.MetaClasses</span> <span class="kn">import</span> <span class="n">ExtendedType</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Versioning] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span> <span class="nn">Decorators</span>          <span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+		<span class="kn">from</span> <span class="nn">MetaClasses</span>         <span class="kn">import</span> <span class="n">ExtendedType</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Versioning] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<div class="viewcode-block" id="Parts">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.Parts">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Parts</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Enumeration of parts in a version number that can be presents.&quot;&quot;&quot;</span>
+
+	<span class="n">Unknown</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c1">#: Undocumented</span>
+	<span class="n">Major</span> <span class="o">=</span> <span class="mi">1</span>       <span class="c1">#: Major number is present. (e.g. X in ``vX.0.0``).</span>
+	<span class="n">Minor</span> <span class="o">=</span> <span class="mi">2</span>       <span class="c1">#: Minor number is present. (e.g. Y in ``v0.Y.0``).</span>
+	<span class="n">Patch</span> <span class="o">=</span> <span class="mi">4</span>       <span class="c1">#: Patch number is present. (e.g. Z in ``v0.0.Z``).</span>
+	<span class="n">Build</span> <span class="o">=</span> <span class="mi">8</span>       <span class="c1">#: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)</span>
+	<span class="n">Pre</span>   <span class="o">=</span> <span class="mi">16</span>      <span class="c1">#: Pre-release number is present.</span>
+	<span class="n">Post</span>  <span class="o">=</span> <span class="mi">32</span>      <span class="c1">#: Post-release number is present.</span>
+	<span class="n">Prefix</span> <span class="o">=</span> <span class="mi">64</span>     <span class="c1">#: Prefix is present.</span>
+	<span class="n">Postfix</span> <span class="o">=</span> <span class="mi">128</span>   <span class="c1">#: Postfix is present.</span></div>
+
+<span class="c1">#		AHead   = 256</span>
+
+
+<div class="viewcode-block" id="Flags">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.Flags">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Flags</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;State enumeration, if a (tagged) version is build from a clean or dirty working directory.&quot;&quot;&quot;</span>
+
+	<span class="n">Clean</span> <span class="o">=</span> <span class="mi">1</span>       <span class="c1">#: A versioned build was created from a *clean* working directory.</span>
+	<span class="n">Dirty</span> <span class="o">=</span> <span class="mi">2</span>       <span class="c1">#: A versioned build was created from a *dirty* working directory.</span></div>
+
+
+
+<div class="viewcode-block" id="Version">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.Version">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Version</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+	<span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="SemanticVersion">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">SemanticVersion</span><span class="p">(</span><span class="n">Version</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Representation of a semantic version number like ``3.7.12``.&quot;&quot;&quot;</span>
+
+	<span class="n">_parts</span>   <span class="p">:</span> <span class="n">Parts</span> <span class="o">=</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Unknown</span>  <span class="c1">#: Integer flag enumeration of present parts in a version number.</span>
+	<span class="n">_flags</span>   <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Flags</span><span class="o">.</span><span class="n">Clean</span>      <span class="c1">#: State if the version in a working directory is clean or dirty compared to a tagged version.</span>
+	<span class="n">_major</span>   <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1">#: Major number part of the version number.</span>
+	<span class="n">_minor</span>   <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1">#: Minor number part of the version number.</span>
+	<span class="n">_patch</span>   <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1">#: Patch number part of the version number.</span>
+	<span class="n">_build</span>   <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1">#: Build number part of the version number.</span>
+	<span class="n">_pre</span>     <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1">#: Pre-release version number part.</span>
+	<span class="n">_post</span>    <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1">#: Post-release version number part.</span>
+	<span class="n">_prefix</span>  <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>               <span class="c1">#: Prefix string</span>
+	<span class="n">_postfix</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>               <span class="c1">#: Postfix string</span>
+<span class="c1"># QUESTION: was this how many commits a version is ahead of the last tagged version?</span>
+<span class="c1">#	ahead   : int = 0</span>
+
+<div class="viewcode-block" id="SemanticVersion.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__init__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">major</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">minor</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">patch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">build</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="n">Flags</span> <span class="o">=</span> <span class="n">Flags</span><span class="o">.</span><span class="n">Clean</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_major</span> <span class="o">=</span> <span class="n">major</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_minor</span> <span class="o">=</span> <span class="n">minor</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">=</span> <span class="n">patch</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_build</span> <span class="o">=</span> <span class="n">build</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_parts</span> <span class="o">=</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Minor</span> <span class="o">|</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Minor</span> <span class="o">|</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Patch</span> <span class="o">|</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Build</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">=</span> <span class="n">flags</span></div>
+
+
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span> <span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span> <span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SemanticVersion&quot;</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">versionString</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;versionString&#39; is empty.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">versionString</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;versionString&#39; is None.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">versionString</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;V&quot;</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)):</span>
+			<span class="n">versionString</span> <span class="o">=</span> <span class="n">versionString</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+		<span class="k">elif</span> <span class="n">versionString</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;rev&quot;</span><span class="p">,</span> <span class="s2">&quot;REV&quot;</span><span class="p">)):</span>
+			<span class="n">versionString</span> <span class="o">=</span> <span class="n">versionString</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>
+
+		<span class="n">split</span> <span class="o">=</span> <span class="n">versionString</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+		<span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span>
+		<span class="n">major</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+		<span class="n">minor</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">patch</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">build</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">parts</span> <span class="o">=</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Major</span>
+		<span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+			<span class="n">minor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+			<span class="n">parts</span> <span class="o">|=</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Minor</span>
+		<span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+			<span class="n">patch</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+			<span class="n">parts</span> <span class="o">|=</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Patch</span>
+		<span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+			<span class="n">build</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+			<span class="n">parts</span> <span class="o">|=</span> <span class="n">Parts</span><span class="o">.</span><span class="n">Build</span>
+		<span class="n">flags</span> <span class="o">=</span> <span class="n">Flags</span><span class="o">.</span><span class="n">Clean</span>
+
+		<span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">major</span><span class="p">,</span> <span class="n">minor</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">build</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span> <span class="nf">Major</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_major</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span> <span class="nf">Minor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minor</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span> <span class="nf">Patch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span> <span class="nf">Build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span> <span class="nf">Parts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parts</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span> <span class="nf">Flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Flags</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span>
+
+<div class="viewcode-block" id="SemanticVersion.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__eq__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Version instances (version numbers) for equality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both version numbers are equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SemanticVersion</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by == operator.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: SemanticVersion&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="p">(</span>
+			<span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_major</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_major</span><span class="p">)</span> <span class="ow">and</span>
+			<span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_minor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_minor</span><span class="p">)</span> <span class="ow">and</span>
+			<span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_patch</span><span class="p">)</span> <span class="ow">and</span>
+			<span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_build</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_build</span><span class="p">)</span>
+		<span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SemanticVersion.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__ne__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Version instances (version numbers) for inequality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both version numbers are not equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SemanticVersion</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by != operator.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: SemanticVersion&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+
+	<span class="nd">@staticmethod</span>
+	<span class="k">def</span> <span class="nf">__compare</span><span class="p">(</span><span class="n">left</span><span class="p">:</span> <span class="s1">&#39;SemanticVersion&#39;</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="s1">&#39;SemanticVersion&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Private helper method to compute the comparison of two :class:`SemanticVersion` instances.</span>
+
+<span class="sd">		:param left:  Left parameter.</span>
+<span class="sd">		:param right: Right parameter.</span>
+<span class="sd">		:returns:     ``True``, if ``left`` is smaller than ``right``. |br|</span>
+<span class="sd">		              False if ``left`` is greater than ``right``. |br|</span>
+<span class="sd">		              Otherwise it&#39;s None (both parameters are equal).</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">_major</span> <span class="o">&lt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_major</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">True</span>
+		<span class="k">elif</span> <span class="n">left</span><span class="o">.</span><span class="n">_major</span> <span class="o">&gt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_major</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">_minor</span> <span class="o">&lt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_minor</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">True</span>
+		<span class="k">elif</span> <span class="n">left</span><span class="o">.</span><span class="n">_minor</span> <span class="o">&gt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_minor</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">_patch</span> <span class="o">&lt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_patch</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">True</span>
+		<span class="k">elif</span> <span class="n">left</span><span class="o">.</span><span class="n">_patch</span> <span class="o">&gt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_patch</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">_build</span> <span class="o">&lt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_build</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">True</span>
+		<span class="k">elif</span> <span class="n">left</span><span class="o">.</span><span class="n">_build</span> <span class="o">&gt;</span> <span class="n">right</span><span class="o">.</span><span class="n">_build</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SemanticVersion.__lt__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__lt__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Version instances (version numbers) if the version is less than the second operand.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if version is less than the second operand.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SemanticVersion</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &lt; operator.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: SemanticVersion&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="SemanticVersion.__le__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__le__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Version instances (version numbers) if the version is less than or equal to the second operand.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if version is less than or equal to the second operand.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SemanticVersion</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &lt;= operator.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: SemanticVersion&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="SemanticVersion.__gt__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__gt__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Version instances (version numbers) if the version is greater than the second operand.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if version is greater than the second operand.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SemanticVersion</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &gt; operator.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: SemanticVersion&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__le__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SemanticVersion.__ge__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__ge__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Version instances (version numbers) if the version is greater than or equal to the second operand.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if version is greater than or equal to the second operand.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SemanticVersion`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SemanticVersion</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &gt;= operator.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: SemanticVersion&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__lt__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SemanticVersion.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__repr__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this version number without prefix ``v``.</span>
+
+<span class="sd">		:returns: Raw version number representation without a prefix.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="SemanticVersion.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__str__">[docs]</a>
+	<span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this version number with prefix ``v``.</span>
+
+<span class="sd">		:returns: Version number representation including a prefix.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;v</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CalendarVersion">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.CalendarVersion">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">CalendarVersion</span><span class="p">(</span><span class="n">Version</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Representation of a calendar version number like ``2021.10``.&quot;&quot;&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2024, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 30.06.2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
