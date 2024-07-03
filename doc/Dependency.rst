@@ -206,7 +206,7 @@ recursively install the mandatory dependencies too.
 +====================================================================+=============+========================================================================================+======================+
 | `anytree <https://GitHub.com/c0fec0de/anytree>`__                  | ≥2.9.0      | `Apache 2 <https://GitHub.com/c0fec0de/anytree/blob/main/LICENSE>`__                   | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
-| `itertree <https://GitHub.com/BR1py/itertree>`__                   | ≥1.0.5      | `MIT <https://GitHub.com/BR1py/itertree/blob/main/LICENSE>`__                          | *Not yet evaluated.* |
+| `itertree <https://GitHub.com/BR1py/itertree>`__                   | ≥1.1.3      | `MIT <https://GitHub.com/BR1py/itertree/blob/main/LICENSE>`__                          | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
 | `treelib <https://GitHub.com/caesar0301/treelib>`__                | ≥1.6.4      | `Apache 2 <https://GitHub.com/caesar0301/treelib/blob/master/LICENSE>`__               | *Not yet evaluated.* |
 +--------------------------------------------------------------------+-------------+----------------------------------------------------------------------------------------+----------------------+
