@@ -29,10 +29,10 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.Tree."""
-from typing import Any, Optional as Nullable, List
+from typing   import Any, Optional as Nullable, List, Tuple, Dict
 from unittest import TestCase
 
-from pytest import mark
+from pytest   import mark
 
 from pyTooling.Tree import Node, AlreadyInTreeError, NoSiblingsError
 
@@ -755,30 +755,59 @@ class Exceptions(TestCase):
 
 
 class Rendering(TestCase):
-	_tree = (
-		(0, 1), (0, 2), (0, 3),
-		(1, 4), (1, 5),
+	# parentID, nodeID, dict
+	_tree: Tuple[Tuple[int, int, Dict[str, float]], ...] = (
+		(0, 1, {"time": 11.0}), (0, 2, {"time": 3.2}), (0, 3, {"time": 7.9}),
+		(1, 4, {"time": 29.2}), (1, 5, {"time": 31.4}),
 		# 2
-		(3, 6), (3, 7),
-		(4, 8),
-		(5, 10),
+		(3, 6, {"time": 4.1}), (3, 7, {"time": 5.6}),
+		(4, 8, {"time": 19.7}),
+		(5, 10, {"time": 0.6}),
 		# 6
 		# 7
-		(8, 9),
+		(8, 9, {"time": 1.1}),
 		# 9
-		(10, 11), (10, 12), (10, 13),
+		(10, 11, {"time": 25.8}), (10, 12, {"time": 14.0}), (10, 13, {"time": 17.5}),
 		# 11
 		# 12
 		# 13
 	)
 
-	def test_Render(self) -> None:
-		root = Node(nodeID=0, value="<Root 0>")
+	def test_RenderDefault(self) -> None:
+		print()
 
-		for parentID, childID in self._tree:
-			Node(nodeID=childID, value=f"<Node {childID}>", parent=root.GetNodeByID(parentID))
+		root = Node(nodeID=0, value="<Root 0>", keyValuePairs={"time": 85.3})
+		for parentID, childID, kvp in self._tree:
+			Node(nodeID=childID, value=f"<Node {childID}>", keyValuePairs=kvp, parent=root.GetNodeByID(parentID))
 
+		print("=" * 40)
 		rendering = root.Render()
-		print(rendering)
+		print(rendering, end="")
 
+		print("=" * 40)
+		rendering = root.Render(bypassMarker=" │  ", nodeMarker=" ├──", lastNodeMarker=" └──")
+		print(rendering, end="")
+
+		print("=" * 40)
+		rendering = root.Render(bypassMarker="|   ", nodeMarker="o-- ", lastNodeMarker="`-- ")
+		print(rendering, end="")
+
+		print("=" * 40)
+
+		self.assertEqual(len(self._tree) + 2, len(rendering.split("\n")))
+
+	def test_RenderUserdefined(self) -> None:
+		print()
+
+		def format(node: Node) -> str:
+			return f"{node._id}: {node._value} - {','.join(f'{k}:{v}' for k, v in node._dict.items())}"
+
+		root = Node(nodeID=0, value="<Root 0>", keyValuePairs={"time": 85.3}, format=format)
+		for parentID, childID, kvp in self._tree:
+			Node(nodeID=childID, value=f"<Node {childID}>", keyValuePairs=kvp, parent=root.GetNodeByID(parentID), format=format)
+
+		print("=" * 40)
+		rendering = root.Render()
+		print(rendering, end="")
+		print("=" * 40)
 		self.assertEqual(len(self._tree) + 2, len(rendering.split("\n")))

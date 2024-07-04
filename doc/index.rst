@@ -259,6 +259,7 @@ CLI Abstraction
            def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
              cls._executableNames = {
                "Darwin": "git",
+               "FreeBSD": "git",
                "Linux": "git",
                "Windows": "git.exe"
              }

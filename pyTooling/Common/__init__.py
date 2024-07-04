@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2024, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "6.3.0"
+__version__ =       "6.4.0"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
@@ -435,6 +435,6 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 		for key, item0 in ds[0].items():
 			# WORKAROUND: using redundant parenthesis for Python 3.7 and pypy-3.10
-			yield (key, item0, *(d[key] for d in ds[1:]))
+			yield key, item0, *(d[key] for d in ds[1:])
 
 	return gen(dicts)

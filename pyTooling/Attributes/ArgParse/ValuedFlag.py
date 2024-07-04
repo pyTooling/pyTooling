@@ -29,7 +29,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from typing   import Optional as Nullable
+from typing import Optional as Nullable
 
 try:
 	from pyTooling.Decorators                   import export
@@ -48,7 +48,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 @export
 class ValuedFlag(NamedAndValuedArgument):
 	"""
-	Defines a switch argument like ``--help``.
+	Defines a switch argument like ``--count=25``.
 
 	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
 	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument

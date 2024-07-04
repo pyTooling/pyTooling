@@ -48,7 +48,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 @export
 class OptionalValuedFlag(NamedAndValuedArgument):
 	"""
-	Defines a switch argument like ``--help``.
+	Defines a switch argument like ``--repeat[=1]``.
 
 	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
 	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument

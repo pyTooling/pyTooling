@@ -82,12 +82,12 @@ class PythonVersion(SemanticVersion):
 class Platforms(Flag):
 	Unknown = 0
 
-	OS_BSD =     auto()        #: Operating System: BSD (Unix).
+	OS_FreeBSD = auto()        #: Operating System: BSD (Unix).
 	OS_Linux =   auto()        #: Operating System: Linux.
 	OS_MacOS =   auto()        #: Operating System: macOS.
 	OS_Windows = auto()        #: Operating System: Windows.
 
-	OperatingSystem = OS_BSD | OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
+	OperatingSystem = OS_FreeBSD | OS_Linux | OS_MacOS | OS_Windows  #: Mask: Any operating system.
 
 	SEP_WindowsPath =  auto()  #: Seperator: Path element seperator (e.g. for directories).
 	SEP_WindowsValue = auto()  #: Seperator: Value seperator in variables (e.g. for paths in PATH).
@@ -107,7 +107,7 @@ class Platforms(Flag):
 	Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
 	Architecture = Arch_x86 | Arch_Arm        #: Mask: Any architecture.
 
-	FreeBSD = OS_BSD     | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
+	FreeBSD = OS_FreeBSD | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
 	Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
 	MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64                                       #: Group: native macOS on x86-64.
 	Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
@@ -296,12 +296,20 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		return Platforms.ENV_Native in self._platform
 
 	@readonly
-	def IsNativeWindows(self) -> bool:
-		"""Returns true, if the platform is a :term:`native` Windows x86-64 platform.
+	def IsNativeFreeBSD(self) -> bool:
+		"""Returns true, if the platform is a :term:`native` FreeBSD x86-64 platform.
 
-		:returns: ``True``, if the platform is a native Windows x86-64 platform.
+		:returns: ``True``, if the platform is a native FreeBSD x86-64 platform.
 		"""
-		return Platforms.Windows in self._platform
+		return Platforms.FreeBSD in self._platform
+
+	@readonly
+	def IsNativeMacOS(self) -> bool:
+		"""Returns true, if the platform is a :term:`native` macOS x86-64 platform.
+
+		:returns: ``True``, if the platform is a native macOS x86-64 platform.
+		"""
+		return Platforms.MacOS in self._platform
 
 	@readonly
 	def IsNativeLinux(self) -> bool:
@@ -312,12 +320,12 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		return Platforms.Linux in self._platform
 
 	@readonly
-	def IsNativeMacOS(self) -> bool:
-		"""Returns true, if the platform is a :term:`native` macOS x86-64 platform.
+	def IsNativeWindows(self) -> bool:
+		"""Returns true, if the platform is a :term:`native` Windows x86-64 platform.
 
-		:returns: ``True``, if the platform is a native macOS x86-64 platform.
+		:returns: ``True``, if the platform is a native Windows x86-64 platform.
 		"""
-		return Platforms.MacOS in self._platform
+		return Platforms.Windows in self._platform
 
 	@readonly
 	def IsMSYS2Environment(self) -> bool:
@@ -435,16 +443,20 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		Returns the file extension for an executable.
 
+		* FreeBSD: ``""`` (empty string)
 		* Linux: ``""`` (empty string)
 		* macOS: ``""`` (empty string)
 		* Windows: ``"exe"``
 		"""
-		if Platforms.OS_Windows in self._platform:
-			return "exe"
+
+		if Platforms.OS_FreeBSD in self._platform:
+			return ""
 		elif Platforms.OS_Linux in self._platform:
 			return ""
 		elif Platforms.OS_MacOS in self._platform:
 			return ""
+		elif Platforms.OS_Windows in self._platform:
+			return "exe"
 		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
@@ -453,16 +465,19 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		Returns the file extension for a shared library.
 
+		* FreeBSD: ``"so"``
 		* Linux: ``"so"``
 		* macOS: ``"lib"``
 		* Windows: ``"dll"``
 		"""
-		if Platforms.OS_Windows in self._platform:
-			return "dll"
+		if Platforms.OS_FreeBSD in self._platform:
+			return "so"
 		elif Platforms.OS_Linux in self._platform:
 			return "so"
 		elif Platforms.OS_MacOS in self._platform:
 			return "lib"
+		elif Platforms.OS_Windows in self._platform:
+			return "dll"
 		else:  # pragma: no cover
 			raise Exception(f"Unknown operating system.")
 
@@ -472,7 +487,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	def __str__(self) -> str:
 		runtime = ""
 
-		if Platforms.OS_MacOS in self._platform:
+		if Platforms.OS_FreeBSD in self._platform:
+			platform = "FreeBSD"
+		elif Platforms.OS_MacOS in self._platform:
 			platform = "MacOS"
 		elif Platforms.OS_Linux in self._platform:
 			platform = "Linux"

@@ -49,10 +49,12 @@ if __name__ == "__main__": # pragma: no cover
 
 class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
 	# _executableNames: ClassVar[Dict[str, str]] = {
-	# 	"Darwin":  "git",
-	# 	"Linux":   "git",
-	# 	"Windows": "git.exe"
-	# }
+	_executableNames = {
+		"Darwin":  "git",
+		"FreeBSD": "git",
+		"Linux":   "git",
+		"Windows": "git.exe"
+	}
 
 	@CLIArgument()
 	class FlagVersion(LongFlag, name="version"): ...
