@@ -61,13 +61,13 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 regExp = re_compile(
 	r"""^"""
-	"""(?:(?P<scheme>\w+)://)?"""
-	"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
-	"""(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
-	"""(?P<path>[^?#]*?)"""
-	"""(?:\?(?P<query>[^#]+?))?"""
-	"""(?:#(?P<fragment>.+?))?"""
-	"""$"""
+	r"""(?:(?P<scheme>\w+)://)?"""
+	r"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
+	r"""(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
+	r"""(?P<path>[^?#]*?)"""
+	r"""(?:\?(?P<query>[^#]+?))?"""
+	r"""(?:#(?P<fragment>.+?))?"""
+	r"""$"""
 )
 
 @export
