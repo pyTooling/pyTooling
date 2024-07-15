@@ -54,6 +54,7 @@ class GenericPath(TestCase):
 	def test_str(self) -> None:
 		self.assertEqual(str(self.url), "https://pyTooling.GitHub.io:8080/path/to/endpoint?user=paebbels&token=1234567890")
 
+
 class URLs(TestCase):
 	def test_Host(self):
 		url = URL.Parse("github")
@@ -234,3 +235,15 @@ class URLs(TestCase):
 		self.assertEqual("/path/to/resource.ext", str(url.Path))
 		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
 		self.assertEqual("ref-45", url.Fragment)
+
+		cleanURL = url.WithoutCredentials()
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("gitlab.company.com", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertIsNone(cleanURL.User)
+		self.assertIsNone(cleanURL.Password)
+		self.assertEqual("/path/to/resource.ext", str(url.Path))
+		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
+		self.assertEqual("ref-45", url.Fragment)
+		

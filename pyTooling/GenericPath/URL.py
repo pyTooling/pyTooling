@@ -59,16 +59,18 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		raise ex
 
 
-regExp = re_compile(
-	r"""^"""
+__all__ = ["URL_PATTERN", "URL_REGEXP"]
+
+URL_PATTERN = (
 	r"""(?:(?P<scheme>\w+)://)?"""
 	r"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
 	r"""(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
 	r"""(?P<path>[^?#]*?)"""
 	r"""(?:\?(?P<query>[^#]+?))?"""
 	r"""(?:#(?P<fragment>.+?))?"""
-	r"""$"""
-)
+)                                                 #: Regular expression pattern for validating and splitting a URL.
+URL_REGEXP = re_compile("^" + URL_PATTERN + "$")  #: Precompiled regular expression for URL validation.
+
 
 @export
 class Protocols(IntFlag):
@@ -84,10 +86,10 @@ class Protocols(IntFlag):
 
 @export
 class Host(RootMixIn):
-	"""Represents a hostname (including the port number) in a URL."""
+	"""Represents a host as either hostname, DNS or IP-address including the port number in a URL."""
 
-	_hostname : str
-	_port :     Nullable[int]
+	_hostname: str
+	_port:     Nullable[int]
 
 	def __init__(
 		self,
@@ -107,6 +109,7 @@ class Host(RootMixIn):
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
+		self._hostname = hostname
 
 		if port is None:
 			pass
@@ -120,9 +123,7 @@ class Host(RootMixIn):
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got value '{port}'.")
 			raise ex
-
-		self._hostname = hostname
-		self._port =     port
+		self._port = port
 
 	@readonly
 	def Hostname(self) -> str:
@@ -204,12 +205,11 @@ class URL:
 		:param scheme:   Transport scheme to be used for a specified resource.
 		:param path:     Path to the resource.
 		:param host:     Hostname where the resource is located.
-		:param user:     User name for authentication.
-		:param password: Password for authentication.
+		:param user:     Username for basic authentication.
+		:param password: Password for basic authentication.
 		:param query:    An optional query string.
 		:param fragment: An optional fragment.
 		"""
-
 		if scheme is not None and not isinstance(scheme, Protocols):
 			ex = TypeError(f"Parameter 'scheme' is not of type 'Protocols'.")
 			if version_info >= (3, 11):  # pragma: no cover
@@ -261,8 +261,7 @@ class URL:
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
 			raise ex
-
-		self._fragment =  fragment
+		self._fragment = fragment
 
 	@readonly
 	def Scheme(self) -> Protocols:
@@ -311,13 +310,13 @@ class URL:
 	@classmethod
 	def Parse(cls, url: str) -> "URL":
 		"""
-		Parses a URL string and returns a URL object.
+		Parse a URL string and returns a URL object.
 
 		:param url:               URL as string to be parsed.
-		:return:                  A URL object.
+		:returns:                 A URL object.
 		:raises ToolingException: When syntax does not match.
 		"""
-		matches = regExp.match(url)
+		matches = URL_REGEXP.match(url)
 		if matches is not None:
 			scheme =    matches.group("scheme")
 			user =      matches.group("user")
@@ -326,7 +325,7 @@ class URL:
 
 			port = matches.group("port")
 			if port is not None:
-				port =      int(port)
+				port =    int(port)
 			path =      matches.group("path")
 			query =     matches.group("query")
 			fragment =  matches.group("fragment")
@@ -353,7 +352,6 @@ class URL:
 			)
 
 		raise ToolingException(f"Syntax error when parsing URL '{url}'.")
-
 
 	def __str__(self) -> str:
 		"""
@@ -385,9 +383,9 @@ class URL:
 
 	def WithoutCredentials(self) -> "URL":
 		"""
-		Returns a URL object with removed credentials (username and password).
+		Returns a URL object without credentials (username and password).
 
-		:return: New URL object with removed credentials.
+		:return: New URL object without credentials.
 		"""
 		return self.__class__(
 			scheme=self._scheme,
