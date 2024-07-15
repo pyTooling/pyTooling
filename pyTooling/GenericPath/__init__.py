@@ -32,19 +32,21 @@
 from typing import List, Optional as Nullable
 
 try:
-	from pyTooling.Decorators import export
+	from pyTooling.Decorators  import export
+	from pyTooling.MetaClasses import ExtendedType
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.GenericPath] Could not import from 'pyTooling.*'!")
 
 	try:
-		from Decorators         import export
+		from Decorators          import export
+		from MetaClasses         import ExtendedType
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.GenericPath] Could not import directly!")
 		raise ex
 
 
 @export
-class Base:
+class Base(metaclass=ExtendedType, mixin=True):
 	"""Base-class for all pyTooling.GenericPath path elements."""
 
 	DELIMITER = "/"
@@ -56,7 +58,7 @@ class Base:
 
 
 @export
-class RootMixIn(Base):
+class RootMixIn(Base, mixin=True):
 	"""Mixin-class for root elements in a path system."""
 
 	def __init__(self) -> None:
@@ -64,7 +66,7 @@ class RootMixIn(Base):
 
 
 @export
-class ElementMixIn(Base):
+class ElementMixIn(Base, mixin=True):
 	"""Mixin-class for elements in a path system."""
 
 	_elementName: str
@@ -78,7 +80,7 @@ class ElementMixIn(Base):
 
 
 @export
-class PathMixIn:
+class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
 	ELEMENT_DELIMITER = "/"
@@ -133,5 +135,5 @@ class PathMixIn:
 
 
 @export
-class SystemMixIn:
+class SystemMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path system."""

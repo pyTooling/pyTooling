@@ -28,18 +28,31 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+This package provides a representation for a Uniform Resource Locator (URL).
+
+.. code-block::
+
+   [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
+"""
+from sys      import version_info
+
 from enum     import IntFlag
 from re       import compile as re_compile
-from typing   import Dict, Optional as Nullable
+from typing   import Dict, Optional as Nullable, Mapping
 
 try:
 	from pyTooling.Decorators  import export, readonly
+	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.Common      import getFullyQualifiedName
 	from pyTooling.GenericPath import RootMixIn, ElementMixIn, PathMixIn
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.GenericPath.URL] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators         import export, readonly
+		from Exceptions         import ToolingException
+		from Common             import getFullyQualifiedName
 		from GenericPath        import RootMixIn, ElementMixIn, PathMixIn
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.GenericPath.URL] Could not import directly!")
@@ -68,8 +81,38 @@ class Host(RootMixIn):
 	_hostname : str
 	_port :     Nullable[int]
 
-	def __init__(self, hostname: str, port: Nullable[int] = None) -> None:
+	def __init__(
+		self,
+		hostname: str,
+		port: Nullable[int] = None
+	) -> None:
+		"""
+		Initialize a host instance described by host name and port number.
+
+		:param hostname: Name of the host (either IP or DNS).
+		:param port:     Port number.
+		"""
 		super().__init__()
+
+		if not isinstance(hostname, str):
+			ex = TypeError(f"Parameter 'hostname' is not of type 'str'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
+			raise ex
+
+		if port is None:
+			pass
+		elif not isinstance(port, int):
+			ex = TypeError(f"Parameter 'port' is not of type 'int'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
+			raise ex
+		elif not (0 <= port < 65536):
+			ex = ValueError(f"Parameter 'port' is out of range 0..65535.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got value '{port}'.")
+			raise ex
+
 		self._hostname = hostname
 		self._port =     port
 
@@ -89,6 +132,17 @@ class Host(RootMixIn):
 			result += f":{self._port}"
 
 		return result
+
+	def Copy(self) -> "Host":
+		"""
+		Create a copy of this object.
+
+		:return: A new Host instance.
+		"""
+		return self.__class__(
+			self._hostname,
+			self._port
+		)
 
 
 @export
@@ -110,7 +164,13 @@ class Path(PathMixIn):
 
 @export
 class URL:
-	"""Represents a URL including scheme, host, credentials, path, query and fragment."""
+	"""
+	Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.
+
+	.. code-block::
+
+	   [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
+	"""
 
 	_scheme:    Protocols
 	_user:      Nullable[str]
@@ -120,16 +180,125 @@ class URL:
 	_query:     Nullable[Dict[str, str]]
 	_fragment:  Nullable[str]
 
-	def __init__(self, scheme: Protocols, path: Path, host: Nullable[Host] = None, user: Nullable[str] = None, password: Nullable[str] = None, query: Nullable[Dict[str, str]] = None, fragment: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		scheme: Protocols,
+		path: Path,
+		host: Nullable[Host] = None,
+		user: Nullable[str] = None,
+		password: Nullable[str] = None,
+		query: Nullable[Mapping[str, str]] = None,
+		fragment: Nullable[str] = None
+	) -> None:
+		"""
+		Initializes a Uniform Resource Locator (URL).
+
+		:param scheme:   Transport scheme to be used for a specified resource.
+		:param path:     Path to the resource.
+		:param host:     Hostname where the resource is located.
+		:param user:     User name for authentication.
+		:param password: Password for authentication.
+		:param query:    An optional query string.
+		:param fragment: An optional fragment.
+		"""
+
 		self._scheme =    scheme
 		self._user =      user
 		self._password =  password
 		self._host =      host
 		self._path =      path
-		self._query =     query
+		self._query =     {keyword: value for keyword, value in query.items()}
 		self._fragment =  fragment
 
+	@readonly
+	def Scheme(self) -> Protocols:
+		return self._scheme
+
+	@readonly
+	def User(self) -> Nullable[str]:
+		return self._user
+
+	@readonly
+	def Password(self) -> Nullable[str]:
+		return self._password
+
+	@readonly
+	def Host(self) -> Nullable[Host]:
+		"""
+		Returns the host part (host name and port number) of the URL.
+
+		:return: The host part of the URL.
+		"""
+		return self._host
+
+	@readonly
+	def Path(self) -> Path:
+		return self._path
+
+	@readonly
+	def Query(self) -> Nullable[Dict[str, str]]:
+		"""
+		Returns a dictionary of key-value pairs representing the query part in a URL.
+
+		:returns: A dictionary representing the query.
+		"""
+		return self._query
+
+	@readonly
+	def Fragment(self) -> Nullable[str]:
+		"""
+		Returns the fragment part of the URL.
+
+		:return: The fragment part of the URL.
+		"""
+		return self._fragment
+
+	# http://semaphore.plc2.de:5000/api/v1/semaphore?name=Riviera&foo=bar#page2
+	@classmethod
+	def Parse(cls, url: str) -> "URL":
+		"""
+		Parses a URL string and returns a URL object.
+
+		:param url:               URL as string to be parsed.
+		:return:                  A URL object.
+		:raises ToolingException: When syntax does not match.
+		"""
+		matches = regExp.match(url)
+		if matches is not None:
+			scheme =    matches.group("scheme")
+			user =      None # matches.group("user")
+			password =  None # matches.group("password")
+			host =      matches.group("host")
+
+			port = matches.group("port")
+			if port is not None:
+				port =      int(port)
+			path =      matches.group("path")
+			query =     matches.group("query")
+			fragment =  matches.group("fragment")
+
+			scheme =    None if scheme is None else Protocols[scheme.upper()]
+			hostObj =   None if host is None   else Host(host, port)
+
+			pathObj =   Path.Parse(path, hostObj)
+
+			parameters = {}
+			if query is not None:
+				for pair in query.split("&"):
+					key, value = pair.split("=")
+					parameters[key] = value
+
+			return cls(scheme, pathObj, hostObj, user, password, parameters, fragment)
+
+		raise ToolingException(f"Syntax error when parsing URL '{url}'.")
+
+
 	def __str__(self) -> str:
+		"""
+		Formats the URL object as a string representation.
+
+		:return: Formatted URL object.
+		"""
 		result = str(self._path)
 
 		if self._host is not None:
@@ -152,63 +321,16 @@ class URL:
 
 		return result
 
-	@readonly
-	def Scheme(self) -> Protocols:
-		return self._scheme
+	def WithoutCredentials(self) -> "URL":
+		"""
+		Returns a URL object with removed credentials (username and password).
 
-	@readonly
-	def User(self) -> Nullable[str]:
-		return self._user
-
-	@readonly
-	def Password(self) -> Nullable[str]:
-		return self._password
-
-	@readonly
-	def Host(self) -> Nullable[Host]:
-		return self._host
-
-	@readonly
-	def Path(self) -> Path:
-		return self._path
-
-	@readonly
-	def Query(self) -> Nullable[Dict[str, str]]:
-		return self._query
-
-	@readonly
-	def Fragment(self) -> Nullable[str]:
-		return self._fragment
-
-	# http://semaphore.plc2.de:5000/api/v1/semaphore?name=Riviera&foo=bar#page2
-	@classmethod
-	def Parse(cls, path: str) -> "URL":
-		matches = regExp.match(path)
-		if matches is not None:
-			scheme =    matches.group("scheme")
-			user =      None # matches.group("user")
-			password =  None # matches.group("password")
-			host =      matches.group("host")
-
-			port = matches.group("port")
-			if port is not None:
-				port =      int(port)
-			path =      matches.group("path")
-			query =     matches.group("query")
-			fragment =  matches.group("fragment")
-
-			scheme =    None if (scheme is None) else Protocols[scheme.upper()]
-			hostObj =   None if (host is None)   else Host(host, port)
-
-			pathObj =   Path.Parse(path, hostObj)
-
-			parameters = {}
-			if query is not None:
-				for pair in query.split("&"):
-					key, value = pair.split("=")
-					parameters[key] = value
-
-			return cls(scheme, pathObj, hostObj, user, password, parameters, fragment)
-
-		else:
-			pass
+		:return: New URL object with removed credentials.
+		"""
+		return self.__class__(
+			scheme=self._scheme,
+			path=self._path,
+			host=self._host,
+			query=self._query,
+			fragment=self._fragment
+		)
