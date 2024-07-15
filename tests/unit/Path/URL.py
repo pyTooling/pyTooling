@@ -57,7 +57,8 @@ class GenericPath(TestCase):
 
 class URLs(TestCase):
 	def test_Host(self):
-		url = URL.Parse("github")
+		resource = "github"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github", url.Host.Hostname)
@@ -68,8 +69,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_IP(self):
-		url = URL.Parse("192.168.1.1")
+		resource = "192.168.1.1"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("192.168.1.1", url.Host.Hostname)
@@ -80,8 +84,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS(self):
-		url = URL.Parse("github.com")
+		resource = "github.com"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -92,8 +99,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS_Port(self):
-		url = URL.Parse("github.com:80")
+		resource = "github.com:80"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -104,8 +114,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS_Port_Path(self):
-		url = URL.Parse("github.com:80/entrypoint")
+		resource = "github.com:80/entrypoint"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -116,8 +129,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS_Port_Path_File(self):
-		url = URL.Parse("github.com:80/path/file.png")
+		resource = "github.com:80/path/file.png"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -128,8 +144,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS_Port_Path_File_Query(self):
-		url = URL.Parse("github.com:80/path/file.png?width=1024")
+		resource = "github.com:80/path/file.png?width=1024"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -140,8 +159,11 @@ class URLs(TestCase):
 		self.assertDictEqual({"width": "1024"}, url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS_Port_Path_File_QueryQuery(self):
-		url = URL.Parse("github.com:80/path/file.png?width=1024&height=912")
+		resource = "github.com:80/path/file.png?width=1024&height=912"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -152,8 +174,11 @@ class URLs(TestCase):
 		self.assertDictEqual({"width": "1024", "height": "912"}, url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_DNS_Port_Path_File_Fragment(self):
-		url = URL.Parse("github.com:80/entrypoint#chapter-3")
+		resource = "github.com:80/entrypoint#chapter-3"
+		url = URL.Parse(resource)
 
 		self.assertIsNone(url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -164,8 +189,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertEqual("chapter-3", url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_HTTP_DNS(self):
-		url = URL.Parse("http://github.com")
+		resource = "http://github.com"
+		url = URL.Parse(resource)
 
 		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -176,8 +204,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_HTTPS_DNS(self):
-		url = URL.Parse("https://github.com")
+		resource = "https://github.com"
+		url = URL.Parse(resource)
 
 		self.assertEqual(Protocols.HTTPS, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -188,8 +219,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_HTTPS_DNS_Port(self):
-		url = URL.Parse("https://github.com:443")
+		resource = "https://github.com:443"
+		url = URL.Parse(resource)
 
 		self.assertEqual(Protocols.HTTPS, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
@@ -200,8 +234,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_HTTPS_User_DNS_Port(self):
-		url = URL.Parse("https://paebbels@v-4.github.com:25005")
+		resource = "https://paebbels@v-4.github.com:25005"
+		url = URL.Parse(resource)
 
 		self.assertEqual(Protocols.HTTPS, url.Scheme)
 		self.assertEqual("v-4.github.com", url.Host.Hostname)
@@ -212,8 +249,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_HTTPS_User_Pwd_DNS(self):
-		url = URL.Parse("https://paebbels:foobar@v4.api.github.com")
+		resource = "https://paebbels:foobar@v4.api.github.com"
+		url = URL.Parse(resource)
 
 		self.assertEqual(Protocols.HTTPS, url.Scheme)
 		self.assertEqual("v4.api.github.com", url.Host.Hostname)
@@ -224,8 +264,11 @@ class URLs(TestCase):
 		self.assertIsNone(url.Query)
 		self.assertIsNone(url.Fragment)
 
+		self.assertEqual(resource, str(url))
+
 	def test_GitLabCIToken(self):
-		url = URL.Parse("https://gitlab-ci-token:glcbt-64_2yjksyWRz6mPq57YFsvx@gitlab.company.com/path/to/resource.ext?query1=34&query2=343#ref-45")
+		resource = "https://gitlab-ci-token:glcbt-64_2yjksyWRz6mPq57YFsvx@gitlab.company.com/path/to/resource.ext?query1=34&query2=343#ref-45"
+		url = URL.Parse(resource)
 
 		self.assertEqual(Protocols.HTTPS, url.Scheme)
 		self.assertEqual("gitlab.company.com", url.Host.Hostname)
@@ -235,6 +278,8 @@ class URLs(TestCase):
 		self.assertEqual("/path/to/resource.ext", str(url.Path))
 		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
 		self.assertEqual("ref-45", url.Fragment)
+
+		self.assertEqual(resource, str(url))
 
 		cleanURL = url.WithoutCredentials()
 
@@ -246,4 +291,4 @@ class URLs(TestCase):
 		self.assertEqual("/path/to/resource.ext", str(url.Path))
 		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
 		self.assertEqual("ref-45", url.Fragment)
-		
+

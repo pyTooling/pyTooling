@@ -373,7 +373,7 @@ class URL:
 		if self._scheme is not None:
 			result = self._scheme.name.lower() + "://" + result
 
-		if len(self._query) != 0:
+		if self._query is not None and len(self._query) > 0:
 			result = result + "?" + "&".join([f"{key}={value}" for key, value in self._query.items()])
 
 		if self._fragment is not None:
