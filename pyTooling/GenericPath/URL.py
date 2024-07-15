@@ -59,8 +59,16 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		raise ex
 
 
-regExp = re_compile(r"^(?:(?P<scheme>\w+)://)?(?:(?P<host>(?:\w+|\.)+)(?:\:(?P<port>\d+))?)?(?P<path>[^?#]*)(?:\?(?P<query>[^#]+))?(?:#(?P<fragment>.+))?$")
-
+regExp = re_compile(
+	r"""^"""
+	"""(?:(?P<scheme>\w+)://)?"""
+	"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
+	"""(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
+	"""(?P<path>[^?#]*?)"""
+	"""(?:\?(?P<query>[^#]+?))?"""
+	"""(?:#(?P<fragment>.+?))?"""
+	"""$"""
+)
 
 @export
 class Protocols(IntFlag):
@@ -266,8 +274,8 @@ class URL:
 		matches = regExp.match(url)
 		if matches is not None:
 			scheme =    matches.group("scheme")
-			user =      None # matches.group("user")
-			password =  None # matches.group("password")
+			user =      matches.group("user")
+			password =  matches.group("password")
 			host =      matches.group("host")
 
 			port = matches.group("port")
