@@ -420,7 +420,9 @@ Common Classes
 
                version = SemanticVersion("2.5.4")
 
-            .. todo:: Needs example code
+               version.Major
+               version.Minor
+               version.Patch
 
 
 Configuration
