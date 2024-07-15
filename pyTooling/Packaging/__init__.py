@@ -94,34 +94,37 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 	Special dependency entries like Git repository references are translates to match the syntax expected by setuptools.
 
-	:param requirementsFile: Path to the `requirements.txt` file as an instance of :class:`Path`.
+	:param requirementsFile: Path to the ``requirements.txt`` file as an instance of :class:`Path`.
 	:returns:                A list of dependencies.
 	"""
 	indentation = "  " * indent
 	requirements = []
-	with requirementsFile.open("r") as file:
-		if debug:
-			print(f"[pyTooling.Packaging]{indentation} Extracting requirements from '{requirementsFile}'.")
-		for line in file.readlines():
-			line = line.strip()
-			if line.startswith("#") or line == "":
-				continue
-			elif line.startswith("-r"):
-				# Remove the first word/argument (-r)
-				filename = line[2:].lstrip()
-				requirements += loadRequirementsFile(requirementsFile.parent / filename, indent + 1, debug)
-			elif line.startswith("https"):
-				if debug:
-					print(f"[pyTooling.Packaging]{indentation} Found URL '{line}'.")
+	try:
+		with requirementsFile.open("r") as file:
+			if debug:
+				print(f"[pyTooling.Packaging]{indentation} Extracting requirements from '{requirementsFile}'.")
+			for line in file.readlines():
+				line = line.strip()
+				if line.startswith("#") or line == "":
+					continue
+				elif line.startswith("-r"):
+					# Remove the first word/argument (-r)
+					filename = line[2:].lstrip()
+					requirements += loadRequirementsFile(requirementsFile.parent / filename, indent + 1, debug)
+				elif line.startswith("https"):
+					if debug:
+						print(f"[pyTooling.Packaging]{indentation} Found URL '{line}'.")
 
-				# Convert 'URL#NAME' to 'NAME @ URL'
-				splitItems = line.split("#")
-				requirements.append(f"{splitItems[1]} @ {splitItems[0]}")
-			else:
-				if debug:
-					print(f"[pyTooling.Packaging]{indentation} - {line}")
+					# Convert 'URL#NAME' to 'NAME @ URL'
+					splitItems = line.split("#")
+					requirements.append(f"{splitItems[1]} @ {splitItems[0]}")
+				else:
+					if debug:
+						print(f"[pyTooling.Packaging]{indentation} - {line}")
 
-				requirements.append(line)
+					requirements.append(line)
+	except FileNotFoundError as ex:
+		raise FileNotFoundError(f"Requirements file '{requirementsFile}' not found in '{Path.cwd()}'.") from ex
 
 	return requirements
 

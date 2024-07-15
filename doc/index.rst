@@ -81,16 +81,16 @@ Attributes
                from pyTooling.Attributes import Attribute
 
                class Command(Attribute):
-                 def __init__(self, cmd: str, help: str = ""):
+                 def __init__(self, cmd: str, help: str = "") -> None:
                    pass
 
                class Flag(Attribute):
-                 def __init__(self, param: str, short: str = None, long: str = None, help: str = ""):
+                 def __init__(self, param: str, short: str = None, long: str = None, help: str = "") -> None:
                    pass
 
                @Command(cmd="version", help="Print version information.")
                @Flag(param="verbose", short="-v", long="--verbose", help="Default handler.")
-               def Handler(self, args):
+               def Handler(self, args) -> None:
                  pass
 
                for function in Command.GetFunctions():
@@ -104,12 +104,12 @@ Attributes
                from pyTooling.MetaClasses import ExtendedType
 
                class TestCase(Attribute):
-                 def __init__(self, name: str):
+                 def __init__(self, name: str) -> None:
                    pass
 
                class Program(metaclass=ExtendedType):
                   @TestCase(name="Handler routine")
-                  def Handler(self, args):
+                  def Handler(self, args) -> None:
                     pass
 
 
@@ -126,12 +126,12 @@ Attributes
                from pyTooling.MetaClasses import ExtendedType
 
                class TestSuite(Attribute):
-                 def __init__(self, name: str):
+                 def __init__(self, name: str) -> None:
                    pass
 
                @TestSuite(name="Command line interface tests")
                class Program(metaclass=ExtendedType):
-                  def Handler(self, args):
+                  def Handler(self, args) -> None:
                     pass
 
                prog = Program()
@@ -174,7 +174,7 @@ ArgParse
             .. code-block:: Python
 
                class Program:
-                 def __init__(self):
+                 def __init__(self) -> None:
                    mainParser = argparse.ArgumentParser()
 		             mainParser.set_defaults(func=self.HandleDefault)
                    mainParser.add_argument("-v", "--verbose")
@@ -256,7 +256,7 @@ CLI Abstraction
       .. code-block:: Python
 
          class Git(Executable):
-           def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
+           def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> self:
              cls._executableNames = {
                "Darwin": "git",
                "FreeBSD": "git",
@@ -401,15 +401,15 @@ Common Classes
 
                class MyTests(TestCase):
                  @mark.skipif(not CurrentPlatform.IsNativeWindows, reason="Skipped, if platform isn't native Windows.")
-                 def test_OnlyNativeWindows(self):
+                 def test_OnlyNativeWindows(self) -> None:
                    pass
 
                  @mark.skipif(not CurrentPlatform.IsMinGW64OnWindows, reason="Skipped, if platform isn't MinGW64.")
-                 def test_OnlyMinGW64(self):
+                 def test_OnlyMinGW64(self) -> None:
                    pass
 
                  @mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
-                 def test_ObjectSize(self):
+                 def test_ObjectSize(self) -> None:
                    pass
 
          .. tab-item:: SemanticVersion
@@ -420,7 +420,9 @@ Common Classes
 
                version = SemanticVersion("2.5.4")
 
-            .. todo:: Needs example code
+               version.Major
+               version.Minor
+               version.Patch
 
 
 Configuration
@@ -447,11 +449,25 @@ Configuration
 
          .. tab-item:: JSON
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               pass
+               from pathlib import Path
+               from pyTooling.Configuration.JSON import Configuration
+
+               configFile = Path("config.json")
+               config = Configuration(configFile)
+
+               # Accessing root-level scalar value
+               configFileFormatVersion = config["version"]
+               # Accessing value in a sequence
+               firstItemInList = config["list"][0]
+               # Accessing first value in dictionary
+               firstItemInDict = config["dict"]["key_1"]
+
+               # Iterate simple list
+               simpleList = config["list"]
+               for item in simpleList:
+                 pass
 
          .. tab-item:: TOML
 
@@ -463,11 +479,25 @@ Configuration
 
          .. tab-item:: YAML
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               pass
+               from pathlib import Path
+               from pyTooling.Configuration.YAML import Configuration
+
+               configFile = Path("config.yml")
+               config = Configuration(configFile)
+
+               # Accessing root-level scalar value
+               configFileFormatVersion = config["version"]
+               # Accessing value in a sequence
+               firstItemInList = config["list"][0]
+               # Accessing first value in dictionary
+               firstItemInDict = config["dict"]["key_1"]
+
+               # Iterate simple list
+               simpleList = config["list"]
+               for item in simpleList:
+                 pass
 
          .. tab-item:: XML
 
@@ -507,29 +537,69 @@ Data Structures
 
       .. tab-set::
 
-          .. tab-item:: Graph
+         .. tab-item:: Graph
+
+            .. code-block:: Python
+
+               from pyTooling.Graph import Graph, Vertex
+
+               graph = Graph(name="myGraph")
+
+               # Create new vertices and an edge between them
+               vertex1 = Vertex(vertexID=1, graph=graph)
+               vertex2 = Vertex(vertexID=2, value="2", graph=graph)
+               edge12 = vertex1.EdgeToVertex(vertex2, edgeValue="1 -> 2", weight=15)
+
+               # Create an edge to a new vertex
+               edge2x = vertex2.EdgeToNewVertex(vertexID=3)
+               vertex3 = edge2x.Destination
+
+               # Create a link between two vertices
+               link31 = vertex3.LinkToVertex(vertex1)
+
+         .. tab-item:: Statemachine
 
             .. todo:: Needs example code
 
-             .. code-block:: Python
+            .. code-block:: Python
 
-                pass
+               pass
 
-          .. tab-item:: Statemachine
+         .. tab-item:: Tree
 
-            .. todo:: Needs example code
+            .. code-block:: Python
 
-             .. code-block:: Python
+               from pyTooling.Tree import Node
 
-                pass
+               # Create a new tree by creating a root node (no parent reference)
+               root = Node(value="OSVVM Regression Tests")
 
-          .. tab-item:: Tree
+               # Construct the tree top-down
+               lib = Node(value="Utility Library", parent=root)
 
-            .. todo:: Needs example code
+               # Another standalone node with unique ID (actually an independent tree)
+               common = Node(nodeID=5, value="Common")
 
-             .. code-block:: Python
+               # Construct bottom-up
+               axi = Node(value="AXI")
+               axiCommon = Node(value="AXI4 Common")
+               axi.AddChild(axiCommon)
 
-                pass
+               # Group nodes and handover children at node creation time
+               vcList = [common, axi]
+               vcs = Node(value="Verification Components", parent=root, children=vcList)
+
+               # Add multiple nodes at once
+               axiProtocols = (
+                 Node(value="AXI4-Stream"),
+                 Node(value="AXI4-Lite"),
+                 Node(value="AXI4")
+               )
+               axi.AddChildren(axiProtocols)
+
+               # Create another standalone node and attach it later to a tree.
+               uart = Node(value="UART")
+               uart.Parent = vcs
 
 .. grid:: 3
 
@@ -722,19 +792,31 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
          .. tab-item:: Singleton
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               def
+               class Application(metaclass=ExtendedType, singleton=True):
+                  _x: int
+
+                  def __init__(self) -> None:
+                     print("Instance of 'App1WithoutParameters' was created")
+                     self._x = 10
+
+               instance1 = Application()
+               instance2 = Application()
+               assert instance1 is instance2
 
          .. tab-item:: Slotted Class
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               def
+               class Data(metaclass=ExtendedType, slots=True):
+                  _x: int
+                  _y: int = 12
+
+                  def __init__(self, x: int) -> None:
+                    self._x = x
+
+               data = Data(11)
 
          .. tab-item:: MixIn Class
 
@@ -774,7 +856,43 @@ Packaging
    .. grid-item::
       :columns: 6
 
-      .. todo:: Needs example code
+      .. tab-set::
+
+         .. tab-item:: DescribePythonPackage
+
+            .. code-block:: Python
+
+               from setuptools          import setup
+
+               from pathlib             import Path
+               from pyTooling.Packaging import DescribePythonPackage
+
+               pass
+
+         .. tab-item:: DescribePythonPackageHostedOnGitHub
+            :selected:
+
+            .. code-block:: Python
+
+               from setuptools          import setup
+
+               from pathlib             import Path
+               from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
+
+               gitHubNamespace =        "Paebbels"
+               packageName =            "pyVersioning"
+               packageDirectory =       packageName.replace(".", "/")
+               packageInformationFile = Path(f"{packageDirectory}/__init__.py")
+
+               setup(**DescribePythonPackageHostedOnGitHub(
+                 packageName=packageName,
+                 description="Write version information collected from (CI) environment for any programming language as source file.",
+                 gitHubNamespace=gitHubNamespace,
+                 sourceFileWithVersion=packageInformationFile,
+                 consoleScripts={
+                   "pyVersioning": "pyVersioning.CLI:main",
+                 }
+               ))
 
 
 Terminal

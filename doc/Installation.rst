@@ -41,7 +41,7 @@ See :ref:`DEP` for more details.
       .. tab-set::
 
          .. tab-item:: Minimal installation
-           :sync: Minimal
+            :sync: Minimal
 
             .. code-block:: bash
 
@@ -90,7 +90,7 @@ See :ref:`DEP` for more details.
       .. tab-set::
 
          .. tab-item:: Minimal installation
-           :sync: Minimal
+            :sync: Minimal
 
             .. code-block:: powershell
 
@@ -144,7 +144,7 @@ just all (``all``) dependencies.
       .. tab-set::
 
          .. tab-item:: Minimal installation
-           :sync: Minimal
+            :sync: Minimal
 
             .. code-block:: bash
 
@@ -155,7 +155,7 @@ just all (``all``) dependencies.
                python3 -m pip install pyTooling
 
          .. tab-item:: With Documentation Dependencies
-           :sync: Doc
+            :sync: Doc
 
             .. code-block:: bash
 
@@ -166,7 +166,7 @@ just all (``all``) dependencies.
                python3 -m pip install pyTooling[doc]
 
          .. tab-item:: With Unit Testing Dependencies
-           :sync: Unit
+            :sync: Unit
 
             .. code-block:: bash
 
@@ -177,7 +177,7 @@ just all (``all``) dependencies.
                python3 -m pip install pyTooling[test]
 
          .. tab-item:: All Developer Dependencies
-           :sync: All
+            :sync: All
 
             .. code-block:: bash
 
@@ -193,7 +193,7 @@ just all (``all``) dependencies.
       .. tab-set::
 
          .. tab-item:: Minimal installation
-           :sync: Minimal
+            :sync: Minimal
 
             .. code-block:: powershell
 
@@ -204,7 +204,7 @@ just all (``all``) dependencies.
                py -m pip install pyTooling
 
          .. tab-item:: With Documentation Dependencies
-           :sync: Doc
+            :sync: Doc
 
             .. code-block:: powershell
 
@@ -215,7 +215,7 @@ just all (``all``) dependencies.
                py -m pip install pyTooling[doc]
 
          .. tab-item:: With Unit Testing Dependencies
-           :sync: Unit
+            :sync: Unit
 
             .. code-block:: powershell
 
@@ -226,7 +226,7 @@ just all (``all``) dependencies.
                py -m pip install pyTooling[test]
 
          .. tab-item:: All Developer Dependencies
-           :sync: All
+            :sync: All
 
             .. code-block:: powershell
 
@@ -249,7 +249,7 @@ package in a ``requirements.txt`` file.
 
    .. code-block:: text
 
-      pyTooling ~= 6.3.0
+      pyTooling ~= 6.4
 
 
 .. _INSTALL/pip/update:
@@ -565,7 +565,7 @@ Ensure :ref:`packaging requirements <DEP/packaging>` are installed.
          python3 -m pip uninstall -y pyTooling
 
          # Install from wheel
-         python3 -m pip install ./dist/pyTooling-6.3.0-py3-none-any.whl
+         python3 -m pip install ./dist/pyTooling-6.4.0-py3-none-any.whl
 
    .. tab-item:: Windows
       :sync: Windows
@@ -581,7 +581,7 @@ Ensure :ref:`packaging requirements <DEP/packaging>` are installed.
          py -m pip uninstall -y pyTooling
 
          # Install from wheel
-         py -m pip install .\dist\pyTooling-6.3.0-py3-none-any.whl
+         py -m pip install .\dist\pyTooling-6.4.0-py3-none-any.whl
 
 .. note::
 

@@ -67,7 +67,7 @@ The following example implements a portion of the ``git`` program and its ``comm
          for line in commit.GetLineReader():
            print(line)
 
-   .. grid-item:: **Declaration of ``Git``**
+   .. grid-item:: **Declaration of** ``Git``
       :columns: 6
 
       .. code-block:: Python
