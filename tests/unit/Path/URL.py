@@ -53,3 +53,184 @@ class GenericPath(TestCase):
 
 	def test_str(self) -> None:
 		self.assertEqual(str(self.url), "https://pyTooling.GitHub.io:8080/path/to/endpoint?user=paebbels&token=1234567890")
+
+class URLs(TestCase):
+	def test_Host(self):
+		url = URL.Parse("github")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_IP(self):
+		url = URL.Parse("192.168.1.1")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("192.168.1.1", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS(self):
+		url = URL.Parse("github.com")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS_Port(self):
+		url = URL.Parse("github.com:80")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(80, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS_Port_Path(self):
+		url = URL.Parse("github.com:80/entrypoint")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(80, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("/entrypoint", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS_Port_Path_File(self):
+		url = URL.Parse("github.com:80/path/file.png")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(80, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("/path/file.png", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS_Port_Path_File_Query(self):
+		url = URL.Parse("github.com:80/path/file.png?width=1024")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(80, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("/path/file.png", str(url.Path))
+		self.assertDictEqual({"width": "1024"}, url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS_Port_Path_File_QueryQuery(self):
+		url = URL.Parse("github.com:80/path/file.png?width=1024&height=912")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(80, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("/path/file.png", str(url.Path))
+		self.assertDictEqual({"width": "1024", "height": "912"}, url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_DNS_Port_Path_File_Fragment(self):
+		url = URL.Parse("github.com:80/entrypoint#chapter-3")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(80, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("/entrypoint", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertEqual("chapter-3", url.Fragment)
+
+	def test_HTTP_DNS(self):
+		url = URL.Parse("http://github.com")
+
+		self.assertEqual(Protocols.HTTP, url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_HTTPS_DNS(self):
+		url = URL.Parse("https://github.com")
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_HTTPS_DNS_Port(self):
+		url = URL.Parse("https://github.com:443")
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(443, url.Host.Port)
+		self.assertIsNone(url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_HTTPS_User_DNS_Port(self):
+		url = URL.Parse("https://paebbels@v-4.github.com:25005")
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("v-4.github.com", url.Host.Hostname)
+		self.assertEqual(25005, url.Host.Port)
+		self.assertEqual("paebbels", url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_HTTPS_User_Pwd_DNS(self):
+		url = URL.Parse("https://paebbels:foobar@v4.api.github.com")
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("v4.api.github.com", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertEqual("paebbels", url.User)
+		self.assertEqual("foobar", url.Password)
+		self.assertEqual("", str(url.Path))
+		self.assertIsNone(url.Query)
+		self.assertIsNone(url.Fragment)
+
+	def test_GitLabCIToken(self):
+		url = URL.Parse("https://gitlab-ci-token:glcbt-64_2yjksyWRz6mPq57YFsvx@gitlab.company.com/path/to/resource.ext?query1=34&query2=343#ref-45")
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("gitlab.company.com", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+		self.assertEqual("gitlab-ci-token", url.User)
+		self.assertEqual("glcbt-64_2yjksyWRz6mPq57YFsvx", url.Password)
+		self.assertEqual("/path/to/resource.ext", str(url.Path))
+		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
+		self.assertEqual("ref-45", url.Fragment)

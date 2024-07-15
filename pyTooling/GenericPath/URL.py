@@ -210,12 +210,58 @@ class URL:
 		:param fragment: An optional fragment.
 		"""
 
-		self._scheme =    scheme
-		self._user =      user
-		self._password =  password
-		self._host =      host
-		self._path =      path
-		self._query =     {keyword: value for keyword, value in query.items()}
+		if scheme is not None and not isinstance(scheme, Protocols):
+			ex = TypeError(f"Parameter 'scheme' is not of type 'Protocols'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
+			raise ex
+		self._scheme = scheme
+
+		if user is not None and not isinstance(user, str):
+			ex = TypeError(f"Parameter 'user' is not of type 'str'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
+			raise ex
+		self._user = user
+
+		if password is not None and not isinstance(password, str):
+			ex = TypeError(f"Parameter 'password' is not of type 'str'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
+			raise ex
+		self._password = password
+
+		if host is not None and not isinstance(host, Host):
+			ex = TypeError(f"Parameter 'host' is not of type 'Host'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
+			raise ex
+		self._host = host
+
+		if path is not None and not isinstance(path, Path):
+			ex = TypeError(f"Parameter 'path' is not of type 'Path'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+		self._path = path
+
+		if query is not None:
+			if not isinstance(query, Mapping):
+				ex = TypeError(f"Parameter 'query' is not a mapping ('dict', ...).")
+				if version_info >= (3, 11):  # pragma: no cover
+					ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
+				raise ex
+
+			self._query = {keyword: value for keyword, value in query.items()}
+		else:
+			self._query = None
+
+		if fragment is not None and not isinstance(fragment, str):
+			ex = TypeError(f"Parameter 'fragment' is not of type 'str'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
+			raise ex
+
 		self._fragment =  fragment
 
 	@readonly
@@ -296,7 +342,15 @@ class URL:
 					key, value = pair.split("=")
 					parameters[key] = value
 
-			return cls(scheme, pathObj, hostObj, user, password, parameters, fragment)
+			return cls(
+				scheme,
+				pathObj,
+				hostObj,
+				user,
+				password,
+				parameters if len(parameters) > 0 else None,
+				fragment
+			)
 
 		raise ToolingException(f"Syntax error when parsing URL '{url}'.")
 
