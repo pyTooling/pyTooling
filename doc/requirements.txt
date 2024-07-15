@@ -7,7 +7,7 @@ setuptools ~= 70.3
 
 # Enforce latest version on ReadTheDocs
 sphinx ~= 7.4
-docutils ~= 0.20
+docutils ~= 0.21
 
 # ReadTheDocs Theme
 sphinx_rtd_theme ~= 2.0.0
