@@ -26,3 +26,4 @@ sphinx_autodoc_typehints ~= 2.2
 sphinx_reports ~= 0.6
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
