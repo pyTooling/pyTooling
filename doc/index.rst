@@ -25,12 +25,12 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful abstract data models, lacking classes, decorators, a new
-performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
+**pyTooling** is a powerful collection of arbitrary and useful (abstract) data models, lacking classes, decorators, a
+new performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
 handling of package descriptions or to unify multiple existing APIs into a single API.
 
-It's useful ‒ if not even essential ‒ for **any** Python-base project independent if it's a library, framework, CLI tool
-or just a "script".
+It's useful ‒ if not even essential ‒ for **any** Python-based project independent if it's a library, framework, CLI
+tool or just a "script".
 
 In addition, pyTooling provides a collection of `CI job templates for GitHub Actions <https://github.com/pyTooling/Actions>`__.
 This drastically simplifies GHA-based CI pipelines for Python projects.
