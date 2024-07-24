@@ -1,11 +1,9 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-from importlib.util import find_spec
 from sys import path as sys_path
 from os.path import abspath
 from pathlib import Path
-from json import loads
 
 from pyTooling.Packaging import extractVersionInformation
 
@@ -61,10 +59,10 @@ pygments_style = "manni"
 # ==============================================================================
 # Restructured Text settings
 # ==============================================================================
-prologPath = "prolog.inc"
+prologPath = Path("prolog.inc")
 try:
-	with open(prologPath, "r") as prologFile:
-		rst_prolog = prologFile.read()
+	with prologPath.open("r", encoding="utf-8") as fileHandle:
+		rst_prolog = fileHandle.read()
 except Exception as ex:
 	print(f"[ERROR:] While reading '{prologPath}'.")
 	print(ex)

@@ -43,13 +43,13 @@ from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional
 
 try:
 	from pyTooling.Exceptions import ToolingException
-	from pyTooling.Decorators import export
+	from pyTooling.Decorators import export, readonly
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Exceptions import ToolingException
-		from Decorators import export
+		from Decorators import export, readonly
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.MetaClasses] Could not import directly!")
 		raise ex
@@ -457,9 +457,9 @@ class ExtendedType(type):
 		# Additional methods on a class
 		def HasClassAttributes(self) -> bool:
 			"""
-			Check if class has Attributes.
+			Read-only property to check if the class has Attributes (:attr:`__pyattr__`).
 
-			:return: ``True``, if the class has Attributes.
+			:returns: ``True``, if the class has Attributes.
 			"""
 			try:
 				return len(self.__pyattr__) > 0
@@ -468,9 +468,9 @@ class ExtendedType(type):
 
 		def HasMethodAttributes(self) -> bool:
 			"""
-			Check if class has any method with Attributes.
+			Read-only property to check if the class has methods with Attributes (:attr:`__methodsWithAttributes__`).
 
-			:return: ``True``, if the class has any method with Attributes.
+			:returns: ``True``, if the class has any method with Attributes.
 			"""
 			try:
 				return len(self.__methodsWithAttributes__) > 0
@@ -516,8 +516,8 @@ class ExtendedType(type):
 
 			return methodAttributePairs
 
-		newClass.HasClassAttributes = classmethod(property(HasClassAttributes, doc=HasClassAttributes.__doc__))
-		newClass.HasMethodAttributes = classmethod(property(HasMethodAttributes, doc=HasMethodAttributes.__doc__))
+		newClass.HasClassAttributes = classmethod(readonly(HasClassAttributes))
+		newClass.HasMethodAttributes = classmethod(readonly(HasMethodAttributes))
 		newClass.GetMethodsWithAttributes = classmethod(GetMethodsWithAttributes)
 		GetMethodsWithAttributes.__qualname__ = f"{className}.{GetMethodsWithAttributes.__name__}"
 		# GetMethods(predicate) -> dict[method, list[attribute]] / generator

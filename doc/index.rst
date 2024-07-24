@@ -932,6 +932,9 @@ Timer
 
       .. todo:: Needs example code
 
+
+.. _CONTRIBUTORS:
+
 Contributors
 ************
 
@@ -940,6 +943,8 @@ Contributors
 * `Unai Martinez-Corral <https://GitHub.com/umarcor/>`__
 * `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
 
+
+.. _LICENSE:
 
 License
 *******
