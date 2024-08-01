@@ -1,6 +1,6 @@
-.. _INSTALL:
-
 .. |PackageName| replace:: pyTooling
+
+.. _INSTALL:
 
 Installation/Updates
 ####################
