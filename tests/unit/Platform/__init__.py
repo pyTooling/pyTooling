@@ -71,7 +71,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("", platform.ExecutableExtension)
-		self.assertEqual("so", platform.SharedLibraryExtension)
+		self.assertEqual("a", platform.StaticLibraryExtension)
+		self.assertEqual("so", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("MacOS (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -94,7 +95,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("", platform.ExecutableExtension)
-		self.assertEqual("lib", platform.SharedLibraryExtension)
+		self.assertEqual("a", platform.StaticLibraryExtension)
+		self.assertEqual("dylib", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeWindows', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -117,7 +119,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows+MSYS2 (x86-64) - MSYS" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MSYS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -139,7 +142,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW32" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MinGW32', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -161,7 +165,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows+MSYS2 (x86-64) - MinGW64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_MinGW64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -183,7 +188,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows+MSYS2 (x86-64) - UCRT64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_UCRT64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -205,7 +211,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows+MSYS2 (x86-64) - Clang32" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_Clang32', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -227,7 +234,8 @@ class AnyPlatform(TestCase):
 		self.assertTrue(platform.IsClang32OnWindows)
 		self.assertFalse(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 	@mark.skipif("Windows+MSYS2 (x86-64) - Clang64" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_Clang64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
@@ -249,5 +257,8 @@ class AnyPlatform(TestCase):
 		self.assertFalse(platform.IsClang32OnWindows)
 		self.assertTrue(platform.IsClang64OnWindows)
 		self.assertEqual("exe", platform.ExecutableExtension)
-		self.assertEqual("dll", platform.SharedLibraryExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+
+# TODO: FreeBSD
