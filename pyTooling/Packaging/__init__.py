@@ -36,9 +36,9 @@ A set of helper functions to describe a Python package for setuptools.
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from collections.abc import Sized
 from pathlib         import Path
+from re              import split as re_split
 from sys             import version_info
-from typing          import List, Iterable, Dict, Sequence, Any, Optional as Nullable
-
+from typing          import List, Iterable, Dict, Sequence, Any, Optional as Nullable, Union, Tuple
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -432,6 +432,10 @@ def DescribePythonPackage(
 	   * ``doc``, ``doc.*``
 	   * ``tests``, ``tests.*``
 
+	.. topic:: Handling of minimal Python version
+
+	   The minimal required Python version is selected from ``pythonVersions``.
+
 	.. topic:: Handling of dunder variables
 
 	   A Python source file specified by parameter ``sourceFileWithVersion`` will be analyzed with Pythons parser and the
@@ -636,6 +640,20 @@ def DescribePythonPackage(
 			ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 	classifiers.append(license.PythonClassifier)
+
+	def naturalSorting(array: Iterable[str]) -> List[str]:
+		# See http://nedbatchelder.com/blog/200712/human_sorting.html
+		def toInt(text: str) -> Union[str, int]:
+			return int(text) if text.isdigit() else text
+
+		def createKey(text: str) -> Tuple[Union[str, float], ...]:
+			return tuple(toInt(part) for part in re_split(r"(\d+)", text))
+
+		sortedArray = list(array)
+		sortedArray.sort(key=createKey)
+		return sortedArray
+
+	pythonVersions = naturalSorting(pythonVersions)
 
 	# Translate Python versions to classifiers
 	classifiers.append("Programming Language :: Python :: 3 :: Only")
