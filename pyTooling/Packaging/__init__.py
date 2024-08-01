@@ -710,6 +710,7 @@ def DescribePythonPackageHostedOnGitHub(
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
 	consoleScripts: Dict[str, str] = None,
 	dataFiles: Dict[str, List[str]] = None,
+	debug: bool = False
 ) -> Dict[str, Any]:
 	"""
 	Helper function to describe a Python package when hosted on GitHub.
@@ -717,10 +718,42 @@ def DescribePythonPackageHostedOnGitHub(
 	This is a wrapper for :func:`DescribePythonPackage`, because some parameters can be simplified by knowing the GitHub
 	namespace and repository name: issue tracker URL, source code URL, ...
 
-	.. hint::
-
-	   Some information will be gathered automatically from well-known files.
-
+	:param packageName:                   Name of the Python package.
+	:param description:                   Short description of the package. The long description will be read from README file.
+	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).
+	:param gitHubRepository:              Name of the GitHub repository.
+	:param projectURL:                    URL to the Python project.
+	:param keywords:                      A list of keywords.
+	:param license:                       The package's license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)
+	:param requirementsFile:              The path to the project's requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile: The path to the project's requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:      The path to the project's requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:     The path to the project's requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:         The path to the project's source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)
+	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)
+	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
+	:param debug:                         Enable extended outputs for debugging.
+	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
+	:raises ToolingException:             If package 'setuptools' is not available.
+	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:            If README file doesn't exist.
+	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:            If requirements file doesn't exist.
+	:raises TypeError:                    If parameter 'documentationRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                    If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                    If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                    If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:            If package file with dunder variables doesn't exist.
+	:raises TypeError:                    If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
+	:raises ValueError:                   If developmentStatus uses an unsupported value. (See :const:`STATUS`)
+	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
+	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
+	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
 	"""
 	gitHubRepository = gitHubRepository if gitHubRepository is not None else packageName
 
@@ -752,4 +785,5 @@ def DescribePythonPackageHostedOnGitHub(
 		pythonVersions=pythonVersions,
 		consoleScripts=consoleScripts,
 		dataFiles=dataFiles,
+		debug=debug,
 	)
