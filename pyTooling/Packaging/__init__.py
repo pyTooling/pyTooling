@@ -158,49 +158,53 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 	   .. code-block:: Python
 
-	      requirements = list(set(loadRequirementsFile(documentationRequirementsFile)))
+	      requirements = list(set(loadRequirementsFile(requirementsFile)))
 
 	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.
+	:param debug:              If ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
 	:raises TypeError:         If parameter 'requirementsFile' is not of type 'Path'.
 	:raises FileNotFoundError: If requirements file does not exist.
 	"""
 	if not isinstance(requirementsFile, Path):
-		ex = TypeError(f"Parameter 'requirementsFile' is not of type 'Path'.")
+		ex = TypeError(f"Parameter '{requirementsFile}' is not of type 'Path'.")
 		if version_info >= (3, 11):  # pragma: no cover
 			ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
 		raise ex
 
-	indentation = "  " * indent
-	requirements = []
-	try:
-		with requirementsFile.open("r") as file:
-			if debug:
-				print(f"[pyTooling.Packaging]{indentation} Extracting requirements from '{requirementsFile}'.")
-			for line in file.readlines():
-				line = line.strip()
-				if line.startswith("#") or line == "":
-					continue
-				elif line.startswith("-r"):
-					# Remove the first word/argument (-r)
-					filename = line[2:].lstrip()
-					requirements += loadRequirementsFile(requirementsFile.parent / filename, indent + 1, debug)
-				elif line.startswith("https"):
-					if debug:
-						print(f"[pyTooling.Packaging]{indentation} Found URL '{line}'.")
+	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> List[str]:
+		"""Recursive variant of :func:`loadRequirementsFile`."""
+		requirements = []
+		try:
+			with requirementsFile.open("r") as file:
+				if debug:
+					print(f"[pyTooling.Packaging]{'  ' * indent} Extracting requirements from '{requirementsFile}'.")
+				for line in file.readlines():
+					line = line.strip()
+					if line.startswith("#") or line == "":
+						continue
+					elif line.startswith("-r"):
+						# Remove the first word/argument (-r)
+						filename = line[2:].lstrip()
+						requirements += _loadRequirementsFile(requirementsFile.parent / filename, indent + 1)
+					elif line.startswith("https"):
+						if debug:
+							print(f"[pyTooling.Packaging]{'  ' * indent} Found URL '{line}'.")
 
-					# Convert 'URL#NAME' to 'NAME @ URL'
-					splitItems = line.split("#")
-					requirements.append(f"{splitItems[1]} @ {splitItems[0]}")
-				else:
-					if debug:
-						print(f"[pyTooling.Packaging]{indentation} - {line}")
+						# Convert 'URL#NAME' to 'NAME @ URL'
+						splitItems = line.split("#")
+						requirements.append(f"{splitItems[1]} @ {splitItems[0]}")
+					else:
+						if debug:
+							print(f"[pyTooling.Packaging]{'  ' * indent} - {line}")
 
-					requirements.append(line)
-	except FileNotFoundError as ex:
-		raise FileNotFoundError(f"Requirements file '{requirementsFile}' not found in '{Path.cwd()}'.") from ex
+						requirements.append(line)
+		except FileNotFoundError as ex:
+			raise FileNotFoundError(f"Requirements file '{requirementsFile}' not found in '{Path.cwd()}'.") from ex
 
-	return requirements
+		return requirements
+
+	return _loadRequirementsFile(requirementsFile, 0)
 
 
 @export
@@ -215,7 +219,27 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 	_description: str     #: Description of the package.
 	_version: str         #: Version number.
 
-	def __init__(self, author: str, email: str, copyright: str, license: str, version: str, description: str, keywords: Iterable[str]) -> None:
+	def __init__(
+		self,
+		author: str,
+		email: str,
+		copyright: str,
+		license: str,
+		version: str,
+		description: str,
+		keywords: Iterable[str]
+	) -> None:
+		"""
+		Initializes a Python package (version) information instance.
+
+		:param author:      Author of the Python package.
+		:param email:       The author's email address
+		:param copyright:   The copyright notice of the Package.
+		:param license:     The Python package's license.
+		:param version:     The Python package's version.
+		:param description: The Python package's short description.
+		:param keywords:    The Python package's list of keywords.
+		"""
 		self._author =      author
 		self._email =       email
 		self._copyright =   copyright
@@ -361,6 +385,8 @@ STATUS: Dict[str, str] = {
 """
 A dictionary of supported development status values.
 
+The mapping's value will be appended to ``Development Status :: `` to form a package classifier.
+
 1. Planning
 2. Pre-Alpha
 3. Alpha
@@ -368,21 +394,72 @@ A dictionary of supported development status values.
 5. Production/Stable
 6. Mature
 7. Inactive
+
+.. seealso::
+
+   `Python package classifiers <https://pypi.org/classifiers/>`__
 """
 
-DEFAULT_LICENSE =     Apache_2_0_License
+DEFAULT_LICENSE = Apache_2_0_License
+"""
+Default license (Apache License, 2.0) used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``license`` is not assigned.
+"""
+
 DEFAULT_PY_VERSIONS = ("3.8", "3.9", "3.10", "3.11", "3.12")
+"""
+A tuple of supported CPython versions used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``pythonVersions`` is not assigned.
+
+.. seealso::
+
+   `Status of Python versions <https://devguide.python.org/versions/>`__
+"""
+
 DEFAULT_CLASSIFIERS = (
 		"Operating System :: OS Independent",
 		"Intended Audience :: Developers",
 		"Topic :: Utilities"
 	)
+"""
+A list of Python package classifiers used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``classifiers`` is not assigned.
+
+.. seealso::
+
+   `Python package classifiers <https://pypi.org/classifiers/>`__
+"""
 
 DEFAULT_README = Path("README.md")
+"""
+Path to the README file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``readmeFile`` is not assigned.
+"""
+
 DEFAULT_REQUIREMENTS = Path("requirements.txt")
+"""
+Path to the requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``requirementsFile`` is not assigned.
+"""
+
 DEFAULT_DOCUMENTATION_REQUIREMENTS = Path("doc/requirements.txt")
+"""
+Path to the README requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``documentationRequirementsFile`` is not assigned.
+"""
+
 DEFAULT_TEST_REQUIREMENTS = Path("tests/requirements.txt")
+"""
+Path to the README requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``unittestRequirementsFile`` is not assigned.
+"""
+
 DEFAULT_PACKAGING_REQUIREMENTS = Path("build/requirements.txt")
+"""
+Path to the package requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
+if parameter ``packagingRequirementsFile`` is not assigned.
+"""
+
 DEFAULT_VERSION_FILE = Path("__init__.py")
 
 
@@ -434,7 +511,7 @@ def DescribePythonPackage(
 
 	.. topic:: Handling of minimal Python version
 
-	   The minimal required Python version is selected from ``pythonVersions``.
+	   The minimal required Python version is selected from parameter ``pythonVersions``.
 
 	.. topic:: Handling of dunder variables
 
@@ -452,8 +529,9 @@ def DescribePythonPackage(
 
 	.. topic:: Handling of package classifiers
 
-	   To reduce redundanty in providing parameters to this function (e.g. supported ``pythonVersions``), classifiers for
-	   the supported Python versions shouldn't be provided via parameter ``classifiers`` to this function.
+	   To reduce redundantly provided parameters to this function (e.g. supported ``pythonVersions``), only additional
+	   classifiers should be provided via parameter ``classifiers``. The supported Python versions will be implicitly
+	   converted to package classifiers, so no need to specify them in parameter ``classifiers``.
 
 	   The following classifiers are implicitly handled:
 
@@ -641,19 +719,25 @@ def DescribePythonPackage(
 		raise ex
 	classifiers.append(license.PythonClassifier)
 
-	def naturalSorting(array: Iterable[str]) -> List[str]:
+	def _naturalSorting(array: Iterable[str]) -> List[str]:
+		"""A simple natural sorting implementation."""
 		# See http://nedbatchelder.com/blog/200712/human_sorting.html
-		def toInt(text: str) -> Union[str, int]:
+		def _toInt(text: str) -> Union[str, int]:
+			"""Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string."""
 			return int(text) if text.isdigit() else text
 
-		def createKey(text: str) -> Tuple[Union[str, float], ...]:
-			return tuple(toInt(part) for part in re_split(r"(\d+)", text))
+		def _createKey(text: str) -> Tuple[Union[str, float], ...]:
+			"""
+			Split the text into a tuple of multiple :class:`str` and :class:`int` fields, so embedded numbers can be sorted by
+			their value.
+			"""
+			return tuple(_toInt(part) for part in re_split(r"(\d+)", text))
 
 		sortedArray = list(array)
-		sortedArray.sort(key=createKey)
+		sortedArray.sort(key=_createKey)
 		return sortedArray
 
-	pythonVersions = naturalSorting(pythonVersions)
+	pythonVersions = _naturalSorting(pythonVersions)
 
 	# Translate Python versions to classifiers
 	classifiers.append("Programming Language :: Python :: 3 :: Only")
@@ -731,7 +815,7 @@ def DescribePythonPackageHostedOnGitHub(
 	debug: bool = False
 ) -> Dict[str, Any]:
 	"""
-	Helper function to describe a Python package when hosted on GitHub.
+	Helper function to describe a Python package when the source code is hosted on GitHub.
 
 	This is a wrapper for :func:`DescribePythonPackage`, because some parameters can be simplified by knowing the GitHub
 	namespace and repository name: issue tracker URL, source code URL, ...

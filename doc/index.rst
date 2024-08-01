@@ -884,15 +884,17 @@ Packaging
                packageDirectory =       packageName.replace(".", "/")
                packageInformationFile = Path(f"{packageDirectory}/__init__.py")
 
-               setup(**DescribePythonPackageHostedOnGitHub(
-                 packageName=packageName,
-                 description="Write version information collected from (CI) environment for any programming language as source file.",
-                 gitHubNamespace=gitHubNamespace,
-                 sourceFileWithVersion=packageInformationFile,
-                 consoleScripts={
-                   "pyVersioning": "pyVersioning.CLI:main",
-                 }
-               ))
+               setup(
+                 **DescribePythonPackageHostedOnGitHub(
+                   packageName=packageName,
+                   description="Write version information collected from (CI) environment for any programming language as source file.",
+                   gitHubNamespace=gitHubNamespace,
+                   sourceFileWithVersion=packageInformationFile,
+                   consoleScripts={
+                     "pyVersioning": "pyVersioning.CLI:main",
+                   }
+                 )
+               )
 
 
 Terminal
