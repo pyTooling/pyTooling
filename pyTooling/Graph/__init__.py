@@ -652,7 +652,7 @@ class Vertex(
 		"""
 		Read-only property to get a tuple of inbound edges (:attr:`_inboundEdges`).
 
-		:return: Tuple of inbound edges.
+		:returns: Tuple of inbound edges.
 		"""
 		return tuple(self._inboundEdges)
 
@@ -661,7 +661,7 @@ class Vertex(
 		"""
 		Read-only property to get a tuple of outbound edges (:attr:`_outboundEdges`).
 
-		:return: Tuple of outbound edges.
+		:returns: Tuple of outbound edges.
 		"""
 		return tuple(self._outboundEdges)
 
@@ -670,7 +670,7 @@ class Vertex(
 		"""
 		Read-only property to get a tuple of inbound links (:attr:`_inboundLinks`).
 
-		:return: Tuple of inbound links.
+		:returns: Tuple of inbound links.
 		"""
 		return tuple(self._inboundLinks)
 
@@ -679,7 +679,7 @@ class Vertex(
 		"""
 		Read-only property to get a tuple of outbound links (:attr:`_outboundLinks`).
 
-		:return: Tuple of outbound links.
+		:returns: Tuple of outbound links.
 		"""
 		return tuple(self._outboundLinks)
 
@@ -688,7 +688,7 @@ class Vertex(
 		"""
 		Read-only property to get the number of all edges (inbound and outbound).
 
-		:return: Number of inbound and outbound edges.
+		:returns: Number of inbound and outbound edges.
 		"""
 		return len(self._inboundEdges) + len(self._outboundEdges)
 
@@ -697,7 +697,7 @@ class Vertex(
 		"""
 		Read-only property to get the number of inbound edges.
 
-		:return: Number of inbound edges.
+		:returns: Number of inbound edges.
 		"""
 		return len(self._inboundEdges)
 
@@ -706,7 +706,7 @@ class Vertex(
 		"""
 		Read-only property to get the number of outbound edges.
 
-		:return: Number of outbound edges.
+		:returns: Number of outbound edges.
 		"""
 		return len(self._outboundEdges)
 
@@ -715,7 +715,7 @@ class Vertex(
 		"""
 		Read-only property to get the number of all links (inbound and outbound).
 
-		:return: Number of inbound and outbound links.
+		:returns: Number of inbound and outbound links.
 		"""
 		return len(self._inboundLinks) + len(self._outboundLinks)
 
@@ -724,7 +724,7 @@ class Vertex(
 		"""
 		Read-only property to get the number of inbound links.
 
-		:return: Number of inbound links.
+		:returns: Number of inbound links.
 		"""
 		return len(self._inboundLinks)
 
@@ -733,7 +733,7 @@ class Vertex(
 		"""
 		Read-only property to get the number of outbound links.
 
-		:return: Number of outbound links.
+		:returns: Number of outbound links.
 		"""
 		return len(self._outboundLinks)
 
@@ -782,7 +782,7 @@ class Vertex(
 		"""
 		Read-only property to get a tuple of predecessor vertices.
 
-		:return: Tuple of predecessor vertices.
+		:returns: Tuple of predecessor vertices.
 		"""
 		return tuple([edge.Source for edge in self._inboundEdges])
 
@@ -791,17 +791,45 @@ class Vertex(
 		"""
 		Read-only property to get a tuple of successor vertices.
 
-		:return: Tuple of successor vertices.
+		:returns: Tuple of successor vertices.
 		"""
 		return tuple([edge.Destination for edge in self._outboundEdges])
 
-	def EdgeToVertex(self, vertex: 'Vertex', edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
+	def EdgeToVertex(
+		self,
+		vertex: 'Vertex',
+		edgeID: Nullable[EdgeIDType] = None,
+		edgeWeight: Nullable[EdgeWeightType] = None,
+		edgeValue: Nullable[VertexValueType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> 'Edge':
 		"""
-		.. todo:: GRAPH::Vertex::EdgeToVertex Needs documentation.
+		Create an outbound edge from this vertex to the referenced vertex.
 
+		:param vertex:        The vertex to be linked to.
+		:param edgeID:        The edge's optional ID for the new edge object.
+		:param edgeWeight:    The edge's optional weight for the new edge object.
+		:param edgeValue:     The edge's optional value for the new edge object.
+		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:returns:             The edge object linking this vertex and the referenced vertex.
+
+		.. seealso::
+
+		   :meth:`EdgeFromVertex` |br|
+		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
+		   :meth:`EdgeToNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
+		   :meth:`EdgeFromNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
+		   :meth:`LinkToVertex` |br|
+		      |rarr| Create an outbound link from this vertex to the referenced vertex.
+		   :meth:`LinkFromVertex` |br|
+		      |rarr| Create an inbound link from the referenced vertex to this vertex.
+
+		.. todo:: GRAPH::Vertex::EdgeToVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, keyValuePairs)
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
@@ -829,13 +857,41 @@ class Vertex(
 
 		return edge
 
-	def EdgeFromVertex(self, vertex: 'Vertex', edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
+	def EdgeFromVertex(
+		self,
+		vertex: 'Vertex',
+		edgeID: Nullable[EdgeIDType] = None,
+		edgeWeight: Nullable[EdgeWeightType] = None,
+		edgeValue: Nullable[VertexValueType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> 'Edge':
 		"""
-		.. todo:: GRAPH::Vertex::EdgeFromVertex Needs documentation.
+		Create an inbound edge from the referenced vertex to this vertex.
 
+		:param vertex:        The vertex to be linked from.
+		:param edgeID:        The edge's optional ID for the new edge object.
+		:param edgeWeight:    The edge's optional weight for the new edge object.
+		:param edgeValue:     The edge's optional value for the new edge object.
+		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:returns:             The edge object linking the referenced vertex and this vertex.
+
+		.. seealso::
+
+		   :meth:`EdgeToVertex` |br|
+		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
+		   :meth:`EdgeToNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
+		   :meth:`EdgeFromNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
+		   :meth:`LinkToVertex` |br|
+		      |rarr| Create an outbound link from this vertex to the referenced vertex.
+		   :meth:`LinkFromVertex` |br|
+		      |rarr| Create an inbound link from the referenced vertex to this vertex.
+
+		.. todo:: GRAPH::Vertex::EdgeFromVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
+			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, keyValuePairs)
 
 			vertex._outboundEdges.append(edge)
 			self._inboundEdges.append(edge)
@@ -863,15 +919,49 @@ class Vertex(
 
 		return edge
 
-	def EdgeToNewVertex(self, vertexID: Nullable[VertexIDType] = None, vertexValue: Nullable[VertexValueType] = None, vertexWeight: Nullable[VertexWeightType] = None, edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
+	def EdgeToNewVertex(
+		self,
+		vertexID: Nullable[VertexIDType] = None,
+		vertexValue: Nullable[VertexValueType] = None,
+		vertexWeight: Nullable[VertexWeightType] = None,
+		vertexKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		edgeID: Nullable[EdgeIDType] = None,
+		edgeWeight: Nullable[EdgeWeightType] = None,
+		edgeValue: Nullable[VertexValueType] = None,
+		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> 'Edge':
 		"""
-		.. todo:: GRAPH::Vertex::EdgeToNewVertex Needs documentation.
+		Create a new vertex and link that vertex by an outbound edge from this vertex.
 
+		:param vertexID:            The new vertex' optional ID.
+		:param vertexValue:         The new vertex' optional value.
+		:param vertexWeight:        The new vertex' optional weight.
+		:param vertexKeyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new vertex.
+		:param edgeID:              The edge's optional ID for the new edge object.
+		:param edgeWeight:          The edge's optional weight for the new edge object.
+		:param edgeValue:           The edge's optional value for the new edge object.
+		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:returns:                   The edge object linking this vertex and the created vertex.
+
+		.. seealso::
+
+		   :meth:`EdgeToVertex` |br|
+		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
+		   :meth:`EdgeFromVertex` |br|
+		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
+		   :meth:`EdgeFromNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
+		   :meth:`LinkToVertex` |br|
+		      |rarr| Create an outbound link from this vertex to the referenced vertex.
+		   :meth:`LinkFromVertex` |br|
+		      |rarr| Create an inbound link from the referenced vertex to this vertex.
+
+		.. todo:: GRAPH::Vertex::EdgeToNewVertex Needs possible exceptions to be documented.
 		"""
-		vertex = Vertex(vertexID, vertexValue, vertexWeight, graph=self._graph)  # , component=self._component)
+		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight)
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, edgeKeyValuePairs)
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
@@ -899,15 +989,49 @@ class Vertex(
 
 		return edge
 
-	def EdgeFromNewVertex(self, vertexID: Nullable[VertexIDType] = None, vertexValue: Nullable[VertexValueType] = None, vertexWeight: Nullable[VertexWeightType] = None, edgeID: Nullable[EdgeIDType] = None, edgeWeight: Nullable[EdgeWeightType] = None, edgeValue: Nullable[VertexValueType] = None) -> 'Edge':
+	def EdgeFromNewVertex(
+		self,
+		vertexID: Nullable[VertexIDType] = None,
+		vertexValue: Nullable[VertexValueType] = None,
+		vertexWeight: Nullable[VertexWeightType] = None,
+		vertexKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		edgeID: Nullable[EdgeIDType] = None,
+		edgeWeight: Nullable[EdgeWeightType] = None,
+		edgeValue: Nullable[VertexValueType] = None,
+		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> 'Edge':
 		"""
-		.. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs documentation.
+		Create a new vertex and link that vertex by an inbound edge to this vertex.
 
+		:param vertexID:            The new vertex' optional ID.
+		:param vertexValue:         The new vertex' optional value.
+		:param vertexWeight:        The new vertex' optional weight.
+		:param vertexKeyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new vertex.
+		:param edgeID:              The edge's optional ID for the new edge object.
+		:param edgeWeight:          The edge's optional weight for the new edge object.
+		:param edgeValue:           The edge's optional value for the new edge object.
+		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:returns:                   The edge object linking this vertex and the created vertex.
+
+		.. seealso::
+
+		   :meth:`EdgeToVertex` |br|
+		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
+		   :meth:`EdgeFromVertex` |br|
+		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
+		   :meth:`EdgeToNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
+		   :meth:`LinkToVertex` |br|
+		      |rarr| Create an outbound link from this vertex to the referenced vertex.
+		   :meth:`LinkFromVertex` |br|
+		      |rarr| Create an inbound link from the referenced vertex to this vertex.
+
+		.. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs possible exceptions to be documented.
 		"""
-		vertex = Vertex(vertexID, vertexValue, vertexWeight, graph=self._graph)  # , component=self._component)
+		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight)
+			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, edgeKeyValuePairs)
 
 			vertex._outboundEdges.append(edge)
 			self._inboundEdges.append(edge)
@@ -935,16 +1059,44 @@ class Vertex(
 
 		return edge
 
-	def LinkToVertex(self, vertex: 'Vertex', linkID: Nullable[EdgeIDType] = None, linkWeight: Nullable[EdgeWeightType] = None, linkValue: Nullable[VertexValueType] = None) -> 'Link':
+	def LinkToVertex(
+		self,
+		vertex: 'Vertex',
+		linkID: Nullable[EdgeIDType] = None,
+		linkWeight: Nullable[EdgeWeightType] = None,
+		linkValue: Nullable[VertexValueType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+	) -> 'Link':
 		"""
-		.. todo:: GRAPH::Vertex::LinkToVertex Needs documentation.
+		Create an outbound link from this vertex to the referenced vertex.
 
+		:param vertex:        The vertex to be linked to.
+		:param edgeID:        The edge's optional ID for the new link object.
+		:param edgeWeight:    The edge's optional weight for the new link object.
+		:param edgeValue:     The edge's optional value for the new link object.
+		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new link object.
+		:returns:             The link object linking this vertex and the referenced vertex.
+
+		.. seealso::
+
+		   :meth:`EdgeToVertex` |br|
+		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
+		   :meth:`EdgeFromVertex` |br|
+		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
+		   :meth:`EdgeToNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
+		   :meth:`EdgeFromNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
+		   :meth:`LinkFromVertex` |br|
+		      |rarr| Create an inbound link from the referenced vertex to this vertex.
+
+		.. todo:: GRAPH::Vertex::LinkToVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
 			# FIXME: needs an error message
 			raise GraphException()
 		else:
-			link = Link(self, vertex, linkID, linkValue, linkWeight)
+			link = Link(self, vertex, linkID, linkValue, linkWeight, keyValuePairs)
 
 			self._outboundLinks.append(link)
 			vertex._inboundLinks.append(link)
@@ -971,16 +1123,44 @@ class Vertex(
 
 		return link
 
-	def LinkFromVertex(self, vertex: 'Vertex', linkID: Nullable[EdgeIDType] = None, linkWeight: Nullable[EdgeWeightType] = None, linkValue: Nullable[VertexValueType] = None) -> 'Edge':
+	def LinkFromVertex(
+		self,
+		vertex: 'Vertex',
+		linkID: Nullable[EdgeIDType] = None,
+		linkWeight: Nullable[EdgeWeightType] = None,
+		linkValue: Nullable[VertexValueType] = None,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
+	) -> 'Edge':
 		"""
-		.. todo:: GRAPH::Vertex::LinkToVertex Needs documentation.
+		Create an inbound link from the referenced vertex to this vertex.
 
+		:param vertex:        The vertex to be linked from.
+		:param edgeID:        The edge's optional ID for the new link object.
+		:param edgeWeight:    The edge's optional weight for the new link object.
+		:param edgeValue:     The edge's optional value for the new link object.
+		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new link object.
+		:returns:             The link object linking the referenced vertex and this vertex.
+
+		.. seealso::
+
+		   :meth:`EdgeToVertex` |br|
+		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
+		   :meth:`EdgeFromVertex` |br|
+		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
+		   :meth:`EdgeToNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
+		   :meth:`EdgeFromNewVertex` |br|
+		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
+		   :meth:`LinkToVertex` |br|
+		      |rarr| Create an outbound link from this vertex to the referenced vertex.
+
+		.. todo:: GRAPH::Vertex::LinkFromVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
 			# FIXME: needs an error message
 			raise GraphException()
 		else:
-			link = Link(vertex, self, linkID, linkValue, linkWeight)
+			link = Link(vertex, self, linkID, linkValue, linkWeight, keyValuePairs)
 
 			vertex._outboundLinks.append(link)
 			self._inboundLinks.append(link)
@@ -1012,7 +1192,7 @@ class Vertex(
 		Check if this vertex is linked to another vertex by any outbound edge.
 
 		:param destination: Destination vertex to check.
-		:return:            ``True``, if the destination vertex is a destination on any outbound edge.
+		:returns:           ``True``, if the destination vertex is a destination on any outbound edge.
 
 		.. seealso::
 
@@ -1034,7 +1214,7 @@ class Vertex(
 		Check if this vertex is linked to another vertex by any inbound edge.
 
 		:param source: Source vertex to check.
-		:return:       ``True``, if the source vertex is a source on any inbound edge.
+		:returns:      ``True``, if the source vertex is a source on any inbound edge.
 
 		.. seealso::
 
@@ -1056,7 +1236,7 @@ class Vertex(
 		Check if this vertex is linked to another vertex by any outbound link.
 
 		:param destination: Destination vertex to check.
-		:return:            ``True``, if the destination vertex is a destination on any outbound link.
+		:returns:           ``True``, if the destination vertex is a destination on any outbound link.
 
 		.. seealso::
 
@@ -1078,7 +1258,7 @@ class Vertex(
 		Check if this vertex is linked to another vertex by any inbound link.
 
 		:param source: Source vertex to check.
-		:return:       ``True``, if the source vertex is a source on any inbound link.
+		:returns:      ``True``, if the source vertex is a source on any inbound link.
 
 		.. seealso::
 
@@ -1375,7 +1555,7 @@ class Vertex(
 		as long as the graph was not modified (e.g. ordering of edges on vertices).
 
 		:param destination: The destination vertex to reach.
-		:return:            A generator to iterate all vertices on the path found between this vertex and the destination vertex.
+		:returns:           A generator to iterate all vertices on the path found between this vertex and the destination vertex.
 		"""
 		# Trivial case if start is destination
 		if self is destination:
@@ -1464,7 +1644,7 @@ class Vertex(
 		unique but deterministic as long as the graph was not modified (e.g. ordering of edges on vertices).
 
 		:param destination: The destination vertex to reach.
-		:return:            A generator to iterate all vertices on the path found between this vertex and the destination vertex.
+		:returns:           A generator to iterate all vertices on the path found between this vertex and the destination vertex.
 		"""
 		# Improvements: both-sided Dijkstra (search from start and destination to reduce discovered area.
 
@@ -1571,7 +1751,7 @@ class Vertex(
 
 		The tree is traversed using depths-first-search.
 
-		:return:
+		:returns:
 		"""
 		visited: Set[Vertex] = set()
 		stack: List[Tuple[Node, typing_Iterator[Edge]]] = list()

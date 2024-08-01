@@ -55,19 +55,36 @@ class HelperFunctions(TestCase):
 		self.assertEqual(36, len(versionInformation.Keywords))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_loadReadmeTXT(self) -> None:
+		from pyTooling.Packaging import loadReadmeFile
+
+		readme = loadReadmeFile(Path("tests/pyPackage/README.txt"))
+		self.assertIn("1. pyPackage", readme.Content)
+		self.assertEqual("text/plain", readme.MimeType)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
-		readme = loadReadmeFile(Path("README.md"))
-		self.assertIn("# pyTooling", readme.Content)
+		readme = loadReadmeFile(Path("tests/pyPackage/README.md"))
+		self.assertIn("# pyPackage", readme.Content)
 		self.assertEqual("text/markdown", readme.MimeType)
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeReST(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
+		readme = loadReadmeFile(Path("tests/pyPackage/README.rst"))
+		self.assertIn("pyPackage", readme.Content)
+		self.assertIn("#########", readme.Content)
+		self.assertEqual("text/x-rst", readme.MimeType)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_loadReadmeOther(self) -> None:
+		from pyTooling.Packaging import loadReadmeFile
+
 		with self.assertRaises(ValueError):
-			_ = loadReadmeFile(Path("README.rst"))
+			_ = loadReadmeFile(Path("tests/pyPackage/README.ascii"))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirements(self) -> None:

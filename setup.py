@@ -47,18 +47,20 @@ packageName =            "pyTooling.*"
 packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
-setup(**DescribePythonPackageHostedOnGitHub(
-	packageName=packageName,
-	description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-	gitHubNamespace=gitHubNamespace,
-	unittestRequirementsFile=Path("tests/requirements.txt"),
-	additionalRequirements={
-		"packaging": ["setuptools>=69.0.0"],
-		"terminal":  ["colorama>=0.4.6"],
-		"yaml":      ["ruamel.yaml>=0.18"],
-	},
-	sourceFileWithVersion=packageInformationFile,
-	dataFiles={
-		packageName[:-2]: ["py.typed"]
-	}
-))
+setup(
+	**DescribePythonPackageHostedOnGitHub(
+		packageName=packageName,
+		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
+		gitHubNamespace=gitHubNamespace,
+		unittestRequirementsFile=Path("tests/requirements.txt"),
+		additionalRequirements={
+			"packaging": ["setuptools ~= 72.1"],
+			"terminal":  ["colorama ~= 0.4.6"],
+			"yaml":      ["ruamel.yaml ~= 0.18"],
+		},
+		sourceFileWithVersion=packageInformationFile,
+		dataFiles={
+			packageName[:-2]: ["py.typed"]
+		}
+	)
+)

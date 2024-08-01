@@ -461,13 +461,34 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			raise Exception(f"Unknown operating system.")
 
 	@readonly
-	def SharedLibraryExtension(self) -> str:
+	def StaticLibraryExtension(self) -> str:
 		"""
-		Returns the file extension for a shared library.
+		Returns the file extension for a static library.
+
+		* FreeBSD: ``"a"``
+		* Linux: ``"a"``
+		* macOS: ``"lib"``
+		* Windows: ``"lib"``
+		"""
+		if Platforms.OS_FreeBSD in self._platform:
+			return "a"
+		elif Platforms.OS_Linux in self._platform:
+			return "a"
+		elif Platforms.OS_MacOS in self._platform:
+			return "a"
+		elif Platforms.OS_Windows in self._platform:
+			return "lib"
+		else:  # pragma: no cover
+			raise Exception(f"Unknown operating system.")
+
+	@readonly
+	def DynamicLibraryExtension(self) -> str:
+		"""
+		Returns the file extension for a dynamic/shared library.
 
 		* FreeBSD: ``"so"``
 		* Linux: ``"so"``
-		* macOS: ``"lib"``
+		* macOS: ``"dylib"``
 		* Windows: ``"dll"``
 		"""
 		if Platforms.OS_FreeBSD in self._platform:
@@ -475,7 +496,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Linux in self._platform:
 			return "so"
 		elif Platforms.OS_MacOS in self._platform:
-			return "lib"
+			return "dylib"
 		elif Platforms.OS_Windows in self._platform:
 			return "dll"
 		else:  # pragma: no cover
