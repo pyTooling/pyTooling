@@ -857,7 +857,12 @@ def DescribePythonPackageHostedOnGitHub(
 	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
 	"""
-	gitHubRepository = gitHubRepository if gitHubRepository is not None else packageName
+	if gitHubRepository is None:
+		# Assign GitHub repository name without '.*', if derived from Python package name.
+		if packageName.endswith(".*"):
+			gitHubRepository = packageName[:-2]
+		else:
+			gitHubRepository = packageName
 
 	# Derive URLs
 	sourceCodeURL = f"https://GitHub.com/{gitHubNamespace}/{gitHubRepository}"
