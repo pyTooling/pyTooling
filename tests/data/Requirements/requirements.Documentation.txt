@@ -1,3 +1,3 @@
 -r requirements.Common.txt
 
-sphinx ~= 8.0
+sphinx ~= 7.4
