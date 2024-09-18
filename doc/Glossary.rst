@@ -512,6 +512,15 @@ Glossary
    UCRT
      Universal C Runtime
 
+   URI
+     Uniform Resource Identifier
+
+   URL
+     Uniform Resource Locator
+
+   URN
+     Uniform Resource Name
+
    Vertex
      A vertex is a :term:`node` in a graph. Vertexes in a graph are connected using :term:`edges <edge>`.
 

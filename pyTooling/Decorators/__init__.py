@@ -190,10 +190,17 @@ def readonly(func: Callable) -> property:
 	"""
 	Marks a property as *read-only*.
 
-	It will remove ``<property>.setter`` and ``<property>.deleter``.
+	The doc-string will be taken from the getter-function.
 
-	:param func:
-	:return:
+	It will remove ``<property>.setter`` and ``<property>.deleter`` from the property descriptor.
+
+	:param func: Function to convert to a read-only property.
+	:returns:    A property object with just a getter.
+
+	.. seealso::
+
+	   :class:`property`
+	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 	prop = property(fget=func, fset=None, fdel=None, doc=func.__doc__)
 

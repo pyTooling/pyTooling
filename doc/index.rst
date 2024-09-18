@@ -25,12 +25,12 @@
 pyTooling Documentation
 #######################
 
-**pyTooling** is a powerful collection of arbitrary useful abstract data models, lacking classes, decorators, a new
-performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
+**pyTooling** is a powerful collection of arbitrary and useful (abstract) data models, lacking classes, decorators, a
+new performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
 handling of package descriptions or to unify multiple existing APIs into a single API.
 
-It's useful ‒ if not even essential ‒ for **any** Python-base project independent if it's a library, framework, CLI tool
-or just a "script".
+It's useful ‒ if not even essential ‒ for **any** Python-based project independent if it's a library, framework, CLI
+tool or just a "script".
 
 In addition, pyTooling provides a collection of `CI job templates for GitHub Actions <https://github.com/pyTooling/Actions>`__.
 This drastically simplifies GHA-based CI pipelines for Python projects.
@@ -884,15 +884,17 @@ Packaging
                packageDirectory =       packageName.replace(".", "/")
                packageInformationFile = Path(f"{packageDirectory}/__init__.py")
 
-               setup(**DescribePythonPackageHostedOnGitHub(
-                 packageName=packageName,
-                 description="Write version information collected from (CI) environment for any programming language as source file.",
-                 gitHubNamespace=gitHubNamespace,
-                 sourceFileWithVersion=packageInformationFile,
-                 consoleScripts={
-                   "pyVersioning": "pyVersioning.CLI:main",
-                 }
-               ))
+               setup(
+                 **DescribePythonPackageHostedOnGitHub(
+                   packageName=packageName,
+                   description="Write version information collected from (CI) environment for any programming language as source file.",
+                   gitHubNamespace=gitHubNamespace,
+                   sourceFileWithVersion=packageInformationFile,
+                   consoleScripts={
+                     "pyVersioning": "pyVersioning.CLI:main",
+                   }
+                 )
+               )
 
 
 Terminal
@@ -932,6 +934,9 @@ Timer
 
       .. todo:: Needs example code
 
+
+.. _CONTRIBUTORS:
+
 Contributors
 ************
 
@@ -940,6 +945,8 @@ Contributors
 * `Unai Martinez-Corral <https://GitHub.com/umarcor/>`__
 * `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
 
+
+.. _LICENSE:
 
 License
 *******
