@@ -36,7 +36,7 @@ jobs:
       system_list: "ubuntu windows macos mingw64 ucrt64 clang64"
 
   UnitTesting:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r1
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
     needs:
       - UnitTestingParams
     with:
@@ -47,7 +47,7 @@ jobs:
       coverage_sqlite_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_sqlite }}
 
   PerformanceTesting:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r1
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
     needs:
       - PerformanceTestingParams
     with:
@@ -57,7 +57,7 @@ jobs:
       unittest_directory: 'performance'
 
   Benchmarking:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r1
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
     needs:
       - BenchmarkingParams
     with:
@@ -67,7 +67,7 @@ jobs:
       unittest_directory: 'benchmark'
 
   PlatformTesting:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r1
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
     needs:
       - PlatformTestingParams
     with:
