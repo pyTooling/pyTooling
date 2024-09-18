@@ -117,7 +117,7 @@ extracts all specified dependencies. As a result, a list of requirement strings 
 
             -r ../requirements.txt
 
-            Sphinx ~= 8.0
+            Sphinx ~= 7.4
             docutils <= 0.21
 
             sphinx_rtd_theme ~= 2.0
