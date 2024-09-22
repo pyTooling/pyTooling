@@ -3,9 +3,6 @@ name: Performance
 on:
   push:
   workflow_dispatch:
-  schedule:
-# Every Friday at 23:00 - rerun pipeline to check for dependency-based issues
-    - cron: '0 23 * * 5'
 
 jobs:
   PerformanceTestingParams:
@@ -22,7 +19,7 @@ jobs:
     with:
       jobs: ${{ needs.PerformanceTestingParams.outputs.python_jobs }}
       requirements: '-r tests/performance/requirements.txt'
-#      unittest_xml_artifact: ${{ fromJson(needs.Params.outputs.artifact_names).unittesting_xml }}
+      unittest_xml_artifact: pyTooling-Performance-Unittest-XML
       unittest_directory: 'performance'
 
 #  PublishTestResults:
