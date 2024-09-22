@@ -42,15 +42,15 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-def func1(param : CallByRefParam) -> None:
+def func1(param: CallByRefParam) -> None:
 	param <<= (3, 4)
 
 
-def func2(param : CallByRefBoolParam, value: bool = True) -> None:
+def func2(param: CallByRefBoolParam, value: bool = True) -> None:
 	param <<= value
 
 
-def assign_42(param : CallByRefIntParam, value: int = 42) -> None:
+def assign_42(param: CallByRefIntParam, value: int = 42) -> None:
 	param <<= value
 
 

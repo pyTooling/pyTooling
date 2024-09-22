@@ -155,7 +155,7 @@ information as properties.
             from setuptools import setup
             from pyTooling.Packaging import extractVersionInformation
 
-            file = Path("../pyTooling/Common/__init__.py")
+            file = Path("./pyTooling/Common/__init__.py")
             versionInfo = extractVersionInformation(file)
 
             setup(
