@@ -26,4 +26,5 @@ jobs:
     needs:
       - Benchmarking
     with:
+      report_title: Benchmark Test Summary
       merged_junit_artifact: pyTooling-BenchmarkTestReportSummary-XML

@@ -36,7 +36,7 @@ Testcase for operating system program ``mkdir``.
 :license: Apache License, Version 2.0
 """
 from pathlib      import Path
-from typing       import Tuple, Any, Dict
+from typing       import Any
 
 from pytest       import mark
 from sys          import platform as sys_platform
@@ -47,7 +47,7 @@ from .                        import Helper
 from .Examples                import GitArgumentsMixin
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
@@ -64,13 +64,20 @@ class Git(Executable, GitArgumentsMixin):
 		return super().__new__(cls)
 
 
-if __name__ == "__main__": # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unittest <testcase module>'")
-	exit(1)
+@mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
+class ExplicitBinaryDirectoryOnFreeBSD(TestCase, Helper):
+	_binaryDirectoryPath = Path("/usr/local/bin")
+
+	def test_VersionFlag(self) -> None:
+		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool[tool.FlagVersion] = True
+
+		tool.StartProcess()
+		output = "\n".join(tool.GetLineReader())
+		self.assertRegex(output, r"git version \d+.\d+.\d+")
 
 
-@mark.skipif(sys_platform == "win32", reason="Don't run these tests on Windows.")
+@mark.skipif(sys_platform in ("freebsd", "win32"), reason="Don't run these tests on FreeBSD and Windows.")
 class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
 	_binaryDirectoryPath = Path("/usr/bin")
 

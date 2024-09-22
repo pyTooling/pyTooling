@@ -47,7 +47,8 @@ from pyTooling.CLIAbstraction.ValuedFlagList import ShortValuedFlagList, ValuedF
 	LongValuedFlagList
 from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag, WindowsTupleFlag, LongTupleFlag
 
-if __name__ == "__main__": # pragma: no cover
+
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)

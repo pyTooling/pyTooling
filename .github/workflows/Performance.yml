@@ -25,10 +25,7 @@ jobs:
 #  PublishTestResults:
 #    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
 #    needs:
-#      - UnitTestingParams
-#      - UnitTesting
 ##      - PerformanceTesting
-#      - Benchmarking
-#      - PlatformTesting
 #    with:
-#      merged_junit_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
+#      report_title: Performance Test Summary
+#      merged_junit_artifact: pyTooling-PerformanceTestReportSummary-XML
