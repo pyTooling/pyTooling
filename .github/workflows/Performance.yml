@@ -19,7 +19,7 @@ jobs:
     with:
       jobs: ${{ needs.PerformanceTestingParams.outputs.python_jobs }}
       requirements: '-r tests/performance/requirements.txt'
-      unittest_xml_artifact: pyTooling-Performance-Unittest-XML
+      unittest_xml_artifact: pyTooling-PerformanceTestReportSummary-XML
       unittest_directory: 'performance'
 
 #  PublishTestResults:

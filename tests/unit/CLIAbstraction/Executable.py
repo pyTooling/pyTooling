@@ -83,7 +83,7 @@ class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
 		self.assertRegex(output, r"git version \d+.\d+.\d+")
 
 
-@mark.skipif(sys_platform in ("linux", "darwin"), reason="Don't run these tests on Linux or Mac OS.")
+@mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
 class ExplicitBinaryDirectoryOnWindows(TestCase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 

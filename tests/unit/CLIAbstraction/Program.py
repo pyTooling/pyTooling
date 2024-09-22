@@ -35,7 +35,7 @@ Testcase for operating system program ``mkdir``.
 :license: Apache License, Version 2.0
 """
 from pathlib      import Path
-from typing       import ClassVar, Dict, Tuple, Any
+from typing       import Any
 
 from pytest       import mark
 from sys          import platform as sys_platform
@@ -121,7 +121,7 @@ class ExplicitPathsOnLinux(TestCase, Helper):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
 
-@mark.skipif(sys_platform in ("linux", "darwin"), reason="Don't run these tests on Linux or Mac OS.")
+@mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
 class ExplicitPathsOnWindows(TestCase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 

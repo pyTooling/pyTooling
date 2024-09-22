@@ -18,7 +18,7 @@ jobs:
     with:
       jobs: ${{ needs.BenchmarkingParams.outputs.python_jobs }}
       requirements: '-r tests/benchmark/requirements.txt'
-      unittest_xml_artifact: pyTooling-Benchmark-Unittest-XML
+      unittest_xml_artifact: pyTooling-BenchmarkTestReportSummary-XML
       unittest_directory: 'benchmark'
 
   PublishTestResults:
@@ -26,4 +26,4 @@ jobs:
     needs:
       - Benchmarking
     with:
-      merged_junit_artifact: pyTooling-Benchmark-Unittest-XML
+      merged_junit_artifact: pyTooling-BenchmarkTestReportSummary-XML
