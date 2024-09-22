@@ -36,6 +36,7 @@ from pytest   import mark
 
 from pyTooling.Tree import Node, AlreadyInTreeError, NoSiblingsError
 
+
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")

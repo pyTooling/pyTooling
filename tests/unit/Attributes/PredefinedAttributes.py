@@ -38,6 +38,7 @@ from pyTooling.Common      import firstItem
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Attributes  import SimpleAttribute, Attribute, Entity
 
+
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")

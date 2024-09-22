@@ -656,7 +656,6 @@ class Values(TestCase):
 		with self.assertRaises(KeyError):
 			_ = graph.GetVertexByValue(1)
 
-
 	def test_EdgeNoneValue(self) -> None:
 		graph = Graph()
 		vertex1 = Vertex(graph=graph)

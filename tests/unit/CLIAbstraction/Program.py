@@ -35,7 +35,7 @@ Testcase for operating system program ``mkdir``.
 :license: Apache License, Version 2.0
 """
 from pathlib      import Path
-from typing       import ClassVar, Dict, Tuple, Any
+from typing       import Any
 
 from pytest       import mark
 from sys          import platform as sys_platform
@@ -47,7 +47,7 @@ from .                        import Helper
 from .Examples                import GitArgumentsMixin
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
@@ -73,7 +73,8 @@ class Gitt(Program):
 	}
 
 	@CLIArgument()
-	class FlagVersion(LongFlag, name="version"): ...
+	class FlagVersion(LongFlag, name="version"):
+		...
 
 
 class GitUnknownOS(Program):
@@ -82,7 +83,46 @@ class GitUnknownOS(Program):
 	}
 
 
-@mark.skipif(sys_platform == "win32", reason="Don't run these tests on Windows.")
+@mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
+class ExplicitPathsOnFreeBSD(TestCase, Helper):
+	_binaryDirectoryPath = Path("/usr/local/bin")
+
+	def test_BinaryDirectory(self) -> None:
+		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+
+		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		self.assertEqual(Path(executable), tool.Path)
+		self.assertListEqual([executable], tool.ToArgumentList())
+		self.assertEqual(f"[\"{executable}\"]", repr(tool))
+		self.assertEqual(f"\"{executable}\"", str(tool))
+
+	def test_BinaryDirectory_NotAPath(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
+
+	def test_BinaryDirectory_DoesNotExist(self) -> None:
+		with self.assertRaises(CLIAbstractionException):
+			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
+
+	def test_ExecutablePath(self) -> None:
+		tool = Git(executablePath=self._binaryDirectoryPath / "git")
+
+		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		self.assertEqual(Path(executable), tool.Path)
+		self.assertListEqual([executable], tool.ToArgumentList())
+		self.assertEqual(f"[\"{executable}\"]", repr(tool))
+		self.assertEqual(f"\"{executable}\"", str(tool))
+
+	def test_ExecutablePath_NotAPath(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
+
+	def test_ExecutablePath_DoesNotExist(self) -> None:
+		with self.assertRaises(CLIAbstractionException):
+			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
+
+
+@mark.skipif(sys_platform in ("freebsd", "win32"), reason="Don't run these tests on FreeBSD and Windows.")
 class ExplicitPathsOnLinux(TestCase, Helper):
 	_binaryDirectoryPath = Path("/usr/bin")
 
@@ -121,7 +161,7 @@ class ExplicitPathsOnLinux(TestCase, Helper):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
 
-@mark.skipif(sys_platform in ("linux", "darwin"), reason="Don't run these tests on Linux or Mac OS.")
+@mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
 class ExplicitPathsOnWindows(TestCase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 
