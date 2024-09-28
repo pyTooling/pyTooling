@@ -9,18 +9,18 @@ on:
 
 jobs:
   UnitTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r1
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: pyTooling
       python_version_list: "3.8 3.9 3.10 3.11 3.12 pypy-3.8 pypy-3.9 pypy-3.10"
 #      disable_list: "windows:pypy-3.8 windows:pypy-3.9 windows:pypy-3.10"
 
   PlatformTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r1
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Platform
       python_version_list: ""
-      system_list: "ubuntu windows macos mingw64 ucrt64 clang64"
+      system_list: "ubuntu windows macos macos-arm mingw64 ucrt64 clang64"
 
   UnitTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
@@ -187,6 +187,7 @@ jobs:
       - PublishCoverageResults
       - PublishToGitHubPages
 #      - PublishOnPyPI
+      - IntermediateCleanUp
     with:
       package: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
       remaining: |

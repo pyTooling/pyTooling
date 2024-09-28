@@ -35,7 +35,7 @@ See :ref:`DEP` for more details.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. tab-set::
@@ -138,7 +138,7 @@ just all (``all``) dependencies.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. tab-set::
@@ -259,7 +259,7 @@ Updating from PyPI using PIP
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -289,7 +289,7 @@ Uninstallation using PIP
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -326,7 +326,7 @@ Ensure :ref:`unit testing requirements <DEP/testing>` are installed.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. tab-set::
@@ -427,7 +427,7 @@ Ensure :ref:`unit testing requirements <DEP/testing>` are installed.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -463,7 +463,7 @@ Ensure :ref:`documentation requirements <DEP/documentation>` are installed.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. tab-set::
@@ -551,7 +551,7 @@ Ensure :ref:`packaging requirements <DEP/packaging>` are installed.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash

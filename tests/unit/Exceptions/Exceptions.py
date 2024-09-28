@@ -48,7 +48,7 @@ def raise_EnvironmentExecption() -> None:
 
 
 def raise_PlatformNotSupportedException() -> None:
-	raise PlatformNotSupportedException("Platform 'OSX' is not supported.")
+	raise PlatformNotSupportedException("Platform 'macOS' is not supported.")
 
 
 def raise_NotConfiguredException() -> None:
