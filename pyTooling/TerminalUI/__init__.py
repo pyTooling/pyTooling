@@ -482,8 +482,9 @@ class Severity(Enum):
 	"""Logging message severity levels."""
 
 	Fatal =    100    #: Fatal messages
-	Error =     70    #: Error messages
-	Quiet =     60    #: Always visible messages, even in quiet mode.
+	Error =     80    #: Error messages
+	Quiet =     70    #: Always visible messages, even in quiet mode.
+	Critical =  60    #: Critical messages
 	Warning =   50    #: Warning messages
 	Info =      20    #: Informative messages
 	Normal =    10    #: Normal messages
@@ -721,6 +722,12 @@ class ILineTerminal:
 			return self._terminal.WriteError(*args, **kwargs)
 		return False
 
+	def WriteCritical(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
+		"""Write a warning message if ``condition`` is true."""
+		if (self._terminal is not None) and condition:
+			return self._terminal.WriteCritical(*args, **kwargs)
+		return False
+
 	def WriteWarning(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""Write a warning message if ``condition`` is true."""
 		if (self._terminal is not None) and condition:
@@ -767,29 +774,31 @@ class ILineTerminal:
 @export
 class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_LOG_MESSAGE_FORMAT__ = {
-		Severity.Fatal:   "{DARK_RED}[FATAL]   {message}{NOCOLOR}",
-		Severity.Error:   "{RED}[ERROR]   {message}{NOCOLOR}",
-		Severity.Quiet:   "{WHITE}{message}{NOCOLOR}",
-		Severity.Warning: "{YELLOW}[WARNING] {message}{NOCOLOR}",
-		Severity.Info:    "{WHITE}{message}{NOCOLOR}",
-		Severity.Normal:  "{WHITE}{message}{NOCOLOR}",
-		Severity.DryRun:  "{DARK_CYAN}[DRY] {message}{NOCOLOR}",
-		Severity.Verbose: "{GRAY}{message}{NOCOLOR}",
-		Severity.Debug:   "{DARK_GRAY}{message}{NOCOLOR}"
-	}                   #: Message formatting rules.
+		Severity.Fatal:    "{DARK_RED}[FATAL]    {message}{NOCOLOR}",
+		Severity.Error:    "{RED}[ERROR]    {message}{NOCOLOR}",
+		Severity.Quiet:    "{WHITE}{message}{NOCOLOR}",
+		Severity.Critical: "{DARK_YELLOW}[CRITICAL] {message}{NOCOLOR}",
+		Severity.Warning:  "{YELLOW}[WARNING]  {message}{NOCOLOR}",
+		Severity.Info:     "{WHITE}{message}{NOCOLOR}",
+		Severity.Normal:   "{WHITE}{message}{NOCOLOR}",
+		Severity.DryRun:   "{DARK_CYAN}[DRY] {message}{NOCOLOR}",
+		Severity.Verbose:  "{GRAY}{message}{NOCOLOR}",
+		Severity.Debug:    "{DARK_GRAY}{message}{NOCOLOR}"
+	}                    #: Message formatting rules.
 
 	_LOG_LEVEL_ROUTING__: Dict[Severity, Tuple[Callable[[str, str], int]]]  #: Message routing rules.
-	_verbose: bool
-	_debug: bool
-	_quiet: bool
-	_writeLevel: Severity
+	_verbose:       bool
+	_debug:         bool
+	_quiet:         bool
+	_writeLevel:    Severity
 	_writeToStdOut: bool
 
-	_lines: List[Line]
-	_baseIndent: int
+	_lines:         List[Line]
+	_baseIndent:    int
 
-	_errorCount: int
-	_warningCount: int
+	_errorCount:    int
+	_criticalWarningCount: int
+	_warningCount:  int
 
 	def __init__(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
 		"""Initializer of a line based terminal interface."""
@@ -808,8 +817,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._lines =          []
 		self._baseIndent =     0
 
-		self._errorCount =   0
-		self._warningCount = 0
+		self._errorCount =           0
+		self._criticalWarningCount = 0
+		self._warningCount =         0
 
 	def __InitializeLogLevelRouting(self, mode: Mode):
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
@@ -881,6 +891,10 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		return self._warningCount
 
 	@readonly
+	def CriticalWarningCount(self) -> int:
+		return self._criticalWarningCount
+
+	@readonly
 	def ErrorCount(self) -> int:
 		return self._errorCount
 
@@ -893,11 +907,35 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		if self._errorCount > 0:
 			self.WriteFatal("Too many errors in previous steps.")
 
-	def ExitOnPreviousWarnings(self) -> None:
+	def ExitOnPreviousCriticalWarnings(self, includeErrors: bool = True) -> None:
+		"""Exit application if critical warnings have been printed."""
+		if includeErrors and (self._errorCount > 0):
+			if self._criticalWarningCount > 0:
+				self.WriteFatal("Too many errors and critical warnings in previous steps.")
+			else:
+				self.WriteFatal("Too many errors in previous steps.")
+		elif self._criticalWarningCount > 0:
+			self.WriteFatal("Too many critical warnings in previous steps.")
+
+	def ExitOnPreviousWarnings(self, includeCriticalWarnings: bool = True, includeErrors: bool = True) -> None:
 		"""Exit application if warnings have been printed."""
-		if self._warningCount > 0:
-			self.WriteError("Too many warnings in previous steps.")
-			self.FatalExit()
+		if includeErrors and (self._errorCount > 0):
+			if includeCriticalWarnings and (self._criticalWarningCount > 0):
+				if self._warningCount > 0:
+					self.WriteFatal("Too many errors and (critical) warnings in previous steps.")
+				else:
+					self.WriteFatal("Too many errors and critical warnings in previous steps.")
+			elif self._warningCount > 0:
+				self.WriteFatal("Too many warnings in previous steps.")
+			else:
+				self.WriteFatal("Too many errors in previous steps.")
+		elif includeCriticalWarnings and (self._criticalWarningCount > 0):
+			if self._warningCount > 0:
+				self.WriteFatal("Too many (critical) warnings in previous steps.")
+			else:
+				self.WriteFatal("Too many critical warnings in previous steps.")
+		elif self._warningCount > 0:
+			self.WriteFatal("Too many warnings in previous steps.")
 
 	def WriteLine(self, line: Line) -> bool:
 		"""Print a formatted line to the underlying terminal/console offered by the operating system."""
@@ -921,6 +959,10 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	def WriteError(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
 		self._errorCount += 1
 		return self.WriteLine(Line(message, Severity.Error, self._baseIndent + indent, appendLinebreak))
+
+	def WriteCritical(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
+		self._criticalWarningCount += 1
+		return self.WriteLine(Line(message, Severity.Critical, self._baseIndent + indent, appendLinebreak))
 
 	def WriteWarning(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
 		self._warningCount += 1

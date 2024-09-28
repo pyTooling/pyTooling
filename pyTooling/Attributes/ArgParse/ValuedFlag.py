@@ -55,7 +55,7 @@ class ValuedFlag(NamedAndValuedArgument):
 	is present in the commandline arguments, otherwise ``False``.
 	"""
 
-	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, help: Nullable[str] = None):
+	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None):
 		"""
 		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
 		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
@@ -75,21 +75,22 @@ class ValuedFlag(NamedAndValuedArgument):
 			args.append(long)
 
 		kwargs = {
-			"dest":    dest,
-			"metavar": metaName,
-			"default": None,
-			"help":    help,
+			"dest":     dest,
+			"metavar":  metaName,
+			"default":  None,
+			"help":     help,
+			"required": not optional
 		}
 		super().__init__(*args, **kwargs)
 
 
 @export
 class ShortValuedFlag(ValuedFlag):
-	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, help: Nullable[str] = None):
-		super().__init__(short=short, dest=dest, metaName=metaName, help=help)
+	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None):
+		super().__init__(short, None, dest, metaName, optional, help)
 
 
 @export
 class LongValuedFlag(ValuedFlag):
-	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, help: Nullable[str] = None):
-		super().__init__(long=long, dest=dest, metaName=metaName, help=help)
+	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None):
+		super().__init__(None, long, dest, metaName, optional, help)
