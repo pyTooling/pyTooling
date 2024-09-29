@@ -101,7 +101,7 @@ class Platforms(Flag):
 
 	ARCH_x86_32 =  auto()      #: Architecture: x86-32 (IA32).
 	ARCH_x86_64 =  auto()      #: Architecture: x86-64 (AMD64).
-	ARCH_AArch64 = auto()      #: Architecture: AArch64.
+	ARCH_AArch64 = auto()      #: Architecture: AArch64 (arm64).
 
 	Arch_x86 =     ARCH_x86_32 | ARCH_x86_64  #: Mask: Any x86 architecture.
 	Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
@@ -109,8 +109,11 @@ class Platforms(Flag):
 
 	FreeBSD = OS_FreeBSD | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
 	Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
-	MacOS =   OS_MacOS   | ENV_Native | ARCH_x86_64                                       #: Group: native macOS on x86-64.
+	MacOS =   OS_MacOS   | ENV_Native                                                     #: Group: native macOS.
 	Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
+
+	MacOS_Intel = MacOS | ARCH_x86_64    #: Group: native macOS on x86-64.
+	MacOS_ARM =   MacOS | ARCH_AArch64   #: Group: native macOS on aarch64.
 
 	MSYS =    auto()     #: MSYS2 Runtime: MSYS.
 	MinGW32 = auto()     #: MSYS2 Runtime: :term:`MinGW32 <MinGW>`.
@@ -218,7 +221,14 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					raise Exception(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
 			elif sys_platform == "darwin":
-				self._platform |= Platforms.OS_MacOS | Platforms.ENV_Native | Platforms.ARCH_x86_64
+				self._platform |= Platforms.OS_MacOS | Platforms.ENV_Native
+
+				if machine == "x86_64":
+					self._platform |= Platforms.ARCH_x86_64
+				elif machine == "arm64":
+					self._platform |= Platforms.ARCH_AArch64
+				else:  # pragma: no cover
+					raise Exception(f"Unknown architecture '{machine}' for a native macOS.")
 
 				# print()
 				# print(os.name)
@@ -511,7 +521,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		if Platforms.OS_FreeBSD in self._platform:
 			platform = "FreeBSD"
 		elif Platforms.OS_MacOS in self._platform:
-			platform = "MacOS"
+			platform = "macOS"
 		elif Platforms.OS_Linux in self._platform:
 			platform = "Linux"
 		elif Platforms.OS_Windows in self._platform:
@@ -551,7 +561,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.ARCH_x86_64 in self._platform:
 			architecture = "x86-64"
 		elif Platforms.ARCH_AArch64 in self._platform:
-			architecture = "amd64"
+			architecture = "aarch64"
 		else:
 			architecture = "arch:dec-err"
 

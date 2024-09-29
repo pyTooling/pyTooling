@@ -75,11 +75,35 @@ class AnyPlatform(TestCase):
 		self.assertEqual("so", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("MacOS (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
-	def test_NativeMacOS(self) -> None:
+	@mark.skipif("macOS (x86_64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	def test_NativeMacOS_Intel(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.MacOS), repr(platform))
+		self.assertEqual(str(Platforms.MacOS_Intel), repr(platform))
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertFalse(platform.IsNativeWindows)
+		self.assertFalse(platform.IsNativeLinux)
+		self.assertTrue(platform.IsNativeMacOS)
+		self.assertTrue(platform.IsPOSIX)
+		self.assertEqual("/", platform.PathSeperator)
+		self.assertEqual(":", platform.ValueSeperator)
+		self.assertFalse(platform.IsMSYS2Environment)
+		self.assertFalse(platform.IsMSYSOnWindows)
+		self.assertFalse(platform.IsMinGW32OnWindows)
+		self.assertFalse(platform.IsMinGW64OnWindows)
+		self.assertFalse(platform.IsUCRT64OnWindows)
+		self.assertFalse(platform.IsClang32OnWindows)
+		self.assertFalse(platform.IsClang64OnWindows)
+		self.assertEqual("", platform.ExecutableExtension)
+		self.assertEqual("a", platform.StaticLibraryExtension)
+		self.assertEqual("dylib", platform.DynamicLibraryExtension)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+
+	@mark.skipif("macOS (aarch64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	def test_NativeMacOS_ARM(self) -> None:
+		platform = Platform()
+
+		self.assertEqual(str(Platforms.MacOS_ARM), repr(platform))
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)

@@ -30,7 +30,7 @@ PyPI (see :ref:`INSTALL`).
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -105,7 +105,7 @@ the mandatory dependencies too.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -150,7 +150,7 @@ recursively install the mandatory dependencies too.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -185,7 +185,7 @@ recursively install the mandatory dependencies too.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -233,7 +233,7 @@ the mandatory dependencies too.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -288,7 +288,7 @@ install the mandatory dependencies too.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash
@@ -331,7 +331,7 @@ install the mandatory dependencies too.
 
 .. tab-set::
 
-   .. tab-item:: Linux/MacOS
+   .. tab-item:: Linux/macOS
       :sync: Linux
 
       .. code-block:: bash

@@ -862,7 +862,7 @@ class ValuedFlags(TestCase):
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@ValuedFlag(short="-c", long="--count", dest="count", help="Number of elements.")
+			@ValuedFlag(short="-c", long="--count", dest="count", optional=True, help="Number of elements.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -920,7 +920,7 @@ class ValuedFlags(TestCase):
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@ShortValuedFlag("-c", dest="count", help="Number of elements.")
+			@ShortValuedFlag("-c", dest="count", optional=True, help="Number of elements.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -955,7 +955,7 @@ class ValuedFlags(TestCase):
 
 		class Program(ProgramBase):
 			@DefaultHandler()
-			@LongValuedFlag("--count", dest="count", help="Number of elements.")
+			@LongValuedFlag("--count", dest="count", optional=True, help="Number of elements.")
 			def HandleDefault(self, args) -> None:
 				self.handler = self.HandleDefault
 				self.args = args
@@ -995,7 +995,7 @@ class ValuedFlags(TestCase):
 				self.args = args
 
 			@CommandHandler("cmd", help="Command")
-			@ValuedFlag(short="-c", long="--count", dest="count", help="Number of elements.")
+			@ValuedFlag(short="-c", long="--count", dest="count", optional=True, help="Number of elements.")
 			def CmdHandler(self, args) -> None:
 				self.handler = self.CmdHandler
 				self.args = args
@@ -1058,7 +1058,7 @@ class ValuedFlags(TestCase):
 				self.args = args
 
 			@CommandHandler("cmd", help="Command")
-			@ShortValuedFlag("-c", dest="count", help="Number of elements.")
+			@ShortValuedFlag("-c", dest="count", optional=True, help="Number of elements.")
 			def CmdHandler(self, args) -> None:
 				self.handler = self.CmdHandler
 				self.args = args
@@ -1098,7 +1098,7 @@ class ValuedFlags(TestCase):
 				self.args = args
 
 			@CommandHandler("cmd", help="Command")
-			@LongValuedFlag("--count", dest="count", help="Number of elements.")
+			@LongValuedFlag("--count", dest="count", optional=True, help="Number of elements.")
 			def CmdHandler(self, args) -> None:
 				self.handler = self.CmdHandler
 				self.args = args
