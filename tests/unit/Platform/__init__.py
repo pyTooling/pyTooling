@@ -75,7 +75,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("so", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("macOS (x86_64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("macOS (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS_Intel', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_NativeMacOS_Intel(self) -> None:
 		platform = Platform()
 
@@ -99,7 +99,7 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dylib", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("macOS (aarch64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	@mark.skipif("macOS (aarch64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeMacOS_ARM', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
 	def test_NativeMacOS_ARM(self) -> None:
 		platform = Platform()
 
