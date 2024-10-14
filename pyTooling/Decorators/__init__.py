@@ -208,7 +208,7 @@ def readonly(func: Callable) -> property:
 
 
 @export
-def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
+def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Union[Func, type]], Union[Func, type]]:
 	"""
 	Copy the doc-string from given base-class to the method this decorator is applied to.
 
@@ -230,14 +230,28 @@ def InheritDocString(baseClass: type) -> Callable[[Func], Func]:
 	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
 	:returns:         Decorator function that copies the doc-string.
 	"""
-	def decorator(m: Func) -> Func:
+	def decorator(param: Union[Func, type]) -> Union[Func, type]:
 		"""
 		Decorator function, which copies the doc-string from base-class' method to method ``m``.
 
-		:param m: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
+		:param param: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
 		:returns: Same method, but with overwritten doc-string field (``__doc__``).
 		"""
-		m.__doc__ = getattr(baseClass, m.__name__).__doc__
-		return m
+		if isinstance(param, type):
+			baseDoc = baseClass.__doc__
+		elif callable(param):
+			baseDoc = getattr(baseClass, param.__name__).__doc__
+		else:
+			return param
+
+		if merge:
+			if param.__doc__ is None:
+				param.__doc__ = baseDoc
+			elif baseDoc is not None:
+				param.__doc__ = baseDoc + "\n\n" + param.__doc__
+		else:
+			param.__doc__ = baseDoc
+
+		return param
 
 	return decorator
