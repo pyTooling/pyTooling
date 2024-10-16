@@ -42,7 +42,7 @@ __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "consol
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
 					  "path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
-					  "timer", "tree", "TUI", "url", "versioning", "wheel"]
+					  "stopwatch", "tree", "TUI", "url", "versioning", "wheel"]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque

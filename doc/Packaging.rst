@@ -231,7 +231,7 @@ resulting AST will be searched for the following dunder variables:
 The gathered information be used to add further mappings in the result dictionary.
 
 Handling of package classifiers
-==============================
+===============================
 
 To reduce redundantly provided parameters to this function (e.g. supported ``pythonVersions``), only additional
 classifiers should be provided via parameter ``classifiers``. The supported Python versions will be implicitly

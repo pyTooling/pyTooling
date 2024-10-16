@@ -378,12 +378,16 @@ Common Classes
         The :mod:`pyTooling.Licensing` module provides :ref:`unified license names <LICENSING>` as well as license name
         mappings or translations.
       * :ref:`Unified platform and environment description <COMMON/Platform>`: Python has many ways in figuring out the
-        current platform using APIs from ``sys``, ``platform``, ``os``, …. Unfortunately, none of the provided standard APIs
-        offers a comprehensive answer. pyTooling provides a :ref:`CurrentPlatform <COMMON/CurrentPlatform>` singleton
-        summarizing multiple platform APIs into a single class instance.
-      * :ref:`Representations of version numbers <VERSIONING>`: While Python itself has a good versioning schema, there are no
-        classes provided to abstract version numbers. pyTooling provides such representations following semantic versioning
-        (SemVer) and calendar versioning (CalVer) schemes. It's provided by the :mod:`pyTooling.Versioning` module.
+        current platform using APIs from ``sys``, ``platform``, ``os``, …. Unfortunately, none of the provided standard
+        APIs offers a comprehensive answer. pyTooling provides a :ref:`CurrentPlatform <COMMON/CurrentPlatform>`
+        singleton summarizing multiple platform APIs into a single class instance.
+      * :ref:`Representations of version numbers <VERSIONING>`: While Python itself has a good versioning schema, there
+        are no classes provided to abstract version numbers. pyTooling provides such representations following semantic
+        versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by the :mod:`pyTooling.Versioning`
+        module.
+      * :ref:`Measuring execution times <COMMON/Stopwatch>` can be achieved by using a stopwatch implementation with
+        start, pause, resume, split and stop features. Internally, a high resolution clock is used. The stopwatch can
+        also be used in a ``with``-statement.
 
    .. grid-item::
       :columns: 6
@@ -423,6 +427,30 @@ Common Classes
                version.Major
                version.Minor
                version.Patch
+
+         .. tab-item:: Licenses
+
+            .. code-block:: Python
+
+               pass
+
+         .. tab-item:: Stopwatch
+
+            .. code-block:: Python
+
+               from pyTooling.Stopwatch import Stopwatch
+
+               sw = Stopwatch("my name", preferPause=True)
+               sw.Start()
+               # do something
+               sw.Pause()
+
+               with sw:
+                 # do something
+
+               sw.Resume()
+               # do something
+               sw.Stop()
 
 
 Configuration
@@ -625,7 +653,7 @@ Data Structures
            classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    .. grid-item:: Statemachine
-      :columns: 4
+      :columns: 3
 
       .. mermaid::
          :caption: A statemachine graph.
@@ -646,7 +674,7 @@ Data Structures
            classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 
    .. grid-item:: Tree
-      :columns: 4
+      :columns: 5
 
       .. mermaid::
          :caption: Root of the current node are marked in blue.
@@ -919,21 +947,6 @@ Terminal
 
       .. todo:: Needs example code
 
-Timer
-=====
-
-.. grid:: 2
-
-   .. grid-item::
-      :columns: 6
-
-      A :class:`~pyTooling.Timer.Timer` class to measure and accumulate code execution times.
-
-   .. grid-item::
-      :columns: 6
-
-      .. todo:: Needs example code
-
 
 .. _CONTRIBUTORS:
 
@@ -999,6 +1012,7 @@ License
    Common/CallByRef
    Common/Licensing
    Common/Platform
+   Common/Stopwatch
    Common/Versioning
 
 .. toctree::
@@ -1047,12 +1061,6 @@ License
    :hidden:
 
    Terminal/index
-
-.. toctree::
-   :caption: Timer
-   :hidden:
-
-   Timer
 
 .. raw:: latex
 
