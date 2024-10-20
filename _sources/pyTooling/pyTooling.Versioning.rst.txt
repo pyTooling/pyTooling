@@ -1,0 +1,94 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.Versioning
+====================
+
+.. automodule:: pyTooling.Versioning
+
+
+.. currentmodule:: pyTooling.Versioning
+
+
+**Classes**
+
+- :py:class:`Parts`:
+  Enumeration of parts in a version number that can be presents.
+
+- :py:class:`Flags`:
+  State enumeration, if a (tagged) version is build from a clean or dirty working directory.
+
+- :py:class:`Version`:
+  Undocumented.
+
+- :py:class:`SemanticVersion`:
+  Representation of a semantic version number like ``3.7.12``.
+
+- :py:class:`CalendarVersion`:
+  Representation of a calendar version number like ``2021.10``.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Parts
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Parts
+      :parts: 1
+
+.. autoclass:: Flags
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Flags
+      :parts: 1
+
+.. autoclass:: Version
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Version
+      :parts: 1
+
+.. autoclass:: SemanticVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SemanticVersion
+      :parts: 1
+
+.. autoclass:: CalendarVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CalendarVersion
+      :parts: 1
