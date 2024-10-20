@@ -169,7 +169,50 @@ class ReadOnly(TestCase):
 
 
 class InheritDocStrings(TestCase):
-	def test_InheritDocString(self) -> None:
+	def test_Class_Copy(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1)
+		class Class2(Class1):
+			pass
+
+		self.assertEqual("Class1", Class1.__doc__)
+		self.assertEqual(Class1.__doc__, Class2.__doc__)
+
+	def test_Class_Override(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1)
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("Class1", Class2.__doc__)
+
+	def test_Class_Fallback(self) -> None:
+		class Class1:
+			pass
+
+		@InheritDocString(Class1, merge=True)
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertIsNone(Class1.__doc__)
+		self.assertEqual("Class2", Class2.__doc__)
+
+	def test_Class_Merge(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True)
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("Class1", Class1.__doc__)
+		self.assertEqual("Class1\n\nClass2", Class2.__doc__)
+
+	def test_Method(self) -> None:
 		class Class1:
 			def method(self):
 				"""Method's doc-string."""
