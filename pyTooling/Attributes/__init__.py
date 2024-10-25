@@ -160,16 +160,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		else:
 			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [attribute, ])
 
-	if version_info < (3, 9):  # pragma: no cover
-		@property
-		def Scope(cls) -> AttributeScope:
-			return cls._scope
-
-	else:
-		@classmethod
-		@property
-		def Scope(cls) -> AttributeScope:
-			return cls._scope
+	@property
+	def Scope(cls) -> AttributeScope:
+		return cls._scope
 
 	@classmethod
 	def GetFunctions(cls, scope: Nullable[Type] = None) -> Generator[TAttr, None, None]:

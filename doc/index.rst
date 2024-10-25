@@ -394,6 +394,12 @@ Common Classes
 
       .. tab-set::
 
+         .. tab-item:: Licenses
+
+            .. code-block:: Python
+
+               pass
+
          .. tab-item:: Platform
 
             .. code-block:: Python
@@ -427,12 +433,6 @@ Common Classes
                version.Major
                version.Minor
                version.Patch
-
-         .. tab-item:: Licenses
-
-            .. code-block:: Python
-
-               pass
 
          .. tab-item:: Stopwatch
 
