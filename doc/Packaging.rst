@@ -117,10 +117,10 @@ extracts all specified dependencies. As a result, a list of requirement strings 
 
             -r ../requirements.txt
 
-            Sphinx ~= 7.4
+            Sphinx ~= 8.1
             docutils <= 0.21
 
-            sphinx_rtd_theme ~= 2.0
+            sphinx_rtd_theme ~= 3.0
 
 
 .. _PACKAGING/Helper/extractVersionInformation:
@@ -231,7 +231,7 @@ resulting AST will be searched for the following dunder variables:
 The gathered information be used to add further mappings in the result dictionary.
 
 Handling of package classifiers
-==============================
+===============================
 
 To reduce redundantly provided parameters to this function (e.g. supported ``pythonVersions``), only additional
 classifiers should be provided via parameter ``classifiers``. The supported Python versions will be implicitly

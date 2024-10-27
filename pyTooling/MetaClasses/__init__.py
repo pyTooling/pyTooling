@@ -455,28 +455,6 @@ class ExtendedType(type):
 		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
 
 		# Additional methods on a class
-		def HasClassAttributes(self) -> bool:
-			"""
-			Read-only property to check if the class has Attributes (:attr:`__pyattr__`).
-
-			:returns: ``True``, if the class has Attributes.
-			"""
-			try:
-				return len(self.__pyattr__) > 0
-			except AttributeError:
-				return False
-
-		def HasMethodAttributes(self) -> bool:
-			"""
-			Read-only property to check if the class has methods with Attributes (:attr:`__methodsWithAttributes__`).
-
-			:returns: ``True``, if the class has any method with Attributes.
-			"""
-			try:
-				return len(self.__methodsWithAttributes__) > 0
-			except AttributeError:
-				return False
-
 		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
 			"""
 
@@ -516,10 +494,9 @@ class ExtendedType(type):
 
 			return methodAttributePairs
 
-		newClass.HasClassAttributes = classmethod(readonly(HasClassAttributes))
-		newClass.HasMethodAttributes = classmethod(readonly(HasMethodAttributes))
 		newClass.GetMethodsWithAttributes = classmethod(GetMethodsWithAttributes)
 		GetMethodsWithAttributes.__qualname__ = f"{className}.{GetMethodsWithAttributes.__name__}"
+
 		# GetMethods(predicate) -> dict[method, list[attribute]] / generator
 		# GetClassAtrributes -> list[attributes] / generator
 		# MethodHasAttributes(predicate) -> bool
@@ -945,6 +922,31 @@ class ExtendedType(type):
 					if "__raises_abstract_class_error__" not in str(ex):
 						raise ex
 
+			return False
+
+	# Additional properties and methods on a class
+	@property
+	def HasClassAttributes(self) -> bool:
+		"""
+		Read-only property to check if the class has Attributes (:attr:`__pyattr__`).
+
+		:returns: ``True``, if the class has Attributes.
+		"""
+		try:
+			return len(self.__pyattr__) > 0
+		except AttributeError:
+			return False
+
+	@property
+	def HasMethodAttributes(self) -> bool:
+		"""
+		Read-only property to check if the class has methods with Attributes (:attr:`__methodsWithAttributes__`).
+
+		:returns: ``True``, if the class has any method with Attributes.
+		"""
+		try:
+			return len(self.__methodsWithAttributes__) > 0
+		except AttributeError:
 			return False
 
 

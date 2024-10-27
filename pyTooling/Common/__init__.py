@@ -37,12 +37,12 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2024, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "6.7.0"
+__version__ =       "7.0.0"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
 					  "path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
-					  "timer", "tree", "TUI", "url", "versioning", "wheel"]
+					  "stopwatch", "tree", "TUI", "url", "versioning", "wheel"]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque
@@ -252,8 +252,9 @@ def firstItem(iterable: Iterable[_Element]) -> _Element:
 	"""
 	Returns the first item from an iterable.
 
-	:param iterable: Iterable to get the first item from.
-	:return:         First item.
+	:param iterable:    Iterable to get the first item from.
+	:return:            First item.
+	:raises ValueError: If parameter 'iterable' contains no items.
 	"""
 	i = iter(iterable)
 	try:
@@ -267,8 +268,9 @@ def lastItem(iterable: Iterable[_Element]) -> _Element:
 	"""
 	Returns the last item from an iterable.
 
-	:param iterable: Iterable to get the last item from.
-	:return:         Last item.
+	:param iterable:    Iterable to get the last item from.
+	:return:            Last item.
+	:raises ValueError: If parameter 'iterable' contains no items.
 	"""
 	i = iter(iterable)
 	try:
@@ -295,8 +297,9 @@ def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	"""
 	Retrieves the first key from a dictionary's keys.
 
-	:param d: Dictionary to get the first key from.
-	:returns: The first key.
+	:param d:           Dictionary to get the first key from.
+	:returns:           The first key.
+	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
 		raise ValueError(f"Dictionary is empty.")
@@ -309,8 +312,9 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	"""
 	Retrieves the first value from a dictionary's values.
 
-	:param d: Dictionary to get the first value from.
-	:returns: The first value.
+	:param d:           Dictionary to get the first value from.
+	:returns:           The first value.
+	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
 		raise ValueError(f"Dictionary is empty.")
@@ -323,8 +327,9 @@ def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	"""
 	Retrieves the first key-value-pair from a dictionary.
 
-	:param d: Dictionary to get the first key-value-pair from.
-	:returns: The first key-value-pair as tuple.
+	:param d:           Dictionary to get the first key-value-pair from.
+	:returns:           The first key-value-pair as tuple.
+	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
 		raise ValueError(f"Dictionary is empty.")
@@ -370,9 +375,10 @@ def mergedicts(*dicts: Tuple[Dict, ...], filter: Nullable[Callable[[Hashable, An
 	If parameter ``filter`` isn't ``None``, then this function is applied to every element during the merge operation. If
 	it returns true, the dictionary element will be present in the resulting dictionary.
 
-	:param dicts:  Tuple of dictionaries to merge as positional parameters.
-	:param filter: Optional filter function to apply to each dictionary element when merging.
-	:returns:      A new dictionary containing the merge result.
+	:param dicts:       Tuple of dictionaries to merge as positional parameters.
+	:param filter:      Optional filter function to apply to each dictionary element when merging.
+	:returns:           A new dictionary containing the merge result.
+	:raises ValueError: If 'mergedicts' got called without any dictionaries parameters.
 
 	.. seealso::
 
@@ -416,9 +422,11 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 	"""
 	Iterate multiple dictionaries simultaneously.
 
-	:param dicts: Tuple of dictionaries to iterate as positional parameters.
-	:returns:     A generator returning a tuple containing the key and values of each dictionary in the order of given
-	              dictionaries.
+	:param dicts:       Tuple of dictionaries to iterate as positional parameters.
+	:returns:           A generator returning a tuple containing the key and values of each dictionary in the order of
+	                    given dictionaries.
+	:raises ValueError: If 'zipdicts' got called without any dictionary parameters.
+	:raises ValueError: If not all dictionaries have the same length.
 
 	.. seealso::
 
