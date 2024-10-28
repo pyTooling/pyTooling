@@ -31,7 +31,7 @@
 """Unit tests for package :mod:`pyTooling.Versioning`."""
 from unittest             import TestCase
 
-from pyTooling.Versioning import SemanticVersion
+from pyTooling.Versioning import SemanticVersion, WordSizeValidator, MaxValueValidator
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -56,26 +56,26 @@ class Version(TestCase):
 	def test_CreateFromString1(self) -> None:
 		version = SemanticVersion.Parse("0.0.0")
 
-		self.assertEqual(version.Major, 0, "Major number is not 0.")
-		self.assertEqual(version.Minor, 0, "Minor number is not 0.")
-		self.assertEqual(version.Patch, 0, "Patch number is not 0.")
-		self.assertEqual(version.Build, 0, "Build number is not 0.")
+		self.assertEqual(0, version.Major, "Major number is not 0.")
+		self.assertEqual(0, version.Minor, "Minor number is not 0.")
+		self.assertEqual(0, version.Patch, "Patch number is not 0.")
+		self.assertEqual(0, version.Build, "Build number is not 0.")
 
 	def test_CreateFromIntegers1(self) -> None:
 		version = SemanticVersion(0, 0, 0)
 
-		self.assertEqual(version.Major, 0, "Major number is not 0.")
-		self.assertEqual(version.Minor, 0, "Minor number is not 0.")
-		self.assertEqual(version.Patch, 0, "Patch number is not 0.")
-		self.assertEqual(version.Build, 0, "Build number is not 0.")
+		self.assertEqual(0, version.Major, "Major number is not 0.")
+		self.assertEqual(0, version.Minor, "Minor number is not 0.")
+		self.assertEqual(0, version.Patch, "Patch number is not 0.")
+		self.assertEqual(0, version.Build, "Build number is not 0.")
 
 	def test_CreateFromIntegers2(self) -> None:
 		version = SemanticVersion(1, 2, 3, 4)
 
-		self.assertEqual(version.Major, 1, "Major number is not 1.")
-		self.assertEqual(version.Minor, 2, "Minor number is not 2.")
-		self.assertEqual(version.Patch, 3, "Patch number is not 3.")
-		self.assertEqual(version.Build, 4, "Build number is not 4.")
+		self.assertEqual(1, version.Major, "Major number is not 1.")
+		self.assertEqual(2, version.Minor, "Minor number is not 2.")
+		self.assertEqual(3, version.Patch, "Patch number is not 3.")
+		self.assertEqual(4, version.Build, "Build number is not 4.")
 
 	def test_Equal(self) -> None:
 		l = [
@@ -173,3 +173,30 @@ class Version(TestCase):
 				v1 = SemanticVersion.Parse(t[0])
 				v2 = SemanticVersion.Parse(t[1])
 				self.assertGreaterEqual(v1, v2)
+
+
+class ValidatedWordSize(TestCase):
+	def test_All8Bit_AllInRange(self) -> None:
+		version = SemanticVersion.Parse("12.64.255", WordSizeValidator(8))
+
+		self.assertEqual(12, version.Major)
+		self.assertEqual(64, version.Minor)
+		self.assertEqual(255, version.Patch)
+
+	def test_All8Bit_MajorOutOfRange(self) -> None:
+		with self.assertRaises(ValueError) as ex:
+			_ = SemanticVersion.Parse("1203.64.255", WordSizeValidator(8))
+
+		self.assertIn("Version.Major", str(ex.exception))
+
+	def test_All8Bit_MinorOutOfRange(self) -> None:
+		with self.assertRaises(ValueError) as ex:
+			_ = SemanticVersion.Parse("12.640.255", WordSizeValidator(8))
+
+		self.assertIn("Version.Minor", str(ex.exception))
+
+	def test_All8Bit_PatchOutOfRange(self) -> None:
+		with self.assertRaises(ValueError) as ex:
+			_ = SemanticVersion.Parse("12.64.256", WordSizeValidator(8))
+
+		self.assertIn("Version.Patch", str(ex.exception))

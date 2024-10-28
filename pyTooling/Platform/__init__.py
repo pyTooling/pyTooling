@@ -44,7 +44,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 	try:
 		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, mixin
+		from MetaClasses         import ExtendedType
 		from Versioning          import SemanticVersion
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Platform] Could not import directly!")
@@ -68,14 +68,6 @@ class PythonVersion(SemanticVersion):
 		from sys import version_info
 
 		super().__init__(version_info.major, version_info.minor, version_info.micro)
-
-	def __eq__(self, other):
-		parts = other.split(".")
-		for a, b in zip(parts, (self._major, self._minor, self._patch)):
-			if int(a) != b:
-				return False
-
-		return True
 
 
 @export
