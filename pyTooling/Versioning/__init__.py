@@ -534,7 +534,7 @@ class SemanticVersion(Version):
 
 		version = cls(major, minor, patch, build, flags, prefix)
 		if validator is not None and not validator(version):
-			raise ValueError(f"Failed to validate version string '{versionString}'.")
+			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
 		return version
 
@@ -711,7 +711,7 @@ class SemanticVersion(Version):
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._major}.{self._minor}.{self._patch}"
+		return f"{self._prefix if Parts.Prefix in self._parts else ''}{self._major}.{self._minor}.{self._patch}"
 
 	def __str__(self) -> str:
 		"""
@@ -719,7 +719,12 @@ class SemanticVersion(Version):
 
 		:returns: Version number representation including a prefix.
 		"""
-		return f"{self._prefix}{self._major}.{self._minor}.{self._patch}"
+		result = self._prefix if Parts.Prefix in self._parts else ""
+		result += f"{self._major}" if Parts.Major in self._parts else ""
+		result += f".{self._minor}" if Parts.Minor in self._parts else ""
+		result += f".{self._patch}" if Parts.Patch in self._parts else ""
+
+		return result
 
 
 @export
@@ -771,7 +776,7 @@ class CalendarVersion(Version):
 
 		version = cls(major, minor, flags)
 		if validator is not None and not validator(version):
-			raise ValueError(f"Failed to validate version string '{versionString}'.")
+			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
 		return version
 
