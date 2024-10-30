@@ -702,8 +702,32 @@ class SemanticVersion(Version):
 		return super().__ge__(other)
 
 	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return a string representation of this version number according to the format specification.
+
+		.. topic:: Format Specifiers
+
+		* ``%P`` - prefix
+		* ``%M`` - major number
+		* ``%m`` - minor number
+		* ``%u`` - patch number
+		* ``%b`` - build number
+
+		:param formatSpec: The format specification.
+		:return:           Formatted version number.
+		"""
 		if formatSpec == "":
 			return self.__str__()
+
+		result = formatSpec
+		result = result.replace("%M", str(self._major))
+		result = result.replace("%m", str(self._minor))
+		result = result.replace("%u", str(self._patch))
+		result = result.replace("%b", str(self._build))
+		result = result.replace("%P", str(self._prefix))
+		# result = result.replace("%p", str(self._pre))
+
+		return result.replace("%%", "%")
 
 	def __repr__(self) -> str:
 		"""
@@ -941,4 +965,7 @@ class CalendarVersion(Version):
 
 		:returns: Version number representation including a prefix.
 		"""
-		return f"v{self._major}.{self._minor}"
+		result = f"{self._major}"
+		result += f".{self._minor}" if Parts.Minor in self._parts else ""
+
+		return result

@@ -448,13 +448,13 @@ class ValidatedMaxValue(TestCase):
 
 		self.assertIn("Version.Major", str(ex.exception))
 
-	def test_All8Bit_MinorOutOfRange(self) -> None:
+	def test_All255_MinorOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("12.640.255",  MaxValueValidator(255))
 
 		self.assertIn("Version.Minor", str(ex.exception))
 
-	def test_All8Bit_PatchOutOfRange(self) -> None:
+	def test_All255_PatchOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("12.64.256",  MaxValueValidator(255))
 
@@ -516,3 +516,38 @@ class FormattingUsingFormat(TestCase):
 
 		self.assertEqual("1.2.3", f"{version:}")
 		self.assertEqual(str(version), f"{version:}")
+
+	def test_OtherFormat(self) -> None:
+		version = SemanticVersion(1, 2, 3)
+
+		self.assertEqual("hello world", f"{version:hello world}")
+
+	def test_Percent(self) -> None:
+		version = SemanticVersion(1, 2, 3, prefix="v")
+
+		self.assertEqual("hello%world", f"{version:hello%%world}")
+
+	def test_Major(self) -> None:
+		version = SemanticVersion(1, 2, 3, prefix="v")
+
+		self.assertEqual("1", f"{version:%M}")
+
+	def test_Minor(self) -> None:
+		version = SemanticVersion(1, 2, 3, prefix="v")
+
+		self.assertEqual("2", f"{version:%m}")
+
+	def test_Patch(self) -> None:
+		version = SemanticVersion(1, 2, 3, prefix="v")
+
+		self.assertEqual("3", f"{version:%u}")
+
+	def test_Build(self) -> None:
+		version = SemanticVersion(1, 2, 3, prefix="v")
+
+		self.assertEqual("0", f"{version:%b}")
+
+	def test_FullVersion(self) -> None:
+		version = SemanticVersion(1, 2, 3, prefix="v")
+
+		self.assertEqual("v1.2.3", f"{version:%P%M.%m.%u}")
