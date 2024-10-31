@@ -64,10 +64,11 @@ class PythonImplementation(Flag):
 
 @export
 class PythonVersion(SemanticVersion):
-	def __init__(self) -> None:
+	@classmethod
+	def FromSysVersionInfo(cls) -> "PythonVersion":
 		from sys import version_info
 
-		super().__init__(version_info.major, version_info.minor, version_info.micro)
+		return cls(version_info.major, version_info.minor, version_info.micro)
 
 
 @export
@@ -156,7 +157,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			self._pythonImplementation = PythonImplementation.Unknown
 
 		# Discover the Python version
-		self._pythonVersion = PythonVersion()
+		self._pythonVersion = PythonVersion.FromSysVersionInfo()
 
 		# Discover the platform
 		self._platform = Platforms.Unknown
