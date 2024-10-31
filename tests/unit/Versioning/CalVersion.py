@@ -462,3 +462,29 @@ class FormattingUsingFormat(TestCase):
 
 		self.assertEqual("1.2", f"{version:}")
 		self.assertEqual(str(version), f"{version:}")
+
+	def test_OtherFormat(self) -> None:
+		version = CalendarVersion(1, 2, 3)
+
+		self.assertEqual("hello world", f"{version:hello world}")
+
+	def test_Percent(self) -> None:
+		version = CalendarVersion(1, 2)
+
+		self.assertEqual("hello%world", f"{version:hello%%world}")
+
+	def test_Major(self) -> None:
+		version = CalendarVersion(1, 2)
+
+		self.assertEqual("1", f"{version:%M}")
+
+	def test_Minor(self) -> None:
+		version = CalendarVersion(1, 2)
+
+		self.assertEqual("2", f"{version:%m}")
+
+	def test_FullVersion(self) -> None:
+		version = CalendarVersion(1, 2)
+
+		self.assertEqual("v1.2", f"{version:v%M.%m}")
+
