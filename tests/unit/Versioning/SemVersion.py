@@ -406,10 +406,10 @@ class ValidatedWordSize(TestCase):
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("12.64.256", WordSizeValidator(8))
 
-		self.assertIn("Version.Patch", str(ex.exception))
+		self.assertIn("Version.Micro", str(ex.exception))
 
 	def test_358Bits_AllInRange(self) -> None:
-		version = SemanticVersion.Parse("7.31.255", WordSizeValidator(2, majorBits=3, minorBits=5, patchBits=8))
+		version = SemanticVersion.Parse("7.31.255", WordSizeValidator(2, majorBits=3, minorBits=5, microBits=8))
 
 		self.assertEqual(7, version.Major)
 		self.assertEqual(31, version.Minor)
@@ -417,7 +417,7 @@ class ValidatedWordSize(TestCase):
 
 	def test_358Bit_MajorOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
-			_ = SemanticVersion.Parse("8.31.255", WordSizeValidator(majorBits=3, minorBits=5, patchBits=8))
+			_ = SemanticVersion.Parse("8.31.255", WordSizeValidator(majorBits=3, minorBits=5, microBits=8))
 
 		self.assertIn("Version.Major", str(ex.exception))
 
@@ -431,7 +431,7 @@ class ValidatedWordSize(TestCase):
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("7.31.256", WordSizeValidator(8, majorBits=3, minorBits=5))
 
-		self.assertIn("Version.Patch", str(ex.exception))
+		self.assertIn("Version.Micro", str(ex.exception))
 
 
 class ValidatedMaxValue(TestCase):
@@ -458,7 +458,7 @@ class ValidatedMaxValue(TestCase):
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("12.64.256",  MaxValueValidator(255))
 
-		self.assertIn("Version.Patch", str(ex.exception))
+		self.assertIn("Version.Micro", str(ex.exception))
 
 
 class FormattingUsingRepr(TestCase):

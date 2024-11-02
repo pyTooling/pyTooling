@@ -33,6 +33,7 @@ from unittest             import TestCase
 from pytest               import mark
 
 from pyTooling.Versioning import Flags, CalendarVersion, WordSizeValidator, MaxValueValidator
+from pyTooling.Versioning import YearMonthVersion, YearWeekVersion, YearReleaseVersion, YearMonthDayVersion
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -488,3 +489,84 @@ class FormattingUsingFormat(TestCase):
 
 		self.assertEqual("v1.2", f"{version:v%M.%m}")
 
+
+class InstantiationOfYearMonthVersion(TestCase):
+	def test_Year(self):
+		version = YearMonthVersion(1)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(0, version.Month)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+	def test_YearMonth(self):
+		version = YearMonthVersion(1, 2)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(2, version.Month)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+
+class InstantiationOfYearWeekVersion(TestCase):
+	def test_Year(self):
+		version = YearWeekVersion(1)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(0, version.Week)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+	def test_YearWeek(self):
+		version = YearWeekVersion(1, 2)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(2, version.Week)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+
+class InstantiationOfYearReleaseVersion(TestCase):
+	def test_Year(self):
+		version = YearReleaseVersion(1)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(0, version.Release)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+	def test_YearRelease(self):
+		version = YearReleaseVersion(1, 2)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(2, version.Release)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+
+class InstantiationOfYearMonthDayVersion(TestCase):
+	def test_Year(self):
+		version = YearMonthDayVersion(1)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(0, version.Month)
+		self.assertEqual(0, version.Day)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+	def test_YearMonth(self):
+		version = YearMonthDayVersion(1, 2)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(2, version.Month)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)
+
+	def test_YearMonthDay(self):
+		version = YearMonthDayVersion(1, 2, 3)
+
+		self.assertEqual(1, version.Year)
+		self.assertEqual(2, version.Month)
+		self.assertEqual(3, version.Day)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.Clean, version.Flags)

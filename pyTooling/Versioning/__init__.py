@@ -35,7 +35,7 @@ Implementation of semantic and date versioning version-numbers.
 """
 from enum   import Flag
 from sys    import version_info   # needed for versions before Python 3.11
-from typing import Optional as Nullable, Union, Callable
+from typing import Optional as Nullable, Union, Callable, Any
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -59,8 +59,13 @@ class Parts(Flag):
 
 	Unknown = 0     #: Undocumented
 	Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
+	Year = 1        #: Year is present. (e.g. X in ``XXXX.10``).
 	Minor = 2       #: Minor number is present. (e.g. Y in ``v0.Y.0``).
+	Month = 2       #: Month is present. (e.g. X in ``2024.YY``).
+	Week = 2        #: Week is present. (e.g. X in ``2024.YY``).
+	Micro = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
 	Patch = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
+	Day = 4         #: Day is present. (e.g. X in ``2024.10.ZZ``).
 	Build = 8       #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
 	Pre   = 16      #: Pre-release number is present.
 	Post  = 32      #: Post-release number is present.
@@ -77,23 +82,34 @@ class Flags(Flag):
 	Dirty = 2       #: A versioned build was created from a *dirty* working directory.
 
 
+@export
 def WordSizeValidator(
 	bits: Nullable[int] = None,
 	majorBits: Nullable[int] = None,
 	minorBits: Nullable[int] = None,
-	patchBits: Nullable[int] = None,
+	microBits: Nullable[int] = None,
 	buildBits: Nullable[int] = None
 ):
-	majorMax = minorMax = patchMax = buildMax = -1
+	"""
+	A factory function to return a validator for Version instances for a positive integer range based on word-sizes in bits.
+
+	:param bits:      Number of bits to encode any positive version number part.
+	:param majorBits: Number of bits to encode a positive major number in a version.
+	:param minorBits: Number of bits to encode a positive minor number in a version.
+	:param microBits: Number of bits to encode a positive micro number in a version.
+	:param buildBits: Number of bits to encode a positive build number in a version.
+	:return:          A validation function for Version instances.
+	"""
+	majorMax = minorMax = microMax = buildMax = -1
 	if bits is not None:
-		majorMax = minorMax = patchMax = buildMax = 2**bits - 1
+		majorMax = minorMax = microMax = buildMax = 2**bits - 1
 
 	if majorBits is not None:
 		majorMax = 2**majorBits - 1
 	if minorBits is not None:
 		minorMax = 2**minorBits - 1
-	if patchBits is not None:
-		patchMax = 2**patchBits - 1
+	if microBits is not None:
+		microMax = 2 ** microBits - 1
 	if buildBits is not None:
 		buildMax = 2**buildBits - 1
 
@@ -104,23 +120,37 @@ def WordSizeValidator(
 		if Parts.Minor in version._parts and version._minor > minorMax:
 			raise ValueError(f"Field 'Version.Minor' > {max}.")
 
-		if Parts.Patch in version._parts and version._patch > patchMax:
-			raise ValueError(f"Field 'Version.Patch' > {max}.")
+		if Parts.Micro in version._parts and version._micro > microMax:
+			raise ValueError(f"Field 'Version.Micro' > {max}.")
+
+		if Parts.Build in version._parts and version._build > buildMax:
+			raise ValueError(f"Field 'Version.Build' > {max}.")
 
 		return True
 
 	return validator
 
 
+@export
 def MaxValueValidator(
 	max: Nullable[int] = None,
 	majorMax: Nullable[int] = None,
 	minorMax: Nullable[int] = None,
-	patchMax: Nullable[int] = None,
+	microMax: Nullable[int] = None,
 	buildMax: Nullable[int] = None
 ):
+	"""
+	A factory function to return a validator for Version instances checking for a positive integer range [0..max].
+
+	:param max:      The upper bound for any positive version number part.
+	:param majorMax: The upper bound for the positive major number.
+	:param minorMax: The upper bound for the positive minor number.
+	:param microMax: The upper bound for the positive micro number.
+	:param buildMax: The upper bound for the positive build number.
+	:return:         A validation function for Version instances.
+	"""
 	if max is not None:
-		majorMax = minorMax = patchMax = buildMax = max
+		majorMax = minorMax = microMax = buildMax = max
 
 	def validator(version: SemanticVersion) -> bool:
 		if Parts.Major in version._parts and version._major > majorMax:
@@ -129,8 +159,11 @@ def MaxValueValidator(
 		if Parts.Minor in version._parts and version._minor > minorMax:
 			raise ValueError(f"Field 'Version.Minor' > {max}.")
 
-		if Parts.Patch in version._parts and version._patch > patchMax:
-			raise ValueError(f"Field 'Version.Patch' > {max}.")
+		if Parts.Micro in version._parts and version._micro > microMax:
+			raise ValueError(f"Field 'Version.Micro' > {max}.")
+
+		if Parts.Build in version._parts and version._build > buildMax:
+			raise ValueError(f"Field 'Version.Build' > {max}.")
 
 		return True
 
@@ -142,16 +175,45 @@ class Version(metaclass=ExtendedType, slots=True):
 	"""Base-class for a version representation."""
 
 	_parts   : Parts  #: Integer flag enumeration of present parts in a version number.
+	_prefix  : str    #: Prefix string
 	_major   : int    #: Major number part of the version number.
 	_minor   : int    #: Minor number part of the version number.
+	_micro   : int    #: Micro number part of the version number.
+	_build   : int    #: Build number part of the version number.
+	_postfix : str    #: Postfix string
 	_flags   : Flags  #: State if the version in a working directory is clean or dirty compared to a tagged version.
 
 	def __init__(
 		self,
 		major: int,
 		minor: Nullable[int] = None,
-		flags: Flags = Flags.Clean
+		micro: Nullable[int] = None,
+		build: Nullable[int] = None,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a version number representation.
+
+		:param major:       Major number part of a version number.
+		:param minor:       Minor number part of a version number.
+		:param micro:       Micro (patch) number part of a version number.
+		:param build:       Build number part of a version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		if not isinstance(major, int):
 			raise TypeError("Parameter 'major' is not of type 'int'.")
 		elif major < 0:
@@ -170,6 +232,46 @@ class Version(metaclass=ExtendedType, slots=True):
 			self._parts |= Parts.Minor
 		else:
 			self._minor = 0
+
+		if micro is not None:
+			if not isinstance(micro, int):
+				raise TypeError("Parameter 'micro' is not of type 'int'.")
+			elif micro < 0:
+				raise ValueError("Parameter 'micro' is negative.")
+
+			self._micro = micro
+			self._parts |= Parts.Micro
+		else:
+			self._micro = 0
+
+		if build is not None:
+			if not isinstance(build, int):
+				raise TypeError("Parameter 'build' is not of type 'int'.")
+			elif build < 0:
+				raise ValueError("Parameter 'build' is negative.")
+
+			self._build = build
+			self._parts |= Parts.Build
+		else:
+			self._build = 0
+
+		if prefix is not None:
+			if not isinstance(prefix, str):
+				raise TypeError("Parameter 'prefix' is not of type 'str'.")
+
+			self._prefix = prefix
+			self._parts |= Parts.Prefix
+		else:
+			self._prefix = ""
+
+		if postfix is not None:
+			if not isinstance(postfix, str):
+				raise TypeError("Parameter 'postfix' is not of type 'str'.")
+
+			self._postfix = postfix
+			self._parts |= Parts.Postfix
+		else:
+			self._postfix = ""
 
 		self._flags = flags
 
@@ -191,11 +293,26 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._minor
 
 	@readonly
+	def Micro(self) -> int:
+		return self._micro
+
+	@readonly
+	def Build(self) -> int:
+		return self._build
+
+	@readonly
 	def Flags(self) -> Flags:
 		return self._flags
 
-	@abstractmethod
-	def _equal(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
+	@readonly
+	def Prefix(self) -> str:
+		return self._prefix
+
+	@readonly
+	def Postfix(self) -> str:
+		return self._postfix
+
+	def _equal(self, left: "Version", right: "Version") -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`Version` instances.
 
@@ -203,8 +320,13 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param right: Right parameter.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
+		return (
+			(left._major == right._major) and
+			(left._minor == right._minor) and
+			(left._micro == right._micro) and
+			(left._build == right._build)
+		)
 
-	@abstractmethod
 	def _compare(self, left: "Version", right: "Version") -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`Version` instances.
@@ -215,6 +337,46 @@ class Version(metaclass=ExtendedType, slots=True):
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both parameters are equal).
 		"""
+		if left._major < right._major:
+			return True
+		elif left._major > right._major:
+			return False
+
+		if left._minor < right._minor:
+			return True
+		elif left._minor > right._minor:
+			return False
+
+		if left._micro < right._micro:
+			return True
+		elif left._micro > right._micro:
+			return False
+
+		if left._build < right._build:
+			return True
+		elif left._build > right._build:
+			return False
+
+		return None
+
+	def _minimum(self, left: "Version", right: "Version") -> Nullable[bool]:
+		exactMajor = Parts.Minor in right._parts
+		exactMinor = Parts.Micro in right._parts
+
+		if exactMajor and left._major != right._major:
+			return False
+		elif not exactMajor and left._major >= right._major:
+			return True
+
+		if exactMinor and left._minor != right._minor:
+			return False
+		elif not exactMinor and left._minor >= right._minor:
+			return True
+
+		if Parts.Micro in right._parts:
+			return left._micro >= right._micro
+
+		return True
 
 	@mustoverride
 	def __eq__(self, other: Union["Version", str, int, None]) -> bool:
@@ -416,17 +578,29 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return not self.__lt__(other)
 
+	def __imod__(self, other: Union["Version", str, int, None]) -> bool:
+		if other is None:
+			raise ValueError(f"Second operand is None.")
+		elif isinstance(other, self.__class__):
+			pass
+		elif isinstance(other, str):
+			other = self.__class__.Parse(other)
+		elif isinstance(other, int):
+			other = self.__class__(major=other)
+		else:
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by %= operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			raise ex
+
+		return self._minimum(self, other)
 
 @export
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
-	_patch   : int    #: Patch number part of the version number.
-	_build   : int    #: Build number part of the version number.
 	_pre     : int    #: Pre-release version number part.
 	_post    : int    #: Post-release version number part.
-	_prefix  : str    #: Prefix string
-	_postfix : str    #: Postfix string
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead   : int = 0
 
@@ -434,43 +608,13 @@ class SemanticVersion(Version):
 		self,
 		major: int,
 		minor: Nullable[int] = None,
-		patch: Nullable[int] = None,
+		micro: Nullable[int] = None,
 		build: Nullable[int] = None,
 		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
 	) -> None:
-		super().__init__(major, minor, flags)
-
-		if patch is not None:
-			if not isinstance(patch, int):
-				raise TypeError("Parameter 'patch' is not of type 'int'.")
-			elif patch < 0:
-				raise ValueError("Parameter 'patch' is negative.")
-
-			self._patch = patch
-			self._parts |= Parts.Patch
-		else:
-			self._patch = 0
-
-		if build is not None:
-			if not isinstance(build, int):
-				raise TypeError("Parameter 'build' is not of type 'int'.")
-			elif build < 0:
-				raise ValueError("Parameter 'build' is negative.")
-
-			self._build = build
-			self._parts |= Parts.Build
-		else:
-			self._build = 0
-
-		if prefix is not None:
-			if not isinstance(prefix, str):
-				raise TypeError("Parameter 'prefix' is not of type 'str'.")
-
-			self._prefix = prefix
-			self._parts |= Parts.Prefix
-		else:
-			self._prefix = ""
+		super().__init__(major, minor, micro, build, flags, prefix, postfix)
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "SemanticVersion":
@@ -516,7 +660,7 @@ class SemanticVersion(Version):
 		length = len(split)
 		major = int(split[0])
 		minor = 0
-		patch = 0
+		micro = 0
 		build = 0
 		parts |= Parts.Major
 
@@ -524,7 +668,7 @@ class SemanticVersion(Version):
 			minor = int(split[1])
 			parts |= Parts.Minor
 		if length >= 3:
-			patch = int(split[2])
+			micro = int(split[2])
 			parts |= Parts.Patch
 		if length >= 4:
 			build = int(split[3])
@@ -532,7 +676,7 @@ class SemanticVersion(Version):
 
 		flags = Flags.Clean
 
-		version = cls(major, minor, patch, build, flags, prefix)
+		version = cls(major, minor, micro, build, flags, prefix)
 		if validator is not None and not validator(version):
 			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
@@ -540,11 +684,7 @@ class SemanticVersion(Version):
 
 	@readonly
 	def Patch(self) -> int:
-		return self._patch
-
-	@readonly
-	def Build(self) -> int:
-		return self._build
+		return self._micro
 
 	def _equal(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
 		"""
@@ -554,12 +694,7 @@ class SemanticVersion(Version):
 		:param right: Right parameter.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
-		return (
-			(left._major == right._major) and
-			(left._minor == right._minor) and
-			(left._patch == right._patch) and
-			(left._build == right._build)
-		)
+		return super()._equal(left, right)
 
 	def _compare(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
 		"""
@@ -571,27 +706,7 @@ class SemanticVersion(Version):
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both parameters are equal).
 		"""
-		if left._major < right._major:
-			return True
-		elif left._major > right._major:
-			return False
-
-		if left._minor < right._minor:
-			return True
-		elif left._minor > right._minor:
-			return False
-
-		if left._patch < right._patch:
-			return True
-		elif left._patch > right._patch:
-			return False
-
-		if left._build < right._build:
-			return True
-		elif left._build > right._build:
-			return False
-
-		return None
+		return super()._compare(left, right)
 
 	def __eq__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
 		"""
@@ -701,6 +816,9 @@ class SemanticVersion(Version):
 		"""
 		return super().__ge__(other)
 
+	def __imod__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+		return super().__imod__(other)
+
 	def __format__(self, formatSpec: str) -> str:
 		"""
 		Return a string representation of this version number according to the format specification.
@@ -710,7 +828,7 @@ class SemanticVersion(Version):
 		* ``%P`` - prefix
 		* ``%M`` - major number
 		* ``%m`` - minor number
-		* ``%u`` - patch number
+		* ``%u`` - micro number
 		* ``%b`` - build number
 
 		:param formatSpec: The format specification.
@@ -723,7 +841,7 @@ class SemanticVersion(Version):
 		result = result.replace("%P", str(self._prefix))
 		result = result.replace("%M", str(self._major))
 		result = result.replace("%m", str(self._minor))
-		result = result.replace("%u", str(self._patch))
+		result = result.replace("%u", str(self._micro))
 		result = result.replace("%b", str(self._build))
 		# result = result.replace("%p", str(self._pre))
 
@@ -735,7 +853,7 @@ class SemanticVersion(Version):
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._prefix if Parts.Prefix in self._parts else ''}{self._major}.{self._minor}.{self._patch}"
+		return f"{self._prefix if Parts.Prefix in self._parts else ''}{self._major}.{self._minor}.{self._micro}"
 
 	def __str__(self) -> str:
 		"""
@@ -744,9 +862,10 @@ class SemanticVersion(Version):
 		:returns: Version number representation including a prefix.
 		"""
 		result = self._prefix if Parts.Prefix in self._parts else ""
-		result += f"{self._major}" if Parts.Major in self._parts else ""
+		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
-		result += f".{self._patch}" if Parts.Patch in self._parts else ""
+		result += f".{self._micro}" if Parts.Micro in self._parts else ""
+		result += f".{self._build}" if Parts.Build in self._parts else ""
 
 		return result
 
@@ -759,12 +878,16 @@ class CalendarVersion(Version):
 		self,
 		major: int,
 		minor: Nullable[int] = None,
-		flags: Flags = Flags.Clean
+		micro: Nullable[int] = None,
+		build: Nullable[int] = None,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
 	) -> None:
-		super().__init__(major, minor, flags)
+		super().__init__(major, minor, micro, build, flags, prefix, postfix)
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "CalendarVersion":
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["CalendarVersion"], bool]] = None) -> "CalendarVersion":
 		"""
 		Parse a version string and return a :class:`CalendarVersion` instance.
 
@@ -798,11 +921,15 @@ class CalendarVersion(Version):
 
 		flags = Flags.Clean
 
-		version = cls(major, minor, flags)
+		version = cls(major, minor, 0, 0, flags)
 		if validator is not None and not validator(version):
 			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
 		return version
+
+	@property
+	def Year(self) -> int:
+		return self._major
 
 	def _equal(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
 		"""
@@ -988,3 +1115,88 @@ class CalendarVersion(Version):
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 
 		return result
+
+
+@export
+class YearMonthVersion(CalendarVersion):
+	"""Representation of a calendar version number like ``2021.10``."""
+
+	def __init__(
+		self,
+		year: int,
+		month: Nullable[int] = None,
+		build: Nullable[int] = None,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
+	) -> None:
+		super().__init__(year, month, 0, build, flags, prefix, postfix)
+
+	@property
+	def Month(self) -> int:
+		return self._minor
+
+
+@export
+class YearWeekVersion(CalendarVersion):
+	"""Representation of a calendar version number like ``2021.47``."""
+
+	def __init__(
+		self,
+		year: int,
+		week: Nullable[int] = None,
+		build: Nullable[int] = None,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
+	) -> None:
+		super().__init__(year, week, 0, build, flags, prefix, postfix)
+
+	@property
+	def Week(self) -> int:
+		return self._minor
+
+
+@export
+class YearReleaseVersion(CalendarVersion):
+	"""Representation of a calendar version number like ``2021.2``."""
+
+	def __init__(
+		self,
+		year: int,
+		release: Nullable[int] = None,
+		build: Nullable[int] = None,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
+	) -> None:
+		super().__init__(year, release, 0, build, flags, prefix, postfix)
+
+	@property
+	def Release(self) -> int:
+		return self._minor
+
+
+@export
+class YearMonthDayVersion(CalendarVersion):
+	"""Representation of a calendar version number like ``2021.10.15``."""
+
+	def __init__(
+		self,
+		year: int,
+		month: Nullable[int] = None,
+		day: Nullable[int] = None,
+		build: Nullable[int] = None,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
+	) -> None:
+		super().__init__(year, month, day, build, flags, prefix, postfix)
+
+	@property
+	def Month(self) -> int:
+		return self._minor
+
+	@property
+	def Day(self) -> int:
+		return self._micro

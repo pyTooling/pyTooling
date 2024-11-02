@@ -49,64 +49,64 @@ class Operations(TestCase):
 	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25
 
 	def test_StartStart(self) -> None:
-		timer = Stopwatch()
-		timer.Start()
+		sw = Stopwatch()
+		sw.Start()
 		with self.assertRaises(ToolingException):
-			timer.Start()
+			sw.Start()
 
 	def test_Split(self) -> None:
-		timer = Stopwatch()
+		sw = Stopwatch()
 		with self.assertRaises(ToolingException):
-			timer.Split()
+			sw.Split()
 
 	def test_Pause(self) -> None:
-		timer = Stopwatch()
+		sw = Stopwatch()
 		with self.assertRaises(ToolingException):
-			timer.Pause()
+			sw.Pause()
 
 	def test_Resume(self) -> None:
-		timer = Stopwatch()
+		sw = Stopwatch()
 		with self.assertRaises(ToolingException):
-			timer.Resume()
+			sw.Resume()
 
 	def test_Stop(self) -> None:
-		timer = Stopwatch()
+		sw = Stopwatch()
 		with self.assertRaises(ToolingException):
-			timer.Stop()
+			sw.Stop()
 
 	def test_StartStop(self) -> None:
 		print()
 
-		timer = Stopwatch()
+		sw = Stopwatch()
 
-		timer.Start()
+		sw.Start()
 		sleep(self.DELAY)  # 500 ms
-		diff = timer.Stop()
+		diff = sw.Stop()
 
 		print(f"Duration for 'sleep({self.DELAY:0.3f})': {diff:0.6f} us")
 		self.assertLessEqual(diff, self.DELAY * self.INACCURACY)
 
-		self.assertFalse(timer.HasSplitTimes)
-		self.assertFalse(timer.IsStarted)
-		self.assertFalse(timer.IsPaused)
-		self.assertFalse(timer.IsRunning)
-		self.assertTrue(timer.IsStopped)
-		self.assertEqual(0, timer.SplitCount)
-		self.assertEqual(0, timer.ActiveCount)
-		self.assertEqual(0, timer.InactiveCount)
-		self.assertEqual(0, len(timer))
+		self.assertFalse(sw.HasSplitTimes)
+		self.assertFalse(sw.IsStarted)
+		self.assertFalse(sw.IsPaused)
+		self.assertFalse(sw.IsRunning)
+		self.assertTrue(sw.IsStopped)
+		self.assertEqual(0, sw.SplitCount)
+		self.assertEqual(0, sw.ActiveCount)
+		self.assertEqual(0, sw.InactiveCount)
+		self.assertEqual(0, len(sw))
 
 	def test_StartPauseStop(self) -> None:
 		print()
 
-		timer = Stopwatch()
+		sw = Stopwatch()
 
-		timer.Start()
+		sw.Start()
 		sleep(self.DELAY)  # 500 ms
-		diff1 = timer.Pause()
+		diff1 = sw.Pause()
 		sleep(self.PAUSE)  # 200 ms
-		diff2 = timer.Stop()
-		total = timer.Duration
+		diff2 = sw.Stop()
+		total = sw.Duration
 
 		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:0.6f} us")
 		self.assertLessEqual(diff1, self.DELAY * self.INACCURACY)
@@ -117,25 +117,25 @@ class Operations(TestCase):
 		print(f"Duration for '1x sleep({self.DELAY:0.3f}) + 1x pause({self.PAUSE:0.3f})': {total:0.6f} us")
 		self.assertLessEqual(total, (1 * self.DELAY + 1 * self.PAUSE) * self.INACCURACY)
 
-		self.assertTrue(timer.HasSplitTimes)
-		self.assertEqual(2, timer.SplitCount)
-		self.assertEqual(1, timer.ActiveCount)
-		self.assertEqual(1, timer.InactiveCount)
-		self.assertEqual(2, len(timer))
+		self.assertTrue(sw.HasSplitTimes)
+		self.assertEqual(2, sw.SplitCount)
+		self.assertEqual(1, sw.ActiveCount)
+		self.assertEqual(1, sw.InactiveCount)
+		self.assertEqual(2, len(sw))
 
 	def test_StartPauseResumeStop(self) -> None:
 		print()
 
-		timer = Stopwatch()
+		sw = Stopwatch()
 
-		timer.Start()
+		sw.Start()
 		sleep(self.DELAY)  # 500 ms
-		diff1 = timer.Pause()
+		diff1 = sw.Pause()
 		sleep(self.PAUSE)  # 200 ms
-		diff2 = timer.Resume()
+		diff2 = sw.Resume()
 		sleep(self.DELAY)  # 500 ms
-		diff3 = timer.Stop()
-		total = timer.Duration
+		diff3 = sw.Stop()
+		total = sw.Duration
 
 		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:0.6f} us")
 		self.assertLessEqual(diff1, self.DELAY * self.INACCURACY)
@@ -151,15 +151,15 @@ class Operations(TestCase):
 
 		seq = ((diff1, True), (diff2, False), (diff3, True))
 
-		self.assertTrue(timer.HasSplitTimes)
-		self.assertEqual(3, timer.SplitCount)
-		self.assertEqual(2, timer.ActiveCount)
-		self.assertEqual(1, timer.InactiveCount)
-		self.assertEqual(3, len(timer))
-		self.assertTupleEqual(seq[0], timer[0])
-		self.assertTupleEqual(seq[1], timer[1])
-		self.assertTupleEqual(seq[2], timer[2])
-		self.assertTupleEqual(seq, tuple(t for t in timer))
+		self.assertTrue(sw.HasSplitTimes)
+		self.assertEqual(3, sw.SplitCount)
+		self.assertEqual(2, sw.ActiveCount)
+		self.assertEqual(1, sw.InactiveCount)
+		self.assertEqual(3, len(sw))
+		self.assertTupleEqual(seq[0], sw[0])
+		self.assertTupleEqual(seq[1], sw[1])
+		self.assertTupleEqual(seq[2], sw[2])
+		self.assertTupleEqual(seq, tuple(t for t in sw))
 
 
 class Formatting(TestCase):
@@ -271,7 +271,7 @@ class ContextManagerProtocol(TestCase):
 		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
 
 		with self.assertRaises(StopwatchException):
-			with sw as timer:
+			with sw:
 				sleep(self.DELAY)  # 500 ms
 
 	def test_ReuseContext_ResumePause(self) -> None:
