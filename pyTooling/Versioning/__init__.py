@@ -196,10 +196,10 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a version number representation.
 
-		:param major:       Major number part of a version number.
-		:param minor:       Minor number part of a version number.
-		:param micro:       Micro (patch) number part of a version number.
-		:param build:       Build number part of a version number.
+		:param major:       Major number part of the version number.
+		:param minor:       Minor number part of the version number.
+		:param micro:       Micro (patch) number part of the version number.
+		:param build:       Build number part of the version number.
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
@@ -282,34 +282,74 @@ class Version(metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def Parts(self) -> Parts:
+		"""
+		Read-only property to access the used parts of this version number.
+
+		:return: A flag enumeration of used version number parts.
+		"""
 		return self._parts
 
 	@readonly
 	def Major(self) -> int:
+		"""
+		Read-only property to access the major number.
+
+		:return: The major number.
+		"""
 		return self._major
 
 	@readonly
 	def Minor(self) -> int:
+		"""
+		Read-only property to access the minor number.
+
+		:return: The minor number.
+		"""
 		return self._minor
 
 	@readonly
 	def Micro(self) -> int:
+		"""
+		Read-only property to access the micro number.
+
+		:return: The micro number.
+		"""
 		return self._micro
 
 	@readonly
 	def Build(self) -> int:
+		"""
+		Read-only property to access the build number.
+
+		:return: The build number.
+		"""
 		return self._build
 
 	@readonly
 	def Flags(self) -> Flags:
+		"""
+		Read-only property to access the version number's flags.
+
+		:return: The flags of the version number.
+		"""
 		return self._flags
 
 	@readonly
 	def Prefix(self) -> str:
+		"""
+		Read-only property to access the version number's prefix.
+
+		:return: The prefix of the version number.
+		"""
 		return self._prefix
 
 	@readonly
 	def Postfix(self) -> str:
+		"""
+		Read-only property to access the version number's postfix.
+
+		:return: The postfix of the version number.
+		"""
 		return self._postfix
 
 	def _equal(self, left: "Version", right: "Version") -> Nullable[bool]:
@@ -614,6 +654,27 @@ class SemanticVersion(Version):
 		prefix: Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a semantic version number representation.
+
+		:param major:       Major number part of the version number.
+		:param minor:       Minor number part of the version number.
+		:param micro:       Micro (patch) number part of the version number.
+		:param build:       Build number part of the version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		super().__init__(major, minor, micro, build, flags, prefix, postfix)
 
 	@classmethod
@@ -684,6 +745,13 @@ class SemanticVersion(Version):
 
 	@readonly
 	def Patch(self) -> int:
+		"""
+		Read-only property to access the patch number.
+
+		The patch number is identical to the micro number.
+
+		:return: The patch number.
+		"""
 		return self._micro
 
 	def _equal(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
@@ -884,6 +952,27 @@ class CalendarVersion(Version):
 		prefix: Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a calendar version number representation.
+
+		:param major:       Major number part of the version number.
+		:param minor:       Minor number part of the version number.
+		:param micro:       Micro (patch) number part of the version number.
+		:param build:       Build number part of the version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		super().__init__(major, minor, micro, build, flags, prefix, postfix)
 
 	@classmethod
@@ -929,6 +1018,11 @@ class CalendarVersion(Version):
 
 	@property
 	def Year(self) -> int:
+		"""
+		Read-only property to access the year part.
+
+		:return: The year part.
+		"""
 		return self._major
 
 	def _equal(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
@@ -1130,10 +1224,35 @@ class YearMonthVersion(CalendarVersion):
 		prefix: Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a year-month version number representation.
+
+		:param year:        Year part of the version number.
+		:param month:       Month part of the version number.
+		:param build:       Build number part of the version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		super().__init__(year, month, 0, build, flags, prefix, postfix)
 
 	@property
 	def Month(self) -> int:
+		"""
+		Read-only property to access the month part.
+
+		:return: The month part.
+		"""
 		return self._minor
 
 
@@ -1150,10 +1269,35 @@ class YearWeekVersion(CalendarVersion):
 		prefix: Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a year-week version number representation.
+
+		:param year:        Year part of the version number.
+		:param week:        Week part of the version number.
+		:param build:       Build number part of the version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		super().__init__(year, week, 0, build, flags, prefix, postfix)
 
 	@property
 	def Week(self) -> int:
+		"""
+		Read-only property to access the week part.
+
+		:return: The week part.
+		"""
 		return self._minor
 
 
@@ -1170,10 +1314,35 @@ class YearReleaseVersion(CalendarVersion):
 		prefix: Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a year-release version number representation.
+
+		:param year:        Year part of the version number.
+		:param release:     Release number of the version number.
+		:param build:       Build number part of the version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		super().__init__(year, release, 0, build, flags, prefix, postfix)
 
 	@property
 	def Release(self) -> int:
+		"""
+		Read-only property to access the release number.
+
+		:return: The release number.
+		"""
 		return self._minor
 
 
@@ -1191,12 +1360,43 @@ class YearMonthDayVersion(CalendarVersion):
 		prefix: Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
+		"""
+		Initializes a year-month-day version number representation.
+
+		:param year:        Year part of the version number.
+		:param month:       Month part of the version number.
+		:param day:         Day part of the version number.
+		:param build:       Build number part of the version number.
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
 		super().__init__(year, month, day, build, flags, prefix, postfix)
 
 	@property
 	def Month(self) -> int:
+		"""
+		Read-only property to access the month part.
+
+		:return: The month part.
+		"""
 		return self._minor
 
 	@property
 	def Day(self) -> int:
+		"""
+		Read-only property to access the day part.
+
+		:return: The day part.
+		"""
 		return self._micro
