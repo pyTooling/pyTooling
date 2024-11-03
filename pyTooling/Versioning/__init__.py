@@ -33,7 +33,7 @@ Implementation of semantic and date versioning version-numbers.
 
 .. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
-from enum   import Flag
+from enum   import Flag, Enum
 from sys    import version_info   # needed for versions before Python 3.11
 from typing import Optional as Nullable, Union, Callable, Any
 
@@ -72,6 +72,21 @@ class Parts(Flag):
 	Prefix = 64     #: Prefix is present.
 	Postfix = 128   #: Postfix is present.
 #		AHead   = 256
+# Serial for alpha/beta/rc
+
+
+@export
+class ReleaseLevel(Enum):
+	"""Enumeration describing parts of a version number that can be present."""
+	Unknown = 0
+	Alpha = 1
+	Beta = 2
+	Gamma = 3
+	Development = 5
+	ReleaseCandidate = 10
+	Final = 20
+	# Pre
+	# Post
 
 
 @export
@@ -639,19 +654,22 @@ class Version(metaclass=ExtendedType, slots=True):
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
-	_pre     : int    #: Pre-release version number part.
-	_post    : int    #: Post-release version number part.
+	_level:  Nullable[ReleaseLevel]  #: Release level
+	_serial: Nullable[int]           #:
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead   : int = 0
 
 	def __init__(
 		self,
-		major: int,
-		minor: Nullable[int] = None,
-		micro: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
+		major:   int,
+		minor:   Nullable[int] = None,
+		micro:   Nullable[int] = None,
+		build:   Nullable[int] = None,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		serial:  Nullable[int] = None,
+		*,
+		flags:   Flags = Flags.Clean,
+		prefix:  Nullable[str] = None,
 		postfix: Nullable[str] = None
 	) -> None:
 		"""
@@ -661,6 +679,8 @@ class SemanticVersion(Version):
 		:param minor:       Minor number part of the version number.
 		:param micro:       Micro (patch) number part of the version number.
 		:param build:       Build number part of the version number.
+		:param level:       tbd
+		:param serial:      tbd
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
@@ -676,6 +696,9 @@ class SemanticVersion(Version):
 		:raises TypeError:  If parameter 'postfix' is not of type str.
 		"""
 		super().__init__(major, minor, micro, build, flags, prefix, postfix)
+
+		self._level = level
+		self._serial = serial
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "SemanticVersion":
@@ -753,6 +776,24 @@ class SemanticVersion(Version):
 		:return: The patch number.
 		"""
 		return self._micro
+
+	@readonly
+	def ReleaseLevel(self) -> ReleaseLevel:
+		"""
+		Read-only property to access the release level.
+
+		:return: The release level.
+		"""
+		return self._level
+
+	@readonly
+	def Serial(self) -> int:
+		"""
+		Read-only property to access the release serial.
+
+		:return: The release serial.
+		"""
+		return self._serial
 
 	def _equal(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
 		"""
@@ -936,6 +977,24 @@ class SemanticVersion(Version):
 		result += f".{self._build}" if Parts.Build in self._parts else ""
 
 		return result
+
+
+@export
+class PythonVersion(SemanticVersion):
+	@classmethod
+	def FromSysVersionInfo(cls) -> "PythonVersion":
+		from sys import version_info
+
+		if version_info.releaselevel == "alpha":
+			rl = ReleaseLevel.Alpha
+		elif version_info.releaselevel == "beta":
+			rl = ReleaseLevel.Beta
+		elif version_info.releaselevel == "candidate":
+			rl = ReleaseLevel.ReleaseCandidate
+		elif version_info.releaselevel == "final":
+			rl = ReleaseLevel.Final
+
+		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, serial=version_info.serial)
 
 
 @export

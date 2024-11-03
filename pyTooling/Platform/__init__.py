@@ -38,14 +38,14 @@ from enum                    import Flag, auto
 try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Versioning  import SemanticVersion
+	from pyTooling.Versioning  import PythonVersion
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Platform] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators          import export, readonly
 		from MetaClasses         import ExtendedType
-		from Versioning          import SemanticVersion
+		from Versioning          import PythonVersion
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Platform] Could not import directly!")
 		raise ex
@@ -60,15 +60,6 @@ class PythonImplementation(Flag):
 
 	CPython = 1
 	PyPy = 2
-
-
-@export
-class PythonVersion(SemanticVersion):
-	@classmethod
-	def FromSysVersionInfo(cls) -> "PythonVersion":
-		from sys import version_info
-
-		return cls(version_info.major, version_info.minor, version_info.micro)
 
 
 @export
