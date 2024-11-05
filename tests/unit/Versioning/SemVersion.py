@@ -31,7 +31,7 @@
 """Unit tests for package :mod:`pyTooling.Versioning`."""
 from unittest             import TestCase
 
-from pyTooling.Versioning import Flags, SemanticVersion, WordSizeValidator, MaxValueValidator
+from pyTooling.Versioning import Flags, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,27 +44,161 @@ class Instantiation(TestCase):
 	def test_Major(self):
 		version = SemanticVersion(1)
 
+		self.assertEqual("", version.Prefix)
 		self.assertEqual(1, version.Major)
 		self.assertEqual(0, version.Minor)
+		self.assertEqual(0, version.Micro)
 		self.assertEqual(0, version.Patch)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual(0, version.Number)
+		self.assertEqual(0, version.Dev)
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
 	def test_MajorMinor(self):
 		version = SemanticVersion(1, 2)
 
+		self.assertEqual("", version.Prefix)
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
+		self.assertEqual(0, version.Micro)
 		self.assertEqual(0, version.Patch)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual(0, version.Number)
+		self.assertEqual(0, version.Dev)
 		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorPatch(self):
+	def test_MajorMinorMicro(self):
 		version = SemanticVersion(1, 2, 3)
 
+		self.assertEqual("", version.Prefix)
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
 		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual(0, version.Number)
+		self.assertEqual(0, version.Dev)
 		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevel(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha)
+
+		self.assertEqual("", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(0, version.Number)
+		self.assertEqual(0, version.Dev)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelNumber(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4)
+
+		self.assertEqual("", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(0, version.Dev)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelNumberDev(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5)
+
+		self.assertEqual("", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(5, version.Dev)
+		self.assertEqual(0, version.Build)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelNumberDevBuild(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6)
+
+		self.assertEqual("", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(5, version.Dev)
+		self.assertEqual(6, version.Build)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelNumberDevBuildPostfix(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p")
+
+		self.assertEqual("", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(5, version.Dev)
+		self.assertEqual(6, version.Build)
+		self.assertEqual("p", version.Postfix)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelDevNumberBuildPostfixPrefix(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix="v")
+
+		self.assertEqual("v", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(5, version.Dev)
+		self.assertEqual(6, version.Build)
+		self.assertEqual("p", version.Postfix)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelDevNumberBuildPostfixPrefixHash(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix="v", hash="abcdef")
+
+		self.assertEqual("v", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(5, version.Dev)
+		self.assertEqual(6, version.Build)
+		self.assertEqual("p", version.Postfix)
+		self.assertEqual(Flags.NoVCS, version.Flags)
+
+	def test_MajorMinorMicroReleaseLevelNumberDevBuildPostfixPrefixHashFlags(self):
+		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix="v", hash="abcdef", flags=Flags.Git)
+
+		self.assertEqual("v", version.Prefix)
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(3, version.Patch)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(4, version.Number)
+		self.assertEqual(5, version.Dev)
+		self.assertEqual(6, version.Build)
+		self.assertEqual("p", version.Postfix)
+		self.assertEqual("abcdef", version.Hash)
+		self.assertEqual(Flags.Git, version.Flags)
 
 	def test_Major_String(self):
 		with self.assertRaises(TypeError):
@@ -81,6 +215,70 @@ class Instantiation(TestCase):
 	def test_Major_Minor_Negative(self):
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, -2)
+
+	def test_Major_Micro_String(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, "3")
+
+	def test_Major_Micro_Negative(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2,-3)
+
+	def test_Major_ReleaseLevel_None(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2, 3, None)
+
+	def test_Major_ReleaseLevel_String(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, "RL")
+
+	def test_Major_ReleaseLevel_Final(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Final, 1)
+
+	def test_Major_Number_String(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, "4")
+
+	def test_Major_Number_Negative(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, -4)
+
+	def test_Major_Dev_String(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, "5")
+
+	def test_Major_Dev_Negative(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, -5)
+
+	def test_Major_Build_String(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build="6")
+
+	def test_Major_Build_Negative(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=-6)
+
+	def test_Major_Postfix_Integer(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix=7)
+
+	def test_Major_Prefix_Integer(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix=8)
+
+	def test_Major_Hash_Integer(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix="v", hash=9)
+
+	def test_Major_Flags_None(self):
+		with self.assertRaises(ValueError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix="v", hash="ab", flags=None)
+
+	def test_Major_Flags_String(self):
+		with self.assertRaises(TypeError):
+			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, build=6, postfix="p", prefix="v", hash="ab", flags="d")
 
 
 class Parsing(TestCase):
@@ -105,42 +303,42 @@ class Parsing(TestCase):
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(0, version.Minor)
-		self.assertEqual(0, version.Patch)
+		self.assertEqual(0, version.Micro)
 
 	def test_String_MajorMinor(self) -> None:
 		version = SemanticVersion.Parse("1.2")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
-		self.assertEqual(0, version.Patch)
+		self.assertEqual(0, version.Micro)
 
-	def test_String_MajorMinorPatch(self) -> None:
+	def test_String_MajorMinorMicro(self) -> None:
 		version = SemanticVersion.Parse("1.2.3")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
-		self.assertEqual(3, version.Patch)
+		self.assertEqual(3, version.Micro)
 
 	def test_vString(self) -> None:
 		version = SemanticVersion.Parse("v1.2.3")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
-		self.assertEqual(3, version.Patch)
+		self.assertEqual(3, version.Micro)
 
 	def test_iString(self) -> None:
 		version = SemanticVersion.Parse("i1.2.3")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
-		self.assertEqual(3, version.Patch)
+		self.assertEqual(3, version.Micro)
 
 	def test_rString(self) -> None:
 		version = SemanticVersion.Parse("r1.2.3")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
-		self.assertEqual(3, version.Patch)
+		self.assertEqual(3, version.Micro)
 
 
 class CompareVersions(TestCase):
@@ -388,7 +586,7 @@ class ValidatedWordSize(TestCase):
 
 		self.assertEqual(12, version.Major)
 		self.assertEqual(64, version.Minor)
-		self.assertEqual(255, version.Patch)
+		self.assertEqual(255, version.Micro)
 
 	def test_All8Bit_MajorOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
@@ -402,7 +600,7 @@ class ValidatedWordSize(TestCase):
 
 		self.assertIn("Version.Minor", str(ex.exception))
 
-	def test_All8Bit_PatchOutOfRange(self) -> None:
+	def test_All8Bit_MicroOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("12.64.256", WordSizeValidator(8))
 
@@ -413,7 +611,7 @@ class ValidatedWordSize(TestCase):
 
 		self.assertEqual(7, version.Major)
 		self.assertEqual(31, version.Minor)
-		self.assertEqual(255, version.Patch)
+		self.assertEqual(255, version.Micro)
 
 	def test_358Bit_MajorOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
@@ -427,7 +625,7 @@ class ValidatedWordSize(TestCase):
 
 		self.assertIn("Version.Minor", str(ex.exception))
 
-	def test_358Bit_PatchOutOfRange(self) -> None:
+	def test_358Bit_MicroOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("7.31.256", WordSizeValidator(8, majorBits=3, minorBits=5))
 
@@ -440,7 +638,7 @@ class ValidatedMaxValue(TestCase):
 
 		self.assertEqual(12, version.Major)
 		self.assertEqual(64, version.Minor)
-		self.assertEqual(255, version.Patch)
+		self.assertEqual(255, version.Micro)
 
 	def test_All255_MajorOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
@@ -454,7 +652,7 @@ class ValidatedMaxValue(TestCase):
 
 		self.assertIn("Version.Minor", str(ex.exception))
 
-	def test_All255_PatchOutOfRange(self) -> None:
+	def test_All255_MicroOutOfRange(self) -> None:
 		with self.assertRaises(ValueError) as ex:
 			_ = SemanticVersion.Parse("12.64.256",  MaxValueValidator(255))
 
@@ -477,7 +675,7 @@ class FormattingUsingRepr(TestCase):
 
 		self.assertEqual("1.2.0", repr(version))
 
-	def test_MajorMinorPatch(self) -> None:
+	def test_MajorMinorMicro(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("1.2.3", repr(version))
@@ -499,12 +697,12 @@ class FormattingUsingStr(TestCase):
 
 		self.assertEqual("1.2", str(version))
 
-	def test_MajorMinorPatch(self) -> None:
+	def test_MajorMinorMicro(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("1.2.3", str(version))
 
-	def test_MajorMinorPatchPrefix(self) -> None:
+	def test_MajorMinorMicroPrefix(self) -> None:
 		version = SemanticVersion(1, 2, 3, prefix="v")
 
 		self.assertEqual("v1.2.3", str(version))
@@ -537,7 +735,7 @@ class FormattingUsingFormat(TestCase):
 
 		self.assertEqual("2", f"{version:%m}")
 
-	def test_Patch(self) -> None:
+	def test_Micro(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("3", f"{version:%u}")

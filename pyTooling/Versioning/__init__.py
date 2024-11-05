@@ -341,7 +341,19 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			self._prefix = ""
 
-		# hash
+		if hash is not None:
+			if not isinstance(hash, str):
+				raise TypeError("Parameter 'hash' is not of type 'str'.")
+
+			self._parts |= Parts.Hash
+			self._hash = hash
+		else:
+			self._hash = ""
+
+		if flags is None:
+			raise ValueError("Parameter 'flags' is None.")
+		elif not isinstance(flags, Flags):
+			raise TypeError("Parameter 'flags' is not of type 'Flags'.")
 
 		self._flags = flags
 
@@ -447,7 +459,7 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		:return: The hash.
 		"""
-		return self._postfix
+		return self._hash
 
 	@readonly
 	def Flags(self) -> Flags:
