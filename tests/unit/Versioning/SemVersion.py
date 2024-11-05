@@ -48,7 +48,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Minor)
 		self.assertEqual(0, version.Patch)
 		self.assertEqual(0, version.Build)
-		self.assertEqual(Flags.Clean, version.Flags)
+		self.assertEqual(Flags.NoVCS, version.Flags)
 
 	def test_MajorMinor(self):
 		version = SemanticVersion(1, 2)
@@ -468,9 +468,9 @@ class FormattingUsingRepr(TestCase):
 		self.assertEqual("1.0.0", repr(version))
 
 	def test_MajorPrefix(self) -> None:
-		version = SemanticVersion(1, prefix="v")
+		version = SemanticVersion(1)
 
-		self.assertEqual("v1.0.0", repr(version))
+		self.assertEqual("1.0.0", repr(version))
 
 	def test_MajorMinor(self) -> None:
 		version = SemanticVersion(1, 2)
@@ -523,27 +523,27 @@ class FormattingUsingFormat(TestCase):
 		self.assertEqual("hello world", f"{version:hello world}")
 
 	def test_Percent(self) -> None:
-		version = SemanticVersion(1, 2, 3, prefix="v")
+		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("hello%world", f"{version:hello%%world}")
 
 	def test_Major(self) -> None:
-		version = SemanticVersion(1, 2, 3, prefix="v")
+		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("1", f"{version:%M}")
 
 	def test_Minor(self) -> None:
-		version = SemanticVersion(1, 2, 3, prefix="v")
+		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("2", f"{version:%m}")
 
 	def test_Patch(self) -> None:
-		version = SemanticVersion(1, 2, 3, prefix="v")
+		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("3", f"{version:%u}")
 
 	def test_Build(self) -> None:
-		version = SemanticVersion(1, 2, 3, prefix="v")
+		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("0", f"{version:%b}")
 

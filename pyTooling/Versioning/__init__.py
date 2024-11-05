@@ -40,6 +40,7 @@ from typing import Optional as Nullable, Union, Callable, Any
 try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
+	from pyTooling.Exceptions  import ToolingException
 	from pyTooling.Common      import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
@@ -47,6 +48,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	try:
 		from Decorators          import export, readonly
 		from MetaClasses         import ExtendedType, abstractmethod, mustoverride
+		from Exceptions          import ToolingException
 		from Common              import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Versioning] Could not import directly!")
@@ -56,7 +58,6 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 @export
 class Parts(Flag):
 	"""Enumeration describing parts of a version number that can be present."""
-
 	Unknown = 0     #: Undocumented
 	Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
 	Year = 1        #: Year is present. (e.g. X in ``XXXX.10``).
@@ -66,35 +67,38 @@ class Parts(Flag):
 	Micro = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
 	Patch = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
 	Day = 4         #: Day is present. (e.g. X in ``2024.10.ZZ``).
-	Build = 8       #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
-	Pre   = 16      #: Pre-release number is present.
-	Post  = 32      #: Post-release number is present.
-	Prefix = 64     #: Prefix is present.
-	Postfix = 128   #: Postfix is present.
+	Level = 8       #: Release level is present.
+	Dev = 16        #: Development part is present.
+	Build = 32      #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
+	Post  = 64      #: Post-release number is present.
+	Prefix = 128    #: Prefix is present.
+	Postfix = 256   #: Postfix is present.
+	Hash = 512      #: Hash is present.
 #		AHead   = 256
-# Serial for alpha/beta/rc
 
 
 @export
 class ReleaseLevel(Enum):
-	"""Enumeration describing parts of a version number that can be present."""
-	Unknown = 0
-	Alpha = 1
-	Beta = 2
-	Gamma = 3
-	Development = 5
-	ReleaseCandidate = 10
-	Final = 20
-	# Pre
-	# Post
+	"""Enumeration describing the version's maturity level."""
+	Final =             0  #:
+	ReleaseCandidate = 10  #:
+	Development =      20  #:
+	Gamma =            30  #:
+	Beta =             40  #:
+	Alpha =            50  #:
 
 
 @export
 class Flags(Flag):
 	"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
-
+	NoVCS = 0       #: No Version Control System VCS
 	Clean = 1       #: A versioned build was created from a *clean* working directory.
 	Dirty = 2       #: A versioned build was created from a *dirty* working directory.
+
+	CVS = 16        #: Concurrent Versions System (CVS)
+	SVN = 32        #: Subversion (SVN)
+	Git = 64        #: Git
+	Hg = 128        #: Mercurial (Hg)
 
 
 @export
@@ -189,24 +193,33 @@ def MaxValueValidator(
 class Version(metaclass=ExtendedType, slots=True):
 	"""Base-class for a version representation."""
 
-	_parts   : Parts  #: Integer flag enumeration of present parts in a version number.
-	_prefix  : str    #: Prefix string
-	_major   : int    #: Major number part of the version number.
-	_minor   : int    #: Minor number part of the version number.
-	_micro   : int    #: Micro number part of the version number.
-	_build   : int    #: Build number part of the version number.
-	_postfix : str    #: Postfix string
-	_flags   : Flags  #: State if the version in a working directory is clean or dirty compared to a tagged version.
+	_parts   : Parts         #: Integer flag enumeration of present parts in a version number.
+	_prefix  : str           #: Prefix string
+	_major   : int           #: Major number part of the version number.
+	_minor   : int           #: Minor number part of the version number.
+	_micro   : int           #: Micro number part of the version number.
+	_level   : ReleaseLevel  #: Release level (alpha, beta, rc, final, ...)
+	_number  : int           #: Release number (Python calls it serial)
+	_dev     : int           #: Development number
+	_build   : int           #: Build number part of the version number.
+	_postfix : str           #: Postfix string
+	_hash    : str           #: Hash from version control system.
+	_flags   : Flags         #: State if the version in a working directory is clean or dirty compared to a tagged version.
 
 	def __init__(
 		self,
-		major: int,
-		minor: Nullable[int] = None,
-		micro: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
-		postfix: Nullable[str] = None
+		major:   int,
+		minor:   Nullable[int] = None,
+		micro:   Nullable[int] = None,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:  Nullable[int] = None,
+		dev:     Nullable[int] = None,
+		*,
+		build:   Nullable[int] = None,
+		postfix: Nullable[str] = None,
+		prefix:  Nullable[str] = None,
+		hash:    Nullable[str] = None,
+		flags:   Flags = Flags.NoVCS
 	) -> None:
 		"""
 		Initializes a version number representation.
@@ -214,10 +227,14 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param major:       Major number part of the version number.
 		:param minor:       Minor number part of the version number.
 		:param micro:       Micro (patch) number part of the version number.
+		:param level:       Release level (alpha, beta, release candidate, final, ...) of the version number.
+		:param number:      Release number part (in combination with release level) of the version number.
+		:param dev:         Development number part of the version number.
 		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
+		:param prefix:      The version number's prefix.
+		:param hash:        Postfix string.
+		:param flags:       The version number's flags.
 		:raises TypeError:  If parameter 'major' is not of type int.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type int.
@@ -234,8 +251,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif major < 0:
 			raise ValueError("Parameter 'major' is negative.")
 
-		self._major = major
 		self._parts = Parts.Major
+		self._major = major
 
 		if minor is not None:
 			if not isinstance(minor, int):
@@ -243,8 +260,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			elif minor < 0:
 				raise ValueError("Parameter 'minor' is negative.")
 
-			self._minor = minor
 			self._parts |= Parts.Minor
+			self._minor = minor
 		else:
 			self._minor = 0
 
@@ -254,10 +271,46 @@ class Version(metaclass=ExtendedType, slots=True):
 			elif micro < 0:
 				raise ValueError("Parameter 'micro' is negative.")
 
-			self._micro = micro
 			self._parts |= Parts.Micro
+			self._micro = micro
 		else:
 			self._micro = 0
+
+		if level is None:
+			raise ValueError("Parameter 'level' is None.")
+		elif not isinstance(level, ReleaseLevel):
+			raise TypeError("Parameter 'level' is not of type 'ReleaseLevel'.")
+		elif level is ReleaseLevel.Final:
+			if number is not None:
+				raise ValueError("Parameter 'number' must be None, if parameter 'level' is 'Final'.")
+
+			self._parts |= Parts.Level
+			self._level = level
+			self._number = 0
+		else:
+			self._parts |= Parts.Level
+			self._level = level
+
+			if number is not None:
+				if not isinstance(number, int):
+					raise TypeError("Parameter 'number' is not of type 'int'.")
+				elif number < 0:
+					raise ValueError("Parameter 'number' is negative.")
+
+				self._number = number
+			else:
+				self._number = 0
+
+		if dev is not None:
+			if not isinstance(dev, int):
+				raise TypeError("Parameter 'dev' is not of type 'int'.")
+			elif dev < 0:
+				raise ValueError("Parameter 'dev' is negative.")
+
+			self._parts |= Parts.Dev
+			self._dev = dev
+		else:
+			self._dev = 0
 
 		if build is not None:
 			if not isinstance(build, int):
@@ -270,23 +323,25 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			self._build = 0
 
-		if prefix is not None:
-			if not isinstance(prefix, str):
-				raise TypeError("Parameter 'prefix' is not of type 'str'.")
-
-			self._prefix = prefix
-			self._parts |= Parts.Prefix
-		else:
-			self._prefix = ""
-
 		if postfix is not None:
 			if not isinstance(postfix, str):
 				raise TypeError("Parameter 'postfix' is not of type 'str'.")
 
-			self._postfix = postfix
 			self._parts |= Parts.Postfix
+			self._postfix = postfix
 		else:
 			self._postfix = ""
+
+		if prefix is not None:
+			if not isinstance(prefix, str):
+				raise TypeError("Parameter 'prefix' is not of type 'str'.")
+
+			self._parts |= Parts.Prefix
+			self._prefix = prefix
+		else:
+			self._prefix = ""
+
+		# hash
 
 		self._flags = flags
 
@@ -303,6 +358,15 @@ class Version(metaclass=ExtendedType, slots=True):
 		:return: A flag enumeration of used version number parts.
 		"""
 		return self._parts
+
+	@readonly
+	def Prefix(self) -> str:
+		"""
+		Read-only property to access the version number's prefix.
+
+		:return: The prefix of the version number.
+		"""
+		return self._prefix
 
 	@readonly
 	def Major(self) -> int:
@@ -332,6 +396,33 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._micro
 
 	@readonly
+	def Level(self) -> ReleaseLevel:
+		"""
+		Read-only property to access the release level.
+
+		:return: The release level.
+		"""
+		return self._level
+
+	@readonly
+	def Number(self) -> int:
+		"""
+		Read-only property to access the release number.
+
+		:return: The release number.
+		"""
+		return self._number
+
+	@readonly
+	def Dev(self) -> int:
+		"""
+		Read-only property to access the development number.
+
+		:return: The development number.
+		"""
+		return self._dev
+
+	@readonly
 	def Build(self) -> int:
 		"""
 		Read-only property to access the build number.
@@ -341,24 +432,6 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._build
 
 	@readonly
-	def Flags(self) -> Flags:
-		"""
-		Read-only property to access the version number's flags.
-
-		:return: The flags of the version number.
-		"""
-		return self._flags
-
-	@readonly
-	def Prefix(self) -> str:
-		"""
-		Read-only property to access the version number's prefix.
-
-		:return: The prefix of the version number.
-		"""
-		return self._prefix
-
-	@readonly
 	def Postfix(self) -> str:
 		"""
 		Read-only property to access the version number's postfix.
@@ -366,6 +439,24 @@ class Version(metaclass=ExtendedType, slots=True):
 		:return: The postfix of the version number.
 		"""
 		return self._postfix
+
+	@readonly
+	def Hash(self) -> str:
+		"""
+		Read-only property to access the version number's hash.
+
+		:return: The hash.
+		"""
+		return self._postfix
+
+	@readonly
+	def Flags(self) -> Flags:
+		"""
+		Read-only property to access the version number's flags.
+
+		:return: The flags of the version number.
+		"""
+		return self._flags
 
 	def _equal(self, left: "Version", right: "Version") -> Nullable[bool]:
 		"""
@@ -379,6 +470,9 @@ class Version(metaclass=ExtendedType, slots=True):
 			(left._major == right._major) and
 			(left._minor == right._minor) and
 			(left._micro == right._micro) and
+			(left._level == right._level) and
+			(left._number == right._number) and
+			(left._dev == right._dev) and
 			(left._build == right._build)
 		)
 
@@ -654,8 +748,6 @@ class Version(metaclass=ExtendedType, slots=True):
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
-	_level:  Nullable[ReleaseLevel]  #: Release level
-	_serial: Nullable[int]           #:
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead   : int = 0
 
@@ -664,13 +756,15 @@ class SemanticVersion(Version):
 		major:   int,
 		minor:   Nullable[int] = None,
 		micro:   Nullable[int] = None,
-		build:   Nullable[int] = None,
 		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		serial:  Nullable[int] = None,
+		number:  Nullable[int] = None,
+		dev:     Nullable[int] = None,
 		*,
-		flags:   Flags = Flags.Clean,
+		build:   Nullable[int] = None,
+		postfix: Nullable[str] = None,
 		prefix:  Nullable[str] = None,
-		postfix: Nullable[str] = None
+		hash:    Nullable[str] = None,
+		flags:   Flags = Flags.NoVCS
 	) -> None:
 		"""
 		Initializes a semantic version number representation.
@@ -695,10 +789,7 @@ class SemanticVersion(Version):
 		:raises TypeError:  If parameter 'prefix' is not of type str.
 		:raises TypeError:  If parameter 'postfix' is not of type str.
 		"""
-		super().__init__(major, minor, micro, build, flags, prefix, postfix)
-
-		self._level = level
-		self._serial = serial
+		super().__init__(major, minor, micro, level, number, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "SemanticVersion":
@@ -760,7 +851,7 @@ class SemanticVersion(Version):
 
 		flags = Flags.Clean
 
-		version = cls(major, minor, micro, build, flags, prefix)
+		version = cls(major, minor, micro, build=build, prefix=prefix, flags=flags)
 		if validator is not None and not validator(version):
 			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
@@ -980,21 +1071,79 @@ class SemanticVersion(Version):
 
 
 @export
+class ExtendedSemanticVersion(SemanticVersion):
+	"""Representation of an extended semantic version number like ``3.7.12.post3``."""
+
+	_pre:  Nullable[int]  #: Pre-release version number part.
+	_post: Nullable[int]  #: Post-release version number part.
+
+	def __init__(
+		self,
+		major: int,
+		minor: Nullable[int] = None,
+		micro: Nullable[int] = None,
+		build: Nullable[int] = None,
+		level: Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		serial: Nullable[int] = None,
+		pre: Nullable[int] = None,
+		post: Nullable[int] = None,
+		*,
+		flags: Flags = Flags.Clean,
+		prefix: Nullable[str] = None,
+		postfix: Nullable[str] = None
+	) -> None:
+		"""
+		Initializes a semantic version number representation.
+
+		:param major:       Major number part of the version number.
+		:param minor:       Minor number part of the version number.
+		:param micro:       Micro (patch) number part of the version number.
+		:param build:       Build number part of the version number.
+		:param level:       tbd
+		:param serial:      tbd
+		:param pre:         tbd
+		:param post:        tbd
+		:param flags:       The version number's flags.
+		:param prefix:      The version number's prefix.
+		:param postfix:     The version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises ValueError: If parameter 'major' is a negative number.
+		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises ValueError: If parameter 'minor' is a negative number.
+		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'prefix' is not of type str.
+		:raises TypeError:  If parameter 'postfix' is not of type str.
+		"""
+		super().__init__(major, minor, micro, build, level, serial)
+
+		self._pre = pre
+		self._post = post
+
+@export
 class PythonVersion(SemanticVersion):
 	@classmethod
 	def FromSysVersionInfo(cls) -> "PythonVersion":
 		from sys import version_info
 
-		if version_info.releaselevel == "alpha":
-			rl = ReleaseLevel.Alpha
-		elif version_info.releaselevel == "beta":
-			rl = ReleaseLevel.Beta
-		elif version_info.releaselevel == "candidate":
-			rl = ReleaseLevel.ReleaseCandidate
-		elif version_info.releaselevel == "final":
+		if version_info.releaselevel == "final":
 			rl = ReleaseLevel.Final
+			number = None
+		else:
+			number = version_info.serial
 
-		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, serial=version_info.serial)
+			if version_info.releaselevel == "alpha":
+				rl = ReleaseLevel.Alpha
+			elif version_info.releaselevel == "beta":
+				rl = ReleaseLevel.Beta
+			elif version_info.releaselevel == "candidate":
+				rl = ReleaseLevel.ReleaseCandidate
+			else:
+				raise ToolingException(f"Unsupported release level '{version_info.releaselevel}'.")
+
+		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
 
 
 @export
@@ -1032,7 +1181,7 @@ class CalendarVersion(Version):
 		:raises TypeError:  If parameter 'prefix' is not of type str.
 		:raises TypeError:  If parameter 'postfix' is not of type str.
 		"""
-		super().__init__(major, minor, micro, build, flags, prefix, postfix)
+		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["CalendarVersion"], bool]] = None) -> "CalendarVersion":
