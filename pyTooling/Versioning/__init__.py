@@ -520,22 +520,22 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return None
 
-	def _minimum(self, left: "Version", right: "Version") -> Nullable[bool]:
-		exactMajor = Parts.Minor in right._parts
-		exactMinor = Parts.Micro in right._parts
+	def _minimum(self, actual: "Version", expected: "Version") -> Nullable[bool]:
+		exactMajor = Parts.Minor in expected._parts
+		exactMinor = Parts.Micro in expected._parts
 
-		if exactMajor and left._major != right._major:
+		if exactMajor and actual._major != expected._major:
 			return False
-		elif not exactMajor and left._major >= right._major:
-			return True
-
-		if exactMinor and left._minor != right._minor:
+		elif not exactMajor and actual._major < expected._major:
 			return False
-		elif not exactMinor and left._minor >= right._minor:
-			return True
 
-		if Parts.Micro in right._parts:
-			return left._micro >= right._micro
+		if exactMinor and actual._minor != expected._minor:
+			return False
+		elif not exactMinor and actual._minor < expected._minor:
+			return False
+
+		if Parts.Micro in expected._parts:
+			return actual._micro >= expected._micro
 
 		return True
 
