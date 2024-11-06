@@ -739,7 +739,7 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return not self.__lt__(other)
 
-	def __imod__(self, other: Union["Version", str, int, None]) -> bool:
+	def __rshift__(self, other: Union["Version", str, int, None]) -> bool:
 		if other is None:
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
@@ -846,9 +846,9 @@ class SemanticVersion(Version):
 		split = versionString.split(".")
 		length = len(split)
 		major = int(split[0])
-		minor = 0
-		micro = 0
-		build = 0
+		minor = None
+		micro = None
+		build = None
 		parts |= Parts.Major
 
 		if length >= 2:
@@ -1028,8 +1028,8 @@ class SemanticVersion(Version):
 		"""
 		return super().__ge__(other)
 
-	def __imod__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
-		return super().__imod__(other)
+	def __rshift__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+		return super().__rshift__(other)
 
 	def __format__(self, formatSpec: str) -> str:
 		"""

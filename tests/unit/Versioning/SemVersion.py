@@ -439,6 +439,26 @@ class CompareVersions(TestCase):
 				v2 = SemanticVersion.Parse(t[1])
 				self.assertGreaterEqual(v1, v2)
 
+	def test_Minimum(self) -> None:
+		l = [
+			# ver      req     exp
+			("0.0.1", "0.0.0", True),
+			("0.0.1", "0.0.1", True),
+			("0.0.1", "0.0.2", False),
+			("0.1.0", "0.0", True),
+			("0.1.0", "0.1", True),
+			("0.1.0", "0.2", False),
+			("1.0.0", "0", True),
+			("1.0.0", "1", True),
+			("1.0.0", "2", False),
+		]
+
+		for ver, req, exp in l:
+			with self.subTest(minimum=(ver, req)):
+				version = SemanticVersion.Parse(ver)
+				requirement = SemanticVersion.Parse(req)
+				self.assertEqual(exp, version >> requirement, f"{version} ~= {requirement}")
+
 
 class CompareNone(TestCase):
 	def test_Equal(self):
@@ -477,6 +497,12 @@ class CompareNone(TestCase):
 		with self.assertRaises(ValueError):
 			_ = version >= None
 
+	def test_Minimum(self):
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError):
+			_ = version >> None
+
 
 class CompareString(TestCase):
 	def test_Equal(self):
@@ -509,6 +535,11 @@ class CompareString(TestCase):
 
 		self.assertGreaterEqual("1.2.3", version)
 
+	def test_Minimum(self):
+		version = SemanticVersion(1, 2, 3)
+
+		self.assertTrue(version >> "1.2.3")
+
 
 class CompareInteger(TestCase):
 	def test_Equal(self):
@@ -540,6 +571,11 @@ class CompareInteger(TestCase):
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertGreaterEqual(2, version)
+
+	def test_Minimum(self):
+		version = SemanticVersion(1, 2, 3)
+
+		self.assertTrue(version >> 1)
 
 
 class CompareOtherType(TestCase):
@@ -578,6 +614,12 @@ class CompareOtherType(TestCase):
 
 		with self.assertRaises(TypeError):
 			_ = version >= 1.2
+
+	def test_Minimum(self):
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(TypeError):
+			_ = version >> 1.2
 
 
 class ValidatedWordSize(TestCase):
