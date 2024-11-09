@@ -81,11 +81,77 @@ class Parts(Flag):
 @export
 class ReleaseLevel(Enum):
 	"""Enumeration describing the version's maturity level."""
-	Final =             0  #:
-	ReleaseCandidate = 10  #:
-	Development =      20  #:
-	Beta =             30  #:
-	Alpha =            40  #:
+	Final =              0  #:
+	ReleaseCandidate = -10  #:
+	Development =      -20  #:
+	Beta =             -30  #:
+	Alpha =            -40  #:
+
+	def __eq__(self, other: Any):
+		if isinstance(other, str):
+			other = ReleaseLevel(other)
+		if not isinstance(other, ReleaseLevel):
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+			raise ex
+
+		return self is other
+
+	def __ne__(self, other: Any):
+		if isinstance(other, str):
+			other = ReleaseLevel(other)
+		if not isinstance(other, ReleaseLevel):
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+			raise ex
+
+		return self is not other
+
+	def __lt__(self, other: Any):
+		if isinstance(other, str):
+			other = ReleaseLevel(other)
+		if not isinstance(other, ReleaseLevel):
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+			raise ex
+
+		return self.value < other.value
+
+	def __le__(self, other: Any):
+		if isinstance(other, str):
+			other = ReleaseLevel(other)
+		if not isinstance(other, ReleaseLevel):
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+			raise ex
+
+		return self.value <= other.value
+
+	def __gt__(self, other: Any):
+		if isinstance(other, str):
+			other = ReleaseLevel(other)
+		if not isinstance(other, ReleaseLevel):
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+			raise ex
+
+		return self.value > other.value
+
+	def __ge__(self, other: Any):
+		if isinstance(other, str):
+			other = ReleaseLevel(other)
+		if not isinstance(other, ReleaseLevel):
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+			raise ex
+
+		return self.value >= other.value
 
 	def __str__(self) -> str:
 		if self is ReleaseLevel.Final:
@@ -521,8 +587,10 @@ class Version(metaclass=ExtendedType, slots=True):
 			(left._micro == right._micro) and
 			(left._releaseLevel == right._releaseLevel) and
 			(left._releaseNumber == right._releaseNumber) and
+			(left._post == right._post) and
 			(left._dev == right._dev) and
-			(left._build == right._build)
+			(left._build == right._build) and
+			(left._postfix == right._postfix)
 		)
 
 	def _compare(self, left: "Version", right: "Version") -> Nullable[bool]:
@@ -548,6 +616,26 @@ class Version(metaclass=ExtendedType, slots=True):
 		if left._micro < right._micro:
 			return True
 		elif left._micro > right._micro:
+			return False
+
+		if left._releaseLevel < right._releaseLevel:
+			return True
+		elif left._releaseLevel > right._releaseLevel:
+			return False
+
+		if left._releaseNumber < right._releaseNumber:
+			return True
+		elif left._releaseNumber > right._releaseNumber:
+			return False
+
+		if left._post < right._post:
+			return True
+		elif left._post > right._post:
+			return False
+
+		if left._dev < right._dev:
+			return True
+		elif left._dev > right._dev:
 			return False
 
 		if left._build < right._build:

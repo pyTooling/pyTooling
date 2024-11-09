@@ -423,7 +423,7 @@ Common Classes
                  def test_ObjectSize(self) -> None:
                    pass
 
-         .. tab-item:: SemanticVersion
+         .. tab-item:: Version Classes
             :selected:
 
             .. code-block:: Python

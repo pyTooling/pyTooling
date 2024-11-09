@@ -16,7 +16,7 @@ Semantic Versioning
 
 The :class:`~pyTooling.Versioning.SemanticVersion` class represents of a version number like ``v3.7.12``. It consists of
 a major, minor and micro number. The micro number is also known as patch number. The minor and micro numbers are
-optional, but usually used by most semantic version numbers. In addition, further optional parts can be added like a
+optional, but usually used by most semantic version numbering schemes. In addition, optional parts can be added like a
 prefix, a postfix or a build number.
 
 .. hint::
@@ -38,7 +38,7 @@ prefix, a postfix or a build number.
 
       .. rubric:: Direct Instantiation
 
-      Alternatively, a semantic version can be constructed from parts like major, minor and micro numbers.
+      A semantic version can be constructed from parts like major, minor and micro numbers.
 
       .. code-block:: python
 
@@ -47,8 +47,9 @@ prefix, a postfix or a build number.
 
       .. rubric:: Construction from String
 
-      A semantic version can be created from a string containing a semantic version number by using the class-method
-      :meth:`~pyTooling.Versioning.SemanticVersion.Parse`. The string is parsed and a semantic version gets returned.
+      Alternatively, a semantic version can be created from a string containing a semantic version number by using the
+      class-method :meth:`~pyTooling.Versioning.SemanticVersion.Parse`. The string is parsed and a semantic version gets
+      returned.
 
       .. code-block:: python
 
@@ -84,12 +85,7 @@ prefix, a postfix or a build number.
         (version), ``rev`` (revision).
 
       Comparison operators
-        Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``%=``.
-
-      .. rubric:: Missing Features
-
-      * release-level: additional labels like ``dev``, ``rc``, ``pl``, ``alpha``
-      * pre-version and post-version
+        Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
 
    .. grid-item::
       :columns: 6
@@ -110,6 +106,10 @@ prefix, a postfix or a build number.
              pass
 
            @readonly
+           def Prefix(self) -> str:
+             pass
+
+           @readonly
            def Major(self) -> int:
              pass
 
@@ -126,19 +126,35 @@ prefix, a postfix or a build number.
              pass
 
            @readonly
+           def ReleaseLevel(self) -> ReleaseLevel:
+             pass
+
+           @readonly
+           def ReleaseNumber(self) -> int:
+             pass
+
+           @readonly
+           def Post(self) -> int:
+             pass
+
+           @readonly
+           def Dev(self) -> int:
+             pass
+
+           @readonly
            def Build(self) -> int:
              pass
 
            @readonly
-           def Flags(self) -> Flags:
-             pass
-
-           @readonly
-           def Prefix(self) -> str:
-             pass
-
-           @readonly
            def Postfix(self) -> str:
+             pass
+
+           @readonly
+           def Hash(self) -> str:
+             pass
+
+           @readonly
+           def Flags(self) -> Flags:
              pass
 
            def __eq__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
