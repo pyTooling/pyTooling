@@ -68,24 +68,58 @@ prefix, a postfix or a build number.
 
       .. rubric:: Features
 
-      Major number
-        Represents the major version number in semantic version.
-
-      Minor number
-        Represents the minor version number in semantic version.
-
-      Micro number
-        Represents the micro or patch version number in semantic version.
-
-      Build number
-        Represents the build number.
-
       Prefix string
         Represents the prefix like: ``v`` (version), ``r`` (revision), ``i`` (internal version/release), ``ver``
         (version), ``rev`` (revision).
 
+        :green:`v`\ 1.2.3
+
+      Major number
+        Represents the major version number in semantic version.
+
+        v\ :green:`1`\ .2.3
+
+      Minor number
+        Represents the minor version number in semantic version.
+
+        v1.\ :green:`2`\ .3
+
+      Micro number
+        Represents the micro or patch version number in semantic version.
+
+        v1.2.\ :green:`3`
+
+      Build number
+        Represents the build number.
+
+        v1.2.3.\ :green:`4`
+
+      Release Level / Release number
+        Distinguishes if a version is in *alpha*, *beta*, *release candidate* or *final* release level.
+
+        v1.2.3.\ :green:`alpha4` |br|
+        v1.2.3.\ :green:`beta4` |br|
+        v1.2.3.\ :green:`rc4`
+
+      Post number
+        tbd
+
+        v1.2.3.\ :green:`post4`
+
+      Development number
+        tbd
+
+        v1.2.3.\ :green:`dev4`
+
+      Postfix string
+        v1.2.3+\ :green:`deb11u5`
+
       Comparison operators
         Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
+
+      String formatting
+        The version number can be formatted as a string with a fixed formatting pattern based on present version parts
+        as well as a user-defined formatting via :meth:`~pyTooling.Versioning.SemanticVersion.__format__`
 
    .. grid-item::
       :columns: 6

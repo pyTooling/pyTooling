@@ -86,9 +86,30 @@ Features
    .. grid-item::
       :columns: 6
 
-      .. todo::
+      Name
+        A stopwatch can be named at creation time.
 
-         STOPWATCH:: Needs documentation for stop watch
+      Starting and stopping
+        The stopwatch can be started and stopped. Once stopped, no further start or pause/resume is possible. A
+        stopwatch can't be restarted. A new stopwatch object should be created and the old can be destroyed.
+
+        The stopwatch collects the absolute start (begin) and stop (end) times. It then provides a duration from start
+        to stop operation.
+
+      Pause and resume
+        A stopwatch can be paused and resumed.
+
+      Split times
+        tbd
+
+      Iterating split times
+        tbd
+
+      Using in a ``with``-statement
+        tbd
+
+      State of a stopwatch
+        tbd
 
    .. grid-item::
       :columns: 6

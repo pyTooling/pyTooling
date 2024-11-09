@@ -1232,9 +1232,9 @@ class SemanticVersion(Version):
 
 	def __str__(self) -> str:
 		"""
-		Return a string representation of this version number with prefix ``v``.
+		Return a string representation of this version number.
 
-		:returns: Version number representation including a prefix.
+		:returns: Version number representation.
 		"""
 		result = self._prefix if Parts.Prefix in self._parts else ""
 		result += f"{self._major}"  # major is always present
@@ -1279,6 +1279,27 @@ class PythonVersion(SemanticVersion):
 
 		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
 
+	def __str__(self) -> str:
+		"""
+		Return a string representation of this version number.
+
+		:returns: Version number representation.
+		"""
+		result = self._prefix if Parts.Prefix in self._parts else ""
+		result += f"{self._major}"  # major is always present
+		result += f".{self._minor}" if Parts.Minor in self._parts else ""
+		result += f".{self._micro}" if Parts.Micro in self._parts else ""
+		if self._releaseLevel is ReleaseLevel.Alpha:
+			result += f"a{self._releaseNumber}"
+		elif self._releaseLevel is ReleaseLevel.Beta:
+			result += f"b{self._releaseNumber}"
+		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
+			result += f"rc{self._releaseNumber}"
+		result += f".post{self._post}" if Parts.Post in self._parts else ""
+		result += f".dev{self._dev}" if Parts.Dev in self._parts else ""
+		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""
+
+		return result
 
 @export
 class CalendarVersion(Version):
