@@ -6,11 +6,11 @@ on:
 
 jobs:
   PerformanceTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r1
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Performance
       python_version_list: "3.12 3.13"  # pypy-3.10"
-      system_list: "ubuntu windows macos"
+      system_list: "ubuntu windows macos macos-arm"
 
   PerformanceTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev

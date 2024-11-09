@@ -38,14 +38,14 @@ from enum                    import Flag, auto
 try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Versioning  import SemanticVersion
+	from pyTooling.Versioning  import PythonVersion
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Platform] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, mixin
-		from Versioning          import SemanticVersion
+		from MetaClasses         import ExtendedType
+		from Versioning          import PythonVersion
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Platform] Could not import directly!")
 		raise ex
@@ -60,22 +60,6 @@ class PythonImplementation(Flag):
 
 	CPython = 1
 	PyPy = 2
-
-
-@export
-class PythonVersion(SemanticVersion):
-	def __init__(self) -> None:
-		from sys import version_info
-
-		super().__init__(version_info.major, version_info.minor, version_info.micro)
-
-	def __eq__(self, other):
-		parts = other.split(".")
-		for a, b in zip(parts, (self._major, self._minor, self._patch)):
-			if int(a) != b:
-				return False
-
-		return True
 
 
 @export
@@ -164,7 +148,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			self._pythonImplementation = PythonImplementation.Unknown
 
 		# Discover the Python version
-		self._pythonVersion = PythonVersion()
+		self._pythonVersion = PythonVersion.FromSysVersionInfo()
 
 		# Discover the platform
 		self._platform = Platforms.Unknown
@@ -198,11 +182,17 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 				if sysconfig_platform == "mingw_i686":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
-				elif sysconfig_platform == "mingw_x86_64":
+				elif sysconfig_platform == "mingw_x86_64_msvcrt_gnu":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64
-				elif sysconfig_platform == "mingw_x86_64_ucrt":
+				elif sysconfig_platform == "mingw_x86_64_ucrt_gnu":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
-				elif sysconfig_platform == "mingw_x86_64_clang":
+				elif sysconfig_platform == "mingw_x86_64_ucrt_llvm":
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
+				elif sysconfig_platform == "mingw_x86_64":        # pragma: no cover
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64
+				elif sysconfig_platform == "mingw_x86_64_ucrt":   # pragma: no cover
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
+				elif sysconfig_platform == "mingw_x86_64_clang":  # pragma: no cover
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
 				else:  # pragma: no cover
 					raise Exception(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
