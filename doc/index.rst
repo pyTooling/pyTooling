@@ -382,12 +382,13 @@ Common Classes
         APIs offers a comprehensive answer. pyTooling provides a :ref:`CurrentPlatform <COMMON/CurrentPlatform>`
         singleton summarizing multiple platform APIs into a single class instance.
       * :ref:`Representations of version numbers <VERSIONING>`: While Python itself has a good versioning schema, there
-        are no classes provided to abstract version numbers. pyTooling provides such representations following semantic
-        versioning (SemVer) and calendar versioning (CalVer) schemes. It's provided by the :mod:`pyTooling.Versioning`
-        module.
-      * :ref:`Measuring execution times <COMMON/Stopwatch>` can be achieved by using a stopwatch implementation with
-        start, pause, resume, split and stop features. Internally, a high resolution clock is used. The stopwatch can
-        also be used in a ``with``-statement.
+        are no classes provided to abstract a version numbers. pyTooling provides such representations following
+        semantic versioning (SemVer) and calendar versioning (CalVer) schemes. The implementation can parse many common
+        formats and allows user defined formatting. In addition, versions can be compared with various operators
+        including PIPs ``~=`` operator.
+      * :ref:`Measuring execution times <COMMON/Stopwatch>` can be achieved by using a stopwatch implementation
+        providing start, pause, resume, split and stop features. Internally, Python's *high resolution clock* is used.
+        The stopwatch also provides a context manager, so it can be used in a ``with``-statement.
 
    .. grid-item::
       :columns: 6
@@ -423,16 +424,30 @@ Common Classes
                    pass
 
          .. tab-item:: SemanticVersion
+            :selected:
 
             .. code-block:: Python
 
-               from pyTooling.Versioning import SemanticVersion
+               from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion
 
-               version = SemanticVersion("2.5.4")
+               version = SemanticVersion("v2.5.4")
 
                version.Major
                version.Minor
                version.Patch
+
+               if version >= "2.5":
+                 print(f"{version:%p%M.%m.%u}")
+
+               # Python versioning from sys.version_info
+               from pyTooling.Versioning import PythonVersion, CalendarVersion
+
+               pythonVersion = PythonVersion.FromSysVersionInfo()
+
+               # Calendar versioning
+               from pyTooling.Versioning import CalendarVersion
+
+               osvvmVersion = CalendarVersion.Parse("2024.07")
 
          .. tab-item:: Stopwatch
 
@@ -451,6 +466,15 @@ Common Classes
                sw.Resume()
                # do something
                sw.Stop()
+
+               print(f"Start:      {sw.StartTime}")
+               print(f"Stop:       {sw.StopTime}")
+               print(f"Duration:   {sw.Duration}")
+               print(f"Activity:   {sw.Activity}")
+               print(f"Inactivity: {sw.Inactivity}")
+               print("Splits:")
+               for duration, activity in sw:
+                  print(f"  {'running for' if activity else 'paused for '} {duration}")
 
 
 Configuration

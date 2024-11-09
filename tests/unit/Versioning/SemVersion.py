@@ -886,7 +886,7 @@ class RoundTrip(TestCase):
 			"v1.2.3.rc1+deb25",
 			"1.2.rc3.post2",
 			"1.2.rc3.post2.dev4",
-			"1.2.alpha3.post2.dev4"
+			"v1.2.3.alpha4.post5.dev6+deb11u3"
 		]
 
 		for ver in l:

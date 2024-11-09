@@ -11,7 +11,7 @@ Stopwatch
    .. grid-item::
       :columns: 6
 
-      The stopwatch implements a solution to measure and collect timings. For example code execution times or test run times.
+      The stopwatch implements a solution to measure and collect timings: e.g. code execution times or test run times.
 
       The time measurement can be :meth:`started <pyTooling.Stopwatch.Stopwatch.Start>`, :meth:`paused <pyTooling.Stopwatch.Stopwatch.Pause>`,
       :meth:`resumed <pyTooling.Stopwatch.Stopwatch.Resume>` and :meth:`stopped <pyTooling.Stopwatch.Stopwatch.Stop>`. More
