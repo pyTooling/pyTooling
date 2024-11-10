@@ -20,7 +20,8 @@ jobs:
     with:
       name: Platform
       python_version_list: ""
-      system_list: "ubuntu windows macos macos-arm mingw64 ucrt64 clang64"
+      system_list: "ubuntu windows macos macos-arm mingw32 mingw64 ucrt64 clang64"
+      disable_list: "mingw32:*"  # no ruamel-yaml for MinGW32
 
   UnitTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@dev
