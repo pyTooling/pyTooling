@@ -180,7 +180,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				else:  # pragma: no cover
 					raise Exception(f"Unknown architecture '{machine}' for Windows.")
 
-				if sysconfig_platform == "mingw_i686":
+				if sysconfig_platform == "mingw_i686_msvcrt_gnu":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
 				elif sysconfig_platform == "mingw_x86_64_msvcrt_gnu":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64
@@ -188,6 +188,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.UCRT64
 				elif sysconfig_platform == "mingw_x86_64_ucrt_llvm":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
+				elif sysconfig_platform == "mingw_i686":          # pragma: no cover
+					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
 				elif sysconfig_platform == "mingw_x86_64":        # pragma: no cover
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW64
 				elif sysconfig_platform == "mingw_x86_64_ucrt":   # pragma: no cover
