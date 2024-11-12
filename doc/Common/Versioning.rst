@@ -121,6 +121,24 @@ prefix, a postfix or a build number.
         The version number can be formatted as a string with a fixed formatting pattern based on present version parts
         as well as a user-defined formatting via :meth:`~pyTooling.Versioning.SemanticVersion.__format__`
 
+      .. rubric:: Examples
+
+      .. hlist::
+         :columns: 3
+
+         * ``v1``
+         * ``r1.12``
+         * ``i1.2.13+linux_86_64``
+         * ``rev1.2.3.14``
+         * ``v1.2.3-dev``
+         * ``v1.2.3.dev23``
+         * ``v1.2.3.alpha1``
+         * ``v1.2.3.beta1``
+         * ``v1.2.3.rc1+deb25``
+         * ``1.2.8.post2``
+         * ``1.2.8.post2.dev4``
+         * ``v1.2.3.alpha4.post5.dev6+deb11u35``
+
    .. grid-item::
       :columns: 6
 
