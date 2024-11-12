@@ -214,16 +214,16 @@ def WordSizeValidator(
 
 	def validator(version: SemanticVersion) -> bool:
 		if Parts.Major in version._parts and version._major > majorMax:
-			raise ValueError(f"Field 'Version.Major' > {max}.")
+			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
 		if Parts.Minor in version._parts and version._minor > minorMax:
-			raise ValueError(f"Field 'Version.Minor' > {max}.")
+			raise ValueError(f"Field 'Version.Minor' > {minorMax}.")
 
 		if Parts.Micro in version._parts and version._micro > microMax:
-			raise ValueError(f"Field 'Version.Micro' > {max}.")
+			raise ValueError(f"Field 'Version.Micro' > {microMax}.")
 
 		if Parts.Build in version._parts and version._build > buildMax:
-			raise ValueError(f"Field 'Version.Build' > {max}.")
+			raise ValueError(f"Field 'Version.Build' > {buildMax}.")
 
 		return True
 
@@ -253,16 +253,16 @@ def MaxValueValidator(
 
 	def validator(version: SemanticVersion) -> bool:
 		if Parts.Major in version._parts and version._major > majorMax:
-			raise ValueError(f"Field 'Version.Major' > {max}.")
+			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
 		if Parts.Minor in version._parts and version._minor > minorMax:
-			raise ValueError(f"Field 'Version.Minor' > {max}.")
+			raise ValueError(f"Field 'Version.Minor' > {minorMax}.")
 
 		if Parts.Micro in version._parts and version._micro > microMax:
-			raise ValueError(f"Field 'Version.Micro' > {max}.")
+			raise ValueError(f"Field 'Version.Micro' > {microMax}.")
 
 		if Parts.Build in version._parts and version._build > buildMax:
-			raise ValueError(f"Field 'Version.Build' > {max}.")
+			raise ValueError(f"Field 'Version.Build' > {buildMax}.")
 
 		return True
 

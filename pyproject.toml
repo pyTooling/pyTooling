@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools ~= 75.3",
+  "setuptools ~= 75.4",
   "wheel ~= 0.45",
   "pyTooling ~= 8.0"
 ]
@@ -11,7 +11,7 @@ line-length = 120
 
 [tool.mypy]
 files = ["pyTooling"]
-python_version = "3.12"
+python_version = "3.13"
 #ignore_missing_imports = true
 strict = true
 pretty = true
@@ -30,6 +30,7 @@ filterwarnings = [
 	"error::DeprecationWarning",
 	"error::PendingDeprecationWarning"
 ]
+junit_logging = "all"
 
 [tool.interrogate]
 color = true
