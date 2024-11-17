@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2024, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.0.2"
+__version__ =       "8.0.3"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
@@ -85,26 +85,25 @@ def getFullyQualifiedName(obj: Any):
 	return f"{module}.{name}"
 
 
-if version_info >= (3, 9):  # pragma: no cover
-	@export
-	def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
-		from importlib.resources import files  # TODO: can be used as regular import > 3.8
+@export
+def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
+	from importlib.resources import files  # TODO: can be used as regular import > 3.8
 
-		# TODO: files() has wrong TypeHint Traversible vs. Path
-		resourcePath: Path = files(module) / filename
-		if not resourcePath.exists():
-			from pyTooling.Exceptions import ToolingException
+	# TODO: files() has wrong TypeHint Traversible vs. Path
+	resourcePath: Path = files(module) / filename
+	if not resourcePath.exists():
+		from pyTooling.Exceptions import ToolingException
 
-			raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
+		raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
 
-		return resourcePath
+	return resourcePath
 
 
-	@export
-	def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
-		from importlib.resources import files
+@export
+def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
+	from importlib.resources import files
 
-		return files(module).joinpath(filename).read_text()
+	return files(module).joinpath(filename).read_text()
 
 
 @export

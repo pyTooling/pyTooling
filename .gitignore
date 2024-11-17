@@ -30,7 +30,7 @@ doc/pyTooling/**/*.*
 # BuildTheDocs
 doc/_theme/**/*.*
 
-# IntelliJ project files
+# PyCharm project files
 /.idea/workspace.xml
 
 # Git files

@@ -136,7 +136,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 		raise ValueError("Unsupported README format.")
 
 	try:
-		with readmeFile.open("r") as file:
+		with readmeFile.open("r", encoding="utf-8") as file:
 			return Readme(
 				content=file.read(),
 				mimeType=mimeType
@@ -176,7 +176,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		"""Recursive variant of :func:`loadRequirementsFile`."""
 		requirements = []
 		try:
-			with requirementsFile.open("r") as file:
+			with requirementsFile.open("r", encoding="utf-8") as file:
 				if debug:
 					print(f"[pyTooling.Packaging]{'  ' * indent} Extracting requirements from '{requirementsFile}'.")
 				for line in file.readlines():
@@ -318,7 +318,7 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	_version =     None
 
 	try:
-		with sourceFile.open("r") as file:
+		with sourceFile.open("r", encoding="utf-8") as file:
 			content = file.read()
 	except FileNotFoundError as ex:
 		raise FileNotFoundError

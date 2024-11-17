@@ -73,7 +73,7 @@ class RandomGraph(PerformanceTest):
 		graph = pt_Graph(name=str(vertexCount))
 		vList = [pt_Vertex(vertexID=v, graph=graph) for v in range(vertexCount)]
 
-		with file.open("r") as f:
+		with file.open("r", encoding="utf-8") as f:
 			for line in f.readlines():
 				v, u, w = line.split(" ")
 				vList[int(v)].EdgeToVertex(vList[int(u)], edgeWeight=int(w))
