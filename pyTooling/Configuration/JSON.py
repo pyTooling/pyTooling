@@ -313,7 +313,7 @@ class Configuration(Dictionary, Abstract_Configuration):
 		if not configFile.exists():
 			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
-		with configFile.open() as file:
+		with configFile.open("r", encoding="utf-8") as file:
 			self._jsonConfig = load(file)
 
 		Dictionary.__init__(self, self, self, None, self._jsonConfig)

@@ -83,7 +83,7 @@ class RandomGraph(PerformanceTest):
 		for v in range(vertexCount):
 			graph.add_vertex(str(v))
 
-		with file.open("r") as f:
+		with file.open("r", encoding="utf-8") as f:
 			for line in f.readlines():
 				v, u, w = line.split(" ")
 				graph.add_edge(v, u, weight=int(w))

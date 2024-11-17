@@ -660,6 +660,6 @@ class GraphMLDocument(Base):
 		return lines
 
 	def WriteToFile(self, file: Path) -> None:
-		with file.open("w") as f:
+		with file.open("w", encoding="utf-8") as f:
 			f.write(f"""<?xml version="1.0" encoding="utf-8"?>""")
 			f.writelines(self.ToStringLines())

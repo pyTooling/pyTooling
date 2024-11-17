@@ -1094,7 +1094,7 @@ License
    :caption: References and Reports
    :hidden:
 
-   pyTooling/pyTooling
+   Python Class Reference <pyTooling/pyTooling>
    unittests/index
    coverage/index
    Doc. Coverage Report <DocCoverage>

@@ -85,26 +85,25 @@ def getFullyQualifiedName(obj: Any):
 	return f"{module}.{name}"
 
 
-if version_info >= (3, 9):  # pragma: no cover
-	@export
-	def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
-		from importlib.resources import files  # TODO: can be used as regular import > 3.8
+@export
+def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
+	from importlib.resources import files  # TODO: can be used as regular import > 3.8
 
-		# TODO: files() has wrong TypeHint Traversible vs. Path
-		resourcePath: Path = files(module) / filename
-		if not resourcePath.exists():
-			from pyTooling.Exceptions import ToolingException
+	# TODO: files() has wrong TypeHint Traversible vs. Path
+	resourcePath: Path = files(module) / filename
+	if not resourcePath.exists():
+		from pyTooling.Exceptions import ToolingException
 
-			raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
+		raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
 
-		return resourcePath
+	return resourcePath
 
 
-	@export
-	def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
-		from importlib.resources import files
+@export
+def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
+	from importlib.resources import files
 
-		return files(module).joinpath(filename).read_text()
+	return files(module).joinpath(filename).read_text()
 
 
 @export
