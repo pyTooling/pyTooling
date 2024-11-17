@@ -28,10 +28,11 @@ PIP might download further packages as listed in :ref:`package dependencies <DEP
 Installing a Wheel Package from PyPI using PIP
 ==============================================
 
-Developers can install the |PackageName| package itself or the package with further dependencies for documentation
-generation (``doc``), running unit tests (``test``) or just all (``all``) dependencies.
+Users can install the |PackageName| package as a minimal installation or the package with extensions (``packaging``,
+``terminal``, ``yaml``) installing further dependencies. In case the provided extensions are not needed, it keeps the
+list of dependencies low - especially the minimal installation is still dependency free.
 
-See :ref:`DEP` for more details.
+See :ref:`DEP/package` for more details.
 
 .. tab-set::
 
@@ -133,8 +134,10 @@ See :ref:`DEP` for more details.
                # Alternatively
                py -m pip install pyTooling[yaml]
 
-Developers can install further dependencies for documentation generation (``doc``) or running unit tests (``test``) or
-just all (``all``) dependencies.
+Developers can install the |PackageName| package itself or the package with further dependencies for documentation
+generation (``doc``), running unit tests (``test``) or just all (``all``) dependencies.
+
+See :ref:`DEP` for more details.
 
 .. tab-set::
 
