@@ -581,6 +581,24 @@ class IDs(TestCase):
 		self.assertEqual(1, vertex.ID)
 		self.assertIs(vertex, graph.GetVertexByID(1))
 
+	def test_HasVertexByNoneID(self) -> None:
+		graph = Graph()
+
+		self.assertFalse(graph.HasVertexByID(None))
+
+		_ = Vertex(graph=graph)
+		self.assertTrue(graph.HasVertexByID(None))
+
+	def test_HasVertexByID(self) -> None:
+		graph = Graph()
+
+		self.assertFalse(graph.HasVertexByID(1))
+
+		_ = Vertex(vertexID=1, graph=graph)
+		self.assertFalse(graph.HasVertexByID(None))
+		self.assertFalse(graph.HasVertexByID(0))
+		self.assertTrue(graph.HasVertexByID(1))
+
 	def test_GetVertexByNoneID(self) -> None:
 		graph = Graph()
 
@@ -604,7 +622,7 @@ class IDs(TestCase):
 		self.assertIs(vertex, graph.GetVertexByID(1))
 
 		with self.assertRaises(DuplicateVertexError):
-			vertex = Vertex(vertexID=1, graph=graph)
+			_ = Vertex(vertexID=1, graph=graph)
 
 
 class Values(TestCase):
@@ -629,6 +647,28 @@ class Values(TestCase):
 
 		self.assertIsNone(vertex.Value)
 		self.assertIs(vertex, graph.GetVertexByValue(None))
+
+	def test_HasVertexByNoneValue(self) -> None:
+		graph = Graph()
+
+		self.assertFalse(graph.HasVertexByValue(None))
+
+		_ = Vertex(graph=graph)
+		self.assertTrue(graph.HasVertexByValue(None))
+
+	def test_HasVertexByValue(self) -> None:
+		graph = Graph()
+
+		self.assertFalse(graph.HasVertexByValue(1))
+
+		vertex = Vertex(value=1, graph=graph)
+		self.assertFalse(graph.HasVertexByValue(None))
+		self.assertFalse(graph.HasVertexByValue(0))
+		self.assertTrue(graph.HasVertexByValue(1))
+
+		vertex.Value = None
+		self.assertTrue(graph.HasVertexByValue(None))
+		self.assertFalse(graph.HasVertexByValue(1))
 
 	def test_GetVertexByNoneValue(self) -> None:
 		graph = Graph()
