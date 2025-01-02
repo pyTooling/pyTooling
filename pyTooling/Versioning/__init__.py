@@ -153,6 +153,9 @@ class ReleaseLevel(Enum):
 
 		return self.value >= other.value
 
+	def __hash__(self) -> int:
+		return hash(self.value)
+
 	def __str__(self) -> str:
 		if self is ReleaseLevel.Final:
 			return "final"
@@ -273,6 +276,8 @@ def MaxValueValidator(
 class Version(metaclass=ExtendedType, slots=True):
 	"""Base-class for a version representation."""
 
+	__hash:         Nullable[int]  #: once computed hash of the object
+
 	_parts:         Parts          #: Integer flag enumeration of present parts in a version number.
 	_prefix:        str            #: Prefix string
 	_major:         int            #: Major number part of the version number.
@@ -329,6 +334,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'prefix' is not of type str.
 		:raises TypeError:  If parameter 'postfix' is not of type str.
 		"""
+		self.__hash = None
+
 		if not isinstance(major, int):
 			raise TypeError("Parameter 'major' is not of type 'int'.")
 		elif major < 0:
@@ -913,6 +920,25 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return self._minimum(self, other)
 
+	def __hash__(self) -> int:
+		if self.__hash is None:
+			self.__hash = hash((
+				self._prefix,
+				self._major,
+				self._minor,
+				self._micro,
+				self._releaseLevel,
+				self._releaseNumber,
+				self._post,
+				self._dev,
+				self._build,
+				self._postfix,
+				self._hash,
+				self._flags
+			))
+		return self.__hash
+
+
 @export
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
@@ -1214,6 +1240,9 @@ class SemanticVersion(Version):
 	def __rshift__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
 		return super().__rshift__(other)
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 	def __format__(self, formatSpec: str) -> str:
 		result = self._format(formatSpec)
 
@@ -1278,6 +1307,9 @@ class PythonVersion(SemanticVersion):
 				raise ToolingException(f"Unsupported release level '{version_info.releaselevel}'.")
 
 		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
+
+	def __hash__(self) -> int:
+		return super().__hash__()
 
 	def __str__(self) -> str:
 		"""
@@ -1531,6 +1563,9 @@ class CalendarVersion(Version):
 		"""
 		return super().__ge__(other)
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 	def __format__(self, formatSpec: str) -> str:
 		"""
 		Return a string representation of this version number according to the format specification.
@@ -1618,6 +1653,9 @@ class YearMonthVersion(CalendarVersion):
 		"""
 		return self._minor
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 
 @export
 class YearWeekVersion(CalendarVersion):
@@ -1663,6 +1701,9 @@ class YearWeekVersion(CalendarVersion):
 		"""
 		return self._minor
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 
 @export
 class YearReleaseVersion(CalendarVersion):
@@ -1707,6 +1748,9 @@ class YearReleaseVersion(CalendarVersion):
 		:return: The release number.
 		"""
 		return self._minor
+
+	def __hash__(self) -> int:
+		return super().__hash__()
 
 
 @export
@@ -1763,3 +1807,6 @@ class YearMonthDayVersion(CalendarVersion):
 		:return: The day part.
 		"""
 		return self._micro
+
+	def __hash__(self) -> int:
+		return super().__hash__()
