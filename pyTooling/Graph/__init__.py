@@ -1470,7 +1470,7 @@ class Vertex(
 				nextVertex = edge.Destination
 				if nextVertex not in visited:
 					queue.appendleft(nextVertex)
-				visited.add(nextVertex)
+					visited.add(nextVertex)
 
 	def IterateVerticesDFS(self) -> Generator['Vertex', None, None]:
 		"""
