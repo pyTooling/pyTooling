@@ -375,6 +375,13 @@ class Parsing(TestCase):
 		self.assertEqual(3, version.Micro)
 
 
+class HashVersions(TestCase):
+	def test_SemanticVersion(self):
+		version = SemanticVersion.Parse("v1.2.3")
+
+		self.assertIsNotNone(version.__hash__())
+
+
 class CompareVersions(TestCase):
 	def test_Equal(self) -> None:
 		l = [

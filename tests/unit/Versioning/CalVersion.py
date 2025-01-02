@@ -223,6 +223,33 @@ class Parsing(TestCase):
 # 				self.assertGreaterEqual(v1, v2)
 
 
+class HashVersions(TestCase):
+	def test_CalendarVersion(self):
+		version = CalendarVersion.Parse("2024.2")
+
+		self.assertIsNotNone(version.__hash__())
+
+	def test_YearMonthVersion(self):
+		version = YearMonthVersion(2024, 2)
+
+		self.assertIsNotNone(version.__hash__())
+
+	def test_YearWeekVersion(self):
+		version = YearWeekVersion(2024, 42)
+
+		self.assertIsNotNone(version.__hash__())
+
+	def test_YearReleaseVersion(self):
+		version = YearReleaseVersion(2024, 25)
+
+		self.assertIsNotNone(version.__hash__())
+
+	def test_YearMonthDayVersion(self):
+		version = YearMonthDayVersion(2024, 8, 25)
+
+		self.assertIsNotNone(version.__hash__())
+
+
 class CompareNone(TestCase):
 	def test_Equal(self):
 		version = CalendarVersion(1, 2)
