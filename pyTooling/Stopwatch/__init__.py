@@ -399,8 +399,12 @@ class Stopwatch(SlottedObject):
 
 		If the stopwatch is not yet stopped, the duration from start to now is returned.
 
-		:return: Duration since stopwatch was started in seconds.
+		:return: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
+		         be 0.0.
 		"""
+		if self._startTime is None:
+			return 0.0
+
 		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
 
 
