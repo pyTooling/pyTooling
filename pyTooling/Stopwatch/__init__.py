@@ -36,7 +36,7 @@ A stopwatch to measure execution times.
 from datetime import datetime
 from inspect  import Traceback
 from time     import perf_counter_ns
-from typing   import List, Optional as Nullable, Iterator, Tuple, Type
+from typing   import List, Optional as Nullable, Iterator, Tuple, Type, ContextManager
 
 # Python 3.11: use Self if returning the own object: , Self
 
@@ -61,6 +61,22 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 @export
 class StopwatchException(ToolingException):
 	"""This exception is caused by wrong usage of the stopwatch."""
+
+
+@export
+class ExcludeContextManager:
+	_stopwatch: "Stopwatch"
+
+	def __init__(self, stopwatch: "Stopwatch") -> None:
+		self._stopwatch = stopwatch
+
+	def __enter__(self) -> "ExcludeContextManager":  # TODO: Python 3.11: -> Self:
+		self._stopwatch.Pause()
+
+		return self
+
+	def __exit__(self, exc_type: Type[Exception], exc_val: Exception, exc_tb: Traceback) -> bool:
+		self._stopwatch.Resume()
 
 
 @export
@@ -91,6 +107,8 @@ class Stopwatch(SlottedObject):
 	_totalTime:    Nullable[int]
 	_splits:       List[Tuple[float, bool]]
 
+	_excludeContextManager: ExcludeContextManager
+
 	def __init__(self, name: str = None, started: bool = False, preferPause: bool = False) -> None:
 		"""
 		Initializes the fields of the stopwatch.
@@ -109,6 +127,8 @@ class Stopwatch(SlottedObject):
 		self._stopTime =     None
 		self._totalTime =    None
 		self._splits =       []
+
+		self._excludeContextManager = None
 
 		if started is False:
 			self._beginTime =  None
@@ -407,6 +427,13 @@ class Stopwatch(SlottedObject):
 
 		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
 
+	@readonly
+	def Exclude(self) -> ExcludeContextManager:
+		if self._excludeContextManager is None:
+			excludeContextManager = ExcludeContextManager(self)
+			self._excludeContextManager = excludeContextManager
+
+		return excludeContextManager
 
 	def __enter__(self) -> "Stopwatch":  # TODO: Python 3.11: -> Self:
 		"""
