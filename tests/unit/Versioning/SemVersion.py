@@ -338,6 +338,7 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(0, version.Minor)
 		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
 
 	def test_String_MajorMinor(self) -> None:
 		version = SemanticVersion.Parse("1.2")
@@ -345,6 +346,7 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
 
 	def test_String_MajorMinorMicro(self) -> None:
 		version = SemanticVersion.Parse("1.2.3")
@@ -352,6 +354,7 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 		self.assertEqual(3, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
 
 	def test_vString(self) -> None:
 		version = SemanticVersion.Parse("v1.2.3")
@@ -359,6 +362,7 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 		self.assertEqual(3, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
 
 	def test_iString(self) -> None:
 		version = SemanticVersion.Parse("i1.2.3")
@@ -366,6 +370,7 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 		self.assertEqual(3, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
 
 	def test_rString(self) -> None:
 		version = SemanticVersion.Parse("r1.2.3")
@@ -373,6 +378,61 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 		self.assertEqual(3, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+
+	def test_MajorMinorDev(self) -> None:
+		version = SemanticVersion.Parse("0.6-dev")
+
+		self.assertEqual(0, version.Major)
+		self.assertEqual(6, version.Minor)
+		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Development, version.ReleaseLevel)
+		self.assertEqual(0, version.ReleaseNumber)
+
+	def test_MajorMinorDevelopment(self) -> None:
+		version = SemanticVersion.Parse("0.6.dev10")
+
+		self.assertEqual(0, version.Major)
+		self.assertEqual(6, version.Minor)
+		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual(10, version.Dev)
+
+	def test_MajorMinorAlpha(self) -> None:
+		version = SemanticVersion.Parse("0.6a1")
+
+		self.assertEqual(0, version.Major)
+		self.assertEqual(6, version.Minor)
+		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(1, version.ReleaseNumber)
+
+	def test_MajorMinorBeta(self) -> None:
+		version = SemanticVersion.Parse("0.6b5")
+
+		self.assertEqual(0, version.Major)
+		self.assertEqual(6, version.Minor)
+		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Beta, version.ReleaseLevel)
+		self.assertEqual(5, version.ReleaseNumber)
+
+	def test_MajorMinorGamma(self) -> None:
+		version = SemanticVersion.Parse("0.6c3")
+
+		self.assertEqual(0, version.Major)
+		self.assertEqual(6, version.Minor)
+		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.Gamma, version.ReleaseLevel)
+		self.assertEqual(3, version.ReleaseNumber)
+
+	def test_MajorMinorReleaseCandidate(self) -> None:
+		version = SemanticVersion.Parse("0.6rc2")
+
+		self.assertEqual(0, version.Major)
+		self.assertEqual(6, version.Minor)
+		self.assertEqual(0, version.Micro)
+		self.assertEqual(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
+		self.assertEqual(2, version.ReleaseNumber)
 
 
 class HashVersions(TestCase):
