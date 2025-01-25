@@ -84,8 +84,9 @@ class ReleaseLevel(Enum):
 	Final =              0  #:
 	ReleaseCandidate = -10  #:
 	Development =      -20  #:
-	Beta =             -30  #:
-	Alpha =            -40  #:
+	Gamma =            -30  #:
+	Beta =             -40  #:
+	Alpha =            -50  #:
 
 	def __eq__(self, other: Any):
 		if isinstance(other, str):
@@ -954,7 +955,7 @@ class SemanticVersion(Version):
 		r"|"
 			r"(?:[-](?P<release>dev|final))"
 		r"|"
-			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|a|b|rc|pl)(?P<number>\d+))"
+			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|a|b|c|rc|pl)(?P<number>\d+))"
 		r")?"
 		r"(?:(?P<delim2>[\.\-]post)(?P<post>\d+))?"
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
@@ -1044,7 +1045,7 @@ class SemanticVersion(Version):
 
 		match = cls._PATTERN.match(versionString)
 		if match is None:
-			raise ValueError("Syntax error in parameter 'versionString'.")
+			raise ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
 			if value is None or value == "":
@@ -1070,6 +1071,8 @@ class SemanticVersion(Version):
 					releaseLevel = ReleaseLevel.Alpha
 				elif level == "b" or level == "beta":
 					releaseLevel = ReleaseLevel.Beta
+				elif level == "c" or level == "gamma":
+					releaseLevel = ReleaseLevel.Gamma
 				elif level == "rc":
 					releaseLevel = ReleaseLevel.ReleaseCandidate
 				else:  # pragma: no cover
@@ -1276,6 +1279,8 @@ class SemanticVersion(Version):
 			result += f".alpha{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Beta:
 			result += f".beta{self._releaseNumber}"
+		elif self._releaseLevel is ReleaseLevel.Gamma:
+			result += f".gamma{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
 			result += f".rc{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
@@ -1325,6 +1330,8 @@ class PythonVersion(SemanticVersion):
 			result += f"a{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Beta:
 			result += f"b{self._releaseNumber}"
+		elif self._releaseLevel is ReleaseLevel.Gamma:
+			result += f"c{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
 			result += f"rc{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
