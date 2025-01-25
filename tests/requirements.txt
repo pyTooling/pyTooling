@@ -8,12 +8,12 @@ pytest ~= 8.3
 pytest-cov ~= 6.0
 
 # Static Type Checking
-mypy ~= 1.13
+mypy ~= 1.14
 typing_extensions ~= 4.12
 lxml ~= 5.3
 
 # For pyTooling.Configuration.YAML testing
-ruamel.yaml ~= 0.18.6
+ruamel.yaml ~= 0.18
 
 # For pyTooling.TerminalUI testing
 colorama >= 0.4.6
