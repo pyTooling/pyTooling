@@ -84,8 +84,9 @@ class ReleaseLevel(Enum):
 	Final =              0  #:
 	ReleaseCandidate = -10  #:
 	Development =      -20  #:
-	Beta =             -30  #:
-	Alpha =            -40  #:
+	Gamma =            -30  #:
+	Beta =             -40  #:
+	Alpha =            -50  #:
 
 	def __eq__(self, other: Any):
 		if isinstance(other, str):
@@ -152,6 +153,9 @@ class ReleaseLevel(Enum):
 			raise ex
 
 		return self.value >= other.value
+
+	def __hash__(self) -> int:
+		return hash(self.value)
 
 	def __str__(self) -> str:
 		if self is ReleaseLevel.Final:
@@ -273,6 +277,8 @@ def MaxValueValidator(
 class Version(metaclass=ExtendedType, slots=True):
 	"""Base-class for a version representation."""
 
+	__hash:         Nullable[int]  #: once computed hash of the object
+
 	_parts:         Parts          #: Integer flag enumeration of present parts in a version number.
 	_prefix:        str            #: Prefix string
 	_major:         int            #: Major number part of the version number.
@@ -329,6 +335,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'prefix' is not of type str.
 		:raises TypeError:  If parameter 'postfix' is not of type str.
 		"""
+		self.__hash = None
+
 		if not isinstance(major, int):
 			raise TypeError("Parameter 'major' is not of type 'int'.")
 		elif major < 0:
@@ -913,6 +921,25 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return self._minimum(self, other)
 
+	def __hash__(self) -> int:
+		if self.__hash is None:
+			self.__hash = hash((
+				self._prefix,
+				self._major,
+				self._minor,
+				self._micro,
+				self._releaseLevel,
+				self._releaseNumber,
+				self._post,
+				self._dev,
+				self._build,
+				self._postfix,
+				self._hash,
+				self._flags
+			))
+		return self.__hash
+
+
 @export
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
@@ -928,7 +955,7 @@ class SemanticVersion(Version):
 		r"|"
 			r"(?:[-](?P<release>dev|final))"
 		r"|"
-			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|a|b|rc|pl)(?P<number>\d+))"
+			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|a|b|c|rc|pl)(?P<number>\d+))"
 		r")?"
 		r"(?:(?P<delim2>[\.\-]post)(?P<post>\d+))?"
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
@@ -1018,7 +1045,7 @@ class SemanticVersion(Version):
 
 		match = cls._PATTERN.match(versionString)
 		if match is None:
-			raise ValueError("Syntax error in parameter 'versionString'.")
+			raise ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
 			if value is None or value == "":
@@ -1044,6 +1071,8 @@ class SemanticVersion(Version):
 					releaseLevel = ReleaseLevel.Alpha
 				elif level == "b" or level == "beta":
 					releaseLevel = ReleaseLevel.Beta
+				elif level == "c" or level == "gamma":
+					releaseLevel = ReleaseLevel.Gamma
 				elif level == "rc":
 					releaseLevel = ReleaseLevel.ReleaseCandidate
 				else:  # pragma: no cover
@@ -1214,6 +1243,9 @@ class SemanticVersion(Version):
 	def __rshift__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
 		return super().__rshift__(other)
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 	def __format__(self, formatSpec: str) -> str:
 		result = self._format(formatSpec)
 
@@ -1247,6 +1279,8 @@ class SemanticVersion(Version):
 			result += f".alpha{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Beta:
 			result += f".beta{self._releaseNumber}"
+		elif self._releaseLevel is ReleaseLevel.Gamma:
+			result += f".gamma{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
 			result += f".rc{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
@@ -1279,6 +1313,9 @@ class PythonVersion(SemanticVersion):
 
 		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 	def __str__(self) -> str:
 		"""
 		Return a string representation of this version number.
@@ -1293,6 +1330,8 @@ class PythonVersion(SemanticVersion):
 			result += f"a{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Beta:
 			result += f"b{self._releaseNumber}"
+		elif self._releaseLevel is ReleaseLevel.Gamma:
+			result += f"c{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
 			result += f"rc{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
@@ -1531,6 +1570,9 @@ class CalendarVersion(Version):
 		"""
 		return super().__ge__(other)
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 	def __format__(self, formatSpec: str) -> str:
 		"""
 		Return a string representation of this version number according to the format specification.
@@ -1618,6 +1660,9 @@ class YearMonthVersion(CalendarVersion):
 		"""
 		return self._minor
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 
 @export
 class YearWeekVersion(CalendarVersion):
@@ -1663,6 +1708,9 @@ class YearWeekVersion(CalendarVersion):
 		"""
 		return self._minor
 
+	def __hash__(self) -> int:
+		return super().__hash__()
+
 
 @export
 class YearReleaseVersion(CalendarVersion):
@@ -1707,6 +1755,9 @@ class YearReleaseVersion(CalendarVersion):
 		:return: The release number.
 		"""
 		return self._minor
+
+	def __hash__(self) -> int:
+		return super().__hash__()
 
 
 @export
@@ -1763,3 +1814,6 @@ class YearMonthDayVersion(CalendarVersion):
 		:return: The day part.
 		"""
 		return self._micro
+
+	def __hash__(self) -> int:
+		return super().__hash__()

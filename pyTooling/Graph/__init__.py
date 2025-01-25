@@ -1470,7 +1470,7 @@ class Vertex(
 				nextVertex = edge.Destination
 				if nextVertex not in visited:
 					queue.appendleft(nextVertex)
-				visited.add(nextVertex)
+					visited.add(nextVertex)
 
 	def IterateVerticesDFS(self) -> Generator['Vertex', None, None]:
 		"""
@@ -2845,35 +2845,51 @@ class Graph(
 			yield from self._verticesWithID
 		return iter(gen())
 
+	def HasVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
+		"""
+		.. todo:: GRAPH::Graph::HasVertexByID Needs documentation.
+
+		"""
+		if vertexID is None:
+			return len(self._verticesWithoutID) >= 1
+		else:
+			return vertexID in self._verticesWithID
+
+	def HasVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
+		"""
+		.. todo:: GRAPH::Graph::HasVertexByValue Needs documentation.
+
+		"""
+		return any(vertex._value == value for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()))
+
 	def GetVertexByID(self, vertexID: Nullable[VertexIDType]) -> Vertex:
 		"""
 		.. todo:: GRAPH::Graph::GetVertexByID Needs documentation.
 
 		"""
 		if vertexID is None:
-			if len(self._verticesWithoutID) > 1:
-				raise KeyError(f"Found multiple vertices with ID `None`.")
+			if (l := len(self._verticesWithoutID)) == 1:
+				return self._verticesWithoutID[0]
+			elif l == 0:
+				raise KeyError(f"Found no vertex with ID `None`.")
 			else:
-				try:
-					return self._verticesWithoutID[0]
-				except IndexError:
-					raise KeyError(f"Found no vertex with ID `None`.")
+				raise KeyError(f"Found multiple vertices with ID `None`.")
 		else:
 			return self._verticesWithID[vertexID]
 
-	def GetVertexByValue(self, value) -> Vertex:
+	def GetVertexByValue(self, value: Nullable[VertexValueType]) -> Vertex:
 		"""
 		.. todo:: GRAPH::Graph::GetVertexByValue Needs documentation.
 
 		"""
-		vertices = [vertex for vertex in chain(self._verticesWithID.values(), self._verticesWithoutID) if vertex._value == value]
-		if len(vertices) > 1:
-			raise KeyError(f"Found multiple vertices with Value == `{value}`.")
+		# FIXME: optimize: iterate only until first item is found and check for a second to produce error
+		vertices = [vertex for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()) if vertex._value == value]
+		if (l := len(vertices)) == 1:
+			return vertices[0]
+		elif l == 0:
+			raise KeyError(f"Found no vertex with Value == `{value}`.")
 		else:
-			try:
-				return vertices[0]
-			except IndexError:
-				raise KeyError(f"Found no vertex with Value == `{value}`.")
+			raise KeyError(f"Found multiple vertices with Value == `{value}`.")
 
 	def CopyGraph(self) -> 'Graph':
 		raise NotImplementedError()
