@@ -1,0 +1,83 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="273pt" height="138pt" viewBox="0.00 0.00 273.00 138.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 134)">
+<ns0:title>inheritancec148a34832</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Configuration</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Configuration" ns1:title="Abstract root node in a configuration." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="241,-93 159,-93 159,-74 241,-74 241,-93" />
+<ns0:text text-anchor="middle" x="200" y="-81" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Configuration</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Node</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Node" ns1:title="Abstract node in a configuration data structure." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="76.5,-56 22.5,-56 22.5,-37 76.5,-37 76.5,-56" />
+<ns0:text text-anchor="middle" x="49.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Node</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Node-&gt;Configuration</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M76.71,-53.03C98.56,-58.48 130.15,-66.35 155.75,-72.72" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="155.51,-74.47 160.79,-73.98 156.36,-71.07 155.51,-74.47" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>Dictionary</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Dictionary" ns1:title="Abstract dictionary node in a configuration." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="233.5,-56 166.5,-56 166.5,-37 233.5,-37 233.5,-56" />
+<ns0:text text-anchor="middle" x="200" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Dictionary</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Node-&gt;Dictionary</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M76.71,-46.5C100.13,-46.5 134.72,-46.5 161.14,-46.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="161.31,-48.25 166.31,-46.5 161.31,-44.75 161.31,-48.25" />
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>Sequence</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Sequence" ns1:title="Abstract sequence node in a configuration." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="232,-19 168,-19 168,0 232,0 232,-19" />
+<ns0:text text-anchor="middle" x="200" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Sequence</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Node-&gt;Sequence</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M76.71,-39.97C100.69,-33.99 136.4,-25.1 163.05,-18.46" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="163.48,-20.15 167.91,-17.25 162.64,-16.76 163.48,-20.15" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>ConfigurationException</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.ConfigurationException" ns1:title="ConfigurationException" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="265,-130 135,-130 135,-111 265,-111 265,-130" />
+<ns0:text text-anchor="middle" x="200" y="-118" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ConfigurationException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>ToolingException</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" ns1:title="The exception is raised by pyTooling internal features." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="99,-130 0,-130 0,-111 99,-111 99,-130" />
+<ns0:text text-anchor="middle" x="49.5" y="-118" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ToolingException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ToolingException-&gt;ConfigurationException</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M99.12,-120.5C108.94,-120.5 119.43,-120.5 129.79,-120.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="129.87,-122.25 134.87,-120.5 129.87,-118.75 129.87,-122.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>
