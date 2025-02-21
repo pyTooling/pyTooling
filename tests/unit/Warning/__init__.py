@@ -28,45 +28,71 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-A solution to send warnings like exceptions to a handler in the upper part of the call-stack.
-"""
-from builtins import Warning as _Warning
+from unittest import TestCase
 
-from inspect import currentframe
-from typing import List, Self, Callable, Optional as Nullable
+from pyTooling.Warning import WarningCollector
+
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
 
 
-class WarningCollector:
-	_warnings: Nullable[List]
-	_handler:  Nullable[Callable[[_Warning], bool]]
+class ClassA:
+	def methA(self) -> None:
+		WarningCollector.Raise(Warning("Warning from ClassA.methA"))
 
-	def __init__(self, warnings: Nullable[_Warning] = None, handler: Nullable[Callable[[_Warning], bool]] = None):
-		self._warnings = warnings
-		self._handler = handler
 
-	def __enter__(self) -> Self:
-		return self
+class WarningCollection(TestCase):
+	def test_WarningCollector_None(self) -> None:
+		a = ClassA()
+		with self.assertRaises(Exception) as ex:
+			a.methA()
 
-	def __exit__(self, exc_type, exc_val, exc_tb):
-		pass
+		self.assertEqual("Unhandled warning: Warning from ClassA.methA", str(ex.exception))
 
-	def AddWarning(self, warning: _Warning) -> bool:
-		if self._warnings is not None:
-			self._warnings.append(warning)
-		if self._handler is not None:
-			return self._handler(warning)
+	def test_WarningCollector_List(self) -> None:
+		warnings = []
 
-		return False
+		a = ClassA()
+		with WarningCollector(warnings) as warning:
+			a.methA()
 
-	@classmethod
-	def Raise(cls, warning: _Warning) -> None:
-		frame = currentframe()
-		while frame := frame.f_back:
-			for localValue in reversed(frame.f_locals.values()):
-				if isinstance(localValue, cls):
-					if localValue.AddWarning(warning):
-						raise Exception(f"Warning: {warning}") from warning
-					return
-		else:
-			raise Exception(f"Unhandled warning: {warning}") from warning
+		self.assertEqual(1, len(warnings))
+		self.assertEqual("Warning from ClassA.methA", str(warnings[0]))
+
+	def test_WarningCollector_Print(self) -> None:
+		print()
+
+		message = ""
+		def func(warning: Warning) -> bool:
+			nonlocal message
+			message = str(warning)
+			print(message)
+
+			return False
+
+		a = ClassA()
+		with WarningCollector(handler=func) as warning:
+			a.methA()
+
+		self.assertEqual("Warning from ClassA.methA", message)
+
+	def test_WarningCollector_Abort(self) -> None:
+		print()
+
+		message = ""
+		def func(warning: Warning) -> bool:
+			nonlocal message
+			message = str(warning)
+			print(message)
+
+			return True
+
+		a = ClassA()
+		with self.assertRaises(Exception) as ex:
+			with WarningCollector(handler=func) as warning:
+				a.methA()
+
+		self.assertEqual("Warning from ClassA.methA", message)
+		self.assertEqual("Warning: Warning from ClassA.methA", str(ex.exception))
