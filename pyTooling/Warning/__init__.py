@@ -34,18 +34,30 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 from builtins import Warning as _Warning
 
 from inspect import currentframe
-from typing import List, Self, Callable, Optional as Nullable
+from typing import List, Callable, Optional as Nullable
+
+try:
+	from pyTooling.Decorators import export
+except ModuleNotFoundError:  # pragma: no cover
+	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators         import export
+	except ModuleNotFoundError as ex:  # pragma: no cover
+		print("[pyTooling.Common] Could not import directly!")
+		raise ex
 
 
+@export
 class WarningCollector:
 	_warnings: Nullable[List]
 	_handler:  Nullable[Callable[[_Warning], bool]]
 
-	def __init__(self, warnings: Nullable[_Warning] = None, handler: Nullable[Callable[[_Warning], bool]] = None):
+	def __init__(self, warnings: Nullable[List] = None, handler: Nullable[Callable[[_Warning], bool]] = None):
 		self._warnings = warnings
 		self._handler = handler
 
-	def __enter__(self) -> Self:
+	def __enter__(self) -> 'WarningCollector':  # -> Self: needs Python 3.11
 		return self
 
 	def __exit__(self, exc_type, exc_val, exc_tb):

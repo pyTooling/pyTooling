@@ -48,7 +48,6 @@ __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 from collections         import deque
 from numbers             import Number
 from pathlib             import Path
-from sys                 import version_info
 from types               import ModuleType
 from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
 from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
