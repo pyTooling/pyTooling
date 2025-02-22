@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2024 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,9 +35,9 @@ Common types, helper functions and classes.
 """
 __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
-__copyright__ =     "2017-2024, Patrick Lehmann"
+__copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.1.0"
+__version__ =       "8.2.0"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
@@ -48,7 +48,6 @@ __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 from collections         import deque
 from numbers             import Number
 from pathlib             import Path
-from sys                 import version_info
 from types               import ModuleType
 from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
 from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable

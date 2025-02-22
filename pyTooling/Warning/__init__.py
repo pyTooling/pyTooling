@@ -1,17 +1,17 @@
 # ==================================================================================================================== #
-#             _____           _ _             _____                                                                    #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ ___  ___                                                       #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | || '__/ _ \/ _ \                                                      #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | |  __/  __/                                                      #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \___|\___|                                                      #
-# |_|    |___/                          |___/                                                                          #
+#             _____           _ _           __        __               _                                               #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ \ \      / /_ _ _ __ _ __ (_)_ __   __ _                                   #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` \ \ /\ / / _` | '__| '_ \| | '_ \ / _` |                                  #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |\ V  V / (_| | |  | | | | | | | | (_| |                                  #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |                                  #
+# |_|    |___/                          |___/                                  |___/                                   #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2025-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,59 +28,57 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for treelib."""
-from treelib import Tree as treelib_Tree
+"""
+A solution to send warnings like exceptions to a handler in the upper part of the call-stack.
+"""
+from builtins import Warning as _Warning
 
-from . import PerformanceTest
+from inspect import currentframe
+from typing import List, Callable, Optional as Nullable
+
+try:
+	from pyTooling.Decorators import export
+except ModuleNotFoundError:  # pragma: no cover
+	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators         import export
+	except ModuleNotFoundError as ex:  # pragma: no cover
+		print("[pyTooling.Common] Could not import directly!")
+		raise ex
 
 
-if __name__ == "__main__":  # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unittest <testcase module>'")
-	exit(1)
+@export
+class WarningCollector:
+	_warnings: Nullable[List]
+	_handler:  Nullable[Callable[[_Warning], bool]]
 
+	def __init__(self, warnings: Nullable[List] = None, handler: Nullable[Callable[[_Warning], bool]] = None):
+		self._warnings = warnings
+		self._handler = handler
 
-class Tree(PerformanceTest):
-	def test_AddChildren(self) -> None:
-		def wrapper(count: int):
-			def func():
-				tree = treelib_Tree()
-				rootNode = tree.create_node("root", identifier=0, data=0)
+	def __enter__(self) -> 'WarningCollector':  # -> Self: needs Python 3.11
+		return self
 
-				for i in range(1, count):
-					tree.create_node("child", parent=rootNode, data=i)
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		pass
 
-			return func
+	def AddWarning(self, warning: _Warning) -> bool:
+		if self._warnings is not None:
+			self._warnings.append(warning)
+		if self._handler is not None:
+			return self._handler(warning)
 
-		self.runTests(wrapper, self.counts)
+		return False
 
-	def test_SetParent(self) -> None:
-		def wrapper(count: int):
-			def func():
-				tree = treelib_Tree()
-				rootNode = tree.create_node(identifier=0)
-
-				for i in range(1, count):
-					tree.create_node(identifier=i, parent=0)
-
-			return func
-
-		self.runTests(wrapper, self.counts)
-
-	def test_AddFlatTree(self) -> None:
-		def run(count: int):
-			def func():
-				tree = treelib_Tree()
-				rootNode = tree.create_node(identifier=0)
-
-				for i in range(1, 10):
-					newTree = treelib_Tree()
-					parentNode = newTree.create_node(identifier=count * i)
-					for j in range(1, count):
-						newTree.create_node(identifier=count * i + j, parent=parentNode)
-
-					tree.paste(0, newTree)
-
-			return func
-
-		self.runTests(run, self.counts[:-1])
+	@classmethod
+	def Raise(cls, warning: _Warning) -> None:
+		frame = currentframe()
+		while frame := frame.f_back:
+			for localValue in reversed(frame.f_locals.values()):
+				if isinstance(localValue, cls):
+					if localValue.AddWarning(warning):
+						raise Exception(f"Warning: {warning}") from warning
+					return
+		else:
+			raise Exception(f"Unhandled warning: {warning}") from warning

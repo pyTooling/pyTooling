@@ -252,7 +252,7 @@ package in a ``requirements.txt`` file.
 
    .. code-block:: text
 
-      pyTooling ~= 8.0
+      pyTooling ~= 8.1
 
 
 .. _INSTALL/pip/update:
