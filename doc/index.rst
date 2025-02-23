@@ -1063,10 +1063,11 @@ License
    Decorators
 
 .. toctree::
-   :caption: Exceptions
+   :caption: Exceptions and Warnings
    :hidden:
 
    Exceptions
+   Warning/index
 
 .. toctree::
    :caption: Meta Classes

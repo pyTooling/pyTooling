@@ -30,6 +30,8 @@
 #
 """
 A solution to send warnings like exceptions to a handler in the upper part of the call-stack.
+
+.. hint:: See :ref:`high-level help <WARNING>` for explanations and usage examples.
 """
 from builtins import Warning as _Warning
 

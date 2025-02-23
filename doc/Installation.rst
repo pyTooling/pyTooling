@@ -252,7 +252,7 @@ package in a ``requirements.txt`` file.
 
    .. code-block:: text
 
-      pyTooling ~= 8.1
+      pyTooling ~= 8.2
 
 
 .. _INSTALL/pip/update:
@@ -568,7 +568,7 @@ Ensure :ref:`packaging requirements <DEP/packaging>` are installed.
          python3 -m pip uninstall -y pyTooling
 
          # Install from wheel
-         python3 -m pip install ./dist/pyTooling-8.1.0-py3-none-any.whl
+         python3 -m pip install ./dist/pyTooling-8.2.0-py3-none-any.whl
 
    .. tab-item:: Windows
       :sync: Windows
@@ -584,7 +584,7 @@ Ensure :ref:`packaging requirements <DEP/packaging>` are installed.
          py -m pip uninstall -y pyTooling
 
          # Install from wheel
-         py -m pip install .\dist\pyTooling-8.1.0-py3-none-any.whl
+         py -m pip install .\dist\pyTooling-8.2.0-py3-none-any.whl
 
 .. note::
 
