@@ -47,7 +47,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 class DefaultEnvironment(TestCase):
 	def test_Empty(self) -> None:
-		env = Environment(variables={})
+		env = Environment(newVariables={})
 
 		self.assertEqual(0, len(env))
 		self.assertFalse("PATH" in env)
@@ -62,7 +62,7 @@ class DefaultEnvironment(TestCase):
 class ArtificialEnvironment(TestCase):
 	def test_Simple(self) -> None:
 		variables = {"PATH": "/bin"}
-		env = Environment(variables=variables)
+		env = Environment(newVariables=variables)
 
 		self.assertTrue("PATH" in env)
 		self.assertEqual("/bin", env["PATH"])
