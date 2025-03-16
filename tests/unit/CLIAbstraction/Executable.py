@@ -42,7 +42,7 @@ from pytest       import mark
 from sys          import platform as sys_platform
 from unittest     import TestCase
 
-from pyTooling.CLIAbstraction import Executable
+from pyTooling.CLIAbstraction import Executable, Environment
 from .                        import Helper
 from .Examples                import GitArgumentsMixin
 
@@ -72,7 +72,7 @@ class ExplicitBinaryDirectoryOnFreeBSD(TestCase, Helper):
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 		tool[tool.FlagVersion] = True
 
-		tool.StartProcess()
+		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
 		output = "\n".join(tool.GetLineReader())
 		self.assertRegex(output, r"git version \d+.\d+.\d+")
 
@@ -85,7 +85,7 @@ class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 		tool[tool.FlagVersion] = True
 
-		tool.StartProcess()
+		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
 		output = "\n".join(tool.GetLineReader())
 		self.assertRegex(output, r"git version \d+.\d+.\d+")
 
@@ -98,7 +98,7 @@ class ExplicitBinaryDirectoryOnWindows(TestCase, Helper):
 		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
 		tool[tool.FlagVersion] = True
 
-		tool.StartProcess()
+		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
 		output = "\n".join(tool.GetLineReader())
 		self.assertRegex(output, r"git version \d+.\d+.\d+.windows.\d+")
 
@@ -109,7 +109,7 @@ class CommonOptions(TestCase, Helper):
 		tool = Git()
 		tool[tool.FlagVersion] = True
 
-		tool.StartProcess()
+		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
 		output = "\n".join(tool.GetLineReader())
 		self.assertRegex(output, r"git version \d+.\d+.\d+(.windows.\d+)?")
 
@@ -120,7 +120,7 @@ class CommonOptions(TestCase, Helper):
 		tool = Git()
 		tool[tool.FlagHelp] = True
 
-		tool.StartProcess()
+		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
 		output = "\n".join(tool.GetLineReader())
 		self.assertRegex(output, r"^usage: git")
 
@@ -131,7 +131,7 @@ class CommonOptions(TestCase, Helper):
 		tool = Git()
 		tool[tool.CommandHelp] = True
 
-		tool.StartProcess()
+		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
 		output = "\n".join(tool.GetLineReader())
 		self.assertRegex(output, r"^usage: git")
 

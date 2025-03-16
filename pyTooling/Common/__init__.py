@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.2.0"
+__version__ =       "8.3.0"
 __keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
 					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
 					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
@@ -218,6 +218,19 @@ def bind(instance, func, methodName: Nullable[str] = None):
 	setattr(instance, methodName, boundMethod)
 
 	return boundMethod
+
+
+@export
+def count(iterator: Iterable) -> int:
+	"""
+	Returns the number of elements in an iterable.
+
+	.. attention:: After counting the iterable's elements, the iterable is consumed.
+
+	:param iterator: Iterable to consume and count.
+	:return:         Number of elements in the iterable.
+	"""
+	return len(list(iterator))
 
 
 _Element = TypeVar("Element")

@@ -33,14 +33,38 @@ Unit tests for :func:`firstItem` and :func:`lastItem`.
 """
 from unittest import TestCase
 
-from pyTooling.Common import firstItem, lastItem
-
+from pyTooling.Common import firstItem, lastItem, count
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
 
+
+class Count(TestCase):
+	def test_count_empty(self) -> None:
+		c = count(range(0))
+
+		self.assertEqual(0, c)
+
+	def test_count_1(self) -> None:
+		c = count(range(1))
+
+		self.assertEqual(1, c)
+
+	def test_count_5(self) -> None:
+		c = count(range(5))
+
+		self.assertEqual(5, c)
+
+	def test_count_10(self) -> None:
+		length = 10
+
+		l = [i for i in range(length)]
+		g = (i for i in l)
+		c = count(g)
+
+		self.assertEqual(length, c)
 
 class First(TestCase):
 	def test_FirstItem0(self) -> None:

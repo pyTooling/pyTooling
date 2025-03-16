@@ -39,7 +39,7 @@ from platform   import system
 from shutil     import which as shutil_which
 from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
 from sys        import version_info           # needed for versions before Python 3.11
-from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any
+from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any, Mapping, Iterable
 
 try:
 	from pyTooling.Decorators                import export, readonly
@@ -86,20 +86,38 @@ class CLIArgument(Attribute):
 class Environment(metaclass=ExtendedType, slots=True):
 	_variables: Dict[str, str]
 
-	def __init__(self, variables: Nullable[Dict[str, str]] = None) -> None:
-		if variables is None:
-			variables = os_environ
+	def __init__(
+		self,
+		newVariables: Nullable[Mapping[str, str]] = None,
+		addVariables: Nullable[Mapping[str, str]] = None,
+		delVariables: Nullable[Iterable[str]] = None
+	) -> None:
+		if newVariables is None:
+			newVariables = os_environ
 
-		self._variables = {name:value for (name, value) in variables.items()}
+		self._variables = {name: value for name, value in newVariables.items()}
 
-	def __contains__(self, name: str) -> bool:
-		return name in self._variables
+		if delVariables is not None:
+			for variableName in delVariables:
+				del self._variables[variableName]
+
+		if addVariables is not None:
+			self._variables.update(addVariables)
 
 	def __len__(self) -> len:
 		return len(self._variables)
 
+	def __contains__(self, name: str) -> bool:
+		return name in self._variables
+
 	def __getitem__(self, name: str) -> str:
 		return self._variables[name]
+
+	def __setitem__(self, name: str, value: str) -> None:
+		self._variables[name] = value
+
+	def __delitem__(self, name: str) -> None:
+		del self._variables[name]
 
 
 @export
@@ -267,26 +285,29 @@ class Executable(Program):  # (ILogable):
 	_BOUNDARY: ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"
 
 	_workingDirectory: Nullable[Path]
-	_environment: Nullable[Dict[str, str]]
-	_process: Nullable[Subprocess_Popen]
-	_iterator: Nullable[Iterator]
+	_environment:      Nullable[Environment]
+	_process:          Nullable[Subprocess_Popen]
+	_iterator:         Nullable[Iterator]
 
 	def __init__(
 		self,
 		executablePath: Path = None,
 		binaryDirectoryPath: Path = None,
 		workingDirectory: Path = None,
-		# environment: Environment = None,
+		environment: Nullable[Environment] = None,
 		dryRun: bool = False
 	):
 		super().__init__(executablePath, binaryDirectoryPath, dryRun)
 
 		self._workingDirectory = None
-		self._environment = None
+		self._environment = environment
 		self._process = None
 		self._iterator = None
 
-	def StartProcess(self):
+	def StartProcess(
+		self,
+		environment: Nullable[Environment] = None
+	):
 		# start child process
 
 		if self._dryRun:
@@ -294,7 +315,9 @@ class Executable(Program):  # (ILogable):
 			return
 
 		if self._environment is not None:
-			envVariables = self._environment.Variables
+			envVariables = self._environment._variables
+		elif environment is not None:
+			envVariables = environment._variables
 		else:
 			envVariables = None
 
