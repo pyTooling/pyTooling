@@ -16,7 +16,7 @@ Warnings
       This function expects a single parameter: an instance of :class:`Warning`.
 
       To handle a raised warning, a `with`-statement is used to collect raised warnings. Usually, a list is handed over
-      to a :class:`~pyTooling.Warning.WarningCollector` context. 
+      to a :class:`~pyTooling.Warning.WarningCollector` context.
 
    .. grid-item::
       :columns: 6

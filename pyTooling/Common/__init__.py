@@ -220,6 +220,19 @@ def bind(instance, func, methodName: Nullable[str] = None):
 	return boundMethod
 
 
+@export
+def count(iterator: Iterable) -> int:
+	"""
+	Returns the number of elements in an iterable.
+
+	.. attention:: After counting the iterable's elements, the iterable is consumed.
+
+	:param iterator: Iterable to consume and count.
+	:return:         Number of elements in the iterable.
+	"""
+	return len(list(iterator))
+
+
 _Element = TypeVar("Element")
 
 
