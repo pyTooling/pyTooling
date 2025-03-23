@@ -1077,8 +1077,9 @@ License
    :hidden:
 
    DataStructures/index
-   DataStructures/Graph
    DataStructures/LinkedList
+   DataStructures/Cartesian
+   DataStructures/Graph
    DataStructures/Path/index
    DataStructures/StateMachine
    DataStructures/Tree
