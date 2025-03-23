@@ -35,10 +35,22 @@ from collections.abc import Sized
 from sys             import version_info
 from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable
 
-from pyTooling.Decorators  import readonly, export
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Common      import getFullyQualifiedName
+try:
+	from pyTooling.Decorators  import readonly, export
+	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Common      import getFullyQualifiedName
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
+	print("[pyTooling.List] Could not import from 'pyTooling.*'!")
+
+	try:
+		from Decorators  import readonly, export
+		from Exceptions  import ToolingException
+		from MetaClasses import ExtendedType
+		from Common      import getFullyQualifiedName
+	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
+		print("[pyTooling.List] Could not import directly!")
+		raise ex
 
 
 _NodeValue = TypeVar("_NodeValue")

@@ -1,7 +1,7 @@
 .. _STRUCT/LinkedList:
 
-LinkedList
-##########
+Doubly Linked List
+##################
 
 The :mod:`pyTooling.List` package
 
@@ -14,15 +14,12 @@ The :mod:`pyTooling.List` package
    :caption: A linked list graph.
 
    %%{init: { "flowchart": { "nodeSpacing": 15, "rankSpacing": 30, "curve": "linear", "useMaxWidth": false } } }%%
-   graph TD
-     A(Idle); B(Check); C(Prepare); D(Read); E(Finished); F(Write) ; G(Retry); H(WriteWait); I(ReadWait)
+   graph LR
+     LL(LinkedList); A(Node 0); B(Node 1); C(Node 2); D(Node 3); E(Node 4)
 
-     A:::mark1 --> B --> C --> F
-     F --> H --> E:::cur
-     B --> G --> B
-     G -.-> A --> C
-     D -.-> A
-     C ---> D --> I --> E -.-> A
+     LL:::mark1 --> A
+     LL --> E
+     A <--> B <--> C <--> D <--> E
 
      classDef node fill:#eee,stroke:#777,font-size:smaller;
      classDef cur fill:#9e9,stroke:#6e6;
@@ -31,12 +28,25 @@ The :mod:`pyTooling.List` package
 
 .. rubric:: Doubly Linked List Properties:
 
-
+* The LinkedList counts the number of elements.
+* The LinkedList has a reference to the first and last element in the doubly linked list.
+* Each Node has a linked to its previous Node and its next Node (doubly linked).
+* Each Node has a link to its LinkedList.
+* Each Node has a value.
+* Operations can be performed in the LinkedList or on any Node.
+* The LinkedList can be iterated in ascending and descending order.
+* The list can be iterated starting from any Node.
 
 .. _STRUCT/LinkedList/Features:
 
 Features
 ********
+
+* Insert operations can be performed in the LinkedList or on any Node.
+* Remove operations can be performed in the LinkedList or on any Node.
+* The LinkedList can be iterated in ascending and descending order.
+* The LinkedList can be cleared.
+
 
 * TBD
 
