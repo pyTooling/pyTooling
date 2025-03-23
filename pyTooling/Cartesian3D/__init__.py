@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-
-"""
+"""An implementation of 3D cartesian data structures for Python."""
 
 from math   import sqrt, acos
 from typing import Union, Generic, Any, Tuple
@@ -57,6 +55,8 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 @export
 class Point3D(Generic[Coordinate]):
+	"""An implementation of a 3D cartesian point."""
+
 	x: Coordinate
 	y: Coordinate
 	z: Coordinate
@@ -134,6 +134,8 @@ class Point3D(Generic[Coordinate]):
 
 @export
 class Origin3D(Point3D[Coordinate]):
+	"""An implementation of a 3D cartesian origin."""
+
 	def __init__(self) -> None:
 		super().__init__(0, 0, 0)
 
@@ -146,6 +148,8 @@ class Origin3D(Point3D[Coordinate]):
 
 @export
 class Offset3D(Generic[Coordinate]):
+	"""An implementation of a 3D cartesian offset."""
+
 	xOffset: Coordinate
 	yOffset: Coordinate
 	zOffset: Coordinate
@@ -217,6 +221,8 @@ class Offset3D(Generic[Coordinate]):
 
 @export
 class Size3D:
+	"""An implementation of a 3D cartesian size."""
+
 	width: Coordinate
 	height: Coordinate
 	depth: Coordinate
@@ -248,6 +254,8 @@ class Size3D:
 
 @export
 class Segment3D(Generic[Coordinate]):
+	"""An implementation of a 3D cartesian segment."""
+
 	start: Point3D[Coordinate]
 	end: Point3D[Coordinate]
 
@@ -258,6 +266,8 @@ class Segment3D(Generic[Coordinate]):
 
 @export
 class LineSegment3D(Segment3D[Coordinate]):
+	"""An implementation of a 3D cartesian line segment."""
+
 	@readonly
 	def Length(self) -> float:
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2 + (self.end.z - self.start.z) ** 2)

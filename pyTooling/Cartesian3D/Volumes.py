@@ -57,7 +57,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 @export
 class Volume:
-	pass
+	"""Base-class for all 3D cartesian volumes."""
 
 
 @export

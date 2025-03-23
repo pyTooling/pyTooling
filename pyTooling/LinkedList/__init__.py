@@ -28,9 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
+"""An object-oriented doubly linked-list data structure for Python."""
 
-"""
 from collections.abc import Sized
 from sys             import version_info
 from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable
@@ -57,12 +56,14 @@ _NodeValue = TypeVar("_NodeValue")
 
 
 @export
-class ListException(ToolingException):
-	pass
+class LinkedListException(ToolingException):
+	"""Base exception of all exceptions raised by :mod:`pyTooling.LinkedList`."""
 
 
 @export
 class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
+	"""A node in an object-oriented doubly linked-list."""
+
 	_list:     Nullable["LinkedList[_NodeValue]"]
 	_next:     Nullable["Node[_NodeValue]"]
 	_previous: Nullable["Node[_NodeValue]"]
@@ -250,7 +251,10 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				self._list = None
 
 
+@export
 class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
+	"""An object-oriented doubly linked-list."""
+
 	_begin: Nullable[Node[_NodeValue]]
 	_end:   Nullable[Node[_NodeValue]]
 	_count: int
@@ -287,7 +291,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 					ex.add_note(f"Got type '{getFullyQualifiedName(first)}'.")
 				raise ex
 			elif first._list is not None:
-				raise ListException(f"First element in parameter 'nodes' is assigned to different list.")
+				raise LinkedListException(f"First element in parameter 'nodes' is assigned to different list.")
 
 			position = 1
 			first._list = self
@@ -301,7 +305,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 						ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 					raise ex
 				elif node._list is not None:
-					raise ListException(f"{position}. element in parameter 'nodes' is assigned to different list.")
+					raise LinkedListException(f"{position}. element in parameter 'nodes' is assigned to different list.")
 
 				node._list = self
 				node._previous = previous
@@ -346,7 +350,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if node._list is not None:
-			raise ListException(f"Parameter 'node' belongs to another linked list.")
+			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
 
 		node._list = self
 		node._previous = None
@@ -369,7 +373,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if node._list is not None:
-			raise ListException(f"Parameter 'node' belongs to another linked list.")
+			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
 
 		node._list = self
 		node._next = None
@@ -383,7 +387,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 	def RemoveFromBegin(self) -> Node[_NodeValue]:
 		if self._begin is None:
-			raise ListException(f"List is empty.")
+			raise LinkedListException(f"List is empty.")
 
 		node = self._begin
 		self._begin = node._next
@@ -399,7 +403,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 	def RemoveFromEnd(self) -> Node[_NodeValue]:
 		if self._end is None:
-			raise ListException(f"List is empty.")
+			raise LinkedListException(f"List is empty.")
 
 		node = self._end
 		self._end = node._previous
@@ -422,7 +426,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 				node = node._next
 			else:
-				raise ListException(f"Node not found.")
+				raise LinkedListException(f"Node not found.")
 		else:
 			node = self._end
 			while node is not None:
@@ -431,7 +435,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 				node = node._previous
 			else:
-				raise ListException(f"Node not found.")
+				raise LinkedListException(f"Node not found.")
 
 		return node
 
@@ -488,4 +492,4 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			node = node._next
 			pos += 1
 		else:  # pragma: no cover
-			raise ListException(f"Node position not found.")
+			raise LinkedListException(f"Node position not found.")

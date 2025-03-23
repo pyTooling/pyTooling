@@ -3,7 +3,7 @@
 2D Cartesian
 ############
 
-The :mod:`pyTooling.Cartesian` package
+The :mod:`pyTooling.Cartesian2D` package ...
 
 .. #contents:: Table of Contents
    :local:
@@ -118,28 +118,28 @@ Shapes
 
 
 
-.. _STRUCT/Cartesian3D/Shape:
+.. _STRUCT/Cartesian2D/Shape:
 
 Shape
 =====
 
 
 
-.. _STRUCT/Cartesian3D/Trapezium:
+.. _STRUCT/Cartesian2D/Trapezium:
 
 Trapezium
 =========
 
 
 
-.. _STRUCT/Cartesian3D/Rectangle:
+.. _STRUCT/Cartesian2D/Rectangle:
 
 Rectangle
 =========
 
 
 
-.. _STRUCT/Cartesian3D/Square:
+.. _STRUCT/Cartesian2D/Square:
 
 Square
 ======
@@ -151,6 +151,7 @@ Square
 3D Cartesian
 ############
 
+The :mod:`pyTooling.Cartesian3D` package ...
 
 
 .. _STRUCT/Cartesian3D/Classes:

@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-
-"""
+"""An implementation of 2D cartesian data structures for Python."""
 
 from math   import sqrt, acos
 from typing import TypeVar, Union, Generic, Any, Tuple
@@ -58,6 +56,8 @@ Coordinate = TypeVar("Coordinate", bound=Union[int, float])
 
 @export
 class Point2D(Generic[Coordinate]):
+	"""An implementation of a 2D cartesian point."""
+
 	x: Coordinate
 	y: Coordinate
 
@@ -126,6 +126,8 @@ class Point2D(Generic[Coordinate]):
 
 @export
 class Origin2D(Point2D[Coordinate]):
+	"""An implementation of a 2D cartesian origin."""
+
 	def __init__(self) -> None:
 		super().__init__(0, 0)
 
@@ -138,6 +140,8 @@ class Origin2D(Point2D[Coordinate]):
 
 @export
 class Offset2D(Generic[Coordinate]):
+	"""An implementation of a 2D cartesian offset."""
+
 	xOffset: Coordinate
 	yOffset: Coordinate
 
@@ -201,6 +205,8 @@ class Offset2D(Generic[Coordinate]):
 
 @export
 class Size2D:
+	"""An implementation of a 2D cartesian size."""
+
 	width: Coordinate
 	height: Coordinate
 
@@ -228,6 +234,8 @@ class Size2D:
 
 @export
 class Segment2D(Generic[Coordinate]):
+	"""An implementation of a 2D cartesian segment."""
+
 	start: Point2D[Coordinate]
 	end: Point2D[Coordinate]
 
@@ -238,6 +246,8 @@ class Segment2D(Generic[Coordinate]):
 
 @export
 class LineSegment2D(Segment2D[Coordinate]):
+	"""An implementation of a 2D cartesian line segment."""
+
 	@readonly
 	def Length(self) -> float:
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)

@@ -3,7 +3,7 @@
 Doubly Linked List
 ##################
 
-The :mod:`pyTooling.List` package
+The :mod:`pyTooling.LinkedList` package ...
 
 .. #contents:: Table of Contents
    :local:

@@ -32,7 +32,7 @@
 
 from unittest import TestCase
 
-from pyTooling.LinkedList import Node, LinkedList, ListException
+from pyTooling.LinkedList import Node, LinkedList, LinkedListException
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -124,7 +124,7 @@ class Instantiation(TestCase):
 		node0._list = "list"
 		nodes = (node0, )
 
-		with self.assertRaises(ListException):
+		with self.assertRaises(LinkedListException):
 			_ = LinkedList(nodes)
 
 	def test_LinkedList_Tuple2(self) -> None:
@@ -144,7 +144,7 @@ class Instantiation(TestCase):
 		node1._list = "list"
 		nodes = (node0, node1)
 
-		with self.assertRaises(ListException):
+		with self.assertRaises(LinkedListException):
 			_ = LinkedList(nodes)
 
 	def test_LinkedList_Tuple3(self) -> None:
@@ -224,7 +224,7 @@ class Insert(TestCase):
 
 		node = Node(0)
 		node._list = "list"
-		with self.assertRaises(ListException):
+		with self.assertRaises(LinkedListException):
 			ll.InsertAtBegin(node)
 
 	def test_InsertLast(self) -> None:
@@ -275,7 +275,7 @@ class Insert(TestCase):
 
 		node = Node(0)
 		node._list = "list"
-		with self.assertRaises(ListException):
+		with self.assertRaises(LinkedListException):
 			ll.InsertAtEnd(node)
 
 
@@ -283,7 +283,7 @@ class Remove(TestCase):
 	def test_RemoveFirst_EmptyList(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(ListException):
+		with self.assertRaises(LinkedListException):
 			ll.RemoveFromBegin()
 
 	def test_RemoveFirst(self) -> None:
@@ -334,7 +334,7 @@ class Remove(TestCase):
 	def test_RemoveLast_EmptyList(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(ListException):
+		with self.assertRaises(LinkedListException):
 			ll.RemoveFromEnd()
 
 	def test_RemoveLast(self) -> None:

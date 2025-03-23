@@ -56,7 +56,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 @export
 class Shape(Generic[Coordinate]):
-	pass
+	"""Base-class for all 2D cartesian shapes."""
 
 
 @export
