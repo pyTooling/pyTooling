@@ -32,7 +32,7 @@
 
 from collections.abc import Sized
 from sys             import version_info
-from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable
+from typing import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List
 
 try:
 	from pyTooling.Decorators  import readonly, export
@@ -250,6 +250,20 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				self._list._count -= 1
 				self._list = None
 
+	def IterateToFirst(self) -> Generator["Node[_NodeValue]", None, None]:
+		node = self._previous
+
+		while node is not None:
+			yield node
+			node = node._previous
+
+	def IterateToLast(self) -> Generator["Node[_NodeValue]", None, None]:
+		node = self._next
+
+		while node is not None:
+			yield node
+			node = node._next
+
 	def __repr__(self) -> str:
 		return f"Node: {self._value}"
 
@@ -455,6 +469,22 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 		last._previous = node
 		self._begin = last
+
+	def IterateFromFirst(self) -> Generator[Node[_NodeValue], None, None]:
+		if self._begin is None:
+			return
+
+		node = self._begin
+
+		while node is not None:
+			yield node
+			node = node._next
+
+	def ToList(self) -> List[Node[_NodeValue]]:
+		return [n for n in self.IterateFromFirst()]
+
+	def ToTuple(self) -> Tuple[Node[_NodeValue], ...]:
+		return tuple(self.IterateFromFirst())
 
 	# Remove at position (= __delitem__)
 	# Remove by predicate (n times)

@@ -144,6 +144,8 @@ if ($liveunit)
   $env:ENVIRONMENT_NAME = "Windows (x86-64)"
   pytest -raP --color=yes --junitxml=report/unit/TestReportSummary.xml --template=html1/index.html --report=report/unit/html/index.html --split-report tests/unit
 
+  pyedaa-reports -v unittest "--merge=pyTest-JUnit:report/unit/TestReportSummary.xml" "--pytest=rewrite-dunder-init;reduce-depth:pytest.tests.unit" "--output=pyTest-JUnit:report/unit/unittest.xml"
+
   if ($copyunit)
   { cp -Recurse -Force .\report\unit\html\* .\doc\_build\html\unittests
     Write-Host -ForegroundColor DarkBlue    "[live][UNIT]      Copyed unit testing report to 'unittests' directory in HTML directory"
@@ -159,6 +161,8 @@ elseif ($unit)
   $runUnitFunc = {
     $env:ENVIRONMENT_NAME = "Windows (x86-64)"
     pytest -raP --color=yes --junitxml=report/unit/TestReportSummary.xml --template=html1/index.html --report=report/unit/html/index.html --split-report tests/unit
+
+    pyedaa-reports -v unittest "--merge=pyTest-JUnit:report/unit/TestReportSummary.xml" "--pytest=rewrite-dunder-init;reduce-depth:pytest.tests.unit" "--output=pyTest-JUnit:report/unit/unittest.xml"
   }
   $unitJob = Start-Job -Name "UnitTests" -ScriptBlock $runUnitFunc
   $jobs += $unitJob
