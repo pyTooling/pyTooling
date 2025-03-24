@@ -462,7 +462,7 @@ class Remove(TestCase):
 		self.assertIsNone(node2.Next)
 
 
-class Clear(TestCase):
+class MiscOperations(TestCase):
 	def test_Clear_EmptyList(self) -> None:
 		ll = LinkedList()
 
@@ -481,6 +481,63 @@ class Clear(TestCase):
 		self.assertEqual(0, ll.Count)
 		self.assertIsNone(ll.First)
 		self.assertIsNone(ll.Last)
+
+	def test_Reverse_Empty(self) -> None:
+		ll = LinkedList()
+
+		ll.Reverse()
+
+		self.assertEqual(0, ll.Count)
+		self.assertIsNone(ll.First)
+		self.assertIsNone(ll.Last)
+
+	def test_Reverse1(self) -> None:
+		ll = LinkedList()
+
+		node = Node(0)
+		ll.InsertAtEnd(node)
+
+		ll.Reverse()
+
+		self.assertEqual(1, ll.Count)
+		self.assertIs(ll.First, ll.Last)
+		self.assertIsNone(node.Previous)
+		self.assertIsNone(node.Next)
+
+	def test_Reverse2(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		node2 = Node(2)
+		ll.InsertAtEnd(node2)
+
+		ll.Reverse()
+
+		self.assertEqual(2, ll.Count)
+		self.assertIs(node2, ll.First)
+		self.assertIs(node1, ll.Last)
+		self.assertIsNone(node2.Previous)
+		self.assertIsNone(node1.Next)
+
+	def test_Reverse3(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+		node2 = Node(2)
+		ll.InsertAtEnd(node2)
+		node3 = Node(3)
+		ll.InsertAtEnd(node3)
+
+		ll.Reverse()
+
+		self.assertEqual(3, ll.Count)
+		self.assertIs(node3, ll.First)
+		self.assertIs(node1, ll.Last)
+		self.assertIsNone(node3.Previous)
+		self.assertIsNone(node1.Next)
 
 
 class GetItem(TestCase):

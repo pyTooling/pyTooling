@@ -250,6 +250,9 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				self._list._count -= 1
 				self._list = None
 
+	def __repr__(self) -> str:
+		return f"Node: {self._value}"
+
 
 @export
 class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
@@ -439,6 +442,20 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 		return node
 
+	def Reverse(self) -> None:
+		if self._begin is None or self._begin is self._end:
+			return
+
+		node = self._end = self._begin
+
+		while node is not None:
+			last = node
+			node = last._next
+			last._next = last._previous
+
+		last._previous = node
+		self._begin = last
+
 	# Remove at position (= __delitem__)
 	# Remove by predicate (n times)
 
@@ -453,10 +470,6 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 	# slice by start, length from right
 	# slice by start, length from left
 	# Slice by predicate
-
-	# reverse
-
-	# clear
 
 	# iterate start, length from right
 	# iterate start, length from left
