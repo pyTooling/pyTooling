@@ -175,12 +175,15 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if node._list is not None:
-			raise ValueError(f"Parameter 'node' belongs to another linked list.")
+			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
 
 		node._list = self._list
 		node._next = self
 		node._previous = self._previous
-		self._previous._next = node
+		if self._previous is None:
+			self._list._begin = node
+		else:
+			self._previous._next = node
 		self._previous = node
 		self._list._count += 1
 
@@ -195,12 +198,15 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if node._list is not None:
-			raise ValueError(f"Parameter 'node' belongs to another linked list.")
+			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
 
 		node._list = self._list
 		node._previous = self
 		node._next = self._next
-		self._next._previous = node
+		if self._next is None:
+			self._list._end = node
+		else:
+			self._next._previous = node
 		self._next = node
 		self._list._count += 1
 
@@ -404,7 +410,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 	def RemoveFromBegin(self) -> Node[_NodeValue]:
 		if self._begin is None:
-			raise LinkedListException(f"List is empty.")
+			raise LinkedListException(f"Linked list is empty.")
 
 		node = self._begin
 		self._begin = node._next
@@ -420,7 +426,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 	def RemoveFromEnd(self) -> Node[_NodeValue]:
 		if self._end is None:
-			raise LinkedListException(f"List is empty.")
+			raise LinkedListException(f"Linked list is empty.")
 
 		node = self._end
 		self._end = node._previous
@@ -479,6 +485,16 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		while node is not None:
 			yield node
 			node = node._next
+
+	def IterateFromLast(self) -> Generator[Node[_NodeValue], None, None]:
+		if self._end is None:
+			return
+
+		node = self._end
+
+		while node is not None:
+			yield node
+			node = node._previous
 
 	def ToList(self) -> List[Node[_NodeValue]]:
 		return [n for n in self.IterateFromFirst()]

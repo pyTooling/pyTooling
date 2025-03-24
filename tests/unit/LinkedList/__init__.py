@@ -278,6 +278,138 @@ class Insert(TestCase):
 		with self.assertRaises(LinkedListException):
 			ll.InsertAtEnd(node)
 
+	def test_InserBefore(self) -> None:
+		ll = LinkedList()
+
+		node0 = Node(0)
+		node2 = Node(2)
+		ll.InsertAtEnd(node0)
+		ll.InsertAtEnd(node2)
+
+		node1 = Node(1)
+		node2.InsertBefore(node1)
+
+		self.assertEqual(3, ll.Count)
+		self.assertIs(node0, ll.First)
+		self.assertIs(node2, ll.Last)
+		self.assertIsNone(node0.Previous)
+		self.assertIs(node1, node0.Next)
+		self.assertIs(node0, node1.Previous)
+		self.assertIs(node2, node1.Next)
+		self.assertIs(node1, node2.Previous)
+		self.assertIsNone(node2.Next)
+
+	def test_InserBefore_First(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		node0 = Node(0)
+		node1.InsertBefore(node0)
+
+		self.assertEqual(2, ll.Count)
+		self.assertIs(node0, ll.First)
+		self.assertIs(node1, ll.Last)
+		self.assertIsNone(node0.Previous)
+		self.assertIs(node1, node0.Next)
+		self.assertIs(node0, node1.Previous)
+
+	def test_InserBefore_None(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		with self.assertRaises(ValueError):
+			node1.InsertBefore(None)
+
+	def test_InserBefore_WrongType(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		with self.assertRaises(TypeError):
+			node1.InsertBefore("node")
+
+	def test_InserBefore_UsedNode(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		node0 = Node(0)
+		node0._list = "list"
+		with self.assertRaises(LinkedListException):
+			node1.InsertBefore(node0)
+
+	def test_InserAfter(self) -> None:
+		ll = LinkedList()
+
+		node0 = Node(0)
+		node2 = Node(2)
+		ll.InsertAtEnd(node0)
+		ll.InsertAtEnd(node2)
+
+		node1 = Node(1)
+		node0.InsertAfter(node1)
+
+		self.assertEqual(3, ll.Count)
+		self.assertIs(node0, ll.First)
+		self.assertIs(node2, ll.Last)
+		self.assertIsNone(node0.Previous)
+		self.assertIs(node1, node0.Next)
+		self.assertIs(node0, node1.Previous)
+		self.assertIs(node2, node1.Next)
+		self.assertIs(node1, node2.Previous)
+		self.assertIsNone(node2.Next)
+
+	def test_InserAfter_First(self) -> None:
+		ll = LinkedList()
+
+		node0 = Node(0)
+		ll.InsertAtEnd(node0)
+
+		node1 = Node(1)
+		node0.InsertAfter(node1)
+
+		self.assertEqual(2, ll.Count)
+		self.assertIs(node0, ll.First)
+		self.assertIs(node1, ll.Last)
+		self.assertIsNone(node0.Previous)
+		self.assertIs(node1, node0.Next)
+		self.assertIs(node0, node1.Previous)
+
+	def test_InserAfter_None(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		with self.assertRaises(ValueError):
+			node1.InsertAfter(None)
+
+	def test_InserAfter_WrongType(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		with self.assertRaises(TypeError):
+			node1.InsertAfter("node")
+
+	def test_InserAfter_UsedNode(self) -> None:
+		ll = LinkedList()
+
+		node1 = Node(1)
+		ll.InsertAtEnd(node1)
+
+		node0 = Node(0)
+		node0._list = "list"
+		with self.assertRaises(LinkedListException):
+			node1.InsertAfter(node0)
+
 
 class Remove(TestCase):
 	def test_RemoveFirst_EmptyList(self) -> None:
@@ -543,14 +675,9 @@ class MiscOperations(TestCase):
 class GetItem(TestCase):
 	def test_GetFirst(self) -> None:
 		ll = LinkedList()
-		ll.InsertAtEnd(Node(0))
-		ll.InsertAtEnd(Node(1))
-		ll.InsertAtEnd(Node(2))
-		ll.InsertAtEnd(Node(3))
-		ll.InsertAtEnd(Node(4))
-		ll.InsertAtEnd(Node(5))
 
-		self.assertEqual(6, ll.Count)
+		for i in range(6):
+			ll.InsertAtEnd(Node(i))
 
 		first = ll[0]
 
@@ -560,14 +687,9 @@ class GetItem(TestCase):
 
 	def test_GetSecond(self) -> None:
 		ll = LinkedList()
-		ll.InsertAtEnd(Node(0))
-		ll.InsertAtEnd(Node(1))
-		ll.InsertAtEnd(Node(2))
-		ll.InsertAtEnd(Node(3))
-		ll.InsertAtEnd(Node(4))
-		ll.InsertAtEnd(Node(5))
 
-		self.assertEqual(6, ll.Count)
+		for i in range(6):
+			ll.InsertAtEnd(Node(i))
 
 		second = ll[1]
 
@@ -577,14 +699,9 @@ class GetItem(TestCase):
 
 	def test_GetThird(self) -> None:
 		ll = LinkedList()
-		ll.InsertAtEnd(Node(0))
-		ll.InsertAtEnd(Node(1))
-		ll.InsertAtEnd(Node(2))
-		ll.InsertAtEnd(Node(3))
-		ll.InsertAtEnd(Node(4))
-		ll.InsertAtEnd(Node(5))
 
-		self.assertEqual(6, ll.Count)
+		for i in range(6):
+			ll.InsertAtEnd(Node(i))
 
 		third = ll[2]
 
@@ -592,14 +709,9 @@ class GetItem(TestCase):
 
 	def test_GetLast(self) -> None:
 		ll = LinkedList()
-		ll.InsertAtEnd(Node(0))
-		ll.InsertAtEnd(Node(1))
-		ll.InsertAtEnd(Node(2))
-		ll.InsertAtEnd(Node(3))
-		ll.InsertAtEnd(Node(4))
-		ll.InsertAtEnd(Node(5))
 
-		self.assertEqual(6, ll.Count)
+		for i in range(6):
+			ll.InsertAtEnd(Node(i))
 
 		last = ll[5]
 
@@ -620,3 +732,215 @@ class GetItem(TestCase):
 
 		with self.assertRaises(ValueError):
 			_ = ll[2]
+
+
+class Search(TestCase):
+	def test_Search_Empty(self) -> None:
+		ll = LinkedList()
+
+		with self.assertRaises(LinkedListException):
+			ll.Search(lambda n: n.Value == 4)
+
+	def test_Search_NotFound(self) -> None:
+		ll = LinkedList()
+
+		for i in range(1, 6):
+			ll.InsertAtEnd(Node(i))
+
+		with self.assertRaises(LinkedListException):
+			ll.Search(lambda n: n.Value == 10)
+
+	def test_Search_NotFound_Reverse(self) -> None:
+		ll = LinkedList()
+
+		for i in range(1, 6):
+			ll.InsertAtEnd(Node(i))
+
+		with self.assertRaises(LinkedListException):
+			ll.Search(lambda n: n.Value == 10, reverse=True)
+
+	def test_Search(self) -> None:
+		ll = LinkedList()
+
+		for i in range(1, 6):
+			ll.InsertAtEnd(Node(i))
+
+		node = ll.Search(lambda n: n.Value % 2 == 0)
+
+		self.assertEqual(2, node.Value)
+
+	def test_Search_Reverse(self) -> None:
+		ll = LinkedList()
+
+		for i in range(1, 6):
+			ll.InsertAtEnd(Node(i))
+
+		node = ll.Search(lambda n: n.Value % 2 == 0, reverse=True)
+
+		self.assertEqual(4, node.Value)
+
+
+class Iterate(TestCase):
+	def test_IterateFromFirst_Empty(self) -> None:
+		ll = LinkedList()
+
+		with self.assertRaises(StopIteration):
+			iterator = iter(ll.IterateFromFirst())
+			_ = next(iterator)
+
+	def test_IterateFromFirst(self) -> None:
+		ll = LinkedList()
+
+		length = 5
+		sequence = []
+		for i in range(length):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		self.assertEqual(length, ll.Count)
+
+		self.assertListEqual(sequence, [n for n in ll.IterateFromFirst()])
+
+	def test_IterateFromLast_Empty(self) -> None:
+		ll = LinkedList()
+
+		with self.assertRaises(StopIteration):
+			iterator = iter(ll.IterateFromLast())
+			_ = next(iterator)
+
+	def test_IterateFromLast(self) -> None:
+		ll = LinkedList()
+
+		length = 5
+		sequence = []
+		for i in range(length):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		self.assertEqual(length, ll.Count)
+
+		sequence.reverse()
+		self.assertListEqual(sequence, [n for n in ll.IterateFromLast()])
+
+	def test_IterateToFirst_First(self) -> None:
+		ll = LinkedList()
+
+		length = 5
+		sequence = []
+		for i in range(length):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		self.assertEqual(length, ll.Count)
+
+		index = 0
+		actual = [n for n in sequence[index].IterateToFirst()]
+		self.assertEqual(0, len(actual))
+
+	def test_IterateToFirst(self) -> None:
+		ll = LinkedList()
+
+		length = 5
+		sequence = []
+		for i in range(length):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		self.assertEqual(length, ll.Count)
+
+		index = 3
+		actual = [n for n in sequence[index].IterateToFirst()]
+		self.assertEqual(index, len(actual))
+
+		expected = sequence[0:index]
+		expected.reverse()
+		self.assertListEqual(expected, actual)
+
+	def test_IterateToLast_Last(self) -> None:
+		ll = LinkedList()
+
+		length = 5
+		sequence = []
+		for i in range(length):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		self.assertEqual(length, ll.Count)
+
+		index = length - 1
+		actual = [n for n in sequence[index].IterateToLast()]
+		self.assertEqual(0, len(actual))
+
+	def test_IterateToLast(self) -> None:
+		ll = LinkedList()
+
+		length = 5
+		sequence = []
+		for i in range(length):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		self.assertEqual(length, ll.Count)
+
+		index = 1
+		actual = [n for n in sequence[index].IterateToLast()]
+		self.assertEqual(length - index - 1, len(actual))
+
+		expected = sequence[index + 1:length - index + 1]
+		self.assertListEqual(expected, actual)
+
+
+class Conversion(TestCase):
+	def test_ToTuple_Empty(self) -> None:
+		ll = LinkedList()
+
+		t = ll.ToTuple()
+
+		self.assertIsInstance(t, tuple)
+		self.assertEqual(0, len(t))
+		self.assertTupleEqual(tuple(), t)
+
+	def test_ToTuple(self) -> None:
+		ll = LinkedList()
+
+		sequence = []
+		for i in range(5):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		t = ll.ToTuple()
+
+		self.assertIsInstance(t, tuple)
+		self.assertEqual(len(sequence), len(t))
+		self.assertTupleEqual(tuple(sequence), t)
+
+	def test_ToList_Empty(self) -> None:
+		ll = LinkedList()
+
+		l = ll.ToList()
+
+		self.assertIsInstance(l, list)
+		self.assertEqual(0, len(l))
+		self.assertListEqual([], l)
+
+	def test_ToList(self) -> None:
+		ll = LinkedList()
+
+		sequence = []
+		for i in range(5):
+			node = Node(i)
+			sequence.append(node)
+			ll.InsertAtEnd(node)
+
+		l = ll.ToList()
+
+		self.assertIsInstance(l, list)
+		self.assertEqual(len(sequence), len(l))
+		self.assertListEqual(sequence, l)
