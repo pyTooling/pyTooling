@@ -9,7 +9,7 @@ on:
 
 jobs:
   ConfigParams:
-    uses: pyTooling/Actions/.github/workflows/ExtractConfiguration.yml@r4
+    uses: pyTooling/Actions/.github/workflows/ExtractConfiguration.yml@dev
     with:
       package_name: pyTooling
 
@@ -105,12 +105,13 @@ jobs:
       codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
     needs:
       - UnitTestingParams
       - UnitTesting
       - PlatformTesting
     with:
+      merged_junit_filename: ${{ needs.ConfigParams.outputs.unittest_merged_report_xml_filename }}
       merged_junit_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).unittesting_xml }}
 
 #  VerifyDocs:
