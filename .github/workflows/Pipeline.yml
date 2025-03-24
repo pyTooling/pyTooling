@@ -124,7 +124,7 @@ jobs:
 
 
   Documentation:
-    uses: pyTooling/Actions/.github/workflows/SphinxDocumentation.yml@r4
+    uses: pyTooling/Actions/.github/workflows/SphinxDocumentation.yml@dev
     needs:
       - ConfigParams
       - UnitTestingParams
