@@ -32,7 +32,7 @@
 
 from collections.abc import Sized
 from sys             import version_info
-from typing import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List
+from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List, Any
 
 try:
 	from pyTooling.Decorators  import readonly, export
@@ -484,6 +484,34 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		last._previous = node
 		self._begin = last
 
+	def Sort(self, key: Nullable[Callable[[Node[_NodeValue]], Any]] = None, reverse: bool = False) -> None:
+		if (self._begin is None) or (self._begin is self._end):
+			return
+
+		if key is None:
+			def key(node: Node) -> Any:
+				return node._value
+
+		sequence = [n for n in self.IterateFromFirst()]
+		sequence.sort(key=key, reverse=reverse)
+
+		first = sequence[0]
+
+		position = 1
+		first._previous = None
+		self._begin = previous = node = first
+
+		for node in sequence[1:]:
+			node._previous = previous
+			previous._next = node
+
+			previous = node
+			position += 1
+
+		self._end = node
+		self._count = position
+		node._next = None
+
 	def IterateFromFirst(self) -> Generator[Node[_NodeValue], None, None]:
 		if self._begin is None:
 			return
@@ -505,12 +533,17 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			node = node._previous
 
 	def ToList(self) -> List[Node[_NodeValue]]:
-		return [n for n in self.IterateFromFirst()]
+		return [n.Value for n in self.IterateFromFirst()]
 
 	def ToTuple(self) -> Tuple[Node[_NodeValue], ...]:
-		return tuple(self.IterateFromFirst())
+		return tuple(n.Value for n in self.IterateFromFirst())
 
+	# Copy
 	# Sort
+
+  # merge lists
+	# append / prepend lists
+	# split list
 
 	# Remove at position (= __delitem__)
 	# Remove by predicate (n times)
@@ -526,7 +559,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 	# Count by predicate
 
-	# slice by start, length from right
+	# slice by start, length from right -> new list
 	# slice by start, length from left
 	# Slice by predicate
 

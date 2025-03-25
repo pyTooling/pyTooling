@@ -671,6 +671,67 @@ class MiscOperations(TestCase):
 		self.assertIsNone(node3.Previous)
 		self.assertIsNone(node1.Next)
 
+	def test_Sort_Empty(self) -> None:
+		ll = LinkedList()
+
+		ll.Sort()
+
+		self.assertEqual(0, ll.Count)
+		self.assertIsNone(ll.First)
+		self.assertIsNone(ll.Last)
+
+	def test_Sort_Single(self) -> None:
+		ll = LinkedList()
+		node0 = Node(0)
+		ll.InsertAtEnd(node0)
+
+		ll.Sort()
+
+		self.assertEqual(1, ll.Count)
+		self.assertIs(node0, ll.First)
+		self.assertIs(node0, ll.Last)
+		self.assertIsNone(node0.Previous)
+		self.assertIsNone(node0.Next)
+
+	def test_Sort(self) -> None:
+		sequence = [7, 6, 4, 8, 2, 5, 3, 1, 9]
+		ll = LinkedList()
+
+		for i in sequence:
+			ll.InsertAtEnd(Node(i))
+
+		ll.Sort()
+
+		self.assertListEqual([i for i in range(1, len(sequence) + 1)], ll.ToList())
+
+	def test_Sort_Reverse(self) -> None:
+		sequence = [7, 6, 4, 8, 2, 5, 3, 1, 9]
+		ll = LinkedList()
+
+		for i in sequence:
+			ll.InsertAtEnd(Node(i))
+
+		ll.Sort(reverse=True)
+
+		self.assertListEqual([i for i in range(len(sequence), 0, -1)], ll.ToList())
+
+	def test_Sort_Key(self) -> None:
+		sequence = [7, 6, 4, 8, 2, 5, 3, 1, 9]
+		ll = LinkedList()
+
+		class Inner:
+			_value: int
+
+			def __init__(self, value: int):
+				self._value = value
+
+		for i in sequence:
+			ll.InsertAtEnd(Node(Inner(i)))
+
+		ll.Sort(key=lambda node: node._value._value)
+
+		self.assertListEqual([i for i in range(1, len(sequence) + 1)], [n._value for n in ll.ToList()])
+
 
 class GetItem(TestCase):
 	def test_GetFirst(self) -> None:
@@ -912,7 +973,7 @@ class Conversion(TestCase):
 		sequence = []
 		for i in range(5):
 			node = Node(i)
-			sequence.append(node)
+			sequence.append(i)
 			ll.InsertAtEnd(node)
 
 		t = ll.ToTuple()
@@ -936,7 +997,7 @@ class Conversion(TestCase):
 		sequence = []
 		for i in range(5):
 			node = Node(i)
-			sequence.append(node)
+			sequence.append(i)
 			ll.InsertAtEnd(node)
 
 		l = ll.ToList()
