@@ -30,7 +30,6 @@
 #
 """Performance tests for pyTooling.Graph."""
 from pathlib import Path
-from statistics import mean
 
 from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex, DestinationNotReachable
 from . import PerformanceTest

@@ -214,11 +214,16 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 	# move backward
 	# move by relative pos
 	# move to position
+	# move to begin
+	# move to end
+
+	# insert tuple/list/linkedlist before
+	# insert tuple/list/linkedlist after
 
 	# iterate forward for n
 	# iterate backward for n
 
-	# slice to tuple / list
+	# slice to tuple / list starting from that node
 
 	# swap left by n
 	# swap right by n
@@ -441,6 +446,9 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		return node
 
 	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeValue]:
+		if self._begin is None:
+			raise LinkedListException(f"Linked list is empty.")
+
 		if not reverse:
 			node = self._begin
 			while node is not None:
@@ -502,10 +510,15 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 	def ToTuple(self) -> Tuple[Node[_NodeValue], ...]:
 		return tuple(self.IterateFromFirst())
 
+	# Sort
+
 	# Remove at position (= __delitem__)
 	# Remove by predicate (n times)
 
 	# Insert at position (= __setitem__)
+
+  # insert tuple/list/linkedlist at begin
+	# insert tuple/list/linkedlist at end
 
 	# Find by position (= __getitem__)
 	# Find by predicate from left (n times)
