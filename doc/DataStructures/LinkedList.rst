@@ -123,9 +123,9 @@ Instantiation
    .. grid-item::
       :columns: 6
 
-      A :class:`~pyTooling.LinkedList.LinkedList` can be instantiated as an empty list without any aditional parameters.
-      It will report via property :attr:`LinkedList.IsEmpty <pyTooling.LinkedList.LinkedList.IsEmpty>` as empty and
-      report zero elements via property :attr:`LinkedList.Count <pyTooling.LinkedList.LinkedList.Count>`.
+      The :class:`~pyTooling.LinkedList.LinkedList` can be instantiated as an empty linked list without any aditional
+      parameters. It will report as empty via property :attr:`LinkedList.IsEmpty <pyTooling.LinkedList.LinkedList.IsEmpty>`
+      and report zero elements via property :attr:`LinkedList.Count <pyTooling.LinkedList.LinkedList.Count>`.
 
       Alternatively, it can be constructed from an iterable like a :class:`tuple`, :class:`list` or any Python iterator.
       The order of the iterable is preserved.
@@ -138,23 +138,33 @@ Instantiation
 
       .. tab-set::
 
-         .. tab-item:: Initialize an empty LinkedList
+         .. tab-item:: Empty LinkedList
 
             .. code-block:: Python
 
                from pyTooling.LinkedList import LinkedList
 
+
                ll = LinkedList()
 
-         .. tab-item:: Inititialize LinkedList from tuple
+               ll.IsEmpty
+               # => True
+               ll.Count
+               # => 0
+
+         .. tab-item:: LinkedList from tuple
 
             .. code-block:: Python
 
                from pyTooling.LinkedList import LinkedList
 
                initTuple = (1, 2, 3, 4, 5)
-
                ll = LinkedList(initTuple)
+
+               ll.IsEmpty
+               # => False
+               ll.Count
+               # => 5
 
 
 Clear
@@ -183,7 +193,15 @@ Clear
 
                from pyTooling.LinkedList import LinkedList
 
-               ll = LinkedList()
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               ll.Clear()
+
+               ll.IsEmpty
+               # => False
+               ll.Count
+               # => 5
 
 Insert
 ======
@@ -195,8 +213,131 @@ Insert
 
       A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
 
+      Very fast insertions into the linked list can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>` or after the last element
+      using :meth:`LinkedList.InsertAfterLast <pyTooling.LinkedList.LinkedList.InsertAfterLast>`
+
+      Additionally, if there is a reference to a specific node of the linked list, insertions before and after that node
+      are also very efficient. The methods are :meth:`LinkedList.InsertBefore <pyTooling.LinkedList.Node.InsertBefore>`
+      and :meth:`LinkedList.InsertAfter <pyTooling.LinkedList.Node.InsertAfter>`.
+
+      The time complexity is `O(1)`.
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Before first node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList, Node
+
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               newNode = Node(0)
+               ll.InsertBeforeFirst(newNode)
+
+         .. tab-item:: After last node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList, Node
+
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               newNode = Node(6)
+               ll.InsertAfterLast(newNode)
+
+         .. tab-item:: Before current node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList, Node
+
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               node = ll[2]
+
+               newNode = Node(2.5)
+               node.InsertBefore(newNode)
+
+         .. tab-item:: After current node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList, Node
+
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               node = ll[2]
+
+               newNode = Node(3.5)
+               node.InsertAfter(newNode)
+
+
+Random Access Insert
+====================
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      Inserting a new node at a random postion is less efficient then direct inserts at the first or last element of the
+      linked list or before and after a specific node. The additional effort comes from walking the linked list to find
+      the n-th element. Then an efficient insert is performed.
+
+      The linked list is walked from the shorter end.
+
+      The time complexity is `O(n/2)`.
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Before first n-th node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList, Node
+
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               newNode = Node(2.5)
+               ll.InsertBefore(2, newNode)
+
+         .. tab-item:: Before after n-th node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList, Node
+
+               initTuple = (1, 2, 3, 4, 5)
+               ll = LinkedList(initTuple)
+
+               newNode = Node(3.5)
+               ll.InsertAfter(2, newNode)
+
+Remove
+======
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
       Very fast insertions can be achieved before the the first element using
-      :meth:`LinkedList.InsertAtBegin <pyTooling.LinkedList.LinkedList.InsertAtBegin>`
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
 
       The time complexity is `O(1)`.
 
@@ -206,7 +347,7 @@ Insert
 
       .. tab-set::
 
-         .. tab-item:: Insert before first element
+         .. tab-item:: First node
 
             .. code-block:: Python
 
@@ -214,7 +355,7 @@ Insert
 
                ll = LinkedList()
 
-         .. tab-item:: Insert after last element
+         .. tab-item:: Last node
 
             .. code-block:: Python
 
@@ -222,7 +363,7 @@ Insert
 
                ll = LinkedList()
 
-         .. tab-item:: Insert before current element
+         .. tab-item:: Current node
 
             .. code-block:: Python
 
@@ -230,7 +371,7 @@ Insert
 
                ll = LinkedList()
 
-         .. tab-item:: Insert after current element
+         .. tab-item:: At position
 
             .. code-block:: Python
 
@@ -238,7 +379,7 @@ Insert
 
                ll = LinkedList()
 
-         .. tab-item:: Insert at position
+         .. tab-item:: By predicate
 
             .. code-block:: Python
 
@@ -246,45 +387,239 @@ Insert
 
                ll = LinkedList()
 
-
-Remove
-======
-
-* at begin
-* at end
-* current node
 
 Iterate
 =======
 
-* from begin
-* from end
-* from node forward
-* from node backward
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
+      Very fast insertions can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
+
+      The time complexity is `O(1)`.
+
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Forward from first node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: Backward from last node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: Forward from current node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: Backward from current node
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
 
 Sort
 ====
 
-* sort ascending
-* sort descending
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
+      Very fast insertions can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
+
+      The time complexity is `O(1)`.
+
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Ascending
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: Descending
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
 
 Reverse
 =======
 
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
+      Very fast insertions can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
+
+      The time complexity is `O(1)`.
+
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Reverse
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
 Search
 ======
 
-search node with value
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
+      Very fast insertions can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
+
+      The time complexity is `O(1)`.
+
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: By predicate
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
 
 Convert
 =======
 
-* to tuple
-* to list
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
+      Very fast insertions can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
+
+      The time complexity is `O(1)`.
+
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: To tuple
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: To list
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
 
 Item Access
 ===========
 
-* get value
-* set value
-* del value
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A new :class:`~pyTooling.LinkedList.Node` can be inserted into the linked list at any position.
+
+      Very fast insertions can be achieved before the the first element using
+      :meth:`LinkedList.InsertBeforeFirst <pyTooling.LinkedList.LinkedList.InsertBeforeFirst>`
+
+      The time complexity is `O(1)`.
+
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Get value
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: Set value
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()
+
+         .. tab-item:: Delete value
+
+            .. code-block:: Python
+
+               from pyTooling.LinkedList import LinkedList
+
+               ll = LinkedList()

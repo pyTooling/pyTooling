@@ -113,3 +113,7 @@ section > p,
 	padding-left: 0;
 	padding-right: 0;
 }
+
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) .property {
+	display: inline;  /* inline-block; */
+}

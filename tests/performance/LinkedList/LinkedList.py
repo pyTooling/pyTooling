@@ -47,7 +47,7 @@ class Insertion(PerformanceTest):
 				ll = pt_LinkedList()
 
 				for i in range(1, count):
-					ll.InsertAtBegin(pt_Node(i))
+					ll.InsertBeforeFirst(pt_Node(i))
 
 			return func
 
@@ -59,7 +59,7 @@ class Insertion(PerformanceTest):
 				ll = pt_LinkedList()
 
 				for i in range(1, count):
-					ll.InsertAtEnd(pt_Node(i))
+					ll.InsertAfterLast(pt_Node(i))
 
 			return func
 

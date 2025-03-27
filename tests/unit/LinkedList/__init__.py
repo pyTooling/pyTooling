@@ -161,7 +161,7 @@ class Properties(TestCase):
 		self.assertEqual(0, ll.Count)
 		self.assertEqual(0, len(ll))
 
-		ll.InsertAtEnd(Node(0))
+		ll.InsertAfterLast(Node(0))
 
 		self.assertEqual(1, ll.Count)
 		self.assertEqual(1, len(ll))
@@ -180,7 +180,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node = Node(0)
-		ll.InsertAtBegin(node)
+		ll.InsertBeforeFirst(node)
 
 		self.assertEqual(1, ll.Count)
 		self.assertIs(node, ll.First)
@@ -194,8 +194,8 @@ class Insert(TestCase):
 
 		node1 = Node(1)
 		node2 = Node(2)
-		ll.InsertAtBegin(node2)
-		ll.InsertAtBegin(node1)
+		ll.InsertBeforeFirst(node2)
+		ll.InsertBeforeFirst(node1)
 
 		self.assertEqual(2, ll.Count)
 		self.assertIs(node1, ll.First)
@@ -211,13 +211,13 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		with self.assertRaises(ValueError):
-			ll.InsertAtBegin(None)
+			ll.InsertBeforeFirst(None)
 
 	def test_InsertFirst_WrongType(self) -> None:
 		ll = LinkedList()
 
 		with self.assertRaises(TypeError):
-			ll.InsertAtBegin("0")
+			ll.InsertBeforeFirst("0")
 
 	def test_InsertFirst_UsedNode(self) -> None:
 		ll = LinkedList()
@@ -225,13 +225,13 @@ class Insert(TestCase):
 		node = Node(0)
 		node._list = "list"
 		with self.assertRaises(LinkedListException):
-			ll.InsertAtBegin(node)
+			ll.InsertBeforeFirst(node)
 
 	def test_InsertLast(self) -> None:
 		ll = LinkedList()
 
 		node = Node(0)
-		ll.InsertAtEnd(node)
+		ll.InsertAfterLast(node)
 
 		self.assertEqual(1, ll.Count)
 		self.assertIs(node, ll.First)
@@ -245,8 +245,8 @@ class Insert(TestCase):
 
 		node1 = Node(1)
 		node2 = Node(2)
-		ll.InsertAtEnd(node1)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node1)
+		ll.InsertAfterLast(node2)
 
 		self.assertEqual(2, ll.Count)
 		self.assertIs(node1, ll.First)
@@ -262,13 +262,13 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		with self.assertRaises(ValueError):
-			ll.InsertAtEnd(None)
+			ll.InsertAfterLast(None)
 
 	def test_InsertLast_WrongType(self) -> None:
 		ll = LinkedList()
 
 		with self.assertRaises(TypeError):
-			ll.InsertAtEnd("0")
+			ll.InsertAfterLast("0")
 
 	def test_InsertLast_UsedNode(self) -> None:
 		ll = LinkedList()
@@ -276,15 +276,15 @@ class Insert(TestCase):
 		node = Node(0)
 		node._list = "list"
 		with self.assertRaises(LinkedListException):
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 	def test_InserBefore(self) -> None:
 		ll = LinkedList()
 
 		node0 = Node(0)
 		node2 = Node(2)
-		ll.InsertAtEnd(node0)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node0)
+		ll.InsertAfterLast(node2)
 
 		node1 = Node(1)
 		node2.InsertBefore(node1)
@@ -303,7 +303,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		node0 = Node(0)
 		node1.InsertBefore(node0)
@@ -319,7 +319,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		with self.assertRaises(ValueError):
 			node1.InsertBefore(None)
@@ -328,7 +328,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		with self.assertRaises(TypeError):
 			node1.InsertBefore("node")
@@ -337,7 +337,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		node0 = Node(0)
 		node0._list = "list"
@@ -349,8 +349,8 @@ class Insert(TestCase):
 
 		node0 = Node(0)
 		node2 = Node(2)
-		ll.InsertAtEnd(node0)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node0)
+		ll.InsertAfterLast(node2)
 
 		node1 = Node(1)
 		node0.InsertAfter(node1)
@@ -369,7 +369,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node0 = Node(0)
-		ll.InsertAtEnd(node0)
+		ll.InsertAfterLast(node0)
 
 		node1 = Node(1)
 		node0.InsertAfter(node1)
@@ -385,7 +385,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		with self.assertRaises(ValueError):
 			node1.InsertAfter(None)
@@ -394,7 +394,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		with self.assertRaises(TypeError):
 			node1.InsertAfter("node")
@@ -403,7 +403,7 @@ class Insert(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		node0 = Node(0)
 		node0._list = "list"
@@ -416,17 +416,17 @@ class Remove(TestCase):
 		ll = LinkedList()
 
 		with self.assertRaises(LinkedListException):
-			ll.RemoveFromBegin()
+			ll.RemoveFirst()
 
 	def test_RemoveFirst(self) -> None:
 		ll = LinkedList()
 
 		node = Node(0)
-		ll.InsertAtEnd(node)
+		ll.InsertAfterLast(node)
 
 		self.assertEqual(1, ll.Count)
 
-		n = ll.RemoveFromBegin()
+		n = ll.RemoveFirst()
 
 		self.assertEqual(0, ll.Count)
 		self.assertIsNone(ll.First)
@@ -443,12 +443,12 @@ class Remove(TestCase):
 
 		node1 = Node(1)
 		node2 = Node(2)
-		ll.InsertAtEnd(node1)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node1)
+		ll.InsertAfterLast(node2)
 
 		self.assertEqual(2, ll.Count)
 
-		n = ll.RemoveFromBegin()
+		n = ll.RemoveFirst()
 
 		self.assertEqual(1, ll.Count)
 		self.assertIs(node2, ll.First)
@@ -467,17 +467,17 @@ class Remove(TestCase):
 		ll = LinkedList()
 
 		with self.assertRaises(LinkedListException):
-			ll.RemoveFromEnd()
+			ll.RemoveLast()
 
 	def test_RemoveLast(self) -> None:
 		ll = LinkedList()
 
 		node = Node(0)
-		ll.InsertAtBegin(node)
+		ll.InsertBeforeFirst(node)
 
 		self.assertEqual(1, ll.Count)
 
-		n = ll.RemoveFromEnd()
+		n = ll.RemoveLast()
 
 		self.assertEqual(0, ll.Count)
 		self.assertIsNone(ll.First)
@@ -494,12 +494,12 @@ class Remove(TestCase):
 
 		node1 = Node(1)
 		node2 = Node(2)
-		ll.InsertAtBegin(node2)
-		ll.InsertAtBegin(node1)
+		ll.InsertBeforeFirst(node2)
+		ll.InsertBeforeFirst(node1)
 
 		self.assertEqual(2, ll.Count)
 
-		n = ll.RemoveFromEnd()
+		n = ll.RemoveLast()
 
 		self.assertEqual(1, ll.Count)
 		self.assertIs(node1, ll.First)
@@ -518,7 +518,7 @@ class Remove(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		self.assertEqual(1, ll.Count)
 
@@ -536,8 +536,8 @@ class Remove(TestCase):
 
 		node1 = Node(1)
 		node2 = Node(2)
-		ll.InsertAtEnd(node1)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node1)
+		ll.InsertAfterLast(node2)
 
 		self.assertEqual(2, ll.Count)
 
@@ -556,9 +556,9 @@ class Remove(TestCase):
 		node1 = Node(1)
 		node2 = Node(2)
 		node3 = Node(3)
-		ll.InsertAtEnd(node1)
-		ll.InsertAtEnd(node2)
-		ll.InsertAtEnd(node3)
+		ll.InsertAfterLast(node1)
+		ll.InsertAfterLast(node2)
+		ll.InsertAfterLast(node3)
 
 		self.assertEqual(3, ll.Count)
 
@@ -579,8 +579,8 @@ class Remove(TestCase):
 
 		node1 = Node(1)
 		node2 = Node(2)
-		ll.InsertAtBegin(node2)
-		ll.InsertAtBegin(node1)
+		ll.InsertBeforeFirst(node2)
+		ll.InsertBeforeFirst(node1)
 
 		self.assertEqual(2, ll.Count)
 
@@ -606,7 +606,7 @@ class MiscOperations(TestCase):
 
 	def test_Clear(self) -> None:
 		ll = LinkedList()
-		ll.InsertAtBegin(Node(0))
+		ll.InsertBeforeFirst(Node(0))
 
 		ll.Clear()
 
@@ -627,7 +627,7 @@ class MiscOperations(TestCase):
 		ll = LinkedList()
 
 		node = Node(0)
-		ll.InsertAtEnd(node)
+		ll.InsertAfterLast(node)
 
 		ll.Reverse()
 
@@ -640,10 +640,10 @@ class MiscOperations(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 
 		node2 = Node(2)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node2)
 
 		ll.Reverse()
 
@@ -657,11 +657,11 @@ class MiscOperations(TestCase):
 		ll = LinkedList()
 
 		node1 = Node(1)
-		ll.InsertAtEnd(node1)
+		ll.InsertAfterLast(node1)
 		node2 = Node(2)
-		ll.InsertAtEnd(node2)
+		ll.InsertAfterLast(node2)
 		node3 = Node(3)
-		ll.InsertAtEnd(node3)
+		ll.InsertAfterLast(node3)
 
 		ll.Reverse()
 
@@ -683,7 +683,7 @@ class MiscOperations(TestCase):
 	def test_Sort_Single(self) -> None:
 		ll = LinkedList()
 		node0 = Node(0)
-		ll.InsertAtEnd(node0)
+		ll.InsertAfterLast(node0)
 
 		ll.Sort()
 
@@ -698,7 +698,7 @@ class MiscOperations(TestCase):
 		ll = LinkedList()
 
 		for i in sequence:
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		ll.Sort()
 
@@ -709,7 +709,7 @@ class MiscOperations(TestCase):
 		ll = LinkedList()
 
 		for i in sequence:
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		ll.Sort(reverse=True)
 
@@ -726,7 +726,7 @@ class MiscOperations(TestCase):
 				self._value = value
 
 		for i in sequence:
-			ll.InsertAtEnd(Node(Inner(i)))
+			ll.InsertAfterLast(Node(Inner(i)))
 
 		ll.Sort(key=lambda node: node._value._value)
 
@@ -738,7 +738,7 @@ class GetItem(TestCase):
 		ll = LinkedList()
 
 		for i in range(6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		first = ll[0]
 
@@ -750,7 +750,7 @@ class GetItem(TestCase):
 		ll = LinkedList()
 
 		for i in range(6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		second = ll[1]
 
@@ -762,7 +762,7 @@ class GetItem(TestCase):
 		ll = LinkedList()
 
 		for i in range(6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		third = ll[2]
 
@@ -772,7 +772,7 @@ class GetItem(TestCase):
 		ll = LinkedList()
 
 		for i in range(6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		last = ll[5]
 
@@ -788,8 +788,8 @@ class GetItem(TestCase):
 
 	def test_Get_OutOfRange(self) -> None:
 		ll = LinkedList()
-		ll.InsertAtEnd(Node(0))
-		ll.InsertAtEnd(Node(1))
+		ll.InsertAfterLast(Node(0))
+		ll.InsertAfterLast(Node(1))
 
 		with self.assertRaises(ValueError):
 			_ = ll[2]
@@ -806,7 +806,7 @@ class Search(TestCase):
 		ll = LinkedList()
 
 		for i in range(1, 6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		with self.assertRaises(LinkedListException):
 			ll.Search(lambda n: n.Value == 10)
@@ -815,7 +815,7 @@ class Search(TestCase):
 		ll = LinkedList()
 
 		for i in range(1, 6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		with self.assertRaises(LinkedListException):
 			ll.Search(lambda n: n.Value == 10, reverse=True)
@@ -824,7 +824,7 @@ class Search(TestCase):
 		ll = LinkedList()
 
 		for i in range(1, 6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		node = ll.Search(lambda n: n.Value % 2 == 0)
 
@@ -834,7 +834,7 @@ class Search(TestCase):
 		ll = LinkedList()
 
 		for i in range(1, 6):
-			ll.InsertAtEnd(Node(i))
+			ll.InsertAfterLast(Node(i))
 
 		node = ll.Search(lambda n: n.Value % 2 == 0, reverse=True)
 
@@ -857,7 +857,7 @@ class Iterate(TestCase):
 		for i in range(length):
 			node = Node(i)
 			sequence.append(node)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		self.assertEqual(length, ll.Count)
 
@@ -878,7 +878,7 @@ class Iterate(TestCase):
 		for i in range(length):
 			node = Node(i)
 			sequence.append(node)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		self.assertEqual(length, ll.Count)
 
@@ -893,7 +893,7 @@ class Iterate(TestCase):
 		for i in range(length):
 			node = Node(i)
 			sequence.append(node)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		self.assertEqual(length, ll.Count)
 
@@ -909,7 +909,7 @@ class Iterate(TestCase):
 		for i in range(length):
 			node = Node(i)
 			sequence.append(node)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		self.assertEqual(length, ll.Count)
 
@@ -929,7 +929,7 @@ class Iterate(TestCase):
 		for i in range(length):
 			node = Node(i)
 			sequence.append(node)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		self.assertEqual(length, ll.Count)
 
@@ -945,7 +945,7 @@ class Iterate(TestCase):
 		for i in range(length):
 			node = Node(i)
 			sequence.append(node)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		self.assertEqual(length, ll.Count)
 
@@ -974,7 +974,7 @@ class Conversion(TestCase):
 		for i in range(5):
 			node = Node(i)
 			sequence.append(i)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		t = ll.ToTuple()
 
@@ -998,7 +998,7 @@ class Conversion(TestCase):
 		for i in range(5):
 			node = Node(i)
 			sequence.append(i)
-			ll.InsertAtEnd(node)
+			ll.InsertAfterLast(node)
 
 		l = ll.ToList()
 

@@ -57,17 +57,25 @@ _NodeValue = TypeVar("_NodeValue")
 
 @export
 class LinkedListException(ToolingException):
-	"""Base exception of all exceptions raised by :mod:`pyTooling.LinkedList`."""
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.LinkedList`."""
 
 
 @export
 class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
-	"""A node in an object-oriented doubly linked-list."""
+	"""
+	The node in an object-oriented doubly linked-list.
 
-	_list:     Nullable["LinkedList[_NodeValue]"]
-	_next:     Nullable["Node[_NodeValue]"]
-	_previous: Nullable["Node[_NodeValue]"]
-	_value:    _NodeValue
+	It contains a reference to the doubly linked list (:attr:`_list`), the previous node (:attr:`_previous`), the next
+	node (:attr:`_next`) and the stored data (:attr:`_value`).
+
+	The :attr:`_previous` field of the **first node** in a doubly linked list is ``None``. Similarly, the :attr:`_next`
+	field of the **last node** is ``None``. ``None`` represents the end of the linked list when iterating it node-by-node.
+	"""
+
+	_list:     Nullable["LinkedList[_NodeValue]"]  #: Reference to the doubly linked list instance.
+	_previous: Nullable["Node[_NodeValue]"]        #: Reference to the previous node.
+	_next:     Nullable["Node[_NodeValue]"]        #: Reference to the next node.
+	_value:    _NodeValue                          #: The value of the node.
 
 	def __init__(
 		self,
@@ -75,6 +83,15 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		previous: Nullable["Node[_NodeValue]"] = None,
 		next: Nullable["Node[_NodeValue]"] = None
 	) -> None:
+		"""
+		Initialize a linked list node.
+
+		:param value:      Value to store in the node.
+		:param previous:   Optional reference to the previous node.
+		:param next:       Optional reference to the next node.
+		:raises TypeError: If parameter 'previous' is not of type :class:`Node`.
+		:raises TypeError: If parameter 'next' is not of type :class:`Node`.
+		"""
 		self._previous = previous
 		self._next = next
 		self._value = value
@@ -95,7 +112,7 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				# Check if previous was the last node
 				if previous._next is None:
 					self._next = None
-					self._list._end = self
+					self._list._last = self
 				else:
 					self._next = previous._next
 					self._next._previous = self
@@ -133,7 +150,7 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				# Check if next was the first node
 				if next._previous is None:
 					self._previous = None
-					self._list._begin = self
+					self._list._first = self
 				else:
 					self._previous = next._previous
 					self._previous._next = self
@@ -146,25 +163,59 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def List(self) -> Nullable["LinkedList[_NodeValue]"]:
+		"""
+		Read-only property to access the linked list, this node belongs to.
+
+		:return: The linked list, this node is part of, or ``None``.
+		"""
 		return self._list
 
 	@readonly
-	def Next(self) -> Nullable["Node[_NodeValue]"]:
-		return self._next
+	def Previous(self) -> Nullable["Node[_NodeValue]"]:
+		"""
+		Read-only property to access nodes predecessor.
+
+		This reference is ``None`` if the node is the first node in the doubly linked list.
+
+		:return: The node before the current node or ``None``.
+		"""
+		return self._previous
 
 	@readonly
-	def Previous(self) -> Nullable["Node[_NodeValue]"]:
-		return self._previous
+	def Next(self) -> Nullable["Node[_NodeValue]"]:
+		"""
+		Read-only property to access nodes successor.
+
+		This reference is ``None`` if the node is the last node in the doubly linked list.
+
+		:return: The node after the current node or ``None``.
+		"""
+		return self._next
 
 	@property
 	def Value(self) -> _NodeValue:
+		"""
+		Property to access the node's internal data.
+
+		The data can be a scalar or a reference to an object.
+
+		:return: The node's value.
+		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, value: _NodeValue) -> None:
 		self._value = value
 
-	def InsertBefore(self, node: "Node[_NodeValue]"):
+	def InsertBefore(self, node: "Node[_NodeValue]") -> None:
+		"""
+		Insert a node before this node.
+
+		:param node:                 Node to insert.
+		:raises ValueError:          If parameter 'node' is ``None``.
+		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
 
@@ -181,13 +232,21 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		node._next = self
 		node._previous = self._previous
 		if self._previous is None:
-			self._list._begin = node
+			self._list._first = node
 		else:
 			self._previous._next = node
 		self._previous = node
 		self._list._count += 1
 
-	def InsertAfter(self, node: "Node[_NodeValue]"):
+	def InsertAfter(self, node: "Node[_NodeValue]") -> None:
+		"""
+		Insert a node after this node.
+
+		:param node:                 Node to insert.
+		:raises ValueError:          If parameter 'node' is ``None``.
+		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
 
@@ -204,7 +263,7 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		node._previous = self
 		node._next = self._next
 		if self._next is None:
-			self._list._end = node
+			self._list._last = node
 		else:
 			self._next._previous = node
 		self._next = node
@@ -228,14 +287,17 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 	# swap left by n
 	# swap right by n
 
-	def Remove(self) -> "Node[_NodeValue]":
+	def Remove(self) -> None:
+		"""
+		Remove this node from the linked list.
+		"""
 		if self._previous is None:
 			if self._list is not None:
-				self._list._begin = self._next
+				self._list._first = self._next
 				self._list._count -= 1
 
 				if self._next is None:
-					self._list._end = None
+					self._list._last = None
 
 				self._list = None
 
@@ -245,7 +307,7 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			self._next = None
 		elif self._next is None:
 			if self._list is not None:
-				self._list._end = self._previous
+				self._list._last = self._previous
 				self._list._count -= 1
 				self._list = None
 
@@ -261,14 +323,36 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				self._list._count -= 1
 				self._list = None
 
-	def IterateToFirst(self) -> Generator["Node[_NodeValue]", None, None]:
+	def IterateToFirst(self, includeSelf: bool = False) -> Generator["Node[_NodeValue]", None, None]:
+		"""
+		Return a generator iterating backward from this node to the list's first node.
+
+		Optionally, this node can be included into the generated sequence.
+
+		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at previous node.
+		:return:            A sequence of nodes towards the list's first node.
+		"""
+		if includeSelf:
+			yield self
+
 		node = self._previous
 
 		while node is not None:
 			yield node
 			node = node._previous
 
-	def IterateToLast(self) -> Generator["Node[_NodeValue]", None, None]:
+	def IterateToLast(self, includeSelf: bool = False) -> Generator["Node[_NodeValue]", None, None]:
+		"""
+		Return a generator iterating forward from this node to the list's last node.
+
+		Optionally, this node can be included into the generated sequence by setting.
+
+		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at next node.
+		:return:            A sequence of nodes towards the list's last node.
+		"""
+		if includeSelf:
+			yield self
+
 		node = self._next
 
 		while node is not None:
@@ -283,15 +367,25 @@ class Node(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 	"""An object-oriented doubly linked-list."""
 
-	_begin: Nullable[Node[_NodeValue]]
-	_end:   Nullable[Node[_NodeValue]]
-	_count: int
+	_first: Nullable[Node[_NodeValue]]  #: Reference to the first node of the linked list.
+	_last:  Nullable[Node[_NodeValue]]  #: Reference to the last node of the linked list.
+	_count: int                         #: Number of nodes in the linked list.
 
 	# allow iterable to initialize the list
-	def __init__(self, nodes: Nullable[Iterable[Node[_NodeValue]]] = None):
+	def __init__(self, nodes: Nullable[Iterable[Node[_NodeValue]]] = None) -> None:
+		"""
+		Initialize an empty linked list.
+
+		Optionally, an iterable can be given to initialize the linked list. The order is preserved.
+
+		:param nodes:                Optional iterable to initialize the linked list.
+		:raises TypeError:           If parameter 'nodes' is not an :class:`iterable <typing.Iterable>`.
+		:raises TypeError:           If parameter 'nodes' items are not of type :class:`Node`.
+		:raises LinkedListException: If parameter 'nodes' contains items which are already part of another linked list.
+		"""
 		if nodes is None:
-			self._begin = None
-			self._end = None
+			self._first = None
+			self._last = None
 			self._count = 0
 		elif not isinstance(nodes, Iterable):
 			ex = TypeError(f"Parameter 'nodes' is not an iterable.")
@@ -300,16 +394,16 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			raise ex
 		else:
 			if isinstance(nodes, Sized) and len(nodes) == 0:
-				self._begin = None
-				self._end = None
+				self._first = None
+				self._last = None
 				self._count = 0
 				return
 
 			try:
 				first = next(iterator := iter(nodes))
 			except StopIteration:
-				self._begin = None
-				self._end = None
+				self._first = None
+				self._last = None
 				self._count = 0
 				return
 
@@ -324,7 +418,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			position = 1
 			first._list = self
 			first._previous = None
-			self._begin = previous = node = first
+			self._first = previous = node = first
 
 			for node in iterator:
 				if not isinstance(node, Node):
@@ -342,32 +436,69 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 				previous = node
 				position += 1
 
-			self._end = node
+			self._last = node
 			self._count = position
 			node._next = None
 
 	@readonly
 	def IsEmpty(self) -> int:
+		"""
+		Read-only property to access the number of .
+
+		This reference is ``None`` if the node is the last node in the doubly linked list.
+
+		:return: ``True`` if linked list is empty, otherwise ``False``
+		"""
 		return self._count == 0
 
 	@readonly
 	def Count(self) -> int:
+		"""
+		Read-only property to access the number of nodes in the linked list.
+
+		:return: Number of nodes.
+		"""
 		return self._count
 
 	@readonly
 	def First(self) -> Nullable[Node[_NodeValue]]:
-		return self._begin
+		"""
+		Read-only property to access the first node in the linked list.
+
+		In case the list is empty, ``None`` is returned.
+
+		:return: First node.
+		"""
+		return self._first
 
 	@readonly
 	def Last(self) -> Nullable[Node[_NodeValue]]:
-		return self._end
+		"""
+		Read-only property to access the last node in the linked list.
+
+		In case the list is empty, ``None`` is returned.
+
+		:return: Last node.
+		"""
+		return self._last
 
 	def Clear(self) -> None:
-		self._begin = None
-		self._end = None
+		"""
+		Clear the linked list.
+		"""
+		self._first = None
+		self._last = None
 		self._count = 0
 
-	def InsertAtBegin(self, node: Node[_NodeValue]):
+	def InsertBeforeFirst(self, node: Node[_NodeValue]) -> None:
+		"""
+		Insert a node before the first node.
+
+		:param node:                 Node to insert.
+		:raises ValueError:          If parameter 'node' is ``None``.
+		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
 
@@ -382,15 +513,23 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 		node._list = self
 		node._previous = None
-		node._next = self._begin
-		if self._begin is None:
-			self._end = node
+		node._next = self._first
+		if self._first is None:
+			self._last = node
 		else:
-			self._begin._previous = node
-		self._begin = node
+			self._first._previous = node
+		self._first = node
 		self._count += 1
 
-	def InsertAtEnd(self, node: Node[_NodeValue]):
+	def InsertAfterLast(self, node: Node[_NodeValue]) -> None:
+		"""
+		Insert a node after the last node.
+
+		:param node:                 Node to insert.
+		:raises ValueError:          If parameter 'node' is ``None``.
+		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
 
@@ -405,52 +544,66 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 		node._list = self
 		node._next = None
-		node._previous = self._end
-		if self._end is None:
-			self._begin = node
+		node._previous = self._last
+		if self._last is None:
+			self._first = node
 		else:
 			node._previous._next = node
-		self._end = node
+		self._last = node
 		self._count += 1
 
-	def RemoveFromBegin(self) -> Node[_NodeValue]:
-		if self._begin is None:
+	def RemoveFirst(self) -> Node[_NodeValue]:
+		"""
+		Remove first node from linked list.
+
+		:return:                     First node.
+		:raises LinkedListException: If linked list is empty.
+		"""
+		if self._first is None:
 			raise LinkedListException(f"Linked list is empty.")
 
-		node = self._begin
-		self._begin = node._next
-		if self._begin is None:
-			self._end = None
+		node = self._first
+		self._first = node._next
+		if self._first is None:
+			self._last = None
+			self._count = 0
 		else:
-			self._begin._previous = None
-		self._count -= 1
+			self._first._previous = None
+			self._count -= 1
 
 		node._list = None
 		node._next = None
 		return node
 
-	def RemoveFromEnd(self) -> Node[_NodeValue]:
-		if self._end is None:
+	def RemoveLast(self) -> Node[_NodeValue]:
+		"""
+		Remove last node from linked list.
+
+		:return:                     Last node.
+		:raises LinkedListException: If linked list is empty.
+		"""
+		if self._last is None:
 			raise LinkedListException(f"Linked list is empty.")
 
-		node = self._end
-		self._end = node._previous
-		if self._end is None:
-			self._begin = None
+		node = self._last
+		self._last = node._previous
+		if self._last is None:
+			self._first = None
+			self._count = 0
 		else:
-			self._end._next = None
-		self._count -= 1
+			self._last._next = None
+			self._count -= 1
 
 		node._list = None
 		node._previous = None
 		return node
 
 	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeValue]:
-		if self._begin is None:
+		if self._first is None:
 			raise LinkedListException(f"Linked list is empty.")
 
 		if not reverse:
-			node = self._begin
+			node = self._first
 			while node is not None:
 				if predicate(node):
 					break
@@ -459,7 +612,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			else:
 				raise LinkedListException(f"Node not found.")
 		else:
-			node = self._end
+			node = self._last
 			while node is not None:
 				if predicate(node):
 					break
@@ -471,10 +624,13 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 		return node
 
 	def Reverse(self) -> None:
-		if self._begin is None or self._begin is self._end:
+		"""
+		Reverse the order of nodes in the linked list.
+		"""
+		if self._first is None or self._first is self._last:
 			return
 
-		node = self._end = self._begin
+		node = self._last = self._first
 
 		while node is not None:
 			last = node
@@ -482,15 +638,27 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			last._next = last._previous
 
 		last._previous = node
-		self._begin = last
+		self._first = last
 
 	def Sort(self, key: Nullable[Callable[[Node[_NodeValue]], Any]] = None, reverse: bool = False) -> None:
-		if (self._begin is None) or (self._begin is self._end):
+		"""
+		Sort the linked list in ascending or descending order.
+
+		The sort operation is **stable**.
+
+		:param key:     Optional function to access a user-defined key for sorting.
+		:param reverse: Optional parameter, if ``True`` sort in descending order, otherwise in ascending order.
+
+		.. note::
+
+		   The linked list is converted to an array, which is sorted by quicksort using the builtin :meth:`~list.sort`.
+		   Afterward, the sorted array is used to reconstruct the linked list in requested order.
+		"""
+		if (self._first is None) or (self._first is self._last):
 			return
 
 		if key is None:
-			def key(node: Node) -> Any:
-				return node._value
+			key = lambda node: node._value
 
 		sequence = [n for n in self.IterateFromFirst()]
 		sequence.sort(key=key, reverse=reverse)
@@ -499,7 +667,7 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 
 		position = 1
 		first._previous = None
-		self._begin = previous = node = first
+		self._first = previous = node = first
 
 		for node in sequence[1:]:
 			node._previous = previous
@@ -508,35 +676,71 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 			previous = node
 			position += 1
 
-		self._end = node
+		self._last = node
 		self._count = position
 		node._next = None
 
 	def IterateFromFirst(self) -> Generator[Node[_NodeValue], None, None]:
-		if self._begin is None:
+		"""
+		Return a generator iterating forward from list's first node to list's last node.
+
+		:return: A sequence of nodes towards the list's last node.
+		"""
+		if self._first is None:
 			return
 
-		node = self._begin
+		node = self._first
 
 		while node is not None:
 			yield node
 			node = node._next
 
 	def IterateFromLast(self) -> Generator[Node[_NodeValue], None, None]:
-		if self._end is None:
+		"""
+		Return a generator iterating backward from list's last node to list's first node.
+
+		:return: A sequence of nodes towards the list's first node.
+		"""
+		if self._last is None:
 			return
 
-		node = self._end
+		node = self._last
 
 		while node is not None:
 			yield node
 			node = node._previous
 
-	def ToList(self) -> List[Node[_NodeValue]]:
-		return [n.Value for n in self.IterateFromFirst()]
+	def ToList(self, reverse: bool = False) -> List[Node[_NodeValue]]:
+		"""
+		Convert the linked list to a :class:`list`.
 
-	def ToTuple(self) -> Tuple[Node[_NodeValue], ...]:
-		return tuple(n.Value for n in self.IterateFromFirst())
+		Optionally, the resulting list can be constructed in reverse order.
+
+		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
+		:return:        A list (array) of this linked list's values.
+		"""
+		if self._count == 0:
+			return []
+		elif reverse:
+			return [n._value for n in self.IterateFromLast()]
+		else:
+			return [n._value for n in self.IterateFromFirst()]
+
+	def ToTuple(self, reverse: bool = False) -> Tuple[Node[_NodeValue], ...]:
+		"""
+		Convert the linked list to a :class:`tuple`.
+
+		Optionally, the resulting tuple can be constructed in reverse order.
+
+		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
+		:return:        A tuple of this linked list's values.
+		"""
+		if self._count == 0:
+			return tuple()
+		elif reverse:
+			return tuple(n._value for n in self.IterateFromLast())
+		else:
+			return tuple(n._value for n in self.IterateFromFirst())
 
 	# Copy
 	# Sort
@@ -568,33 +772,82 @@ class LinkedList(Generic[_NodeValue], metaclass=ExtendedType, slots=True):
 	# iterate by predicate
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of nodes in the linked list.
+
+		:returns: Number of nodes.
+		"""
 		return self._count
 
 	def __getitem__(self, position: int) -> Node[_NodeValue]:
+		"""
+		Access a node in the linked list by position.
+
+		:param position:    Node position to access.
+		:return:            Node at the given position.
+		:raises ValueError: If parameter 'position' is out of range.
+
+		.. note::
+
+		   The algorithm starts iterating nodes from the shorter end.
+		"""
 		if position == 0:
-			if self._begin is None:
+			if self._first is None:
 				ex = ValueError("Parameter 'position' is out of range.")
 				if version_info >= (3, 11):  # pragma: no cover
 					ex.add_note(f"Linked list is empty.")
 				raise ex
 
-			return self._begin
+			return self._first
 		elif position == self._count - 1:
-			return self._end
+			return self._last
 		elif position >= self._count:
 			ex = ValueError("Parameter 'position' is out of range.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Linked list has {self._count} elements. Requested index: {position}.")
 			raise ex
 
-		# TODO: interate from shorter end
-		pos = 1
-		node = self._begin._next
-		while node is not None:
-			if pos == position:
-				return node
+		if position < self._count / 2:
+			pos = 1
+			node = self._first._next
+			while node is not None:
+				if pos == position:
+					return node
 
-			node = node._next
-			pos += 1
-		else:  # pragma: no cover
-			raise LinkedListException(f"Node position not found.")
+				node = node._next
+				pos += 1
+			else:  # pragma: no cover
+				raise LinkedListException(f"Node position not found.")
+		else:
+			pos = self._count - 2
+			node = self._last._previous
+			while node is not None:
+				if pos == position:
+					return node
+
+				node = node._previous
+				pos -= 1
+			else:  # pragma: no cover
+				raise LinkedListException(f"Node position not found.")
+
+	def __setitem__(self, position: int, value: _NodeValue) -> None:
+		"""
+		Set the value of node at the given position.
+
+		:param position: Position of the node to modify.
+		:param value:    New value for the node addressed by position.
+		"""
+		node = self[position]
+		node._value = value
+
+	def __delitem__(self, position: int) -> Node[_NodeValue]:
+		"""
+		Remove a node at the given position.
+
+		:param position: Position of the node to remove.
+		:return:         Removed node.
+		"""
+		node = self[position]
+		node.Remove()
+
+		return node
