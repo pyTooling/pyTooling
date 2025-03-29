@@ -95,8 +95,8 @@ Linked List Properties
 Node Properties
 ===============
 
-* Previous
-* Next
+* PreviousNode
+* NextNode
 * Value
 * List
 
@@ -218,8 +218,8 @@ Insert
       using :meth:`LinkedList.InsertAfterLast <pyTooling.LinkedList.LinkedList.InsertAfterLast>`
 
       Additionally, if there is a reference to a specific node of the linked list, insertions before and after that node
-      are also very efficient. The methods are :meth:`LinkedList.InsertBefore <pyTooling.LinkedList.Node.InsertBefore>`
-      and :meth:`LinkedList.InsertAfter <pyTooling.LinkedList.Node.InsertAfter>`.
+      are also very efficient. The methods are :meth:`LinkedList.InsertNodeBefore <pyTooling.LinkedList.Node.InsertNodeBefore>`
+      and :meth:`LinkedList.InsertNodeAfter <pyTooling.LinkedList.Node.InsertNodeAfter>`.
 
       The time complexity is `O(1)`.
 
@@ -264,7 +264,7 @@ Insert
                node = ll[2]
 
                newNode = Node(2.5)
-               node.InsertBefore(newNode)
+               node.InsertNodeBefore(newNode)
 
          .. tab-item:: After current node
 
@@ -278,7 +278,7 @@ Insert
                node = ll[2]
 
                newNode = Node(3.5)
-               node.InsertAfter(newNode)
+               node.InsertNodeAfter(newNode)
 
 
 Random Access Insert
@@ -312,7 +312,7 @@ Random Access Insert
                ll = LinkedList(initTuple)
 
                newNode = Node(2.5)
-               ll.InsertBefore(2, newNode)
+               ll.InsertNodeBefore(2, newNode)
 
          .. tab-item:: Before after n-th node
 
@@ -324,7 +324,7 @@ Random Access Insert
                ll = LinkedList(initTuple)
 
                newNode = Node(3.5)
-               ll.InsertAfter(2, newNode)
+               ll.InsertNodeAfter(2, newNode)
 
 Remove
 ======
