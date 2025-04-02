@@ -1039,37 +1039,6 @@ class Iterate(TestCase):
 
 		self.assertEqual(0, ll.Count)
 
-	def test_IterateZigZag(self) -> None:
-		print()
-
-		ll = LinkedList()
-
-		limit = 55
-		sequence = [15, 16, 17, 9, 3, 5, 20, 8, 14, 12, 7, 1, 16, 3, 11, 16, 5, 8, 2, 12, 11, 9, 12, 7, 4, 0, 11, 17, 3, 13, 7, 11, 20, 0, 3, 17, 10, 10, 13, 3, 9, 6, 3, 0, 13, 18, 7, 15, 11, 17]
-		for i in sequence:
-			ll.InsertAfterLast(Node(i))
-
-		index = 0
-		collected = 0
-		buckets = []
-		buckets.append([])
-		ll.Sort(reverse=True)
-		while not ll.IsEmpty:
-			for node in ll.IterateFromFirst():
-				if collected + node.Value > limit:
-					continue
-
-				collected += node.Value
-				buckets[index].append(node.Value)
-				node.Remove()
-
-			index += 1
-			collected = 0
-			buckets.append([])
-
-		for i, bucket in enumerate(buckets):
-			print(f"{i:2}: {len(bucket)} = {sum(bucket)}")
-
 
 class Conversion(TestCase):
 	def test_ToTuple_Empty(self) -> None:
@@ -1153,3 +1122,45 @@ class Conversion(TestCase):
 		self.assertIsInstance(l, list)
 		self.assertEqual(len(sequence), len(l))
 		self.assertListEqual(sequence, l)
+
+
+class Usecases(TestCase):
+	def test_FillBuckets(self) -> None:
+		print()
+
+		limit = 55
+		sequence = [
+			15, 16, 17, 9, 3, 5, 20, 8, 14, 12, 7, 1, 16, 3, 11, 16, 5, 8, 2, 12, 11, 9, 12, 7, 4, 0, 11, 17, 3, 13, 7, 11,
+			20, 0, 3, 17, 10, 10, 13, 3, 9, 6, 3, 0, 13, 18, 7, 15, 11, 17
+		]
+		ll = LinkedList(Node(i) for i in sequence)
+
+		index = 0
+		collected = 0
+		buckets = []
+		buckets.append([])
+		ll.Sort(reverse=True)
+		while True:
+			for node in ll.IterateFromFirst():
+				if collected + node.Value > limit:
+					continue
+
+				collected += node.Value
+				buckets[index].append(node.Value)
+				node.Remove()
+
+			index += 1
+			if not ll.IsEmpty:
+				collected = 0
+				buckets.append([])
+			else:
+				break
+
+		expected = ((6, 55), (4, 55), (4, 55), (4, 55), (5, 55), (5, 55), (6, 55), (7, 55), (9, 40))
+
+		self.assertEqual(len(expected), len(buckets))
+		for i, bucket in enumerate(buckets):
+			print(f"{i:2}: {len(bucket)} = {sum(bucket)}")
+
+			self.assertEqual(expected[i][0], len(bucket))
+			self.assertEqual(expected[i][1], sum(bucket))

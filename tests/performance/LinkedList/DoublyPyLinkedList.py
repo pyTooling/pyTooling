@@ -29,6 +29,8 @@
 # ==================================================================================================================== #
 #
 """Performance tests for pyTooling.LinkedList."""
+from typing import List
+
 from doubly_py_linked_list import DoublyLinkedList
 
 from . import PerformanceTest
@@ -64,3 +66,44 @@ class Insertion(PerformanceTest):
 			return func
 
 		self.runSizedTests(wrapper, self.counts)
+
+
+class Remove(PerformanceTest):
+	def test_FillBuckets(self) -> None:
+		limit = 145
+		def wrapper(count: int):
+			def func():
+				dll = DoublyLinkedList(self.randomArray[0:count])
+
+				index = 0
+				collected = 0
+				buckets = []
+				buckets.append([])
+				# dll.Sort(reverse=True)
+				while True:
+					items: List[int] = []
+					for pos, node in enumerate(dll):
+						if collected + node > limit:
+							continue
+
+						collected += node
+						buckets[index].append(node)
+						items.append(node)
+
+						if collected == limit:
+							break
+
+					index += 1
+					if dll.length > len(items):
+						collected = 0
+						buckets.append([])
+
+						nodes = dll.nodes()
+						for pos in items:
+							dll.remove(nodes[pos])
+					else:
+						break
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts[:-1])

@@ -28,9 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.LinkedList."""
-
-from pyTooling.LinkedList import LinkedList as pt_LinkedList, Node as pt_Node
+"""Performance tests for list."""
 from . import PerformanceTest
 
 
@@ -44,10 +42,10 @@ class Insertion(PerformanceTest):
 	def test_InsertBeforeFirst(self) -> None:
 		def wrapper(count: int):
 			def func():
-				ll = pt_LinkedList()
+				lst = []
 
 				for i in range(1, count):
-					ll.InsertBeforeFirst(pt_Node(i))
+					lst.insert(0, i)
 
 			return func
 
@@ -56,10 +54,10 @@ class Insertion(PerformanceTest):
 	def test_InsertAfterLast(self) -> None:
 		def wrapper(count: int):
 			def func():
-				ll = pt_LinkedList()
+				lst = []
 
 				for i in range(1, count):
-					ll.InsertAfterLast(pt_Node(i))
+					lst.append(i)
 
 			return func
 
@@ -67,33 +65,106 @@ class Insertion(PerformanceTest):
 
 
 class Remove(PerformanceTest):
-	def test_FillBuckets(self) -> None:
+	def test_FillBuckets_RemoveList(self) -> None:
 		limit = 145
 		def wrapper(count: int):
 			def func():
-				ll = pt_LinkedList(pt_Node(i) for i in self.randomArray[0:count])
+				lst =[i for i in self.randomArray[0:count]]
 
 				index = 0
 				collected = 0
 				buckets = []
 				buckets.append([])
-				ll.Sort(reverse=True)
+				lst.sort(reverse=True)
 				while True:
-					for node in ll.IterateFromFirst():
-						if collected + node.Value > limit:
+					removeList = []
+					for pos, value in enumerate(lst):
+						if collected + value > limit:
 							continue
 
-						collected += node.Value
-						buckets[index].append(node.Value)
-						node.Remove()
+						collected += value
+						buckets[index].append(value)
+						removeList.append(pos)
 
-						if collected == limit:
-							break
+						# if collected == limit:
+						# 	break
 
 					index += 1
-					if not ll.IsEmpty:
+					if len(lst) > len(removeList):
 						collected = 0
 						buckets.append([])
+
+						for offset, pos in enumerate(removeList):
+							lst.pop(pos - offset)
+
+					else:
+						break
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts[:-1])
+
+	def test_FillBuckets_MoveValue(self) -> None:
+		limit = 145
+		def wrapper(count: int):
+			def func():
+				lst = [i for i in self.randomArray[0:count]]
+
+				index = 0
+				collected = 0
+				buckets = []
+				buckets.append([])
+				lst.sort(reverse=True)
+				while True:
+					pos = 0
+					for value in lst:
+						if collected + value > limit:
+							lst[pos] = value
+							pos += 1
+							continue
+
+						collected += value
+						buckets[index].append(value)
+
+					lst = lst[:pos]
+					index += 1
+					if len(lst) > 0:
+						collected = 0
+						buckets.append([])
+					else:
+						break
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts[:-1])
+
+	def test_FillBuckets_NewList(self) -> None:
+		limit = 145
+		def wrapper(count: int):
+			def func():
+				lst =[i for i in self.randomArray[0:count]]
+
+				index = 0
+				collected = 0
+				buckets = []
+				buckets.append([])
+				lst.sort(reverse=True)
+				while True:
+					newLst = []
+					for value in lst:
+						if collected + value > limit:
+							newLst.append(value)
+							continue
+
+						collected += value
+						buckets[index].append(value)
+
+					lst = newLst
+					index += 1
+					if len(lst) > 0:
+						collected = 0
+						buckets.append([])
+
 					else:
 						break
 
