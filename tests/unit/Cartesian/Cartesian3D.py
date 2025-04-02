@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               _     _       _            _ _     _     _                             #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | |   (_)_ __ | | _____  __| | |   (_)___| |_                           #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |   | | '_ \| |/ / _ \/ _` | |   | / __| __|                          #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___| | | | |   <  __/ (_| | |___| \__ \ |_                           #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____|_|_| |_|_|\_\___|\__,_|_____|_|___/\__|                          #
+#             _____           _ _               ____           _            _             ____  ____                   #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|__ _ _ __| |_ ___  ___(_) __ _ _ __ |___ \|  _ \                  #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _` | '__| __/ _ \/ __| |/ _` | '_ \  __) | | | |                 #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_| | |  | ||  __/\__ \ | (_| | | | |/ __/| |_| |                 #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\__,_|_|   \__\___||___/_|\__,_|_| |_|_____|____/                  #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -28,12 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.LinkedList."""
-from typing import List
+"""
+Unit tests for ...
+"""
+from unittest            import TestCase
 
-from doubly_py_linked_list import DoublyLinkedList
-
-from . import PerformanceTest
+from pyTooling.Cartesian2D import Origin2D, Point2D, Offset2D, LineSegment2D
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -42,68 +42,90 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Insertion(PerformanceTest):
-	def test_InsertBeforeFirst(self) -> None:
-		def wrapper(count: int):
-			def func():
-				dll = DoublyLinkedList()
+class Instantiation(TestCase):
+	def test_Origin(self) -> None:
+		origin = Origin2D()
 
-				for i in range(1, count):
-					dll.insert_head(i)
+		self.assertEqual(0, origin.x)
+		self.assertEqual(0, origin.y)
+		self.assertEqual("(0, 0)", str(origin))
+		self.assertEqual("Origin2D(0, 0)", repr(origin))
 
-			return func
+	def test_Point(self) -> None:
+		point = Point2D(1, 2)
 
-		self.runSizedTests(wrapper, self.counts)
+		self.assertEqual(1, point.x)
+		self.assertEqual(2, point.y)
+		self.assertEqual("(1, 2)", str(point))
+		self.assertEqual("Point2D(1, 2)", repr(point))
 
-	def test_InsertAfterLast(self) -> None:
-		def wrapper(count: int):
-			def func():
-				dll = DoublyLinkedList()
+	def test_Offset(self) -> None:
+		offset = Offset2D(1, 2)
 
-				for i in range(1, count):
-					dll.insert_tail(i)
-
-			return func
-
-		self.runSizedTests(wrapper, self.counts)
+		self.assertEqual(1, offset.xOffset)
+		self.assertEqual(2, offset.yOffset)
+		self.assertEqual("(1, 2)", str(offset))
+		self.assertEqual("Offset2D(1, 2)", repr(offset))
 
 
-class Remove(PerformanceTest):
-	def test_FillBuckets(self) -> None:
-		limit = 145
-		def wrapper(count: int):
-			def func():
-				dll = DoublyLinkedList(self.randomArray[0:count])
+class PointArithmetic(TestCase):
+	def test_Point_Plus_Point(self) -> None:
+		point1 = Point2D(1, 2)
+		point2 = Point2D(2, 3)
 
-				index = 0
-				collected = 0
-				buckets = []
-				buckets.append([])
-				# dll.Sort(reverse=True)
-				while True:
-					items: List[int] = []
-					for pos, value in enumerate(dll):
-						if collected + value > limit:
-							continue
+		with self.assertRaises(TypeError):
+			_ = point1 + point2
 
-						collected += value
-						buckets[index].append(value)
-						items.append(pos)
+	def test_Point_Plus_Offset(self) -> None:
+		point = Point2D(1, 2)
+		offset = Offset2D(2, 3)
 
-						if collected == limit:
-							break
+		newPoint = point + offset
 
-					index += 1
-					if dll.length > len(items):
-						collected = 0
-						buckets.append([])
+		self.assertEqual(3, newPoint.x)
+		self.assertEqual(5, newPoint.y)
 
-						nodes = dll.nodes()
-						for pos in items:
-							dll.remove(nodes[pos])
-					else:
-						break
+	def test_Point_Plus_Tuple(self) -> None:
+		point = Point2D(1, 2)
+		offset = (2, 3)
 
-			return func
+		newPoint = point + offset
 
-		self.runSizedTests(wrapper, self.counts[:-1])
+		self.assertEqual(3, newPoint.x)
+		self.assertEqual(5, newPoint.y)
+
+	def test_Point_InplacePlus_Offset(self) -> None:
+		point = Point2D(1, 2)
+		offset = Offset2D(2, 3)
+
+		point += offset
+
+		self.assertEqual(3, point.x)
+		self.assertEqual(5, point.y)
+
+	def test_Point_InplacePlus_Tuple(self) -> None:
+		point = Point2D(1, 2)
+		offset = (2, 3)
+
+		point += offset
+
+		self.assertEqual(3, point.x)
+		self.assertEqual(5, point.y)
+
+	def test_Point_Minus_Offset(self) -> None:
+		point = Point2D(1, 2)
+		offset = Offset2D(2, 3)
+
+		newPoint = point + -offset
+
+		self.assertEqual(-1, newPoint.x)
+		self.assertEqual(-1, newPoint.y)
+
+	def test_Point_Minus_Point(self) -> None:
+		point1 = Point2D(1, 2)
+		point2 = Point2D(2, 3)
+
+		offset = point2 - point1
+
+		self.assertEqual(1, offset.xOffset)
+		self.assertEqual(1, offset.yOffset)

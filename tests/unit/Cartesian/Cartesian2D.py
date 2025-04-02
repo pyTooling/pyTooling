@@ -58,3 +58,74 @@ class Instantiation(TestCase):
 		self.assertEqual(2, point.y)
 		self.assertEqual("(1, 2)", str(point))
 		self.assertEqual("Point2D(1, 2)", repr(point))
+
+	def test_Offset(self) -> None:
+		offset = Offset2D(1, 2)
+
+		self.assertEqual(1, offset.xOffset)
+		self.assertEqual(2, offset.yOffset)
+		self.assertEqual("(1, 2)", str(offset))
+		self.assertEqual("Offset2D(1, 2)", repr(offset))
+
+
+class PointArithmetic(TestCase):
+	def test_Point_Plus_Point(self) -> None:
+		point1 = Point2D(1, 2)
+		point2 = Point2D(2, 3)
+
+		with self.assertRaises(TypeError):
+			_ = point1 + point2
+
+	def test_Point_Plus_Offset(self) -> None:
+		point = Point2D(1, 2)
+		offset = Offset2D(2, 3)
+
+		newPoint = point + offset
+
+		self.assertEqual(3, newPoint.x)
+		self.assertEqual(5, newPoint.y)
+
+	def test_Point_Plus_Tuple(self) -> None:
+		point = Point2D(1, 2)
+		offset = (2, 3)
+
+		newPoint = point + offset
+
+		self.assertEqual(3, newPoint.x)
+		self.assertEqual(5, newPoint.y)
+
+	def test_Point_InplacePlus_Offset(self) -> None:
+		point = Point2D(1, 2)
+		offset = Offset2D(2, 3)
+
+		point += offset
+
+		self.assertEqual(3, point.x)
+		self.assertEqual(5, point.y)
+
+	def test_Point_InplacePlus_Tuple(self) -> None:
+		point = Point2D(1, 2)
+		offset = (2, 3)
+
+		point += offset
+
+		self.assertEqual(3, point.x)
+		self.assertEqual(5, point.y)
+
+	def test_Point_Minus_Offset(self) -> None:
+		point = Point2D(1, 2)
+		offset = Offset2D(2, 3)
+
+		newPoint = point + -offset
+
+		self.assertEqual(-1, newPoint.x)
+		self.assertEqual(-1, newPoint.y)
+
+	def test_Point_Minus_Point(self) -> None:
+		point1 = Point2D(1, 2)
+		point2 = Point2D(2, 3)
+
+		offset = point2 - point1
+
+		self.assertEqual(1, offset.xOffset)
+		self.assertEqual(1, offset.yOffset)

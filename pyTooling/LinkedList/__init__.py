@@ -40,7 +40,7 @@ try:
 	from pyTooling.MetaClasses import ExtendedType
 	from pyTooling.Common      import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.List] Could not import from 'pyTooling.*'!")
+	print("[pyTooling.LinkedList] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators  import readonly, export
@@ -48,7 +48,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from MetaClasses import ExtendedType
 		from Common      import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.List] Could not import directly!")
+		print("[pyTooling.LinkedList] Could not import directly!")
 		raise ex
 
 

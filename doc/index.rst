@@ -1061,6 +1061,7 @@ License
    Common/index
    Common/CallByRef
    Common/Licensing
+   Common/Filesystem
    Common/Platform
    Common/Stopwatch
    Common/Versioning
