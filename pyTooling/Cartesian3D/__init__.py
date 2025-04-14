@@ -55,7 +55,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 
 @export
-class Point3D(Generic[Coordinate]):
+class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 3D cartesian point."""
 
 	x: Coordinate  #: The x-direction coordinate.
@@ -236,7 +236,7 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Offset3D(Generic[Coordinate]):
+class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 3D cartesian offset."""
 
 	xOffset: Coordinate  #: The x-direction offset
@@ -443,7 +443,7 @@ class Offset3D(Generic[Coordinate]):
 
 
 @export
-class Size3D:
+class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 3D cartesian size."""
 
 	width:  Coordinate  #: width in x-direction.
@@ -503,7 +503,7 @@ class Size3D:
 
 
 @export
-class Segment3D(Generic[Coordinate]):
+class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 3D cartesian segment."""
 
 	start: Point3D[Coordinate]  #: Start point of a segment.
@@ -533,7 +533,7 @@ class Segment3D(Generic[Coordinate]):
 
 
 @export
-class LineSegment3D(Segment3D[Coordinate]):
+class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 	"""An implementation of a 3D cartesian line segment."""
 
 	@readonly

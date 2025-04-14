@@ -28,38 +28,21 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An implementation of 3D cartesian volumes for Python."""
+"""
+Unit tests for ...
+"""
+from unittest import TestCase
 
-try:
-	from pyTooling.Decorators  import readonly, export
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Common      import getFullyQualifiedName
-	from pyTooling.Cartesian3D import Point3D, Offset3D
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Cartesian3D] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators  import readonly, export
-		from Exceptions  import ToolingException
-		from MetaClasses import ExtendedType
-		from Common      import getFullyQualifiedName
-		from Cartesian3D import Point3D, Offset3D
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Cartesian3D] Could not import directly!")
-		raise ex
+from pyTooling.Cartesian3D         import Point3D
+from pyTooling.Cartesian3D.Volumes import Volume, Cuboid, Cube
 
 
-@export
-class Volume:
-	"""Base-class for all 3D cartesian volumes."""
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
 
 
-@export
-class Cuboid(Volume):
-	pass
-
-
-@export
-class Cube(Cuboid):
-	pass
+class Instantiation(TestCase):
+	def test_Cube(self) -> None:
+		origin = Cube()

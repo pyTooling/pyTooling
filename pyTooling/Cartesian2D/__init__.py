@@ -56,7 +56,7 @@ Coordinate = TypeVar("Coordinate", bound=Union[int, float])
 
 
 @export
-class Point2D(Generic[Coordinate]):
+class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 2D cartesian point."""
 
 	x: Coordinate  #: The x-direction coordinate.
@@ -222,7 +222,7 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Offset2D(Generic[Coordinate]):
+class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 2D cartesian offset."""
 
 	xOffset: Coordinate  #: The x-direction offset
@@ -412,7 +412,7 @@ class Offset2D(Generic[Coordinate]):
 
 
 @export
-class Size2D:
+class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 2D cartesian size."""
 
 	width:  Coordinate  #: width in x-direction.
@@ -464,7 +464,7 @@ class Size2D:
 
 
 @export
-class Segment2D(Generic[Coordinate]):
+class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 2D cartesian segment."""
 
 	start: Point2D[Coordinate]  #: Start point of a segment.
@@ -494,7 +494,7 @@ class Segment2D(Generic[Coordinate]):
 
 
 @export
-class LineSegment2D(Segment2D[Coordinate]):
+class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 	"""An implementation of a 2D cartesian line segment."""
 
 	@readonly

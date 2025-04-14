@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               ____           _            _             _____ ____                   #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|__ _ _ __| |_ ___  ___(_) __ _ _ __ |___ /|  _ \                  #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _` | '__| __/ _ \/ __| |/ _` | '_ \  |_ \| | | |                 #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_| | |  | ||  __/\__ \ | (_| | | | |___) | |_| |                 #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\__,_|_|   \__\___||___/_|\__,_|_| |_|____/|____/                  #
+#             _____           _ _               ____           _            _             ____  ____                   #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|__ _ _ __| |_ ___  ___(_) __ _ _ __ |___ \|  _ \                  #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _` | '__| __/ _ \/ __| |/ _` | '_ \  __) | | | |                 #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_| | |  | ||  __/\__ \ | (_| | | | |/ __/| |_| |                 #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\__,_|_|   \__\___||___/_|\__,_|_| |_|_____|____/                  #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -28,38 +28,74 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An implementation of 3D cartesian volumes for Python."""
+"""
+Unit tests for ...
+"""
+from unittest import TestCase
 
-try:
-	from pyTooling.Decorators  import readonly, export
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Common      import getFullyQualifiedName
-	from pyTooling.Cartesian3D import Point3D, Offset3D
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Cartesian3D] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators  import readonly, export
-		from Exceptions  import ToolingException
-		from MetaClasses import ExtendedType
-		from Common      import getFullyQualifiedName
-		from Cartesian3D import Point3D, Offset3D
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Cartesian3D] Could not import directly!")
-		raise ex
+from pyTooling.Cartesian2D        import Point2D, LineSegment2D
+from pyTooling.Cartesian2D.Shapes import Trapezium, Rectangle, Square
 
 
-@export
-class Volume:
-	"""Base-class for all 3D cartesian volumes."""
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
 
 
-@export
-class Cuboid(Volume):
-	pass
+class Instantiation(TestCase):
+	def test_Trapezium(self) -> None:
+		point00 = Point2D(1, 1)
+		point01 = Point2D(3, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 3)
 
+		trapezium = Trapezium(point00, point01, point11, point10)
 
-@export
-class Cube(Cuboid):
-	pass
+	def test_Trapezium_str1(self) -> None:
+		point01 = Point2D(3, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 3)
+
+		with self.assertRaises(TypeError):
+			_ = Trapezium("1, 1", point01, point11, point10)
+
+	def test_Trapezium_str2(self) -> None:
+		point00 = Point2D(1, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 3)
+
+		with self.assertRaises(TypeError):
+			_ = Trapezium(point00, "3, 1", point11, point10)
+
+	def test_Trapezium_str3(self) -> None:
+		point00 = Point2D(1, 1)
+		point01 = Point2D(3, 1)
+		point10 = Point2D(1, 3)
+
+		with self.assertRaises(TypeError):
+			_ = Trapezium(point00, point01, "3, 3", point10)
+
+	def test_Trapezium_str4(self) -> None:
+		point00 = Point2D(1, 1)
+		point01 = Point2D(3, 1)
+		point11 = Point2D(3, 3)
+
+		with self.assertRaises(TypeError):
+			_ = Trapezium(point00, point01, point11, "1, 3")
+
+	def test_Rectangle(self) -> None:
+		point00 = Point2D(1, 1)
+		point01 = Point2D(3, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 3)
+
+		rectangle = Rectangle(point00, point01, point11, point10)
+
+	def test_Square(self) -> None:
+		point00 = Point2D(1, 1)
+		point01 = Point2D(3, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 3)
+
+		square = Square(point00, point01, point11, point10)

@@ -28,9 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-
-"""
+"""An implementation of 2D cartesian shapes for Python."""
+from sys import version_info
 
 from typing import Generic, Tuple, Optional as Nullable
 
@@ -60,11 +59,43 @@ class Shape(Generic[Coordinate]):
 
 
 @export
-class Trapezium(Shape[Coordinate]):
-	points: Tuple[Point2D[Coordinate], ...]
-	segments: Tuple[LineSegment2D[Coordinate], ...]
+class Trapezium(Shape[Coordinate], Generic[Coordinate]):
+	"""
+	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
+	"""
+	points:   Tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
+	segments: Tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
 
-	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]):
+	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
+		"""
+		Initializes a trapezium with 4 corners.
+
+		:param p00: First corner.
+		:param p01: Second corner.
+		:param p11: Third corner.
+		:param p10: Forth corner
+		"""
+		if not isinstance(p00, Point2D):
+			ex = TypeError(f"Parameter 'p00' is not of type Point2D.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
+			raise ex
+		if not isinstance(p01, Point2D):
+			ex = TypeError(f"Parameter 'p01' is not of type Point2D.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
+			raise ex
+		if not isinstance(p11, Point2D):
+			ex = TypeError(f"Parameter 'p11' is not of type Point2D.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
+			raise ex
+		if not isinstance(p10, Point2D):
+			ex = TypeError(f"Parameter 'p10' is not of type Point2D.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
+			raise ex
+
 		self.points = (
 			_p00 := p00.Copy(),
 			_p01 := p01.Copy(),
@@ -82,21 +113,45 @@ class Trapezium(Shape[Coordinate]):
 
 @export
 class Rectangle(Trapezium[Coordinate]):
-	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]):
+	"""
+	A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90°.
+	"""
+
+	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
+		"""
+		Initializes a rectangle with 4 corners.
+
+		:param p00: First corner.
+		:param p01: Second corner.
+		:param p11: Third corner.
+		:param p10: Forth corner
+		"""
 		super().__init__(p00, p01, p11, p10)
 
 		if self.segments[0].Length != self.segments[2].Length or self.segments[1].Length != self.segments[3].Length:
-			raise ValueError()
+			raise ValueError(f"Line segments (edges) of opposite edges different lengths.")
 
 		if (self.segments[0].AngleTo(self.segments[1]) == 0.0 and self.segments[1].AngleTo(self.segments[2]) == 0.0
 			and self.segments[2].AngleTo(self.segments[3]) == 0.0 and self.segments[3].AngleTo(self.segments[0]) == 0.0):
-			raise ValueError()
+			raise ValueError(f"Line segments (edges) have no 90° angles.")
 
 
 @export
 class Square(Rectangle[Coordinate]):
-	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]):
+	"""
+	A square is a rectangle, where all edges have the same length and all inner angels are 90°.
+	"""
+
+	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
+		"""
+		Initializes a square with 4 corners.
+
+		:param p00: First corner.
+		:param p01: Second corner.
+		:param p11: Third corner.
+		:param p10: Forth corner
+		"""
 		super().__init__(p00, p01, p11, p10)
 
 		if self.segments[0].Length != self.segments[1].Length:
-			raise ValueError()
+			raise ValueError(f"Line segments (edges) between corners have different lengths.")
