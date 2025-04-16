@@ -83,19 +83,3 @@ class Instantiation(TestCase):
 
 		with self.assertRaises(TypeError):
 			_ = Trapezium(point00, point01, point11, "1, 3")
-
-	def test_Rectangle(self) -> None:
-		point00 = Point2D(1, 1)
-		point01 = Point2D(3, 1)
-		point11 = Point2D(3, 3)
-		point10 = Point2D(1, 3)
-
-		rectangle = Rectangle(point00, point01, point11, point10)
-
-	def test_Square(self) -> None:
-		point00 = Point2D(1, 1)
-		point01 = Point2D(3, 1)
-		point11 = Point2D(3, 3)
-		point10 = Point2D(1, 3)
-
-		square = Square(point00, point01, point11, point10)

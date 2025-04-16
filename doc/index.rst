@@ -1127,6 +1127,7 @@ License
    Python Class Reference <pyTooling/pyTooling>
    unittests/index
    coverage/index
+   CodeCoverage
    Doc. Coverage Report <DocCoverage>
    Static Type Check Report ➚ <typing/index>
 
