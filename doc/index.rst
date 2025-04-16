@@ -571,15 +571,18 @@ Data Structures
       pyTooling also provides :ref:`fast and powerful data structures <STRUCT>` offering object-oriented APIs:
 
       * :ref:`Graph data structure <STRUCT/Graph>` |br|
-        |rarr| A directed graph implementation using a :class:`~pyTooling.Graph.Vertex` and an :class:`~pyTooling.Graph.Edge`
-        class.
+        |rarr| A directed graph implementation using a :class:`~pyTooling.Graph.Vertex` and an
+        :class:`~pyTooling.Graph.Edge` class.
+      * :ref:`Tree data structure <STRUCT/Tree>` |br|
+        |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
+      * :ref:`Doubly Linked List <STRUCT/LinkedList>` |br|
+        |rarr| An object-oriented implementation using a :class:`~pyTooling.List.Node` and a
+        :class:`~pyTooling.List.LinkedList` class.
       * :ref:`Path data structure <STRUCT/Path>` |br|
         |rarr| To be documented.
       * :ref:`Finite State Machine data structure <STRUCT/StateMachine>` |br|
         |rarr| A data model for state machines using a :class:`~pyTooling.StateMachine.State` and a
         :class:`~pyTooling.StateMachine.Transition` class.
-      * :ref:`Tree data structure <STRUCT/Tree>` |br|
-        |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
 
       .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
          |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
@@ -652,6 +655,29 @@ Data Structures
                # Create another standalone node and attach it later to a tree.
                uart = Node(value="UART")
                uart.Parent = vcs
+
+         .. tab-item:: Doubly Linked List
+
+            .. code-block:: Python
+
+               from pyTooling.List import Node
+
+               # Create a new doubly linked list from an iterable
+               node = Node(2)
+               nodes = (Node(1), node, Node(3))
+               linkedList = LinkedList(nodes)
+
+               # Add node before first element
+               linkedList.InsertBeforeFirst(Node(0))
+
+               # Add node after last element
+               linkedList.InsertAfterLast(Node(4))
+
+               # Get length
+               linkedList.Count   # alternatively: len(linkedList)
+
+               # Delete node
+               node.Remove()
 
 .. grid:: 3
 
@@ -1035,6 +1061,7 @@ License
    Common/index
    Common/CallByRef
    Common/Licensing
+   Common/Filesystem
    Common/Platform
    Common/Stopwatch
    Common/Versioning
@@ -1051,6 +1078,8 @@ License
    :hidden:
 
    DataStructures/index
+   DataStructures/LinkedList
+   DataStructures/Cartesian
    DataStructures/Graph
    DataStructures/Path/index
    DataStructures/StateMachine
@@ -1098,6 +1127,7 @@ License
    Python Class Reference <pyTooling/pyTooling>
    unittests/index
    coverage/index
+   CodeCoverage
    Doc. Coverage Report <DocCoverage>
    Static Type Check Report ➚ <typing/index>
 

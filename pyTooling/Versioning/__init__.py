@@ -678,11 +678,11 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		.. topic:: Format Specifiers
 
-		* ``%p`` - prefix
-		* ``%M`` - major number
-		* ``%m`` - minor number
-		* ``%u`` - micro number
-		* ``%b`` - build number
+		   * ``%p`` - prefix
+		   * ``%M`` - major number
+		   * ``%m`` - minor number
+		   * ``%u`` - micro number
+		   * ``%b`` - build number
 
 		:param formatSpec: The format specification.
 		:return:           Formatted version number.
@@ -1579,8 +1579,8 @@ class CalendarVersion(Version):
 
 		.. topic:: Format Specifiers
 
-		* ``%M`` - major number (year)
-		* ``%m`` - minor number (month/week)
+		   * ``%M`` - major number (year)
+		   * ``%m`` - minor number (month/week)
 
 		:param formatSpec: The format specification.
 		:return:           Formatted version number.

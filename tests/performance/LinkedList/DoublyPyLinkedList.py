@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _                                                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _                                                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |                                                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |                                                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |                                                                         #
+#             _____           _ _               _     _       _            _ _     _     _                             #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | |   (_)_ __ | | _____  __| | |   (_)___| |_                           #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |   | | '_ \| |/ / _ \/ _` | |   | / __| __|                          #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___| | | | |   <  __/ (_| | |___| \__ \ |_                           #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____|_|_| |_|_|\_\___|\__,_|_____|_|___/\__|                          #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2025-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,39 +28,82 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-Package installer for 'pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and
-exceptions.'.
-"""
-# Add package itself to PYTHON_PATH, so it can be used to package itself.
-from os.path    import abspath
-from sys        import path as sys_path
-sys_path.insert(0, abspath('./pyTooling'))
+"""Performance tests for pyTooling.LinkedList."""
+from typing import List
 
-from setuptools import setup
+from doubly_py_linked_list import DoublyLinkedList
 
-from pathlib    import Path
-from Packaging  import DescribePythonPackageHostedOnGitHub
+from . import PerformanceTest
 
-gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling.*"
-packageDirectory =       packageName[:-2]
-packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
-setup(
-	**DescribePythonPackageHostedOnGitHub(
-		packageName=packageName,
-		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-		gitHubNamespace=gitHubNamespace,
-		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements={
-			"packaging": ["setuptools ~= 78.1"],
-			"terminal":  ["colorama ~= 0.4.6"],
-			"yaml":      ["ruamel.yaml ~= 0.18"],
-		},
-		sourceFileWithVersion=packageInformationFile,
-		dataFiles={
-			packageName[:-2]: ["py.typed"]
-		}
-	)
-)
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
+
+
+class Insertion(PerformanceTest):
+	def test_InsertBeforeFirst(self) -> None:
+		def wrapper(count: int):
+			def func():
+				dll = DoublyLinkedList()
+
+				for i in range(1, count):
+					dll.insert_head(i)
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts)
+
+	def test_InsertAfterLast(self) -> None:
+		def wrapper(count: int):
+			def func():
+				dll = DoublyLinkedList()
+
+				for i in range(1, count):
+					dll.insert_tail(i)
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts)
+
+
+class Remove(PerformanceTest):
+	def test_FillBuckets(self) -> None:
+		limit = 145
+		def wrapper(count: int):
+			def func():
+				dll = DoublyLinkedList(self.randomArray[0:count])
+
+				index = 0
+				collected = 0
+				buckets = []
+				buckets.append([])
+				# dll.Sort(reverse=True)
+				while True:
+					items: List[int] = []
+					for pos, value in enumerate(dll):
+						if collected + value > limit:
+							continue
+
+						collected += value
+						buckets[index].append(value)
+						items.append(pos)
+
+						if collected == limit:
+							break
+
+					index += 1
+					if dll.length > len(items):
+						collected = 0
+						buckets.append([])
+
+						nodes = dll.nodes()
+						for pos in items:
+							dll.remove(nodes[pos])
+					else:
+						break
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts[:-1])

@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _                                                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _                                                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |                                                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |                                                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |                                                                         #
+#             _____           _ _               _     _       _            _ _     _     _                             #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | |   (_)_ __ | | _____  __| | |   (_)___| |_                           #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |   | | '_ \| |/ / _ \/ _` | |   | / __| __|                          #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___| | | | |   <  __/ (_| | |___| \__ \ |_                           #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____|_|_| |_|_|\_\___|\__,_|_____|_|___/\__|                          #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2025-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,39 +28,39 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-Package installer for 'pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and
-exceptions.'.
-"""
-# Add package itself to PYTHON_PATH, so it can be used to package itself.
-from os.path    import abspath
-from sys        import path as sys_path
-sys_path.insert(0, abspath('./pyTooling'))
+"""Performance tests for pyTooling.LinkedList."""
+from collections import deque
 
-from setuptools import setup
+from . import PerformanceTest
 
-from pathlib    import Path
-from Packaging  import DescribePythonPackageHostedOnGitHub
 
-gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling.*"
-packageDirectory =       packageName[:-2]
-packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
 
-setup(
-	**DescribePythonPackageHostedOnGitHub(
-		packageName=packageName,
-		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-		gitHubNamespace=gitHubNamespace,
-		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements={
-			"packaging": ["setuptools ~= 78.1"],
-			"terminal":  ["colorama ~= 0.4.6"],
-			"yaml":      ["ruamel.yaml ~= 0.18"],
-		},
-		sourceFileWithVersion=packageInformationFile,
-		dataFiles={
-			packageName[:-2]: ["py.typed"]
-		}
-	)
-)
+
+class Insertion(PerformanceTest):
+	def test_InsertBeforeFirst(self) -> None:
+		def wrapper(count: int):
+			def func():
+				dq = deque()
+
+				for i in range(1, count):
+					dq.appendleft(i)
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts)
+
+	def test_InsertAfterLast(self) -> None:
+		def wrapper(count: int):
+			def func():
+				dq = deque()
+
+				for i in range(1, count):
+					dq.append(i)
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts)

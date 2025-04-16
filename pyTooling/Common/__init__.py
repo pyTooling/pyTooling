@@ -37,12 +37,14 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.3.0"
-__keywords__ =      ["abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators",
-					  "dfs", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
-					  "iterators", "licensing", "message logging", "meta-classes", "overloading", "override", "packaging",
-					  "path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface",
-					  "stopwatch", "tree", "TUI", "url", "versioning", "wheel"]
+__version__ =       "8.4.0"
+__keywords__ =      [
+	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
+	"double linked list", "exceptions", "generators", "generic library", "generic path", "graph", "installation",
+	"iterators", "licensing", "linked list", "message logging", "meta-classes", "overloading", "override", "packaging",
+	"path", "platform", "setuptools", "shell", "singleton", "slots","terminal", "text user interface", "stopwatch",
+	"tree", "TUI", "url", "versioning", "wheel"
+]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque

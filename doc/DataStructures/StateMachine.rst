@@ -77,8 +77,8 @@ By Feature
 .. danger::
 
    Accessing internal fields of a statemachine, state or transition is strongly not recommended for users, as it might
-   lead to a corrupted graph data structure. If a power-user wants to access these fields, feel free to use them for
-   achieving a higher performance, but you got warned 😉.
+   lead to a corrupted data structure. If a power-user wants to access these fields, feel free to use them for achieving
+   a higher performance, but you got warned 😉.
 
 
 .. _STRUCT/StateMachine/ID:
