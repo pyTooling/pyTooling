@@ -1,0 +1,248 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=======================
+pyTooling.Graph.GraphML
+=======================
+
+.. automodule:: pyTooling.Graph.GraphML
+
+
+.. currentmodule:: pyTooling.Graph.GraphML
+
+
+**Classes**
+
+- :py:class:`AttributeContext`:
+  Enumeration of all attribute contexts.
+
+- :py:class:`AttributeTypes`:
+  Enumeration of all attribute types.
+
+- :py:class:`EdgeDefault`:
+  An enumeration describing the default edge direction.
+
+- :py:class:`ParsingOrder`:
+  An enumeration describing the parsing order of the graph's representation.
+
+- :py:class:`IDStyle`:
+  An enumeration describing the style of identifiers (IDs).
+
+- :py:class:`Base`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`BaseWithID`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`BaseWithData`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`Key`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`Data`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`Node`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`Edge`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`BaseGraph`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`Graph`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`Subgraph`:
+  Base-class for all GraphML data model classes.
+
+- :py:class:`GraphMLDocument`:
+  Base-class for all GraphML data model classes.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: AttributeContext
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: AttributeContext
+      :parts: 1
+
+.. autoclass:: AttributeTypes
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: AttributeTypes
+      :parts: 1
+
+.. autoclass:: EdgeDefault
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: EdgeDefault
+      :parts: 1
+
+.. autoclass:: ParsingOrder
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ParsingOrder
+      :parts: 1
+
+.. autoclass:: IDStyle
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: IDStyle
+      :parts: 1
+
+.. autoclass:: Base
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Base
+      :parts: 1
+
+.. autoclass:: BaseWithID
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseWithID
+      :parts: 1
+
+.. autoclass:: BaseWithData
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseWithData
+      :parts: 1
+
+.. autoclass:: Key
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Key
+      :parts: 1
+
+.. autoclass:: Data
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Data
+      :parts: 1
+
+.. autoclass:: Node
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Node
+      :parts: 1
+
+.. autoclass:: Edge
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Edge
+      :parts: 1
+
+.. autoclass:: BaseGraph
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseGraph
+      :parts: 1
+
+.. autoclass:: Graph
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Graph
+      :parts: 1
+
+.. autoclass:: Subgraph
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Subgraph
+      :parts: 1
+
+.. autoclass:: GraphMLDocument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: GraphMLDocument
+      :parts: 1

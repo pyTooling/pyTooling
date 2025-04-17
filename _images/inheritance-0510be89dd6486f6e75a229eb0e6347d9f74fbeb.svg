@@ -1,0 +1,101 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="576pt" height="81pt" viewBox="0.00 0.00 576.00 81.17">
+<ns0:g id="graph0" class="graph" transform="scale(0.98 0.98) rotate(0) translate(4 79)">
+<ns0:title>inheritance4d38372ec3</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="135,-56 0,-56 0,-37 135,-37 135,-56" />
+<ns0:text text-anchor="middle" x="67.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>NamedArgument</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument" ns1:title="Base-class for all command line arguments with a name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="271,-75 171,-75 171,-56 271,-56 271,-75" />
+<ns0:text text-anchor="middle" x="221" y="-63" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>CommandLineArgument-&gt;NamedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-54.89C145.52,-56.16 155.86,-57.46 165.67,-58.69" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="165.57,-60.44 170.75,-59.32 166.01,-56.97 165.57,-60.44" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>ValuedArgument</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument" ns1:title="Base-class for all command line arguments with a value." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="270,-38 172,-38 172,-19 270,-19 270,-38" />
+<ns0:text text-anchor="middle" x="221" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ValuedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>CommandLineArgument-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-38.55C145.79,-37.32 156.41,-36.06 166.46,-34.86" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="166.9,-36.57 171.65,-34.24 166.48,-33.1 166.9,-36.57" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="94.5,-19 40.5,-19 40.5,0 94.5,0 94.5,-19" />
+<ns0:text text-anchor="middle" x="67.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>NamedTupledArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:title="Class and base-class for all TupleFlag classes, which represents an argument with separate value.">
+<ns0:polygon fill="white" stroke="#1e90ff" points="438,-38 307,-38 307,-19 438,-19 438,-38" />
+<ns0:text text-anchor="middle" x="372.5" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedTupledArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Generic-&gt;NamedTupledArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M94.79,-7.94C133.48,-5.99 207.99,-3.6 271,-9.5 288.94,-11.18 308.46,-14.52 325.48,-17.93" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="325.42,-19.7 330.67,-18.99 326.12,-16.28 325.42,-19.7" />
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>Generic-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M94.54,-12.77C114.37,-15.25 142.33,-18.76 166.82,-21.83" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="166.81,-23.59 171.99,-22.48 167.25,-20.12 166.81,-23.59" />
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>NamedArgument-&gt;NamedTupledArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M260.5,-55.97C281.08,-50.88 306.51,-44.59 327.83,-39.31" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="328.44,-40.96 332.87,-38.06 327.6,-37.56 328.44,-40.96" />
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>WindowsTupleFlag</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.ValuedTupleFlag.html#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag" ns1:title="Represents a :class:`ValuedTupleArgument` with a single slash in front of the switch name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="581,-38 474,-38 474,-19 581,-19 581,-38" />
+<ns0:text text-anchor="middle" x="527.5" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">WindowsTupleFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge7" class="edge">
+<ns0:title>NamedTupledArgument-&gt;WindowsTupleFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M438.39,-28.5C448.37,-28.5 458.63,-28.5 468.46,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="468.55,-30.25 473.55,-28.5 468.55,-26.75 468.55,-30.25" />
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>ValuedArgument-&gt;NamedTupledArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M270.13,-28.5C280.18,-28.5 290.96,-28.5 301.62,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="301.84,-30.25 306.84,-28.5 301.84,-26.75 301.84,-30.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>
