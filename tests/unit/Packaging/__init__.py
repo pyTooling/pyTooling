@@ -52,7 +52,7 @@ class HelperFunctions(TestCase):
 
 		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
-		self.assertEqual(38, len(versionInformation.Keywords))
+		self.assertEqual(42, len(versionInformation.Keywords))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeTXT(self) -> None:

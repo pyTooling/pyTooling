@@ -2,7 +2,7 @@ Code Coverage Report
 ####################
 
 .. report:code-coverage::
-   :packageid: src
+   :reportid: src
 
 ----------
 

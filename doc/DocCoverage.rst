@@ -7,13 +7,13 @@ Documentation Coverage
       :columns: 8
 
       .. report:doc-coverage::
-         :packageid: src
+         :reportid: src
 
    .. grid-item::
       :columns: 4
 
       .. report:doc-coverage-legend::
-         :packageid: src
+         :reportid: src
          :style: vertical-table
 
 ----------
