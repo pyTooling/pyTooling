@@ -64,21 +64,21 @@
    :target: https://GitHub.com/pyTooling/pyTooling/actions/workflows/Pipeline.yml
 
 .. # Codacy - quality
-.. |SHIELD:svg:pyTooling-codacy-quality| image:: https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=codacy
+.. |SHIELD:svg:pyTooling-codacy-quality| image:: https://img.shields.io/codacy/grade/08ef744c0b70490289712b02a7a4cebe?longCache=true&style=flat-square&logo=codacy
    :alt: Codacy - Quality
    :height: 22
    :target: https://www.codacy.com/gh/pyTooling/pyTooling
-.. |SHIELD:png:pyTooling-codacy-quality| image:: https://raster.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=codacy
+.. |SHIELD:png:pyTooling-codacy-quality| image:: https://raster.shields.io/codacy/grade/08ef744c0b70490289712b02a7a4cebe?longCache=true&style=flat-square&logo=codacy
    :alt: Codacy - Quality
    :height: 22
    :target: https://www.codacy.com/gh/pyTooling/pyTooling
 
 .. # Codacy - coverage
-.. |SHIELD:svg:pyTooling-codacy-coverage| image:: https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=codacy
+.. |SHIELD:svg:pyTooling-codacy-coverage| image:: https://img.shields.io/codacy/coverage/08ef744c0b70490289712b02a7a4cebe?longCache=true&style=flat-square&logo=codacy
    :alt: Codacy - Line Coverage
    :height: 22
    :target: https://www.codacy.com/gh/pyTooling/pyTooling
-.. |SHIELD:png:pyTooling-codacy-coverage| image:: https://raster.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=codacy
+.. |SHIELD:png:pyTooling-codacy-coverage| image:: https://raster.shields.io/codacy/coverage/08ef744c0b70490289712b02a7a4cebe?longCache=true&style=flat-square&logo=codacy
    :alt: Codacy - Line Coverage
    :height: 22
    :target: https://www.codacy.com/gh/pyTooling/pyTooling

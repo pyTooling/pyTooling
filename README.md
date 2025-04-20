@@ -7,8 +7,8 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyTooling?longCache=true&style=flat-square&logo=PyPI&logoColor=FBE072)  
 [![GitHub Workflow - Build and Test Status](https://img.shields.io/github/actions/workflow/status/pyTooling/pyTooling/Pipeline.yml?branch=main&longCache=true&style=flat-square&label=build%20and%20test&logo=GitHub%20Actions&logoColor=FFFFFF)](https://GitHub.com/pyTooling/pyTooling/actions/workflows/Pipeline.yml)
 [![Libraries.io status for latest release](https://img.shields.io/librariesio/release/pypi/pyTooling?longCache=true&style=flat-square&logo=Libraries.io&logoColor=fff)](https://libraries.io/github/pyTooling/pyTooling)
-[![Codacy - Quality](https://img.shields.io/codacy/grade/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
-[![Codacy - Coverage](https://img.shields.io/codacy/coverage/8dc5205ba8b24e008f2287759096e181?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
+[![Codacy - Quality](https://img.shields.io/codacy/grade/08ef744c0b70490289712b02a7a4cebe?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
+[![Codacy - Coverage](https://img.shields.io/codacy/coverage/08ef744c0b70490289712b02a7a4cebe?longCache=true&style=flat-square&logo=Codacy)](https://www.codacy.com/gh/pyTooling/pyTooling)
 [![Codecov - Branch Coverage](https://img.shields.io/codecov/c/github/pyTooling/pyTooling?longCache=true&style=flat-square&logo=Codecov)](https://codecov.io/gh/pyTooling/pyTooling)
 
 <!--

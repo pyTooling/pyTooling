@@ -11,10 +11,11 @@ jobs:
       package_name: pyTooling
 
   BenchmarkingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r4
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Benchmark
       python_version_list: "3.12 3.13 pypy-3.10"
+      pipeline-delay: 120
 
   Benchmarking:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r4
@@ -36,5 +37,9 @@ jobs:
       - Benchmarking
     with:
       unittest_artifacts_pattern: "*-BenchmarkTestReportSummary-XML-*"
-      report_title: Benchmark Test Summary
-      merged_junit_artifact: pyTooling-BenchmarkTestReportSummary-XML
+      report_title:           'Benchmark Test Summary'
+      merged_junit_artifact:  pyTooling-BenchmarkTestReportSummary-XML
+      dorny:                  true
+      codecov:                false
+    secrets:
+      CODECOV_TOKEN:          ${{ secrets.CODECOV_TOKEN }}
