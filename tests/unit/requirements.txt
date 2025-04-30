@@ -1,3 +1,3 @@
 -r ../requirements.txt
 
-setuptools ~= 79.0
+setuptools >= 80.0

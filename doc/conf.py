@@ -7,12 +7,22 @@ from pathlib import Path
 
 from pyTooling.Packaging import extractVersionInformation
 
+# ==============================================================================
+# Project configuration
+# ==============================================================================
+githubNamespace = "pyTooling"
+githubProject = pythonProject = "pyTooling"
+directoryName = pythonProject.replace('.', '/')
+
+
+# ==============================================================================
+# Project paths
+# ==============================================================================
 ROOT = Path(__file__).resolve().parent
 
 sys_path.insert(0, abspath("."))
 sys_path.insert(0, abspath(".."))
-sys_path.insert(0, abspath("../pyTooling"))
-# sys_path.insert(0, abspath("_extensions"))
+sys_path.insert(0, abspath(f"../{directoryName}"))
 
 
 # ==============================================================================
@@ -21,10 +31,7 @@ sys_path.insert(0, abspath("../pyTooling"))
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-githubNamespace = "pyTooling"
-project = "pyTooling"
-
-packageInformationFile = Path(f"../{project}/Common/__init__.py")
+packageInformationFile = Path(f"../{directoryName}/Common/__init__.py")
 versionInformation = extractVersionInformation(packageInformationFile)
 
 author =    versionInformation.Author
@@ -91,7 +98,7 @@ html_logo = str(Path(html_static_path[0]) / "logo.png")
 html_favicon = str(Path(html_static_path[0]) / "icon.png")
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = f"{project}Doc"
+htmlhelp_basename = f"{pythonProject}Doc"
 
 # If not None, a 'Last updated on:' timestamp is inserted at every page
 # bottom, using the given strftime format.
@@ -102,7 +109,7 @@ html_last_updated_fmt = "%d.%m.%Y"
 # Python settings
 # ==============================================================================
 modindex_common_prefix = [
-	f"{project}."
+	f"{pythonProject}."
 ]
 
 # ==============================================================================
@@ -144,8 +151,8 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
 	( master_doc,
-		f"{project}.tex",
-		f"The {project} Documentation",
+		f"{pythonProject}.tex",
+		f"The {pythonProject} Documentation",
 		f"Patrick Lehmann",
 		f"manual"
 	),
@@ -208,9 +215,9 @@ autodoc_typehints = "both"
 # ==============================================================================
 extlinks = {
 	"gh":      (f"https://GitHub.com/%s", "gh:%s"),
-	"ghissue": (f"https://GitHub.com/{githubNamespace}/{project}/issues/%s", "issue #%s"),
-	"ghpull":  (f"https://GitHub.com/{githubNamespace}/{project}/pull/%s", "pull request #%s"),
-	"ghsrc":   (f"https://GitHub.com/{githubNamespace}/{project}/blob/main/%s", None),
+	"ghissue": (f"https://GitHub.com/{githubNamespace}/{githubProject}/issues/%s", "issue #%s"),
+	"ghpull":  (f"https://GitHub.com/{githubNamespace}/{githubProject}/pull/%s", "pull request #%s"),
+	"ghsrc":   (f"https://GitHub.com/{githubNamespace}/{githubProject}/blob/main/%s", None),
 	"wiki":    (f"https://en.wikipedia.org/wiki/%s", None),
 }
 
@@ -255,13 +262,13 @@ todo_link_only = True
 # ==============================================================================
 report_unittest_testsuites = {
 	"src": {
-		"name":        f"{project}",
+		"name":        f"{pythonProject}",
 		"xml_report":  "../report/unit/unittest.xml",
 	}
 }
 report_codecov_packages = {
 	"src": {
-		"name":        f"{project}",
+		"name":        f"{pythonProject}",
 		"json_report": "../report/coverage/coverage.json",
 		"fail_below":  80,
 		"levels":      "default"
@@ -269,8 +276,8 @@ report_codecov_packages = {
 }
 report_doccov_packages = {
 	"src": {
-		"name":       f"{project}",
-		"directory":  f"../{project}",
+		"name":       f"{pythonProject}",
+		"directory":  f"../{directoryName}",
 		"fail_below": 80,
 		"levels":     "default"
 	}
@@ -287,17 +294,17 @@ report_doccov_packages = {
 # AutoAPI.Sphinx
 # ==============================================================================
 autoapi_modules = {
-	f"{project}":  {
+	f"{pythonProject}":  {
 		"template": "package",
-		"output":   project,
+		"output":   pythonProject,
 		"override": True
 	}
 }
 
-for directory in [mod for mod in Path(f"../{project}").iterdir() if mod.is_dir() and mod.name != "__pycache__"]:
-	print(f"Adding module rule for '{project}.{directory.name}'")
-	autoapi_modules[f"{project}.{directory.name}"] = {
+for directory in [mod for mod in Path(f"../{directoryName}").iterdir() if mod.is_dir() and mod.name != "__pycache__"]:
+	print(f"Adding module rule for '{pythonProject}.{directory.name}'")
+	autoapi_modules[f"{pythonProject}.{directory.name}"] = {
 		"template": "module",
-		"output":   project,
+		"output":   pythonProject,
 		"override": True
 	}

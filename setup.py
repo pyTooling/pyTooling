@@ -54,7 +54,7 @@ setup(
 		gitHubNamespace=gitHubNamespace,
 		unittestRequirementsFile=Path("tests/requirements.txt"),
 		additionalRequirements={
-			"packaging": ["setuptools ~= 79.0"],
+			"packaging": ["setuptools >= 80.0"],
 			"terminal":  ["colorama ~= 0.4.6"],
 			"yaml":      ["ruamel.yaml ~= 0.18"],
 		},
