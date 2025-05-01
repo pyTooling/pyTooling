@@ -43,5 +43,4 @@ jobs:
       merged_junit_artifact:      pyTooling-BenchmarkTestReportSummary-XML
       dorny:                      true
       codecov:                    false
-    secrets:
-      CODECOV_TOKEN:          ${{ secrets.CODECOV_TOKEN }}
+    secrets: inherit
