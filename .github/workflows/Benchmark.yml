@@ -32,7 +32,7 @@ jobs:
       unittest_xml_artifact:          pyTooling-BenchmarkTestReportSummary-XML
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
     needs:
       - ConfigParams
       - Benchmarking
@@ -42,6 +42,6 @@ jobs:
       report_title:               'Benchmark Test Summary'
       merged_junit_artifact:      pyTooling-BenchmarkTestReportSummary-XML
       dorny:                      true
-      codecov:                    false
-    secrets:
-      CODECOV_TOKEN:          ${{ secrets.CODECOV_TOKEN }}
+      codecov:                    true
+      codecov_flags:              'benchmark'
+    secrets: inherit
