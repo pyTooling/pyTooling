@@ -23,9 +23,9 @@ jobs:
       - ConfigParams
       - BenchmarkingParams
     with:
-      jobs: ${{ needs.BenchmarkingParams.outputs.python_jobs }}
-      requirements: '-r tests/benchmark/requirements.txt'
-      unittest_directory: 'benchmark'
+      jobs:                           ${{ needs.BenchmarkingParams.outputs.python_jobs }}
+      requirements:                   '-r tests/benchmark/requirements.txt'
+      unittest_directory:             'benchmark'
       unittest_report_xml_directory:  ${{ needs.ConfigParams.outputs.unittest_report_xml_directory }}
       unittest_report_xml_filename:   ${{ needs.ConfigParams.outputs.unittest_report_xml_filename }}
       coverage_report_html_directory: ${{ needs.ConfigParams.outputs.coverage_report_html_directory }}
@@ -34,12 +34,14 @@ jobs:
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
     needs:
+      - ConfigParams
       - Benchmarking
     with:
+      testsuite-summary-name:     ${{ needs.ConfigParams.outputs.package_fullname }}
       unittest_artifacts_pattern: "*-BenchmarkTestReportSummary-XML-*"
-      report_title:           'Benchmark Test Summary'
-      merged_junit_artifact:  pyTooling-BenchmarkTestReportSummary-XML
-      dorny:                  true
-      codecov:                false
+      report_title:               'Benchmark Test Summary'
+      merged_junit_artifact:      pyTooling-BenchmarkTestReportSummary-XML
+      dorny:                      true
+      codecov:                    false
     secrets:
       CODECOV_TOKEN:          ${{ secrets.CODECOV_TOKEN }}
