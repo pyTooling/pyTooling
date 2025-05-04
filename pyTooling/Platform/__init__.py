@@ -92,7 +92,7 @@ class UnknownPlatformException(PlatformException):
 
 
 @export
-class UnknownOperatingSystem(PlatformException):
+class UnknownOperatingSystemException(PlatformException):
 	"""The exception is raised by pyTooling.Platform when the operating system is unknown."""
 
 
@@ -473,8 +473,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``""`` (empty string)
 		* Windows: ``"exe"``
 
-		:returns:                       File extension of an executable.
-		:raises UnknownOperatingSystem: If the operating system is unknown.
+		:returns:                                File extension of an executable.
+		:raises UnknownOperatingSystemException: If the operating system is unknown.
 		"""
 
 		if Platforms.OS_FreeBSD in self._platform:
@@ -486,7 +486,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Windows in self._platform:
 			return "exe"
 		else:  # pragma: no cover
-			raise UnknownOperatingSystem("Unknown operating system.")
+			raise UnknownOperatingSystemException("Unknown operating system.")
 
 	@readonly
 	def StaticLibraryExtension(self) -> str:
@@ -498,8 +498,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``"lib"``
 		* Windows: ``"lib"``
 
-		:returns:                       File extension of a static library.
-		:raises UnknownOperatingSystem: If the operating system is unknown.
+		:returns:                                File extension of a static library.
+		:raises UnknownOperatingSystemException: If the operating system is unknown.
 		"""
 		if Platforms.OS_FreeBSD in self._platform:
 			return "a"
@@ -510,7 +510,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Windows in self._platform:
 			return "lib"
 		else:  # pragma: no cover
-			raise UnknownOperatingSystem("Unknown operating system.")
+			raise UnknownOperatingSystemException("Unknown operating system.")
 
 	@readonly
 	def DynamicLibraryExtension(self) -> str:
@@ -522,8 +522,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``"dylib"``
 		* Windows: ``"dll"``
 
-		:returns:                       File extension of a dynamic library.
-		:raises UnknownOperatingSystem: If the operating system is unknown.
+		:returns:                                File extension of a dynamic library.
+		:raises UnknownOperatingSystemException: If the operating system is unknown.
 		"""
 		if Platforms.OS_FreeBSD in self._platform:
 			return "so"
@@ -534,7 +534,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Windows in self._platform:
 			return "dll"
 		else:  # pragma: no cover
-			raise UnknownOperatingSystem("Unknown operating system.")
+			raise UnknownOperatingSystemException("Unknown operating system.")
 
 	def __repr__(self) -> str:
 		return str(self._platform)
