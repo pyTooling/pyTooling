@@ -1,0 +1,59 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="522pt" height="27pt" viewBox="0.00 0.00 522.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritance3e4764cfe7</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ArgParseAttribute</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.ArgParseAttribute" ns1:title="Base-class for all attributes to describe a :mod:`argparse`-base command line argument parser." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="197,-19 95,-19 95,0 197,0 197,-19" />
+<ns0:text text-anchor="middle" x="146" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ArgParseAttribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="368,-19 233,-19 233,0 368,0 368,-19" />
+<ns0:text text-anchor="middle" x="300.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ArgParseAttribute-&gt;CommandLineArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M197.36,-9.5C207.12,-9.5 217.53,-9.5 227.83,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="227.88,-11.25 232.88,-9.5 227.88,-7.75 227.88,-11.25" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Attribute</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" ns1:title="Base-class for all pyTooling attributes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="59,-19 0,-19 0,0 59,0 59,-19" />
+<ns0:text text-anchor="middle" x="29.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Attribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Attribute-&gt;ArgParseAttribute</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M59.1,-9.5C68.43,-9.5 79.14,-9.5 89.75,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="89.95,-11.25 94.95,-9.5 89.95,-7.75 89.95,-11.25" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>DelimiterArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.Argument.html#pyTooling.Attributes.ArgParse.Argument.DelimiterArgument" ns1:title="Represents a delimiter symbol like ``--``." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="514,-19 404,-19 404,0 514,0 514,-19" />
+<ns0:text text-anchor="middle" x="459" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">DelimiterArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>CommandLineArgument-&gt;DelimiterArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M368.32,-9.5C378.37,-9.5 388.67,-9.5 398.55,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="398.67,-11.25 403.67,-9.5 398.67,-7.75 398.67,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

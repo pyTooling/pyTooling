@@ -1,0 +1,78 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.Exceptions
+====================
+
+.. automodule:: pyTooling.Exceptions
+
+
+.. currentmodule:: pyTooling.Exceptions
+
+
+**Exceptions**
+
+- :py:exc:`OverloadResolutionError`:
+  The exception is raised, when no matching overloaded method was found.
+
+- :py:exc:`ExceptionBase`:
+  Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions.
+
+- :py:exc:`EnvironmentException`:
+  The exception is raised when an expected environment variable is missing.
+
+- :py:exc:`PlatformNotSupportedException`:
+  The exception is raise if the platform is not supported.
+
+- :py:exc:`NotConfiguredException`:
+  The exception is raise if the requested setting is not configured.
+
+- :py:exc:`ToolingException`:
+  The exception is raised by pyTooling internal features.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: OverloadResolutionError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: OverloadResolutionError
+      :parts: 1
+
+.. autoexception:: ExceptionBase
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ExceptionBase
+      :parts: 1
+
+.. autoexception:: EnvironmentException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: EnvironmentException
+      :parts: 1
+
+.. autoexception:: PlatformNotSupportedException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PlatformNotSupportedException
+      :parts: 1
+
+.. autoexception:: NotConfiguredException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NotConfiguredException
+      :parts: 1
+
+.. autoexception:: ToolingException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ToolingException
+      :parts: 1
