@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=====================================
+pyTooling.CLIAbstraction.KeyValueFlag
+=====================================
+
+.. automodule:: pyTooling.CLIAbstraction.KeyValueFlag
+
+
+.. currentmodule:: pyTooling.CLIAbstraction.KeyValueFlag
+
+
+**Classes**
+
+- :py:class:`NamedKeyValuePairsArgument`:
+  Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value
+
+- :py:class:`ShortKeyValueFlag`:
+  Represents a :py:class:`NamedKeyValueFlagArgument` with a single dash in front of the switch name.
+
+- :py:class:`LongKeyValueFlag`:
+  Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
+
+- :py:class:`WindowsKeyValueFlag`:
+  Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: NamedKeyValuePairsArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NamedKeyValuePairsArgument
+      :parts: 1
+
+.. autoclass:: ShortKeyValueFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortKeyValueFlag
+      :parts: 1
+
+.. autoclass:: LongKeyValueFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongKeyValueFlag
+      :parts: 1
+
+.. autoclass:: WindowsKeyValueFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsKeyValueFlag
+      :parts: 1
