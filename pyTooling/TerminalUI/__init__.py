@@ -843,13 +843,13 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._quiet =         quiet
 
 		if quiet:
-			self._writeLevel = Severity.Quiet
+			self._writeLevel =  Severity.Quiet
 		elif debug:
-			self._writeLevel = Severity.Debug
+			self._writeLevel =  Severity.Debug
 		elif verbose:
-			self._writeLevel = Severity.Verbose
+			self._writeLevel =  Severity.Verbose
 		else:
-			self._writeLevel = Severity.Normal
+			self._writeLevel =  Severity.Normal
 
 		self._writeToStdOut = writeToStdOut
 

@@ -35,6 +35,7 @@ from typing   import Callable, Dict, Tuple, Any, TypeVar
 try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType
+	from pyTooling.Exceptions  import ToolingException
 	from pyTooling.Common      import firstElement, firstPair
 	from pyTooling.Attributes  import Attribute
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
@@ -43,6 +44,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	try:
 		from Decorators          import export, readonly
 		from MetaClasses         import ExtendedType
+		from Exceptions          import ToolingException
 		from Common              import firstElement, firstPair
 		from Attributes          import Attribute
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
@@ -51,6 +53,11 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 
 M = TypeVar("M", bound=Callable)
+
+
+@export
+class ArgParseException(ToolingException):
+	pass
 
 
 #@abstract
@@ -289,7 +296,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		if (methodCount := len(methods)) == 1:
 			defaultMethod, attributes = firstPair(methods)
 			if len(attributes) > 1:
-				raise Exception("Marked default handler multiple times with 'DefaultAttribute'.")
+				raise ArgParseException("Marked default handler multiple times with 'DefaultAttribute'.")
 
 			# set default handler for the main parser
 			self._mainParser.set_defaults(func=firstElement(attributes).Handler)
@@ -300,7 +307,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				self._mainParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
 		elif methodCount > 1:
-			raise Exception("Marked more then one handler as default handler with 'DefaultAttribute'.")
+			raise ArgParseException("Marked more then one handler as default handler with 'DefaultAttribute'.")
 
 		# Search for 'CommandHandler' marked methods
 		methods: Dict[Callable, Tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
@@ -309,7 +316,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				self._subParser = self._mainParser.add_subparsers(help='sub-command help')
 
 			if len(attributes) > 1:
-				raise Exception("Marked command handler multiple times with 'CommandHandler'.")
+				raise ArgParseException("Marked command handler multiple times with 'CommandHandler'.")
 
 			# Add a sub parser for each command / handler pair
 			attribute = firstElement(attributes)
