@@ -800,8 +800,14 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_criticalWarningCount: int
 	_warningCount:  int
 
+	HeadLine:       ClassVar[str]
+
 	def __init__(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
-		"""Initializer of a line based terminal interface."""
+		"""
+		Initializer of a line-based terminal interface.
+
+		:param mode: Defines what output (normal, error, data) to write where. Default: a linear flow all to *STDOUT*.
+		"""
 		TerminalBaseApplication.__init__(self)
 		# ILineTerminal.__init__(self, self)
 
@@ -836,6 +842,51 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 				self._LOG_LEVEL_ROUTING__[severity] =   (self.WriteLineToStdErr, )
 		else:  # pragma: no cover
 			raise ExceptionBase(f"Unsupported mode '{mode}'.")
+
+	def _PrintHeadline(self, width: int = 80) -> None:
+		"""
+		Helper method to print the program headline.
+
+		:param width: Number of characters for horizontal lines.
+
+    .. admonition::
+
+		   .. code-block::
+
+		      =========================
+		          centered headline
+		      =========================
+		"""
+		if width == 0:
+			width = self._width
+
+		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
+		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
+		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
+
+	def _PrintVersion(self, author: str, email: str, copyright: str, license: str, version: str) -> None:
+		"""
+		Helper method to print the version information.
+
+		:param author:    Author of the application.
+		:param email:     The author's email address.
+		:param copyright: The copyright information.
+		:param license:   The license.
+		:param version:   The application's version.
+
+    .. admonition::
+
+		   .. code-block:: Python
+
+		      def _PrintVersion(self):
+		        from MyModule import __author__, __email__, __copyright__, __license__, __version__
+
+		        super()._PrintVersion(__author__, __email__, __copyright__, __license__, __version__)
+		"""
+		self.WriteNormal(f"Author:    {author} ({email})")
+		self.WriteNormal(f"Copyright: {copyright}")
+		self.WriteNormal(f"License:   {license}")
+		self.WriteNormal(f"Version:   {version}")
 
 	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True):
 		self._verbose =       True if debug else verbose

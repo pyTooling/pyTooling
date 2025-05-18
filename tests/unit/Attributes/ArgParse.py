@@ -32,16 +32,22 @@
 """
 Unit tests for argparse attributes.
 """
-from pathlib import Path
-from typing   import Callable, Any
-from unittest import TestCase
+from argparse      import ArgumentError
+from io            import StringIO
+from pathlib       import Path
+from typing        import Callable, Any, Tuple, NoReturn
+from unittest      import TestCase
+from unittest.mock import patch
 
-from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
-from pyTooling.Attributes.ArgParse.Argument import StringArgument, PositionalArgument, IntegerArgument, FloatArgument, \
-	PathArgument, ListArgument, StringListArgument, IntegerListArgument, FloatListArgument, PathListArgument
-from pyTooling.Attributes.ArgParse.Flag import FlagArgument, ShortFlag, LongFlag
+from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
+from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument
+from pyTooling.Attributes.ArgParse.Argument   import PathArgument, PathListArgument, ListArgument
+from pyTooling.Attributes.ArgParse.Argument   import IntegerArgument, IntegerListArgument
+from pyTooling.Attributes.ArgParse.Argument   import FloatArgument, FloatListArgument
+from pyTooling.Attributes.ArgParse.Flag       import FlagArgument, ShortFlag, LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
 from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
+from pyTooling.TerminalUI                     import TerminalApplication
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -50,7 +56,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ProgramBase(ArgParseHelperMixin):
+class ProgramBase(ArgParseHelperMixin, mixin=True):
 	handler: Callable
 	args: Any
 
@@ -327,18 +333,18 @@ class Commands(TestCase):
 		# Checking wrong command
 		arguments = ["cmd3"]
 
-		try:
+		with self.assertRaises(ArgumentError) as ctx:
 			parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
-		except SystemExit as ex:
-			pass
+
+		self.assertIn("invalid choice", ctx.exception.message)
+		self.assertIn("cmd3", ctx.exception.message)
 
 		# Checking missing command
 		arguments = []
 
-		try:
-			parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
-		except SystemExit as ex:
-			pass
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		self.assertFalse(parsed.verbose)
+		self.assertEqual(0, len(nonProcessedArgs))
 
 
 class Values(TestCase):
@@ -1129,45 +1135,104 @@ class ValuedFlags(TestCase):
 		self.assertIsNone(prog.args.count)
 
 
+class Program(ProgramBase, mixin=True):
+	@DefaultHandler()
+	@FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
+	def HandleDefault(self, args) -> None:
+		self.handler = self.HandleDefault
+		self.args = args
+
+	@CommandHandler("new-user", help="Add a new user.")
+	@StringArgument(dest="username", metaName="username", help="Name of the new user.")
+	@LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
+	def NewUserHandler(self, args) -> None:
+		self.handler = self.NewUserHandler
+		self.args = args
+
+	@CommandHandler("delete-user", help="Delete a user.")
+	@StringArgument(dest="username", metaName="username", help="Name of the new user.")
+	@FlagArgument(short="-f", long="--force", dest="force", help="Ignore internal checks.")
+	def DeleteUserHandler(self, args) -> None:
+		self.handler = self.DeleteUserHandler
+		self.args = args
+
+	@CommandHandler("list-user", help="Add a new user.")
+	def ListUserHandler(self, args) -> None:
+		self.handler = self.ListUserHandler
+		self.args = args
+
+
 class UserManager(TestCase):
 	def test_UserManager(self):
 		print()
 
-		class Program(ProgramBase):
-			@DefaultHandler()
-			@FlagArgument(short="-v", long="--verbose", dest="verbose", help="Show verbose messages.")
-			def HandleDefault(self, args) -> None:
-				self.handler = self.HandleDefault
-				self.args = args
+		class Application(Program):
+			pass
 
-			@CommandHandler("new-user", help="Add a new user.")
-			@StringArgument(dest="username", metaName="username", help="Name of the new user.")
-			@LongValuedFlag("--quota", dest="quota", help="Max usable disk space.")
-			def NewUserHandler(self, args) -> None:
-				self.handler = self.NewUserHandler
-				self.args = args
-
-			@CommandHandler("delete-user", help="Delete a user.")
-			@StringArgument(dest="username", metaName="username", help="Name of the new user.")
-			@FlagArgument(short="-f", long="--force", dest="force", help="Ignore internal checks.")
-			def DeleteUserHandler(self, args) -> None:
-				self.handler = self.DeleteUserHandler
-				self.args = args
-
-			@CommandHandler("list-user", help="Add a new user.")
-			def ListUserHandler(self, args) -> None:
-				self.handler = self.ListUserHandler
-				self.args = args
-
-		prog = Program()
+		app = Application()
 
 		# Checking long parameter
 		arguments = ["new-user", "username", "--quota=17"]
 
-		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
-		prog._RouteToHandler(parsed)
+		parsed, nonProcessedArgs = app.MainParser.parse_known_args(arguments)
+		app._RouteToHandler(parsed)
 
 		self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
-		self.assertIs(prog.handler.__func__, Program.NewUserHandler)
-		self.assertEqual(3 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
-		self.assertEqual("17", prog.args.quota)
+		self.assertIs(app.handler.__func__, Program.NewUserHandler)
+		self.assertEqual(3 + 1, len(app.args.__dict__), f"args: {app.args.__dict__}")  #: 1+ for 'func' as callback
+		self.assertEqual("17", app.args.quota)
+
+
+class Application(TerminalApplication, Program):
+	HeadLine = "Application"
+
+	def __init__(self):
+		super().__init__()
+		Program.__init__(self)
+
+	def Run(self) -> NoReturn:
+		returnCode = 0
+		try:
+			super().Run()  # todo: enableAutoComplete ??
+		except ArgumentError as ex:
+			self._PrintHeadline()
+			self.WriteError(ex.message)
+			returnCode = 2
+
+		self.Exit(returnCode)
+
+
+class MockedUserManager(TestCase):
+	@staticmethod
+	def _PrintToStdOutAndStdErr(out: StringIO, err: StringIO, stdoutEnd: str = "") -> Tuple[str, str]:
+		out.seek(0)
+		err.seek(0)
+
+		stdout = out.read()
+		stderr = err.read()
+
+		print("-- STDOUT " + "-" * 70)
+		print(stdout, end=stdoutEnd)
+		if len(stderr) > 0:
+			print("-- STDERR " + "-" * 70)
+			print(stderr, end="")
+		print("-" * 80)
+
+		return stdout, stderr
+
+	@patch("sys.argv", ["help", "expand"])
+	def test_HelpForExport(self):
+		print()
+
+		app = Application()
+		app._stdout, app._stderr = out, err = StringIO(), StringIO()
+		with self.assertRaises(SystemExit) as ctx:
+			app.Run()
+
+		stdout, stderr = self._PrintToStdOutAndStdErr(out, err)
+
+		self.assertEqual(2, ctx.exception.code)
+		self.assertIn("Application", stdout)
+		# self.assertIn(f"usage: {PROGRAM}", stdout)
+		# self.assertIn(f"usage: {PROGRAM}", stderr)
+		self.assertEqual("", stderr)
