@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=============================
+pyTooling.CLIAbstraction.Flag
+=============================
+
+.. automodule:: pyTooling.CLIAbstraction.Flag
+
+
+.. currentmodule:: pyTooling.CLIAbstraction.Flag
+
+
+**Classes**
+
+- :py:class:`FlagArgument`:
+  Base-class for all Flag classes, which represents a simple flag argument like ``-v`` or ``--verbose``.
+
+- :py:class:`ShortFlag`:
+  Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single dash.
+
+- :py:class:`LongFlag`:
+  Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a double dash.
+
+- :py:class:`WindowsFlag`:
+  Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single slash.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: FlagArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: FlagArgument
+      :parts: 1
+
+.. autoclass:: ShortFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortFlag
+      :parts: 1
+
+.. autoclass:: LongFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongFlag
+      :parts: 1
+
+.. autoclass:: WindowsFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsFlag
+      :parts: 1

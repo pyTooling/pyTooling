@@ -1,0 +1,71 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="442pt" height="84pt" viewBox="0.00 0.00 442.00 84.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
+<ns0:title>inheritanceeff036bf75</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Base</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Base" ns1:title="Base" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="144,-76 90,-76 90,-57 144,-57 144,-76" />
+<ns0:text text-anchor="middle" x="117" y="-64" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Base</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>BaseWithIDValueAndWeight</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.BaseWithIDValueAndWeight" ns1:title="BaseWithIDValueAndWeight" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="333,-38 180,-38 180,-19 333,-19 333,-38" />
+<ns0:text text-anchor="middle" x="256.5" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseWithIDValueAndWeight</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Base-&gt;BaseWithIDValueAndWeight</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M144.19,-59.26C164.55,-53.63 193.14,-45.73 216.24,-39.35" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="216.73,-41.03 221.09,-38.01 215.8,-37.66 216.73,-41.03" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-38 0,-38 0,-19 54,-19 54,-38" />
+<ns0:text text-anchor="middle" x="27" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Generic-&gt;Base</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M50.21,-38.09C61.98,-43.17 76.55,-49.46 88.98,-54.83" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="88.52,-56.54 93.8,-56.91 89.9,-53.33 88.52,-56.54" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>BaseEdge</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.BaseEdge" ns1:title="An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="434,-19 369,-19 369,0 434,0 434,-19" />
+<ns0:text text-anchor="middle" x="401.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseEdge</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Generic-&gt;BaseEdge</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.01,-24.51C84.21,-20.09 135.57,-13.22 180,-10.5 244.44,-6.55 319.67,-7.37 363.51,-8.39" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="363.65,-10.14 368.69,-8.52 363.74,-6.65 363.65,-10.14" />
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Generic-&gt;BaseWithIDValueAndWeight</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.1,-28.5C83.37,-28.5 132.29,-28.5 174.59,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="174.71,-30.25 179.71,-28.5 174.71,-26.75 174.71,-30.25" />
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>BaseWithIDValueAndWeight-&gt;BaseEdge</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M329.42,-18.94C341.37,-17.36 353.31,-15.77 363.9,-14.36" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="364.25,-16.08 368.98,-13.69 363.79,-12.61 364.25,-16.08" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

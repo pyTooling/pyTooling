@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+================================
+pyTooling.CLIAbstraction.Command
+================================
+
+.. automodule:: pyTooling.CLIAbstraction.Command
+
+
+.. currentmodule:: pyTooling.CLIAbstraction.Command
+
+
+**Classes**
+
+- :py:class:`CommandArgument`:
+  Represents a command argument.
+
+- :py:class:`ShortCommand`:
+  Represents a command name with a single dash.
+
+- :py:class:`LongCommand`:
+  Represents a command name with a double dash.
+
+- :py:class:`WindowsCommand`:
+  Represents a command name with a single slash.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: CommandArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CommandArgument
+      :parts: 1
+
+.. autoclass:: ShortCommand
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortCommand
+      :parts: 1
+
+.. autoclass:: LongCommand
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongCommand
+      :parts: 1
+
+.. autoclass:: WindowsCommand
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsCommand
+      :parts: 1
