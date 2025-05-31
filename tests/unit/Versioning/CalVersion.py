@@ -102,21 +102,21 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	@mark.xfail(msg="v2024.04 not yet support")
+	@mark.xfail(reason="v2024.04 not yet support")
 	def test_vString(self) -> None:
 		version = CalendarVersion.Parse("v1.2")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	@mark.xfail(msg="i2024.04 not yet support")
+	@mark.xfail(reason="i2024.04 not yet support")
 	def test_iString(self) -> None:
 		version = CalendarVersion.Parse("i1.2")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	@mark.xfail(msg="r2024.04 not yet support")
+	@mark.xfail(reason="r2024.04 not yet support")
 	def test_rString(self) -> None:
 		version = CalendarVersion.Parse("r1.2")
 
@@ -454,7 +454,7 @@ class FormattingUsingRepr(TestCase):
 
 		self.assertEqual("1.0", repr(version))
 
-	@mark.xfail(msg="v2024.04 not yet support")
+	@mark.xfail(reason="v2024.04 not yet support")
 	def test_MajorPrefix(self) -> None:
 		version = CalendarVersion(1, prefix="v")
 
@@ -472,7 +472,7 @@ class FormattingUsingStr(TestCase):
 
 		self.assertEqual("1", str(version))
 
-	@mark.xfail(msg="v2024.04 not yet support")
+	@mark.xfail(reason="v2024.04 not yet support")
 	def test_MajorPrefix(self) -> None:
 		version = CalendarVersion(1, prefix="v")
 
