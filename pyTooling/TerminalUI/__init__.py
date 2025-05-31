@@ -849,7 +849,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 		:param width: Number of characters for horizontal lines.
 
-    .. admonition::
+		.. admonition:: Generated output
 
 		   .. code-block::
 
@@ -874,7 +874,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param license:   The license.
 		:param version:   The application's version.
 
-    .. admonition::
+		.. admonition:: Example usage
 
 		   .. code-block:: Python
 

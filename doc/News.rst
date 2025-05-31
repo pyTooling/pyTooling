@@ -27,30 +27,43 @@ Version 8.x (2025)
 .. topic:: `v8.1.0 - 25.01.2025 <https://github.com/pyTooling/pyTooling/releases/v8.1.0>`__
 
    * Graph
+
      * Added methods HasVertexByID, HasVertexByValue.
      * Added method GetVertexByValue.
+
    * Versioning
+
      * Version classes are now hashable.
      * Added gamma release level.
+
    * Stopwatch
+
      * Added Exclude context manager
 
 .. topic:: `v8.0.0 - 09.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.0>`__
 
    * Reworked semantic and calendar version classes:
+
      * Moved common implementations to Version base-type.
+
        * Moved major, minor, micro, build, post, dev, release level, release number, hash, prefix, postfix parts to the base-type.
        * Moved implementations of comparison operators to the base-type: __eq__, __ne__, __lt__, __le__, __gt__, __ge__.
        * Implemented minimum comparison operator using __rshift__ (>>) for PIP's ~= operator.
        * Implemented a formatting helper method _format.
+
      * Reworked SemanticVersion.
+
        * Additionally allow comparisons with string and integer types.
        * Enhanced SemanticVersion.Parse() class-method:
+
          * Raise exceptions on invalid inputs.
          * Use a regular expression to check and split the input.
+
      * Implemented CalendarVersion (previously a dummy).
+
        * Added CalendarVersion.Parse() class-method: raise exceptions on invalid inputs.
        * Implemented comparison operators.
+
      * Added validator classes WordSizeValidator and MaxValueValidator.
      * Added doc-strings.
      * Improved __str__() method to return only used version parts.

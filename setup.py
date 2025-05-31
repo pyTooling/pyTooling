@@ -61,6 +61,7 @@ setup(
 		sourceFileWithVersion=packageInformationFile,
 		dataFiles={
 			packageName[:-2]: ["py.typed"]
-		}
+		},
+		debug=True
 	)
 )
