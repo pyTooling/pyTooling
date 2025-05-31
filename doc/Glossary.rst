@@ -107,16 +107,18 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    CLIOption
-     ...
+     undocumented
 
    CLIParameter
-     ...
+     undocumented
 
    CopyLeft
-     ...
+     undocumented
+
+     Wikipedia: :wiki:`Copyleft <Copyleft>`
 
    Cygwin
-     :wiki:`Cygwin` is a :wiki:`POSIX`-compatible programming and runtime environment for Windows.
+     :wiki:`Cygwin <Cygwin>` is a :wiki:`POSIX <POSIX>`-compatible programming and runtime environment for Windows.
 
    DAG
      A *directed acyclic graph* (DAG) is a :term:`directed graph <DG>` without backward edges and therefore free of cycles.
@@ -160,7 +162,7 @@ Glossary
           classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    Decorator
-     ...
+     undocumented
 
    Descendant
      *Descendants* are all direct and indirect successors of a :term:`node` (:term:`child nodes <child>` and child
@@ -203,10 +205,10 @@ Glossary
      An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph`.
 
    Executable
-     ...
+     undocumented
 
    Exception
-     ...
+     undocumented
 
    Graph
      A *graph* is a data structure made of :term:`vertices <vertex>` (nodes) and vertex-vertex relations called
@@ -300,6 +302,9 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   Hardlink
+     undocumented
+
    Meta-Class
      A *meta-class* is a class helping to construct classes. Thus, it's the type of a type.
 
@@ -327,11 +332,15 @@ Glossary
    MinGW
      Minimalistic GNU for Windows.
 
+     Wikipedia: :wiki:`MinGW <Mingw-w64>`
+
    Mixin-Class
      A *mixin classes* are classes used as secondary base-classes in multiple inheritance.
 
    MSYS2
-     ...
+     undocumented
+
+     Wikipedia: :wiki:`MSYS2 <Mingw-w64#MSYS2>`
 
    Mustoverride Method
      A *must-override* method provides a partial implementation (incomplete code) and must therefore be fully
@@ -345,10 +354,10 @@ Glossary
      MSYS2.
 
    Node
-     ...
+     undocumented
 
    Overloading
-     ...
+     undocumented
 
    Parent
      A *parent* is direct predecessor of a :term:`node`.
@@ -382,19 +391,23 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Post-Order
-     ...
+     undocumented
 
    Pre-Order
-     ...
+     undocumented
 
    Program
-     ...
+     undocumented
 
    PyPI
-     ...
+     undocumented
+
+     Wikipedia: :wiki:`Python Package Index <Python_Package_Index>`
 
    PyPy
-     ...
+     undocumented
+
+     Wikipedia: :wiki:`PyPy <PyPy>`
 
    Relative
      *Relatives* are :term:`siblings <sibling>` and their :term:`descendants <descendant>`.
@@ -501,7 +514,10 @@ Glossary
      another instance is going to be created, a previously cached instance of that class will be returned.
 
    Slots
-     ...
+     undocumented
+
+   Softlink
+     undocumented
 
    Tree
      A *tree* is a data structure made of :term:`nodes <node>` and parent-child relations. All nodes in a tree share one
@@ -512,17 +528,27 @@ Glossary
    UCRT
      Universal C Runtime
 
+     Wikipedia: :wiki:`Microsoft Windows library files: UCRT <Microsoft_Windows_library_files#UCRT>`
+
    URI
      Uniform Resource Identifier
+
+     Wikipedia: :wiki:`Uniform Resource Identifier <Uniform_Resource_Identifier>`
 
    URL
      Uniform Resource Locator
 
+     Wikipedia: :wiki:`Uniform Resource Locator <URL>`
+
    URN
      Uniform Resource Name
+
+     Wikipedia: :wiki:`Uniform Resource Name <Uniform_Resource_Name>`
 
    Vertex
      A vertex is a :term:`node` in a graph. Vertexes in a graph are connected using :term:`edges <edge>`.
 
    WSL
      Windows System for Linux
+
+     Wikipedia: :wiki:`Windows Subsystem for Linux <Windows_Subsystem_for_Linux>`
