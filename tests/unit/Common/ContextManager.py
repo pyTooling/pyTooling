@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _                                                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _                                                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |                                                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |                                                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |                                                                         #
+#             _____           _ _               ____                                                                   #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|___  _ __ ___  _ __ ___   ___  _ __                               #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \                              #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_) | | | | | | | | | | | (_) | | | |                             #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\___/|_| |_| |_|_| |_| |_|\___/|_| |_|                             #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -29,39 +29,43 @@
 # ==================================================================================================================== #
 #
 """
-Package installer for 'pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and
-exceptions.'.
+Unit tests for :class:`~pyTooling.Common.ChangeDirectory`.
 """
-# Add package itself to PYTHON_PATH, so it can be used to package itself.
-from os.path    import abspath
-from sys        import path as sys_path
-sys_path.insert(0, abspath('./pyTooling'))
+from pathlib  import Path
+from unittest import TestCase
 
-from setuptools import setup
+from pyTooling.Common import ChangeDirectory as ChangeDir
 
-from pathlib    import Path
-from Packaging  import DescribePythonPackageHostedOnGitHub
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
 
-gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling.*"
-packageDirectory =       packageName[:-2]
-packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
-setup(
-	**DescribePythonPackageHostedOnGitHub(
-		packageName=packageName,
-		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-		gitHubNamespace=gitHubNamespace,
-		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements={
-			"packaging": ["setuptools >= 80.0"],
-			"terminal":  ["colorama ~= 0.4.6"],
-			"yaml":      ["ruamel.yaml ~= 0.18"],
-		},
-		sourceFileWithVersion=packageInformationFile,
-		dataFiles={
-			packageName[:-2]: ["py.typed"]
-		},
-		debug=True
-	)
-)
+class ChangeDirectory(TestCase):
+	def test_ChangeDirectory(self) -> None:
+		before = Path.cwd()
+		path = Path("tests/unit/Common")
+
+		with ChangeDir(path) as p:
+			self.assertEqual(before / path, Path.cwd())
+			self.assertEqual(before / path, p)
+
+		self.assertEqual(before, Path.cwd())
+
+	def test_DoubleChangeDirectory(self) -> None:
+		before = Path.cwd()
+		outerPath = Path("tests/unit/Common")
+		innerPath = Path("../Attributes")
+
+		with ChangeDir(outerPath) as op:
+			self.assertEqual((before / outerPath).resolve(), Path.cwd())
+			self.assertEqual((before / outerPath).resolve(), op)
+
+			with ChangeDir(innerPath) as ip:
+				self.assertEqual((before / outerPath / innerPath).resolve(), Path.cwd())
+				self.assertEqual((before / outerPath / innerPath).resolve(), ip)
+
+			self.assertEqual((before / outerPath).resolve(), Path.cwd())
+
+		self.assertEqual(before, Path.cwd())

@@ -185,12 +185,12 @@ class Directory(Element["Directory"]):
 	While scanning for subelements, the directory is populated with elements. Every file object added, gets registered in
 	the filesystems :class:`Root` for deduplication. In case a file identifier already exists, the found filename will
 	reference the same file objects. In turn, the file objects has then references to multiple filenames (parents). This
-	allows to detect :def:`hardlinks <hardlink>`.
+	allows to detect :term:`hardlinks <hardlink>`.
 
-	The time needed for scanning the directory and its subelements is provided via :attr:`ScanDuration`.
+	The time needed for scanning the directory and its subelements is provided via :data:`ScanDuration`.
 
 	After scnaning the directory for subelements, certain directory properties get aggregated. The time needed for
-	aggregation is provided via :attr:`AggregateDuration`.
+	aggregation is provided via :data:`AggregateDuration`.
 	"""
 
 	_path:              Nullable[Path]             #: Cached :class:`~pathlib.Path` object of this directory.

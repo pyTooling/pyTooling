@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.4.7"
+__version__ =       "8.5.0"
 __keywords__ =      [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -49,14 +49,15 @@ __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque
 from numbers             import Number
+from os                  import chdir
 from pathlib             import Path
-from types               import ModuleType
+from types               import ModuleType, TracebackType
 from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
 from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
 
 
 try:
-	from pyTooling.Decorators import export
+	from pyTooling.Decorators  import export
 except ModuleNotFoundError:  # pragma: no cover
 	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
 
@@ -459,3 +460,29 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 			yield key, item0, *(d[key] for d in ds[1:])
 
 	return gen(dicts)
+
+
+@export
+class ChangeDirectory:
+	_oldWorkingDirectory: Path
+	_newWorkingDirectory: Path
+
+	def __init__(self, directory: Path) -> None:
+		self._newWorkingDirectory = directory
+
+	def __enter__(self) -> Path:
+		self._oldWorkingDirectory = Path.cwd()
+		chdir(self._newWorkingDirectory)
+
+		if self._newWorkingDirectory.is_absolute():
+			return self._newWorkingDirectory.resolve()
+		else:
+			return (self._oldWorkingDirectory / self._newWorkingDirectory).resolve()
+
+	def __exit__(
+		self,
+		exc_type: Nullable[Type[BaseException]] = None,
+		exc_val:  Nullable[BaseException] = None,
+		exc_tb:   Nullable[TracebackType] = None
+	) -> Nullable[bool]:
+		chdir(self._oldWorkingDirectory)
