@@ -35,6 +35,7 @@ A set of helper functions to describe a Python package for setuptools.
 """
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from collections.abc import Sized
+from os              import scandir as os_scandir
 from pathlib         import Path
 from re              import split as re_split
 from sys             import version_info
@@ -44,7 +45,7 @@ try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.Exceptions  import ToolingException
 	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Common      import getFullyQualifiedName
+	from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
 	from pyTooling.Licensing   import License, Apache_2_0_License
 except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
@@ -53,7 +54,7 @@ except (ImportError, ModuleNotFoundError):                                      
 		from Decorators          import export, readonly
 		from Exceptions          import ToolingException
 		from MetaClasses         import ExtendedType
-		from Common              import getFullyQualifiedName
+		from Common              import __version__, getFullyQualifiedName, firstElement
 		from Licensing           import License, Apache_2_0_License
 	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
 		print("[pyTooling.Packaging] Could not import directly!")
@@ -613,6 +614,8 @@ def DescribePythonPackage(
 	except ImportError as ex:
 		raise ToolingException(f"Optional dependency 'setuptools' is not available.") from ex
 
+	print(f"[pyTooling.Packaging] Python: {version_info.major}.{version_info.minor}.{version_info.micro}, pyTooling: {__version__}")
+
 	# Read README for upload to PyPI
 	if not isinstance(readmeFile, Path):
 		ex = TypeError(f"Parameter 'readmeFile' is not of type 'Path'.")
@@ -644,9 +647,9 @@ def DescribePythonPackage(
 			raise ex
 		elif not documentationRequirementsFile.exists():
 			if debug:
-				print(f"Documentation requirements file '{documentationRequirementsFile}' not found in '{Path.cwd()}'.")
-				print("  No section added to 'extraRequirements'.")
-			# raise FileNotFoundError(f"Documentation requirements file '{documentationRequirementsFile}' not found in '{Path.cwd()}'.")
+				print(f"[pyTooling.Packaging] Documentation requirements file '{documentationRequirementsFile}' not found in '{Path.cwd()}'.")
+				print( "[pyTooling.Packaging]   No section added to 'extraRequirements'.")
+		# raise FileNotFoundError(f"Documentation requirements file '{documentationRequirementsFile}' not found in '{Path.cwd()}'.")
 		else:
 			extraRequirements["doc"] = list(set(loadRequirementsFile(documentationRequirementsFile, debug=debug)))
 
@@ -658,9 +661,9 @@ def DescribePythonPackage(
 			raise ex
 		elif not unittestRequirementsFile.exists():
 			if debug:
-				print(f"Unit testing requirements file '{unittestRequirementsFile}' not found in '{Path.cwd()}'.")
-				print("  No section added to 'extraRequirements'.")
-			# raise FileNotFoundError(f"Unit testing requirements file '{unittestRequirementsFile}' not found in '{Path.cwd()}'.")
+				print(f"[pyTooling.Packaging] Unit testing requirements file '{unittestRequirementsFile}' not found in '{Path.cwd()}'.")
+				print( "[pyTooling.Packaging]   No section added to 'extraRequirements'.")
+		# raise FileNotFoundError(f"Unit testing requirements file '{unittestRequirementsFile}' not found in '{Path.cwd()}'.")
 		else:
 			extraRequirements["test"] = list(set(loadRequirementsFile(unittestRequirementsFile, debug=debug)))
 
@@ -672,8 +675,8 @@ def DescribePythonPackage(
 			raise ex
 		elif not packagingRequirementsFile.exists():
 			if debug:
-				print(f"Packaging requirements file '{packagingRequirementsFile}' not found in '{Path.cwd()}'.")
-				print("  No section added to 'extraRequirements'.")
+				print(f"[pyTooling.Packaging] Packaging requirements file '{packagingRequirementsFile}' not found in '{Path.cwd()}'.")
+				print( "[pyTooling.Packaging]   No section added to 'extraRequirements'.")
 		# raise FileNotFoundError(f"Packaging requirements file '{packagingRequirementsFile}' not found in '{Path.cwd()}'.")
 		else:
 			extraRequirements["build"] = list(set(loadRequirementsFile(packagingRequirementsFile, debug=debug)))
@@ -697,13 +700,28 @@ def DescribePythonPackage(
 		versionInformation = extractVersionInformation(sourceFileWithVersion)
 
 	# Scan for packages and source files
-	exclude = ["build", "build.*", "dist", "dist.*", "doc", "doc.*", "tests", "tests.*"]
+	if debug:
+		print(f"[pyTooling.Packaging] Exclude list for find_(namespace_)packages:")
+	exclude = []
+	rootNamespace = firstElement(packageName.split("."))
+	for dirName in (dirItem.name for dirItem in os_scandir(Path.cwd()) if dirItem.is_dir() and "." not in dirItem.name and dirItem.name != rootNamespace):
+		exclude.append(f"{dirName}")
+		exclude.append(f"{dirName}.*")
+		if debug:
+			print(f"[pyTooling.Packaging] - {dirName}, {dirName}.*")
+
 	if "." in packageName:
+		exclude.append(rootNamespace)
 		packages = find_namespace_packages(exclude=exclude)
 		if packageName.endswith(".*"):
 			packageName = packageName[:-2]
 	else:
 		packages = find_packages(exclude=exclude)
+
+	if debug:
+		print("[pyTooling.Packaging] Found packages:")
+		for package in packages:
+			print(f"[pyTooling.Packaging] - {package}")
 
 	if keywords is None or isinstance(keywords, Sized) and len(keywords) == 0:
 		keywords = versionInformation.Keywords
