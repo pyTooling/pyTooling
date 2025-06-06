@@ -1,0 +1,66 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===================
+pyTooling.CallByRef
+===================
+
+.. automodule:: pyTooling.CallByRef
+
+
+.. currentmodule:: pyTooling.CallByRef
+
+
+**Classes**
+
+- :py:class:`CallByRefParam`:
+  Implements a *call-by-reference* parameter.
+
+- :py:class:`CallByRefBoolParam`:
+  A special *call-by-reference* implementation for boolean reference types.
+
+- :py:class:`CallByRefIntParam`:
+  A special *call-by-reference* implementation for integer reference types.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: CallByRefParam
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CallByRefParam
+      :parts: 1
+
+.. autoclass:: CallByRefBoolParam
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CallByRefBoolParam
+      :parts: 1
+
+.. autoclass:: CallByRefIntParam
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CallByRefIntParam
+      :parts: 1
