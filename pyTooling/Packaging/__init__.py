@@ -719,7 +719,7 @@ def DescribePythonPackage(
 		packages = find_packages(exclude=exclude)
 
 	if debug:
-		print("[pyTooling.Packaging] Found packages:")
+		print(f"[pyTooling.Packaging] Found packages: ({packages.__class__.__name__})")
 		for package in packages:
 			print(f"[pyTooling.Packaging] - {package}")
 
