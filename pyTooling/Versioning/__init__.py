@@ -1412,7 +1412,7 @@ class CalendarVersion(Version):
 
 		flags = Flags.Clean
 
-		version = cls(major, minor, 0, 0, flags)
+		version = cls(major, minor, flags=flags)
 		if validator is not None and not validator(version):
 			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
