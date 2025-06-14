@@ -1,0 +1,50 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="302pt" height="46pt" viewBox="0.00 0.00 302.00 46.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 42)">
+<ns0:title>inheritance542f5eb454</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-38 0,-38 0,-19 54,-19 54,-38" />
+<ns0:text text-anchor="middle" x="27" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>LineSegment2D</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.LineSegment2D" ns1:title="An implementation of a 2D cartesian line segment." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="294,-38 200,-38 200,-19 294,-19 294,-38" />
+<ns0:text text-anchor="middle" x="247" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">LineSegment2D</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Generic-&gt;LineSegment2D</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.3,-28.5C88.97,-28.5 150.74,-28.5 194.79,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="194.8,-30.25 199.8,-28.5 194.8,-26.75 194.8,-30.25" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Segment2D</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Segment2D" ns1:title="An implementation of a 2D cartesian segment." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="164,-19 90,-19 90,0 164,0 164,-19" />
+<ns0:text text-anchor="middle" x="127" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Segment2D</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Generic-&gt;Segment2D</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54,-23.46C63.46,-21.63 74.39,-19.51 84.83,-17.48" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="85.34,-19.17 89.91,-16.5 84.67,-15.73 85.34,-19.17" />
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Segment2D-&gt;LineSegment2D</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M164.05,-15.3C173.71,-16.86 184.36,-18.57 194.68,-20.24" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="194.5,-21.98 199.72,-21.05 195.06,-18.53 194.5,-21.98" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

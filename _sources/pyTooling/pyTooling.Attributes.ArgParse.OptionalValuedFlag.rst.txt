@@ -1,0 +1,66 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+================================================
+pyTooling.Attributes.ArgParse.OptionalValuedFlag
+================================================
+
+.. automodule:: pyTooling.Attributes.ArgParse.OptionalValuedFlag
+
+
+.. currentmodule:: pyTooling.Attributes.ArgParse.OptionalValuedFlag
+
+
+**Classes**
+
+- :py:class:`OptionalValuedFlag`:
+  Defines a switch argument like ``--repeat[=1]``.
+
+- :py:class:`ShortOptionalValuedFlag`:
+  Defines a switch argument like ``--repeat[=1]``.
+
+- :py:class:`LongOptionalValuedFlag`:
+  Defines a switch argument like ``--repeat[=1]``.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: OptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: OptionalValuedFlag
+      :parts: 1
+
+.. autoclass:: ShortOptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortOptionalValuedFlag
+      :parts: 1
+
+.. autoclass:: LongOptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongOptionalValuedFlag
+      :parts: 1

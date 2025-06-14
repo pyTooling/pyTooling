@@ -1,0 +1,44 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="439pt" height="27pt" viewBox="0.00 0.00 439.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritance81a79160b8</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>BaseClassWithoutSlotsError</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.BaseClassWithoutSlotsError" ns1:title="The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="431,-19 279,-19 279,0 431,0 431,-19" />
+<ns0:text text-anchor="middle" x="355" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseClassWithoutSlotsError</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>ExtendedTypeError</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedTypeError" ns1:title="The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="243,-19 135,-19 135,0 243,0 243,-19" />
+<ns0:text text-anchor="middle" x="189" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ExtendedTypeError</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>ExtendedTypeError-&gt;BaseClassWithoutSlotsError</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M243.25,-9.5C253.05,-9.5 263.49,-9.5 273.88,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="273.98,-11.25 278.98,-9.5 273.98,-7.75 273.98,-11.25" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>ToolingException</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" ns1:title="The exception is raised by pyTooling internal features." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="99,-19 0,-19 0,0 99,0 99,-19" />
+<ns0:text text-anchor="middle" x="49.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ToolingException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ToolingException-&gt;ExtendedTypeError</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M99.36,-9.5C109.09,-9.5 119.4,-9.5 129.42,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="129.62,-11.25 134.62,-9.5 129.62,-7.75 129.62,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

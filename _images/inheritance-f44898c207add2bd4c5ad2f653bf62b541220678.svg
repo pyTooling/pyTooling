@@ -1,0 +1,116 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="576pt" height="57pt" viewBox="0.00 0.00 576.00 57.32">
+<ns0:g id="graph0" class="graph" transform="scale(0.69 0.69) rotate(0) translate(4 79)">
+<ns0:title>inheritance4c7ad727e3</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="135,-56 0,-56 0,-37 135,-37 135,-56" />
+<ns0:text text-anchor="middle" x="67.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>NamedArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument" ns1:title="Base-class for all command line arguments with a name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="271,-75 171,-75 171,-56 271,-56 271,-75" />
+<ns0:text text-anchor="middle" x="221" y="-63" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>CommandLineArgument-&gt;NamedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-54.89C145.52,-56.16 155.86,-57.46 165.67,-58.69" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="165.57,-60.44 170.75,-59.32 166.01,-56.97 165.57,-60.44" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>ValuedArgument</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument" ns1:title="Base-class for all command line arguments with a value." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="270,-38 172,-38 172,-19 270,-19 270,-38" />
+<ns0:text text-anchor="middle" x="221" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ValuedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>CommandLineArgument-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-38.55C145.79,-37.32 156.41,-36.06 166.46,-34.86" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="166.9,-36.57 171.65,-34.24 166.48,-33.1 166.9,-36.57" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="94.5,-19 40.5,-19 40.5,0 94.5,0 94.5,-19" />
+<ns0:text text-anchor="middle" x="67.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>NamedAndValuedArgument</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:title="Base-class for all command line arguments with a name and a value.">
+<ns0:polygon fill="white" stroke="#1e90ff" points="459,-38 307,-38 307,-19 459,-19 459,-38" />
+<ns0:text text-anchor="middle" x="383" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedAndValuedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Generic-&gt;NamedAndValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M94.77,-8.08C133.45,-6.32 207.95,-4.14 271,-9.5 290.94,-11.19 312.69,-14.57 331.6,-18.02" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="331.62,-19.8 336.86,-18.99 332.26,-16.36 331.62,-19.8" />
+</ns0:g>
+
+<ns0:g id="edge7" class="edge">
+<ns0:title>Generic-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M94.54,-12.77C114.37,-15.25 142.33,-18.76 166.82,-21.83" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="166.81,-23.59 171.99,-22.48 167.25,-20.12 166.81,-23.59" />
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>NamedKeyValuePairsArgument</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.KeyValueFlag.html#pyTooling.CLIAbstraction.KeyValueFlag.NamedKeyValuePairsArgument" ns1:title="Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="663,-38 495,-38 495,-19 663,-19 663,-38" />
+<ns0:text text-anchor="middle" x="579" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedKeyValuePairsArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>NamedAndValuedArgument-&gt;NamedKeyValuePairsArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M459.01,-28.5C469.08,-28.5 479.5,-28.5 489.78,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="489.81,-30.25 494.81,-28.5 489.81,-26.75 489.81,-30.25" />
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>NamedArgument-&gt;NamedAndValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M263.2,-55.97C285.33,-50.86 312.67,-44.53 335.55,-39.24" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="336.18,-40.89 340.66,-38.06 335.39,-37.48 336.18,-40.89" />
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ValuedArgument-&gt;NamedAndValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M270.01,-28.5C279.97,-28.5 290.73,-28.5 301.51,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="301.79,-30.25 306.79,-28.5 301.79,-26.75 301.79,-30.25" />
+</ns0:g>
+
+<ns0:g id="node7" class="node">
+<ns0:title>WindowsKeyValueFlag</ns0:title>
+<ns0:g id="a_node7"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.KeyValueFlag.html#pyTooling.CLIAbstraction.KeyValueFlag.WindowsKeyValueFlag" ns1:title="Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="826,-38 699,-38 699,-19 826,-19 826,-38" />
+<ns0:text text-anchor="middle" x="762.5" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">WindowsKeyValueFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge8" class="edge">
+<ns0:title>NamedKeyValuePairsArgument-&gt;WindowsKeyValueFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M663.05,-28.5C673.3,-28.5 683.69,-28.5 693.68,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="693.86,-30.25 698.86,-28.5 693.86,-26.75 693.86,-30.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

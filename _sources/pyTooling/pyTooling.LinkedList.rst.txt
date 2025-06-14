@@ -1,0 +1,73 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.LinkedList
+====================
+
+.. automodule:: pyTooling.LinkedList
+
+
+.. currentmodule:: pyTooling.LinkedList
+
+
+**Exceptions**
+
+- :py:exc:`LinkedListException`:
+  Base-exception of all exceptions raised by :mod:`pyTooling.LinkedList`.
+
+
+
+**Classes**
+
+- :py:class:`Node`:
+  The node in an object-oriented doubly linked-list.
+
+- :py:class:`LinkedList`:
+  An object-oriented doubly linked-list.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: LinkedListException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LinkedListException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Node
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Node
+      :parts: 1
+
+.. autoclass:: LinkedList
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LinkedList
+      :parts: 1
