@@ -1,0 +1,80 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="446pt" height="46pt" viewBox="0.00 0.00 446.00 46.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 42)">
+<ns0:title>inheritance3a3c65352f</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-38 0,-38 0,-19 54,-19 54,-38" />
+<ns0:text text-anchor="middle" x="27" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Trapezium</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Cartesian2D.Shapes.html#pyTooling.Cartesian2D.Shapes.Trapezium" ns1:title="A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices)." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="247,-38 180,-38 180,-19 247,-19 247,-38" />
+<ns0:text text-anchor="middle" x="213.5" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Trapezium</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Generic-&gt;Trapezium</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.04,-28.5C85.48,-28.5 138.58,-28.5 174.56,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="174.74,-30.25 179.74,-28.5 174.74,-26.75 174.74,-30.25" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Shape</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Cartesian2D.Shapes.html#pyTooling.Cartesian2D.Shapes.Shape" ns1:title="Base-class for all 2D cartesian shapes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="144,-19 90,-19 90,0 144,0 144,-19" />
+<ns0:text text-anchor="middle" x="117" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Shape</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Generic-&gt;Shape</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.4,-22.8C63.97,-20.73 74.87,-18.38 84.82,-16.23" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="85.4,-17.9 89.92,-15.13 84.66,-14.48 85.4,-17.9" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Rectangle</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Cartesian2D.Shapes.html#pyTooling.Cartesian2D.Shapes.Rectangle" ns1:title="A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90&#176;." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="348,-38 283,-38 283,-19 348,-19 348,-38" />
+<ns0:text text-anchor="middle" x="315.5" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Rectangle</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>Square</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.Cartesian2D.Shapes.html#pyTooling.Cartesian2D.Shapes.Square" ns1:title="A square is a rectangle, where all edges have the same length and all inner angels are 90&#176;." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="438,-38 384,-38 384,-19 438,-19 438,-38" />
+<ns0:text text-anchor="middle" x="411" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Square</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Rectangle-&gt;Square</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M348.15,-28.5C358.08,-28.5 369.02,-28.5 378.91,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="378.97,-30.25 383.97,-28.5 378.97,-26.75 378.97,-30.25" />
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Trapezium-&gt;Rectangle</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M247.24,-28.5C256.94,-28.5 267.63,-28.5 277.58,-28.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="277.7,-30.25 282.7,-28.5 277.7,-26.75 277.7,-30.25" />
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Shape-&gt;Trapezium</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M144.07,-14.74C153.56,-16.65 164.48,-18.84 174.77,-20.91" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="174.51,-22.65 179.76,-21.92 175.2,-19.22 174.51,-22.65" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>
