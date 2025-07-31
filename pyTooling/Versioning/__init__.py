@@ -1831,10 +1831,25 @@ V = TypeVar("V", bound=Version)
 
 @export
 class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	Representation of a version range described by a lower bound and upper bound version.
+
+	This version range works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
+	"""
 	_lowerBound: V
 	_upperBound: V
 
-	def __init__(self, lowerBound: V, upperBound: V):
+	def __init__(self, lowerBound: V, upperBound: V) -> None:
+		"""
+		Initializes a version range described by a lower and upper bound.
+
+		:param lowerBound:  lowest version (inclusive).
+		:param upperBound:  hightest version (inclusive).
+		:raises TypeError:  If parameter ``lowerBound`` is not of type :class:`Version`.
+		:raises TypeError:  If parameter ``upperBound`` is not of type :class:`Version`.
+		:raises TypeError:  If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
+		:raises ValueError: If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
+		"""
 		if not isinstance(lowerBound, Version):
 			ex = TypeError(f"Parameter 'lowerBound' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
@@ -1853,7 +1868,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
 			raise ex
 
-		if lowerBound >= upperBound:
+		if not (lowerBound <= upperBound):
 			ex = ValueError(f"Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
@@ -1864,10 +1879,20 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def LowerBound(self) -> V:
+		"""
+		Read-only property to access the range's lower bound.
+
+		:return: Lower bound of the version range.
+		"""
 		return self._lowerBound
 
 	@readonly
 	def UpperBound(self) -> V:
+		"""
+		Read-only property to access the range's upper bound.
+
+		:return: Upper bound of the version range.
+		"""
 		return self._upperBound
 
 	def __lt__(self, other: Any) -> bool:
@@ -1931,6 +1956,13 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		return self._lowerBound >= other
 
 	def __contains__(self, item: Version) -> bool:
+		"""
+		Check if parameter ``item`` is in the version range.
+
+		:param item:       Version to check if in range.
+		:return:           True, if ``item`` is in range.
+		:raises TypeError: If parameter ``item`` is not of type :class:`Version`.
+		"""
 		if not isinstance(item, Version):
 			ex = TypeError(f"Parameter 'item' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
