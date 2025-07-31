@@ -10,6 +10,7 @@ Param(
   [switch]$doc,
   [switch]$livedoc,
   [switch]$doccov,
+  [switch]$docview,
 
   [switch]$unit,
   [switch]$liveunit,
@@ -43,7 +44,7 @@ $EnableVerbose =      [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -o
 $help = $help -or ( -not(
   $all -or $copyall -or
     $clean -or
-    $doc -or $livedoc -or $doccov -or
+    $doc -or $livedoc -or $doccov -or $docview -or
     $unit -or $liveunit -or $copyunit -or
     $cov -or $livecov -or $copycov -or
     $type -or $livetype -or $copytype -or
@@ -317,5 +318,10 @@ if ($cov)
     Write-Host -ForegroundColor DarkMagenta "[post][COV]       Copyed code coverage report to 'coverage' directory in HTML directory"
   }
 }
+
+if ($docview)
+{ & 'C:\Program Files\Google\Chrome\Application\chrome.exe' "$(pwd)\doc\_build\html\index.html"
+}
+
 Write-Host -ForegroundColor DarkGreen       "================================================================================"
 Write-Host -ForegroundColor DarkGreen       "[SCRIPT]          Finished"

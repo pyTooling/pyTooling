@@ -36,7 +36,7 @@ Implementation of semantic and date versioning version-numbers.
 from enum   import Flag, Enum
 from re     import compile as re_compile
 from sys    import version_info   # needed for versions before Python 3.11
-from typing import Optional as Nullable, Union, Callable, Any
+from typing import Optional as Nullable, Union, Callable, Any, Generic, TypeVar
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -791,6 +791,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
 			pass
+		elif isinstance(other, VersionRange):
+			other = other._lowerBound
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -801,8 +803,7 @@ class Version(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
-		result = self._compare(self, other)
-		return result if result is not None else False
+		return self._compare(self, other) is True
 
 	@mustoverride
 	def __le__(self, other: Union["Version", str, int, None]) -> bool:
@@ -825,6 +826,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
 			pass
+		elif isinstance(other, VersionRange):
+			other = other._lowerBound
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -859,6 +862,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
 			pass
+		elif isinstance(other, VersionRange):
+			other = other._upperBound
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -869,7 +874,7 @@ class Version(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
-		return not self.__le__(other)
+		return self._compare(self, other) is False
 
 	@mustoverride
 	def __ge__(self, other: Union["Version", str, int, None]) -> bool:
@@ -892,6 +897,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
 			pass
+		elif isinstance(other, VersionRange):
+			other = other._upperBound
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -902,7 +909,8 @@ class Version(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
-		return not self.__lt__(other)
+		result = self._compare(self, other)
+		return not result if result is not None else True
 
 	def __rshift__(self, other: Union["Version", str, int, None]) -> bool:
 		if other is None:
@@ -1817,3 +1825,147 @@ class YearMonthDayVersion(CalendarVersion):
 
 	def __hash__(self) -> int:
 		return super().__hash__()
+
+
+V = TypeVar("V", bound=Version)
+
+@export
+class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
+	_lowerBound: V
+	_upperBound: V
+
+	def __init__(self, lowerBound: V, upperBound: V):
+		if not isinstance(lowerBound, Version):
+			ex = TypeError(f"Parameter 'lowerBound' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}'.")
+			raise ex
+
+		if not isinstance(upperBound, Version):
+			ex = TypeError(f"Parameter 'upperBound' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(upperBound)}'.")
+			raise ex
+
+		if not (isinstance(lowerBound, upperBound.__class__) and isinstance(upperBound, lowerBound.__class__)):
+			ex = TypeError(f"Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
+			raise ex
+
+		if lowerBound >= upperBound:
+			ex = ValueError(f"Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
+			raise ex
+
+		self._lowerBound = lowerBound
+		self._upperBound = upperBound
+
+	@readonly
+	def LowerBound(self) -> V:
+		return self._lowerBound
+
+	@readonly
+	def UpperBound(self) -> V:
+		return self._upperBound
+
+	def __lt__(self, other: Any) -> bool:
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
+			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._upperBound < other
+
+	def __le__(self, other: Any) -> bool:
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
+			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._upperBound <= other
+
+	def __gt__(self, other: Any) -> bool:
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
+			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._lowerBound > other
+
+	def __ge__(self, other: Any) -> bool:
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
+			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._lowerBound >= other
+
+	def __contains__(self, item: Version) -> bool:
+		if not isinstance(item, Version):
+			ex = TypeError(f"Parameter 'item' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(item)}'.")
+			raise ex
+
+		return self._lowerBound <= item <= self._upperBound
+
+	def __and__(self, other: Any) -> "VersionRange[T]":
+		if not isinstance(other, VersionRange):
+			ex = TypeError(f"Parameter 'other' is not of type 'VersionRange'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		if not (isinstance(other._lowerBound, self._lowerBound.__class__) and isinstance(self._lowerBound, other._lowerBound.__class__)):
+			ex = TypeError(f"Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible with each other.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(
+					f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
+			raise ex
+
+		if other._lowerBound < self._lowerBound:
+			lBound = self._lowerBound
+		elif other._lowerBound in self:
+			lBound = other._lowerBound
+		else:
+			raise ValueError()
+
+		if other._upperBound > self._upperBound:
+			uBound = self._upperBound
+		elif other._upperBound in self:
+			uBound = other._upperBound
+		else:
+			raise ValueError()
+
+		return self.__class__(lBound, uBound)
+
