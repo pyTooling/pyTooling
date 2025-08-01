@@ -2000,4 +2000,3 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			raise ValueError()
 
 		return self.__class__(lBound, uBound)
-
