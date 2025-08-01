@@ -723,7 +723,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
-		elif isinstance(other, self.__class__):
+		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
@@ -756,7 +756,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
-		elif isinstance(other, self.__class__):
+		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
@@ -789,7 +789,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
-		elif isinstance(other, self.__class__):
+		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
 			other = other._lowerBound
@@ -824,7 +824,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
-		elif isinstance(other, self.__class__):
+		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
 			other = other._lowerBound
@@ -860,7 +860,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
-		elif isinstance(other, self.__class__):
+		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
 			other = other._upperBound
@@ -895,7 +895,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
-		elif isinstance(other, self.__class__):
+		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
 			other = other._upperBound
@@ -1862,7 +1862,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(upperBound)}'.")
 			raise ex
 
-		if not (isinstance(lowerBound, upperBound.__class__) and isinstance(upperBound, lowerBound.__class__)):
+		if not ((lBC := lowerBound.__class__) is (uBC := upperBound.__class__) or issubclass(lBC, uBC) or issubclass(uBC, lBC)):
 			ex = TypeError(f"Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
