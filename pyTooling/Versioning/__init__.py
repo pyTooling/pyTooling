@@ -37,7 +37,7 @@ from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
 from re              import compile as re_compile
 from sys             import version_info   # needed for versions before Python 3.11
-from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Tuple, Iterable, Iterator
+from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Tuple, Iterable, Iterator, List
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -2043,14 +2043,30 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 @export
 class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
-	_items: Tuple[V, ...]
+	"""
+	Representation of a set of versions.
 
-	def __init__(self, versions: Union[Version, Tuple[V]]):
+	The version set is ordered.
+
+	This version set works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
+	"""
+	_items: List[V]
+
+	def __init__(self, versions: Union[Version, Iterable[V]]):
+		"""
+		Initializes a version set either by a single version or an iterable of versions.
+
+		:param versions:    A single version or an iterable of versions.
+		:raises ValueError: If parameter ``versions`` is None`.
+		:raises TypeError:  If parameter ``upperBound`` is not of type :class:`Version`.
+		:raises TypeError:  If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
+		:raises ValueError: If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
+		"""
 		if versions is None:
 			raise ValueError(f"Parameter 'versions' is None.")
 
 		if isinstance(versions, Version):
-			self._items = (versions, )
+			self._items = [versions]
 		elif isinstance(versions, abc_Iterable):
 			iterator = iter(versions)
 			firstVersion = next(iterator)
@@ -2062,7 +2078,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 				if not isinstance(version, baseType):
 					raise TypeError(f"Element from parameter 'versions' is not of type {baseType.__name__}")
 
-			self._items = tuple(sorted(versions))
+			self._items = list(sorted(versions))
 		else:
 			raise TypeError(f"Parameter 'versions' is not an Iterable.")
 
