@@ -33,10 +33,11 @@ Implementation of semantic and date versioning version-numbers.
 
 .. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
-from enum   import Flag, Enum
-from re     import compile as re_compile
-from sys    import version_info   # needed for versions before Python 3.11
-from typing import Optional as Nullable, Union, Callable, Any, Generic, TypeVar
+from collections.abc import Iterable as abc_Iterable
+from enum            import Flag, Enum
+from re              import compile as re_compile
+from sys             import version_info   # needed for versions before Python 3.11
+from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Tuple, Iterable, Iterator
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -822,11 +823,13 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
 		"""
+		equalValue = True
 		if other is None:
 			raise ValueError(f"Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
+			equalValue = RangeBoundHandling.LowerBoundExclusive not in other._boundHandling
 			other = other._lowerBound
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
@@ -839,7 +842,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		result = self._compare(self, other)
-		return result if result is not None else True
+		return result if result is not None else equalValue
 
 	@mustoverride
 	def __gt__(self, other: Union["Version", str, int, None]) -> bool:
@@ -893,11 +896,13 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
 		"""
+		equalValue = True
 		if other is None:
 			raise ValueError(f"Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
+			equalValue = RangeBoundHandling.UpperBoundExclusive not in other._boundHandling
 			other = other._upperBound
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
@@ -910,7 +915,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		result = self._compare(self, other)
-		return not result if result is not None else True
+		return not result if result is not None else equalValue
 
 	def __rshift__(self, other: Union["Version", str, int, None]) -> bool:
 		if other is None:
@@ -1626,7 +1631,7 @@ class CalendarVersion(Version):
 
 @export
 class YearMonthVersion(CalendarVersion):
-	"""Representation of a calendar version number like ``2021.10``."""
+	"""Representation of a calendar version number made of year and month like ``2021.10``."""
 
 	def __init__(
 		self,
@@ -1674,7 +1679,7 @@ class YearMonthVersion(CalendarVersion):
 
 @export
 class YearWeekVersion(CalendarVersion):
-	"""Representation of a calendar version number like ``2021.47``."""
+	"""Representation of a calendar version number made of year and week like ``2021.47``."""
 
 	def __init__(
 		self,
@@ -1722,7 +1727,7 @@ class YearWeekVersion(CalendarVersion):
 
 @export
 class YearReleaseVersion(CalendarVersion):
-	"""Representation of a calendar version number like ``2021.2``."""
+	"""Representation of a calendar version number made of year and release per year like ``2021.2``."""
 
 	def __init__(
 		self,
@@ -1770,7 +1775,7 @@ class YearReleaseVersion(CalendarVersion):
 
 @export
 class YearMonthDayVersion(CalendarVersion):
-	"""Representation of a calendar version number like ``2021.10.15``."""
+	"""Representation of a calendar version number made of year, month and day like ``2021.10.15``."""
 
 	def __init__(
 		self,
@@ -1830,16 +1835,27 @@ class YearMonthDayVersion(CalendarVersion):
 V = TypeVar("V", bound=Version)
 
 @export
+class RangeBoundHandling(Flag):
+	BothBoundsInclusive = 0
+	UpperBoundInclusive = 0
+	LowerBoundInclusive = 0
+	UpperBoundExclusive = 1
+	LowerBoundExclusive = 2
+	BothBoundsExclusive = 3
+
+
+@export
 class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
 	Representation of a version range described by a lower bound and upper bound version.
 
 	This version range works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
-	_lowerBound: V
-	_upperBound: V
+	_lowerBound:    V
+	_upperBound:    V
+	_boundHandling: RangeBoundHandling
 
-	def __init__(self, lowerBound: V, upperBound: V) -> None:
+	def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
 		"""
 		Initializes a version range described by a lower and upper bound.
 
@@ -1876,6 +1892,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._lowerBound = lowerBound
 		self._upperBound = upperBound
+		self._boundHandling = boundHandling
 
 	@readonly
 	def LowerBound(self) -> V:
@@ -1894,6 +1911,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		:return: Upper bound of the version range.
 		"""
 		return self._upperBound
+
+	@readonly
+	def BoundHandling(self) -> RangeBoundHandling:
+		"""
+		Read-only property to access the range's bound handling strategy.
+
+		:return: The range's bound handling strategy.
+		"""
+		return self._boundHandling
 
 	def __lt__(self, other: Any) -> bool:
 		if not isinstance(other, Version):
@@ -1923,7 +1949,10 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		return self._upperBound <= other
+		if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
+			return self._upperBound < other
+		else:
+			return self._upperBound <= other
 
 	def __gt__(self, other: Any) -> bool:
 		if not isinstance(other, Version):
@@ -1953,7 +1982,10 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		return self._lowerBound >= other
+		if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
+			return self._lowerBound > other
+		else:
+			return self._lowerBound >= other
 
 	def __contains__(self, item: Version) -> bool:
 		"""
@@ -1969,7 +2001,14 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(item)}'.")
 			raise ex
 
-		return self._lowerBound <= item <= self._upperBound
+		if self._boundHandling is RangeBoundHandling.BothBoundsInclusive:
+			return self._lowerBound <= item <= self._upperBound
+		elif self._boundHandling is (RangeBoundHandling.LowerBoundInclusive | RangeBoundHandling.UpperBoundExclusive):
+			return self._lowerBound <= item < self._upperBound
+		elif self._boundHandling is (RangeBoundHandling.LowerBoundExclusive | RangeBoundHandling.UpperBoundInclusive):
+			return self._lowerBound < item <= self._upperBound
+		else:
+			return self._lowerBound < item < self._upperBound
 
 	def __and__(self, other: Any) -> "VersionRange[T]":
 		if not isinstance(other, VersionRange):
@@ -2000,3 +2039,35 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			raise ValueError()
 
 		return self.__class__(lBound, uBound)
+
+
+@export
+class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
+	_items: Tuple[V, ...]
+
+	def __init__(self, versions: Union[Version, Tuple[V]]):
+		if versions is None:
+			raise ValueError(f"Parameter 'versions' is None.")
+
+		if isinstance(versions, Version):
+			self._items = (versions, )
+		elif isinstance(versions, abc_Iterable):
+			iterator = iter(versions)
+			firstVersion = next(iterator)
+			if not isinstance(firstVersion, Version):
+				raise TypeError(f"First element in parameter 'versions' is not of type Version.")
+
+			baseType = firstVersion.__class__
+			for version in iterator:
+				if not isinstance(version, baseType):
+					raise TypeError(f"Element from parameter 'versions' is not of type {baseType.__name__}")
+
+			self._items = tuple(sorted(versions))
+		else:
+			raise TypeError(f"Parameter 'versions' is not an Iterable.")
+
+	def __iter__(self) -> Iterator[V]:
+		return self._items.__iter__()
+
+	def __getitem__(self, pos: int) -> V:
+		return self._items[pos]

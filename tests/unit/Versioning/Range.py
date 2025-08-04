@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2020-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2025-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -31,7 +31,7 @@
 """Unit tests for package :mod:`pyTooling.Versioning`."""
 from unittest             import TestCase
 
-from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionRange
+from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionRange, RangeBoundHandling
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -48,6 +48,7 @@ class Instantiation(TestCase):
 
 		self.assertIs(v1, vr.LowerBound)
 		self.assertIs(v2, vr.UpperBound)
+		self.assertEqual(RangeBoundHandling.BothBoundsInclusive, vr.BoundHandling)
 
 	def test_SemVer_SemVer_Reverse(self) -> None:
 		v1 = SemanticVersion(2, 0, 0)
@@ -88,19 +89,21 @@ class Instantiation(TestCase):
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = PythonVersion(2, 0, 0)
 
-		vr = VersionRange(v1, v2)
+		vr = VersionRange(v1, v2, RangeBoundHandling.LowerBoundExclusive)
 
 		self.assertIs(v1, vr.LowerBound)
 		self.assertIs(v2, vr.UpperBound)
+		self.assertEqual(RangeBoundHandling.LowerBoundExclusive, vr.BoundHandling)
 
 	def test_PyVer_SemVer(self) -> None:
 		v1 = PythonVersion(1, 0, 0)
 		v2 = SemanticVersion(2, 0, 0)
 
-		vr = VersionRange(v1, v2)
+		vr = VersionRange(v1, v2, RangeBoundHandling.UpperBoundExclusive)
 
 		self.assertIs(v1, vr.LowerBound)
 		self.assertIs(v2, vr.UpperBound)
+		self.assertEqual(RangeBoundHandling.UpperBoundExclusive, vr.BoundHandling)
 
 
 class Comparison(TestCase):
@@ -142,6 +145,24 @@ class Comparison(TestCase):
 		self.assertFalse(vr <= SemanticVersion(1, 0, 0))
 		self.assertFalse(vr <= SemanticVersion(1, 5, 0))
 		self.assertTrue(vr <= SemanticVersion(2, 0, 0))
+		self.assertTrue(vr <= SemanticVersion(2, 5, 0))
+
+	def test_LessThanOrEqual_Exclusive(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(2, 0, 0)
+
+		vr = VersionRange(v1, v2, RangeBoundHandling.BothBoundsExclusive)
+
+		self.assertTrue(SemanticVersion(0, 5, 0) <= vr)
+		self.assertFalse(SemanticVersion(1, 0, 0) <= vr)
+		self.assertFalse(SemanticVersion(1, 5, 0) <= vr)
+		self.assertFalse(SemanticVersion(2, 0, 0) <= vr)
+		self.assertFalse(SemanticVersion(2, 5, 0) <= vr)
+
+		self.assertFalse(vr <= SemanticVersion(0, 5, 0))
+		self.assertFalse(vr <= SemanticVersion(1, 0, 0))
+		self.assertFalse(vr <= SemanticVersion(1, 5, 0))
+		self.assertFalse(vr <= SemanticVersion(2, 0, 0))
 		self.assertTrue(vr <= SemanticVersion(2, 5, 0))
 
 	def test_GreaterThan(self) -> None:
