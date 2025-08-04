@@ -91,6 +91,19 @@ class Instantiation(TestCase):
 		self.assertEqual(v2, vs[1])
 
 
+class Contains(TestCase):
+	def test_In(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(1, 5, 0)
+		v3 = SemanticVersion(2, 0, 0)
+		vF = SemanticVersion(2, 2, 0)
+
+		vs = VersionSet((v2, v3, v1))
+
+		self.assertTrue(v2 in vs)
+		self.assertFalse(vF in vs)
+
+
 class Ordering(TestCase):
 	def test_Index(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
@@ -117,3 +130,95 @@ class Ordering(TestCase):
 			self.assertLessEqual(previousVersion, nextVersion)
 			previousVersion = nextVersion
 
+
+class Intersection(TestCase):
+	def test_EqualLists(self) -> None:
+		vA1 = SemanticVersion(1, 0, 0)
+		vA2 = SemanticVersion(1, 5, 0)
+		vA3 = SemanticVersion(2, 0, 0)
+		vsA = VersionSet((vA3, vA2, vA1))
+
+		vB1 = SemanticVersion(1, 0, 0)
+		vB2 = SemanticVersion(1, 5, 0)
+		vB3 = SemanticVersion(2, 0, 0)
+		vsB = VersionSet((vB2, vB3, vB1))
+
+		intersection = vsA & vsB
+
+		self.assertEqual(3, len(intersection))
+		self.assertEqual(vA1, intersection[0])
+		self.assertEqual(vA2, intersection[1])
+		self.assertEqual(vA3, intersection[2])
+
+	def test_EmptyResult(self) -> None:
+		vA1 = SemanticVersion(1, 0, 0)
+		vA2 = SemanticVersion(1, 5, 0)
+		vA3 = SemanticVersion(2, 0, 0)
+		vsA = VersionSet((vA3, vA2, vA1))
+
+		vB1 = SemanticVersion(1, 1, 0)
+		vB2 = SemanticVersion(1, 4, 0)
+		vB3 = SemanticVersion(2, 2, 0)
+		vsB = VersionSet((vB2, vB3, vB1))
+
+		intersection = vsA & vsB
+
+		self.assertEqual(0, len(intersection))
+
+	def test_Small_Big(self) -> None:
+		vA1 = SemanticVersion(1, 0, 0)
+		vA2 = SemanticVersion(1, 2, 0)
+		vA3 = SemanticVersion(1, 3, 0)
+		vA4 = SemanticVersion(1, 5, 0)
+		vA5 = SemanticVersion(1, 8, 0)
+		vsA = VersionSet((vA3, vA2, vA1, vA4, vA5))
+
+		vB1 = SemanticVersion(1, 2, 0)
+		vB2 = SemanticVersion(1, 3, 0)
+		vB3 = SemanticVersion(1, 3, 0)
+		vB4 = SemanticVersion(1, 8, 0)
+		vB5 = SemanticVersion(2, 0, 0)
+		vsB = VersionSet((vB2, vB3, vB1, vB4, vB5))
+
+		intersection = vsA & vsB
+
+		self.assertEqual(4, len(intersection))
+		self.assertEqual(vA2, intersection[0])
+		self.assertEqual(vA2, intersection[1])
+		self.assertEqual(vA3, intersection[2])
+		self.assertEqual(vA5, intersection[3])
+
+
+class Union(TestCase):
+	def test_EqualLists(self) -> None:
+		vA1 = SemanticVersion(1, 0, 0)
+		vA2 = SemanticVersion(1, 5, 0)
+		vA3 = SemanticVersion(2, 0, 0)
+		vsA = VersionSet((vA3, vA2, vA1))
+
+		vB1 = SemanticVersion(1, 0, 0)
+		vB2 = SemanticVersion(1, 5, 0)
+		vB3 = SemanticVersion(2, 0, 0)
+		vsB = VersionSet((vB2, vB3, vB1))
+
+		union = vsA | vsB
+
+		self.assertEqual(3, len(union))
+		self.assertEqual(vA1, union[0])
+		self.assertEqual(vA2, union[1])
+		self.assertEqual(vA3, union[2])
+
+	def test_MergedLists(self) -> None:
+		vA1 = SemanticVersion(1, 0, 0)
+		vA2 = SemanticVersion(1, 5, 0)
+		vA3 = SemanticVersion(2, 0, 0)
+		vsA = VersionSet((vA3, vA2, vA1))
+
+		vB1 = SemanticVersion(1, 1, 0)
+		vB2 = SemanticVersion(1, 4, 0)
+		vB3 = SemanticVersion(2, 2, 0)
+		vsB = VersionSet((vB2, vB3, vB1))
+
+		union = vsA | vsB
+
+		self.assertEqual(6, len(union))

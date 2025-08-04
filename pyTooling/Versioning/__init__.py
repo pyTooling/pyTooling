@@ -2044,9 +2044,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 @export
 class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
-	Representation of a set of versions.
-
-	The version set is ordered.
+	Representation of an ordered set of versions.
 
 	This version set works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
@@ -2058,9 +2056,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		:param versions:    A single version or an iterable of versions.
 		:raises ValueError: If parameter ``versions`` is None`.
-		:raises TypeError:  If parameter ``upperBound`` is not of type :class:`Version`.
-		:raises TypeError:  If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
-		:raises ValueError: If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
+		:raises TypeError:  In case of a single version, if parameter ``version`` is not of type :class:`Version`.
+		:raises TypeError:  In case of an iterable, if parameter ``versions`` containes elements, which are not of type :class:`Version`.
+		:raises TypeError:  If parameter ``versions`` is neither a single version nor an iterable thereof.
 		"""
 		if versions is None:
 			raise ValueError(f"Parameter 'versions' is None.")
@@ -2069,7 +2067,12 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 			self._items = [versions]
 		elif isinstance(versions, abc_Iterable):
 			iterator = iter(versions)
-			firstVersion = next(iterator)
+			try:
+				firstVersion = next(iterator)
+			except StopIteration:
+				self._items = []
+				return
+
 			if not isinstance(firstVersion, Version):
 				raise TypeError(f"First element in parameter 'versions' is not of type Version.")
 
@@ -2082,8 +2085,119 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		else:
 			raise TypeError(f"Parameter 'versions' is not an Iterable.")
 
+	def __and__(self, other: "VersionSet[V]") -> "VersionSet[T]":
+		"""
+		Compute intersection of two version sets.
+
+		:param other: Second set of versions.
+		:returns:     Intersection of two version sets.
+		"""
+		selfIterator = self.__iter__()
+		otherIterator = other.__iter__()
+
+		result = []
+		try:
+			selfValue = next(selfIterator)
+			otherValue = next(otherIterator)
+
+			while True:
+				if selfValue < otherValue:
+					selfValue = next(selfIterator)
+				elif otherValue < selfValue:
+					otherValue = next(otherIterator)
+				else:
+					result.append(selfValue)
+					selfValue = next(selfIterator)
+					otherValue = next(otherIterator)
+
+		except StopIteration:
+			pass
+
+		return VersionSet(result)
+
+	def __or__(self, other: "VersionSet[V]") -> "VersionSet[T]":
+		"""
+		Compute union of two version sets.
+
+		:param other: Second set of versions.
+		:returns:     Union of two version sets.
+		"""
+		selfIterator = self.__iter__()
+		otherIterator = other.__iter__()
+
+		result = []
+		try:
+			selfValue = next(selfIterator)
+		except StopIteration:
+			for otherValue in otherIterator:
+				result.append(otherValue)
+
+		try:
+			otherValue = next(otherIterator)
+		except StopIteration:
+			for selfValue in selfIterator:
+				result.append(selfValue)
+
+		while True:
+			if selfValue < otherValue:
+				result.append(selfValue)
+				try:
+					selfValue = next(selfIterator)
+				except StopIteration:
+					for otherValue in otherIterator:
+						result.append(otherValue)
+
+					break
+			elif otherValue < selfValue:
+				result.append(otherValue)
+				try:
+					otherValue = next(otherIterator)
+				except StopIteration:
+					for selfValue in selfIterator:
+						result.append(selfValue)
+
+					break
+			else:
+				result.append(selfValue)
+				try:
+					selfValue = next(selfIterator)
+				except StopIteration:
+					for otherValue in otherIterator:
+						result.append(otherValue)
+
+					break
+
+				try:
+					otherValue = next(otherIterator)
+				except StopIteration:
+					for selfValue in selfIterator:
+						result.append(selfValue)
+
+					break
+
+		return VersionSet(result)
+
+	def __contains__(self, item: V) -> bool:
+		return item in self._items
+
+	def __len__(self) -> int:
+		return len(self._items)
+
 	def __iter__(self) -> Iterator[V]:
+		"""
+		Returns an iterator to iterate all versions of this set from lowest to highest.
+
+		:returns: Iterator to iterate versions.
+		"""
 		return self._items.__iter__()
 
-	def __getitem__(self, pos: int) -> V:
-		return self._items[pos]
+	def __getitem__(self, index: int) -> V:
+		"""
+		Access to a version of a set by index.
+
+		:param index: The index of the version to access.
+		:returns:     The indexed version.
+
+		.. hint:: Versions are ordered from lowest to highest version number.
+		"""
+		return self._items[index]
