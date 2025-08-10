@@ -33,10 +33,12 @@ A stopwatch to measure execution times.
 
 .. hint:: See :ref:`high-level help <COMMON/Stopwatch>` for explanations and usage examples.
 """
+
 from datetime import datetime
 from inspect  import Traceback
 from time     import perf_counter_ns
-from typing   import List, Optional as Nullable, Iterator, Tuple, Type, ContextManager
+from types    import TracebackType
+from typing   import List, Optional as Nullable, Iterator, Tuple, Type
 
 # Python 3.11: use Self if returning the own object: , Self
 
@@ -65,17 +67,46 @@ class StopwatchException(ToolingException):
 
 @export
 class ExcludeContextManager:
-	_stopwatch: "Stopwatch"
+	"""
+	A stopwatch context manager for excluding certain time spans from measurement.
+
+	While a normal stopwatch's embedded context manager (re)starts the stopwatch on every *enter* event and pauses the
+	stopwatch on every *exit* event, this context manager pauses on *enter* events and restarts on every *exit* event.
+	"""
+	_stopwatch: "Stopwatch"  #: Reference to the stopwatch.
 
 	def __init__(self, stopwatch: "Stopwatch") -> None:
+		"""
+		Initializes an excluding context manager.
+
+		:param stopwatch: Reference to the stopwatch.
+		"""
 		self._stopwatch = stopwatch
 
 	def __enter__(self) -> "ExcludeContextManager":  # TODO: Python 3.11: -> Self:
+		"""
+		Enter the context and pause the stopwatch.
+
+		:returns: Excluding stopwatch context manager instance.
+		"""
 		self._stopwatch.Pause()
 
 		return self
 
-	def __exit__(self, exc_type: Type[Exception], exc_val: Exception, exc_tb: Traceback) -> bool:
+	def __exit__(
+		self,
+		exc_type: Nullable[Type[BaseException]] = None,
+		exc_val:  Nullable[BaseException] = None,
+		exc_tb:   Nullable[TracebackType] = None
+	) -> Nullable[bool]:
+		"""
+		Exit the context and restart stopwatch.
+
+		:param exc_type: Exception type
+		:param exc_val:  Exception instance
+		:param exc_tb:   Exception's traceback.
+		:returns:        ``None``
+		"""
 		self._stopwatch.Resume()
 
 
@@ -429,6 +460,11 @@ class Stopwatch(SlottedObject):
 
 	@readonly
 	def Exclude(self) -> ExcludeContextManager:
+		"""
+		Return an *exclude* context manager for the stopwatch instance.
+
+		:returns: An excluding context manager.
+		"""
 		if self._excludeContextManager is None:
 			excludeContextManager = ExcludeContextManager(self)
 			self._excludeContextManager = excludeContextManager
@@ -529,6 +565,11 @@ class Stopwatch(SlottedObject):
 		return self._splits.__iter__()
 
 	def __str__(self):
+		"""
+		Returns the stopwatch's state and its measured time span.
+
+		:returns: The string equivalent of the stopwatch.
+		"""
 		name = f" {self._name}" if self._name is not None else ""
 		if self.IsStopped:
 			return f"Stopwatch{name} (stopped): {self._beginTime} -> {self._endTime}: {self._totalTime}"

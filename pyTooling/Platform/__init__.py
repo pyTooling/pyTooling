@@ -33,7 +33,7 @@ Common platform information gathered from various sources.
 
 .. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
 """
-from enum                    import Flag, auto
+from enum                    import Flag, auto, Enum
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -97,15 +97,17 @@ class UnknownOperatingSystemException(PlatformException):
 
 
 @export
-class PythonImplementation(Flag):
-	Unknown = 0
+class PythonImplementation(Enum):
+	"""An enumeration describing the Python implementation (CPython, PyPy, ...)."""
+	Unknown = 0   #: Unknown Python implementation
 
-	CPython = 1
-	PyPy = 2
+	CPython = 1   #: CPython (reference implementation)
+	PyPy = 2      #: PyPy
 
 
 @export
 class Platforms(Flag):
+	"""A flag describing on which platform Python is running on and/or in which environment it's running in."""
 	Unknown = 0
 
 	OS_FreeBSD = auto()        #: Operating System: BSD (Unix).
@@ -175,6 +177,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	_pythonVersion:        PythonVersion
 
 	def __init__(self) -> None:
+		"""
+		Initializes a platform by accessing multiple APIs of Python to gather all necessary information.
+		"""
 		import sys
 		import os
 		import platform
@@ -286,6 +291,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 	@readonly
 	def PythonImplementation(self) -> PythonImplementation:
+		"""
+		Read-only property to return the :class:`PythonImplementation` of the current interpreter.
+
+		:returns: Python implementation of the current interpreter.
+		"""
 		return self._pythonImplementation
 
 	@readonly
@@ -306,6 +316,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 	@readonly
 	def PythonVersion(self) -> PythonVersion:
+		"""
+		Read-only property to return the :class:`pyTooling.Versioning.PythonVersion` of the current interpreter.
+
+		:returns: Python version of the current interpreter.
+		"""
 		return self._pythonVersion
 
 	@readonly
@@ -537,9 +552,19 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			raise UnknownOperatingSystemException("Unknown operating system.")
 
 	def __repr__(self) -> str:
+		"""
+		Returns the platform's string representation.
+
+		:returns: The string representation of the current platform.
+		"""
 		return str(self._platform)
 
 	def __str__(self) -> str:
+		"""
+		Returns the platform's string equivalent.
+
+		:returns: The string equivalent of the platform.
+		"""
 		runtime = ""
 
 		if Platforms.OS_FreeBSD in self._platform:

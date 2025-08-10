@@ -57,9 +57,13 @@ class Volume:
 
 @export
 class Cuboid(Volume):
-	pass
+	"""
+	A cuboid is a volume made out of 6 rectangles.
+	"""
 
 
 @export
 class Cube(Cuboid):
-	pass
+	"""
+	A cube is a Cuboid made out of 6 equally sized squares.
+	"""

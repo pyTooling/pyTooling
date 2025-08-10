@@ -178,12 +178,20 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	@readonly
 	def Width(self) -> int:
-		"""Returns the current terminal window's width."""
+		"""
+		Read-only property to access the terminal's width.
+
+		:returns: The terminal window's width in characters.
+		"""
 		return self._width
 
 	@readonly
 	def Height(self) -> int:
-		"""Returns the current terminal window's height."""
+		"""
+		Read-only property to access the terminal's height.
+
+		:returns: The terminal window's height in characters.
+		"""
 		return self._height
 
 	@staticmethod
@@ -347,17 +355,21 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	def FatalExit(self, returnCode: int = 0) -> NoReturn:
 		"""
 		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
+
+		:param returnCode:  Return code for application exit.
 		"""
 		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
 
 	def Exit(self, returnCode: int = 0) -> NoReturn:
 		"""
 		Exit the terminal application by uninitializing color support and returning an Exit code.
+
+		:param returnCode: Return code for application exit.
 		"""
 		self.UninitializeColors()
 		exit(returnCode)
 
-	def CheckPythonVersion(self, version) -> None:
+	def CheckPythonVersion(self, version: Tuple[int, ...]) -> None:
 		"""
 		Check if the used Python interpreter fulfills the minimum version requirements.
 		"""
@@ -500,9 +512,9 @@ class Severity(Enum):
 		"""
 		Compare two Severity instances (severity level) for equality.
 
-		:param other:      Parameter to compare against.
+		:param other:      Operand to compare against.
 		:returns:          ``True``, if both severity levels are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		:raises TypeError: If operand ``other`` is not of type :class:`Severity`.
 		"""
 		if isinstance(other, Severity):
 			return self.value == other.value
@@ -516,9 +528,9 @@ class Severity(Enum):
 		"""
 		Compare two Severity instances (severity level) for inequality.
 
-		:param other:      Parameter to compare against.
+		:param other:      Operand to compare against.
 		:returns:          ``True``, if both severity levels are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		:raises TypeError: If operand ``other`` is not of type :class:`Severity`.
 		"""
 		if isinstance(other, Severity):
 			return self.value != other.value
@@ -532,9 +544,9 @@ class Severity(Enum):
 		"""
 		Compare two Severity instances (severity level) for less-than.
 
-		:param other:      Parameter to compare against.
+		:param other:      Operand to compare against.
 		:returns:          ``True``, if severity levels is less than other severity level.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		:raises TypeError: If operand ``other`` is not of type :class:`Severity`.
 		"""
 		if isinstance(other, Severity):
 			return self.value < other.value
@@ -548,9 +560,9 @@ class Severity(Enum):
 		"""
 		Compare two Severity instances (severity level) for less-than-or-equal.
 
-		:param other:      Parameter to compare against.
+		:param other:      Operand to compare against.
 		:returns:          ``True``, if severity levels is less than or equal other severity level.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		:raises TypeError: If operand ``other`` is not of type :class:`Severity`.
 		"""
 		if isinstance(other, Severity):
 			return self.value <= other.value
@@ -564,9 +576,9 @@ class Severity(Enum):
 		"""
 		Compare two Severity instances (severity level) for greater-than.
 
-		:param other:      Parameter to compare against.
+		:param other:      Operand to compare against.
 		:returns:          ``True``, if severity levels is greater than other severity level.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		:raises TypeError: If operand ``other`` is not of type :class:`Severity`.
 		"""
 		if isinstance(other, Severity):
 			return self.value >	other.value
@@ -580,9 +592,9 @@ class Severity(Enum):
 		"""
 		Compare two Severity instances (severity level) for greater-than-or-equal.
 
-		:param other:      Parameter to compare against.
+		:param other:      Operand to compare against.
 		:returns:          ``True``, if severity levels is greater than or equal other severity level.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Severity`.
+		:raises TypeError: If operand ``other`` is not of type :class:`Severity`.
 		"""
 		if isinstance(other, Severity):
 			return self.value >= other.value
@@ -617,10 +629,10 @@ class Line(metaclass=ExtendedType, slots=True):
 		Severity.Debug:     "DEBUG: {message}",
 	}                     #: Message line formatting rules.
 
-	_message:         str
-	_severity:        Severity
-	_indent:          int
-	_appendLinebreak: bool
+	_message:         str       #: Text message (line content).
+	_severity:        Severity  #: Message severity
+	_indent:          int       #: Indentation
+	_appendLinebreak: bool      #: True, if a trailing linebreak should be added when printing this line object.
 
 	def __init__(self, message: str, severity: Severity = Severity.Normal, indent: int = 0, appendLinebreak: bool = True) -> None:
 		"""Constructor for a new ``Line`` object."""
@@ -773,6 +785,9 @@ class ILineTerminal:
 
 @export
 class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
+	"""
+	A base-class for implementation of terminal applications emitting line-by-line messages.
+	"""
 	_LOG_MESSAGE_FORMAT__ = {
 		Severity.Fatal:    "{DARK_RED}[FATAL]    {message}{NOCOLOR}",
 		Severity.Error:    "{RED}[ERROR]    {message}{NOCOLOR}",

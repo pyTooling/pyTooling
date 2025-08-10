@@ -90,67 +90,115 @@ class ReleaseLevel(Enum):
 	Alpha =            -50  #:
 
 	def __eq__(self, other: Any):
+		"""
+		Compare two release levels if the level is equal to the second operand.
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if release level is equal the second operand's release level.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
+
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self is other
 
 	def __ne__(self, other: Any):
+		"""
+		Compare two release levels if the level is unequal to the second operand.
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if release level is unequal the second operand's release level.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
+
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self is not other
 
 	def __lt__(self, other: Any):
+		"""
+		Compare two release levels if the level is less than the second operand.
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if release level is less than the second operand.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
+
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value < other.value
 
 	def __le__(self, other: Any):
+		"""
+		Compare two release levels if the level is less than or equal the second operand.
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if release level is less than or equal the second operand.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
+
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <=>= operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value <= other.value
 
 	def __gt__(self, other: Any):
+		"""
+		Compare two release levels if the level is greater than the second operand.
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if release level is greater than the second operand.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
+
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value > other.value
 
 	def __ge__(self, other: Any):
+		"""
+		Compare two release levels if the level is greater than or equal the second operand.
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if release level is greater than or equal the second operand.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
+
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value >= other.value
@@ -159,6 +207,11 @@ class ReleaseLevel(Enum):
 		return hash(self.value)
 
 	def __str__(self) -> str:
+		"""
+		Returns the release level's string equivalent.
+
+		:returns: The string equivalent of the release level.
+		"""
 		if self is ReleaseLevel.Final:
 			return "final"
 		elif self is ReleaseLevel.ReleaseCandidate:
@@ -586,8 +639,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Private helper method to compute the equality of two :class:`Version` instances.
 
-		:param left:  Left parameter.
-		:param right: Right parameter.
+		:param left:  Left operand.
+		:param right: Right operand.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
 		return (
@@ -606,11 +659,11 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Private helper method to compute the comparison of two :class:`Version` instances.
 
-		:param left:  Left parameter.
-		:param right: Right parameter.
+		:param left:  Left operand.
+		:param right: Right operand.
 		:returns:     ``True``, if ``left`` is smaller than ``right``. |br|
 		              False if ``left`` is greater than ``right``. |br|
-		              Otherwise it's None (both parameters are equal).
+		              Otherwise it's None (both operands are equal).
 		"""
 		if left._major < right._major:
 			return True
@@ -717,7 +770,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
@@ -750,7 +803,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
@@ -783,7 +836,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
@@ -818,7 +871,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
@@ -856,7 +909,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
@@ -891,7 +944,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
@@ -1127,8 +1180,8 @@ class SemanticVersion(Version):
 		"""
 		Private helper method to compute the equality of two :class:`SemanticVersion` instances.
 
-		:param left:  Left parameter.
-		:param right: Right parameter.
+		:param left:  Left operand.
+		:param right: Right operand.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
 		return super()._equal(left, right)
@@ -1137,11 +1190,11 @@ class SemanticVersion(Version):
 		"""
 		Private helper method to compute the comparison of two :class:`SemanticVersion` instances.
 
-		:param left:  Left parameter.
-		:param right: Right parameter.
+		:param left:  Left operand.
+		:param right: Right operand.
 		:returns:     ``True``, if ``left`` is smaller than ``right``. |br|
 		              False if ``left`` is greater than ``right``. |br|
-		              Otherwise it's None (both parameters are equal).
+		              Otherwise it's None (both operands are equal).
 		"""
 		return super()._compare(left, right)
 
@@ -1156,7 +1209,7 @@ class SemanticVersion(Version):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
@@ -1174,7 +1227,7 @@ class SemanticVersion(Version):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
@@ -1192,7 +1245,7 @@ class SemanticVersion(Version):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
@@ -1210,7 +1263,7 @@ class SemanticVersion(Version):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
@@ -1228,7 +1281,7 @@ class SemanticVersion(Version):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
@@ -1246,7 +1299,7 @@ class SemanticVersion(Version):
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
 
-		:param other:       Parameter to compare against.
+		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
@@ -1305,8 +1358,17 @@ class SemanticVersion(Version):
 
 @export
 class PythonVersion(SemanticVersion):
+	"""
+	Represents a Python version.
+	"""
+
 	@classmethod
 	def FromSysVersionInfo(cls) -> "PythonVersion":
+		"""
+		Create a Python version from :data:`sys.version_info`.
+
+		:returns: A PythonVersion instance of the current Python interpreter's version.
+		"""
 		from sys import version_info
 
 		if version_info.releaselevel == "final":
@@ -1352,6 +1414,7 @@ class PythonVersion(SemanticVersion):
 		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""
 
 		return result
+
 
 @export
 class CalendarVersion(Version):
@@ -1448,10 +1511,7 @@ class CalendarVersion(Version):
 		:param right: Right parameter.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
-		return (
-			(left._major == right._major) and
-			(left._minor == right._minor)
-		)
+		return (left._major == right._major) and (left._minor == right._minor) and (left._micro == right._micro)
 
 	def _compare(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
 		"""
@@ -1471,6 +1531,11 @@ class CalendarVersion(Version):
 		if left._minor < right._minor:
 			return True
 		elif left._minor > right._minor:
+			return False
+
+		if left._micro < right._micro:
+			return True
+		elif left._micro > right._micro:
 			return False
 
 		return None
@@ -1836,12 +1901,18 @@ V = TypeVar("V", bound=Version)
 
 @export
 class RangeBoundHandling(Flag):
-	BothBoundsInclusive = 0
-	UpperBoundInclusive = 0
-	LowerBoundInclusive = 0
-	UpperBoundExclusive = 1
-	LowerBoundExclusive = 2
-	BothBoundsExclusive = 3
+	"""
+	A flag defining how to handle bounds in a range.
+
+	If a bound is inclusive, the bound's value is within the range. If a bound is exclusive, the bound's value is the
+	first value outside the range. Inclusive and exclusive behavior can be mixed for lower and upper bounds.
+	"""
+	BothBoundsInclusive = 0  #: Lower and upper bound are inclusive.
+	LowerBoundInclusive = 0  #: Lower bound is inclusive.
+	UpperBoundInclusive = 0  #: Upper bound is inclusive.
+	LowerBoundExclusive = 1  #: Lower bound is exclusive.
+	UpperBoundExclusive = 2  #: Upper bound is exclusive.
+	BothBoundsExclusive = 3  #: Lower and upper bound are exclusive.
 
 
 @export
@@ -1922,6 +1993,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		return self._boundHandling
 
 	def __lt__(self, other: Any) -> bool:
+		"""
+		Compare a version range and a version numbers if the version range is less than the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version range is less than the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
@@ -1937,6 +2017,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		return self._upperBound < other
 
 	def __le__(self, other: Any) -> bool:
+		"""
+		Compare a version range and a version numbers if the version range is less than or equal the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version range is less than  or equal the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
@@ -1955,6 +2044,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			return self._upperBound <= other
 
 	def __gt__(self, other: Any) -> bool:
+		"""
+		Compare a version range and a version numbers if the version range is greater than the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version range is greater than the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
@@ -1970,6 +2068,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		return self._lowerBound > other
 
 	def __ge__(self, other: Any) -> bool:
+		"""
+		Compare a version range and a version numbers if the version range is greater than  or equal the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version range is greater than or equal the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
@@ -1987,28 +2094,28 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		else:
 			return self._lowerBound >= other
 
-	def __contains__(self, item: Version) -> bool:
+	def __contains__(self, version: Version) -> bool:
 		"""
-		Check if parameter ``item`` is in the version range.
+		Check if the version is in the version range.
 
-		:param item:       Version to check if in range.
-		:return:           True, if ``item`` is in range.
-		:raises TypeError: If parameter ``item`` is not of type :class:`Version`.
+		:param version:    Version to check.
+		:returns:          ``True``, if version is in range.
+		:raises TypeError: If parameter ``version`` is not of type :class:`Version`.
 		"""
-		if not isinstance(item, Version):
+		if not isinstance(version, Version):
 			ex = TypeError(f"Parameter 'item' is not of type 'Version'.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(item)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
 			raise ex
 
 		if self._boundHandling is RangeBoundHandling.BothBoundsInclusive:
-			return self._lowerBound <= item <= self._upperBound
+			return self._lowerBound <= version <= self._upperBound
 		elif self._boundHandling is (RangeBoundHandling.LowerBoundInclusive | RangeBoundHandling.UpperBoundExclusive):
-			return self._lowerBound <= item < self._upperBound
+			return self._lowerBound <= version < self._upperBound
 		elif self._boundHandling is (RangeBoundHandling.LowerBoundExclusive | RangeBoundHandling.UpperBoundInclusive):
-			return self._lowerBound < item <= self._upperBound
+			return self._lowerBound < version <= self._upperBound
 		else:
-			return self._lowerBound < item < self._upperBound
+			return self._lowerBound < version < self._upperBound
 
 	def __and__(self, other: Any) -> "VersionRange[T]":
 		if not isinstance(other, VersionRange):
@@ -2048,7 +2155,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 	This version set works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
-	_items: List[V]
+	_items: List[V]  #: An ordered list of set members.
 
 	def __init__(self, versions: Union[Version, Iterable[V]]):
 		"""
@@ -2179,10 +2286,21 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		return VersionSet(result)
 
-	def __contains__(self, item: V) -> bool:
-		return item in self._items
+	def __contains__(self, version: V) -> bool:
+		"""
+		Checks if the version a member of the set.
+
+		:param version: The version to check.
+		:returns:       ``True``, if the version is a member of the set.
+		"""
+		return version in self._items
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of members in the set.
+
+		:returns: Number of set members.
+		"""
 		return len(self._items)
 
 	def __iter__(self) -> Iterator[V]:

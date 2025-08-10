@@ -195,9 +195,19 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 2D point's string representation.
+
+		:returns: The string representation of the 2D point.
+		"""
 		return f"Point2D({self.x}, {self.y})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 2D point's string equivalent.
+
+		:returns: The string equivalent of the 2D point.
+		"""
 		return f"({self.x}, {self.y})"
 
 
@@ -218,6 +228,11 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 		raise RuntimeError(f"An origin can't be copied.")
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 2D origin's string representation.
+
+		:returns: The string representation of the 2D origin.
+		"""
 		return f"Origin2D({self.x}, {self.y})"
 
 
@@ -405,9 +420,19 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 2D offset's string representation.
+
+		:returns: The string representation of the 2D offset.
+		"""
 		return f"Offset2D({self.xOffset}, {self.yOffset})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 2D offset's string equivalent.
+
+		:returns: The string equivalent of the 2D offset.
+		"""
 		return f"({self.xOffset}, {self.yOffset})"
 
 
@@ -457,9 +482,19 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self.width, self.height
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 2D size's string representation.
+
+		:returns: The string representation of the 2D size.
+		"""
 		return f"Size2D({self.width}, {self.height})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 2D size's string equivalent.
+
+		:returns: The string equivalent of the 2D size.
+		"""
 		return f"({self.width}, {self.height})"
 
 
@@ -530,7 +565,17 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		return self.start.ToTuple(), self.end.ToTuple()
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 2D line segment's string representation.
+
+		:returns: The string representation of the 2D line segment.
+		"""
 		return f"LineSegment2D({self.start}, {self.end})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 2D line segment's string equivalent.
+
+		:returns: The string equivalent of the 2D line segment.
+		"""
 		return f"({self.start} → {self.end})"

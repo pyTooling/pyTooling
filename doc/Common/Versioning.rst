@@ -8,6 +8,8 @@ The :mod:`pyTooling.Versioning` package provides auxiliary classes to implement 
 `CalVer <https://calver.org/>`__ rules). The latter one has multiple variants due to the meaning of the version's parts
 like: year-month version or year-week version.
 
+Versions can be grouped by :ref:`version sets <VERSIONING/VersionSet>` and :ref:`version ranges <VERSIONING/VersionRange>`.
+
 
 .. _VERSIONING/SemanticVersion:
 
@@ -422,6 +424,7 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
 
 
 .. _VERSIONING/CalVerVariants:
+
 Variants
 ========
 
@@ -656,3 +659,161 @@ Variants
                  @readonly
                  def Day(self) -> int:
                    pass
+
+.. _VERSIONING/VersionRange:
+
+VersionRange
+************
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A :class:`~pyTooling.Versioning.VersionRange` defines a range of versions from a lower to an upper bound. It
+      equivalently supports :ref:`semantic <VERSIONING/SemanticVersion>` and :ref:`calendar <VERSIONING/CalendarVersion>`
+      versions or derived subclasses thereof. When constructing a new version range, an optional
+      :class:`~pyTooling.Versioning.RangeBoundHandling` flag specifies if the bounds are inclusive (default) or
+      exclusive.
+
+      The version range defines comparison operators (``<``, ``<=``, ``>``, ``>=``) as well as a *contains* checks
+      (``in``, ``not in``).
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Condensed Class Definition
+
+            .. code-block:: python
+
+               @export
+               class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
+                  def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
+
+                  @readonly
+                  def LowerBound(self) -> V:
+                    ...
+
+                  @readonly
+                  def UpperBound(self) -> V:
+                    ...
+
+                  @readonly
+                  def BoundHandling(self) -> RangeBoundHandling:
+                    ...
+
+                  def __lt__(self, other: Any) -> bool:
+                    ...
+
+                  def __le__(self, other: Any) -> bool:
+                    ...
+
+                  def __gt__(self, other: Any) -> bool:
+                    ...
+
+                  def __ge__(self, other: Any) -> bool:
+                    ...
+
+                  def __contains__(self, version: Version) -> bool:
+                    ...
+
+                  def __and__(self, other: Any) -> VersionRange[T]:
+                    ...
+
+         .. tab-item:: Inclusive bounds
+
+            .. code-block:: python
+
+               from pyTooling.Versioning import SemanticVersion, VersionRange
+
+               versionRange = VersionRange(
+                 lowerBound=SemanticVersion(1, 0, 0),
+                 upperBound=SemanticVersion(1, 9, 0)
+               )
+
+               testVersion = SemanticVersion(1, 4, 3)
+               if testVersion in versionRange:
+                 ...
+
+         .. tab-item:: Exclusive upper bound
+
+            .. code-block:: python
+
+               from pyTooling.Versioning import SemanticVersion, VersionRange
+
+               versionRange = VersionRange(
+                 lowerBound=YearWeekVersion(2023, 34),
+                 upperBound=YearWeekVersion(2023, 51),
+                 boundHandling=RangeBoundHandling.UpperBoundExclusive)
+               )
+
+               testVersion = YearWeekVersion(2023, 51)
+               if testVersion not in versionRange:
+                 ...
+
+
+.. _VERSIONING/VersionSet:
+
+VersionSet
+**********
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      A :class:`~pyTooling.Versioning.VersionRange` defines an ordered set of versions.
+
+      The version set defines comparison operators (``<``, ``<=``, ``>``, ``>=``) as well as a *contains* checks
+      (``in``, ``not in``).
+
+   .. grid-item::
+      :columns: 6
+
+      .. tab-set::
+
+         .. tab-item:: Condensed Class Definition
+
+            .. code-block:: python
+
+               @export
+               class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
+                  def __init__(self, versions: Union[Version, Iterable[V]]):
+                    ...
+
+                  def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
+                    ...
+
+                  def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
+                    ...
+
+                  def __contains__(self, version: V) -> bool:
+                    ...
+
+                  def __len__(self) -> int:
+                    ...
+
+                  def __iter__(self) -> Iterator[V]:
+                    ...
+
+                  def __getitem__(self, index: int) -> V:
+                    ...
+
+
+         .. tab-item:: VersionRange with inclusive bounds
+
+            .. code-block:: python
+
+               from pyTooling.Versioning import SemanticVersion, VersionSet
+
+               versionSet = VersionSet((
+                 YearMonthVersion(2024, 4),
+                 YearMonthVersion(2025, 1),
+                 YearMonthVersion(2019, 3)
+               ))
+
+               testVersion = YearMonthVersion(2019, 3)
+               if testVersion in versionSet:
+                 ...
