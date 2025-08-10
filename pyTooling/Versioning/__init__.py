@@ -2144,6 +2144,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 				try:
 					selfValue = next(selfIterator)
 				except StopIteration:
+					result.append(otherValue)
 					for otherValue in otherIterator:
 						result.append(otherValue)
 
@@ -2153,6 +2154,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 				try:
 					otherValue = next(otherIterator)
 				except StopIteration:
+					result.append(selfValue)
 					for selfValue in selfIterator:
 						result.append(selfValue)
 

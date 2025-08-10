@@ -182,11 +182,10 @@ class Intersection(TestCase):
 
 		intersection = vsA & vsB
 
-		self.assertEqual(4, len(intersection))
+		self.assertEqual(3, len(intersection))
 		self.assertEqual(vA2, intersection[0])
-		self.assertEqual(vA2, intersection[1])
-		self.assertEqual(vA3, intersection[2])
-		self.assertEqual(vA5, intersection[3])
+		self.assertEqual(vA3, intersection[1])
+		self.assertEqual(vA5, intersection[2])
 
 
 class Union(TestCase):
