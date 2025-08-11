@@ -91,7 +91,87 @@ class Instantiation(TestCase):
 		self.assertEqual(v2, vs[1])
 
 
-class Contains(TestCase):
+class Comparison(TestCase):
+	def test_LessThan(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(1, 5, 0)
+		v3 = SemanticVersion(2, 0, 0)
+		v4 = SemanticVersion(2, 5, 0)
+		v5 = SemanticVersion(3, 0, 0)
+
+		vs = VersionSet((v1, v2, v3, v4, v5))
+
+		self.assertTrue(SemanticVersion(0, 5, 0) < vs)
+		self.assertFalse(SemanticVersion(1, 0, 0) < vs)
+		self.assertFalse(SemanticVersion(1, 5, 0) < vs)
+
+		self.assertFalse(vs < SemanticVersion(2, 5, 0))
+		self.assertFalse(vs < SemanticVersion(3, 0, 0))
+		self.assertTrue(vs < SemanticVersion(3, 5, 0))
+
+	def test_LessThan_WrongType(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(1, 5, 0)
+		v3 = SemanticVersion(2, 0, 0)
+		v4 = SemanticVersion(2, 5, 0)
+		v5 = SemanticVersion(3, 0, 0)
+
+		vs = VersionSet((v1, v2, v3, v4, v5))
+
+		with self.assertRaises(TypeError) as ex:
+			_ = vs < (2, 5, 0)
+
+	def test_LessThanOrEqual(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(1, 5, 0)
+		v3 = SemanticVersion(2, 0, 0)
+		v4 = SemanticVersion(2, 5, 0)
+		v5 = SemanticVersion(3, 0, 0)
+
+		vs = VersionSet((v1, v2, v3, v4, v5))
+
+		self.assertTrue(SemanticVersion(0, 5, 0) <= vs)
+		self.assertTrue(SemanticVersion(1, 0, 0) <= vs)
+		self.assertFalse(SemanticVersion(1, 5, 0) <= vs)
+
+		self.assertFalse(vs <= SemanticVersion(2, 5, 0))
+		self.assertTrue(vs <= SemanticVersion(3, 0, 0))
+		self.assertTrue(vs <= SemanticVersion(3, 5, 0))
+
+	def test_GreaterThan(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(1, 5, 0)
+		v3 = SemanticVersion(2, 0, 0)
+		v4 = SemanticVersion(2, 5, 0)
+		v5 = SemanticVersion(3, 0, 0)
+
+		vs = VersionSet((v1, v2, v3, v4, v5))
+
+		self.assertFalse(SemanticVersion(2, 5, 0) > vs)
+		self.assertFalse(SemanticVersion(3, 0, 0) > vs)
+		self.assertTrue(SemanticVersion(3, 5, 0) > vs)
+
+		self.assertTrue(vs > SemanticVersion(0, 5, 0))
+		self.assertFalse(vs > SemanticVersion(1, 0, 0))
+		self.assertFalse(vs > SemanticVersion(1, 5, 0))
+
+	def test_GreaterThanOrEqual(self) -> None:
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(1, 5, 0)
+		v3 = SemanticVersion(2, 0, 0)
+		v4 = SemanticVersion(2, 5, 0)
+		v5 = SemanticVersion(3, 0, 0)
+
+		vs = VersionSet((v1, v2, v3, v4, v5))
+
+		self.assertFalse(SemanticVersion(2, 5, 0) >= vs)
+		self.assertTrue(SemanticVersion(3, 0, 0) >= vs)
+		self.assertTrue(SemanticVersion(3, 5, 0) >= vs)
+
+		self.assertTrue(vs >= SemanticVersion(0, 5, 0))
+		self.assertTrue(vs >= SemanticVersion(1, 0, 0))
+		self.assertFalse(vs >= SemanticVersion(1, 5, 0))
+
 	def test_In(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(1, 5, 0)

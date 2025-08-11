@@ -829,7 +829,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
-		The second operand should be an instance of :class:`Version`, but ``str`` and ``int`` are accepted, too. |br|
+		The second operand should be an instance of :class:`Version`, but :class:`VersionRange`, :class:`VersionSet`,
+		``str`` and ``int`` are accepted, too. |br|
 		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
 		number is assumed (all other parts are zero).
 
@@ -839,7 +840,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -847,6 +848,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			pass
 		elif isinstance(other, VersionRange):
 			other = other._lowerBound
+		elif isinstance(other, VersionSet):
+			other = other._items[0]
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -854,7 +857,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is True
@@ -864,7 +867,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
-		The second operand should be an instance of :class:`Version`, but ``str`` and ``int`` are accepted, too. |br|
+		The second operand should be an instance of :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, but
+		``str`` and ``int`` are accepted, too. |br|
 		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
 		number is assumed (all other parts are zero).
 
@@ -874,7 +878,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
 		"""
 		equalValue = True
 		if other is None:
@@ -884,6 +888,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, VersionRange):
 			equalValue = RangeBoundHandling.LowerBoundExclusive not in other._boundHandling
 			other = other._lowerBound
+		elif isinstance(other, VersionSet):
+			other = other._items[0]
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -891,7 +897,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
@@ -902,7 +908,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
-		The second operand should be an instance of :class:`Version`, but ``str`` and ``int`` are accepted, too. |br|
+		The second operand should be an instance of :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, but
+		``str`` and ``int`` are accepted, too. |br|
 		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
 		number is assumed (all other parts are zero).
 
@@ -912,7 +919,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -920,6 +927,8 @@ class Version(metaclass=ExtendedType, slots=True):
 			pass
 		elif isinstance(other, VersionRange):
 			other = other._upperBound
+		elif isinstance(other, VersionSet):
+			other = other._items[-1]
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -927,7 +936,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is False
@@ -937,7 +946,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 
-		The second operand should be an instance of :class:`Version`, but ``str`` and ``int`` are accepted, too. |br|
+		The second operand should be an instance of :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, but
+		``str`` and ``int`` are accepted, too. |br|
 		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
 		number is assumed (all other parts are zero).
 
@@ -947,7 +957,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
 		"""
 		equalValue = True
 		if other is None:
@@ -957,6 +967,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, VersionRange):
 			equalValue = RangeBoundHandling.UpperBoundExclusive not in other._boundHandling
 			other = other._upperBound
+		elif isinstance(other, VersionSet):
+			other = other._items[-1]
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
@@ -964,7 +976,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
 			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
@@ -1992,6 +2004,44 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		return self._boundHandling
 
+	def __and__(self, other: Any) -> "VersionRange[T]":
+		"""
+		Compute the intersection of two version ranges.
+
+		:param other:       Second version range to intersect with.
+		:returns:           Intersected version range.
+		:raises TypeError:  If parameter 'other' is not of type :class:`VersionRange`.
+		:raises ValueError: If intersection is empty.
+		"""
+		if not isinstance(other, VersionRange):
+			ex = TypeError(f"Parameter 'other' is not of type 'VersionRange'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		if not (isinstance(other._lowerBound, self._lowerBound.__class__) and isinstance(self._lowerBound, other._lowerBound.__class__)):
+			ex = TypeError(f"Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible with each other.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(
+					f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
+			raise ex
+
+		if other._lowerBound < self._lowerBound:
+			lBound = self._lowerBound
+		elif other._lowerBound in self:
+			lBound = other._lowerBound
+		else:
+			raise ValueError()
+
+		if other._upperBound > self._upperBound:
+			uBound = self._upperBound
+		elif other._upperBound in self:
+			uBound = other._upperBound
+		else:
+			raise ValueError()
+
+		return self.__class__(lBound, uBound)
+
 	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare a version range and a version numbers if the version range is less than the second operand (version).
@@ -2116,36 +2166,6 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			return self._lowerBound < version <= self._upperBound
 		else:
 			return self._lowerBound < version < self._upperBound
-
-	def __and__(self, other: Any) -> "VersionRange[T]":
-		if not isinstance(other, VersionRange):
-			ex = TypeError(f"Parameter 'other' is not of type 'VersionRange'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
-
-		if not (isinstance(other._lowerBound, self._lowerBound.__class__) and isinstance(self._lowerBound, other._lowerBound.__class__)):
-			ex = TypeError(f"Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible with each other.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(
-					f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
-			raise ex
-
-		if other._lowerBound < self._lowerBound:
-			lBound = self._lowerBound
-		elif other._lowerBound in self:
-			lBound = other._lowerBound
-		else:
-			raise ValueError()
-
-		if other._upperBound > self._upperBound:
-			uBound = self._upperBound
-		elif other._upperBound in self:
-			uBound = other._upperBound
-		else:
-			raise ValueError()
-
-		return self.__class__(lBound, uBound)
 
 
 @export
@@ -2285,6 +2305,78 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 					break
 
 		return VersionSet(result)
+
+	def __lt__(self, other: Any) -> bool:
+		"""
+		Compare a version set and a version numbers if the version set is less than the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version set is less than the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._items[-1] < other
+
+	def __le__(self, other: Any) -> bool:
+		"""
+		Compare a version set and a version numbers if the version set is less than or equal the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version set is less than or equal the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._items[-1] <= other
+
+	def __gt__(self, other: Any) -> bool:
+		"""
+		Compare a version set and a version numbers if the version set is greater than the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version set is greater than the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._items[0] > other
+
+	def __ge__(self, other: Any) -> bool:
+		"""
+		Compare a version set and a version numbers if the version set is greater than or equal the second operand (version).
+
+		:param other:       Operand to compare against.
+		:returns:           ``True``, if version set is greater than or equal the second operand (version).
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		"""
+		# TODO: support VersionRange < VersionRange too
+		# TODO: support str, int, ... like Version ?
+		if not isinstance(other, Version):
+			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._items[0] >= other
 
 	def __contains__(self, version: V) -> bool:
 		"""
