@@ -670,59 +670,85 @@ VersionRange
    .. grid-item::
       :columns: 6
 
-      A :class:`~pyTooling.Versioning.VersionRange` defines a range of versions from a lower to an upper bound. It
-      equivalently supports :ref:`semantic <VERSIONING/SemanticVersion>` and :ref:`calendar <VERSIONING/CalendarVersion>`
-      versions or derived subclasses thereof. When constructing a new version range, an optional
+      A :class:`~pyTooling.Versioning.VersionRange` defines a range of versions reaching from a lower to an upper bound.
+      It equivalently supports :ref:`semantic <VERSIONING/SemanticVersion>` and :ref:`calendar <VERSIONING/CalendarVersion>`
+      versions or derived subclasses thereof. When initializing a version range, an optional
       :class:`~pyTooling.Versioning.RangeBoundHandling` flag specifies if the bounds are inclusive (default) or
       exclusive.
 
-      The version range defines comparison operators (``<``, ``<=``, ``>``, ``>=``) as well as a *contains* checks
-      (``in``, ``not in``).
+      .. rubric:: Features
+
+      Access bounds and bound handling behavior
+        The lower bound of the version range can be read or updated by accessing the
+        :attr:`~pyTooling.Versioning.VersionRange.LowerBound` property. Similarly, the upper bound of the version range
+        can be read or updated by accessing the :attr:`~pyTooling.Versioning.VersionRange.UpperBound` property.
+
+        The behavior how lower and upper bound are handled can be read or modified by accessing the
+        :attr:`~pyTooling.Versioning.VersionRange.BoundHandling` property.
+
+      Comparison of two version ranges
+        A version range can be compare to another version range using comparison operators: ``<``, ``<=``, ``>``, ``>=``.
+
+      Comparison of a version range and a version
+        A version can be compared with a version range and vise versa using comparison operators: ``<``, ``<=``, ``>``,
+        ``>=``.
+
+        The behavior is influenced by the bound handling behavior.
+
+      Contains checks
+        A version can be checked if it's contained in a version range using *contains* operators: ``in``, ``not in``.
+
+        The behavior is influenced by the bound handling behavior.
+
+      Intersection
+        Two version ranges can be intersected using the ``&`` operator creating a new version range.
+
+        In case of an empty intersection result, an exception is raised.
 
    .. grid-item::
       :columns: 6
 
+      .. rubric:: Condensed Class Definition
+
+      .. code-block:: python
+
+         @export
+         class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
+            def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
+
+            @property
+            def LowerBound(self) -> V:
+              pass
+
+            @property
+            def UpperBound(self) -> V:
+              pass
+
+            @property
+            def BoundHandling(self) -> RangeBoundHandling:
+              pass
+
+            def __and__(self, other: Any) -> VersionRange[T]:
+              pass
+
+            def __lt__(self, other: Any) -> bool:
+              pass
+
+            def __le__(self, other: Any) -> bool:
+              pass
+
+            def __gt__(self, other: Any) -> bool:
+              pass
+
+            def __ge__(self, other: Any) -> bool:
+              pass
+
+            def __contains__(self, version: Version) -> bool:
+              pass
+
       .. tab-set::
 
-         .. tab-item:: Condensed Class Definition
-
-            .. code-block:: python
-
-               @export
-               class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
-                  def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
-
-                  @readonly
-                  def LowerBound(self) -> V:
-                    ...
-
-                  @readonly
-                  def UpperBound(self) -> V:
-                    ...
-
-                  @readonly
-                  def BoundHandling(self) -> RangeBoundHandling:
-                    ...
-
-                  def __lt__(self, other: Any) -> bool:
-                    ...
-
-                  def __le__(self, other: Any) -> bool:
-                    ...
-
-                  def __gt__(self, other: Any) -> bool:
-                    ...
-
-                  def __ge__(self, other: Any) -> bool:
-                    ...
-
-                  def __contains__(self, version: Version) -> bool:
-                    ...
-
-                  def __and__(self, other: Any) -> VersionRange[T]:
-                    ...
-
-         .. tab-item:: Inclusive bounds
+         .. tab-item:: Instantiation (Inclusive Bounds)
 
             .. code-block:: python
 
@@ -735,9 +761,9 @@ VersionRange
 
                testVersion = SemanticVersion(1, 4, 3)
                if testVersion in versionRange:
-                 ...
+                 pass
 
-         .. tab-item:: Exclusive upper bound
+         .. tab-item:: Instantiation (Exclusive Upper Bound)
 
             .. code-block:: python
 
@@ -751,7 +777,7 @@ VersionRange
 
                testVersion = YearWeekVersion(2023, 51)
                if testVersion not in versionRange:
-                 ...
+                 pass
 
 
 .. _VERSIONING/VersionSet:
@@ -764,45 +790,82 @@ VersionSet
    .. grid-item::
       :columns: 6
 
-      A :class:`~pyTooling.Versioning.VersionRange` defines an ordered set of versions.
+      A :class:`~pyTooling.Versioning.VersionSet` defines an ordered set (actually a list) of versions. It equivalently
+      supports :ref:`semantic <VERSIONING/SemanticVersion>` and :ref:`calendar <VERSIONING/CalendarVersion>` versions or
+      derived subclasses thereof.
 
-      The version set defines comparison operators (``<``, ``<=``, ``>``, ``>=``) as well as a *contains* checks
-      (``in``, ``not in``).
+      .. rubric:: Features
+
+      Accessing versions in the set
+        The versions within a version set can be accessed via index operation (``__getitem__``) or iterating
+        (``__iter__``) the version set.
+
+        The number of elements is accessible via length operation (``__len__``).
+
+      Comparison of two version sets
+        A version set can be compare to another version set using comparison operators: ``<``, ``<=``, ``>``, ``>=``.
+
+      Comparison of a version set and a version
+        A version can be compared with a version set and vise versa using comparison operators: ``<``, ``<=``, ``>``,
+        ``>=``.
+
+      Contains checks
+        A version can be checked if it's contained in a version set using *contains* operators: ``in``, ``not in``.
+
+      Intersection
+        Two version set can be intersected using the ``&`` operator creating a new version set.
+
+        In case of an empty intersection result, an exception is raised.
+
+      Union
+        Two version sets can be united using the ``|`` operator creating a new version set.
+
 
    .. grid-item::
       :columns: 6
 
+      .. rubric:: Condensed Class Definition
+
+      .. code-block:: python
+
+         @export
+         class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
+            def __init__(self, versions: Union[Version, Iterable[V]]):
+              pass
+
+            def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
+              pass
+
+            def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
+              pass
+
+            def __lt__(self, other: Any) -> bool:
+              pass
+
+            def __le__(self, other: Any) -> bool:
+              pass
+
+            def __gt__(self, other: Any) -> bool:
+              pass
+
+            def __ge__(self, other: Any) -> bool:
+              pass
+
+            def __contains__(self, version: V) -> bool:
+              pass
+
+            def __len__(self) -> int:
+              pass
+
+            def __iter__(self) -> Iterator[V]:
+              pass
+
+            def __getitem__(self, index: int) -> V:
+              pass
+
       .. tab-set::
 
-         .. tab-item:: Condensed Class Definition
-
-            .. code-block:: python
-
-               @export
-               class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
-                  def __init__(self, versions: Union[Version, Iterable[V]]):
-                    ...
-
-                  def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
-                    ...
-
-                  def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
-                    ...
-
-                  def __contains__(self, version: V) -> bool:
-                    ...
-
-                  def __len__(self) -> int:
-                    ...
-
-                  def __iter__(self) -> Iterator[V]:
-                    ...
-
-                  def __getitem__(self, index: int) -> V:
-                    ...
-
-
-         .. tab-item:: VersionRange with inclusive bounds
+         .. tab-item:: Instantiation
 
             .. code-block:: python
 
@@ -816,4 +879,19 @@ VersionSet
 
                testVersion = YearMonthVersion(2019, 3)
                if testVersion in versionSet:
-                 ...
+                 pass
+
+         .. tab-item:: Iterating Elements
+
+            .. code-block:: python
+
+               from pyTooling.Versioning import SemanticVersion, VersionSet
+
+               versionSet = VersionSet((
+                 YearMonthVersion(2024, 4),
+                 YearMonthVersion(2025, 1),
+                 YearMonthVersion(2019, 3)
+               ))
+
+               for version in versionSet:
+                 pass

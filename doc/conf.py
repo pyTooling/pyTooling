@@ -34,6 +34,7 @@ sys_path.insert(0, abspath(f"../{directoryName}"))
 packageInformationFile = Path(f"../{directoryName}/Common/__init__.py")
 versionInformation = extractVersionInformation(packageInformationFile)
 
+project =   pythonProject
 author =    versionInformation.Author
 copyright = versionInformation.Copyright
 version =   ".".join(versionInformation.Version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
