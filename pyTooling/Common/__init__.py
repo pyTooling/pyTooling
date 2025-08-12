@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.5.1"
+__version__ =       "8.6.0"
 __keywords__ =      [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -48,6 +48,7 @@ __keywords__ =      [
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque
+from importlib.resources import files
 from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
@@ -69,7 +70,13 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 @export
-def getFullyQualifiedName(obj: Any):
+def getFullyQualifiedName(obj: Any) -> str:
+	"""
+	Assemble the fully qualified name of a type.
+
+	:param obj: The object for with the fully qualified type is to be assembled.
+	:returns:   The fully qualified name of obj's type.
+	"""
 	try:
 		module = obj.__module__             # for class or function
 	except AttributeError:
@@ -89,8 +96,14 @@ def getFullyQualifiedName(obj: Any):
 
 @export
 def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
-	from importlib.resources import files  # TODO: can be used as regular import > 3.8
+	"""
+	Compute the path to a file within a resource package.
 
+	:param module:            The resource package.
+	:param filename:          The filename.
+	:returns:                 Path to the resource's file.
+	:raises ToolingException: If resource file doesn't exist.
+	"""
 	# TODO: files() has wrong TypeHint Traversible vs. Path
 	resourcePath: Path = files(module) / filename
 	if not resourcePath.exists():
@@ -103,8 +116,14 @@ def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
 
 @export
 def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
-	from importlib.resources import files
+	"""
+	Read a text file resource from resource package.
 
+	:param module:   The resource package.
+	:param filename: The filename.
+	:returns:        File content.
+	"""
+	# TODO: check if resource exists.
 	return files(module).joinpath(filename).read_text()
 
 
@@ -351,38 +370,8 @@ def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	return next(iter(d.items()))
 
 
-@overload
-def mergedicts(
-	m1: Mapping[_DictKey1, _DictValue1],
-	filter: Optional[Callable[[Hashable, Any], bool]]
-) -> Dict[Union[_DictKey1], Union[_DictValue1]]:
-#) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
-	...  # pragma: no cover
-
-
-@overload
-def mergedicts(
-	m1: Mapping[_DictKey1, _DictValue1],
-	m2: Mapping[_DictKey2, _DictValue2],
-	filter: Optional[Callable[[Hashable, Any], bool]]
-) -> Dict[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]]:
-# ) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
-	...  # pragma: no cover
-
-
-@overload
-def mergedicts(
-	m1: Mapping[_DictKey1, _DictValue1],
-	m2: Mapping[_DictKey2, _DictValue2],
-	m3: Mapping[_DictKey3, _DictValue3],
-	filter: Optional[Callable[[Hashable, Any], bool]]
-) -> Dict[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]]:
-#) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
-	...  # pragma: no cover
-
-
 @export
-def mergedicts(*dicts: Tuple[Dict, ...], filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
+def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
@@ -407,32 +396,8 @@ def mergedicts(*dicts: Tuple[Dict, ...], filter: Nullable[Callable[[Hashable, An
 		return {k: v for d in dicts for k, v in d.items() if filter(k, v)}
 
 
-@overload
-def zipdicts(
-	m1: Mapping[_DictKey, _DictValue1]
-) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
-	...  # pragma: no cover
-
-
-@overload
-def zipdicts(
-	m1: Mapping[_DictKey, _DictValue1],
-	m2: Mapping[_DictKey, _DictValue2]
-) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
-	...  # pragma: no cover
-
-
-@overload
-def zipdicts(
-	m1: Mapping[_DictKey, _DictValue1],
-	m2: Mapping[_DictKey, _DictValue2],
-	m3: Mapping[_DictKey, _DictValue3]
-) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
-	...  # pragma: no cover
-
-
 @export
-def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+def zipdicts(*dicts: Dict) -> Generator[Tuple, None, None]:
 	"""
 	Iterate multiple dictionaries simultaneously.
 
@@ -464,13 +429,26 @@ def zipdicts(*dicts: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
 
 @export
 class ChangeDirectory:
-	_oldWorkingDirectory: Path
-	_newWorkingDirectory: Path
+	"""
+	A context manager for changing a directory.
+	"""
+	_oldWorkingDirectory: Path  #: Working directory before directory change.
+	_newWorkingDirectory: Path  #: New working directory.
 
 	def __init__(self, directory: Path) -> None:
+		"""
+		Initializes the context manager for changing directories.
+
+		:param directory: The new working directory to change into.
+		"""
 		self._newWorkingDirectory = directory
 
 	def __enter__(self) -> Path:
+		"""
+		Enter the context and change the working directory to the parameter given in the class initializer.
+
+		:returns: The relative path between old and new working directories.
+		"""
 		self._oldWorkingDirectory = Path.cwd()
 		chdir(self._newWorkingDirectory)
 
@@ -485,4 +463,12 @@ class ChangeDirectory:
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
+		"""
+		Exit the context and revert any working directory changes.
+
+		:param exc_type: Exception type
+		:param exc_val:  Exception instance
+		:param exc_tb:   Exception's traceback.
+		:returns:        ``None``
+		"""
 		chdir(self._oldWorkingDirectory)

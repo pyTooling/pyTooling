@@ -209,9 +209,19 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 3D point's string representation.
+
+		:returns: The string representation of the 3D point.
+		"""
 		return f"Point3D({self.x}, {self.y}, {self.z})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 3D point's string equivalent.
+
+		:returns: The string equivalent of the 3D point.
+		"""
 		return f"({self.x}, {self.y}, {self.z})"
 
 
@@ -232,6 +242,11 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 		raise RuntimeError(f"An origin can't be copied.")
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 3D origin's string representation.
+
+		:returns: The string representation of the 3D origin.
+		"""
 		return f"Origin3D({self.x}, {self.y}, {self.z})"
 
 
@@ -436,9 +451,19 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 3D offset's string representation.
+
+		:returns: The string representation of the 3D offset.
+		"""
 		return f"Offset3D({self.xOffset}, {self.yOffset}, {self.zOffset})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 3D offset's string equivalent.
+
+		:returns: The string equivalent of the 3D offset.
+		"""
 		return f"({self.xOffset}, {self.yOffset}, {self.zOffset})"
 
 
@@ -496,9 +521,19 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self.width, self.height, self.depth
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 3D size's string representation.
+
+		:returns: The string representation of the 3D size.
+		"""
 		return f"Size3D({self.width}, {self.height}, {self.depth})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 3D size's string equivalent.
+
+		:returns: The string equivalent of the 3D size.
+		"""
 		return f"({self.width}, {self.height}, {self.depth})"
 
 
@@ -569,7 +604,17 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		return self.start.ToTuple(), self.end.ToTuple()
 
 	def __repr__(self) -> str:
+		"""
+		Returns the 3D line segment's string representation.
+
+		:returns: The string representation of the 3D line segment.
+		"""
 		return f"LineSegment3D({self.start}, {self.end})"
 
 	def __str__(self) -> str:
+		"""
+		Returns the 3D line segment's string equivalent.
+
+		:returns: The string equivalent of the 3D line segment.
+		"""
 		return f"({self.start} → {self.end})"

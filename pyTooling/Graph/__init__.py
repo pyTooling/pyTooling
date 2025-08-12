@@ -279,7 +279,7 @@ class Base(
 
 	def __contains__(self, key: DictKeyType) -> bool:
 		"""
-		Returns if the key is an attached attribute (key-value-pairs) on this vertex.
+		Checks if the key is an attached attribute (key-value-pairs) on this vertex.
 
 		:param key: The key to check.
 		:returns:   ``True``, if the key is an attached attribute.
