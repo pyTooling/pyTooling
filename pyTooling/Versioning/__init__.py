@@ -1977,32 +1977,62 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		self._upperBound = upperBound
 		self._boundHandling = boundHandling
 
-	@readonly
+	@property
 	def LowerBound(self) -> V:
 		"""
-		Read-only property to access the range's lower bound.
+		Property to access the range's lower bound.
 
 		:return: Lower bound of the version range.
 		"""
 		return self._lowerBound
 
+	@LowerBound.setter
+	def LowerBound(self, value: V) -> None:
+		if not isinstance(value, Version):
+			ex = TypeError(f"Parameter 'value' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._lowerBound = value
+
 	@readonly
 	def UpperBound(self) -> V:
 		"""
-		Read-only property to access the range's upper bound.
+		Property to access the range's upper bound.
 
 		:return: Upper bound of the version range.
 		"""
 		return self._upperBound
 
+	@UpperBound.setter
+	def UpperBound(self, value: V) -> None:
+		if not isinstance(value, Version):
+			ex = TypeError(f"Parameter 'value' is not of type 'Version'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._upperBound = value
+
 	@readonly
 	def BoundHandling(self) -> RangeBoundHandling:
 		"""
-		Read-only property to access the range's bound handling strategy.
+		Property to access the range's bound handling strategy.
 
 		:return: The range's bound handling strategy.
 		"""
 		return self._boundHandling
+
+	@BoundHandling.setter
+	def BoundHandling(self, value: RangeBoundHandling) -> None:
+		if not isinstance(value, RangeBoundHandling):
+			ex = TypeError(f"Parameter 'value' is not of type 'RangeBoundHandling'.")
+			if version_info >= (3, 11):  # pragma: no cover
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._boundHandling = value
 
 	def __and__(self, other: Any) -> "VersionRange[T]":
 		"""

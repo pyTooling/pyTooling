@@ -135,13 +135,17 @@ class Platforms(Flag):
 	Arch_Arm =     ARCH_AArch64               #: Mask: Any Arm architecture.
 	Architecture = Arch_x86 | Arch_Arm        #: Mask: Any architecture.
 
-	FreeBSD = OS_FreeBSD | ENV_Native | ARCH_x86_64                                       #: Group: native FreeBSD on x86-64.
-	Linux =   OS_Linux   | ENV_Native | ARCH_x86_64                                       #: Group: native Linux on x86-64.
-	MacOS =   OS_MacOS   | ENV_Native                                                     #: Group: native macOS.
-	Windows = OS_Windows | ENV_Native | ARCH_x86_64 | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
+	FreeBSD = OS_FreeBSD | ENV_Native                                       #: Group: native FreeBSD on x86-64.
+	Linux =   OS_Linux   | ENV_Native                                       #: Group: native Linux on x86-64.
+	MacOS =   OS_MacOS   | ENV_Native                                       #: Group: native macOS.
+	Windows = OS_Windows | ENV_Native | SEP_WindowsPath | SEP_WindowsValue  #: Group: native Windows on x86-64.
 
-	MacOS_Intel = MacOS | ARCH_x86_64    #: Group: native macOS on x86-64.
-	MacOS_ARM =   MacOS | ARCH_AArch64   #: Group: native macOS on aarch64.
+	Linux_x86_64 =    Linux   | ARCH_x86_64    #: Group: native Linux on x86-64.
+	Linux_AArch64 =   Linux   | ARCH_AArch64   #: Group: native Linux on aarch64.
+	MacOS_Intel =     MacOS   | ARCH_x86_64    #: Group: native macOS on x86-64.
+	MacOS_ARM =       MacOS   | ARCH_AArch64   #: Group: native macOS on aarch64.
+	Windows_x86_64 =  Windows | ARCH_x86_64    #: Group: native Windows on x86-64.
+	Windows_AArch64 = Windows | ARCH_AArch64   #: Group: native Windows on aarch64.
 
 	MSYS =    auto()     #: MSYS2 Runtime: MSYS.
 	MinGW32 = auto()     #: MSYS2 Runtime: :term:`MinGW32 <MinGW>`.
@@ -153,10 +157,10 @@ class Platforms(Flag):
 	MSYS2_Runtime = MSYS | MinGW32 | MinGW64 | UCRT64 | Clang32 | Clang64    #: Mask: Any MSYS2 runtime environment.
 
 	Windows_MSYS2_MSYS =    OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MSYS      #: Group: MSYS runtime running on Windows x86-64
-	Windows_MSYS2_MinGW32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW32   #: Group: MinGW32 runtime running on Windows x86-64
+	Windows_MSYS2_MinGW32 = OS_Windows | ENV_MSYS2 | ARCH_x86_32 | MinGW32   #: Group: MinGW32 runtime running on Windows x86-64
 	Windows_MSYS2_MinGW64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | MinGW64   #: Group: MinGW64 runtime running on Windows x86-64
 	Windows_MSYS2_UCRT64 =  OS_Windows | ENV_MSYS2 | ARCH_x86_64 | UCRT64    #: Group: UCRT64 runtime running on Windows x86-64
-	Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
+	Windows_MSYS2_Clang32 = OS_Windows | ENV_MSYS2 | ARCH_x86_32 | Clang32   #: Group: Clang32 runtime running on Windows x86-64
 	Windows_MSYS2_Clang64 = OS_Windows | ENV_MSYS2 | ARCH_x86_64 | Clang64   #: Group: Clang64 runtime running on Windows x86-64
 
 	Windows_Cygwin32 =      OS_Windows | ENV_Cygwin | ARCH_x86_32            #: Group: 32-bit Cygwin runtime on Windows x86-64
@@ -211,6 +215,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				self._platform |= Platforms.ENV_Native | Platforms.ARCH_x86_32 | Platforms.SEP_WindowsPath | Platforms.SEP_WindowsValue
 			elif sysconfig_platform == "win-amd64":
 				self._platform |= Platforms.ENV_Native | Platforms.ARCH_x86_64 | Platforms.SEP_WindowsPath | Platforms.SEP_WindowsValue
+			elif sysconfig_platform == "win-arm64":
+				self._platform |= Platforms.ENV_Native | Platforms.ARCH_AArch64 | Platforms.SEP_WindowsPath | Platforms.SEP_WindowsValue
 			elif sysconfig_platform.startswith("mingw"):
 				if machine == "AMD64":
 					self._platform |= Platforms.ARCH_x86_64
