@@ -51,11 +51,35 @@ class AnyPlatform(TestCase):
 
 		self.assertEqual(self.expected, str(platform))
 
-	@mark.skipif("Linux (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeLinux', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
-	def test_NativeLinux(self) -> None:
+	@mark.skipif("Linux (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeLinux_x86_64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	def test_NativeLinux_x86_64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Linux), repr(platform))
+		self.assertEqual(str(Platforms.Linux_x86_64), repr(platform))
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertFalse(platform.IsNativeWindows)
+		self.assertTrue(platform.IsNativeLinux)
+		self.assertFalse(platform.IsNativeMacOS)
+		self.assertTrue(platform.IsPOSIX)
+		self.assertEqual("/", platform.PathSeperator)
+		self.assertEqual(":", platform.ValueSeperator)
+		self.assertFalse(platform.IsMSYS2Environment)
+		self.assertFalse(platform.IsMSYSOnWindows)
+		self.assertFalse(platform.IsMinGW32OnWindows)
+		self.assertFalse(platform.IsMinGW64OnWindows)
+		self.assertFalse(platform.IsUCRT64OnWindows)
+		self.assertFalse(platform.IsClang32OnWindows)
+		self.assertFalse(platform.IsClang64OnWindows)
+		self.assertEqual("", platform.ExecutableExtension)
+		self.assertEqual("a", platform.StaticLibraryExtension)
+		self.assertEqual("so", platform.DynamicLibraryExtension)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+
+	@mark.skipif("Linux (aarch64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeLinux_aarch64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	def test_NativeLinux_aarch64(self) -> None:
+		platform = Platform()
+
+		self.assertEqual(str(Platforms.Linux_AArch64), repr(platform))
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertTrue(platform.IsNativeLinux)
@@ -123,11 +147,35 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dylib", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
-	@mark.skipif("Windows (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeWindows', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
-	def test_NativeWindows(self) -> None:
+	@mark.skipif("Windows (x86-64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeWindows_x86_64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	def test_NativeWindows_x86_64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows), repr(platform))
+		self.assertEqual(str(Platforms.Windows_x86_64), repr(platform))
+		self.assertTrue(platform.IsNativePlatform)
+		self.assertTrue(platform.IsNativeWindows)
+		self.assertFalse(platform.IsNativeLinux)
+		self.assertFalse(platform.IsNativeMacOS)
+		self.assertFalse(platform.IsPOSIX)
+		self.assertEqual("\\", platform.PathSeperator)
+		self.assertEqual(";", platform.ValueSeperator)
+		self.assertFalse(platform.IsMSYS2Environment)
+		self.assertFalse(platform.IsMSYSOnWindows)
+		self.assertFalse(platform.IsMinGW32OnWindows)
+		self.assertFalse(platform.IsMinGW64OnWindows)
+		self.assertFalse(platform.IsUCRT64OnWindows)
+		self.assertFalse(platform.IsClang32OnWindows)
+		self.assertFalse(platform.IsClang64OnWindows)
+		self.assertEqual("exe", platform.ExecutableExtension)
+		self.assertEqual("lib", platform.StaticLibraryExtension)
+		self.assertEqual("dll", platform.DynamicLibraryExtension)
+		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
+
+	@mark.skipif("Windows (aarch64)" != os_getenv("ENVIRONMENT_NAME", "skip"), reason=f"Skipped 'test_NativeWindows_aarch64', if environment variable 'ENVIRONMENT_NAME' doesn't match. {os_getenv('ENVIRONMENT_NAME', 'skip')}")
+	def test_NativeWindows_aarch64(self) -> None:
+		platform = Platform()
+
+		self.assertEqual(str(Platforms.Windows_AArch64), repr(platform))
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertTrue(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)

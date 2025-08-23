@@ -17,18 +17,20 @@ jobs:
       package_name: pyTooling
 
   UnitTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r5
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: pyTooling
-      python_version_list: "3.9 3.10 3.11 3.12 3.13 pypy-3.9 pypy-3.10"
-#      disable_list: "windows:pypy-3.8 windows:pypy-3.9 windows:pypy-3.10"
+      python_version_list: "3.9 3.10 3.11 3.12 3.13 pypy-3.10 pypy-3.11"
+      system_list: 'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw64 ucrt64'
+      exclude_list: 'windows-arm:3.9 windows-arm:3.10'
+      disable_list: 'windows-arm:pypy-3.10 windows-arm:pypy-3.11'
 
   PlatformTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r5
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@dev
     with:
       name: Platform
       python_version_list: ""
-      system_list: "ubuntu windows macos macos-arm mingw32 mingw64 ucrt64 clang64"
+      system_list: "ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw32 mingw64 ucrt64 clang64"
       disable_list: "mingw32:*"  # no ruamel-yaml for MinGW32
       pipeline-delay: 30
 
