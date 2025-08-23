@@ -153,38 +153,6 @@ def notimplemented(message: str) -> Callable:
 	return decorator
 
 
-# Further Reading:
-# * https://github.com/python/cpython/issues/89519#issuecomment-1397534245
-# * https://stackoverflow.com/questions/128573/using-property-on-classmethods/64738850#64738850
-# * https://stackoverflow.com/questions/128573/using-property-on-classmethods
-# * https://stackoverflow.com/questions/5189699/how-to-make-a-class-property
-
-@export
-def classproperty(method):
-
-	class Descriptor:
-		"""A decorator adding properties to classes."""
-		_getter: Callable
-		_setter: Callable
-
-		def __init__(self, getter: Nullable[Callable] = None, setter: Nullable[Callable] = None) -> None:
-			self._getter = getter
-			self._setter = setter
-			self.__doc__ = getter.__doc__
-
-		def __get__(self, instance: Any, owner: Nullable[type] = None) -> Any:
-			return self._getter(owner)
-
-		def __set__(self, instance: Any, value: Any) -> None:
-			self._setter(instance.__class__, value)
-
-		def setter(self, setter: Callable):
-			return self.__class__(self._getter, setter)
-
-	descriptor = Descriptor(method)
-	return descriptor
-
-
 @export
 def readonly(func: Callable) -> property:
 	"""

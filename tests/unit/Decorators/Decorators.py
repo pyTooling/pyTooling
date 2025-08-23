@@ -33,7 +33,7 @@ from unittest import TestCase
 
 from pytest   import mark
 
-from pyTooling.Decorators import export, InheritDocString, classproperty, readonly
+from pyTooling.Decorators import export, InheritDocString, readonly
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -223,49 +223,3 @@ class InheritDocStrings(TestCase):
 				pass
 
 		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)
-
-
-class Descriptors(TestCase):
-	def test_ClassProperty(self) -> None:
-		class Content:
-			_value: int
-
-			def __init__(self, value: int) -> None:
-				self._value = value
-
-			@readonly
-			def Value(self):
-				return self._value
-
-		class Class_1:
-			_member = Content(1)
-
-			@classproperty
-			def Member(cls):
-				"""Class_1.Member"""
-				return cls._member
-
-			@Member.setter
-			def _Member(cls, value):
-				cls._member = value
-
-		class Class_2:
-			_member = Content(2)
-
-			@classproperty
-			def Member(cls):
-				return cls._member
-
-			@Member.setter
-			def Member(cls, value):
-				cls._member = value
-
-		self.assertEqual(1, Class_1.Member.Value)
-		self.assertEqual(2, Class_2.Member.Value)
-#		self.assertEqual("Class_1.Member", Class_1.Member.__doc__)
-
-		Class_1.Member = 11
-		Class_2.Member = 12
-
-		self.assertEqual(11, Class_1.Member)
-		self.assertEqual(12, Class_2.Member)
