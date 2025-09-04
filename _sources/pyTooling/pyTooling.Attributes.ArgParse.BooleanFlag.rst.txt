@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=========================================
+pyTooling.Attributes.ArgParse.BooleanFlag
+=========================================
+
+.. automodule:: pyTooling.Attributes.ArgParse.BooleanFlag
+
+
+.. currentmodule:: pyTooling.Attributes.ArgParse.BooleanFlag
+
+
+**Classes**
+
+- :py:class:`BooleanFlag`:
+  Base-class for all command line arguments with a name.
+
+- :py:class:`ShortBooleanFlag`:
+  Base-class for all command line arguments with a name.
+
+- :py:class:`LongBooleanFlag`:
+  Base-class for all command line arguments with a name.
+
+- :py:class:`WindowsBooleanFlag`:
+  Base-class for all command line arguments with a name.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: BooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BooleanFlag
+      :parts: 1
+
+.. autoclass:: ShortBooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortBooleanFlag
+      :parts: 1
+
+.. autoclass:: LongBooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongBooleanFlag
+      :parts: 1
+
+.. autoclass:: WindowsBooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsBooleanFlag
+      :parts: 1
