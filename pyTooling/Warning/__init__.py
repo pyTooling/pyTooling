@@ -33,7 +33,6 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 
 .. hint:: See :ref:`high-level help <WARNING>` for explanations and usage examples.
 """
-from builtins import Warning as _Warning
 from inspect  import currentframe
 from sys      import version_info
 from types    import TracebackType
@@ -58,10 +57,10 @@ class WarningCollector:
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
-	_warnings: List[_Warning]                        #: List of collected warnings.
-	_handler:  Nullable[Callable[[_Warning], bool]]  #: Optional handler function, which is called per collected warning.
+	_warnings: List[Exception]                        #: List of collected warnings.
+	_handler:  Nullable[Callable[[Exception], bool]]  #: Optional handler function, which is called per collected warning.
 
-	def __init__(self, warnings: Nullable[List[_Warning]] = None, handler: Nullable[Callable[[_Warning], bool]] = None) -> None:
+	def __init__(self, warnings: Nullable[List[Exception]] = None, handler: Nullable[Callable[[Exception], bool]] = None) -> None:
 		"""
 		Initializes a warning collector.
 
@@ -120,7 +119,7 @@ class WarningCollector:
 		# outerFrame.f_locals.pop("ctx")
 
 	@readonly
-	def Warnings(self) -> List[_Warning]:
+	def Warnings(self) -> List[Exception]:
 		"""
 		Read-only property to access the list of collected warnings.
 
@@ -128,7 +127,7 @@ class WarningCollector:
 		"""
 		return self._warnings
 
-	def AddWarning(self, warning: _Warning) -> bool:
+	def AddWarning(self, warning: Exception) -> bool:
 		"""
 		Add a warning to the list of warnings managed by this warning collector.
 
@@ -140,7 +139,7 @@ class WarningCollector:
 		"""
 		if self._warnings is None:
 			raise ValueError("Parameter 'warning' is None.")
-		elif self._warnings is None or not isinstance(warning, _Warning):
+		elif self._warnings is None or not isinstance(warning, Exception):
 			ex = TypeError(f"Parameter 'warning' is not of type 'Warning'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(warning)}'.")
@@ -154,7 +153,7 @@ class WarningCollector:
 		return False
 
 	@classmethod
-	def Raise(cls, warning: _Warning) -> None:
+	def Raise(cls, warning: Exception) -> None:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
