@@ -33,23 +33,33 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 
 .. hint:: See :ref:`high-level help <WARNING>` for explanations and usage examples.
 """
-from inspect  import currentframe
-from sys      import version_info
-from types    import TracebackType
-from typing   import List, Callable, Optional as Nullable, Type
+from sys       import version_info
+from threading import local
+from types     import TracebackType
+from typing    import List, Callable, Optional as Nullable, Type
 
 try:
 	from pyTooling.Decorators import export, readonly
 	from pyTooling.Common     import getFullyQualifiedName
+	from pyTooling.Exceptions import ExceptionBase
 except ModuleNotFoundError:  # pragma: no cover
 	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators         import export, readonly
 		from Common             import getFullyQualifiedName
+		from Exceptions         import ExceptionBase
 	except ModuleNotFoundError as ex:  # pragma: no cover
 		print("[pyTooling.Common] Could not import directly!")
 		raise ex
+
+
+_threadLocalData = local()
+
+
+@export
+class UnhandledWarningException(ExceptionBase):
+	pass
 
 
 @export
@@ -57,6 +67,7 @@ class WarningCollector:
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
+	_parent:   Nullable["WarningCollector"]           #: Parent WarningCollector
 	_warnings: List[Exception]                        #: List of collected warnings.
 	_handler:  Nullable[Callable[[Exception], bool]]  #: Optional handler function, which is called per collected warning.
 
@@ -86,8 +97,9 @@ class WarningCollector:
 				ex.add_note(f"Got type '{getFullyQualifiedName(handler)}'.")
 			raise ex
 
+		self._parent =   None
 		self._warnings = warnings
-		self._handler = handler
+		self._handler =  handler
 
 	def __enter__(self) -> 'WarningCollector':  # -> Self: needs Python 3.11
 		"""
@@ -95,6 +107,15 @@ class WarningCollector:
 
 		:returns: The warning collector instance.
 		"""
+		global _threadLocalData
+
+		try:
+			self.Parent = _threadLocalData.warningCollector
+		except AttributeError:
+			pass
+
+		_threadLocalData.warningCollector = self
+
 		return self
 
 	def __exit__(
@@ -110,13 +131,17 @@ class WarningCollector:
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
 		"""
+		global _threadLocalData
 
-		# outerFrame = currentframe().f_back
-		# print("__exit__:")
-		# for l in outerFrame.f_locals:
-		# 	print(f"  {l}")
-		#
-		# outerFrame.f_locals.pop("ctx")
+		_threadLocalData.warningCollector = self._parent
+
+	@property
+	def Parent(self) -> Nullable["WarningCollector"]:
+		return self._parent
+
+	@Parent.setter
+	def Parent(self, value: "WarningCollector") -> None:
+		self._parent = value
 
 	@readonly
 	def Warnings(self) -> List[Exception]:
@@ -161,12 +186,10 @@ class WarningCollector:
 		:raises Exception: If warning should be converted to an exception.
 		:raises Exception: If the call-stack walk couldn't find a warning collector.
 		"""
-		frame = currentframe()
-		while frame := frame.f_back:
-			for localValue in reversed(frame.f_locals.values()):
-				if isinstance(localValue, cls):
-					if localValue.AddWarning(warning):
-						raise Exception(f"Warning: {warning}") from warning
-					return
-		else:
-			raise Exception(f"Unhandled warning: {warning}") from warning
+		global _threadLocalData
+		try:
+			warningCollector = _threadLocalData.warningCollector
+			if warningCollector.AddWarning(warning):
+				raise Exception(f"Warning: {warning}") from warning
+		except AttributeError:
+			raise UnhandledWarningException(f"Unhandled warning: {warning}") from warning
