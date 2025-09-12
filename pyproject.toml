@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 line-length = 120
 
 [tool.mypy]
-files = ["pyTooling"]
+packages = ["pyTooling"]
 python_version = "3.13"
 #ignore_missing_imports = true
 strict = true

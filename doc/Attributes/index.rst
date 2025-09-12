@@ -119,9 +119,9 @@ With this in mind, the following use-cases and ideas can be derived:
 Predefined Attributes
 *********************
 
-pyTooling's attributes offers the :class:`~pyTooling.Attributes.Attribute` base-class to derive futher attribute classes.
-A derive :class:`~pyTooling.Attributes.SimpleAttribute` is also offered to accept any ``*args, **kwargs`` parameters for
-annotation of semi-structured meta-data.
+pyTooling's attributes offers the :class:`~pyTooling.Attributes.Attribute` base-class to derive further attribute
+classes. A derive :class:`~pyTooling.Attributes.SimpleAttribute` is also offered to accept any ``*args, **kwargs``
+parameters for annotation of semi-structured meta-data.
 
 It's recommended to derive an own hierarchy of attribute classes with well-defined parameter lists for the ``__init__``
 method. Meta-data stored in attribute should be made accessible via (readonly) properties.
