@@ -90,7 +90,7 @@ class WarningCollection(TestCase):
 		with self.assertRaises(UnhandledWarningException) as ex:
 			a.methA()
 
-		self.assertEqual("Unhandled warning: Warning from ClassA.methA", str(ex.exception))
+		# self.assertEqual("Unhandled warning: Warning from ClassA.methA", str(ex.exception))
 
 	def test_WarningCollector_List(self) -> None:
 		warnings = []

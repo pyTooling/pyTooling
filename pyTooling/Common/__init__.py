@@ -109,7 +109,8 @@ def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
 	if not resourcePath.exists():
 		from pyTooling.Exceptions import ToolingException
 
-		raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(str(resourcePath))
+		raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") \
+			from FileNotFoundError(str(resourcePath))
 
 	return resourcePath
 
