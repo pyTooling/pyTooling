@@ -12,13 +12,14 @@ line-length = 120
 [tool.mypy]
 packages = ["pyTooling"]
 python_version = "3.13"
-#ignore_missing_imports = true
 strict = true
 pretty = true
 show_error_context = true
 show_error_codes = true
 namespace_packages = true
-html_report = "report/typing"
+html_report = "report/typing/html"
+junit_xml = "report/typing/StaticTypingSummary.xml"
+cobertura_xml_report = "report/typing"
 
 [tool.pytest]
 junit_xml = "report/unit/UnittestReportSummary.xml"

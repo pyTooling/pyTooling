@@ -613,7 +613,7 @@ class ExtendedType(type):
 				annotations: Dict[str, Any] = members.get("__annotations__", {})
 			elif version_info >= (3, 14) and (annotate := members.get("__annotate_func__", None)) is not None:
 				from annotationlib import Format
-				annotations = annotate(Format.VALUE)
+				annotations: Dict[str, Any] = annotate(Format.VALUE)
 			else:
 				annotations = {}
 
