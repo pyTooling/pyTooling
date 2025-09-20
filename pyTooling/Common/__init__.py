@@ -37,7 +37,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.7.2"
+__version__ =       "8.7.3"
 __keywords__ =      [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -53,7 +53,7 @@ from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
 from types               import ModuleType, TracebackType
-from typing              import Type, TypeVar, Callable, Generator, overload, Hashable, Optional, List
+from typing              import Type, TypeVar, Callable, Generator, Hashable, List
 from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
 
 

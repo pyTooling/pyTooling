@@ -35,7 +35,7 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 .. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
 """
 from functools  import wraps
-# from inspect    import signature, Parameter
+from sys        import version_info
 from threading  import Condition
 from types      import FunctionType  #, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
@@ -606,7 +606,17 @@ class ExtendedType(type):
 						inheritedSlottedFields[annotation] = base
 
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			annotations: Dict[str, Any] = members.get("__annotations__", {})
+			if "__annotations__" in members:
+				# WORKAROUND: LEGACY SUPPORT Python <= 3.13
+				#   Accessing annotations was changed in Python 3.14.
+				#   The necessary 'annotationlib' is not available for older Python versions.
+				annotations: Dict[str, Any] = members.get("__annotations__", {})
+			elif version_info >= (3, 14) and (annotate := members.get("__annotate_func__", None)) is not None:
+				from annotationlib import Format
+				annotations = annotate(Format.VALUE)
+			else:
+				annotations = {}
+
 			for fieldName, typeAnnotation in annotations.items():
 				if fieldName in inheritedSlottedFields:
 					cls = inheritedSlottedFields[fieldName]
