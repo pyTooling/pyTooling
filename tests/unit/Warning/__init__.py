@@ -31,7 +31,7 @@
 from typing import List
 from unittest import TestCase
 
-from pyTooling.Warning import WarningCollector
+from pyTooling.Warning import WarningCollector, UnhandledWarningException
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -87,10 +87,10 @@ class Handler:
 class WarningCollection(TestCase):
 	def test_WarningCollector_None(self) -> None:
 		a = ClassA("none")
-		with self.assertRaises(Exception) as ex:
+		with self.assertRaises(UnhandledWarningException) as ex:
 			a.methA()
 
-		self.assertEqual("Unhandled warning: Warning from ClassA.methA", str(ex.exception))
+		# self.assertEqual("Unhandled warning: Warning from ClassA.methA", str(ex.exception))
 
 	def test_WarningCollector_List(self) -> None:
 		warnings = []

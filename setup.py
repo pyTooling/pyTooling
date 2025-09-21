@@ -60,7 +60,7 @@ setup(
 		},
 		sourceFileWithVersion=packageInformationFile,
 		dataFiles={
-			packageName[:-2]: ["py.typed"]
+			packageName[:-1] + "Common": ["../py.typed"]
 		},
 		debug=True
 	)

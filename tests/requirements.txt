@@ -5,15 +5,17 @@ Coverage ~= 7.10
 
 # Test Runner
 pytest ~= 8.4
-pytest-cov ~= 6.2
+pytest-cov ~= 7.0
 
 # Static Type Checking
-mypy ~= 1.17
+mypy[reports] ~= 1.18
 typing_extensions ~= 4.15
+types-colorama >= 0.4.15
+types-setuptools >= 80.9
 lxml ~= 6.0
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml ~= 0.18
 
 # For pyTooling.TerminalUI testing
-colorama >= 0.4.6
+colorama ~= 0.4.6

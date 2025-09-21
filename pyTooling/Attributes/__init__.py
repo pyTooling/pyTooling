@@ -41,7 +41,8 @@ class, method or function. By default, this field is called ``__pyattr__``.
 from enum   import IntFlag
 from sys    import version_info
 from types  import MethodType, FunctionType, ModuleType
-from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar, Optional as Nullable
+from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
+from typing import Optional as Nullable
 
 try:
 	from pyTooling.Decorators import export, readonly
