@@ -1,0 +1,156 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=============================
+pyTooling.Attributes.ArgParse
+=============================
+
+.. automodule:: pyTooling.Attributes.ArgParse
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Attributes.ArgParse.Argument
+   pyTooling.Attributes.ArgParse.BooleanFlag
+   pyTooling.Attributes.ArgParse.Flag
+   pyTooling.Attributes.ArgParse.KeyValueFlag
+   pyTooling.Attributes.ArgParse.OptionalValuedFlag
+   pyTooling.Attributes.ArgParse.ValuedFlag
+
+.. currentmodule:: pyTooling.Attributes.ArgParse
+
+
+**Exceptions**
+
+- :py:exc:`ArgParseException`:
+  The exception is raised by pyTooling internal features.
+
+
+
+**Classes**
+
+- :py:class:`ArgParseAttribute`:
+  Base-class for all attributes to describe a :mod:`argparse`-base command line argument parser.
+
+- :py:class:`_HandlerMixin`:
+  A mixin-class that offers a class field for a reference to a handler method and a matching property.
+
+- :py:class:`CommandLineArgument`:
+  Base-class for all *Argument* classes.
+
+- :py:class:`CommandGroupAttribute`:
+  *Experimental* attribute to group sub-commands in groups for better readability in a ``prog.py --help`` call.
+
+- :py:class:`DefaultHandler`:
+  Marks a handler method as *default* handler. This method is called if no sub-command is given.
+
+- :py:class:`CommandHandler`:
+  Marks a handler method as responsible for the given 'command'. This constructs
+
+- :py:class:`ArgParseHelperMixin`:
+  Mixin-class to implement an :mod:`argparse`-base command line argument processor.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: ArgParseException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ArgParseException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: ArgParseAttribute
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ArgParseAttribute
+      :parts: 1
+
+.. autoclass:: _HandlerMixin
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: _HandlerMixin
+      :parts: 1
+
+.. autoclass:: CommandLineArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CommandLineArgument
+      :parts: 1
+
+.. autoclass:: CommandGroupAttribute
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CommandGroupAttribute
+      :parts: 1
+
+.. autoclass:: DefaultHandler
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DefaultHandler
+      :parts: 1
+
+.. autoclass:: CommandHandler
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CommandHandler
+      :parts: 1
+
+.. autoclass:: ArgParseHelperMixin
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ArgParseHelperMixin
+      :parts: 1

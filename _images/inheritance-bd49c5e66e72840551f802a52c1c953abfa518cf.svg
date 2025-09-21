@@ -1,0 +1,29 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="273pt" height="27pt" viewBox="0.00 0.00 273.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritance1eb479a23c</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ConfigurationException</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.ConfigurationException" ns1:title="ConfigurationException" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="265,-19 135,-19 135,0 265,0 265,-19" />
+<ns0:text text-anchor="middle" x="200" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ConfigurationException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>ToolingException</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" ns1:title="The exception is raised by pyTooling internal features." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="99,-19 0,-19 0,0 99,0 99,-19" />
+<ns0:text text-anchor="middle" x="49.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ToolingException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>ToolingException-&gt;ConfigurationException</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M99.12,-9.5C108.94,-9.5 119.43,-9.5 129.79,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="129.87,-11.25 134.87,-9.5 129.87,-7.75 129.87,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

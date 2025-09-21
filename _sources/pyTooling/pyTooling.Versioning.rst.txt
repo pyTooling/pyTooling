@@ -1,0 +1,240 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.Versioning
+====================
+
+.. automodule:: pyTooling.Versioning
+
+
+.. currentmodule:: pyTooling.Versioning
+
+
+**Functions**
+
+- :py:func:`WordSizeValidator`:
+  A factory function to return a validator for Version instances for a positive integer range based on word-sizes in bits.
+
+- :py:func:`MaxValueValidator`:
+  A factory function to return a validator for Version instances checking for a positive integer range [0..max].
+
+
+
+**Classes**
+
+- :py:class:`Parts`:
+  Enumeration describing parts of a version number that can be present.
+
+- :py:class:`ReleaseLevel`:
+  Enumeration describing the version's maturity level.
+
+- :py:class:`Flags`:
+  State enumeration, if a (tagged) version is build from a clean or dirty working directory.
+
+- :py:class:`Version`:
+  Base-class for a version representation.
+
+- :py:class:`SemanticVersion`:
+  Representation of a semantic version number like ``3.7.12``.
+
+- :py:class:`PythonVersion`:
+  Represents a Python version.
+
+- :py:class:`CalendarVersion`:
+  Representation of a calendar version number like ``2021.10``.
+
+- :py:class:`YearMonthVersion`:
+  Representation of a calendar version number made of year and month like ``2021.10``.
+
+- :py:class:`YearWeekVersion`:
+  Representation of a calendar version number made of year and week like ``2021.47``.
+
+- :py:class:`YearReleaseVersion`:
+  Representation of a calendar version number made of year and release per year like ``2021.2``.
+
+- :py:class:`YearMonthDayVersion`:
+  Representation of a calendar version number made of year, month and day like ``2021.10.15``.
+
+- :py:class:`RangeBoundHandling`:
+  A flag defining how to handle bounds in a range.
+
+- :py:class:`VersionRange`:
+  Representation of a version range described by a lower bound and upper bound version.
+
+- :py:class:`VersionSet`:
+  Representation of an ordered set of versions.
+
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: WordSizeValidator
+
+.. autofunction:: MaxValueValidator
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Parts
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Parts
+      :parts: 1
+
+.. autoclass:: ReleaseLevel
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ReleaseLevel
+      :parts: 1
+
+.. autoclass:: Flags
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Flags
+      :parts: 1
+
+.. autoclass:: Version
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Version
+      :parts: 1
+
+.. autoclass:: SemanticVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SemanticVersion
+      :parts: 1
+
+.. autoclass:: PythonVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PythonVersion
+      :parts: 1
+
+.. autoclass:: CalendarVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CalendarVersion
+      :parts: 1
+
+.. autoclass:: YearMonthVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: YearMonthVersion
+      :parts: 1
+
+.. autoclass:: YearWeekVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: YearWeekVersion
+      :parts: 1
+
+.. autoclass:: YearReleaseVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: YearReleaseVersion
+      :parts: 1
+
+.. autoclass:: YearMonthDayVersion
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: YearMonthDayVersion
+      :parts: 1
+
+.. autoclass:: RangeBoundHandling
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: RangeBoundHandling
+      :parts: 1
+
+.. autoclass:: VersionRange
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: VersionRange
+      :parts: 1
+
+.. autoclass:: VersionSet
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: VersionSet
+      :parts: 1

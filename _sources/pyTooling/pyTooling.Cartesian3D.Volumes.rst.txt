@@ -1,0 +1,66 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=============================
+pyTooling.Cartesian3D.Volumes
+=============================
+
+.. automodule:: pyTooling.Cartesian3D.Volumes
+
+
+.. currentmodule:: pyTooling.Cartesian3D.Volumes
+
+
+**Classes**
+
+- :py:class:`Volume`:
+  Base-class for all 3D cartesian volumes.
+
+- :py:class:`Cuboid`:
+  A cuboid is a volume made out of 6 rectangles.
+
+- :py:class:`Cube`:
+  A cube is a Cuboid made out of 6 equally sized squares.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Volume
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Volume
+      :parts: 1
+
+.. autoclass:: Cuboid
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Cuboid
+      :parts: 1
+
+.. autoclass:: Cube
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Cube
+      :parts: 1

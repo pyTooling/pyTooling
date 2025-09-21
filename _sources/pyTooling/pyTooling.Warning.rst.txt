@@ -1,0 +1,59 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=================
+pyTooling.Warning
+=================
+
+.. automodule:: pyTooling.Warning
+
+
+.. currentmodule:: pyTooling.Warning
+
+
+**Exceptions**
+
+- :py:exc:`UnhandledWarningException`:
+  Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions.
+
+
+
+**Classes**
+
+- :py:class:`WarningCollector`:
+  A context manager to collect warnings within the call hierarchy.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: UnhandledWarningException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: UnhandledWarningException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: WarningCollector
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WarningCollector
+      :parts: 1
