@@ -1,0 +1,124 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=========================
+pyTooling.GenericPath.URL
+=========================
+
+.. automodule:: pyTooling.GenericPath.URL
+
+
+.. currentmodule:: pyTooling.GenericPath.URL
+
+
+**Variables**
+
+- :py:data:`URL_PATTERN`
+  
+- :py:data:`URL_REGEXP`
+  
+
+
+**Classes**
+
+- :py:class:`Protocols`:
+  Enumeration of supported URL schemes.
+
+- :py:class:`Host`:
+  Represents a host as either hostname, DNS or IP-address including the port number in a URL.
+
+- :py:class:`Element`:
+  Derived class for the URL context.
+
+- :py:class:`Path`:
+  Represents a path in a URL.
+
+- :py:class:`URL`:
+  Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: URL_PATTERN
+   :annotation:
+
+   .. code-block:: text
+
+      '(?:(?P<scheme>\\w+)://)?(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\\.[-a-zA-Z0-9_]+)*\\.?)(?:\\:(?P<port>\\d+))?)?(?P<path>[^?#]*?)(?:\\?(?P<query>[^#]+?))?(?:#(?P<fragment>.+?))?'
+
+.. autodata:: URL_REGEXP
+   :annotation:
+
+   .. code-block:: text
+
+      re.compile('^(?:(?P<scheme>\\w+)://)?(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\\.[-a-zA-Z0-9_]+)*\\.?)(?:\\:(?P<port>\\d+))?)?(?P<path>[^?#]*?)(?:\\?(?P<qu)
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Protocols
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Protocols
+      :parts: 1
+
+.. autoclass:: Host
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Host
+      :parts: 1
+
+.. autoclass:: Element
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Element
+      :parts: 1
+
+.. autoclass:: Path
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Path
+      :parts: 1
+
+.. autoclass:: URL
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: URL
+      :parts: 1

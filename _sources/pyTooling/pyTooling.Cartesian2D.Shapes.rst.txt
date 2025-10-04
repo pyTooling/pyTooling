@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+============================
+pyTooling.Cartesian2D.Shapes
+============================
+
+.. automodule:: pyTooling.Cartesian2D.Shapes
+
+
+.. currentmodule:: pyTooling.Cartesian2D.Shapes
+
+
+**Classes**
+
+- :py:class:`Shape`:
+  Base-class for all 2D cartesian shapes.
+
+- :py:class:`Trapezium`:
+  A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
+
+- :py:class:`Rectangle`:
+  A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90°.
+
+- :py:class:`Square`:
+  A square is a rectangle, where all edges have the same length and all inner angels are 90°.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Shape
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Shape
+      :parts: 1
+
+.. autoclass:: Trapezium
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Trapezium
+      :parts: 1
+
+.. autoclass:: Rectangle
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Rectangle
+      :parts: 1
+
+.. autoclass:: Square
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Square
+      :parts: 1

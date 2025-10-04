@@ -1,0 +1,66 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+==========================================
+pyTooling.Attributes.ArgParse.KeyValueFlag
+==========================================
+
+.. automodule:: pyTooling.Attributes.ArgParse.KeyValueFlag
+
+
+.. currentmodule:: pyTooling.Attributes.ArgParse.KeyValueFlag
+
+
+**Classes**
+
+- :py:class:`NamedKeyValuePairsArgument`:
+  Defines a switch argument like ``--help``.
+
+- :py:class:`ShortKeyValueFlag`:
+  Defines a switch argument like ``--help``.
+
+- :py:class:`LongKeyValueFlag`:
+  Defines a switch argument like ``--help``.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: NamedKeyValuePairsArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NamedKeyValuePairsArgument
+      :parts: 1
+
+.. autoclass:: ShortKeyValueFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortKeyValueFlag
+      :parts: 1
+
+.. autoclass:: LongKeyValueFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongKeyValueFlag
+      :parts: 1
