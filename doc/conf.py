@@ -154,8 +154,8 @@ latex_documents = [
 	( master_doc,
 		f"{pythonProject}.tex",
 		f"The {pythonProject} Documentation",
-		f"Patrick Lehmann",
-		f"manual"
+		 "Patrick Lehmann",
+		 "manual"
 	),
 ]
 

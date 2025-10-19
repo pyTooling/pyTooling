@@ -105,7 +105,7 @@ class Host(RootMixIn):
 		super().__init__()
 
 		if not isinstance(hostname, str):
-			ex = TypeError(f"Parameter 'hostname' is not of type 'str'.")
+			ex = TypeError("Parameter 'hostname' is not of type 'str'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
@@ -114,12 +114,12 @@ class Host(RootMixIn):
 		if port is None:
 			pass
 		elif not isinstance(port, int):
-			ex = TypeError(f"Parameter 'port' is not of type 'int'.")
+			ex = TypeError("Parameter 'port' is not of type 'int'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
 		elif not (0 <= port < 65536):
-			ex = ValueError(f"Parameter 'port' is out of range 0..65535.")
+			ex = ValueError("Parameter 'port' is out of range 0..65535.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got value '{port}'.")
 			raise ex
@@ -211,14 +211,14 @@ class URL:
 		:param fragment: An optional fragment.
 		"""
 		if scheme is not None and not isinstance(scheme, Protocols):
-			ex = TypeError(f"Parameter 'scheme' is not of type 'Protocols'.")
+			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
 			raise ex
 		self._scheme = scheme
 
 		if user is not None and not isinstance(user, str):
-			ex = TypeError(f"Parameter 'user' is not of type 'str'.")
+			ex = TypeError("Parameter 'user' is not of type 'str'.")
 			if version_info >= (3, 11):  # pragma: no cover
 				ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
 			raise ex
