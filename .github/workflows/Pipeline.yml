@@ -216,6 +216,7 @@ jobs:
       - PlatformTesting
 #      - StaticTypeCheck
       - Package
+      - Install
       - PublishToGitHubPages
     if: needs.Prepare.outputs.is_release_commit
     permissions:
@@ -235,6 +236,7 @@ jobs:
       - PlatformTesting
 #      - StaticTypeCheck
       - Package
+      - Install
       - PublishToGitHubPages
     with:
       tag: ${{ needs.Prepare.outputs.version }}
@@ -266,6 +268,7 @@ jobs:
       - PublishCoverageResults
       - PublishToGitHubPages
 #      - PublishOnPyPI
+      - Install
       - IntermediateCleanUp
     with:
       package: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
