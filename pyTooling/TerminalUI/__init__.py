@@ -520,8 +520,7 @@ class Severity(Enum):
 			return self.value == other.value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -536,8 +535,7 @@ class Severity(Enum):
 			return self.value != other.value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
 	def __lt__(self, other: Any) -> bool:
@@ -552,8 +550,7 @@ class Severity(Enum):
 			return self.value < other.value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
@@ -568,8 +565,7 @@ class Severity(Enum):
 			return self.value <= other.value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
 	def __gt__(self, other: Any) -> bool:
@@ -584,8 +580,7 @@ class Severity(Enum):
 			return self.value >	other.value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
 	def __ge__(self, other: Any) -> bool:
@@ -600,8 +595,7 @@ class Severity(Enum):
 			return self.value >= other.value
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
 

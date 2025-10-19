@@ -106,8 +106,7 @@ class Host(RootMixIn):
 
 		if not isinstance(hostname, str):
 			ex = TypeError("Parameter 'hostname' is not of type 'str'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
 		self._hostname = hostname
 
@@ -115,13 +114,11 @@ class Host(RootMixIn):
 			pass
 		elif not isinstance(port, int):
 			ex = TypeError("Parameter 'port' is not of type 'int'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
 		elif not (0 <= port < 65536):
 			ex = ValueError("Parameter 'port' is out of range 0..65535.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got value '{port}'.")
+			ex.add_note(f"Got value '{port}'.")
 			raise ex
 		self._port = port
 
@@ -212,44 +209,38 @@ class URL:
 		"""
 		if scheme is not None and not isinstance(scheme, Protocols):
 			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
 			raise ex
 		self._scheme = scheme
 
 		if user is not None and not isinstance(user, str):
 			ex = TypeError("Parameter 'user' is not of type 'str'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
 			raise ex
 		self._user = user
 
 		if password is not None and not isinstance(password, str):
 			ex = TypeError(f"Parameter 'password' is not of type 'str'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
 			raise ex
 		self._password = password
 
 		if host is not None and not isinstance(host, Host):
 			ex = TypeError(f"Parameter 'host' is not of type 'Host'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
 			raise ex
 		self._host = host
 
 		if path is not None and not isinstance(path, Path):
 			ex = TypeError(f"Parameter 'path' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
 		self._path = path
 
 		if query is not None:
 			if not isinstance(query, Mapping):
 				ex = TypeError(f"Parameter 'query' is not a mapping ('dict', ...).")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
 				raise ex
 
 			self._query = {keyword: value for keyword, value in query.items()}
@@ -258,8 +249,7 @@ class URL:
 
 		if fragment is not None and not isinstance(fragment, str):
 			ex = TypeError(f"Parameter 'fragment' is not of type 'str'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
 			raise ex
 		self._fragment = fragment
 

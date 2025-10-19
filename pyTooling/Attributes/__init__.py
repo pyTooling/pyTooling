@@ -152,8 +152,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			attribute._classes.append(entity)
 		else:
 			ex = TypeError(f"Parameter 'entity' is not a function, class nor method.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
 			raise ex
 
 		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):

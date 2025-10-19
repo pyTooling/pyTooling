@@ -117,8 +117,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		for value in values:
 			if not isinstance(value, str):
 				ex = TypeError(f"Value contains elements which are not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 			innerList.append(value)
 

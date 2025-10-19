@@ -154,8 +154,7 @@ class ExecutableArgument(CommandLineArgument):
 		"""
 		if not isinstance(executable, Path):
 			ex = TypeError("Parameter 'executable' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(executable)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(executable)}'.")
 			raise ex
 
 		self._executable = executable
@@ -179,8 +178,7 @@ class ExecutableArgument(CommandLineArgument):
 		"""
 		if not isinstance(value, Path):
 			ex = TypeError("Parameter 'value' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
 		self._executable = value
@@ -527,8 +525,7 @@ class StringListArgument(ValuedArgument):
 		for value in values:
 			if not isinstance(value, str):
 				ex = TypeError(f"Parameter 'values' contains elements which are not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(values)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(values)}'.")
 				raise ex
 
 			self._values.append(value)
@@ -556,8 +553,7 @@ class StringListArgument(ValuedArgument):
 		for value in value:
 			if not isinstance(value, str):
 				ex = TypeError(f"Value contains elements which are not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 			self._values.append(value)
 
@@ -607,8 +603,7 @@ class PathArgument(CommandLineArgument):
 		"""
 		if not isinstance(path, Path):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
 		self._path = path
 
@@ -631,8 +626,7 @@ class PathArgument(CommandLineArgument):
 		"""
 		if not isinstance(value, Path):
 			ex = TypeError("Value is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
 		self._path = value
@@ -676,8 +670,7 @@ class PathListArgument(CommandLineArgument):
 		for path in paths:
 			if not isinstance(path, Path):
 				ex = TypeError(f"Parameter 'paths' contains elements which are not of type 'Path'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 				raise ex
 
 			self._paths.append(path)
@@ -705,8 +698,7 @@ class PathListArgument(CommandLineArgument):
 		for path in value:
 			if not isinstance(path, Path):
 				ex = TypeError(f"Value contains elements which are not of type 'Path'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 				raise ex
 			self._paths.append(path)
 

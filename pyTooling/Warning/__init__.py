@@ -87,14 +87,12 @@ class WarningCollector:
 			warnings = []
 		elif not isinstance(warnings, list):
 			ex = TypeError(f"Parameter 'warnings' is not list.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(warnings)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(warnings)}'.")
 			raise ex
 
 		if handler is not None and not isinstance(handler, Callable):
 			ex = TypeError(f"Parameter 'handler' is not callable.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(handler)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(handler)}'.")
 			raise ex
 
 		self._parent =   None
@@ -166,8 +164,7 @@ class WarningCollector:
 			raise ValueError("Parameter 'warning' is None.")
 		elif self._warnings is None or not isinstance(warning, Exception):
 			ex = TypeError(f"Parameter 'warning' is not of type 'Warning'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(warning)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(warning)}'.")
 			raise ex
 
 		self._warnings.append(warning)

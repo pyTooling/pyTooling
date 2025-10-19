@@ -106,8 +106,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		if previousNode is not None:
 			if not isinstance(previousNode, Node):
 				ex = TypeError(f"Parameter 'previous' is not of type Node.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(previousNode)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(previousNode)}'.")
 				raise ex
 
 			# PreviousNode is part of a list
@@ -130,8 +129,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			if nextNode is not None:
 				if not isinstance(nextNode, Node):
 					ex = TypeError(f"Parameter 'next' is not of type Node.")
-					if version_info >= (3, 11):  # pragma: no cover
-						ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
 					raise ex
 
 				if nextNode._linkedList is not None:
@@ -143,8 +141,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		elif nextNode is not None:
 			if not isinstance(nextNode, Node):
 				ex = TypeError(f"Parameter 'next' is not of type Node.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
 				raise ex
 
 			# NextNode is part of a list
@@ -241,8 +238,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if not isinstance(node, Node):
 			ex = TypeError(f"Parameter 'node' is not of type Node.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -272,8 +268,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if not isinstance(node, Node):
 			ex = TypeError(f"Parameter 'node' is not of type Node.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -415,8 +410,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			self._count = 0
 		elif not isinstance(nodes, Iterable):
 			ex = TypeError(f"Parameter 'nodes' is not an iterable.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 		else:
 			if isinstance(nodes, Sized) and len(nodes) == 0:
@@ -435,8 +429,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 			if not isinstance(first, Node):
 				ex = TypeError(f"First element in parameter 'nodes' is not of type Node.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(first)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(first)}'.")
 				raise ex
 			elif first._linkedList is not None:
 				raise LinkedListException(f"First element in parameter 'nodes' is assigned to different list.")
@@ -449,8 +442,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			for node in iterator:
 				if not isinstance(node, Node):
 					ex = TypeError(f"{position}. element in parameter 'nodes' is not of type Node.")
-					if version_info >= (3, 11):  # pragma: no cover
-						ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 					raise ex
 				elif node._linkedList is not None:
 					raise LinkedListException(f"{position}. element in parameter 'nodes' is assigned to different list.")
@@ -530,8 +522,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		if not isinstance(node, Node):
 			ex = TypeError(f"Parameter 'node' is not of type Node.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -561,8 +552,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		if not isinstance(node, Node):
 			ex = TypeError(f"Parameter 'node' is not of type Node.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -640,8 +630,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		if index == 0:
 			if self._firstNode is None:
 				ex = ValueError("Parameter 'position' is out of range.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Linked list is empty.")
+				ex.add_note(f"Linked list is empty.")
 				raise ex
 
 			return self._firstNode
@@ -649,8 +638,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			return self._lastNode
 		elif index >= self._count:
 			ex = ValueError("Parameter 'position' is out of range.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Linked list has {self._count} elements. Requested index: {index}.")
+			ex.add_note(f"Linked list has {self._count} elements. Requested index: {index}.")
 			raise ex
 
 		if index < self._count / 2:
