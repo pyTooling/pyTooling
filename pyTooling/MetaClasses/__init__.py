@@ -150,7 +150,7 @@ def slotted(cls):
 		for method in cls.__methods__:
 			delattr(method, "__classobj__")
 	else:
-		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+		raise ExtendedTypeError("Class uses an incompatible meta-class.")  # FIXME: create exception for it?
 
 	bases = tuple(base for base in cls.__bases__ if base is not object)
 	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
@@ -173,7 +173,7 @@ def mixin(cls):
 		for method in cls.__methods__:
 			delattr(method, "__classobj__")
 	else:
-		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+		raise ExtendedTypeError("Class uses an incompatible meta-class.")  # FIXME: create exception for it?
 
 	bases = tuple(base for base in cls.__bases__ if base is not object)
 	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
@@ -196,7 +196,7 @@ def singleton(cls):
 		for method in cls.__methods__:
 			delattr(method, "__classobj__")
 	else:
-		raise ExtendedTypeError(f"Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+		raise ExtendedTypeError("Class uses an incompatible meta-class.")  # FIXME: create exception for it?
 
 	bases = tuple(base for base in cls.__bases__ if base is not object)
 	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()

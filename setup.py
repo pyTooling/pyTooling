@@ -59,6 +59,7 @@ setup(
 			"yaml":      ["ruamel.yaml ~= 0.18"],
 		},
 		sourceFileWithVersion=packageInformationFile,
+		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
 		dataFiles={
 			packageName[:-1] + "Common": ["../py.typed"]
 		},

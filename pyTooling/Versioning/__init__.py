@@ -102,8 +102,7 @@ class ReleaseLevel(Enum):
 
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self is other
@@ -121,8 +120,7 @@ class ReleaseLevel(Enum):
 
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self is not other
@@ -140,8 +138,7 @@ class ReleaseLevel(Enum):
 
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value < other.value
@@ -159,8 +156,7 @@ class ReleaseLevel(Enum):
 
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <=>= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value <= other.value
@@ -178,8 +174,7 @@ class ReleaseLevel(Enum):
 
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value > other.value
@@ -197,8 +192,7 @@ class ReleaseLevel(Enum):
 
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value >= other.value
@@ -785,8 +779,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
 		return self._equal(self, other)
@@ -818,8 +811,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
 		return not self._equal(self, other)
@@ -856,8 +848,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is True
@@ -896,8 +887,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
@@ -935,8 +925,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is False
@@ -975,8 +964,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
@@ -993,8 +981,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			other = self.__class__(major=other)
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by %= operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
 		return self._minimum(self, other)
@@ -1113,8 +1100,7 @@ class SemanticVersion(Version):
 			raise ValueError("Parameter 'versionString' is None.")
 		elif not isinstance(versionString, str):
 			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
 
 		versionString = versionString.strip()
@@ -1482,8 +1468,7 @@ class CalendarVersion(Version):
 			raise ValueError("Parameter 'versionString' is None.")
 		elif not isinstance(versionString, str):
 			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
 		elif versionString == "":
 			raise ValueError("Parameter 'versionString' is empty.")
@@ -1951,26 +1936,22 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		if not isinstance(lowerBound, Version):
 			ex = TypeError(f"Parameter 'lowerBound' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}'.")
 			raise ex
 
 		if not isinstance(upperBound, Version):
 			ex = TypeError(f"Parameter 'upperBound' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(upperBound)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(upperBound)}'.")
 			raise ex
 
 		if not ((lBC := lowerBound.__class__) is (uBC := upperBound.__class__) or issubclass(lBC, uBC) or issubclass(uBC, lBC)):
 			ex = TypeError(f"Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
 			raise ex
 
 		if not (lowerBound <= upperBound):
 			ex = ValueError(f"Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
+			ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
 			raise ex
 
 		self._lowerBound = lowerBound
@@ -1990,8 +1971,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	def LowerBound(self, value: V) -> None:
 		if not isinstance(value, Version):
 			ex = TypeError(f"Parameter 'value' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
 		self._lowerBound = value
@@ -2009,8 +1989,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	def UpperBound(self, value: V) -> None:
 		if not isinstance(value, Version):
 			ex = TypeError(f"Parameter 'value' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
 		self._upperBound = value
@@ -2028,8 +2007,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	def BoundHandling(self, value: RangeBoundHandling) -> None:
 		if not isinstance(value, RangeBoundHandling):
 			ex = TypeError(f"Parameter 'value' is not of type 'RangeBoundHandling'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
 		self._boundHandling = value
@@ -2045,14 +2023,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		if not isinstance(other, VersionRange):
 			ex = TypeError(f"Parameter 'other' is not of type 'VersionRange'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if not (isinstance(other._lowerBound, self._lowerBound.__class__) and isinstance(self._lowerBound, other._lowerBound.__class__)):
 			ex = TypeError(f"Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible with each other.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(
+			ex.add_note(
 					f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
 			raise ex
 
@@ -2084,14 +2060,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
 			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._upperBound < other
@@ -2108,14 +2082,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
 			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
@@ -2135,14 +2107,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
 			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._lowerBound > other
@@ -2159,14 +2129,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
 			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
@@ -2184,8 +2152,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		if not isinstance(version, Version):
 			ex = TypeError(f"Parameter 'item' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
 			raise ex
 
 		if self._boundHandling is RangeBoundHandling.BothBoundsInclusive:
@@ -2348,8 +2315,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._items[-1] < other
@@ -2366,8 +2332,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._items[-1] <= other
@@ -2384,8 +2349,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._items[0] > other
@@ -2402,8 +2366,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
 			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._items[0] >= other

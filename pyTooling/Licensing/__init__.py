@@ -196,8 +196,7 @@ class License(metaclass=ExtendedType, slots=True):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: License, str")
+			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -211,8 +210,7 @@ class License(metaclass=ExtendedType, slots=True):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
 			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Supported types for second operand: License, str")
+			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:

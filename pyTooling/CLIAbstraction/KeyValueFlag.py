@@ -91,13 +91,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
 				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 				raise ex
 			elif not isinstance(value, str):
 				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 
 			self._value[key] = value
@@ -124,13 +122,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
 				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 				raise ex
 			elif not isinstance(value, str):
 				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 
 			innerDict[key] = value

@@ -123,8 +123,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 	"""
 	if not isinstance(readmeFile, Path):
 		ex = TypeError(f"Parameter 'readmeFile' is not of type 'Path'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 
 	if readmeFile.suffix == ".txt":
@@ -169,8 +168,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	"""
 	if not isinstance(requirementsFile, Path):
 		ex = TypeError(f"Parameter '{requirementsFile}' is not of type 'Path'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
 		raise ex
 
 	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> List[str]:
@@ -306,8 +304,7 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	"""
 	if not isinstance(sourceFile, Path):
 		ex = TypeError(f"Parameter 'sourceFile' is not of type 'Path'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(sourceFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(sourceFile)}'.")
 		raise ex
 
 	_author =      None
@@ -407,7 +404,7 @@ Default license (Apache License, 2.0) used by :func:`DescribePythonPackage` and 
 if parameter ``license`` is not assigned.
 """
 
-DEFAULT_PY_VERSIONS = ("3.9", "3.10", "3.11", "3.12", "3.13")
+DEFAULT_PY_VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
 """
 A tuple of supported CPython versions used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
 if parameter ``pythonVersions`` is not assigned.
@@ -619,8 +616,7 @@ def DescribePythonPackage(
 	# Read README for upload to PyPI
 	if not isinstance(readmeFile, Path):
 		ex = TypeError(f"Parameter 'readmeFile' is not of type 'Path'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 	elif not readmeFile.exists():
 		raise FileNotFoundError(f"README file '{readmeFile}' not found in '{Path.cwd()}'.")
@@ -630,8 +626,7 @@ def DescribePythonPackage(
 	# Read requirements file and add them to package dependency list (remove duplicates)
 	if not isinstance(requirementsFile, Path):
 		ex = TypeError(f"Parameter 'requirementsFile' is not of type 'Path'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
 		raise ex
 	elif not requirementsFile.exists():
 		raise FileNotFoundError(f"Requirements file '{requirementsFile}' not found in '{Path.cwd()}'.")
@@ -642,8 +637,7 @@ def DescribePythonPackage(
 	if documentationRequirementsFile is not None:
 		if not isinstance(documentationRequirementsFile, Path):
 			ex = TypeError(f"Parameter 'documentationRequirementsFile' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(documentationRequirementsFile)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(documentationRequirementsFile)}'.")
 			raise ex
 		elif not documentationRequirementsFile.exists():
 			if debug:
@@ -656,8 +650,7 @@ def DescribePythonPackage(
 	if unittestRequirementsFile is not None:
 		if not isinstance(unittestRequirementsFile, Path):
 			ex = TypeError(f"Parameter 'unittestRequirementsFile' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(unittestRequirementsFile)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(unittestRequirementsFile)}'.")
 			raise ex
 		elif not unittestRequirementsFile.exists():
 			if debug:
@@ -670,8 +663,7 @@ def DescribePythonPackage(
 	if packagingRequirementsFile is not None:
 		if not isinstance(packagingRequirementsFile, Path):
 			ex = TypeError(f"Parameter 'packagingRequirementsFile' is not of type 'Path'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(packagingRequirementsFile)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(packagingRequirementsFile)}'.")
 			raise ex
 		elif not packagingRequirementsFile.exists():
 			if debug:
@@ -691,8 +683,7 @@ def DescribePythonPackage(
 	# Read __author__, __email__, __version__ from source file
 	if not isinstance(sourceFileWithVersion, Path):
 		ex = TypeError(f"Parameter 'sourceFileWithVersion' is not of type 'Path'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(sourceFileWithVersion)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(sourceFileWithVersion)}'.")
 		raise ex
 	elif not sourceFileWithVersion.exists():
 		raise FileNotFoundError(f"Package file '{sourceFileWithVersion}' with dunder variables not found in '{Path.cwd()}'.")
@@ -732,8 +723,7 @@ def DescribePythonPackage(
 	# Translate license to classifier
 	if not isinstance(license, License):
 		ex = TypeError(f"Parameter 'license' is not of type 'License'.")
-		if version_info >= (3, 11):  # pragma: no cover
-			ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 	classifiers.append(license.PythonClassifier)
 

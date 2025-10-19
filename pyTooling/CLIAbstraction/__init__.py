@@ -158,8 +158,7 @@ class Program(metaclass=ExtendedType, slots=True):
 						raise CLIAbstractionException(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
 				ex = TypeError(f"Parameter 'executablePath' is not of type 'Path'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(executablePath)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(executablePath)}'.")
 				raise ex
 		elif binaryDirectoryPath is not None:
 			if isinstance(binaryDirectoryPath, Path):
@@ -181,8 +180,7 @@ class Program(metaclass=ExtendedType, slots=True):
 						raise CLIAbstractionException(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
 				ex = TypeError(f"Parameter 'binaryDirectoryPath' is not of type 'Path'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(binaryDirectoryPath)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(binaryDirectoryPath)}'.")
 				raise ex
 		else:
 			try:
@@ -225,8 +223,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		"""Access to a CLI parameter by CLI option (key must be of type :class:`CommandLineArgument`), which is already used."""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 			raise ex
 
 		# TODO: is nested check
@@ -235,8 +232,7 @@ class Program(metaclass=ExtendedType, slots=True):
 	def __setitem__(self, key, value):
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 			raise ex
 		elif key not in self.__cliOptions__:
 			raise KeyError(f"Option '{key}' is not allowed on executable '{self.__class__.__name__}'")

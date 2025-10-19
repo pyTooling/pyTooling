@@ -197,9 +197,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self._format = format
 
 		if parent is not None and not isinstance(parent, Node):
-			ex = TypeError(f"Parameter 'parent' is not of type 'Node'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			ex = TypeError("Parameter 'parent' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
 		if parent is None:
@@ -231,16 +230,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self._children = []
 		if children is not None:
 			if not isinstance(children, Iterable):
-				ex = TypeError(f"Parameter 'children' is not iterable.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(children)}'.")
+				ex = TypeError("Parameter 'children' is not iterable.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(children)}'.")
 				raise ex
 
 			for child in children:
 				if not isinstance(child, Node):
 					ex = TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
-					if version_info >= (3, 11):  # pragma: no cover
-						ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 					raise ex
 
 				child.Parent = self
@@ -367,9 +364,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._root = self
 			self._parent = None
 		elif not isinstance(parent, Node):
-			ex = TypeError(f"Parameter 'parent' is not of type 'Node'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			ex = TypeError("Parameter 'parent' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 		else:
 			if parent._root is self._root:
@@ -559,8 +555,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		if not isinstance(child, Node):
 			ex = TypeError(f"Parameter 'child' is not of type 'Node'.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 			raise ex
 
 		if child._root is self._root:
@@ -593,8 +588,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		for child in children:
 			if not isinstance(child, Node):
 				ex = TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
-				if version_info >= (3, 11):  # pragma: no cover
-					ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 				raise ex
 
 			if child._root is self._root:

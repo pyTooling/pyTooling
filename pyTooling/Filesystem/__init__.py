@@ -599,8 +599,7 @@ class Directory(Element["Directory"]):
 		"""
 		if not isinstance(other, Directory):
 			ex = TypeError("Parameter 'other' is not of type Directory.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		if not all(dir1 == dir2 for _, dir1, dir2 in zipdicts(self._subdirectories, other._subdirectories)):
@@ -727,8 +726,7 @@ class Filename(Element[Directory]):
 		"""
 		if not isinstance(other, Filename):
 			ex = TypeError("Parameter 'other' is not of type Filename.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._name == other._name and self.Size == other.Size
@@ -743,8 +741,7 @@ class Filename(Element[Directory]):
 		"""
 		if not isinstance(other, Filename):
 			ex = TypeError("Parameter 'other' is not of type Filename.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._name != other._name or self.Size != other.Size
@@ -812,8 +809,7 @@ class SymbolicLink(Element[Directory]):
 		"""
 		if not isinstance(other, SymbolicLink):
 			ex = TypeError("Parameter 'other' is not of type SymbolicLink.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._name == other._name and self._target == other._target
@@ -828,8 +824,7 @@ class SymbolicLink(Element[Directory]):
 		"""
 		if not isinstance(other, SymbolicLink):
 			ex = TypeError("Parameter 'other' is not of type SymbolicLink.")
-			if version_info >= (3, 11):  # pragma: no cover
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self._name != other._name or self._target != other._target
