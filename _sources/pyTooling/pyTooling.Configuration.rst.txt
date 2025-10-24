@@ -1,0 +1,110 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=======================
+pyTooling.Configuration
+=======================
+
+.. automodule:: pyTooling.Configuration
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Configuration.JSON
+   pyTooling.Configuration.YAML
+
+.. currentmodule:: pyTooling.Configuration
+
+
+**Exceptions**
+
+- :py:exc:`ConfigurationException`:
+  The exception is raised by pyTooling internal features.
+
+
+
+**Classes**
+
+- :py:class:`Node`:
+  Abstract node in a configuration data structure.
+
+- :py:class:`Dictionary`:
+  Abstract dictionary node in a configuration.
+
+- :py:class:`Sequence`:
+  Abstract sequence node in a configuration.
+
+- :py:class:`Configuration`:
+  Abstract root node in a configuration.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: ConfigurationException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ConfigurationException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Node
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Node
+      :parts: 1
+
+.. autoclass:: Dictionary
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Dictionary
+      :parts: 1
+
+.. autoclass:: Sequence
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Sequence
+      :parts: 1
+
+.. autoclass:: Configuration
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Configuration
+      :parts: 1
