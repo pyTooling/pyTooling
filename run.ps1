@@ -34,7 +34,7 @@ Param(
 )
 
 $PackageName = "pyTooling"
-$PackageVersion = "8.7.3"
+$PackageVersion = "8.7.5"
 
 # set default values
 $EnableDebug =        [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
