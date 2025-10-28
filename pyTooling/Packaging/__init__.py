@@ -47,6 +47,7 @@ try:
 	from pyTooling.MetaClasses import ExtendedType
 	from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
 	from pyTooling.Licensing   import License, Apache_2_0_License
+	from pyTooling.Versioning  import SemanticVersion
 except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
 	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
 
@@ -56,6 +57,7 @@ except (ImportError, ModuleNotFoundError):                                      
 		from MetaClasses         import ExtendedType
 		from Common              import __version__, getFullyQualifiedName, firstElement
 		from Licensing           import License, Apache_2_0_License
+		from Versioning          import SemanticVersion
 	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
 		print("[pyTooling.Packaging] Could not import directly!")
 		raise ex
@@ -226,7 +228,8 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		license: str,
 		version: str,
 		description: str,
-		keywords: Iterable[str]
+		keywords: Iterable[str],
+		parse: bool = True
 	) -> None:
 		"""
 		Initializes a Python package (version) information instance.
@@ -246,6 +249,9 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		self._version =     version
 		self._description = description
 		self._keywords =    [k for k in keywords]
+
+		if parse:
+			self.Parse()
 
 	@readonly
 	def Author(self) -> str:
@@ -281,6 +287,10 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 	def Version(self) -> str:
 		"""Version number."""
 		return self._version
+
+	def Parse(self) -> None:
+		version = SemanticVersion.Parse(self._version)
+		authors = [author.strip() for author in self._author.split(",")]
 
 	def __str__(self) -> str:
 		return f"{self._version}"
