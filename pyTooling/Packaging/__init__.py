@@ -282,6 +282,9 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		"""Version number."""
 		return self._version
 
+	def __str__(self) -> str:
+		return f"{self._version}"
+
 
 @export
 def extractVersionInformation(sourceFile: Path) -> VersionInformation:
