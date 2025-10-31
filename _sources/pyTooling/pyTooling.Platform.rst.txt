@@ -1,0 +1,126 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+==================
+pyTooling.Platform
+==================
+
+.. automodule:: pyTooling.Platform
+
+
+.. currentmodule:: pyTooling.Platform
+
+
+**Variables**
+
+- :py:data:`CurrentPlatform`
+  
+
+
+**Exceptions**
+
+- :py:exc:`PlatformException`:
+  Base-exception of all exceptions raised by :mod:`pyTooling.Platform`.
+
+- :py:exc:`UnknownPlatformException`:
+  The exception is raised by pyTooling.Platform when the platform can't be determined.
+
+- :py:exc:`UnknownOperatingSystemException`:
+  The exception is raised by pyTooling.Platform when the operating system is unknown.
+
+
+
+**Classes**
+
+- :py:class:`PythonImplementation`:
+  An enumeration describing the Python implementation (CPython, PyPy, ...).
+
+- :py:class:`Platforms`:
+  A flag describing on which platform Python is running on and/or in which environment it's running in.
+
+- :py:class:`Platform`:
+  An instance of this class contains all gathered information available from various sources.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: CurrentPlatform
+   :annotation:
+
+   .. code-block:: text
+
+      Platforms.Linux_x86_64
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: PlatformException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PlatformException
+      :parts: 1
+
+.. autoexception:: UnknownPlatformException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: UnknownPlatformException
+      :parts: 1
+
+.. autoexception:: UnknownOperatingSystemException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: UnknownOperatingSystemException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: PythonImplementation
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PythonImplementation
+      :parts: 1
+
+.. autoclass:: Platforms
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Platforms
+      :parts: 1
+
+.. autoclass:: Platform
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Platform
+      :parts: 1

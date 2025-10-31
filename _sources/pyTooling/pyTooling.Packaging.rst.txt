@@ -1,0 +1,197 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===================
+pyTooling.Packaging
+===================
+
+.. automodule:: pyTooling.Packaging
+
+
+.. currentmodule:: pyTooling.Packaging
+
+
+**Variables**
+
+- :py:data:`STATUS`
+  
+- :py:data:`DEFAULT_LICENSE`
+  
+- :py:data:`DEFAULT_PY_VERSIONS`
+  
+- :py:data:`DEFAULT_CLASSIFIERS`
+  
+- :py:data:`DEFAULT_README`
+  
+- :py:data:`DEFAULT_REQUIREMENTS`
+  
+- :py:data:`DEFAULT_DOCUMENTATION_REQUIREMENTS`
+  
+- :py:data:`DEFAULT_TEST_REQUIREMENTS`
+  
+- :py:data:`DEFAULT_PACKAGING_REQUIREMENTS`
+  
+- :py:data:`DEFAULT_VERSION_FILE`
+  
+
+
+**Functions**
+
+- :py:func:`loadReadmeFile`:
+  Read the README file (e.g. in Markdown format), so it can be used as long description for the package.
+
+- :py:func:`loadRequirementsFile`:
+  Reads a `requirements.txt` file (recursively) and extracts all specified dependencies into an array.
+
+- :py:func:`extractVersionInformation`:
+  Extract double underscored variables from a Python source file, so these can be used for single-sourcing information.
+
+- :py:func:`DescribePythonPackage`:
+  Helper function to describe a Python package.
+
+- :py:func:`DescribePythonPackageHostedOnGitHub`:
+  Helper function to describe a Python package when the source code is hosted on GitHub.
+
+
+
+**Classes**
+
+- :py:class:`Readme`:
+  Encapsulates the READMEs file content and MIME type.
+
+- :py:class:`VersionInformation`:
+  Encapsulates version information extracted from a Python source file.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: STATUS
+   :annotation:
+
+   .. code-block:: text
+
+      {'alpha': '3 - Alpha',
+       'beta': '4 - Beta',
+       'inactive': '7 - Inactive',
+       'mature': '6 - Mature',
+       'planning': '1 - Planning',
+       'pre-alpha': '2 - Pre-Alpha',
+       'stable': '5 - Production/Stable'}
+
+.. autodata:: DEFAULT_LICENSE
+   :annotation:
+
+   .. code-block:: text
+
+      Apache-2.0
+
+.. autodata:: DEFAULT_PY_VERSIONS
+   :annotation:
+
+   .. code-block:: text
+
+      ('3.10', '3.11', '3.12', '3.13', '3.14')
+
+.. autodata:: DEFAULT_CLASSIFIERS
+   :annotation:
+
+   .. code-block:: text
+
+      ('Operating System :: OS Independent',
+       'Intended Audience :: Developers',
+       'Topic :: Utilities')
+
+.. autodata:: DEFAULT_README
+   :annotation:
+
+   .. code-block:: text
+
+      PosixPath('README.md')
+
+.. autodata:: DEFAULT_REQUIREMENTS
+   :annotation:
+
+   .. code-block:: text
+
+      PosixPath('requirements.txt')
+
+.. autodata:: DEFAULT_DOCUMENTATION_REQUIREMENTS
+   :annotation:
+
+   .. code-block:: text
+
+      PosixPath('doc/requirements.txt')
+
+.. autodata:: DEFAULT_TEST_REQUIREMENTS
+   :annotation:
+
+   .. code-block:: text
+
+      PosixPath('tests/requirements.txt')
+
+.. autodata:: DEFAULT_PACKAGING_REQUIREMENTS
+   :annotation:
+
+   .. code-block:: text
+
+      PosixPath('build/requirements.txt')
+
+.. autodata:: DEFAULT_VERSION_FILE
+   :annotation:
+
+   .. code-block:: text
+
+      PosixPath('__init__.py')
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: loadReadmeFile
+
+.. autofunction:: loadRequirementsFile
+
+.. autofunction:: extractVersionInformation
+
+.. autofunction:: DescribePythonPackage
+
+.. autofunction:: DescribePythonPackageHostedOnGitHub
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Readme
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Readme
+      :parts: 1
+
+.. autoclass:: VersionInformation
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: VersionInformation
+      :parts: 1

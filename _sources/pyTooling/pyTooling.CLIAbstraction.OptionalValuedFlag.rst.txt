@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===========================================
+pyTooling.CLIAbstraction.OptionalValuedFlag
+===========================================
+
+.. automodule:: pyTooling.CLIAbstraction.OptionalValuedFlag
+
+
+.. currentmodule:: pyTooling.CLIAbstraction.OptionalValuedFlag
+
+
+**Classes**
+
+- :py:class:`OptionalValuedFlag`:
+  Class and base-class for all OptionalValuedFlag classes, which represents a flag argument with data.
+
+- :py:class:`ShortOptionalValuedFlag`:
+  Represents a :py:class:`OptionalValuedFlag` with a single dash.
+
+- :py:class:`LongOptionalValuedFlag`:
+  Represents a :py:class:`OptionalValuedFlag` with a double dash.
+
+- :py:class:`WindowsOptionalValuedFlag`:
+  Represents a :py:class:`OptionalValuedFlag` with a single slash.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: OptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: OptionalValuedFlag
+      :parts: 1
+
+.. autoclass:: ShortOptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortOptionalValuedFlag
+      :parts: 1
+
+.. autoclass:: LongOptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongOptionalValuedFlag
+      :parts: 1
+
+.. autoclass:: WindowsOptionalValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsOptionalValuedFlag
+      :parts: 1

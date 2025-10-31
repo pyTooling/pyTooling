@@ -1,0 +1,206 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+======================================
+pyTooling.Attributes.ArgParse.Argument
+======================================
+
+.. automodule:: pyTooling.Attributes.ArgParse.Argument
+
+
+.. currentmodule:: pyTooling.Attributes.ArgParse.Argument
+
+
+**Classes**
+
+- :py:class:`DelimiterArgument`:
+  Represents a delimiter symbol like ``--``.
+
+- :py:class:`NamedArgument`:
+  Base-class for all command line arguments with a name.
+
+- :py:class:`ValuedArgument`:
+  Base-class for all command line arguments with a value.
+
+- :py:class:`PositionalArgument`:
+  Represents a simple string argument containing any information encoded in a string.
+
+- :py:class:`StringArgument`:
+  Represents a simple string argument.
+
+- :py:class:`IntegerArgument`:
+  Represents an integer argument.
+
+- :py:class:`FloatArgument`:
+  Represents a floating point number argument.
+
+- :py:class:`PathArgument`:
+  Represents a single path argument.
+
+- :py:class:`ListArgument`:
+  Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+
+- :py:class:`StringListArgument`:
+  Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+
+- :py:class:`IntegerListArgument`:
+  Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+
+- :py:class:`FloatListArgument`:
+  Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+
+- :py:class:`PathListArgument`:
+  Represents a list of path arguments  (:class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`).
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: DelimiterArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DelimiterArgument
+      :parts: 1
+
+.. autoclass:: NamedArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NamedArgument
+      :parts: 1
+
+.. autoclass:: ValuedArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ValuedArgument
+      :parts: 1
+
+.. autoclass:: PositionalArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PositionalArgument
+      :parts: 1
+
+.. autoclass:: StringArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: StringArgument
+      :parts: 1
+
+.. autoclass:: IntegerArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: IntegerArgument
+      :parts: 1
+
+.. autoclass:: FloatArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: FloatArgument
+      :parts: 1
+
+.. autoclass:: PathArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PathArgument
+      :parts: 1
+
+.. autoclass:: ListArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ListArgument
+      :parts: 1
+
+.. autoclass:: StringListArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: StringListArgument
+      :parts: 1
+
+.. autoclass:: IntegerListArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: IntegerListArgument
+      :parts: 1
+
+.. autoclass:: FloatListArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: FloatListArgument
+      :parts: 1
+
+.. autoclass:: PathListArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PathListArgument
+      :parts: 1
