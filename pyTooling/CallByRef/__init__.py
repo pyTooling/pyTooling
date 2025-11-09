@@ -34,7 +34,6 @@ Auxiliary classes to implement call-by-reference.
 .. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """
 from decimal       import Decimal
-from sys           import version_info           # needed for versions before Python 3.11
 from typing        import Any, Generic, TypeVar, Optional as Nullable
 
 try:

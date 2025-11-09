@@ -36,7 +36,6 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from sys     import version_info           # needed for versions before Python 3.11
 from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 
 try:

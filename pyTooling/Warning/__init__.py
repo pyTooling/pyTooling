@@ -33,7 +33,6 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 
 .. hint:: See :ref:`high-level help <WARNING>` for explanations and usage examples.
 """
-from sys       import version_info
 from threading import local
 from types     import TracebackType
 from typing    import List, Callable, Optional as Nullable, Type
