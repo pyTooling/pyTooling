@@ -37,13 +37,13 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.7.6"
+__version__ =       "8.8.0"
 __keywords__ =      [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
 	"geometry", "graph", "installation", "iterators", "licensing", "linked list", "message logging", "meta-classes",
 	"overloading", "override", "packaging", "path", "platform", "setuptools", "shapes", "shell", "singleton", "slots",
-	"terminal", "text user interface", "stopwatch", "tree", "TUI", "url", "versioning", "volumes", "wheel"
+	"terminal", "text user interface", "stopwatch", "tree", "TUI", "url", "versioning", "volumes", "warning", "wheel"
 ]
 __issue_tracker__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 

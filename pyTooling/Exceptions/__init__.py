@@ -34,9 +34,6 @@ A common set of missing exceptions in Python.
 
 .. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-from sys    import version_info
-from typing import List
-
 try:
 	from pyTooling.Decorators import export
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
@@ -59,15 +56,6 @@ class OverloadResolutionError(Exception):
 	   :func:`@overloadable <pyTooling.MetaClasses.overloadable>`
 	      |rarr| Mark a method as *overloadable*.
 	"""
-	# WORKAROUND: for Python <3.11
-	# Implementing a dummy method for Python versions before
-	__notes__: List[str]
-	if version_info < (3, 11):  # pragma: no cover
-		def add_note(self, message: str):
-			try:
-				self.__notes__.append(message)
-			except AttributeError:
-				self.__notes__ = [message]
 
 
 @export
@@ -83,22 +71,9 @@ class ExceptionBase(Exception):
 		super().__init__()
 		self.message = message
 
-	# WORKAROUND: for Python <3.11
-	# Implementing a dummy method for Python versions before
-	__notes__: List[str]
-	if version_info < (3, 11):  # pragma: no cover
-		def add_note(self, message: str):
-			try:
-				self.__notes__.append(message)
-			except AttributeError:
-				self.__notes__ = [message]
-
 	def __str__(self) -> str:
 		"""Returns the exception's message text."""
 		return self.message
-
-	def with_traceback(self, tb) -> None:
-		super().with_traceback(tb)
 
 	# @DocumentMemberAttribute(False)
 	# @MethodAlias(pyExceptions.with_traceback)
@@ -123,13 +98,3 @@ class NotConfiguredException(ExceptionBase):
 @export
 class ToolingException(Exception):
 	"""The exception is raised by pyTooling internal features."""
-
-	# WORKAROUND: for Python <3.11
-	# Implementing a dummy method for Python versions before
-	__notes__: List[str]
-	if version_info < (3, 11):  # pragma: no cover
-		def add_note(self, message: str):
-			try:
-				self.__notes__.append(message)
-			except AttributeError:
-				self.__notes__ = [message]

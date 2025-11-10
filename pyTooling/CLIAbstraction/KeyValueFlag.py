@@ -41,7 +41,6 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from sys    import version_info           # needed for versions before Python 3.11
 from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable
 
 try:

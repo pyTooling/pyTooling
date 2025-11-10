@@ -32,7 +32,7 @@
 """A set of helpers to implement a text user interface (TUI) in a terminal."""
 from enum                    import Enum, unique
 from io                      import TextIOWrapper
-from sys                     import stdin, stdout, stderr, version_info           # needed for versions before Python 3.11
+from sys                     import stdin, stdout, stderr
 from textwrap                import dedent
 from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 

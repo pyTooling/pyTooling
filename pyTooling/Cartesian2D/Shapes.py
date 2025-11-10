@@ -29,7 +29,6 @@
 # ==================================================================================================================== #
 #
 """An implementation of 2D cartesian shapes for Python."""
-from sys import version_info
 
 from typing import Generic, Tuple, Optional as Nullable
 

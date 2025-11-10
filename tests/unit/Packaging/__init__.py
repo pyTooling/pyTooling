@@ -34,7 +34,6 @@ Unit tests for the packaging helper functions.
 from pathlib  import Path
 from unittest import TestCase
 from pytest   import mark
-from sys      import version_info
 
 from pyTooling.Platform import CurrentPlatform
 
@@ -46,15 +45,15 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class HelperFunctions(TestCase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
 		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
 		self.assertIsInstance(versionInformation.Keywords, list)
-		self.assertEqual(42, len(versionInformation.Keywords))
+		self.assertEqual(43, len(versionInformation.Keywords))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeTXT(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -62,7 +61,7 @@ class HelperFunctions(TestCase):
 		self.assertIn("1. pyPackage", readme.Content)
 		self.assertEqual("text/plain", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -70,7 +69,7 @@ class HelperFunctions(TestCase):
 		self.assertIn("# pyPackage", readme.Content)
 		self.assertEqual("text/markdown", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeReST(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -79,35 +78,35 @@ class HelperFunctions(TestCase):
 		self.assertIn("#########", readme.Content)
 		self.assertEqual("text/x-rst", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeOther(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
 		with self.assertRaises(ValueError):
 			_ = loadReadmeFile(Path("tests/pyPackage/README.ascii"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
 		self.assertEqual(13, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.Git.txt"))
 		self.assertEqual(2, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsRemoteZIP(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.HTTPS-ZIP.txt"))
 		self.assertEqual(1, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsRecursive(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
@@ -116,7 +115,7 @@ class HelperFunctions(TestCase):
 
 
 class VersionInformation(TestCase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import VersionInformation
 
@@ -140,7 +139,7 @@ class VersionInformation(TestCase):
 
 
 class DescribePackage(TestCase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackage(self):
 		print()
 
@@ -164,7 +163,7 @@ class DescribePackage(TestCase):
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment and version_info > (3, 9), reason="Can fail on MSYS2 environment with Python 3.10+.")
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackageFromGitHub(self):
 		print()
 

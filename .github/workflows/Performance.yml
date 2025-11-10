@@ -1,7 +1,7 @@
 name: Performance
 
 on:
-  push:
+#  push:
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
       name: Performance
       python_version_list: "3.12 3.13 3.14 pypy-3.11"
       system_list: "ubuntu windows macos macos-arm"
-      pipeline-delay: 180
+      pipeline-delay: 300
 
   PerformanceTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r6

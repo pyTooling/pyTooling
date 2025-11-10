@@ -30,7 +30,6 @@
 #
 """A powerful tree data structure for Python."""
 from collections   import deque
-from sys           import version_info           # needed for versions before Python 3.11
 from typing        import TypeVar, Generic, List, Tuple, Dict, Deque, Union, Optional as Nullable
 from typing        import Callable, Iterator, Generator, Iterable, Mapping, Hashable
 

@@ -38,7 +38,6 @@ from pathlib    import Path
 from platform   import system
 from shutil     import which as shutil_which
 from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
-from sys        import version_info           # needed for versions before Python 3.11
 from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any, Mapping, Iterable
 
 try:

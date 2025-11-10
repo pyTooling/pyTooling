@@ -28,17 +28,17 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from typing import List
+from typing   import List
 from unittest import TestCase
 
-from pyTooling.Warning import WarningCollector, UnhandledWarningException
+from pyTooling.Warning import WarningCollector, Warning, CriticalWarning
+from pyTooling.Warning import UnhandledExceptionException, UnhandledCriticalWarningException
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
-
-
 
 
 class ClassA:
@@ -47,8 +47,14 @@ class ClassA:
 	def __init__(self, x: object) -> None:
 		self._x = x
 
-	def methA(self) -> None:
-		WarningCollector.Raise(Warning("Warning from ClassA.methA"))
+	def methA_RaiseWarning(self) -> None:
+		WarningCollector.Raise(Warning("Warning from ClassA.methA_RaiseWarning"))
+
+	def methA_RaiseCriticalWarning(self) -> None:
+		WarningCollector.Raise(CriticalWarning("CriticalWarning from ClassA.methA_RaiseCriticalWarning"))
+
+	def methA_RaiseException(self) -> None:
+		WarningCollector.Raise(Exception("Exception from ClassA.methA_RaiseException"))
 
 
 class ClassB:
@@ -58,7 +64,7 @@ class ClassB:
 		self._a = a
 
 	def methB(self) -> None:
-		self._a.methA()
+		self._a.methA_RaiseException()
 
 
 class ClassC:
@@ -84,23 +90,44 @@ class Handler:
 			self._c.methC()
 
 
-class WarningCollection(TestCase):
-	def test_WarningCollector_None(self) -> None:
+class NoWarningCollector(TestCase):
+	def test_RaiseWarning(self) -> None:
 		a = ClassA("none")
-		with self.assertRaises(UnhandledWarningException) as ex:
-			a.methA()
+		a.methA_RaiseWarning()
 
-		# self.assertEqual("Unhandled warning: Warning from ClassA.methA", str(ex.exception))
+	def test_RaiseCriticalWarning(self) -> None:
+		a = ClassA("none")
+		with self.assertRaises(UnhandledCriticalWarningException) as ex:
+			a.methA_RaiseCriticalWarning()
+
+		self.assertEqual("Unhandled Critical Warning: CriticalWarning from ClassA.methA_RaiseCriticalWarning", str(ex.exception))
+
+	def test_RaiseException(self) -> None:
+		a = ClassA("none")
+		with self.assertRaises(UnhandledExceptionException) as ex:
+			a.methA_RaiseException()
+
+		self.assertEqual("Unhandled Exception: Exception from ClassA.methA_RaiseException", str(ex.exception))
+
+
+class WarningCollection(TestCase):
+	def test_WarningCollector_NoList(self) -> None:
+		a = ClassA("list")
+		with WarningCollector() as warning:
+			a.methA_RaiseException()
+
+		self.assertEqual(1, len(warning))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warning[0]))
 
 	def test_WarningCollector_List(self) -> None:
 		warnings = []
 
 		a = ClassA("list")
 		with WarningCollector(warnings) as warning:
-			a.methA()
+			a.methA_RaiseException()
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual("Warning from ClassA.methA", str(warnings[0]))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warnings[0]))
 
 	def test_WarningCollector_Print(self) -> None:
 		print()
@@ -115,9 +142,9 @@ class WarningCollection(TestCase):
 
 		a = ClassA("print")
 		with WarningCollector(handler=func) as warning:
-			a.methA()
+			a.methA_RaiseException()
 
-		self.assertEqual("Warning from ClassA.methA", message)
+		self.assertEqual("Exception from ClassA.methA_RaiseException", message)
 
 	def test_WarningCollector_Abort(self) -> None:
 		print()
@@ -133,10 +160,10 @@ class WarningCollection(TestCase):
 		a = ClassA("abort")
 		with self.assertRaises(Exception) as ex:
 			with WarningCollector(handler=func) as warning:
-				a.methA()
+				a.methA_RaiseException()
 
-		self.assertEqual("Warning from ClassA.methA", message)
-		self.assertEqual("Warning: Warning from ClassA.methA", str(ex.exception))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", message)
+		self.assertEqual("Warning: Exception from ClassA.methA_RaiseException", str(ex.exception))
 
 
 class CallStack(TestCase):
@@ -145,10 +172,10 @@ class CallStack(TestCase):
 
 		a = ClassA(1)
 		with WarningCollector(warnings) as warning:
-			a.methA()
+			a.methA_RaiseException()
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual("Warning from ClassA.methA", str(warnings[0]))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warnings[0]))
 
 	def test_Level_2(self) -> None:
 		warnings = []
@@ -159,7 +186,7 @@ class CallStack(TestCase):
 			b.methB()
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual("Warning from ClassA.methA", str(warnings[0]))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warnings[0]))
 
 	def test_Level_3(self) -> None:
 		warnings = []
@@ -171,7 +198,17 @@ class CallStack(TestCase):
 			c.methC()
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual("Warning from ClassA.methA", str(warnings[0]))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warnings[0]))
+
+	def test_Nested(self) -> None:
+		a = ClassA(1)
+		with WarningCollector() as warning1:
+			with WarningCollector() as warning2:
+				a.methA_RaiseException()
+
+		self.assertIs(warning1, warning2.Parent)
+		self.assertEqual(1, len(warning2))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warning2[0]))
 
 
 class Catch(TestCase):
@@ -187,4 +224,4 @@ class Catch(TestCase):
 
 		self.assertEqual(0, len(warnings))
 		self.assertEqual(1, len(h._warnings))
-		self.assertEqual("Warning from ClassA.methA", str(h._warnings[0]))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(h._warnings[0]))

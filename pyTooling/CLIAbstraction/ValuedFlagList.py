@@ -44,7 +44,6 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
    * For list of paths. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
 """
-from sys    import version_info           # needed for versions before Python 3.11
 from typing import List, Union, Iterable, cast, Any
 
 try:

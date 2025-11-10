@@ -35,7 +35,6 @@ This package provides a representation for a Uniform Resource Locator (URL).
 
    [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 """
-from sys      import version_info
 
 from enum     import IntFlag
 from re       import compile as re_compile

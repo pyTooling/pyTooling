@@ -39,7 +39,6 @@ class, method or function. By default, this field is called ``__pyattr__``.
 .. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
 from enum   import IntFlag
-from sys    import version_info
 from types  import MethodType, FunctionType, ModuleType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
 from typing import Optional as Nullable

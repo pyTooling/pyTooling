@@ -29,7 +29,6 @@
 # ==================================================================================================================== #
 #
 """An implementation of 2D cartesian data structures for Python."""
-from sys    import version_info
 
 from math   import sqrt, acos
 from typing import TypeVar, Union, Generic, Any, Tuple
