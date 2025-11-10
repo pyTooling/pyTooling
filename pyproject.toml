@@ -11,7 +11,7 @@ line-length = 120
 
 [tool.mypy]
 packages = ["pyTooling"]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 pretty = true
 show_error_context = true
@@ -22,22 +22,20 @@ junit_xml = "report/typing/StaticTypingSummary.xml"
 cobertura_xml_report = "report/typing"
 
 [tool.pytest]
-junit_xml = "report/unit/UnittestReportSummary.xml"
-
-[tool.pyedaa-reports]
-junit_xml = "report/unit/unittest.xml"
-
-[tool.pytest.ini_options]
-addopts = "--tb=native"
+addopts = ["--tb=native"]
 # Don't set 'python_classes = *' otherwise, pytest doesn't search for classes
 # derived from unittest.Testcase
-python_files = "*"
-python_functions = "test_*"
+python_files = ["*"]
+python_functions = ["test_*"]
 filterwarnings = [
 	"error::DeprecationWarning",
 	"error::PendingDeprecationWarning"
 ]
+junit_xml = "report/unit/UnittestReportSummary.xml"
 junit_logging = "all"
+
+[tool.pyedaa-reports]
+junit_xml = "report/unit/unittest.xml"
 
 [tool.interrogate]
 color = true

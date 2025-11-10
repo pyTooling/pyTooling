@@ -31,7 +31,6 @@
 """An object-oriented doubly linked-list data structure for Python."""
 
 from collections.abc import Sized
-from sys             import version_info
 from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List, Any
 
 try:

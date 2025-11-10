@@ -43,7 +43,6 @@ The Licensing module implements mapping tables for various license names and ide
 .. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
-from sys          import version_info           # needed for versions before Python 3.11
 from typing       import Any, Dict, Optional as Nullable
 
 

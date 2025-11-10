@@ -55,7 +55,6 @@ starting vertex are provided as methods on a vertex.
 import heapq
 from collections import deque
 from itertools   import chain
-from sys         import version_info           # needed for versions before Python 3.11
 from typing      import TypeVar, Generic, List, Tuple, Dict, Set, Deque, Union, Optional as Nullable
 from typing      import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 

@@ -36,7 +36,6 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
    This isn't a replacement of :mod:`pathlib` introduced with Python 3.4.
 """
 from os                    import scandir, readlink
-from sys                   import version_info
 
 from enum                  import Enum
 from itertools             import chain

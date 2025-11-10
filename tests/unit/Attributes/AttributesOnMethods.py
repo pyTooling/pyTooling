@@ -32,7 +32,6 @@
 """
 Unit tests for attributes attached to methods.
 """
-from sys                   import version_info
 from unittest              import TestCase
 
 from pytest                import mark
@@ -482,7 +481,6 @@ class ApplyMethodAttributes_NoMetaClass(TestCase):
 
 
 class ApplyMethodAttributes_WithMetaClass(TestCase):
-	@mark.skipif(version_info < (3, 9), reason="Disabled on Python 3.8.")
 	def test_NoAttribute(self) -> None:
 		class AttributeA(Attribute):
 			pass

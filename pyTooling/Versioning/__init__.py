@@ -36,8 +36,7 @@ Implementation of semantic and date versioning version-numbers.
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
 from re              import compile as re_compile
-from sys             import version_info   # needed for versions before Python 3.11
-from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Tuple, Iterable, Iterator, List
+from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Iterable, Iterator, List
 
 try:
 	from pyTooling.Decorators  import export, readonly
