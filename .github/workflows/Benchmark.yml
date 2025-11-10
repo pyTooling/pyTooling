@@ -1,7 +1,7 @@
 name: Benchmark
 
 on:
-  push:
+#  push:
   workflow_dispatch:
 
 jobs:
