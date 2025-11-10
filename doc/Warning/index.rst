@@ -26,8 +26,8 @@ Warnings
          from pyTooling.Warning import WarningCollector
 
          class ClassA:
-           def methA(self) -> None:
-             WarningCollector.Raise(Warning("Warning from ClassA.methA"))
+           def methA_RaiseException(self) -> None:
+             WarningCollector.Raise(Warning("Warning from ClassA.methA_RaiseException"))
 
       .. code-block:: Python
 
@@ -40,7 +40,7 @@ Warnings
 
              a = ClassA()
              with WarningCollector(warnings) as warning:
-               a.methA()
+               a.methA_RaiseException()
 
              print("Warnings:)
              for warning in warnings:

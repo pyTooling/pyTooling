@@ -34,8 +34,6 @@ A common set of missing exceptions in Python.
 
 .. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-from typing import List
-
 try:
 	from pyTooling.Decorators import export
 except (ImportError, ModuleNotFoundError):  # pragma: no cover

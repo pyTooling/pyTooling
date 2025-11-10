@@ -35,7 +35,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from threading import local
 from types     import TracebackType
-from typing import List, Callable, Optional as Nullable, Type, Iterator
+from typing    import List, Callable, Optional as Nullable, Type, Iterator
 
 try:
 	from pyTooling.Decorators import export, readonly
@@ -57,17 +57,27 @@ _threadLocalData = local()
 
 
 @export
-class Warning(ExceptionBase):
+class Warning(BaseException):
 	pass
 
 
 @export
-class CriticalWarning(ExceptionBase):
+class CriticalWarning(BaseException):
 	pass
 
 
 @export
-class UnhandledWarningException(Exception):
+class UnhandledWarningException(ExceptionBase):   # FIXME: to be removed in v9.0.0
+	pass
+
+
+@export
+class UnhandledCriticalWarningException(UnhandledWarningException):
+	pass
+
+
+@export
+class UnhandledExceptionException(UnhandledWarningException):
 	pass
 
 
@@ -77,13 +87,13 @@ class WarningCollector:
 	A context manager to collect warnings within the call hierarchy.
 	"""
 	_parent:   Nullable["WarningCollector"]               #: Parent WarningCollector
-	_warnings: List[ExceptionBase]                        #: List of collected warnings (and exceptions).
-	_handler:  Nullable[Callable[[ExceptionBase], bool]]  #: Optional handler function, which is called per collected warning.
+	_warnings: List[BaseException]                        #: List of collected warnings (and exceptions).
+	_handler:  Nullable[Callable[[BaseException], bool]]  #: Optional handler function, which is called per collected warning.
 
 	def __init__(
 		self,
-		warnings: Nullable[List[ExceptionBase]] = None,
-		handler: Nullable[Callable[[ExceptionBase], bool]] = None
+		warnings: Nullable[List[BaseException]] = None,
+		handler: Nullable[Callable[[BaseException], bool]] = None
 	) -> None:
 		"""
 		Initializes a warning collector.
@@ -112,8 +122,14 @@ class WarningCollector:
 		self._warnings = warnings
 		self._handler =  handler
 
-	def __iter__(self) -> Iterator[ExceptionBase]:
+	def __len__(self) -> int:
+		return len(self._warnings)
+
+	def __iter__(self) -> Iterator[BaseException]:
 		return iter(self._warnings)
+
+	def __getitem__(self, index: int) -> BaseException:
+		return self._warnings[index]
 
 	def __enter__(self) -> 'WarningCollector':  # -> Self: needs Python 3.11
 		"""
@@ -158,7 +174,7 @@ class WarningCollector:
 		self._parent = value
 
 	@readonly
-	def Warnings(self) -> List[ExceptionBase]:
+	def Warnings(self) -> List[BaseException]:
 		"""
 		Read-only property to access the list of collected warnings.
 
@@ -166,7 +182,7 @@ class WarningCollector:
 		"""
 		return self._warnings
 
-	def AddWarning(self, warning: ExceptionBase) -> bool:
+	def AddWarning(self, warning: BaseException) -> bool:
 		"""
 		Add a warning to the list of warnings managed by this warning collector.
 
@@ -188,7 +204,7 @@ class WarningCollector:
 		return False if self._handler is None else self._handler(warning)
 
 	@classmethod
-	def Raise(cls, warning: ExceptionBase) -> None:
+	def Raise(cls, warning: BaseException) -> None:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
@@ -202,13 +218,12 @@ class WarningCollector:
 			if warningCollector.AddWarning(warning):
 				raise Exception(f"Warning: {warning}") from warning
 		except AttributeError:
-			message = None
+			ex = None
 			if isinstance(warning, Exception):
-				message = f"Unhandled Exception: {warning}"
+				ex = UnhandledExceptionException(f"Unhandled Exception: {warning}")
 			elif isinstance(warning, CriticalWarning):
-				message = f"Unhandled critical warning: {warning}"
+				ex = UnhandledCriticalWarningException(f"Unhandled Critical Warning: {warning}")
 
-			if message is not None:
-				ex = UnhandledWarningException(message)
+			if ex is not None:
 				ex.add_note(f"Add a 'with'-statement using '{cls.__name__}' somewhere up the call-hierarchy to receive and collect warnings.")
 				raise ex from warning
