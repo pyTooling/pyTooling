@@ -222,6 +222,51 @@ class ExceptionHandling(TestCase):
 				app.PrintException(ex)
 			self.assertEqual(241, exitEx.exception.code)
 
+	def test_ExceptionWithNote(self) -> None:
+		print()
+
+		class Application(TerminalBaseApplication):
+			def __init__(self) -> None:
+				super().__init__()
+
+				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
+
+			def Run(self):
+				ex = Exception(f"Common exception")
+				ex.add_note("First note")
+				raise ex
+
+		app = Application()
+		try:
+			app.Run()
+		except Exception as ex:
+			with self.assertRaises(SystemExit) as exitEx:
+				app.PrintException(ex)
+			self.assertEqual(241, exitEx.exception.code)
+
+	def test_ExceptionWithNotes(self) -> None:
+		print()
+
+		class Application(TerminalBaseApplication):
+			def __init__(self) -> None:
+				super().__init__()
+
+				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
+
+			def Run(self):
+				ex = Exception(f"Common exception")
+				ex.add_note("First note")
+				ex.add_note("Second note")
+				raise ex
+
+		app = Application()
+		try:
+			app.Run()
+		except Exception as ex:
+			with self.assertRaises(SystemExit) as exitEx:
+				app.PrintException(ex)
+			self.assertEqual(241, exitEx.exception.code)
+
 	def test_ExceptionWithNestedException(self) -> None:
 		print()
 
@@ -232,7 +277,12 @@ class ExceptionHandling(TestCase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				raise Exception(f"Common exception") from FileNotFoundError(f"File doesn't exist.")
+				ex = Exception(f"Common exception")
+				ex.add_note("First note")
+				nex = FileNotFoundError(f"File doesn't exist.")
+				nex.add_note("Nested note")
+				nex.add_note("Second nested line")
+				raise ex from nex
 
 		app = Application()
 		try:
