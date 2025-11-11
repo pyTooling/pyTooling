@@ -67,17 +67,17 @@ class CriticalWarning(BaseException):
 
 
 @export
-class UnhandledWarningException(ExceptionBase):   # FIXME: to be removed in v9.0.0
+class UnhandledException(ExceptionBase):
 	pass
 
 
 @export
-class UnhandledCriticalWarningException(UnhandledWarningException):
+class UnhandledCriticalWarningException(UnhandledException):
 	pass
 
 
 @export
-class UnhandledExceptionException(UnhandledWarningException):
+class UnhandledExceptionException(UnhandledException):
 	pass
 
 
