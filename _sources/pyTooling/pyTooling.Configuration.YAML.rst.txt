@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+============================
+pyTooling.Configuration.YAML
+============================
+
+.. automodule:: pyTooling.Configuration.YAML
+
+
+.. currentmodule:: pyTooling.Configuration.YAML
+
+
+**Classes**
+
+- :py:class:`Node`:
+  Abstract node in a configuration data structure.
+
+- :py:class:`Dictionary`:
+  A dictionary node in a YAML data file.
+
+- :py:class:`Sequence`:
+  A sequence node (ordered list) in a YAML data file.
+
+- :py:class:`Configuration`:
+  A configuration read from a YAML file.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Node
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Node
+      :parts: 1
+
+.. autoclass:: Dictionary
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Dictionary
+      :parts: 1
+
+.. autoclass:: Sequence
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Sequence
+      :parts: 1
+
+.. autoclass:: Configuration
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Configuration
+      :parts: 1

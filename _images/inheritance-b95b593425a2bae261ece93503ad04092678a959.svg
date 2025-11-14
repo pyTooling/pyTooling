@@ -1,0 +1,59 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="384pt" height="27pt" viewBox="0.00 0.00 384.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritanceaafc11817e</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Base</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.GraphML.html#pyTooling.Graph.GraphML.Base" ns1:title="Base-class for all GraphML data model classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-19 0,-19 0,0 54,0 54,-19" />
+<ns0:text text-anchor="middle" x="27" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Base</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>BaseWithID</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.GraphML.html#pyTooling.Graph.GraphML.BaseWithID" ns1:title="BaseWithID" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="164,-19 90,-19 90,0 164,0 164,-19" />
+<ns0:text text-anchor="middle" x="127" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseWithID</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Base-&gt;BaseWithID</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54,-9.5C63.46,-9.5 74.39,-9.5 84.83,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.91,-11.25 89.91,-9.5 84.91,-7.75 84.91,-11.25" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>BaseWithData</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.GraphML.html#pyTooling.Graph.GraphML.BaseWithData" ns1:title="BaseWithData" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="286,-19 200,-19 200,0 286,0 286,-19" />
+<ns0:text text-anchor="middle" x="243" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseWithData</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Node</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.GraphML.html#pyTooling.Graph.GraphML.Node" ns1:title="Node" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="376,-19 322,-19 322,0 376,0 376,-19" />
+<ns0:text text-anchor="middle" x="349" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Node</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>BaseWithData-&gt;Node</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M286,-9.5C296.18,-9.5 306.89,-9.5 316.49,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="316.7,-11.25 321.7,-9.5 316.7,-7.75 316.7,-11.25" />
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>BaseWithID-&gt;BaseWithData</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M164.07,-9.5C173.74,-9.5 184.33,-9.5 194.51,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="194.79,-11.25 199.79,-9.5 194.79,-7.75 194.79,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

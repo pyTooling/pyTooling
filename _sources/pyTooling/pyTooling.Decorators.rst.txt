@@ -1,0 +1,90 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.Decorators
+====================
+
+.. automodule:: pyTooling.Decorators
+
+
+.. currentmodule:: pyTooling.Decorators
+
+
+**Variables**
+
+- :py:data:`Param`
+  
+- :py:data:`RetType`
+  
+- :py:data:`Func`
+  
+- :py:data:`T`
+  
+
+
+**Functions**
+
+- :py:func:`export`:
+  Register the given function or class as publicly accessible in a module.
+
+- :py:func:`notimplemented`:
+  Mark a method as *not implemented* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
+
+- :py:func:`readonly`:
+  Marks a property as *read-only*.
+
+- :py:func:`InheritDocString`:
+  Copy the doc-string from given base-class to the method this decorator is applied to.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: Param
+   :annotation:
+
+   .. code-block:: text
+
+      ~Param
+
+.. autodata:: RetType
+   :annotation:
+
+   .. code-block:: text
+
+      ~RetType
+
+.. autodata:: Func
+   :annotation:
+
+   .. code-block:: text
+
+      typing.Callable[~Param, ~RetType]
+
+.. autodata:: T
+   :annotation:
+
+   .. code-block:: text
+
+      ~T
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: export
+
+.. autofunction:: notimplemented
+
+.. autofunction:: readonly
+
+.. autofunction:: InheritDocString
