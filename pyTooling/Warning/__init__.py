@@ -35,7 +35,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from threading import local
 from types     import TracebackType
-from typing    import List, Callable, Optional as Nullable, Type, Iterator
+from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self
 
 try:
 	from pyTooling.Decorators import export, readonly
@@ -131,7 +131,7 @@ class WarningCollector:
 	def __getitem__(self, index: int) -> BaseException:
 		return self._warnings[index]
 
-	def __enter__(self) -> 'WarningCollector':  # -> Self: needs Python 3.11
+	def __enter__(self) -> Self:
 		"""
 		Enter the warning collector context.
 
@@ -151,8 +151,8 @@ class WarningCollector:
 	def __exit__(
 		self,
 		exc_type: Nullable[Type[BaseException]] = None,
-		exc_val: Nullable[BaseException] = None,
-		exc_tb: Nullable[TracebackType] = None
+		exc_val:  Nullable[BaseException] = None,
+		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
 		Exit the warning collector context.
@@ -160,6 +160,7 @@ class WarningCollector:
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
+		:returns:        ``None``
 		"""
 		global _threadLocalData
 

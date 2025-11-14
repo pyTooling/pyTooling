@@ -35,12 +35,9 @@ A stopwatch to measure execution times.
 """
 
 from datetime import datetime
-from inspect  import Traceback
 from time     import perf_counter_ns
 from types    import TracebackType
-from typing   import List, Optional as Nullable, Iterator, Tuple, Type
-
-# Python 3.11: use Self if returning the own object: , Self
+from typing   import List, Optional as Nullable, Iterator, Tuple, Type, Self
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -83,7 +80,7 @@ class ExcludeContextManager:
 		"""
 		self._stopwatch = stopwatch
 
-	def __enter__(self) -> "ExcludeContextManager":  # TODO: Python 3.11: -> Self:
+	def __enter__(self) -> Self:
 		"""
 		Enter the context and pause the stopwatch.
 
@@ -294,6 +291,7 @@ class Stopwatch(SlottedObject):
 		self._resumeTime = None
 		self._totalTime =  self._stopTime - self._startTime
 
+		# FIXME: why is this unused?
 		beginEndDiff = self._endTime - self._beginTime
 
 		return diff
@@ -471,7 +469,7 @@ class Stopwatch(SlottedObject):
 
 		return excludeContextManager
 
-	def __enter__(self) -> "Stopwatch":  # TODO: Python 3.11: -> Self:
+	def __enter__(self) -> Self:
 		"""
 		Implementation of the :ref:`context manager protocol's <context-managers>` ``__enter__(...)`` method.
 
@@ -497,7 +495,12 @@ class Stopwatch(SlottedObject):
 
 		return self
 
-	def __exit__(self, exc_type: Type[Exception], exc_val: Exception, exc_tb: Traceback) -> bool:
+	def __exit__(
+		self,
+		exc_type: Nullable[Type[BaseException]] = None,
+		exc_val:  Nullable[BaseException] = None,
+		exc_tb:   Nullable[TracebackType] = None
+	) -> Nullable[bool]:
 		"""
 		Implementation of the :ref:`context manager protocol's <context-managers>` ``__exit__(...)`` method.
 
@@ -530,7 +533,6 @@ class Stopwatch(SlottedObject):
 				self._totalTime =  self._stopTime - self._startTime
 		else:
 			raise StopwatchException("Stopwatch was not resumed.")
-
 
 	def __len__(self):
 		"""
