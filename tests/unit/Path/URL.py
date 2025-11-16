@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Uni tests for :mod:`pyTooling.GenericPath.URL`."""
+"""Unit tests for :mod:`pyTooling.GenericPath.URL`."""
 from unittest import TestCase
 from pyTooling.GenericPath.URL import URL, Protocols
 
