@@ -1,0 +1,77 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="353pt" height="138pt" viewBox="0.00 0.00 353.00 138.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 134)">
+<ns0:title>inheritance0d08d8562b</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>EnvironmentException</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.EnvironmentException" ns1:title="The exception is raised when an expected environment variable is missing." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="322,-93 195,-93 195,-74 322,-74 322,-93" />
+<ns0:text text-anchor="middle" x="258.5" y="-81" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">EnvironmentException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>ExceptionBase</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.ExceptionBase" ns1:title="Base exception derived from :exc:`Exception &lt;python:Exception&gt;` for all custom exceptions." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="112.5,-56 23.5,-56 23.5,-37 112.5,-37 112.5,-56" />
+<ns0:text text-anchor="middle" x="68" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ExceptionBase</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>ExceptionBase-&gt;EnvironmentException</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M112.72,-55.08C139.96,-60.43 175.21,-67.35 204.1,-73.02" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="203.8,-74.74 209.05,-73.99 204.48,-71.31 203.8,-74.74" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>NotConfiguredException</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.NotConfiguredException" ns1:title="The exception is raise if the requested setting is not configured." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="325.5,-56 191.5,-56 191.5,-37 325.5,-37 325.5,-56" />
+<ns0:text text-anchor="middle" x="258.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NotConfiguredException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ExceptionBase-&gt;NotConfiguredException</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M112.72,-46.5C134.55,-46.5 161.52,-46.5 186.23,-46.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="186.47,-48.25 191.47,-46.5 186.47,-44.75 186.47,-48.25" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>PlatformNotSupportedException</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.PlatformNotSupportedException" ns1:title="The exception is raise if the platform is not supported." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="345,-19 172,-19 172,0 345,0 345,-19" />
+<ns0:text text-anchor="middle" x="258.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">PlatformNotSupportedException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>ExceptionBase-&gt;PlatformNotSupportedException</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M112.72,-37.92C139.96,-32.57 175.21,-25.65 204.1,-19.98" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="204.48,-21.69 209.05,-19.01 203.8,-18.26 204.48,-21.69" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>OverloadResolutionError</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.OverloadResolutionError" ns1:title="The exception is raised, when no matching overloaded method was found." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="136,-93 0,-93 0,-74 136,-74 136,-93" />
+<ns0:text text-anchor="middle" x="68" y="-81" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">OverloadResolutionError</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>ToolingException</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" ns1:title="The exception is raised by pyTooling internal features." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="117.5,-130 18.5,-130 18.5,-111 117.5,-111 117.5,-130" />
+<ns0:text text-anchor="middle" x="68" y="-118" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ToolingException</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+</ns0:g>
+</ns0:svg>

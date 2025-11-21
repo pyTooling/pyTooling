@@ -1,0 +1,59 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="406pt" height="64pt" viewBox="0.00 0.00 406.00 64.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 60)">
+<ns0:title>inheritanced8375533c1</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="135,-56 0,-56 0,-37 135,-37 135,-56" />
+<ns0:text text-anchor="middle" x="67.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>ValuedArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument" ns1:title="Base-class for all command line arguments with a value." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="269,-37 171,-37 171,-18 269,-18 269,-37" />
+<ns0:text text-anchor="middle" x="220" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ValuedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>CommandLineArgument-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-38.06C145.55,-36.77 155.92,-35.46 165.74,-34.22" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="166.08,-35.95 170.82,-33.58 165.64,-32.47 166.08,-35.95" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="94.5,-19 40.5,-19 40.5,0 94.5,0 94.5,-19" />
+<ns0:text text-anchor="middle" x="67.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Generic-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M94.72,-12.64C114.29,-14.98 141.71,-18.26 165.82,-21.14" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="165.74,-22.89 170.91,-21.75 166.15,-19.42 165.74,-22.89" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>StringArgument</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringArgument" ns1:title="Represents a simple string argument." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="398,-37 305,-37 305,-18 398,-18 398,-37" />
+<ns0:text text-anchor="middle" x="351.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">StringArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>ValuedArgument-&gt;StringArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M269.22,-27.5C279.14,-27.5 289.62,-27.5 299.63,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="299.81,-29.25 304.81,-27.5 299.81,-25.75 299.81,-29.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

@@ -1,0 +1,44 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="348pt" height="27pt" viewBox="0.00 0.00 348.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritance82b47ab96d</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Executable</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Executable" ns1:title="Represent a CLI executable derived from :class:`Program`, that adds an abstraction of :class:`subprocess.Popen`." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="164,-19 94,-19 94,0 164,0 164,-19" />
+<ns0:text text-anchor="middle" x="129" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Executable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>OutputFilteredExecutable</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.OutputFilteredExecutable" ns1:title="OutputFilteredExecutable" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="340,-19 200,-19 200,0 340,0 340,-19" />
+<ns0:text text-anchor="middle" x="270" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">OutputFilteredExecutable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Executable-&gt;OutputFilteredExecutable</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M164,-9.5C173.4,-9.5 183.97,-9.5 194.7,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="194.98,-11.25 199.98,-9.5 194.98,-7.75 194.98,-11.25" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Program</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Program" ns1:title="Represent a simple command line interface (CLI) executable (program or script)." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="58,-19 0,-19 0,0 58,0 58,-19" />
+<ns0:text text-anchor="middle" x="29" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Program</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Program-&gt;Executable</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M58.08,-9.5C67.52,-9.5 78.24,-9.5 88.39,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="88.64,-11.25 93.64,-9.5 88.64,-7.75 88.64,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

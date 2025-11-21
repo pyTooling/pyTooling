@@ -1,0 +1,66 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+==================================
+pyTooling.Attributes.ArgParse.Flag
+==================================
+
+.. automodule:: pyTooling.Attributes.ArgParse.Flag
+
+
+.. currentmodule:: pyTooling.Attributes.ArgParse.Flag
+
+
+**Classes**
+
+- :py:class:`FlagArgument`:
+  Defines a switch argument like ``--help``.
+
+- :py:class:`ShortFlag`:
+  Defines a switch argument like ``--help``.
+
+- :py:class:`LongFlag`:
+  Defines a switch argument like ``--help``.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: FlagArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: FlagArgument
+      :parts: 1
+
+.. autoclass:: ShortFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortFlag
+      :parts: 1
+
+.. autoclass:: LongFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongFlag
+      :parts: 1

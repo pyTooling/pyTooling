@@ -1,0 +1,105 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=================
+pyTooling.Warning
+=================
+
+.. automodule:: pyTooling.Warning
+
+
+.. currentmodule:: pyTooling.Warning
+
+
+**Exceptions**
+
+- :py:exc:`UnhandledWarningException`:
+  Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions.
+
+- :py:exc:`UnhandledCriticalWarningException`:
+  Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions.
+
+- :py:exc:`UnhandledExceptionException`:
+  Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions.
+
+
+
+**Classes**
+
+- :py:class:`Warning`:
+  Common base class for all exceptions
+
+- :py:class:`CriticalWarning`:
+  Common base class for all exceptions
+
+- :py:class:`WarningCollector`:
+  A context manager to collect warnings within the call hierarchy.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: UnhandledWarningException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: UnhandledWarningException
+      :parts: 1
+
+.. autoexception:: UnhandledCriticalWarningException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: UnhandledCriticalWarningException
+      :parts: 1
+
+.. autoexception:: UnhandledExceptionException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: UnhandledExceptionException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Warning
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Warning
+      :parts: 1
+
+.. autoclass:: CriticalWarning
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CriticalWarning
+      :parts: 1
+
+.. autoclass:: WarningCollector
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WarningCollector
+      :parts: 1

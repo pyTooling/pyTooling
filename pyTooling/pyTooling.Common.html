@@ -1,0 +1,716 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Common &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Configuration" href="pyTooling.Configuration.html" />
+    <link rel="prev" title="pyTooling.Cartesian3D.Volumes" href="pyTooling.Cartesian3D.Volumes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Common</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.getFullyQualifiedName"><code class="docutils literal notranslate"><span class="pre">getFullyQualifiedName()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.getResourceFile"><code class="docutils literal notranslate"><span class="pre">getResourceFile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.readResourceFile"><code class="docutils literal notranslate"><span class="pre">readResourceFile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.isnestedclass"><code class="docutils literal notranslate"><span class="pre">isnestedclass()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.getsizeof"><code class="docutils literal notranslate"><span class="pre">getsizeof()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.count"><code class="docutils literal notranslate"><span class="pre">count()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.firstElement"><code class="docutils literal notranslate"><span class="pre">firstElement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.lastElement"><code class="docutils literal notranslate"><span class="pre">lastElement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.firstItem"><code class="docutils literal notranslate"><span class="pre">firstItem()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.lastItem"><code class="docutils literal notranslate"><span class="pre">lastItem()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.firstKey"><code class="docutils literal notranslate"><span class="pre">firstKey()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.firstValue"><code class="docutils literal notranslate"><span class="pre">firstValue()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.firstPair"><code class="docutils literal notranslate"><span class="pre">firstPair()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.mergedicts"><code class="docutils literal notranslate"><span class="pre">mergedicts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.zipdicts"><code class="docutils literal notranslate"><span class="pre">zipdicts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Common.ChangeDirectory"><code class="docutils literal notranslate"><span class="pre">ChangeDirectory</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Common.ChangeDirectory._oldWorkingDirectory"><code class="docutils literal notranslate"><span class="pre">ChangeDirectory._oldWorkingDirectory</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Common.ChangeDirectory.__init__"><code class="docutils literal notranslate"><span class="pre">ChangeDirectory.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Common.ChangeDirectory._newWorkingDirectory"><code class="docutils literal notranslate"><span class="pre">ChangeDirectory._newWorkingDirectory</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Common.ChangeDirectory.__enter__"><code class="docutils literal notranslate"><span class="pre">ChangeDirectory.__enter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Common.ChangeDirectory.__exit__"><code class="docutils literal notranslate"><span class="pre">ChangeDirectory.__exit__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Common</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Common.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Common">
+<span id="pytooling-common"></span><h1>pyTooling.Common<a class="headerlink" href="#module-pyTooling.Common" title="Link to this heading"></a></h1>
+<p>Common types, helper functions and classes.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Common/index.html#common"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Functions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Common.getFullyQualifiedName" title="pyTooling.Common.getFullyQualifiedName"><code class="xref py py-func docutils literal notranslate"><span class="pre">getFullyQualifiedName()</span></code></a>:
+Assemble the fully qualified name of a type.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.getResourceFile" title="pyTooling.Common.getResourceFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">getResourceFile()</span></code></a>:
+Compute the path to a file within a resource package.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.readResourceFile" title="pyTooling.Common.readResourceFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">readResourceFile()</span></code></a>:
+Read a text file resource from resource package.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.isnestedclass" title="pyTooling.Common.isnestedclass"><code class="xref py py-func docutils literal notranslate"><span class="pre">isnestedclass()</span></code></a>:
+Returns true, if the given class <code class="docutils literal notranslate"><span class="pre">cls</span></code> is a member on an outer class <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.getsizeof" title="pyTooling.Common.getsizeof"><code class="xref py py-func docutils literal notranslate"><span class="pre">getsizeof()</span></code></a>:
+Recursively calculate the “true” size of an object including complex members like <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.count" title="pyTooling.Common.count"><code class="xref py py-func docutils literal notranslate"><span class="pre">count()</span></code></a>:
+Returns the number of elements in an iterable.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.firstElement" title="pyTooling.Common.firstElement"><code class="xref py py-func docutils literal notranslate"><span class="pre">firstElement()</span></code></a>:
+Returns the first element from an indexable.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.lastElement" title="pyTooling.Common.lastElement"><code class="xref py py-func docutils literal notranslate"><span class="pre">lastElement()</span></code></a>:
+Returns the last element from an indexable.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.firstItem" title="pyTooling.Common.firstItem"><code class="xref py py-func docutils literal notranslate"><span class="pre">firstItem()</span></code></a>:
+Returns the first item from an iterable.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.lastItem" title="pyTooling.Common.lastItem"><code class="xref py py-func docutils literal notranslate"><span class="pre">lastItem()</span></code></a>:
+Returns the last item from an iterable.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.firstKey" title="pyTooling.Common.firstKey"><code class="xref py py-func docutils literal notranslate"><span class="pre">firstKey()</span></code></a>:
+Retrieves the first key from a dictionary’s keys.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.firstValue" title="pyTooling.Common.firstValue"><code class="xref py py-func docutils literal notranslate"><span class="pre">firstValue()</span></code></a>:
+Retrieves the first value from a dictionary’s values.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.firstPair" title="pyTooling.Common.firstPair"><code class="xref py py-func docutils literal notranslate"><span class="pre">firstPair()</span></code></a>:
+Retrieves the first key-value-pair from a dictionary.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.mergedicts" title="pyTooling.Common.mergedicts"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergedicts()</span></code></a>:
+Merge multiple dictionaries into a single new dictionary.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Common.zipdicts" title="pyTooling.Common.zipdicts"><code class="xref py py-func docutils literal notranslate"><span class="pre">zipdicts()</span></code></a>:
+Iterate multiple dictionaries simultaneously.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Common.ChangeDirectory" title="pyTooling.Common.ChangeDirectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChangeDirectory</span></code></a>:
+A context manager for changing a directory.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Functions</strong></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.getFullyQualifiedName">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">getFullyQualifiedName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#getFullyQualifiedName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.getFullyQualifiedName" title="Link to this definition"></a></dt>
+<dd><p>Assemble the fully qualified name of a type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – The object for with the fully qualified type is to be assembled.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fully qualified name of obj’s type.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.getResourceFile">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">getResourceFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#getResourceFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.getResourceFile" title="Link to this definition"></a></dt>
+<dd><p>Compute the path to a file within a resource package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.ModuleType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleType</span></code></a>]</span>) – The resource package.</p></li>
+<li><p><strong>filename</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The filename.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to the resource’s file.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" title="pyTooling.Exceptions.ToolingException"><strong>ToolingException</strong></a> – If resource file doesn’t exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.readResourceFile">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">readResourceFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#readResourceFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.readResourceFile" title="Link to this definition"></a></dt>
+<dd><p>Read a text file resource from resource package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.ModuleType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleType</span></code></a>]</span>) – The resource package.</p></li>
+<li><p><strong>filename</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The filename.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>File content.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.isnestedclass">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">isnestedclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#isnestedclass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.isnestedclass" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the given class <code class="docutils literal notranslate"><span class="pre">cls</span></code> is a member on an outer class <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cls</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a></span>) – Class to check, if it’s a nested class.</p></li>
+<li><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a></span>) – Outer class which is the outer scope of <code class="docutils literal notranslate"><span class="pre">cls</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if <code class="docutils literal notranslate"><span class="pre">cls</span></code> is a nested class within <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.getsizeof">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">getsizeof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#getsizeof"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.getsizeof" title="Link to this definition"></a></dt>
+<dd><p>Recursively calculate the “true” size of an object including complex members like <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Object to calculate the size of.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True size of an object in bytes.</p>
+</dd>
+</dl>
+<div class="admonition-background-information admonition">
+<p class="admonition-title">Background Information</p>
+<p>The function <a class="reference external" href="https://docs.python.org/3/library/sys.html#sys.getsizeof" title="(in Python v3.14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.getsizeof()</span></code></a> only returns the raw size of a Python object and doesn’t account for the
+overhead of e.g. <code class="docutils literal notranslate"><span class="pre">_dict__</span></code> to store dynamically allocated object members.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>The code is based on code snippets and ideas from:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://code.activestate.com/recipes/577504/">Compute Memory Footprint of an Object and its Contents</a> (MIT Lizense)</p></li>
+<li><p><a class="reference external" href="https://stackoverflow.com/a/30316760/3719459">How do I determine the size of an object in Python?</a> (CC BY-SA 4.0)</p></li>
+<li><p><a class="reference external" href="https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots">Python __slots__, slots, and object layout</a> (MIT Lizense)</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.count">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.count" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of elements in an iterable.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>After counting the iterable’s elements, the iterable is consumed.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>iterator</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a></span>) – Iterable to consume and count.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of elements in the iterable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.firstElement">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">firstElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indexable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#firstElement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.firstElement" title="Link to this definition"></a></dt>
+<dd><p>Returns the first element from an indexable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>indexable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>), <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]]</span>) – Indexable to get the first element from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>First element.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.lastElement">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">lastElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indexable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#lastElement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.lastElement" title="Link to this definition"></a></dt>
+<dd><p>Returns the last element from an indexable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>indexable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>), <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]]</span>) – Indexable to get the last element from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Last element.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.firstItem">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">firstItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#firstItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.firstItem" title="Link to this definition"></a></dt>
+<dd><p>Returns the first item from an iterable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>iterable</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)]</span>) – Iterable to get the first item from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>First item.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘iterable’ contains no items.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.lastItem">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">lastItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#lastItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.lastItem" title="Link to this definition"></a></dt>
+<dd><p>Returns the last item from an iterable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>iterable</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)]</span>) – Iterable to get the last item from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Element</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Last item.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘iterable’ contains no items.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.firstKey">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">firstKey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#firstKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.firstKey" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the first key from a dictionary’s keys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictKey1</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictValue1</span></code>)]</span>) – Dictionary to get the first key from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictKey1</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The first key.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘d’ is an empty dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.firstValue">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">firstValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#firstValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.firstValue" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the first value from a dictionary’s values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictKey1</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictValue1</span></code>)]</span>) – Dictionary to get the first value from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictValue1</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The first value.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘d’ is an empty dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.firstPair">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">firstPair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#firstPair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.firstPair" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the first key-value-pair from a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictKey1</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictValue1</span></code>)]</span>) – Dictionary to get the first key-value-pair from.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictKey1</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_DictValue1</span></code>)]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The first key-value-pair as tuple.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘d’ is an empty dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.mergedicts">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">mergedicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">dicts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#mergedicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.mergedicts" title="Link to this definition"></a></dt>
+<dd><p>Merge multiple dictionaries into a single new dictionary.</p>
+<p>If parameter <code class="docutils literal notranslate"><span class="pre">filter</span></code> isn’t <code class="docutils literal notranslate"><span class="pre">None</span></code>, then this function is applied to every element during the merge operation. If
+it returns true, the dictionary element will be present in the resulting dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dicts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></span>) – Tuple of dictionaries to merge as positional parameters.</p></li>
+<li><p><strong>filter</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Hashable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hashable</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]]</span>) – Optional filter function to apply to each dictionary element when merging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new dictionary containing the merge result.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If ‘mergedicts’ got called without any dictionaries parameters.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-in-python">How do I merge two dictionaries in a single expression in Python?</a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Common.zipdicts">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">zipdicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">dicts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#zipdicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.zipdicts" title="Link to this definition"></a></dt>
+<dd><p>Iterate multiple dictionaries simultaneously.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dicts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></span>) – Tuple of dictionaries to iterate as positional parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A generator returning a tuple containing the key and values of each dictionary in the order of
+given dictionaries.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If ‘zipdicts’ got called without any dictionary parameters.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If not all dictionaries have the same length.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>The code is based on code snippets and ideas from:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict">zipping together Python dicts</a> (MIT Lizense)</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Common.ChangeDirectory">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Common.</span></span><span class="sig-name descname"><span class="pre">ChangeDirectory</span></span><a class="reference internal" href="../_modules/pyTooling/Common.html#ChangeDirectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.ChangeDirectory" title="Link to this definition"></a></dt>
+<dd><p>A context manager for changing a directory.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-1064162c8f32f8af1477085679461aa393d198b5.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of ChangeDirectory</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Common.ChangeDirectory._oldWorkingDirectory">
+<span class="sig-name descname"><span class="pre">_oldWorkingDirectory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></em><a class="headerlink" href="#pyTooling.Common.ChangeDirectory._oldWorkingDirectory" title="Link to this definition"></a></dt>
+<dd><p>Working directory before directory change.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Common.ChangeDirectory.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#ChangeDirectory.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.ChangeDirectory.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes the context manager for changing directories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The new working directory to change into.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Common.ChangeDirectory._newWorkingDirectory">
+<span class="sig-name descname"><span class="pre">_newWorkingDirectory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></em><a class="headerlink" href="#pyTooling.Common.ChangeDirectory._newWorkingDirectory" title="Link to this definition"></a></dt>
+<dd><p>New working directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Common.ChangeDirectory.__enter__">
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#ChangeDirectory.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.ChangeDirectory.__enter__" title="Link to this definition"></a></dt>
+<dd><p>Enter the context and change the working directory to the parameter given in the class initializer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The relative path between old and new working directories.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Common.ChangeDirectory.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Common.html#ChangeDirectory.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Common.ChangeDirectory.__exit__" title="Link to this definition"></a></dt>
+<dd><p>Exit the context and revert any working directory changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exc_type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]]</span>) – Exception type</p></li>
+<li><p><strong>exc_val</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]</span>) – Exception instance</p></li>
+<li><p><strong>exc_tb</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/types.html#types.TracebackType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackType</span></code></a>]</span>) – Exception’s traceback.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Cartesian3D.Volumes.html" class="btn btn-neutral float-left" title="pyTooling.Cartesian3D.Volumes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Configuration.html" class="btn btn-neutral float-right" title="pyTooling.Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

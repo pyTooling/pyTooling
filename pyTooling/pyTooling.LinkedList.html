@@ -1,0 +1,943 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.LinkedList &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.MetaClasses" href="pyTooling.MetaClasses.html" />
+    <link rel="prev" title="pyTooling.Licensing" href="pyTooling.Licensing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.LinkedList</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException"><code class="docutils literal notranslate"><span class="pre">LinkedListException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException.__new__"><code class="docutils literal notranslate"><span class="pre">LinkedListException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException.__init__"><code class="docutils literal notranslate"><span class="pre">LinkedListException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.LinkedList.Node"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.__init__"><code class="docutils literal notranslate"><span class="pre">Node.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node._value"><code class="docutils literal notranslate"><span class="pre">Node._value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node._key"><code class="docutils literal notranslate"><span class="pre">Node._key</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node._nextNode"><code class="docutils literal notranslate"><span class="pre">Node._nextNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node._previousNode"><code class="docutils literal notranslate"><span class="pre">Node._previousNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node._linkedList"><code class="docutils literal notranslate"><span class="pre">Node._linkedList</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.List"><code class="docutils literal notranslate"><span class="pre">Node.List</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.PreviousNode"><code class="docutils literal notranslate"><span class="pre">Node.PreviousNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.NextNode"><code class="docutils literal notranslate"><span class="pre">Node.NextNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.Key"><code class="docutils literal notranslate"><span class="pre">Node.Key</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.Value"><code class="docutils literal notranslate"><span class="pre">Node.Value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.InsertNodeBefore"><code class="docutils literal notranslate"><span class="pre">Node.InsertNodeBefore()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.InsertNodeAfter"><code class="docutils literal notranslate"><span class="pre">Node.InsertNodeAfter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.Remove"><code class="docutils literal notranslate"><span class="pre">Node.Remove()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.IterateToFirst"><code class="docutils literal notranslate"><span class="pre">Node.IterateToFirst()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.IterateToLast"><code class="docutils literal notranslate"><span class="pre">Node.IterateToLast()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.Node.__repr__"><code class="docutils literal notranslate"><span class="pre">Node.__repr__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList"><code class="docutils literal notranslate"><span class="pre">LinkedList</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.__init__"><code class="docutils literal notranslate"><span class="pre">LinkedList.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList._firstNode"><code class="docutils literal notranslate"><span class="pre">LinkedList._firstNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList._lastNode"><code class="docutils literal notranslate"><span class="pre">LinkedList._lastNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList._count"><code class="docutils literal notranslate"><span class="pre">LinkedList._count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.IsEmpty"><code class="docutils literal notranslate"><span class="pre">LinkedList.IsEmpty</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.Count"><code class="docutils literal notranslate"><span class="pre">LinkedList.Count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.FirstNode"><code class="docutils literal notranslate"><span class="pre">LinkedList.FirstNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.LastNode"><code class="docutils literal notranslate"><span class="pre">LinkedList.LastNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.Clear"><code class="docutils literal notranslate"><span class="pre">LinkedList.Clear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.InsertBeforeFirst"><code class="docutils literal notranslate"><span class="pre">LinkedList.InsertBeforeFirst()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.InsertAfterLast"><code class="docutils literal notranslate"><span class="pre">LinkedList.InsertAfterLast()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.RemoveFirst"><code class="docutils literal notranslate"><span class="pre">LinkedList.RemoveFirst()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.RemoveLast"><code class="docutils literal notranslate"><span class="pre">LinkedList.RemoveLast()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.GetNodeByIndex"><code class="docutils literal notranslate"><span class="pre">LinkedList.GetNodeByIndex()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.Reverse"><code class="docutils literal notranslate"><span class="pre">LinkedList.Reverse()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.Sort"><code class="docutils literal notranslate"><span class="pre">LinkedList.Sort()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.IterateFromFirst"><code class="docutils literal notranslate"><span class="pre">LinkedList.IterateFromFirst()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.IterateFromLast"><code class="docutils literal notranslate"><span class="pre">LinkedList.IterateFromLast()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.ToList"><code class="docutils literal notranslate"><span class="pre">LinkedList.ToList()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.ToTuple"><code class="docutils literal notranslate"><span class="pre">LinkedList.ToTuple()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.__len__"><code class="docutils literal notranslate"><span class="pre">LinkedList.__len__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.__getitem__"><code class="docutils literal notranslate"><span class="pre">LinkedList.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.__setitem__"><code class="docutils literal notranslate"><span class="pre">LinkedList.__setitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.LinkedList.LinkedList.__delitem__"><code class="docutils literal notranslate"><span class="pre">LinkedList.__delitem__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.LinkedList</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.LinkedList.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.LinkedList">
+<span id="pytooling-linkedlist"></span><h1>pyTooling.LinkedList<a class="headerlink" href="#module-pyTooling.LinkedList" title="Link to this heading"></a></h1>
+<p>An object-oriented doubly linked-list data structure for Python.</p>
+<p><strong>Exceptions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">LinkedListException</span></code></a>:
+Base-exception of all exceptions raised by <a class="reference internal" href="#module-pyTooling.LinkedList" title="pyTooling.LinkedList"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.LinkedList</span></code></a>.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>:
+The node in an object-oriented doubly linked-list.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedList" title="pyTooling.LinkedList.LinkedList"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkedList</span></code></a>:
+An object-oriented doubly linked-list.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Exceptions</strong></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedListException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.LinkedList.</span></span><span class="sig-name descname"><span class="pre">LinkedListException</span></span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedListException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedListException" title="Link to this definition"></a></dt>
+<dd><p>Base-exception of all exceptions raised by <a class="reference internal" href="#module-pyTooling.LinkedList" title="pyTooling.LinkedList"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.LinkedList</span></code></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-10a0235d9dd7515f7e057eecd344806fc8872f7e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of LinkedListException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedListException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.LinkedList.LinkedListException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedListException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.LinkedList.LinkedListException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.LinkedList.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node" title="Link to this definition"></a></dt>
+<dd><p>The node in an object-oriented doubly linked-list.</p>
+<p>It contains a reference to the doubly linked list (<code class="xref py py-attr docutils literal notranslate"><span class="pre">_list</span></code>), the previous node (<code class="xref py py-attr docutils literal notranslate"><span class="pre">_previous</span></code>), the next
+node (<code class="xref py py-attr docutils literal notranslate"><span class="pre">_next</span></code>) and the data (<a class="reference internal" href="#pyTooling.LinkedList.Node._value" title="pyTooling.LinkedList.Node._value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_value</span></code></a>). Optionally, a key (<a class="reference internal" href="#pyTooling.LinkedList.Node._key" title="pyTooling.LinkedList.Node._key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_key</span></code></a>) can be stored for sorting
+purposes.</p>
+<p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">_previous</span></code> field of the <strong>first node</strong> in a doubly linked list is <code class="docutils literal notranslate"><span class="pre">None</span></code>. Similarly, the <code class="xref py py-attr docutils literal notranslate"><span class="pre">_next</span></code>
+field of the <strong>last node</strong> is <code class="docutils literal notranslate"><span class="pre">None</span></code>. <code class="docutils literal notranslate"><span class="pre">None</span></code> represents the end of the linked list when iterating it node-by-node.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-9fd045d8e675e12f125034f103c0dcd189f1292e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Node</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">previousNode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nextNode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize a linked list node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)</span>) – Value to store in the node.</p></li>
+<li><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>)]</span>) – Optional sortable key to store in the node.</p></li>
+<li><p><strong>previousNode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]]</span>) – Optional reference to the previous node.</p></li>
+<li><p><strong>nextNode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]]</span>) – Optional reference to the next node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘previous’ is not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘next’ is not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code><span class="pre">)</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node._value" title="Link to this definition"></a></dt>
+<dd><p>The value of the node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node._key">
+<span class="sig-name descname"><span class="pre">_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code><span class="pre">)]</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node._key" title="Link to this definition"></a></dt>
+<dd><p>The sortable key of the node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node._nextNode">
+<span class="sig-name descname"><span class="pre">_nextNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[Node[_NodeKey,</span> <span class="pre">_NodeValue]]</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node._nextNode" title="Link to this definition"></a></dt>
+<dd><p>Reference to the next node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node._previousNode">
+<span class="sig-name descname"><span class="pre">_previousNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[Node[_NodeKey,</span> <span class="pre">_NodeValue]]</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node._previousNode" title="Link to this definition"></a></dt>
+<dd><p>Reference to the previous node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node._linkedList">
+<span class="sig-name descname"><span class="pre">_linkedList</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[LinkedList[_NodeValue]]</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node._linkedList" title="Link to this definition"></a></dt>
+<dd><p>Reference to the doubly linked list instance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.List">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">List</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.LinkedList.LinkedList" title="pyTooling.LinkedList.LinkedList"><span class="pre">LinkedList</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_NodeValue</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.Node.List" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the linked list, this node belongs to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The linked list, this node is part of, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.PreviousNode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PreviousNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_NodeKey</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_NodeValue</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.Node.PreviousNode" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access nodes predecessor.</p>
+<p>This reference is <code class="docutils literal notranslate"><span class="pre">None</span></code> if the node is the first node in the doubly linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node before the current node or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.NextNode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NextNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_NodeKey</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_NodeValue</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.Node.NextNode" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access nodes successor.</p>
+<p>This reference is <code class="docutils literal notranslate"><span class="pre">None</span></code> if the node is the last node in the doubly linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node after the current node or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.Key">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">_NodeKey</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node.Key" title="Link to this definition"></a></dt>
+<dd><p>Property to access the node’s internal key.</p>
+<p>The key can be a scalar or a reference to an object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node’s key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">_NodeValue</span></em><a class="headerlink" href="#pyTooling.LinkedList.Node.Value" title="Link to this definition"></a></dt>
+<dd><p>Property to access the node’s internal data.</p>
+<p>The data can be a scalar or a reference to an object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node’s value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.InsertNodeBefore">
+<span class="sig-name descname"><span class="pre">InsertNodeBefore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.InsertNodeBefore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.InsertNodeBefore" title="Link to this definition"></a></dt>
+<dd><p>Insert a node before this node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span>) – Node to insert.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘node’ is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘node’ is not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If parameter ‘node’ is already part of another linked list.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.InsertNodeAfter">
+<span class="sig-name descname"><span class="pre">InsertNodeAfter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.InsertNodeAfter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.InsertNodeAfter" title="Link to this definition"></a></dt>
+<dd><p>Insert a node after this node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span>) – Node to insert.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘node’ is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘node’ is not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If parameter ‘node’ is already part of another linked list.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.Remove">
+<span class="sig-name descname"><span class="pre">Remove</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.Remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.Remove" title="Link to this definition"></a></dt>
+<dd><p>Remove this node from the linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.IterateToFirst">
+<span class="sig-name descname"><span class="pre">IterateToFirst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">includeSelf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.IterateToFirst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.IterateToFirst" title="Link to this definition"></a></dt>
+<dd><p>Return a generator iterating backward from this node to the list’s first node.</p>
+<p>Optionally, this node can be included into the generated sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>includeSelf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, include this node into the sequence, otherwise start at previous node.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of nodes towards the list’s first node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.IterateToLast">
+<span class="sig-name descname"><span class="pre">IterateToLast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">includeSelf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.IterateToLast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.IterateToLast" title="Link to this definition"></a></dt>
+<dd><p>Return a generator iterating forward from this node to the list’s last node.</p>
+<p>Optionally, this node can be included into the generated sequence by setting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>includeSelf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, include this node into the sequence, otherwise start at next node.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of nodes towards the list’s last node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.Node.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#Node.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.Node.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.LinkedList.</span></span><span class="sig-name descname"><span class="pre">LinkedList</span></span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList" title="Link to this definition"></a></dt>
+<dd><p>An object-oriented doubly linked-list.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-b442086cf57559706503f028070faab88de6e2ad.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of LinkedList</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize an empty linked list.</p>
+<p>Optionally, an iterable can be given to initialize the linked list. The order is preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nodes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]]]</span>) – Optional iterable to initialize the linked list.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘nodes’ is not an <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">iterable</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘nodes’ items are not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If parameter ‘nodes’ contains items which are already part of another linked list.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList._firstNode">
+<span class="sig-name descname"><span class="pre">_firstNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code><span class="pre">),</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code><span class="pre">)]]</span></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList._firstNode" title="Link to this definition"></a></dt>
+<dd><p>Reference to the first node of the linked list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList._lastNode">
+<span class="sig-name descname"><span class="pre">_lastNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code><span class="pre">),</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code><span class="pre">)]]</span></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList._lastNode" title="Link to this definition"></a></dt>
+<dd><p>Reference to the last node of the linked list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList._count">
+<span class="sig-name descname"><span class="pre">_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList._count" title="Link to this definition"></a></dt>
+<dd><p>Number of nodes in the linked list.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.IsEmpty">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsEmpty</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.IsEmpty" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the number of .</p>
+<p>This reference is <code class="docutils literal notranslate"><span class="pre">None</span></code> if the node is the last node in the doubly linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if linked list is empty, otherwise <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.Count">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.Count" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the number of nodes in the linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of nodes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.FirstNode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FirstNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_NodeKey</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_NodeValue</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.FirstNode" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the first node in the linked list.</p>
+<p>In case the list is empty, <code class="docutils literal notranslate"><span class="pre">None</span></code> is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>First node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.LastNode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LastNode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_NodeKey</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_NodeValue</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.LastNode" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the last node in the linked list.</p>
+<p>In case the list is empty, <code class="docutils literal notranslate"><span class="pre">None</span></code> is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Last node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.Clear">
+<span class="sig-name descname"><span class="pre">Clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.Clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.Clear" title="Link to this definition"></a></dt>
+<dd><p>Clear the linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.InsertBeforeFirst">
+<span class="sig-name descname"><span class="pre">InsertBeforeFirst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.InsertBeforeFirst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.InsertBeforeFirst" title="Link to this definition"></a></dt>
+<dd><p>Insert a node before the first node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span>) – Node to insert.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘node’ is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘node’ is not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If parameter ‘node’ is already part of another linked list.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.InsertAfterLast">
+<span class="sig-name descname"><span class="pre">InsertAfterLast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.InsertAfterLast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.InsertAfterLast" title="Link to this definition"></a></dt>
+<dd><p>Insert a node after the last node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span>) – Node to insert.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘node’ is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘node’ is not of type <a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If parameter ‘node’ is already part of another linked list.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.RemoveFirst">
+<span class="sig-name descname"><span class="pre">RemoveFirst</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.RemoveFirst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.RemoveFirst" title="Link to this definition"></a></dt>
+<dd><p>Remove first node from linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>First node.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If linked list is empty.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.RemoveLast">
+<span class="sig-name descname"><span class="pre">RemoveLast</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.RemoveLast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.RemoveLast" title="Link to this definition"></a></dt>
+<dd><p>Remove last node from linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Last node.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.LinkedList.LinkedListException" title="pyTooling.LinkedList.LinkedListException"><strong>LinkedListException</strong></a> – If linked list is empty.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.GetNodeByIndex">
+<span class="sig-name descname"><span class="pre">GetNodeByIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.GetNodeByIndex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.GetNodeByIndex" title="Link to this definition"></a></dt>
+<dd><p>Access a node in the linked list by position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Node position to access.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Node at the given position.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘position’ is out of range.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The algorithm starts iterating nodes from the shorter end.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.Reverse">
+<span class="sig-name descname"><span class="pre">Reverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.Reverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.Reverse" title="Link to this definition"></a></dt>
+<dd><p>Reverse the order of nodes in the linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.Sort">
+<span class="sig-name descname"><span class="pre">Sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.Sort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.Sort" title="Link to this definition"></a></dt>
+<dd><p>Sort the linked list in ascending or descending order.</p>
+<p>The sort operation is <strong>stable</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]</span>) – Optional function to access a user-defined key for sorting.</p></li>
+<li><p><strong>reverse</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Optional parameter, if <code class="docutils literal notranslate"><span class="pre">True</span></code> sort in descending order, otherwise in ascending order.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The linked list is converted to an array, which is sorted by quicksort using the builtin <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list.sort" title="(in Python v3.14)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sort()</span></code></a>.
+Afterward, the sorted array is used to reconstruct the linked list in requested order.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.IterateFromFirst">
+<span class="sig-name descname"><span class="pre">IterateFromFirst</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.IterateFromFirst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.IterateFromFirst" title="Link to this definition"></a></dt>
+<dd><p>Return a generator iterating forward from list’s first node to list’s last node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A sequence of nodes towards the list’s last node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.IterateFromLast">
+<span class="sig-name descname"><span class="pre">IterateFromLast</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.IterateFromLast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.IterateFromLast" title="Link to this definition"></a></dt>
+<dd><p>Return a generator iterating backward from list’s last node to list’s first node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A sequence of nodes towards the list’s first node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.ToList">
+<span class="sig-name descname"><span class="pre">ToList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.ToList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.ToList" title="Link to this definition"></a></dt>
+<dd><p>Convert the linked list to a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>.</p>
+<p>Optionally, the resulting list can be constructed in reverse order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reverse</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Optional parameter, if <code class="docutils literal notranslate"><span class="pre">True</span></code> return in reversed order, otherwise in normal order.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list (array) of this linked list’s values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.ToTuple">
+<span class="sig-name descname"><span class="pre">ToTuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.ToTuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.ToTuple" title="Link to this definition"></a></dt>
+<dd><p>Convert the linked list to a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.</p>
+<p>Optionally, the resulting tuple can be constructed in reverse order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reverse</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Optional parameter, if <code class="docutils literal notranslate"><span class="pre">True</span></code> return in reversed order, otherwise in normal order.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple of this linked list’s values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.__len__" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of nodes in the linked list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of nodes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Access a node’s value by its index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Node index to access.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Node’s value at the given index.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter ‘index’ is out of range.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The algorithm starts iterating nodes from the shorter end.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.__setitem__">
+<span class="sig-name descname"><span class="pre">__setitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.__setitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.__setitem__" title="Link to this definition"></a></dt>
+<dd><p>Set the value of node at the given position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Index of the node to modify.</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)</span>) – New value for the node’s value addressed by index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.LinkedList.LinkedList.__delitem__">
+<span class="sig-name descname"><span class="pre">__delitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/LinkedList.html#LinkedList.__delitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.LinkedList.LinkedList.__delitem__" title="Link to this definition"></a></dt>
+<dd><p>Remove a node at the given index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Index of the node to remove.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.LinkedList.Node" title="pyTooling.LinkedList.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeKey</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">_NodeValue</span></code>)]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Removed node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Licensing.html" class="btn btn-neutral float-left" title="pyTooling.Licensing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.MetaClasses.html" class="btn btn-neutral float-right" title="pyTooling.MetaClasses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

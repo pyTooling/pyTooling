@@ -1,0 +1,1336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.CLIAbstraction.Argument &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/icon.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+      <li class="breadcrumb-item active">pyTooling.CLIAbstraction.Argument</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.CLIAbstraction.Argument</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               ____ _     ___    _    _         _                  _   _              #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___| |   |_ _|  / \  | |__  ___| |_ _ __ __ _  ___| |_(_) ___  _ __   #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` || |   | |    | |  / _ \ | &#39;_ \/ __| __| &#39;__/ _` |/ __| __| |/ _ \| &#39;_ \  #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| || |___| |___ | | / ___ \| |_) \__ \ |_| | | (_| | (__| |_| | (_) | | | | #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____|_____|___/_/   \_\_.__/|___/\__|_|  \__,_|\___|\__|_|\___/|_| |_| #</span>
+<span class="c1"># |_|    |___/                          |___/                                                                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1"># Copyright 2014-2016 Technische Universität Dresden - Germany, Chair of VLSI-Design, Diagnostics and Architecture     #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module implements command line arguments without prefix character(s).</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w">     </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">  </span><span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Versioning] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">          </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Common</span><span class="w">              </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Versioning] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ValueT&quot;</span><span class="p">]</span>
+
+
+<span class="n">ValueT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;ValueT&quot;</span><span class="p">)</span>   <span class="c1">#: The type of value in a valued argument.</span>
+
+
+<div class="viewcode-block" id="CommandLineArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CommandLineArgument</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Base-class for all *Argument* classes.</span>
+
+<span class="sd">	An argument instance can be converted via ``AsArgument`` to a single string value or a sequence of string values</span>
+<span class="sd">	(tuple) usable e.g. with :class:`subprocess.Popen`. Each argument class implements at least one ``pattern`` parameter</span>
+<span class="sd">	to specify how argument are formatted.</span>
+
+<span class="sd">	There are multiple derived formats supporting:</span>
+
+<span class="sd">	* commands |br|</span>
+<span class="sd">	  |rarr| :mod:`~pyTooling.CLIAbstraction.Command`</span>
+<span class="sd">	* simple names (flags) |br|</span>
+<span class="sd">	  |rarr| :mod:`~pyTooling.CLIAbstraction.Flag`, :mod:`~pyTooling.CLIAbstraction.BooleanFlag`</span>
+<span class="sd">	* simple values (vlaued flags) |br|</span>
+<span class="sd">	  |rarr| :class:`~pyTooling.CLIAbstraction.Argument.StringArgument`, :class:`~pyTooling.CLIAbstraction.Argument.PathArgument`</span>
+<span class="sd">	* names and values |br|</span>
+<span class="sd">	  |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`, :mod:`~pyTooling.CLIAbstraction.OptionalValuedFlag`</span>
+<span class="sd">	* key-value pairs |br|</span>
+<span class="sd">	  |rarr| :mod:`~pyTooling.CLIAbstraction.NamedKeyValuePair`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_pattern</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;This method is called when a class is derived.</span>
+
+<span class="sd">		:param args: Any positional arguments.</span>
+<span class="sd">		:param pattern: This pattern is used to format an argument.</span>
+<span class="sd">		:param kwargs: Any keyword argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="bp">cls</span><span class="o">.</span><span class="n">_pattern</span> <span class="o">=</span> <span class="n">pattern</span>
+
+<div class="viewcode-block" id="CommandLineArgument.__new__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__new__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">CommandLineArgument</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is abstract.&quot;</span><span class="p">)</span>
+
+		<span class="c1"># TODO: not sure why parameters meant for __init__ do reach this level and distract __new__ from it&#39;s work</span>
+		<span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span></div>
+
+
+	<span class="c1"># TODO: Add property to read pattern</span>
+
+<div class="viewcode-block" id="CommandLineArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument">[docs]</a>
+	<span class="nd">@abstractmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>  <span class="c1"># type: ignore[empty-body]</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal name and value.</span>
+
+<span class="sd">		:return:                     Formatted argument.</span>
+<span class="sd">		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;AsArgument&#39; is an abstract method and must be implemented by a subclass.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__str__">[docs]</a>
+	<span class="nd">@abstractmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># type: ignore[empty-body]</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return:                     Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;__str__&#39; is an abstract method and must be implemented by a subclass.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineArgument.__repr__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__repr__">[docs]</a>
+	<span class="nd">@abstractmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># type: ignore[empty-body]</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		.. note:: By default, this method is identical to :meth:`__str__`.</span>
+
+<span class="sd">		:return:                     Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;__repr__&#39; is an abstract method and must be implemented by a subclass.&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ExecutableArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ExecutableArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExecutableArgument</span><span class="p">(</span><span class="n">CommandLineArgument</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Represents the executable.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_executable</span><span class="p">:</span> <span class="n">Path</span>
+
+<div class="viewcode-block" id="ExecutableArgument.__init__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executable</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a ExecutableArgument instance.</span>
+
+<span class="sd">		:param executable: Path to the executable.</span>
+<span class="sd">		:raises TypeError: If parameter &#39;executable&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;executable&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_executable</span> <span class="o">=</span> <span class="n">executable</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Executable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Get the internal path to the wrapped executable.</span>
+
+<span class="sd">		:return: Internal path to the executable.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_executable</span>
+
+	<span class="nd">@Executable</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Executable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the internal path to the wrapped executable.</span>
+
+<span class="sd">		:param value:      Value to path to the executable.</span>
+<span class="sd">		:raises TypeError: If value is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;value&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_executable</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="ExecutableArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ExecutableArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal path to the wrapped executable.</span>
+
+<span class="sd">		:return: Formatted argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_executable</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="ExecutableArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_executable</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span></div>
+
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+
+<div class="viewcode-block" id="DelimiterArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.DelimiterArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DelimiterArgument</span><span class="p">(</span><span class="n">CommandLineArgument</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Represents a delimiter symbol like ``--``.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		This method is called when a class is derived.</span>
+
+<span class="sd">		:param args:    Any positional arguments.</span>
+<span class="sd">		:param pattern: This pattern is used to format an argument. Default: ``&quot;--&quot;``.</span>
+<span class="sd">		:param kwargs:  Any keyword argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DelimiterArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.DelimiterArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern.</span>
+
+<span class="sd">		:return: Formatted argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pattern</span></div>
+
+
+<div class="viewcode-block" id="DelimiterArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_pattern</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span></div>
+
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+
+<div class="viewcode-block" id="NamedArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NamedArgument</span><span class="p">(</span><span class="n">CommandLineArgument</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Base-class for all command line arguments with a name.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		This method is called when a class is derived.</span>
+
+<span class="sd">		:param args:    Any positional arguments.</span>
+<span class="sd">		:param name:    Name of the argument.</span>
+<span class="sd">		:param pattern: This pattern is used to format an argument.</span>
+<span class="sd">		:param kwargs:  Any keyword argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="bp">cls</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+<div class="viewcode-block" id="NamedArgument.__new__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument.__new__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">NamedArgument</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is abstract.&quot;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Get the internal name.</span>
+
+<span class="sd">		:return: Internal name.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+<div class="viewcode-block" id="NamedArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal name.</span>
+
+<span class="sd">		:return:            Formatted argument.</span>
+<span class="sd">		:raises ValueError: If internal name is None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal value &#39;_name&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NamedArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span></div>
+
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+
+<div class="viewcode-block" id="ValuedArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValuedArgument</span><span class="p">(</span><span class="n">CommandLineArgument</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ValueT</span><span class="p">],</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Base-class for all command line arguments with a value.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_value</span><span class="p">:</span> <span class="n">ValueT</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		This method is called when a class is derived.</span>
+
+<span class="sd">		:param args:    Any positional arguments.</span>
+<span class="sd">		:param pattern: This pattern is used to format an argument.</span>
+<span class="sd">		:param kwargs:  Any keyword argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ValuedArgument.__init__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a ValuedArgument instance.</span>
+
+<span class="sd">		:param value:      Value to be stored internally.</span>
+<span class="sd">		:raises TypeError: If parameter &#39;value&#39; is None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;value&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValueT</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Get the internal value.</span>
+
+<span class="sd">		:return: Internal value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+	<span class="nd">@Value</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the internal value.</span>
+
+<span class="sd">		:param value:       Value to set.</span>
+<span class="sd">		:raises ValueError: If value to set is None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value to set is None.&quot;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="ValuedArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal value.</span>
+
+<span class="sd">		:return: Formatted argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ValuedArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span></div>
+
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NamedAndValuedArgument</span><span class="p">(</span><span class="n">NamedArgument</span><span class="p">,</span> <span class="n">ValuedArgument</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ValueT</span><span class="p">],</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">=</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Base-class for all command line arguments with a name and a value.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">=</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		This method is called when a class is derived.</span>
+
+<span class="sd">		:param args:    Any positional arguments.</span>
+<span class="sd">		:param name:    Name of the argument.</span>
+<span class="sd">		:param pattern: This pattern is used to format an argument.</span>
+<span class="sd">		:param kwargs:  Any keyword argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+		<span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span>
+		<span class="n">ValuedArgument</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">ValuedArgument</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal name and value.</span>
+
+<span class="sd">		:return:            Formatted argument.</span>
+<span class="sd">		:raises ValueError: If internal name is None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal value &#39;_name&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NamedTupledArgument</span><span class="p">(</span><span class="n">NamedArgument</span><span class="p">,</span> <span class="n">ValuedArgument</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ValueT</span><span class="p">],</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Class and base-class for all TupleFlag classes, which represents an argument with separate value.</span>
+
+<span class="sd">	A tuple argument is a command line argument followed by a separate value. Name and value are passed as two arguments</span>
+<span class="sd">	to the executable.</span>
+
+<span class="sd">	**Example: **</span>
+
+<span class="sd">	* `width 100``</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_valuePattern</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">valuePattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="bp">cls</span><span class="o">.</span><span class="n">_valuePattern</span> <span class="o">=</span> <span class="n">valuePattern</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">NamedTupledArgument</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is abstract.&quot;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">ValuedArgument</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+	<span class="c1"># TODO: Add property to read value pattern</span>
+
+	<span class="c1"># @property</span>
+	<span class="c1"># def ValuePattern(self) -&gt; str:</span>
+	<span class="c1"># 	if self._valuePattern is None:</span>
+	<span class="c1"># 		raise ValueError(f&quot;&quot;)  # XXX: add message</span>
+	<span class="c1">#</span>
+	<span class="c1"># 	return self._valuePattern</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a sequence of string representations with proper escaping using the matching</span>
+<span class="sd">		pattern based on the internal name and value.</span>
+
+<span class="sd">		:return:            Formatted argument as tuple of strings.</span>
+<span class="sd">		:raises ValueError: If internal name is None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal value &#39;_name&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="p">(</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_pattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">),</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_valuePattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+		<span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()])</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()])</span>
+
+
+<div class="viewcode-block" id="StringArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StringArgument</span><span class="p">(</span><span class="n">ValuedArgument</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Represents a simple string argument.</span>
+
+<span class="sd">	A list of strings is available as :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		This method is called when a class is derived.</span>
+
+<span class="sd">		:param args:    Any positional arguments.</span>
+<span class="sd">		:param pattern: This pattern is used to format an argument.</span>
+<span class="sd">		:param kwargs:  Any keyword argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="StringListArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringListArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StringListArgument</span><span class="p">(</span><span class="n">ValuedArgument</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Represents a list of string argument (:class:`~pyTooling.CLIAbstraction.Argument.StringArgument`).&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="StringListArgument.__init__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringListArgument.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a StringListArgument instance.</span>
+
+<span class="sd">		:param values:     An iterable of str instances.</span>
+<span class="sd">		:raises TypeError: If iterable parameter &#39;values&#39; contains elements not of type :class:`str`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;values&#39; contains elements which are not of type &#39;str&#39;.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Get the internal list of str objects.</span>
+
+<span class="sd">		:return: Reference to the internal list of str objects.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
+
+	<span class="nd">@Value</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Overwrite all elements in the internal list of str objects.</span>
+
+<span class="sd">		.. note:: The list object is not replaced, but cleared and then reused by adding the given elements in the iterable.</span>
+
+<span class="sd">		:param value:      List of str objects to set.</span>
+<span class="sd">		:raises TypeError: If value contains elements, which are not of type :class:`str`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+		<span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value contains elements which are not of type &#39;str&#39;.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StringListArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringListArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal value.</span>
+
+<span class="sd">		:return: Sequence of formatted arguments.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="StringListArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringListArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()])</span></div>
+
+
+<div class="viewcode-block" id="StringListArgument.__repr__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.StringListArgument.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()])</span></div>
+</div>
+
+
+
+<span class="c1"># TODO: Add option to class if path should be checked for existence</span>
+<div class="viewcode-block" id="PathArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PathArgument</span><span class="p">(</span><span class="n">CommandLineArgument</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Represents a single path argument.</span>
+
+<span class="sd">	A list of paths is available as :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1"># The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.</span>
+	<span class="n">_path</span><span class="p">:</span> <span class="n">Path</span>
+
+<div class="viewcode-block" id="PathArgument.__init__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a PathArgument instance.</span>
+
+<span class="sd">		:param path:       Path to a filesystem object.</span>
+<span class="sd">		:raises TypeError: If parameter &#39;path&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;path&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Get the internal path object.</span>
+
+<span class="sd">		:return: Internal path object.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+	<span class="nd">@Value</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the internal path object.</span>
+
+<span class="sd">		:param value:      Value to set.</span>
+<span class="sd">		:raises TypeError: If value is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Value is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="PathArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal value.</span>
+
+<span class="sd">		:return: Formatted argument.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="PathArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Argument formatted and enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span></div>
+
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+
+<div class="viewcode-block" id="PathListArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathListArgument">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PathListArgument</span><span class="p">(</span><span class="n">CommandLineArgument</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Represents a list of path arguments  (:class:`~pyTooling.CLIAbstraction.Argument.PathArgument`).</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1"># The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.</span>
+	<span class="n">_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PathListArgument.__init__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathListArgument.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a PathListArgument instance.</span>
+
+<span class="sd">		:param paths:      An iterable os Path instances.</span>
+<span class="sd">		:raises TypeError: If iterable parameter &#39;paths&#39; contains elements not of type :class:`~pathlib.Path`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_paths</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;paths&#39; contains elements which are not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Get the internal list of path objects.</span>
+
+<span class="sd">		:return: Reference to the internal list of path objects.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span>
+
+	<span class="nd">@Value</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">]):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Overwrite all elements in the internal list of path objects.</span>
+
+<span class="sd">		.. note:: The list object is not replaced, but cleared and then reused by adding the given elements in the iterable.</span>
+
+<span class="sd">		:param value:      List of path objects to set.</span>
+<span class="sd">		:raises TypeError: If value contains elements, which are not of type :class:`~pathlib.Path`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+		<span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value contains elements which are not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PathListArgument.AsArgument">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathListArgument.AsArgument">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AsArgument</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert this argument instance to a string representation with proper escaping using the matching pattern based on</span>
+<span class="sd">		the internal value.</span>
+
+<span class="sd">		:return: Sequence of formatted arguments.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="PathListArgument.__str__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathListArgument.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()])</span></div>
+
+
+<div class="viewcode-block" id="PathListArgument.__repr__">
+<a class="viewcode-back" href="../../../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathListArgument.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of this argument instance.</span>
+
+<span class="sd">		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AsArgument</span><span class="p">()])</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

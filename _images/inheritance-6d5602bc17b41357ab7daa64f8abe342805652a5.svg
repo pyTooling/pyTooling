@@ -1,0 +1,89 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="376pt" height="101pt" viewBox="0.00 0.00 376.00 101.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 97)">
+<ns0:title>inheritancefa92a4b038</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ArgParseAttribute</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.ArgParseAttribute" ns1:title="Base-class for all attributes to describe a :mod:`argparse`-base command line argument parser." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="197,-56 95,-56 95,-37 197,-37 197,-56" />
+<ns0:text text-anchor="middle" x="146" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ArgParseAttribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>CommandHandler</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandHandler" ns1:title="Marks a handler method as responsible for the given 'command'. This constructs" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="353,-93 248,-93 248,-74 353,-74 353,-93" />
+<ns0:text text-anchor="middle" x="300.5" y="-81" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandHandler</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ArgParseAttribute-&gt;CommandHandler</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M186.27,-56.03C207.36,-61.14 233.42,-67.47 255.23,-72.76" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="254.82,-74.46 260.1,-73.94 255.65,-71.06 254.82,-74.46" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="368,-56 233,-56 233,-37 368,-37 368,-56" />
+<ns0:text text-anchor="middle" x="300.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>ArgParseAttribute-&gt;CommandLineArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M197.36,-46.5C207.12,-46.5 217.53,-46.5 227.83,-46.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="227.88,-48.25 232.88,-46.5 227.88,-44.75 227.88,-48.25" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>DefaultHandler</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.DefaultHandler" ns1:title="Marks a handler method as *default* handler. This method is called if no sub-command is given." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="346,-19 255,-19 255,0 346,0 346,-19" />
+<ns0:text text-anchor="middle" x="300.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">DefaultHandler</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>ArgParseAttribute-&gt;DefaultHandler</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M186.27,-36.97C207.36,-31.86 233.42,-25.53 255.23,-20.24" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="255.65,-21.94 260.1,-19.06 254.82,-18.54 255.65,-21.94" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Attribute</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" ns1:title="Base-class for all pyTooling attributes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="59,-37 0,-37 0,-18 59,-18 59,-37" />
+<ns0:text text-anchor="middle" x="29.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Attribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Attribute-&gt;ArgParseAttribute</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M59.1,-32.25C68.43,-33.79 79.14,-35.57 89.75,-37.33" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="89.73,-39.1 94.95,-38.19 90.3,-35.65 89.73,-39.1" />
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>SimpleAttribute</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.SimpleAttribute" ns1:title="SimpleAttribute" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="192.5,-19 99.5,-19 99.5,0 192.5,0 192.5,-19" />
+<ns0:text text-anchor="middle" x="146" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">SimpleAttribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Attribute-&gt;SimpleAttribute</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M59.1,-23C69.76,-21.33 82.21,-19.37 94.27,-17.47" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="94.74,-19.17 99.41,-16.67 94.2,-15.71 94.74,-19.17" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

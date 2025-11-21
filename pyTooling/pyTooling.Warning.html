@@ -1,0 +1,687 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Warning &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Unittest Summary Report" href="../unittests/index.html" />
+    <link rel="prev" title="pyTooling.Versioning" href="pyTooling.Versioning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Warning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Warning.UnhandledWarningException"><code class="docutils literal notranslate"><span class="pre">UnhandledWarningException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.UnhandledWarningException.__new__"><code class="docutils literal notranslate"><span class="pre">UnhandledWarningException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.UnhandledWarningException.__init__"><code class="docutils literal notranslate"><span class="pre">UnhandledWarningException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Warning.UnhandledCriticalWarningException"><code class="docutils literal notranslate"><span class="pre">UnhandledCriticalWarningException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.UnhandledCriticalWarningException.__new__"><code class="docutils literal notranslate"><span class="pre">UnhandledCriticalWarningException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.UnhandledCriticalWarningException.__init__"><code class="docutils literal notranslate"><span class="pre">UnhandledCriticalWarningException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Warning.UnhandledExceptionException"><code class="docutils literal notranslate"><span class="pre">UnhandledExceptionException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.UnhandledExceptionException.__new__"><code class="docutils literal notranslate"><span class="pre">UnhandledExceptionException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.UnhandledExceptionException.__init__"><code class="docutils literal notranslate"><span class="pre">UnhandledExceptionException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Warning.Warning"><code class="docutils literal notranslate"><span class="pre">Warning</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__cause__"><code class="docutils literal notranslate"><span class="pre">Warning.__cause__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__context__"><code class="docutils literal notranslate"><span class="pre">Warning.__context__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__getattribute__"><code class="docutils literal notranslate"><span class="pre">Warning.__getattribute__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__init__"><code class="docutils literal notranslate"><span class="pre">Warning.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__new__"><code class="docutils literal notranslate"><span class="pre">Warning.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__reduce__"><code class="docutils literal notranslate"><span class="pre">Warning.__reduce__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__repr__"><code class="docutils literal notranslate"><span class="pre">Warning.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.__str__"><code class="docutils literal notranslate"><span class="pre">Warning.__str__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.add_note"><code class="docutils literal notranslate"><span class="pre">Warning.add_note()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.Warning.with_traceback"><code class="docutils literal notranslate"><span class="pre">Warning.with_traceback()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning"><code class="docutils literal notranslate"><span class="pre">CriticalWarning</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__cause__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__cause__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__context__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__context__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__getattribute__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__getattribute__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__init__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__new__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__reduce__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__reduce__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__repr__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.__str__"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.__str__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.add_note"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.add_note()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.CriticalWarning.with_traceback"><code class="docutils literal notranslate"><span class="pre">CriticalWarning.with_traceback()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Warning.WarningCollector"><code class="docutils literal notranslate"><span class="pre">WarningCollector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector.__init__"><code class="docutils literal notranslate"><span class="pre">WarningCollector.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector._parent"><code class="docutils literal notranslate"><span class="pre">WarningCollector._parent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector._warnings"><code class="docutils literal notranslate"><span class="pre">WarningCollector._warnings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector._handler"><code class="docutils literal notranslate"><span class="pre">WarningCollector._handler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector.__enter__"><code class="docutils literal notranslate"><span class="pre">WarningCollector.__enter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector.__exit__"><code class="docutils literal notranslate"><span class="pre">WarningCollector.__exit__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector.Warnings"><code class="docutils literal notranslate"><span class="pre">WarningCollector.Warnings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector.AddWarning"><code class="docutils literal notranslate"><span class="pre">WarningCollector.AddWarning()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Warning.WarningCollector.Raise"><code class="docutils literal notranslate"><span class="pre">WarningCollector.Raise()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Warning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Warning.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Warning">
+<span id="pytooling-warning"></span><h1>pyTooling.Warning<a class="headerlink" href="#module-pyTooling.Warning" title="Link to this heading"></a></h1>
+<p>A solution to send warnings like exceptions to a handler in the upper part of the call-stack.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Warning/index.html#warning"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Exceptions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Warning.UnhandledWarningException" title="pyTooling.Warning.UnhandledWarningException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnhandledWarningException</span></code></a>:
+Base exception derived from <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> for all custom exceptions.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Warning.UnhandledCriticalWarningException" title="pyTooling.Warning.UnhandledCriticalWarningException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnhandledCriticalWarningException</span></code></a>:
+Base exception derived from <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> for all custom exceptions.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Warning.UnhandledExceptionException" title="pyTooling.Warning.UnhandledExceptionException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnhandledExceptionException</span></code></a>:
+Base exception derived from <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> for all custom exceptions.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Warning.Warning" title="pyTooling.Warning.Warning"><code class="xref py py-class docutils literal notranslate"><span class="pre">Warning</span></code></a>:
+Common base class for all exceptions</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Warning.CriticalWarning" title="pyTooling.Warning.CriticalWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">CriticalWarning</span></code></a>:
+Common base class for all exceptions</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Warning.WarningCollector" title="pyTooling.Warning.WarningCollector"><code class="xref py py-class docutils literal notranslate"><span class="pre">WarningCollector</span></code></a>:
+A context manager to collect warnings within the call hierarchy.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Exceptions</strong></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledWarningException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Warning.</span></span><span class="sig-name descname"><span class="pre">UnhandledWarningException</span></span><a class="reference internal" href="../_modules/pyTooling/Warning.html#UnhandledWarningException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.UnhandledWarningException" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-976c9581bbcdc07ea6b2b9c4e5374836ec970a03.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of UnhandledWarningException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledWarningException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.UnhandledWarningException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledWarningException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.UnhandledWarningException.__init__" title="Link to this definition"></a></dt>
+<dd><p>ExceptionBase initializer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The exception message.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledCriticalWarningException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Warning.</span></span><span class="sig-name descname"><span class="pre">UnhandledCriticalWarningException</span></span><a class="reference internal" href="../_modules/pyTooling/Warning.html#UnhandledCriticalWarningException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.UnhandledCriticalWarningException" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-8f1384c495f288d65e516a69896b8ef0125de4b0.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of UnhandledCriticalWarningException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledCriticalWarningException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.UnhandledCriticalWarningException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledCriticalWarningException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.UnhandledCriticalWarningException.__init__" title="Link to this definition"></a></dt>
+<dd><p>ExceptionBase initializer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The exception message.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledExceptionException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Warning.</span></span><span class="sig-name descname"><span class="pre">UnhandledExceptionException</span></span><a class="reference internal" href="../_modules/pyTooling/Warning.html#UnhandledExceptionException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.UnhandledExceptionException" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-1f7657340ce35e5fef366549feb5baf0b4db0551.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of UnhandledExceptionException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledExceptionException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.UnhandledExceptionException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.UnhandledExceptionException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.UnhandledExceptionException.__init__" title="Link to this definition"></a></dt>
+<dd><p>ExceptionBase initializer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The exception message.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Warning.</span></span><span class="sig-name descname"><span class="pre">Warning</span></span><a class="reference internal" href="../_modules/pyTooling/Warning.html#Warning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.Warning" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-81a21f0a2c300566b729cd7f9294b607f7f6ea47.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Warning</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__cause__">
+<span class="sig-name descname"><span class="pre">__cause__</span></span><a class="headerlink" href="#pyTooling.Warning.Warning.__cause__" title="Link to this definition"></a></dt>
+<dd><p>exception cause</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__context__">
+<span class="sig-name descname"><span class="pre">__context__</span></span><a class="headerlink" href="#pyTooling.Warning.Warning.__context__" title="Link to this definition"></a></dt>
+<dd><p>exception context</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__getattribute__">
+<span class="sig-name descname"><span class="pre">__getattribute__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.__getattribute__" title="Link to this definition"></a></dt>
+<dd><p>Return getattr(self, name).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__reduce__">
+<span class="sig-name descname"><span class="pre">__reduce__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.__reduce__" title="Link to this definition"></a></dt>
+<dd><p>Helper for pickle.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.add_note">
+<span class="sig-name descname"><span class="pre">add_note</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.add_note" title="Link to this definition"></a></dt>
+<dd><p>Exception.add_note(note) –
+add a note to the exception</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.Warning.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.Warning.with_traceback" title="Link to this definition"></a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Warning.</span></span><span class="sig-name descname"><span class="pre">CriticalWarning</span></span><a class="reference internal" href="../_modules/pyTooling/Warning.html#CriticalWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.CriticalWarning" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-919668018ddbcdd1e1b9709f681abc582e4d5923.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of CriticalWarning</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__cause__">
+<span class="sig-name descname"><span class="pre">__cause__</span></span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__cause__" title="Link to this definition"></a></dt>
+<dd><p>exception cause</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__context__">
+<span class="sig-name descname"><span class="pre">__context__</span></span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__context__" title="Link to this definition"></a></dt>
+<dd><p>exception context</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__getattribute__">
+<span class="sig-name descname"><span class="pre">__getattribute__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__getattribute__" title="Link to this definition"></a></dt>
+<dd><p>Return getattr(self, name).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__reduce__">
+<span class="sig-name descname"><span class="pre">__reduce__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__reduce__" title="Link to this definition"></a></dt>
+<dd><p>Helper for pickle.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.add_note">
+<span class="sig-name descname"><span class="pre">add_note</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.add_note" title="Link to this definition"></a></dt>
+<dd><p>Exception.add_note(note) –
+add a note to the exception</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.CriticalWarning.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Warning.CriticalWarning.with_traceback" title="Link to this definition"></a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Warning.</span></span><span class="sig-name descname"><span class="pre">WarningCollector</span></span><a class="reference internal" href="../_modules/pyTooling/Warning.html#WarningCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.WarningCollector" title="Link to this definition"></a></dt>
+<dd><p>A context manager to collect warnings within the call hierarchy.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-edbc3b690a1ceeed66e4d52ca648241503ae7320.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of WarningCollector</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warnings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Warning.html#WarningCollector.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.WarningCollector.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a warning collector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>warnings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]]</span>) – An optional reference to a list of warnings, which can be modified (appended) by this warning
+collector. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, an internal list is created and can be referenced by the collector’s
+instance.</p></li>
+<li><p><strong>handler</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]]</span>) – An optional handler function, which processes the current warning and decides if a warning should
+be reraised as an exception.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If optional parameter ‘warnings’ is not of type list.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If optional parameter ‘handler’ is not a callable.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector._parent">
+<span class="sig-name descname"><span class="pre">_parent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="#pyTooling.Warning.WarningCollector" title="pyTooling.Warning.WarningCollector"><code class="xref py py-class docutils literal notranslate"><span class="pre">WarningCollector</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Warning.WarningCollector._parent" title="Link to this definition"></a></dt>
+<dd><p>Parent WarningCollector</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector._warnings">
+<span class="sig-name descname"><span class="pre">_warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Warning.WarningCollector._warnings" title="Link to this definition"></a></dt>
+<dd><p>List of collected warnings (and exceptions).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector._handler">
+<span class="sig-name descname"><span class="pre">_handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a><span class="pre">[[</span><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.Warning.WarningCollector._handler" title="Link to this definition"></a></dt>
+<dd><p>Optional handler function, which is called per collected warning.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector.__enter__">
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Warning.html#WarningCollector.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.WarningCollector.__enter__" title="Link to this definition"></a></dt>
+<dd><p>Enter the warning collector context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Warning.WarningCollector" title="pyTooling.Warning.WarningCollector"><code class="xref py py-class docutils literal notranslate"><span class="pre">WarningCollector</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The warning collector instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Warning.html#WarningCollector.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.WarningCollector.__exit__" title="Link to this definition"></a></dt>
+<dd><p>Exit the warning collector context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exc_type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]]</span>) – Exception type</p></li>
+<li><p><strong>exc_val</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]</span>) – Exception instance</p></li>
+<li><p><strong>exc_tb</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/types.html#types.TracebackType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackType</span></code></a>]</span>) – Exception’s traceback.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector.Warnings">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Warnings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><span class="pre">BaseException</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.Warning.WarningCollector.Warnings" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the list of collected warnings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of collected warnings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector.AddWarning">
+<span class="sig-name descname"><span class="pre">AddWarning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warning</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Warning.html#WarningCollector.AddWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.WarningCollector.AddWarning" title="Link to this definition"></a></dt>
+<dd><p>Add a warning to the list of warnings managed by this warning collector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>warning</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a></span>) – The warning to add to the collectors internal warning list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the warning collector has a local handler callback and this handler returned
+<code class="docutils literal notranslate"><span class="pre">True</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">warning</span></code> is None.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">warning</span></code> is not of type <a class="reference internal" href="#pyTooling.Warning.Warning" title="pyTooling.Warning.Warning"><code class="xref py py-class docutils literal notranslate"><span class="pre">Warning</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Warning.WarningCollector.Raise">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Raise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warning</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Warning.html#WarningCollector.Raise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Warning.WarningCollector.Raise" title="Link to this definition"></a></dt>
+<dd><p>Walk the callstack frame by frame upwards and search for the first warning collector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>warning</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a></span>) – Warning to send upwards in the call stack.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><strong>Exception</strong></a> – If warning should be converted to an exception.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><strong>Exception</strong></a> – If the call-stack walk couldn’t find a warning collector.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Versioning.html" class="btn btn-neutral float-left" title="pyTooling.Versioning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../unittests/index.html" class="btn btn-neutral float-right" title="Unittest Summary Report" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

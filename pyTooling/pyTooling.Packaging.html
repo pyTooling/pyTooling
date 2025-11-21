@@ -1,0 +1,942 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Packaging &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Platform" href="pyTooling.Platform.html" />
+    <link rel="prev" title="pyTooling.MetaClasses" href="pyTooling.MetaClasses.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Packaging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.STATUS"><code class="docutils literal notranslate"><span class="pre">STATUS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_LICENSE"><code class="docutils literal notranslate"><span class="pre">DEFAULT_LICENSE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PY_VERSIONS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PY_VERSIONS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_CLASSIFIERS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_CLASSIFIERS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_README"><code class="docutils literal notranslate"><span class="pre">DEFAULT_README</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_REQUIREMENTS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_REQUIREMENTS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_DOCUMENTATION_REQUIREMENTS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_TEST_REQUIREMENTS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PACKAGING_REQUIREMENTS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_VERSION_FILE"><code class="docutils literal notranslate"><span class="pre">DEFAULT_VERSION_FILE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.loadReadmeFile"><code class="docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.loadRequirementsFile"><code class="docutils literal notranslate"><span class="pre">loadRequirementsFile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.extractVersionInformation"><code class="docutils literal notranslate"><span class="pre">extractVersionInformation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage"><code class="docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.Readme"><code class="docutils literal notranslate"><span class="pre">Readme</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.Readme.__init__"><code class="docutils literal notranslate"><span class="pre">Readme.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.Readme._content"><code class="docutils literal notranslate"><span class="pre">Readme._content</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.Readme._mimeType"><code class="docutils literal notranslate"><span class="pre">Readme._mimeType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.Readme.Content"><code class="docutils literal notranslate"><span class="pre">Readme.Content</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.Readme.MimeType"><code class="docutils literal notranslate"><span class="pre">Readme.MimeType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation"><code class="docutils literal notranslate"><span class="pre">VersionInformation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.__init__"><code class="docutils literal notranslate"><span class="pre">VersionInformation.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._author"><code class="docutils literal notranslate"><span class="pre">VersionInformation._author</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._email"><code class="docutils literal notranslate"><span class="pre">VersionInformation._email</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._copyright"><code class="docutils literal notranslate"><span class="pre">VersionInformation._copyright</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._license"><code class="docutils literal notranslate"><span class="pre">VersionInformation._license</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._version"><code class="docutils literal notranslate"><span class="pre">VersionInformation._version</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._description"><code class="docutils literal notranslate"><span class="pre">VersionInformation._description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation._keywords"><code class="docutils literal notranslate"><span class="pre">VersionInformation._keywords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.Author"><code class="docutils literal notranslate"><span class="pre">VersionInformation.Author</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.Copyright"><code class="docutils literal notranslate"><span class="pre">VersionInformation.Copyright</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.Description"><code class="docutils literal notranslate"><span class="pre">VersionInformation.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.Email"><code class="docutils literal notranslate"><span class="pre">VersionInformation.Email</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.Keywords"><code class="docutils literal notranslate"><span class="pre">VersionInformation.Keywords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.License"><code class="docutils literal notranslate"><span class="pre">VersionInformation.License</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.Version"><code class="docutils literal notranslate"><span class="pre">VersionInformation.Version</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation.__str__"><code class="docutils literal notranslate"><span class="pre">VersionInformation.__str__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Packaging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Packaging.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Packaging">
+<span id="pytooling-packaging"></span><h1>pyTooling.Packaging<a class="headerlink" href="#module-pyTooling.Packaging" title="Link to this heading"></a></h1>
+<p>A set of helper functions to describe a Python package for setuptools.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Packaging.html#packaging"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Packaging.STATUS" title="pyTooling.Packaging.STATUS"><code class="xref py py-data docutils literal notranslate"><span class="pre">STATUS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_LICENSE" title="pyTooling.Packaging.DEFAULT_LICENSE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_LICENSE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PY_VERSIONS" title="pyTooling.Packaging.DEFAULT_PY_VERSIONS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_PY_VERSIONS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_CLASSIFIERS" title="pyTooling.Packaging.DEFAULT_CLASSIFIERS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_CLASSIFIERS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_README" title="pyTooling.Packaging.DEFAULT_README"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_README</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_REQUIREMENTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_REQUIREMENTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_DOCUMENTATION_REQUIREMENTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_TEST_REQUIREMENTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_PACKAGING_REQUIREMENTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DEFAULT_VERSION_FILE" title="pyTooling.Packaging.DEFAULT_VERSION_FILE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_VERSION_FILE</span></code></a></p></li>
+</ul>
+<p><strong>Functions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a>:
+Read the README file (e.g. in Markdown format), so it can be used as long description for the package.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.loadRequirementsFile" title="pyTooling.Packaging.loadRequirementsFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadRequirementsFile()</span></code></a>:
+Reads a <cite>requirements.txt</cite> file (recursively) and extracts all specified dependencies into an array.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.extractVersionInformation" title="pyTooling.Packaging.extractVersionInformation"><code class="xref py py-func docutils literal notranslate"><span class="pre">extractVersionInformation()</span></code></a>:
+Extract double underscored variables from a Python source file, so these can be used for single-sourcing information.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a>:
+Helper function to describe a Python package.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>:
+Helper function to describe a Python package when the source code is hosted on GitHub.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Packaging.Readme" title="pyTooling.Packaging.Readme"><code class="xref py py-class docutils literal notranslate"><span class="pre">Readme</span></code></a>:
+Encapsulates the READMEs file content and MIME type.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Packaging.VersionInformation" title="pyTooling.Packaging.VersionInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionInformation</span></code></a>:
+Encapsulates version information extracted from a Python source file.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Variables</strong></p>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.STATUS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">STATUS</span></span><a class="headerlink" href="#pyTooling.Packaging.STATUS" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of supported development status values.</p>
+<p>The mapping’s value will be appended to <a href="#id1"><span class="problematic" id="id2">``</span></a>Development Status :: `` to form a package classifier.</p>
+<ol class="arabic simple">
+<li><p>Planning</p></li>
+<li><p>Pre-Alpha</p></li>
+<li><p>Alpha</p></li>
+<li><p>Beta</p></li>
+<li><p>Production/Stable</p></li>
+<li><p>Mature</p></li>
+<li><p>Inactive</p></li>
+</ol>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://pypi.org/classifiers/">Python package classifiers</a></p>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{&#39;alpha&#39;: &#39;3 - Alpha&#39;,
+ &#39;beta&#39;: &#39;4 - Beta&#39;,
+ &#39;inactive&#39;: &#39;7 - Inactive&#39;,
+ &#39;mature&#39;: &#39;6 - Mature&#39;,
+ &#39;planning&#39;: &#39;1 - Planning&#39;,
+ &#39;pre-alpha&#39;: &#39;2 - Pre-Alpha&#39;,
+ &#39;stable&#39;: &#39;5 - Production/Stable&#39;}
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_LICENSE">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_LICENSE</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_LICENSE" title="Link to this definition"></a></dt>
+<dd><p>Default license (Apache License, 2.0) used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">license</span></code> is not assigned.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Apache-2.0
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_PY_VERSIONS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_PY_VERSIONS</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_PY_VERSIONS" title="Link to this definition"></a></dt>
+<dd><p>A tuple of supported CPython versions used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">pythonVersions</span></code> is not assigned.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://devguide.python.org/versions/">Status of Python versions</a></p>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(&#39;3.10&#39;, &#39;3.11&#39;, &#39;3.12&#39;, &#39;3.13&#39;, &#39;3.14&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_CLASSIFIERS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_CLASSIFIERS</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_CLASSIFIERS" title="Link to this definition"></a></dt>
+<dd><p>A list of Python package classifiers used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">classifiers</span></code> is not assigned.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://pypi.org/classifiers/">Python package classifiers</a></p>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(&#39;Operating System :: OS Independent&#39;,
+ &#39;Intended Audience :: Developers&#39;,
+ &#39;Topic :: Utilities&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_README">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_README</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_README" title="Link to this definition"></a></dt>
+<dd><p>Path to the README file used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">readmeFile</span></code> is not assigned.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;README.md&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_REQUIREMENTS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_REQUIREMENTS</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_REQUIREMENTS" title="Link to this definition"></a></dt>
+<dd><p>Path to the requirements file used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">requirementsFile</span></code> is not assigned.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;requirements.txt&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_DOCUMENTATION_REQUIREMENTS</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS" title="Link to this definition"></a></dt>
+<dd><p>Path to the README requirements file used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">documentationRequirementsFile</span></code> is not assigned.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;doc/requirements.txt&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_TEST_REQUIREMENTS</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS" title="Link to this definition"></a></dt>
+<dd><p>Path to the README requirements file used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">unittestRequirementsFile</span></code> is not assigned.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;tests/requirements.txt&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_PACKAGING_REQUIREMENTS</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS" title="Link to this definition"></a></dt>
+<dd><p>Path to the package requirements file used by <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a> and <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackageHostedOnGitHub()</span></code></a>
+if parameter <code class="docutils literal notranslate"><span class="pre">packagingRequirementsFile</span></code> is not assigned.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;build/requirements.txt&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DEFAULT_VERSION_FILE">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_VERSION_FILE</span></span><a class="headerlink" href="#pyTooling.Packaging.DEFAULT_VERSION_FILE" title="Link to this definition"></a></dt>
+<dd><p>Path subclass for non-Windows systems.</p>
+<p>On a POSIX system, instantiating a Path should return this object.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;__init__.py&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Functions</strong></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Packaging.loadReadmeFile">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">loadReadmeFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">readmeFile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#loadReadmeFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.loadReadmeFile" title="Link to this definition"></a></dt>
+<dd><p>Read the README file (e.g. in Markdown format), so it can be used as long description for the package.</p>
+<p>Supported formats:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Plain text (<code class="docutils literal notranslate"><span class="pre">*.txt</span></code>)</p></li>
+<li><p>Markdown (<code class="docutils literal notranslate"><span class="pre">*.md</span></code>)</p></li>
+<li><p>ReStructured Text (<code class="docutils literal notranslate"><span class="pre">*.rst</span></code>)</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>readmeFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to the <cite>README</cite> file as an instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Packaging.Readme" title="pyTooling.Packaging.Readme"><code class="xref py py-class docutils literal notranslate"><span class="pre">Readme</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the file content and the MIME type.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘readmeFile’ is not of type ‘Path’.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If README file has an unsupported format.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If README file does not exist.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Packaging.loadRequirementsFile">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">loadRequirementsFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requirementsFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#loadRequirementsFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.loadRequirementsFile" title="Link to this definition"></a></dt>
+<dd><p>Reads a <cite>requirements.txt</cite> file (recursively) and extracts all specified dependencies into an array.</p>
+<p>Special dependency entries like Git repository references are translates to match the syntax expected by setuptools.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Duplicates should be removed by converting the result to a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> and back to a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">requirements</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">loadRequirementsFile</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>requirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to the <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file as an instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>.</p></li>
+<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, print found dependencies and recursion.</p></li>
+<li><p><strong>indent</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of dependencies.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘requirementsFile’ is not of type ‘Path’.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If requirements file does not exist.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Packaging.extractVersionInformation">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">extractVersionInformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sourceFile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#extractVersionInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.extractVersionInformation" title="Link to this definition"></a></dt>
+<dd><p>Extract double underscored variables from a Python source file, so these can be used for single-sourcing information.</p>
+<p>Supported variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">__author__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__copyright__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__email__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__keywords__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__license__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__version__</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sourceFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to a Python source file as an instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Packaging.VersionInformation" title="pyTooling.Packaging.VersionInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionInformation</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An instance of <a class="reference internal" href="#pyTooling.Packaging.VersionInformation" title="pyTooling.Packaging.VersionInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionInformation</span></code></a> with gathered variable contents.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘sourceFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DescribePythonPackage">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DescribePythonPackage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packageName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectURL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceCodeURL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documentationURL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issueTrackerCodeURL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Apache</span> <span class="pre">-</span> <span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readmeFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('README.md')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documentationRequirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('doc/requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unittestRequirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('tests/requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packagingRequirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('build/requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additionalRequirements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceFileWithVersion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('__init__.py')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifiers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('Operating</span> <span class="pre">System</span> <span class="pre">::</span> <span class="pre">OS</span> <span class="pre">Independent',</span> <span class="pre">'Intended</span> <span class="pre">Audience</span> <span class="pre">::</span> <span class="pre">Developers',</span> <span class="pre">'Topic</span> <span class="pre">::</span> <span class="pre">Utilities')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">developmentStatus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'stable'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pythonVersions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('3.10',</span> <span class="pre">'3.11',</span> <span class="pre">'3.12',</span> <span class="pre">'3.13',</span> <span class="pre">'3.14')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consoleScripts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataFiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#DescribePythonPackage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.DescribePythonPackage" title="Link to this definition"></a></dt>
+<dd><p>Helper function to describe a Python package.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Some information will be gathered automatically from well-known files.</p>
+<p>Examples: <code class="docutils literal notranslate"><span class="pre">README.md</span></code>, <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>, <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code></p>
+</div>
+<aside class="topic">
+<p class="topic-title">Handling of namespace packages</p>
+<p>If parameter <code class="docutils literal notranslate"><span class="pre">packageName</span></code> contains a dot, a namespace package is assumed. Then
+<code class="xref py py-func docutils literal notranslate"><span class="pre">setuptools.find_namespace_packages()</span></code> is used to discover package files. <br />
+Otherwise, the package is considered a normal package and <code class="xref py py-func docutils literal notranslate"><span class="pre">setuptools.find_packages()</span></code> is used.</p>
+<p>In both cases, the following packages (directories) are excluded from search:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">build.*</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dist</span></code>, <code class="docutils literal notranslate"><span class="pre">dist.*</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">doc</span></code>, <code class="docutils literal notranslate"><span class="pre">doc.*</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">tests.*</span></code></p></li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title">Handling of minimal Python version</p>
+<p>The minimal required Python version is selected from parameter <code class="docutils literal notranslate"><span class="pre">pythonVersions</span></code>.</p>
+</aside>
+<aside class="topic">
+<p class="topic-title">Handling of dunder variables</p>
+<p>A Python source file specified by parameter <code class="docutils literal notranslate"><span class="pre">sourceFileWithVersion</span></code> will be analyzed with Pythons parser and the
+resulting AST will be searched for the following dunder variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">__author__</span></code>: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__copyright__</span></code>: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__email__</span></code>: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__keywords__</span></code>: <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Iterable`[:class:`str</span></code>]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__license__</span></code>: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__version__</span></code>: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></li>
+</ul>
+</aside>
+<p>The gathered information be used to add further mappings in the result dictionary.</p>
+<aside class="topic">
+<p class="topic-title">Handling of package classifiers</p>
+<p>To reduce redundantly provided parameters to this function (e.g. supported <code class="docutils literal notranslate"><span class="pre">pythonVersions</span></code>), only additional
+classifiers should be provided via parameter <code class="docutils literal notranslate"><span class="pre">classifiers</span></code>. The supported Python versions will be implicitly
+converted to package classifiers, so no need to specify them in parameter <code class="docutils literal notranslate"><span class="pre">classifiers</span></code>.</p>
+<p>The following classifiers are implicitly handled:</p>
+<dl class="simple">
+<dt>license</dt><dd><p>The license specified by parameter <code class="docutils literal notranslate"><span class="pre">license</span></code> is translated into a classifier. <br />
+See also <a class="reference internal" href="pyTooling.Licensing.html#pyTooling.Licensing.License.PythonClassifier" title="pyTooling.Licensing.License.PythonClassifier"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyTooling.Licensing.License.PythonClassifier()</span></code></a></p>
+</dd>
+<dt>Python versions</dt><dd><p>Always add <code class="docutils literal notranslate"><span class="pre">Programming</span> <span class="pre">Language</span> <span class="pre">::</span> <span class="pre">Python</span> <span class="pre">::</span> <span class="pre">3</span> <span class="pre">::</span> <span class="pre">Only</span></code>. <br />
+For each value in <code class="docutils literal notranslate"><span class="pre">pythonVersions</span></code>, one <code class="docutils literal notranslate"><span class="pre">Programming</span> <span class="pre">Language</span> <span class="pre">::</span> <span class="pre">Python</span> <span class="pre">::</span> <span class="pre">Major.Minor</span></code> is added.</p>
+</dd>
+<dt>Development status</dt><dd><p>The development status specified by parameter <code class="docutils literal notranslate"><span class="pre">developmentStatus</span></code> is translated to a classifier and added.</p>
+</dd>
+</dl>
+</aside>
+<aside class="topic">
+<p class="topic-title">Handling of extra requirements</p>
+<p>If additional requirement files are provided, e.g. requirements to build the documentation, then <em>extra</em>
+requirements are defined. These can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">packageName[extraName]</span></code>. If so, an extra called
+<code class="docutils literal notranslate"><span class="pre">all</span></code> is added, so developers can install all dependencies needed for package development.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">doc</span></code></dt><dd><p>If parameter <code class="docutils literal notranslate"><span class="pre">documentationRequirementsFile</span></code> is present, an extra requirements called <code class="docutils literal notranslate"><span class="pre">doc</span></code> will be defined.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test</span></code></dt><dd><p>If parameter <code class="docutils literal notranslate"><span class="pre">unittestRequirementsFile</span></code> is present, an extra requirements called <code class="docutils literal notranslate"><span class="pre">test</span></code> will be defined.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">build</span></code></dt><dd><p>If parameter <code class="docutils literal notranslate"><span class="pre">packagingRequirementsFile</span></code> is present, an extra requirements called <code class="docutils literal notranslate"><span class="pre">build</span></code> will be defined.</p>
+</dd>
+<dt>User-defined</dt><dd><p>If parameter <code class="docutils literal notranslate"><span class="pre">additionalRequirements</span></code> is present, an extra requirements for every mapping entry in the
+dictionary will be added.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">all</span></code></dt><dd><p>If any of the above was added, an additional extra requirement called <code class="docutils literal notranslate"><span class="pre">all</span></code> will be added, summarizing all
+extra requirements.</p>
+</dd>
+</dl>
+</aside>
+<aside class="topic">
+<p class="topic-title">Handling of keywords</p>
+<p>If parameter <code class="docutils literal notranslate"><span class="pre">keywords</span></code> is not specified, the dunder variable <code class="docutils literal notranslate"><span class="pre">__keywords__</span></code> from <code class="docutils literal notranslate"><span class="pre">sourceFileWithVersion</span></code>
+will be used. Otherwise, the content of the parameter, if not None or empty.</p>
+</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>packageName</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Name of the Python package.</p></li>
+<li><p><strong>description</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Short description of the package. The long description will be read from README file.</p></li>
+<li><p><strong>projectURL</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – URL to the Python project.</p></li>
+<li><p><strong>sourceCodeURL</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – URL to the Python source code.</p></li>
+<li><p><strong>documentationURL</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – URL to the package’s documentation.</p></li>
+<li><p><strong>issueTrackerCodeURL</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – URL to the projects issue tracker (ticket system).</p></li>
+<li><p><strong>keywords</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A list of keywords.</p></li>
+<li><p><strong>license</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Licensing.html#pyTooling.Licensing.License" title="pyTooling.Licensing.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a></span>) – The package’s license. (Default: <code class="docutils literal notranslate"><span class="pre">Apache</span> <span class="pre">License,</span> <span class="pre">2.0</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_LICENSE" title="pyTooling.Packaging.DEFAULT_LICENSE"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_LICENSE</span></code></a>)</p></li>
+<li><p><strong>readmeFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the README file. (Default: <code class="docutils literal notranslate"><span class="pre">README.md</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_README" title="pyTooling.Packaging.DEFAULT_README"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_README</span></code></a>)</p></li>
+<li><p><strong>requirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file. (Default: <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>documentationRequirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file for documentation. (Default: <code class="docutils literal notranslate"><span class="pre">doc/requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_DOCUMENTATION_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>unittestRequirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file for unit tests. (Default: <code class="docutils literal notranslate"><span class="pre">tests/requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_TEST_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>packagingRequirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file for packaging. (Default: <code class="docutils literal notranslate"><span class="pre">build/requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_PACKAGING_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>additionalRequirements</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – A dictionary of a lists with additional requirements. (default: None)</p></li>
+<li><p><strong>sourceFileWithVersion</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – The path to the project’s source file containing dunder variables like <code class="docutils literal notranslate"><span class="pre">__version__</span></code>. (Default: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_VERSION_FILE" title="pyTooling.Packaging.DEFAULT_VERSION_FILE"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_VERSION_FILE</span></code></a>)</p></li>
+<li><p><strong>classifiers</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A list of package classifiers. (Default: 3 classifiers, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_CLASSIFIERS" title="pyTooling.Packaging.DEFAULT_CLASSIFIERS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_CLASSIFIERS</span></code></a>)</p></li>
+<li><p><strong>developmentStatus</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Development status of the package. (Default: stable, see <a class="reference internal" href="#pyTooling.Packaging.STATUS" title="pyTooling.Packaging.STATUS"><code class="xref py py-const docutils literal notranslate"><span class="pre">STATUS</span></code></a> for supported status values)</p></li>
+<li><p><strong>pythonVersions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A list of supported Python 3 version. (Default: all currently maintained CPython versions, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PY_VERSIONS" title="pyTooling.Packaging.DEFAULT_PY_VERSIONS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_PY_VERSIONS</span></code></a>)</p></li>
+<li><p><strong>consoleScripts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A dictionary mapping command line names to entry points. (Default: None)</p></li>
+<li><p><strong>dataFiles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – A dictionary mapping package names to lists of additional data files.</p></li>
+<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Enable extended outputs for debugging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary suitable for <code class="xref py py-func docutils literal notranslate"><span class="pre">setuptools.setup()</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" title="pyTooling.Exceptions.ToolingException"><strong>ToolingException</strong></a> – If package ‘setuptools’ is not available.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘readmeFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If README file doesn’t exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘requirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If requirements file doesn’t exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘documentationRequirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘unittestRequirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘packagingRequirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘sourceFileWithVersion’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If package file with dunder variables doesn’t exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘license’ is not of type <a class="reference internal" href="pyTooling.Licensing.html#pyTooling.Licensing.License" title="pyTooling.Licensing.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If developmentStatus uses an unsupported value. (See <a class="reference internal" href="#pyTooling.Packaging.STATUS" title="pyTooling.Packaging.STATUS"><code class="xref py py-const docutils literal notranslate"><span class="pre">STATUS</span></code></a>)</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If the content type of the README file is not supported. (See <a class="reference internal" href="#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a>)</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the README file doesn’t exist. (See <a class="reference internal" href="#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a>)</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the requirements file doesn’t exist. (See <a class="reference internal" href="#pyTooling.Packaging.loadRequirementsFile" title="pyTooling.Packaging.loadRequirementsFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadRequirementsFile()</span></code></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">DescribePythonPackageHostedOnGitHub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packageName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gitHubNamespace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gitHubRepository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectURL</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Apache</span> <span class="pre">-</span> <span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readmeFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('README.md')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documentationRequirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('doc/requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unittestRequirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('tests/requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packagingRequirementsFile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('build/requirements.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additionalRequirements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceFileWithVersion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('__init__.py')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifiers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('Operating</span> <span class="pre">System</span> <span class="pre">::</span> <span class="pre">OS</span> <span class="pre">Independent',</span> <span class="pre">'Intended</span> <span class="pre">Audience</span> <span class="pre">::</span> <span class="pre">Developers',</span> <span class="pre">'Topic</span> <span class="pre">::</span> <span class="pre">Utilities')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">developmentStatus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'stable'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pythonVersions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('3.10',</span> <span class="pre">'3.11',</span> <span class="pre">'3.12',</span> <span class="pre">'3.13',</span> <span class="pre">'3.14')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consoleScripts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataFiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#DescribePythonPackageHostedOnGitHub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="Link to this definition"></a></dt>
+<dd><p>Helper function to describe a Python package when the source code is hosted on GitHub.</p>
+<p>This is a wrapper for <a class="reference internal" href="#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">DescribePythonPackage()</span></code></a>, because some parameters can be simplified by knowing the GitHub
+namespace and repository name: issue tracker URL, source code URL, …</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>packageName</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Name of the Python package.</p></li>
+<li><p><strong>description</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Short description of the package. The long description will be read from README file.</p></li>
+<li><p><strong>gitHubNamespace</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Name of the GitHub namespace (organization or user).</p></li>
+<li><p><strong>gitHubRepository</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Name of the GitHub repository.</p></li>
+<li><p><strong>projectURL</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – URL to the Python project.</p></li>
+<li><p><strong>keywords</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A list of keywords.</p></li>
+<li><p><strong>license</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Licensing.html#pyTooling.Licensing.License" title="pyTooling.Licensing.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a></span>) – The package’s license. (Default: <code class="docutils literal notranslate"><span class="pre">Apache</span> <span class="pre">License,</span> <span class="pre">2.0</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_LICENSE" title="pyTooling.Packaging.DEFAULT_LICENSE"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_LICENSE</span></code></a>)</p></li>
+<li><p><strong>readmeFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the README file. (Default: <code class="docutils literal notranslate"><span class="pre">README.md</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_README" title="pyTooling.Packaging.DEFAULT_README"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_README</span></code></a>)</p></li>
+<li><p><strong>requirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file. (Default: <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>documentationRequirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file for documentation. (Default: <code class="docutils literal notranslate"><span class="pre">doc/requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_DOCUMENTATION_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_DOCUMENTATION_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>unittestRequirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file for unit tests. (Default: <code class="docutils literal notranslate"><span class="pre">tests/requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_TEST_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_TEST_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>packagingRequirementsFile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s requirements file for packaging. (Default: <code class="docutils literal notranslate"><span class="pre">build/requirements.txt</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS" title="pyTooling.Packaging.DEFAULT_PACKAGING_REQUIREMENTS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_PACKAGING_REQUIREMENTS</span></code></a>)</p></li>
+<li><p><strong>additionalRequirements</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – A dictionary of a lists with additional requirements. (default: None)</p></li>
+<li><p><strong>sourceFileWithVersion</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path to the project’s source file containing dunder variables like <code class="docutils literal notranslate"><span class="pre">__version__</span></code>. (Default: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_VERSION_FILE" title="pyTooling.Packaging.DEFAULT_VERSION_FILE"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_VERSION_FILE</span></code></a>)</p></li>
+<li><p><strong>classifiers</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A list of package classifiers. (Default: 3 classifiers, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_CLASSIFIERS" title="pyTooling.Packaging.DEFAULT_CLASSIFIERS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_CLASSIFIERS</span></code></a>)</p></li>
+<li><p><strong>developmentStatus</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Development status of the package. (Default: stable, see <a class="reference internal" href="#pyTooling.Packaging.STATUS" title="pyTooling.Packaging.STATUS"><code class="xref py py-const docutils literal notranslate"><span class="pre">STATUS</span></code></a> for supported status values)</p></li>
+<li><p><strong>pythonVersions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A list of supported Python 3 version. (Default: all currently maintained CPython versions, see <a class="reference internal" href="#pyTooling.Packaging.DEFAULT_PY_VERSIONS" title="pyTooling.Packaging.DEFAULT_PY_VERSIONS"><code class="xref py py-const docutils literal notranslate"><span class="pre">DEFAULT_PY_VERSIONS</span></code></a>)</p></li>
+<li><p><strong>consoleScripts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – A dictionary mapping command line names to entry points. (Default: None)</p></li>
+<li><p><strong>dataFiles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – A dictionary mapping package names to lists of additional data files.</p></li>
+<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Enable extended outputs for debugging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary suitable for <code class="xref py py-func docutils literal notranslate"><span class="pre">setuptools.setup()</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" title="pyTooling.Exceptions.ToolingException"><strong>ToolingException</strong></a> – If package ‘setuptools’ is not available.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘readmeFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If README file doesn’t exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘requirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If requirements file doesn’t exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘documentationRequirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘unittestRequirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘packagingRequirementsFile’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘sourceFileWithVersion’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If package file with dunder variables doesn’t exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘license’ is not of type <a class="reference internal" href="pyTooling.Licensing.html#pyTooling.Licensing.License" title="pyTooling.Licensing.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If developmentStatus uses an unsupported value. (See <a class="reference internal" href="#pyTooling.Packaging.STATUS" title="pyTooling.Packaging.STATUS"><code class="xref py py-const docutils literal notranslate"><span class="pre">STATUS</span></code></a>)</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If the content type of the README file is not supported. (See <a class="reference internal" href="#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a>)</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the README file doesn’t exist. (See <a class="reference internal" href="#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a>)</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the requirements file doesn’t exist. (See <a class="reference internal" href="#pyTooling.Packaging.loadRequirementsFile" title="pyTooling.Packaging.loadRequirementsFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadRequirementsFile()</span></code></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Packaging.Readme">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">Readme</span></span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#Readme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.Readme" title="Link to this definition"></a></dt>
+<dd><p>Encapsulates the READMEs file content and MIME type.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-70b8af6ac36af772ac748805e6bb06e45f5cb724.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Readme</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Packaging.Readme.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mimeType</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#Readme.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.Readme.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a README file wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Raw content of the README file.</p></li>
+<li><p><strong>mimeType</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – MIME type of the README file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.Readme._content">
+<span class="sig-name descname"><span class="pre">_content</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.Readme._content" title="Link to this definition"></a></dt>
+<dd><p>Content of the README file</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.Readme._mimeType">
+<span class="sig-name descname"><span class="pre">_mimeType</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.Readme._mimeType" title="Link to this definition"></a></dt>
+<dd><p>MIME type of the README content</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.Readme.Content">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Content</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.Readme.Content" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the README’s content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Raw content of the README file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.Readme.MimeType">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MimeType</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.Readme.MimeType" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the README’s MIME type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The MIME type of the README file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Packaging.</span></span><span class="sig-name descname"><span class="pre">VersionInformation</span></span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#VersionInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.VersionInformation" title="Link to this definition"></a></dt>
+<dd><p>Encapsulates version information extracted from a Python source file.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-9b15fcf72c7087b7d86401f2dfbfb0538d40a460.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of VersionInformation</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">author</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copyright</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#VersionInformation.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a Python package (version) information instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>author</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Author of the Python package.</p></li>
+<li><p><strong>email</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The author’s email address</p></li>
+<li><p><strong>copyright</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The copyright notice of the Package.</p></li>
+<li><p><strong>license</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The Python package’s license.</p></li>
+<li><p><strong>version</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The Python package’s version.</p></li>
+<li><p><strong>description</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The Python package’s short description.</p></li>
+<li><p><strong>keywords</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – The Python package’s list of keywords.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._author">
+<span class="sig-name descname"><span class="pre">_author</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._author" title="Link to this definition"></a></dt>
+<dd><p>Author name(s).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._email">
+<span class="sig-name descname"><span class="pre">_email</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._email" title="Link to this definition"></a></dt>
+<dd><p>Author’s email address.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._copyright">
+<span class="sig-name descname"><span class="pre">_copyright</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._copyright" title="Link to this definition"></a></dt>
+<dd><p>Copyright information.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._license">
+<span class="sig-name descname"><span class="pre">_license</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._license" title="Link to this definition"></a></dt>
+<dd><p>License name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._version">
+<span class="sig-name descname"><span class="pre">_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._version" title="Link to this definition"></a></dt>
+<dd><p>Version number.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._description">
+<span class="sig-name descname"><span class="pre">_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._description" title="Link to this definition"></a></dt>
+<dd><p>Description of the package.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation._keywords">
+<span class="sig-name descname"><span class="pre">_keywords</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation._keywords" title="Link to this definition"></a></dt>
+<dd><p>Keywords.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.Author">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Author</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.Author" title="Link to this definition"></a></dt>
+<dd><p>Name(s) of the package author(s).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.Copyright">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Copyright</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.Copyright" title="Link to this definition"></a></dt>
+<dd><p>Copyright information.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.Description">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.Description" title="Link to this definition"></a></dt>
+<dd><p>Package description text.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.Email">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Email</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.Email" title="Link to this definition"></a></dt>
+<dd><p>Email address of the author.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.Keywords">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Keywords</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.Keywords" title="Link to this definition"></a></dt>
+<dd><p>List of keywords.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.License">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">License</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.License" title="Link to this definition"></a></dt>
+<dd><p>License name.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.Version">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.Version" title="Link to this definition"></a></dt>
+<dd><p>Version number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Packaging.VersionInformation.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Packaging.html#VersionInformation.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Packaging.VersionInformation.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.MetaClasses.html" class="btn btn-neutral float-left" title="pyTooling.MetaClasses" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Platform.html" class="btn btn-neutral float-right" title="pyTooling.Platform" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

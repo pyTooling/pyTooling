@@ -1,0 +1,73 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===================
+pyTooling.Stopwatch
+===================
+
+.. automodule:: pyTooling.Stopwatch
+
+
+.. currentmodule:: pyTooling.Stopwatch
+
+
+**Exceptions**
+
+- :py:exc:`StopwatchException`:
+  This exception is caused by wrong usage of the stopwatch.
+
+
+
+**Classes**
+
+- :py:class:`ExcludeContextManager`:
+  A stopwatch context manager for excluding certain time spans from measurement.
+
+- :py:class:`Stopwatch`:
+  The stopwatch implements a solution to measure and collect timings.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: StopwatchException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: StopwatchException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: ExcludeContextManager
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ExcludeContextManager
+      :parts: 1
+
+.. autoclass:: Stopwatch
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Stopwatch
+      :parts: 1

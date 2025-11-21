@@ -1,0 +1,108 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.TerminalUI
+====================
+
+.. automodule:: pyTooling.TerminalUI
+
+
+.. currentmodule:: pyTooling.TerminalUI
+
+
+**Classes**
+
+- :py:class:`TerminalBaseApplication`:
+  The class offers a basic terminal application base-class.
+
+- :py:class:`Severity`:
+  Logging message severity levels.
+
+- :py:class:`Mode`:
+  Create a collection of name/value pairs.
+
+- :py:class:`Line`:
+  Represents a single message line with a severity and indentation level.
+
+- :py:class:`ILineTerminal`:
+  A mixin class (interface) to provide class-local terminal writing methods.
+
+- :py:class:`TerminalApplication`:
+  A base-class for implementation of terminal applications emitting line-by-line messages.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: TerminalBaseApplication
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: TerminalBaseApplication
+      :parts: 1
+
+.. autoclass:: Severity
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Severity
+      :parts: 1
+
+.. autoclass:: Mode
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Mode
+      :parts: 1
+
+.. autoclass:: Line
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Line
+      :parts: 1
+
+.. autoclass:: ILineTerminal
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ILineTerminal
+      :parts: 1
+
+.. autoclass:: TerminalApplication
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: TerminalApplication
+      :parts: 1

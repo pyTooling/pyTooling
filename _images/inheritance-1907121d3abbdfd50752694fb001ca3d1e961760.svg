@@ -1,0 +1,95 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="550pt" height="64pt" viewBox="0.00 0.00 550.00 64.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 60)">
+<ns0:title>inheritance90dce7857c</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>BooleanFlag</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.BooleanFlag.html#pyTooling.CLIAbstraction.BooleanFlag.BooleanFlag" ns1:title="Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern for an" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="384,-37 307,-37 307,-18 384,-18 384,-37" />
+<ns0:text text-anchor="middle" x="345.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BooleanFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>WindowsBooleanFlag</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.BooleanFlag.html#pyTooling.CLIAbstraction.BooleanFlag.WindowsBooleanFlag" ns1:title="Represents a :py:class:`BooleanFlag` with a slash." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="542,-37 420,-37 420,-18 542,-18 542,-37" />
+<ns0:text text-anchor="middle" x="481" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">WindowsBooleanFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>BooleanFlag-&gt;WindowsBooleanFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M384.04,-27.5C393.59,-27.5 404.12,-27.5 414.61,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="414.76,-29.25 419.76,-27.5 414.76,-25.75 414.76,-29.25" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>NamedArgument</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument" ns1:title="Base-class for all command line arguments with a name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="271,-56 171,-56 171,-37 271,-37 271,-56" />
+<ns0:text text-anchor="middle" x="221" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>NamedArgument-&gt;BooleanFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M271.12,-38.88C281.21,-37.32 291.76,-35.68 301.61,-34.15" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="302.01,-35.86 306.69,-33.36 301.48,-32.4 302.01,-35.86" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>ValuedArgument</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.ValuedArgument" ns1:title="Base-class for all command line arguments with a value." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="270,-19 172,-19 172,0 270,0 270,-19" />
+<ns0:text text-anchor="middle" x="221" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ValuedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ValuedArgument-&gt;BooleanFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M270.06,-16.56C280.55,-18.1 291.57,-19.72 301.83,-21.23" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="301.6,-22.96 306.8,-21.96 302.1,-19.5 301.6,-22.96" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="135,-56 0,-56 0,-37 135,-37 135,-56" />
+<ns0:text text-anchor="middle" x="67.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>CommandLineArgument-&gt;NamedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-46.5C145.52,-46.5 155.86,-46.5 165.67,-46.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="165.75,-48.25 170.75,-46.5 165.75,-44.75 165.75,-48.25" />
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>CommandLineArgument-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M107.52,-36.97C128.37,-31.88 154.14,-25.59 175.74,-20.31" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="176.41,-21.95 180.85,-19.06 175.58,-18.55 176.41,-21.95" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="94.5,-19 40.5,-19 40.5,0 94.5,0 94.5,-19" />
+<ns0:text text-anchor="middle" x="67.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Generic-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M94.54,-9.5C114.37,-9.5 142.33,-9.5 166.82,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="166.99,-11.25 171.99,-9.5 166.99,-7.75 166.99,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

@@ -1,0 +1,1440 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Packaging &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.Packaging</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Packaging</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               ____            _               _                                      #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \ __ _  ___| | ____ _  __ _(_)_ __   __ _                          #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | |_) / _` |/ __| |/ / _` |/ _` | | &#39;_ \ / _` |                         #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  __/ (_| | (__|   &lt; (_| | (_| | | | | | (_| |                         #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|   \__,_|\___|_|\_\__,_|\__, |_|_| |_|\__, |                         #</span>
+<span class="c1"># |_|    |___/                          |___/                             |___/         |___/                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2021-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A set of helper functions to describe a Python package for setuptools.</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;PACKAGING&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ast</span><span class="w">             </span><span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">ast_parse</span><span class="p">,</span> <span class="n">iter_child_nodes</span><span class="p">,</span> <span class="n">Assign</span><span class="p">,</span> <span class="n">Constant</span><span class="p">,</span> <span class="n">Name</span><span class="p">,</span> <span class="n">List</span> <span class="k">as</span> <span class="n">ast_List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w">              </span><span class="kn">import</span> <span class="n">scandir</span> <span class="k">as</span> <span class="n">os_scandir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w">         </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">re</span><span class="w">              </span><span class="kn">import</span> <span class="n">split</span> <span class="k">as</span> <span class="n">re_split</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sys</span><span class="w">             </span><span class="kn">import</span> <span class="n">version_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">          </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">__version__</span><span class="p">,</span> <span class="n">getFullyQualifiedName</span><span class="p">,</span> <span class="n">firstElement</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Licensing</span><span class="w">   </span><span class="kn">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Apache_2_0_License</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>                                           <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Packaging] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">          </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Exceptions</span><span class="w">          </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">MetaClasses</span><span class="w">         </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Common</span><span class="w">              </span><span class="kn">import</span> <span class="n">__version__</span><span class="p">,</span> <span class="n">getFullyQualifiedName</span><span class="p">,</span> <span class="n">firstElement</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Licensing</span><span class="w">           </span><span class="kn">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Apache_2_0_License</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>                                   <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Packaging] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="s2">&quot;STATUS&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_LICENSE&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_PY_VERSIONS&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_CLASSIFIERS&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_README&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_REQUIREMENTS&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;DEFAULT_DOCUMENTATION_REQUIREMENTS&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_TEST_REQUIREMENTS&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFAULT_PACKAGING_REQUIREMENTS&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;DEFAULT_VERSION_FILE&quot;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="Readme">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.Readme">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Readme</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Encapsulates the READMEs file content and MIME type.&quot;&quot;&quot;</span>
+
+	<span class="n">_content</span><span class="p">:</span>  <span class="nb">str</span>   <span class="c1">#: Content of the README file</span>
+	<span class="n">_mimeType</span><span class="p">:</span> <span class="nb">str</span>   <span class="c1">#: MIME type of the README content</span>
+
+<div class="viewcode-block" id="Readme.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.Readme.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mimeType</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a README file wrapper.</span>
+
+<span class="sd">		:param content:  Raw content of the README file.</span>
+<span class="sd">		:param mimeType: MIME type of the README file.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_content</span> <span class="o">=</span> <span class="n">content</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_mimeType</span> <span class="o">=</span> <span class="n">mimeType</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Content</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the README&#39;s content.</span>
+
+<span class="sd">		:returns: Raw content of the README file.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">MimeType</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the README&#39;s MIME type.</span>
+
+<span class="sd">		:returns: The MIME type of the README file.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mimeType</span></div>
+
+
+
+<div class="viewcode-block" id="loadReadmeFile">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.loadReadmeFile">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loadReadmeFile</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Readme</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Read the README file (e.g. in Markdown format), so it can be used as long description for the package.</span>
+
+<span class="sd">	Supported formats:</span>
+
+<span class="sd">	  * Plain text (``*.txt``)</span>
+<span class="sd">	  * Markdown (``*.md``)</span>
+<span class="sd">	  * ReStructured Text (``*.rst``)</span>
+
+<span class="sd">	:param readmeFile:         Path to the `README` file as an instance of :class:`Path`.</span>
+<span class="sd">	:returns:                  A tuple containing the file content and the MIME type.</span>
+<span class="sd">	:raises TypeError:         If parameter &#39;readmeFile&#39; is not of type &#39;Path&#39;.</span>
+<span class="sd">	:raises ValueError:        If README file has an unsupported format.</span>
+<span class="sd">	:raises FileNotFoundError: If README file does not exist.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;readmeFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+	<span class="k">if</span> <span class="n">readmeFile</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.txt&quot;</span><span class="p">:</span>
+		<span class="n">mimeType</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span>
+	<span class="k">elif</span> <span class="n">readmeFile</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.md&quot;</span><span class="p">:</span>
+		<span class="n">mimeType</span> <span class="o">=</span> <span class="s2">&quot;text/markdown&quot;</span>
+	<span class="k">elif</span> <span class="n">readmeFile</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.rst&quot;</span><span class="p">:</span>
+		<span class="n">mimeType</span> <span class="o">=</span> <span class="s2">&quot;text/x-rst&quot;</span>
+	<span class="k">else</span><span class="p">:</span>                                                               <span class="c1"># pragma: no cover</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported README format.&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">with</span> <span class="n">readmeFile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">Readme</span><span class="p">(</span>
+				<span class="n">content</span><span class="o">=</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
+				<span class="n">mimeType</span><span class="o">=</span><span class="n">mimeType</span>
+			<span class="p">)</span>
+	<span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;README file &#39;</span><span class="si">{</span><span class="n">readmeFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ex</span></div>
+
+
+
+<div class="viewcode-block" id="loadRequirementsFile">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.loadRequirementsFile">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loadRequirementsFile</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Reads a `requirements.txt` file (recursively) and extracts all specified dependencies into an array.</span>
+
+<span class="sd">	Special dependency entries like Git repository references are translates to match the syntax expected by setuptools.</span>
+
+<span class="sd">	.. hint::</span>
+
+<span class="sd">	   Duplicates should be removed by converting the result to a :class:`set` and back to a :class:`list`.</span>
+
+<span class="sd">	   .. code-block:: Python</span>
+
+<span class="sd">	      requirements = list(set(loadRequirementsFile(requirementsFile)))</span>
+
+<span class="sd">	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.</span>
+<span class="sd">	:param debug:              If ``True``, print found dependencies and recursion.</span>
+<span class="sd">	:returns:                  A list of dependencies.</span>
+<span class="sd">	:raises TypeError:         If parameter &#39;requirementsFile&#39; is not of type &#39;Path&#39;.</span>
+<span class="sd">	:raises FileNotFoundError: If requirements file does not exist.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;</span><span class="si">{</span><span class="n">requirementsFile</span><span class="si">}</span><span class="s2">&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_loadRequirementsFile</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Recursive variant of :func:`loadRequirementsFile`.&quot;&quot;&quot;</span>
+		<span class="n">requirements</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">with</span> <span class="n">requirementsFile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+					<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging]</span><span class="si">{</span><span class="s1">&#39;  &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">indent</span><span class="si">}</span><span class="s2"> Extracting requirements from &#39;</span><span class="si">{</span><span class="n">requirementsFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+					<span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+					<span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+						<span class="k">continue</span>
+					<span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;-r&quot;</span><span class="p">):</span>
+						<span class="c1"># Remove the first word/argument (-r)</span>
+						<span class="n">filename</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+						<span class="n">requirements</span> <span class="o">+=</span> <span class="n">_loadRequirementsFile</span><span class="p">(</span><span class="n">requirementsFile</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+					<span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;https&quot;</span><span class="p">):</span>
+						<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+							<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging]</span><span class="si">{</span><span class="s1">&#39;  &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">indent</span><span class="si">}</span><span class="s2"> Found URL &#39;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+						<span class="c1"># Convert &#39;URL#NAME&#39; to &#39;NAME @ URL&#39;</span>
+						<span class="n">splitItems</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+						<span class="n">requirements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">splitItems</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">splitItems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+							<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging]</span><span class="si">{</span><span class="s1">&#39;  &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">indent</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+						<span class="n">requirements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requirements file &#39;</span><span class="si">{</span><span class="n">requirementsFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ex</span>
+
+		<span class="k">return</span> <span class="n">requirements</span>
+
+	<span class="k">return</span> <span class="n">_loadRequirementsFile</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="VersionInformation">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.VersionInformation">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VersionInformation</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Encapsulates version information extracted from a Python source file.&quot;&quot;&quot;</span>
+
+	<span class="n">_author</span><span class="p">:</span> <span class="nb">str</span>          <span class="c1">#: Author name(s).</span>
+	<span class="n">_copyright</span><span class="p">:</span> <span class="nb">str</span>       <span class="c1">#: Copyright information.</span>
+	<span class="n">_email</span><span class="p">:</span> <span class="nb">str</span>           <span class="c1">#: Author&#39;s email address.</span>
+	<span class="n">_keywords</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>  <span class="c1">#: Keywords.</span>
+	<span class="n">_license</span><span class="p">:</span> <span class="nb">str</span>         <span class="c1">#: License name.</span>
+	<span class="n">_description</span><span class="p">:</span> <span class="nb">str</span>     <span class="c1">#: Description of the package.</span>
+	<span class="n">_version</span><span class="p">:</span> <span class="nb">str</span>         <span class="c1">#: Version number.</span>
+
+<div class="viewcode-block" id="VersionInformation.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.VersionInformation.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">author</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">copyright</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">license</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">keywords</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a Python package (version) information instance.</span>
+
+<span class="sd">		:param author:      Author of the Python package.</span>
+<span class="sd">		:param email:       The author&#39;s email address</span>
+<span class="sd">		:param copyright:   The copyright notice of the Package.</span>
+<span class="sd">		:param license:     The Python package&#39;s license.</span>
+<span class="sd">		:param version:     The Python package&#39;s version.</span>
+<span class="sd">		:param description: The Python package&#39;s short description.</span>
+<span class="sd">		:param keywords:    The Python package&#39;s list of keywords.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_author</span> <span class="o">=</span>      <span class="n">author</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_email</span> <span class="o">=</span>       <span class="n">email</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_copyright</span> <span class="o">=</span>   <span class="n">copyright</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_license</span> <span class="o">=</span>     <span class="n">license</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_version</span> <span class="o">=</span>     <span class="n">version</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_description</span> <span class="o">=</span> <span class="n">description</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_keywords</span> <span class="o">=</span>    <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">]</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Author</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Name(s) of the package author(s).&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_author</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Copyright</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Copyright information.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copyright</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Package description text.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Email</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Email address of the author.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_email</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Keywords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;List of keywords.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keywords</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">License</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;License name.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_license</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Version number.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_version</span>
+
+<div class="viewcode-block" id="VersionInformation.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.VersionInformation.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_version</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="extractVersionInformation">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.extractVersionInformation">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">extractVersionInformation</span><span class="p">(</span><span class="n">sourceFile</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VersionInformation</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Extract double underscored variables from a Python source file, so these can be used for single-sourcing information.</span>
+
+<span class="sd">	Supported variables:</span>
+
+<span class="sd">	* ``__author__``</span>
+<span class="sd">	* ``__copyright__``</span>
+<span class="sd">	* ``__email__``</span>
+<span class="sd">	* ``__keywords__``</span>
+<span class="sd">	* ``__license__``</span>
+<span class="sd">	* ``__version__``</span>
+
+<span class="sd">	:param sourceFile: Path to a Python source file as an instance of :class:`Path`.</span>
+<span class="sd">	:returns:          An instance of :class:`VersionInformation` with gathered variable contents.</span>
+<span class="sd">	:raises TypeError: If parameter &#39;sourceFile&#39; is not of type :class:`~pathlib.Path`.</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sourceFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;sourceFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">sourceFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+	<span class="n">_author</span> <span class="o">=</span>      <span class="kc">None</span>
+	<span class="n">_copyright</span> <span class="o">=</span>   <span class="kc">None</span>
+	<span class="n">_description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+	<span class="n">_email</span> <span class="o">=</span>       <span class="kc">None</span>
+	<span class="n">_keywords</span> <span class="o">=</span>    <span class="p">[]</span>
+	<span class="n">_license</span> <span class="o">=</span>     <span class="kc">None</span>
+	<span class="n">_version</span> <span class="o">=</span>     <span class="kc">None</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">with</span> <span class="n">sourceFile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+			<span class="n">content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+	<span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">ast</span> <span class="o">=</span> <span class="n">ast_parse</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>                                                          <span class="c1"># pragma: no cover</span>
+		<span class="k">raise</span> <span class="n">ToolingException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal error when parsing &#39;</span><span class="si">{</span><span class="n">sourceFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ex</span>
+
+	<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iter_child_nodes</span><span class="p">(</span><span class="n">ast</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Assign</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="n">target</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;__author__&quot;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+					<span class="n">_author</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;__copyright__&quot;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+					<span class="n">_copyright</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;__email__&quot;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+					<span class="n">_email</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;__keywords__&quot;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>           <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable &#39;__keywords__&#39; should be a list of strings.&quot;</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ast_List</span><span class="p">):</span>
+					<span class="k">for</span> <span class="n">const</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">:</span>
+						<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+							<span class="n">_keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span>                                                                  <span class="c1"># pragma: no cover</span>
+							<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;List elements in &#39;__keywords__&#39; should be strings.&quot;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>                                                                      <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Used unsupported type for variable &#39;__keywords__&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;__license__&quot;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+					<span class="n">_license</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;__version__&quot;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+					<span class="n">_version</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+
+	<span class="k">if</span> <span class="n">_author</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not extract &#39;__author__&#39; from &#39;</span><span class="si">{</span><span class="n">sourceFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>     <span class="c1"># pragma: no cover</span>
+	<span class="k">if</span> <span class="n">_copyright</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not extract &#39;__copyright__&#39; from &#39;</span><span class="si">{</span><span class="n">sourceFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+	<span class="k">if</span> <span class="n">_email</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not extract &#39;__email__&#39; from &#39;</span><span class="si">{</span><span class="n">sourceFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>      <span class="c1"># pragma: no cover</span>
+	<span class="k">if</span> <span class="n">_license</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not extract &#39;__license__&#39; from &#39;</span><span class="si">{</span><span class="n">sourceFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>    <span class="c1"># pragma: no cover</span>
+	<span class="k">if</span> <span class="n">_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not extract &#39;__version__&#39; from &#39;</span><span class="si">{</span><span class="n">sourceFile</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>    <span class="c1"># pragma: no cover</span>
+
+	<span class="k">return</span> <span class="n">VersionInformation</span><span class="p">(</span><span class="n">_author</span><span class="p">,</span> <span class="n">_email</span><span class="p">,</span> <span class="n">_copyright</span><span class="p">,</span> <span class="n">_license</span><span class="p">,</span> <span class="n">_version</span><span class="p">,</span> <span class="n">_description</span><span class="p">,</span> <span class="n">_keywords</span><span class="p">)</span></div>
+
+
+
+<span class="n">STATUS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="s2">&quot;planning&quot;</span><span class="p">:</span>  <span class="s2">&quot;1 - Planning&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;pre-alpha&quot;</span><span class="p">:</span> <span class="s2">&quot;2 - Pre-Alpha&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;alpha&quot;</span><span class="p">:</span>     <span class="s2">&quot;3 - Alpha&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;beta&quot;</span><span class="p">:</span>      <span class="s2">&quot;4 - Beta&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;stable&quot;</span><span class="p">:</span>    <span class="s2">&quot;5 - Production/Stable&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;mature&quot;</span><span class="p">:</span>    <span class="s2">&quot;6 - Mature&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;inactive&quot;</span><span class="p">:</span>  <span class="s2">&quot;7 - Inactive&quot;</span>
+<span class="p">}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A dictionary of supported development status values.</span>
+
+<span class="sd">The mapping&#39;s value will be appended to ``Development Status :: `` to form a package classifier.</span>
+
+<span class="sd">1. Planning</span>
+<span class="sd">2. Pre-Alpha</span>
+<span class="sd">3. Alpha</span>
+<span class="sd">4. Beta</span>
+<span class="sd">5. Production/Stable</span>
+<span class="sd">6. Mature</span>
+<span class="sd">7. Inactive</span>
+
+<span class="sd">.. seealso::</span>
+
+<span class="sd">   `Python package classifiers &lt;https://pypi.org/classifiers/&gt;`__</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_LICENSE</span> <span class="o">=</span> <span class="n">Apache_2_0_License</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Default license (Apache License, 2.0) used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``license`` is not assigned.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_PY_VERSIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;3.10&quot;</span><span class="p">,</span> <span class="s2">&quot;3.11&quot;</span><span class="p">,</span> <span class="s2">&quot;3.12&quot;</span><span class="p">,</span> <span class="s2">&quot;3.13&quot;</span><span class="p">,</span> <span class="s2">&quot;3.14&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A tuple of supported CPython versions used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``pythonVersions`` is not assigned.</span>
+
+<span class="sd">.. seealso::</span>
+
+<span class="sd">   `Status of Python versions &lt;https://devguide.python.org/versions/&gt;`__</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_CLASSIFIERS</span> <span class="o">=</span> <span class="p">(</span>
+		<span class="s2">&quot;Operating System :: OS Independent&quot;</span><span class="p">,</span>
+		<span class="s2">&quot;Intended Audience :: Developers&quot;</span><span class="p">,</span>
+		<span class="s2">&quot;Topic :: Utilities&quot;</span>
+	<span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A list of Python package classifiers used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``classifiers`` is not assigned.</span>
+
+<span class="sd">.. seealso::</span>
+
+<span class="sd">   `Python package classifiers &lt;https://pypi.org/classifiers/&gt;`__</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_README</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;README.md&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Path to the README file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``readmeFile`` is not assigned.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_REQUIREMENTS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Path to the requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``requirementsFile`` is not assigned.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_DOCUMENTATION_REQUIREMENTS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;doc/requirements.txt&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Path to the README requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``documentationRequirementsFile`` is not assigned.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_TEST_REQUIREMENTS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tests/requirements.txt&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Path to the README requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``unittestRequirementsFile`` is not assigned.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_PACKAGING_REQUIREMENTS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;build/requirements.txt&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Path to the package requirements file used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`</span>
+<span class="sd">if parameter ``packagingRequirementsFile`` is not assigned.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_VERSION_FILE</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;__init__.py&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DescribePythonPackage">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.DescribePythonPackage">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">DescribePythonPackage</span><span class="p">(</span>
+	<span class="n">packageName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">projectURL</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">sourceCodeURL</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">documentationURL</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">issueTrackerCodeURL</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">keywords</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">license</span><span class="p">:</span> <span class="n">License</span> <span class="o">=</span> <span class="n">DEFAULT_LICENSE</span><span class="p">,</span>
+	<span class="n">readmeFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_README</span><span class="p">,</span>
+	<span class="n">requirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">documentationRequirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_DOCUMENTATION_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">unittestRequirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_TEST_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">packagingRequirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_PACKAGING_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">additionalRequirements</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">sourceFileWithVersion</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_VERSION_FILE</span><span class="p">,</span>
+	<span class="n">classifiers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_CLASSIFIERS</span><span class="p">,</span>
+	<span class="n">developmentStatus</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;stable&quot;</span><span class="p">,</span>
+	<span class="n">pythonVersions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_PY_VERSIONS</span><span class="p">,</span>
+	<span class="n">consoleScripts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">dataFiles</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Helper function to describe a Python package.</span>
+
+<span class="sd">	.. hint::</span>
+
+<span class="sd">	   Some information will be gathered automatically from well-known files.</span>
+
+<span class="sd">	   Examples: ``README.md``, ``requirements.txt``, ``__init__.py``</span>
+
+<span class="sd">	.. topic:: Handling of namespace packages</span>
+
+<span class="sd">	   If parameter ``packageName`` contains a dot, a namespace package is assumed. Then</span>
+<span class="sd">	   :func:`setuptools.find_namespace_packages` is used to discover package files. |br|</span>
+<span class="sd">	   Otherwise, the package is considered a normal package and :func:`setuptools.find_packages` is used.</span>
+
+<span class="sd">	   In both cases, the following packages (directories) are excluded from search:</span>
+
+<span class="sd">	   * ``build``, ``build.*``</span>
+<span class="sd">	   * ``dist``, ``dist.*``</span>
+<span class="sd">	   * ``doc``, ``doc.*``</span>
+<span class="sd">	   * ``tests``, ``tests.*``</span>
+
+<span class="sd">	.. topic:: Handling of minimal Python version</span>
+
+<span class="sd">	   The minimal required Python version is selected from parameter ``pythonVersions``.</span>
+
+<span class="sd">	.. topic:: Handling of dunder variables</span>
+
+<span class="sd">	   A Python source file specified by parameter ``sourceFileWithVersion`` will be analyzed with Pythons parser and the</span>
+<span class="sd">	   resulting AST will be searched for the following dunder variables:</span>
+
+<span class="sd">	   * ``__author__``: :class:`str`</span>
+<span class="sd">	   * ``__copyright__``: :class:`str`</span>
+<span class="sd">	   * ``__email__``: :class:`str`</span>
+<span class="sd">	   * ``__keywords__``: :class:`typing.Iterable`[:class:`str`]</span>
+<span class="sd">	   * ``__license__``: :class:`str`</span>
+<span class="sd">	   * ``__version__``: :class:`str`</span>
+
+<span class="sd">	The gathered information be used to add further mappings in the result dictionary.</span>
+
+<span class="sd">	.. topic:: Handling of package classifiers</span>
+
+<span class="sd">	   To reduce redundantly provided parameters to this function (e.g. supported ``pythonVersions``), only additional</span>
+<span class="sd">	   classifiers should be provided via parameter ``classifiers``. The supported Python versions will be implicitly</span>
+<span class="sd">	   converted to package classifiers, so no need to specify them in parameter ``classifiers``.</span>
+
+<span class="sd">	   The following classifiers are implicitly handled:</span>
+
+<span class="sd">	   license</span>
+<span class="sd">	     The license specified by parameter ``license`` is translated into a classifier. |br|</span>
+<span class="sd">	     See also :meth:`pyTooling.Licensing.License.PythonClassifier`</span>
+
+<span class="sd">	   Python versions</span>
+<span class="sd">	     Always add ``Programming Language :: Python :: 3 :: Only``. |br|</span>
+<span class="sd">	     For each value in ``pythonVersions``, one ``Programming Language :: Python :: Major.Minor`` is added.</span>
+
+<span class="sd">	   Development status</span>
+<span class="sd">	     The development status specified by parameter ``developmentStatus`` is translated to a classifier and added.</span>
+
+<span class="sd">	.. topic:: Handling of extra requirements</span>
+
+<span class="sd">	   If additional requirement files are provided, e.g. requirements to build the documentation, then *extra*</span>
+<span class="sd">	   requirements are defined. These can be installed via ``pip install packageName[extraName]``. If so, an extra called</span>
+<span class="sd">	   ``all`` is added, so developers can install all dependencies needed for package development.</span>
+
+<span class="sd">	   ``doc``</span>
+<span class="sd">	     If parameter ``documentationRequirementsFile`` is present, an extra requirements called ``doc`` will be defined.</span>
+<span class="sd">	   ``test``</span>
+<span class="sd">	     If parameter ``unittestRequirementsFile`` is present, an extra requirements called ``test`` will be defined.</span>
+<span class="sd">	   ``build``</span>
+<span class="sd">	     If parameter ``packagingRequirementsFile`` is present, an extra requirements called ``build`` will be defined.</span>
+<span class="sd">	   User-defined</span>
+<span class="sd">	     If parameter ``additionalRequirements`` is present, an extra requirements for every mapping entry in the</span>
+<span class="sd">	     dictionary will be added.</span>
+<span class="sd">	   ``all``</span>
+<span class="sd">	     If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all</span>
+<span class="sd">	     extra requirements.</span>
+
+<span class="sd">	.. topic:: Handling of keywords</span>
+
+<span class="sd">	   If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``</span>
+<span class="sd">	   will be used. Otherwise, the content of the parameter, if not None or empty.</span>
+
+<span class="sd">	:param packageName:                   Name of the Python package.</span>
+<span class="sd">	:param description:                   Short description of the package. The long description will be read from README file.</span>
+<span class="sd">	:param projectURL:                    URL to the Python project.</span>
+<span class="sd">	:param sourceCodeURL:                 URL to the Python source code.</span>
+<span class="sd">	:param documentationURL:              URL to the package&#39;s documentation.</span>
+<span class="sd">	:param issueTrackerCodeURL:           URL to the projects issue tracker (ticket system).</span>
+<span class="sd">	:param keywords:                      A list of keywords.</span>
+<span class="sd">	:param license:                       The package&#39;s license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)</span>
+<span class="sd">	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)</span>
+<span class="sd">	:param requirementsFile:              The path to the project&#39;s requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)</span>
+<span class="sd">	:param documentationRequirementsFile: The path to the project&#39;s requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)</span>
+<span class="sd">	:param unittestRequirementsFile:      The path to the project&#39;s requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)</span>
+<span class="sd">	:param packagingRequirementsFile:     The path to the project&#39;s requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)</span>
+<span class="sd">	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)</span>
+<span class="sd">	:param sourceFileWithVersion:         The path to the project&#39;s source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)</span>
+<span class="sd">	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)</span>
+<span class="sd">	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)</span>
+<span class="sd">	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)</span>
+<span class="sd">	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)</span>
+<span class="sd">	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.</span>
+<span class="sd">	:param debug:                         Enable extended outputs for debugging.</span>
+<span class="sd">	:returns:                             A dictionary suitable for :func:`setuptools.setup`.</span>
+<span class="sd">	:raises ToolingException:             If package &#39;setuptools&#39; is not available.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;readmeFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises FileNotFoundError:            If README file doesn&#39;t exist.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;requirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises FileNotFoundError:            If requirements file doesn&#39;t exist.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;documentationRequirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;unittestRequirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;packagingRequirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;sourceFileWithVersion&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises FileNotFoundError:            If package file with dunder variables doesn&#39;t exist.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;license&#39; is not of type :class:`~pyTooling.Licensing.License`.</span>
+<span class="sd">	:raises ValueError:                   If developmentStatus uses an unsupported value. (See :const:`STATUS`)</span>
+<span class="sd">	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)</span>
+<span class="sd">	:raises FileNotFoundError:            If the README file doesn&#39;t exist. (See :func:`loadReadmeFile`)</span>
+<span class="sd">	:raises FileNotFoundError:            If the requirements file doesn&#39;t exist. (See :func:`loadRequirementsFile`)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_packages</span><span class="p">,</span> <span class="n">find_namespace_packages</span>
+	<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">ToolingException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optional dependency &#39;setuptools&#39; is not available.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ex</span>
+
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] Python: </span><span class="si">{</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">version_info</span><span class="o">.</span><span class="n">micro</span><span class="si">}</span><span class="s2">, pyTooling: </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+	<span class="c1"># Read README for upload to PyPI</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;readmeFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+	<span class="k">elif</span> <span class="ow">not</span> <span class="n">readmeFile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+		<span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;README file &#39;</span><span class="si">{</span><span class="n">readmeFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">readme</span> <span class="o">=</span> <span class="n">loadReadmeFile</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">)</span>
+
+	<span class="c1"># Read requirements file and add them to package dependency list (remove duplicates)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;requirementsFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+	<span class="k">elif</span> <span class="ow">not</span> <span class="n">requirementsFile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+		<span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requirements file &#39;</span><span class="si">{</span><span class="n">requirementsFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">requirements</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">loadRequirementsFile</span><span class="p">(</span><span class="n">requirementsFile</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)))</span>
+
+	<span class="n">extraRequirements</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="k">if</span> <span class="n">documentationRequirementsFile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">documentationRequirementsFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;documentationRequirementsFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">documentationRequirementsFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="n">documentationRequirementsFile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] Documentation requirements file &#39;</span><span class="si">{</span><span class="n">documentationRequirementsFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;[pyTooling.Packaging]   No section added to &#39;extraRequirements&#39;.&quot;</span><span class="p">)</span>
+		<span class="c1"># raise FileNotFoundError(f&quot;Documentation requirements file &#39;{documentationRequirementsFile}&#39; not found in &#39;{Path.cwd()}&#39;.&quot;)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">extraRequirements</span><span class="p">[</span><span class="s2">&quot;doc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">loadRequirementsFile</span><span class="p">(</span><span class="n">documentationRequirementsFile</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)))</span>
+
+	<span class="k">if</span> <span class="n">unittestRequirementsFile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unittestRequirementsFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;unittestRequirementsFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">unittestRequirementsFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="n">unittestRequirementsFile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] Unit testing requirements file &#39;</span><span class="si">{</span><span class="n">unittestRequirementsFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;[pyTooling.Packaging]   No section added to &#39;extraRequirements&#39;.&quot;</span><span class="p">)</span>
+		<span class="c1"># raise FileNotFoundError(f&quot;Unit testing requirements file &#39;{unittestRequirementsFile}&#39; not found in &#39;{Path.cwd()}&#39;.&quot;)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">extraRequirements</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">loadRequirementsFile</span><span class="p">(</span><span class="n">unittestRequirementsFile</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)))</span>
+
+	<span class="k">if</span> <span class="n">packagingRequirementsFile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">packagingRequirementsFile</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;packagingRequirementsFile&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">packagingRequirementsFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="n">packagingRequirementsFile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] Packaging requirements file &#39;</span><span class="si">{</span><span class="n">packagingRequirementsFile</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;[pyTooling.Packaging]   No section added to &#39;extraRequirements&#39;.&quot;</span><span class="p">)</span>
+		<span class="c1"># raise FileNotFoundError(f&quot;Packaging requirements file &#39;{packagingRequirementsFile}&#39; not found in &#39;{Path.cwd()}&#39;.&quot;)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">extraRequirements</span><span class="p">[</span><span class="s2">&quot;build&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">loadRequirementsFile</span><span class="p">(</span><span class="n">packagingRequirementsFile</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)))</span>
+
+	<span class="k">if</span> <span class="n">additionalRequirements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">additionalRequirements</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="n">extraRequirements</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extraRequirements</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="n">extraRequirements</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">dep</span> <span class="k">for</span> <span class="n">deps</span> <span class="ow">in</span> <span class="n">extraRequirements</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">]))</span>
+
+	<span class="c1"># Read __author__, __email__, __version__ from source file</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sourceFileWithVersion</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;sourceFileWithVersion&#39; is not of type &#39;Path&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">sourceFileWithVersion</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+	<span class="k">elif</span> <span class="ow">not</span> <span class="n">sourceFileWithVersion</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+		<span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Package file &#39;</span><span class="si">{</span><span class="n">sourceFileWithVersion</span><span class="si">}</span><span class="s2">&#39; with dunder variables not found in &#39;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">versionInformation</span> <span class="o">=</span> <span class="n">extractVersionInformation</span><span class="p">(</span><span class="n">sourceFileWithVersion</span><span class="p">)</span>
+
+	<span class="c1"># Scan for packages and source files</span>
+	<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] Exclude list for find_(namespace_)packages:&quot;</span><span class="p">)</span>
+	<span class="n">exclude</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">rootNamespace</span> <span class="o">=</span> <span class="n">firstElement</span><span class="p">(</span><span class="n">packageName</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">dirName</span> <span class="ow">in</span> <span class="p">(</span><span class="n">dirItem</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">dirItem</span> <span class="ow">in</span> <span class="n">os_scandir</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">())</span> <span class="k">if</span> <span class="n">dirItem</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;.&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dirItem</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">dirItem</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">rootNamespace</span><span class="p">):</span>
+		<span class="n">exclude</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dirName</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+		<span class="n">exclude</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dirName</span><span class="si">}</span><span class="s2">.*&quot;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] - </span><span class="si">{</span><span class="n">dirName</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">dirName</span><span class="si">}</span><span class="s2">.*&quot;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">packageName</span><span class="p">:</span>
+		<span class="n">exclude</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rootNamespace</span><span class="p">)</span>
+		<span class="n">packages</span> <span class="o">=</span> <span class="n">find_namespace_packages</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">packageName</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.*&quot;</span><span class="p">):</span>
+			<span class="n">packageName</span> <span class="o">=</span> <span class="n">packageName</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">packages</span> <span class="o">=</span> <span class="n">find_packages</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] Found packages: (</span><span class="si">{</span><span class="n">packages</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">packages</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[pyTooling.Packaging] - </span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">keywords</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keywords</span><span class="p">,</span> <span class="n">Sized</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">keywords</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="n">keywords</span> <span class="o">=</span> <span class="n">versionInformation</span><span class="o">.</span><span class="n">Keywords</span>
+
+	<span class="c1"># Assemble classifiers</span>
+	<span class="n">classifiers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">classifiers</span><span class="p">)</span>
+
+	<span class="c1"># Translate license to classifier</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">license</span><span class="p">,</span> <span class="n">License</span><span class="p">):</span>
+		<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;license&#39; is not of type &#39;License&#39;.&quot;</span><span class="p">)</span>
+		<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">readmeFile</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+	<span class="n">classifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">license</span><span class="o">.</span><span class="n">PythonClassifier</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_naturalSorting</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;A simple natural sorting implementation.&quot;&quot;&quot;</span>
+		<span class="c1"># See http://nedbatchelder.com/blog/200712/human_sorting.html</span>
+		<span class="k">def</span><span class="w"> </span><span class="nf">_toInt</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">			</span><span class="sd">&quot;&quot;&quot;Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string.&quot;&quot;&quot;</span>
+			<span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="k">else</span> <span class="n">text</span>
+
+		<span class="k">def</span><span class="w"> </span><span class="nf">_createKey</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">			</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Split the text into a tuple of multiple :class:`str` and :class:`int` fields, so embedded numbers can be sorted by</span>
+<span class="sd">			their value.</span>
+<span class="sd">			&quot;&quot;&quot;</span>
+			<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_toInt</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">re_split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\d+)&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+
+		<span class="n">sortedArray</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+		<span class="n">sortedArray</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">_createKey</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">sortedArray</span>
+
+	<span class="n">pythonVersions</span> <span class="o">=</span> <span class="n">_naturalSorting</span><span class="p">(</span><span class="n">pythonVersions</span><span class="p">)</span>
+
+	<span class="c1"># Translate Python versions to classifiers</span>
+	<span class="n">classifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Programming Language :: Python :: 3 :: Only&quot;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pythonVersions</span><span class="p">:</span>
+		<span class="n">classifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Programming Language :: Python :: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+	<span class="c1"># Translate status to classifier</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">classifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Development Status :: </span><span class="si">{</span><span class="n">STATUS</span><span class="p">[</span><span class="n">developmentStatus</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>                                                                   <span class="c1"># pragma: no cover</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported development status &#39;</span><span class="si">{</span><span class="n">developmentStatus</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+	<span class="c1"># Assemble all package information</span>
+	<span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">packageName</span><span class="p">,</span>
+		<span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">versionInformation</span><span class="o">.</span><span class="n">Version</span><span class="p">,</span>
+		<span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">versionInformation</span><span class="o">.</span><span class="n">Author</span><span class="p">,</span>
+		<span class="s2">&quot;author_email&quot;</span><span class="p">:</span> <span class="n">versionInformation</span><span class="o">.</span><span class="n">Email</span><span class="p">,</span>
+		<span class="s2">&quot;license&quot;</span><span class="p">:</span> <span class="n">license</span><span class="o">.</span><span class="n">SPDXIdentifier</span><span class="p">,</span>
+		<span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+		<span class="s2">&quot;long_description&quot;</span><span class="p">:</span> <span class="n">readme</span><span class="o">.</span><span class="n">Content</span><span class="p">,</span>
+		<span class="s2">&quot;long_description_content_type&quot;</span><span class="p">:</span> <span class="n">readme</span><span class="o">.</span><span class="n">MimeType</span><span class="p">,</span>
+		<span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">projectURL</span><span class="p">,</span>
+		<span class="s2">&quot;project_urls&quot;</span><span class="p">:</span> <span class="p">{</span>
+			<span class="s1">&#39;Documentation&#39;</span><span class="p">:</span> <span class="n">documentationURL</span><span class="p">,</span>
+			<span class="s1">&#39;Source Code&#39;</span><span class="p">:</span>   <span class="n">sourceCodeURL</span><span class="p">,</span>
+			<span class="s1">&#39;Issue Tracker&#39;</span><span class="p">:</span> <span class="n">issueTrackerCodeURL</span>
+		<span class="p">},</span>
+		<span class="s2">&quot;packages&quot;</span><span class="p">:</span> <span class="n">packages</span><span class="p">,</span>
+		<span class="s2">&quot;classifiers&quot;</span><span class="p">:</span> <span class="n">classifiers</span><span class="p">,</span>
+		<span class="s2">&quot;keywords&quot;</span><span class="p">:</span> <span class="n">keywords</span><span class="p">,</span>
+		<span class="s2">&quot;python_requires&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;&gt;=</span><span class="si">{</span><span class="n">pythonVersions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+		<span class="s2">&quot;install_requires&quot;</span><span class="p">:</span> <span class="n">requirements</span><span class="p">,</span>
+	<span class="p">}</span>
+
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extraRequirements</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;extras_require&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">extraRequirements</span>
+
+	<span class="k">if</span> <span class="n">consoleScripts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">scripts</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">scriptName</span><span class="p">,</span> <span class="n">entryPoint</span> <span class="ow">in</span> <span class="n">consoleScripts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="n">scripts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">scriptName</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">entryPoint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+		<span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;entry_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s2">&quot;console_scripts&quot;</span><span class="p">:</span> <span class="n">scripts</span>
+		<span class="p">}</span>
+
+	<span class="k">if</span> <span class="n">dataFiles</span><span class="p">:</span>
+		<span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;package_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataFiles</span>
+
+	<span class="k">return</span> <span class="n">parameters</span></div>
+
+
+
+<div class="viewcode-block" id="DescribePythonPackageHostedOnGitHub">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">DescribePythonPackageHostedOnGitHub</span><span class="p">(</span>
+	<span class="n">packageName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">gitHubNamespace</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+	<span class="n">gitHubRepository</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">projectURL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">keywords</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">license</span><span class="p">:</span> <span class="n">License</span> <span class="o">=</span> <span class="n">DEFAULT_LICENSE</span><span class="p">,</span>
+	<span class="n">readmeFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_README</span><span class="p">,</span>
+	<span class="n">requirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">documentationRequirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_DOCUMENTATION_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">unittestRequirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_TEST_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">packagingRequirementsFile</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_PACKAGING_REQUIREMENTS</span><span class="p">,</span>
+	<span class="n">additionalRequirements</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">sourceFileWithVersion</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_VERSION_FILE</span><span class="p">,</span>
+	<span class="n">classifiers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_CLASSIFIERS</span><span class="p">,</span>
+	<span class="n">developmentStatus</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;stable&quot;</span><span class="p">,</span>
+	<span class="n">pythonVersions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_PY_VERSIONS</span><span class="p">,</span>
+	<span class="n">consoleScripts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">dataFiles</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Helper function to describe a Python package when the source code is hosted on GitHub.</span>
+
+<span class="sd">	This is a wrapper for :func:`DescribePythonPackage`, because some parameters can be simplified by knowing the GitHub</span>
+<span class="sd">	namespace and repository name: issue tracker URL, source code URL, ...</span>
+
+<span class="sd">	:param packageName:                   Name of the Python package.</span>
+<span class="sd">	:param description:                   Short description of the package. The long description will be read from README file.</span>
+<span class="sd">	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).</span>
+<span class="sd">	:param gitHubRepository:              Name of the GitHub repository.</span>
+<span class="sd">	:param projectURL:                    URL to the Python project.</span>
+<span class="sd">	:param keywords:                      A list of keywords.</span>
+<span class="sd">	:param license:                       The package&#39;s license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)</span>
+<span class="sd">	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)</span>
+<span class="sd">	:param requirementsFile:              The path to the project&#39;s requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)</span>
+<span class="sd">	:param documentationRequirementsFile: The path to the project&#39;s requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)</span>
+<span class="sd">	:param unittestRequirementsFile:      The path to the project&#39;s requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)</span>
+<span class="sd">	:param packagingRequirementsFile:     The path to the project&#39;s requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)</span>
+<span class="sd">	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)</span>
+<span class="sd">	:param sourceFileWithVersion:         The path to the project&#39;s source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)</span>
+<span class="sd">	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)</span>
+<span class="sd">	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)</span>
+<span class="sd">	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)</span>
+<span class="sd">	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)</span>
+<span class="sd">	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.</span>
+<span class="sd">	:param debug:                         Enable extended outputs for debugging.</span>
+<span class="sd">	:returns:                             A dictionary suitable for :func:`setuptools.setup`.</span>
+<span class="sd">	:raises ToolingException:             If package &#39;setuptools&#39; is not available.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;readmeFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises FileNotFoundError:            If README file doesn&#39;t exist.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;requirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises FileNotFoundError:            If requirements file doesn&#39;t exist.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;documentationRequirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;unittestRequirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;packagingRequirementsFile&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;sourceFileWithVersion&#39; is not of type :class:`~pathlib.Path`.</span>
+<span class="sd">	:raises FileNotFoundError:            If package file with dunder variables doesn&#39;t exist.</span>
+<span class="sd">	:raises TypeError:                    If parameter &#39;license&#39; is not of type :class:`~pyTooling.Licensing.License`.</span>
+<span class="sd">	:raises ValueError:                   If developmentStatus uses an unsupported value. (See :const:`STATUS`)</span>
+<span class="sd">	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)</span>
+<span class="sd">	:raises FileNotFoundError:            If the README file doesn&#39;t exist. (See :func:`loadReadmeFile`)</span>
+<span class="sd">	:raises FileNotFoundError:            If the requirements file doesn&#39;t exist. (See :func:`loadRequirementsFile`)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">gitHubRepository</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="c1"># Assign GitHub repository name without &#39;.*&#39;, if derived from Python package name.</span>
+		<span class="k">if</span> <span class="n">packageName</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.*&quot;</span><span class="p">):</span>
+			<span class="n">gitHubRepository</span> <span class="o">=</span> <span class="n">packageName</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">gitHubRepository</span> <span class="o">=</span> <span class="n">packageName</span>
+
+	<span class="c1"># Derive URLs</span>
+	<span class="n">sourceCodeURL</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://GitHub.com/</span><span class="si">{</span><span class="n">gitHubNamespace</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">gitHubRepository</span><span class="si">}</span><span class="s2">&quot;</span>
+	<span class="n">documentationURL</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">gitHubNamespace</span><span class="si">}</span><span class="s2">.GitHub.io/</span><span class="si">{</span><span class="n">gitHubRepository</span><span class="si">}</span><span class="s2">&quot;</span>
+	<span class="n">issueTrackerCodeURL</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sourceCodeURL</span><span class="si">}</span><span class="s2">/issues&quot;</span>
+
+	<span class="n">projectURL</span> <span class="o">=</span> <span class="n">projectURL</span> <span class="k">if</span> <span class="n">projectURL</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sourceCodeURL</span>
+
+	<span class="k">return</span> <span class="n">DescribePythonPackage</span><span class="p">(</span>
+		<span class="n">packageName</span><span class="o">=</span><span class="n">packageName</span><span class="p">,</span>
+		<span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+		<span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span><span class="p">,</span>
+		<span class="n">projectURL</span><span class="o">=</span><span class="n">projectURL</span><span class="p">,</span>
+		<span class="n">sourceCodeURL</span><span class="o">=</span><span class="n">sourceCodeURL</span><span class="p">,</span>
+		<span class="n">documentationURL</span><span class="o">=</span><span class="n">documentationURL</span><span class="p">,</span>
+		<span class="n">issueTrackerCodeURL</span><span class="o">=</span><span class="n">issueTrackerCodeURL</span><span class="p">,</span>
+		<span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+		<span class="n">readmeFile</span><span class="o">=</span><span class="n">readmeFile</span><span class="p">,</span>
+		<span class="n">requirementsFile</span><span class="o">=</span><span class="n">requirementsFile</span><span class="p">,</span>
+		<span class="n">documentationRequirementsFile</span><span class="o">=</span><span class="n">documentationRequirementsFile</span><span class="p">,</span>
+		<span class="n">unittestRequirementsFile</span><span class="o">=</span><span class="n">unittestRequirementsFile</span><span class="p">,</span>
+		<span class="n">packagingRequirementsFile</span><span class="o">=</span><span class="n">packagingRequirementsFile</span><span class="p">,</span>
+		<span class="n">additionalRequirements</span><span class="o">=</span><span class="n">additionalRequirements</span><span class="p">,</span>
+		<span class="n">sourceFileWithVersion</span><span class="o">=</span><span class="n">sourceFileWithVersion</span><span class="p">,</span>
+		<span class="n">classifiers</span><span class="o">=</span><span class="n">classifiers</span><span class="p">,</span>
+		<span class="n">developmentStatus</span><span class="o">=</span><span class="n">developmentStatus</span><span class="p">,</span>
+		<span class="n">pythonVersions</span><span class="o">=</span><span class="n">pythonVersions</span><span class="p">,</span>
+		<span class="n">consoleScripts</span><span class="o">=</span><span class="n">consoleScripts</span><span class="p">,</span>
+		<span class="n">dataFiles</span><span class="o">=</span><span class="n">dataFiles</span><span class="p">,</span>
+		<span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span>
+	<span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

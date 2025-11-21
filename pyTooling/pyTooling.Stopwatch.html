@@ -1,0 +1,820 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Stopwatch &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.TerminalUI" href="pyTooling.TerminalUI.html" />
+    <link rel="prev" title="pyTooling.StateMachine" href="pyTooling.StateMachine.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Stopwatch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException"><code class="docutils literal notranslate"><span class="pre">StopwatchException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException.__new__"><code class="docutils literal notranslate"><span class="pre">StopwatchException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException.__init__"><code class="docutils literal notranslate"><span class="pre">StopwatchException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager"><code class="docutils literal notranslate"><span class="pre">ExcludeContextManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager.__init__"><code class="docutils literal notranslate"><span class="pre">ExcludeContextManager.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager._stopwatch"><code class="docutils literal notranslate"><span class="pre">ExcludeContextManager._stopwatch</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager.__enter__"><code class="docutils literal notranslate"><span class="pre">ExcludeContextManager.__enter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager.__exit__"><code class="docutils literal notranslate"><span class="pre">ExcludeContextManager.__exit__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch"><code class="docutils literal notranslate"><span class="pre">Stopwatch</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__init__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Start"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Split"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Pause"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Pause()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Resume"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Resume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Stop"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Stop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Name"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsStarted"><code class="docutils literal notranslate"><span class="pre">Stopwatch.IsStarted</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsRunning"><code class="docutils literal notranslate"><span class="pre">Stopwatch.IsRunning</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsPaused"><code class="docutils literal notranslate"><span class="pre">Stopwatch.IsPaused</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsStopped"><code class="docutils literal notranslate"><span class="pre">Stopwatch.IsStopped</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.StartTime"><code class="docutils literal notranslate"><span class="pre">Stopwatch.StartTime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.StopTime"><code class="docutils literal notranslate"><span class="pre">Stopwatch.StopTime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.HasSplitTimes"><code class="docutils literal notranslate"><span class="pre">Stopwatch.HasSplitTimes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.SplitCount"><code class="docutils literal notranslate"><span class="pre">Stopwatch.SplitCount</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.ActiveCount"><code class="docutils literal notranslate"><span class="pre">Stopwatch.ActiveCount</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.InactiveCount"><code class="docutils literal notranslate"><span class="pre">Stopwatch.InactiveCount</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Activity"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Activity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Inactivity"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Inactivity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Duration"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.Exclude"><code class="docutils literal notranslate"><span class="pre">Stopwatch.Exclude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__enter__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__enter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__exit__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__exit__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__len__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__len__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__getitem__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__iter__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__iter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.__str__"><code class="docutils literal notranslate"><span class="pre">Stopwatch.__str__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Stopwatch</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Stopwatch.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Stopwatch">
+<span id="pytooling-stopwatch"></span><h1>pyTooling.Stopwatch<a class="headerlink" href="#module-pyTooling.Stopwatch" title="Link to this heading"></a></h1>
+<p>A stopwatch to measure execution times.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Common/Stopwatch.html#common-stopwatch"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Exceptions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopwatchException</span></code></a>:
+This exception is caused by wrong usage of the stopwatch.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager" title="pyTooling.Stopwatch.ExcludeContextManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExcludeContextManager</span></code></a>:
+A stopwatch context manager for excluding certain time spans from measurement.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch" title="pyTooling.Stopwatch.Stopwatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stopwatch</span></code></a>:
+The stopwatch implements a solution to measure and collect timings.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Exceptions</strong></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.StopwatchException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Stopwatch.</span></span><span class="sig-name descname"><span class="pre">StopwatchException</span></span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#StopwatchException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.StopwatchException" title="Link to this definition"></a></dt>
+<dd><p>This exception is caused by wrong usage of the stopwatch.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-9ca10e4286c986f7afa2c3f464a48ccd1ed3b8c8.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of StopwatchException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.StopwatchException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Stopwatch.StopwatchException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.StopwatchException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Stopwatch.StopwatchException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.ExcludeContextManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Stopwatch.</span></span><span class="sig-name descname"><span class="pre">ExcludeContextManager</span></span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#ExcludeContextManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.ExcludeContextManager" title="Link to this definition"></a></dt>
+<dd><p>A stopwatch context manager for excluding certain time spans from measurement.</p>
+<p>While a normal stopwatch’s embedded context manager (re)starts the stopwatch on every <em>enter</em> event and pauses the
+stopwatch on every <em>exit</em> event, this context manager pauses on <em>enter</em> events and restarts on every <em>exit</em> event.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-e4428c3c72718e91adec6cbcb42e89bf55bbd2cd.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of ExcludeContextManager</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.ExcludeContextManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stopwatch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#ExcludeContextManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.ExcludeContextManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes an excluding context manager.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stopwatch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch" title="pyTooling.Stopwatch.Stopwatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stopwatch</span></code></a></span>) – Reference to the stopwatch.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.ExcludeContextManager._stopwatch">
+<span class="sig-name descname"><span class="pre">_stopwatch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch" title="pyTooling.Stopwatch.Stopwatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stopwatch</span></code></a></em><a class="headerlink" href="#pyTooling.Stopwatch.ExcludeContextManager._stopwatch" title="Link to this definition"></a></dt>
+<dd><p>Reference to the stopwatch.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.ExcludeContextManager.__enter__">
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#ExcludeContextManager.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.ExcludeContextManager.__enter__" title="Link to this definition"></a></dt>
+<dd><p>Enter the context and pause the stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager" title="pyTooling.Stopwatch.ExcludeContextManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExcludeContextManager</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Excluding stopwatch context manager instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.ExcludeContextManager.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#ExcludeContextManager.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.ExcludeContextManager.__exit__" title="Link to this definition"></a></dt>
+<dd><p>Exit the context and restart stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exc_type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]]</span>) – Exception type</p></li>
+<li><p><strong>exc_val</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></a>]</span>) – Exception instance</p></li>
+<li><p><strong>exc_tb</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/types.html#types.TracebackType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackType</span></code></a>]</span>) – Exception’s traceback.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Stopwatch.</span></span><span class="sig-name descname"><span class="pre">Stopwatch</span></span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch" title="Link to this definition"></a></dt>
+<dd><p>The stopwatch implements a solution to measure and collect timings.</p>
+<p>The time measurement can be started, paused, resumed and stopped. More over, split times can be taken too. The
+measurement is based on <a class="reference external" href="https://docs.python.org/3/library/time.html#time.perf_counter_ns" title="(in Python v3.14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">time.perf_counter_ns()</span></code></a>. Additionally, starting and stopping is preserved as absolute
+time via <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime.now" title="(in Python v3.14)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.datetime.now()</span></code></a>.</p>
+<p>Every split time taken is a time delta to the previous operation. These are preserved in an internal sequence of
+splits. This sequence includes time deltas of activity and inactivity. Thus, a running stopwatch can be split as well
+as a paused stopwatch.</p>
+<p>The stopwatch can also be used in a <a class="reference external" href="https://docs.python.org/3/reference/compound_stmts.html#with" title="(in Python v3.14)"><span class="xref std std-ref">with-statement</span></a>, because it implements the <a class="reference external" href="https://docs.python.org/3/reference/datamodel.html#context-managers" title="(in Python v3.14)"><span class="xref std std-ref">context manager protocol</span></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-943e3aeb5f9f4400c8501a8cb26bed91fb4a4235.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Stopwatch</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preferPause</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes the fields of the stopwatch.</p>
+<p>If parameter <code class="docutils literal notranslate"><span class="pre">started</span></code> is set to true, the stopwatch will immediately start.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Optional name of the stopwatch.</p></li>
+<li><p><strong>preferPause</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Optional setting, if __exit__(…) in a contex should prefer pause or stop behavior.</p></li>
+<li><p><strong>started</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Optional flag, if the stopwatch should be started immediately.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Start">
+<span class="sig-name descname"><span class="pre">Start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.Start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Start" title="Link to this definition"></a></dt>
+<dd><p>Start the stopwatch.</p>
+<p>A stopwatch can only be started once. There is no restart or reset operation provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was already started.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was already started and stopped.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Split">
+<span class="sig-name descname"><span class="pre">Split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.Split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Split" title="Link to this definition"></a></dt>
+<dd><p>Take a split time and return the time delta to the previous stopwatch operation.</p>
+<p>The stopwatch needs to be running to take a split time. See property <a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsRunning" title="pyTooling.Stopwatch.Stopwatch.IsRunning"><code class="xref py py-data docutils literal notranslate"><span class="pre">IsRunning</span></code></a> to check if the stopwatch
+is running and the split operation is possible. <br />
+Depending on the previous operation, the time delta will be:</p>
+<ul class="simple">
+<li><p>the duration from start operation to the first split.</p></li>
+<li><p>the duration from last resume to this split.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Duration in seconds since last stopwatch operation</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was not started or resumed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Pause">
+<span class="sig-name descname"><span class="pre">Pause</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.Pause"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Pause" title="Link to this definition"></a></dt>
+<dd><p>Pause the stopwatch and return the time delta to the previous stopwatch operation.</p>
+<p>The stopwatch needs to be running to pause it. See property <a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsRunning" title="pyTooling.Stopwatch.Stopwatch.IsRunning"><code class="xref py py-data docutils literal notranslate"><span class="pre">IsRunning</span></code></a> to check if the stopwatch is running
+and the pause operation is possible. <br />
+Depending on the previous operation, the time delta will be:</p>
+<ul class="simple">
+<li><p>the duration from start operation to the first pause.</p></li>
+<li><p>the duration from last resume to this pause.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Duration in seconds since last stopwatch operation</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was not started or resumed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Resume">
+<span class="sig-name descname"><span class="pre">Resume</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.Resume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Resume" title="Link to this definition"></a></dt>
+<dd><p>Resume the stopwatch and return the time delta to the previous pause operation.</p>
+<p>The stopwatch needs to be paused to resume it. See property <a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsPaused" title="pyTooling.Stopwatch.Stopwatch.IsPaused"><code class="xref py py-data docutils literal notranslate"><span class="pre">IsPaused</span></code></a> to check if the stopwatch is paused
+and the resume operation is possible. <br />
+The time delta will be the duration from last pause to this resume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Duration in seconds since last pause operation</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was not paused.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Stop">
+<span class="sig-name descname"><span class="pre">Stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.Stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Stop" title="Link to this definition"></a></dt>
+<dd><p>Stop the stopwatch and return the time delta to the previous stopwatch operation.</p>
+<p>The stopwatch needs to be started to stop it. See property <a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch.IsStarted" title="pyTooling.Stopwatch.Stopwatch.IsStarted"><code class="xref py py-data docutils literal notranslate"><span class="pre">IsStarted</span></code></a> to check if the stopwatch was started
+and the stop operation is possible. <br />
+Depending on the previous operation, the time delta will be:</p>
+<ul class="simple">
+<li><p>the duration from start operation to the stop operation.</p></li>
+<li><p>the duration from last resume to the stop operation.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Duration in seconds since last stopwatch operation</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was not started.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Stopwatch.StopwatchException" title="pyTooling.Stopwatch.StopwatchException"><strong>StopwatchException</strong></a> – If stopwatch was already stopped.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Name" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the name of the stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Name of the stopwatch.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.IsStarted">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsStarted</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.IsStarted" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the IsStarted state of the stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if stopwatch was started.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.IsRunning">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsRunning</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.IsRunning" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the IsRunning state of the stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if stopwatch was started and is currently not paused.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.IsPaused">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsPaused</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.IsPaused" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the IsPaused state of the stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if stopwatch was started and is currently paused.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.IsStopped">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsStopped</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.IsStopped" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the IsStopped state of the stopwatch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if stopwatch was stopped.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.StartTime">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StartTime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.StartTime" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the absolute time when the stopwatch was started.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The time when the stopwatch was started, otherwise None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.StopTime">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StopTime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.StopTime" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the absolute time when the stopwatch was stopped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The time when the stopwatch was stopped, otherwise None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.HasSplitTimes">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HasSplitTimes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.HasSplitTimes" title="Link to this definition"></a></dt>
+<dd><p>Read-only property checking if split times have been taken.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if split times have been taken.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.SplitCount">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SplitCount</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.SplitCount" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the number of split times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of split times.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.ActiveCount">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ActiveCount</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.ActiveCount" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the number of active split times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of active split times.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This won’t include all activities, unless the stopwatch got stopped.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.InactiveCount">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InactiveCount</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.InactiveCount" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the number of active split times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of active split times.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This won’t include all inactivities, unless the stopwatch got stopped.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Activity">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Activity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Activity" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the duration of all active split times.</p>
+<p>If the stopwatch is currently running, the duration since start or last resume operation will be included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Duration of all active split times in seconds. If the stopwatch was never started, the return value will
+be 0.0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Inactivity">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Inactivity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Inactivity" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the duration of all inactive split times.</p>
+<p>If the stopwatch is currently paused, the duration since last pause operation will be included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
+be 0.0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Duration">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Duration" title="Link to this definition"></a></dt>
+<dd><p>Read-only property returning the duration from start operation to stop operation.</p>
+<p>If the stopwatch is not yet stopped, the duration from start to now is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
+be 0.0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.Exclude">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.Stopwatch.ExcludeContextManager" title="pyTooling.Stopwatch.ExcludeContextManager"><span class="pre">ExcludeContextManager</span></a></em><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.Exclude" title="Link to this definition"></a></dt>
+<dd><p>Return an <em>exclude</em> context manager for the stopwatch instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An excluding context manager.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__enter__">
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__enter__" title="Link to this definition"></a></dt>
+<dd><p>Implementation of the <a class="reference external" href="https://docs.python.org/3/reference/datamodel.html#context-managers" title="(in Python v3.14)"><span class="xref std std-ref">context manager protocol’s</span></a> <code class="docutils literal notranslate"><span class="pre">__enter__(...)</span></code> method.</p>
+<p>An unstarted stopwatch will be started. A paused stopwatch will be resumed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Stopwatch.Stopwatch" title="pyTooling.Stopwatch.Stopwatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stopwatch</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The stopwatch itself.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__exit__" title="Link to this definition"></a></dt>
+<dd><p>Implementation of the <a class="reference external" href="https://docs.python.org/3/reference/datamodel.html#context-managers" title="(in Python v3.14)"><span class="xref std std-ref">context manager protocol’s</span></a> <code class="docutils literal notranslate"><span class="pre">__exit__(...)</span></code> method.</p>
+<p>A running stopwatch will be paused or stopped depending on the configured <code class="docutils literal notranslate"><span class="pre">preferPause</span></code> behavior.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exc_type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a>]</span>) – Exception type, otherwise None.</p></li>
+<li><p><strong>exc_val</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></span>) – Exception object, otherwise None.</p></li>
+<li><p><strong>exc_tb</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/inspect.html#inspect.Traceback" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Traceback</span></code></a></span>) – Exception’s traceback, otherwise None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True, if exceptions should be suppressed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__len__" title="Link to this definition"></a></dt>
+<dd><p>Implementation of <code class="docutils literal notranslate"><span class="pre">len(...)</span></code> to return the number of split times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of split times.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Implementation of <code class="docutils literal notranslate"><span class="pre">split</span> <span class="pre">=</span> <span class="pre">object[i]</span></code> to return the i-th split time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Index to access the i-th split time.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>i-th split time as a tuple of: <br />
+(1) delta time to the previous stopwatch operation and <br />
+(2) a boolean indicating if the split was an activity (true) or inactivity (false).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.14)"><strong>KeyError</strong></a> – If index <em>i</em> doesn’t exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__iter__" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator of tuples to iterate all split times.</p>
+<p>If the stopwatch is not stopped yet, the last split won’t be included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Iterator of split time tuples of: <br />
+(1) delta time to the previous stopwatch operation and <br />
+(2) a boolean indicating if the split was an activity (true) or inactivity (false).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Stopwatch.Stopwatch.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Stopwatch.html#Stopwatch.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Stopwatch.Stopwatch.__str__" title="Link to this definition"></a></dt>
+<dd><p>Returns the stopwatch’s state and its measured time span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The string equivalent of the stopwatch.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.StateMachine.html" class="btn btn-neutral float-left" title="pyTooling.StateMachine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.TerminalUI.html" class="btn btn-neutral float-right" title="pyTooling.TerminalUI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

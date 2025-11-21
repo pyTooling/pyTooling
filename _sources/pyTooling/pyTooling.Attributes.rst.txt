@@ -1,0 +1,122 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.Attributes
+====================
+
+.. automodule:: pyTooling.Attributes
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Attributes.ArgParse
+
+.. currentmodule:: pyTooling.Attributes
+
+
+**Variables**
+
+- :py:data:`Entity`
+  
+- :py:data:`TAttr`
+  
+- :py:data:`TAttributeFilter`
+  
+- :py:data:`ATTRIBUTES_MEMBER_NAME`
+  
+
+
+**Classes**
+
+- :py:class:`AttributeScope`:
+  An enumeration of possible entities an attribute can be applied to.
+
+- :py:class:`Attribute`:
+  Base-class for all pyTooling attributes.
+
+- :py:class:`SimpleAttribute`:
+  Base-class for all pyTooling attributes.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: Entity
+   :annotation:
+
+   .. code-block:: text
+
+      ~Entity
+
+.. autodata:: TAttr
+   :annotation:
+
+   .. code-block:: text
+
+      ~TAttr
+
+.. autodata:: TAttributeFilter
+   :annotation:
+
+   .. code-block:: text
+
+      typing.Union[typing.Type[~TAttr], typing.Iterable[typing.Type[~TAttr]], NoneType]
+
+.. autodata:: ATTRIBUTES_MEMBER_NAME
+   :annotation:
+
+   .. code-block:: text
+
+      '__pyattr__'
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: AttributeScope
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: AttributeScope
+      :parts: 1
+
+.. autoclass:: Attribute
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Attribute
+      :parts: 1
+
+.. autoclass:: SimpleAttribute
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SimpleAttribute
+      :parts: 1

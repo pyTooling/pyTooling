@@ -1,0 +1,1161 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.CallByRef &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.CallByRef</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.CallByRef</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               ____      _ _ ____        ____       __                                #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|__ _| | | __ ) _   _|  _ \ ___ / _|                               #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` || |   / _` | | |  _ \| | | | |_) / _ \ |_                                #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_| | | | |_) | |_| |  _ &lt;  __/  _|                               #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\__,_|_|_|____/ \__, |_| \_\___|_|                                 #</span>
+<span class="c1"># |_|    |___/                          |___/                       |___/                                              #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Auxiliary classes to implement call-by-reference.</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;COMMON/CallByRef&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w">       </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">        </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">export</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.CallByRef] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">          </span><span class="kn">import</span> <span class="n">export</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">MetaClasses</span><span class="w">         </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.CallByRef] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CallByRefParam">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CallByRefParam</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Implements a *call-by-reference* parameter.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   * :class:`CallByRefBoolParam` |br|</span>
+<span class="sd">	     |rarr| A special *call-by-reference* implementation for boolean reference types.</span>
+<span class="sd">	   * :class:`CallByRefIntParam` |br|</span>
+<span class="sd">	     |rarr| A special *call-by-reference* implementation for integer reference types.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">Value</span><span class="p">:</span> <span class="n">T</span>    <span class="c1">#: internal value</span>
+
+<div class="viewcode-block" id="CallByRefParam.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Constructs a *call-by-reference* object for any type.</span>
+
+<span class="sd">		:param value: The value to be set as an initial value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="CallByRefParam.__ilshift__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam.__ilshift__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ilshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefParam[T]&#39;</span><span class="p">:</span>  <span class="c1"># Starting with Python 3.11+, use typing.Self as return type</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Assigns a value to the *call-by-reference* object.</span>
+
+<span class="sd">		:param other: The value to be assigned to this *call-by-reference* object.</span>
+<span class="sd">		:returns:     Itself.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">=</span> <span class="n">other</span>
+		<span class="k">return</span> <span class="bp">self</span></div>
+
+
+	<span class="c1"># binary operators - comparison</span>
+<div class="viewcode-block" id="CallByRefParam.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam.__eq__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefParam wrapped value with another instances (CallbyRefParam) or non-wrapped value for equality.</span>
+
+<span class="sd">		:param other: Parameter to compare against.</span>
+<span class="sd">		:returns:     ``True``, if both values are equal.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">==</span> <span class="n">other</span></div>
+
+
+<div class="viewcode-block" id="CallByRefParam.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam.__ne__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefParam wrapped value with another instances (CallbyRefParam) or non-wrapped value for inequality.</span>
+
+<span class="sd">		:param other: Parameter to compare against.</span>
+<span class="sd">		:returns:     ``True``, if both values are unequal.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">!=</span> <span class="n">other</span></div>
+
+
+	<span class="c1"># Type conversion operators</span>
+<div class="viewcode-block" id="CallByRefParam.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the wrapped object&#39;s string representation.</span>
+
+<span class="sd">		:returns: The string representation of the wrapped value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallByRefParam.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the wrapped object&#39;s string equivalent.</span>
+
+<span class="sd">		:returns: The string equivalent of the wrapped value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CallByRefBoolParam">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefBoolParam">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CallByRefBoolParam</span><span class="p">(</span><span class="n">CallByRefParam</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;A special *call-by-reference* implementation for boolean reference types.&quot;&quot;&quot;</span>
+
+	<span class="c1"># Binary operators - comparison</span>
+<div class="viewcode-block" id="CallByRefBoolParam.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefBoolParam.__eq__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefBoolParam wrapped boolean value with another instances (CallByRefBoolParam) or non-wrapped boolean value for equality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both values are equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">==</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefBoolParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by == operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="s2">&quot;Supported types for second operand: bool, CallByRefBoolParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefBoolParam.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefBoolParam.__ne__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefBoolParam wrapped boolean value with another instances (CallByRefBoolParam) or non-wrapped boolean value for inequality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both values are unequal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">!=</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefBoolParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by != operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: bool, CallByRefBoolParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+	<span class="c1"># Type conversion operators</span>
+<div class="viewcode-block" id="CallByRefBoolParam.__bool__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefBoolParam.__bool__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Type conversion to :class:`bool`.</span>
+
+<span class="sd">		:returns: The wrapped value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span></div>
+
+
+<div class="viewcode-block" id="CallByRefBoolParam.__int__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefBoolParam.__int__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Type conversion to :class:`int`.</span>
+
+<span class="sd">		:returns: The integer representation of the wrapped boolean value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CallByRefIntParam">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CallByRefIntParam</span><span class="p">(</span><span class="n">CallByRefParam</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;A special *call-by-reference* implementation for integer reference types.&quot;&quot;&quot;</span>
+
+	<span class="c1"># Unary operators</span>
+<div class="viewcode-block" id="CallByRefIntParam.__neg__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__neg__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Negate: -self.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__pos__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__pos__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__pos__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Positive: +self.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__invert__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__invert__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Invert: ~self.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span></div>
+
+
+	<span class="c1"># Binary operators - logical</span>
+<div class="viewcode-block" id="CallByRefIntParam.__and__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__and__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;And: self &amp; other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&amp;</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by and operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__or__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__or__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Or: self | other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">|</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by or operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__xor__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__xor__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Xor: self ^ other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">^</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+	<span class="c1"># Binary inplace operators</span>
+<div class="viewcode-block" id="CallByRefIntParam.__iand__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__iand__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__iand__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>  <span class="c1"># Starting with Python 3.11+, use typing.Self as return type</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Inplace and: self &amp;= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&amp;=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &amp;= operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__ior__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__ior__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ior__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>  <span class="c1"># Starting with Python 3.11+, use typing.Self as return type</span>
+<span class="w">		</span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Inplace or: self \|= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">|=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by |= operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__ixor__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__ixor__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ixor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>  <span class="c1"># Starting with Python 3.11+, use typing.Self as return type</span>
+<span class="w">		</span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Inplace or: self \|= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">^=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by ^= operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+	<span class="c1"># Binary operators - arithmetic</span>
+<div class="viewcode-block" id="CallByRefIntParam.__add__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__add__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Addition: self + other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">+</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by + operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__sub__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__sub__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Subtraction: self - other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">-</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by - operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__truediv__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__truediv__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Division: self / other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">/</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by / operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__floordiv__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__floordiv__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Floor division: self // other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">//</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by // operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__mul__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__mul__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Multiplication: self * other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">*</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by * operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__mod__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__mod__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__mod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Modulo: self % other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">%</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by % operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__pow__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__pow__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Power: self ** other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">**</span> <span class="n">other</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by ** operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+	<span class="c1"># Binary inplace operators - arithmetic</span>
+<div class="viewcode-block" id="CallByRefIntParam.__iadd__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__iadd__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Addition: self += other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">+=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__isub__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__isub__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__isub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Subtraction: self -= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">-=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__idiv__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__idiv__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">__idiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Division: self /= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">/=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__ifloordiv__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__ifloordiv__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ifloordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Floor division: self // other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">//=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__imul__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__imul__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Multiplication: self \*= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">*=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__imod__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__imod__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__imod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Modulo: self %= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">%=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__ipow__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__ipow__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ipow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CallByRefIntParam&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Power: self \*\*= other.&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">**=</span> <span class="n">other</span>
+			<span class="k">return</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by xor operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+	<span class="c1"># Binary operators - comparison</span>
+<div class="viewcode-block" id="CallByRefIntParam.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__eq__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for equality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both values are equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">==</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefIntParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by == operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__ne__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for inequality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both values are unequal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">!=</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefIntParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by != operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__lt__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__lt__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for less-than.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if the wrapped value is less than the other value.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&lt;</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefIntParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &lt; operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__le__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__le__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for less-than-or-equal.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if the wrapped value is less than or equal the other value.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&lt;=</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefIntParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &lt;= operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__gt__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__gt__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for geater-than.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if the wrapped value is greater than the other value.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&gt;</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefIntParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &gt; operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__ge__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__ge__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for greater-than-or-equal.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if the wrapped value is greater than or equal the other value.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&gt;=</span> <span class="n">other</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CallByRefIntParam</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">Value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second operand of type &#39;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is not supported by &gt;= operator.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span></div>
+
+
+	<span class="c1"># Type conversion operators</span>
+<div class="viewcode-block" id="CallByRefIntParam.__bool__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__bool__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Type conversion to :class:`bool`.</span>
+
+<span class="sd">		:returns: The boolean representation of the wrapped integer value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__int__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__int__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Type conversion to :class:`int`.</span>
+
+<span class="sd">		:returns: The wrapped value.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Value</span></div>
+
+
+<div class="viewcode-block" id="CallByRefIntParam.__float__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefIntParam.__float__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Type conversion to :class:`float`.</span>
+
+<span class="sd">		:returns: The float representation of the wrapped integer value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Value</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

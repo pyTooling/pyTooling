@@ -1,0 +1,1022 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Versioning &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration" href="../Configuration/index.html" />
+    <link rel="prev" title="Stopwatch" href="Stopwatch.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Versioning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#semantic-versioning">Semantic Versioning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#variants">Variants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#calendar-versioning">Calendar Versioning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#versioning-calvervariants">Variants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#versionrange">VersionRange</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#versionset">VersionSet</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Versioning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Common/Versioning.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="versioning">
+<span id="id1"></span><h1>Versioning<a class="headerlink" href="#versioning" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#module-pyTooling.Versioning" title="pyTooling.Versioning"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Versioning</span></code></a> package provides auxiliary classes to implement <a class="reference internal" href="#versioning-semanticversion"><span class="std std-ref">Semantic Versioning</span></a>
+(following <a class="reference external" href="https://semver.org/">SemVer</a> rules) and <a class="reference internal" href="#versioning-calendarversion"><span class="std std-ref">Calendar Versioning</span></a> (following
+<a class="reference external" href="https://calver.org/">CalVer</a> rules). The latter one has multiple variants due to the meaning of the version’s parts
+like: year-month version or year-week version.</p>
+<p>Versions can be grouped by <a class="reference internal" href="#versioning-versionset"><span class="std std-ref">version sets</span></a> and <a class="reference internal" href="#versioning-versionrange"><span class="std std-ref">version ranges</span></a>.</p>
+<section id="semantic-versioning">
+<span id="versioning-semanticversion"></span><h2>Semantic Versioning<a class="headerlink" href="#semantic-versioning" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion" title="pyTooling.Versioning.SemanticVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">SemanticVersion</span></code></a> class represents of a version number like <code class="docutils literal notranslate"><span class="pre">v3.7.12</span></code>. It consists of
+a major, minor and micro number. The micro number is also known as patch number. The minor and micro numbers are
+optional, but usually used by most semantic version numbering schemes. In addition, optional parts can be added like a
+prefix, a postfix or a build number.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Given a version number <code class="docutils literal notranslate"><span class="pre">MAJOR.MINOR.MICRO</span></code>, increment the:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MAJOR</span></code> version when you make incompatible API changes,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MINOR</span></code> version when you add functionality in a backwards compatible manner, and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MICRO</span></code> version when you make backwards compatible bug fixes.</p></li>
+<li><p>Additional labels for pre-release and build metadata are available as extensions to the <code class="docutils literal notranslate"><span class="pre">MAJOR.MINOR.MICRO</span></code>
+format.</p></li>
+</ul>
+<p>Summary taken from <a class="reference external" href="https://semver.org/">semver.org</a>.</p>
+</div>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Direct Instantiation</p>
+<p>A semantic version can be constructed from parts like major, minor and micro numbers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from numbers</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">SemanticVersion</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Construction from String</p>
+<p>Alternatively, a semantic version can be created from a string containing a semantic version number by using the
+class-method <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.Parse" title="pyTooling.Versioning.SemanticVersion.Parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parse()</span></code></a>. The string is parsed and a semantic version gets
+returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from string</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">SemanticVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;0.22.8&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compare versions</span>
+<span class="k">if</span> <span class="n">version2</span> <span class="o">&gt;</span> <span class="n">version1</span><span class="p">:</span>
+
+<span class="c1"># Compare versions</span>
+<span class="k">if</span> <span class="n">version2</span> <span class="o">&gt;=</span> <span class="s2">&quot;1.4.8&quot;</span><span class="p">:</span>
+</pre></div>
+</div>
+<p class="rubric">Features</p>
+<dl>
+<dt>Prefix string</dt><dd><p>Represents the prefix like: <code class="docutils literal notranslate"><span class="pre">v</span></code> (version), <code class="docutils literal notranslate"><span class="pre">r</span></code> (revision), <code class="docutils literal notranslate"><span class="pre">i</span></code> (internal version/release), <code class="docutils literal notranslate"><span class="pre">ver</span></code>
+(version), <code class="docutils literal notranslate"><span class="pre">rev</span></code> (revision).</p>
+<p><span class="colorgreen">v</span>1.2.3</p>
+</dd>
+<dt>Major number</dt><dd><p>Represents the major version number in semantic version.</p>
+<p>v<span class="colorgreen">1</span>.2.3</p>
+</dd>
+<dt>Minor number</dt><dd><p>Represents the minor version number in semantic version.</p>
+<p>v1.<span class="colorgreen">2</span>.3</p>
+</dd>
+<dt>Micro number</dt><dd><p>Represents the micro or patch version number in semantic version.</p>
+<p>v1.2.<span class="colorgreen">3</span></p>
+</dd>
+<dt>Build number</dt><dd><p>Represents the build number.</p>
+<p>v1.2.3.<span class="colorgreen">4</span></p>
+</dd>
+<dt>Release Level / Release number</dt><dd><p>Distinguishes if a version is in <em>alpha</em>, <em>beta</em>, <em>release candidate</em> or <em>final</em> release level.</p>
+<p>v1.2.3.<span class="colorgreen">alpha4</span> <br />
+v1.2.3.<span class="colorgreen">beta4</span> <br />
+v1.2.3.<span class="colorgreen">rc4</span></p>
+</dd>
+<dt>Post number</dt><dd><p>tbd</p>
+<p>v1.2.3.<span class="colorgreen">post4</span></p>
+</dd>
+<dt>Development number</dt><dd><p>tbd</p>
+<p>v1.2.3.<span class="colorgreen">dev4</span></p>
+</dd>
+<dt>Postfix string</dt><dd><p>v1.2.3+<span class="colorgreen">deb11u5</span></p>
+</dd>
+<dt>Comparison operators</dt><dd><p>Operators for <code class="docutils literal notranslate"><span class="pre">==</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code>.</p>
+</dd>
+<dt>String formatting</dt><dd><p>The version number can be formatted as a string with a fixed formatting pattern based on present version parts
+as well as a user-defined formatting via <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.SemanticVersion.__format__" title="pyTooling.Versioning.SemanticVersion.__format__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__format__()</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<table class="hlist"><tr><td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">v1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r1.12</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">i1.2.13+linux_86_64</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rev1.2.3.14</span></code></p></li>
+</ul>
+</td><td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">v1.2.3-dev</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v1.2.3.dev23</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v1.2.3.alpha1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v1.2.3.beta1</span></code></p></li>
+</ul>
+</td><td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">v1.2.3.rc1+deb25</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1.2.8.post2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1.2.8.post2.dev4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v1.2.3.alpha4.post5.dev6+deb11u35</span></code></p></li>
+</ul>
+</td></tr></table>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SemanticVersion</span><span class="p">(</span><span class="n">Version</span><span class="p">):</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">validator</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Version&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parts</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Major</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Minor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Micro</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Patch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">ReleaseLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReleaseLevel</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">ReleaseNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Post</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Dev</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Postfix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Flags</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__imod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;SemanticVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__format__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formatSpec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<section id="variants">
+<span id="versioning-semvervariants"></span><h3>Variants<a class="headerlink" href="#variants" title="Link to this heading"></a></h3>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+Python Version</label><div class="sd-tab-content docutils">
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>3.13.0</p></li>
+<li><p>3.13.0a4</p></li>
+<li><p>3.13.0b2</p></li>
+<li><p>3.13.0rc2</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PythonVersion</span><span class="p">(</span><span class="n">SemanticVersion</span><span class="p">):</span>
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">FromSysVersionInfo</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PythonVersion&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="calendar-versioning">
+<span id="versioning-calendarversion"></span><h2>Calendar Versioning<a class="headerlink" href="#calendar-versioning" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.CalendarVersion" title="pyTooling.Versioning.CalendarVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalendarVersion</span></code></a> class represents of a version number like <code class="docutils literal notranslate"><span class="pre">2021.10</span></code>.</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Direct Instantiation</p>
+<p>Alternatively, a calendar version can be constructed from parts like major, minor and micro numbers. The
+unified naming of parts can be used to map years to major numbers, months to minor numbers, etc.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from numbers</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">CalendarVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Construction from String</p>
+<p>A calendar version can be created from a string containing a calendar version number by using the class-method
+<a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.CalendarVersion.Parse" title="pyTooling.Versioning.CalendarVersion.Parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parse()</span></code></a>. The string is parsed and a calendar version gets returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from string</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">CalendarVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;2024.05&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compare versions</span>
+<span class="k">if</span> <span class="n">version2</span> <span class="o">&gt;</span> <span class="n">version1</span><span class="p">:</span>
+
+<span class="c1"># Compare versions</span>
+<span class="k">if</span> <span class="n">version2</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023.02&quot;</span><span class="p">:</span>
+</pre></div>
+</div>
+<p class="rubric">Features</p>
+<dl class="simple">
+<dt>Major number</dt><dd><p>Represents the major version number in semantic version.</p>
+</dd>
+<dt>Minor number</dt><dd><p>Represents the minor version number in semantic version.</p>
+</dd>
+<dt>Micro number</dt><dd><p>Represents the micro or patch version number in semantic version.</p>
+</dd>
+<dt>Build number</dt><dd><p>Represents the build number.</p>
+</dd>
+<dt>Prefix string</dt><dd><p>Represents the prefix like: <code class="docutils literal notranslate"><span class="pre">v</span></code> (version), <code class="docutils literal notranslate"><span class="pre">r</span></code> (revision), <code class="docutils literal notranslate"><span class="pre">i</span></code> (internal version/release), <code class="docutils literal notranslate"><span class="pre">ver</span></code>
+(version), <code class="docutils literal notranslate"><span class="pre">rev</span></code> (revision).</p>
+</dd>
+<dt>Comparison operators</dt><dd><p>Operators for <code class="docutils literal notranslate"><span class="pre">==</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">%=</span></code>.</p>
+</dd>
+</dl>
+<p class="rubric">Missing Features</p>
+<ul class="simple">
+<li><p>release-level: additional labels like <code class="docutils literal notranslate"><span class="pre">dev</span></code>, <code class="docutils literal notranslate"><span class="pre">rc</span></code>, <code class="docutils literal notranslate"><span class="pre">pl</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></li>
+<li><p>pre-version and post-version</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CalendarVersion</span><span class="p">(</span><span class="n">Version</span><span class="p">):</span>
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">validator</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CalendarVersion&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parts</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Major</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Minor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Micro</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Patch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Flags</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Postfix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__imod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CalendarVersion&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__format__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formatSpec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<section id="versioning-calvervariants">
+<span id="id2"></span><h3>Variants<a class="headerlink" href="#versioning-calvervariants" title="Link to this heading"></a></h3>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Calendar versions have multiple format variants:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">YY.MINOR.MICRO</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YYYY.MINOR.MICRO</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YY.MM</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YYYY.0M</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YYYY.MM.DD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YYYY.MM.DD_MICRO</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code></p></li>
+</ul>
+<p>Formats taken from <a class="reference external" href="https://calver.org/">calver.org</a>.</p>
+</div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+Year-Month Version</label><div class="sd-tab-content docutils">
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Direct Instantiation</p>
+<p>A year-month version can be constructed from year and month numbers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from numbers</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Construction from String</p>
+<p>A semantic version can also be created from a string containing a year-month version number by using the
+class-method <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.YearMonthVersion.Parse" title="pyTooling.Versioning.YearMonthVersion.Parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parse()</span></code></a>. The string is parsed and a year-month
+version gets returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from string</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearMonthVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;2024.05&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>OSVVM: 2024.07</p></li>
+<li><p>Ubuntu: 2024.10</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">YearMonthVersion</span><span class="p">(</span><span class="n">CalendarVersion</span><span class="p">):</span>
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">validator</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;YearMonthVersion&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YearMonthVersion&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Month</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+Year-Week Version</label><div class="sd-tab-content docutils">
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Direct Instantiation</p>
+<p>A year-week version can be constructed from year and month numbers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from numbers</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearWeekVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Construction from String</p>
+<p>A semantic version can also be created from a string containing a year-week version number by using the
+class-method <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.YearWeekVersion.Parse" title="pyTooling.Versioning.YearWeekVersion.Parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parse()</span></code></a>. The string is parsed and a year-week
+version gets returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from string</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearWeekVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;2024.05&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>Production date codes</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">YearWeekVersion</span><span class="p">(</span><span class="n">CalendarVersion</span><span class="p">):</span>
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">validator</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;YearWeekVersion&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YearWeekVersion&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Week</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+Year-Release Version</label><div class="sd-tab-content docutils">
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Direct Instantiation</p>
+<p>A year-release version can be constructed from year and month numbers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from numbers</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearReleaseVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Construction from String</p>
+<p>A semantic version can also be created from a string containing a year-release version number by using the
+class-method <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.YearReleaseVersion.Parse" title="pyTooling.Versioning.YearReleaseVersion.Parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parse()</span></code></a>. The string is parsed and a year-release
+version gets returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from string</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearReleaseVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;2024.2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>Vivado: 2024.1</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">YearReleaseVersion</span><span class="p">(</span><span class="n">CalendarVersion</span><span class="p">):</span>
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">validator</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;YearReleaseVersion&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YearReleaseVersion&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Release</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+Year-Month-Day Version</label><div class="sd-tab-content docutils">
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Direct Instantiation</p>
+<p>A year-month-day version can be constructed from year, month and day numbers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from numbers</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearMonthDayVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Construction from String</p>
+<p>A semantic version can also be created from a string containing a year-month-day version number by using the
+class-method <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.YearMonthDayVersion.Parse" title="pyTooling.Versioning.YearMonthDayVersion.Parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parse()</span></code></a>. The string is parsed and a
+year-month-day version gets returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct from string</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">YearMonthDayVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;2024.10.05&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>Furo: 2024.04.27</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">YearMonthDayVersion</span><span class="p">(</span><span class="n">CalendarVersion</span><span class="p">):</span>
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">versionString</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">validator</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;YearMonthDayVersion&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YearMonthDayVersion&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Month</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Day</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="versionrange">
+<span id="versioning-versionrange"></span><h2>VersionRange<a class="headerlink" href="#versionrange" title="Link to this heading"></a></h2>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>A <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.VersionRange" title="pyTooling.Versioning.VersionRange"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionRange</span></code></a> defines a range of versions reaching from a lower to an upper bound.
+It equivalently supports <a class="reference internal" href="#versioning-semanticversion"><span class="std std-ref">semantic</span></a> and <a class="reference internal" href="#versioning-calendarversion"><span class="std std-ref">calendar</span></a>
+versions or derived subclasses thereof. When initializing a version range, an optional
+<a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.RangeBoundHandling" title="pyTooling.Versioning.RangeBoundHandling"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangeBoundHandling</span></code></a> flag specifies if the bounds are inclusive (default) or
+exclusive.</p>
+<p class="rubric">Features</p>
+<dl>
+<dt>Access bounds and bound handling behavior</dt><dd><p>The lower bound of the version range can be read or updated by accessing the
+<a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.VersionRange.LowerBound" title="pyTooling.Versioning.VersionRange.LowerBound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">LowerBound</span></code></a> property. Similarly, the upper bound of the version range
+can be read or updated by accessing the <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.VersionRange.UpperBound" title="pyTooling.Versioning.VersionRange.UpperBound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">UpperBound</span></code></a> property.</p>
+<p>The behavior how lower and upper bound are handled can be read or modified by accessing the
+<a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.VersionRange.BoundHandling" title="pyTooling.Versioning.VersionRange.BoundHandling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">BoundHandling</span></code></a> property.</p>
+</dd>
+<dt>Comparison of two version ranges</dt><dd><p>A version range can be compare to another version range using comparison operators: <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>.</p>
+</dd>
+<dt>Comparison of a version range and a version</dt><dd><p>A version can be compared with a version range and vise versa using comparison operators: <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>.</p>
+<p>The behavior is influenced by the bound handling behavior.</p>
+</dd>
+<dt>Contains checks</dt><dd><p>A version can be checked if it’s contained in a version range using <em>contains</em> operators: <code class="docutils literal notranslate"><span class="pre">in</span></code>, <code class="docutils literal notranslate"><span class="pre">not</span> <span class="pre">in</span></code>.</p>
+<p>The behavior is influenced by the bound handling behavior.</p>
+</dd>
+<dt>Intersection</dt><dd><p>Two version ranges can be intersected using the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> operator creating a new version range.</p>
+<p>In case of an empty intersection result, an exception is raised.</p>
+</dd>
+</dl>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VersionRange</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+   <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lowerBound</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">upperBound</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">boundHandling</span><span class="p">:</span> <span class="n">RangeBoundHandling</span> <span class="o">=</span> <span class="n">RangeBoundHandling</span><span class="o">.</span><span class="n">BothBoundsInclusive</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+   <span class="nd">@property</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">LowerBound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="nd">@property</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">UpperBound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="nd">@property</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">BoundHandling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RangeBoundHandling</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VersionRange</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Version</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+</pre></div>
+</div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+Instantiation (Inclusive Bounds)</label><div class="sd-tab-content docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">SemanticVersion</span><span class="p">,</span> <span class="n">VersionRange</span>
+
+<span class="n">versionRange</span> <span class="o">=</span> <span class="n">VersionRange</span><span class="p">(</span>
+  <span class="n">lowerBound</span><span class="o">=</span><span class="n">SemanticVersion</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+  <span class="n">upperBound</span><span class="o">=</span><span class="n">SemanticVersion</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">testVersion</span> <span class="o">=</span> <span class="n">SemanticVersion</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">testVersion</span> <span class="ow">in</span> <span class="n">versionRange</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+Instantiation (Exclusive Upper Bound)</label><div class="sd-tab-content docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">SemanticVersion</span><span class="p">,</span> <span class="n">VersionRange</span>
+
+<span class="n">versionRange</span> <span class="o">=</span> <span class="n">VersionRange</span><span class="p">(</span>
+  <span class="n">lowerBound</span><span class="o">=</span><span class="n">YearWeekVersion</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span> <span class="mi">34</span><span class="p">),</span>
+  <span class="n">upperBound</span><span class="o">=</span><span class="n">YearWeekVersion</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span> <span class="mi">51</span><span class="p">),</span>
+  <span class="n">boundHandling</span><span class="o">=</span><span class="n">RangeBoundHandling</span><span class="o">.</span><span class="n">UpperBoundExclusive</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">testVersion</span> <span class="o">=</span> <span class="n">YearWeekVersion</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span> <span class="mi">51</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">testVersion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">versionRange</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="versionset">
+<span id="versioning-versionset"></span><h2>VersionSet<a class="headerlink" href="#versionset" title="Link to this heading"></a></h2>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>A <a class="reference internal" href="../pyTooling/pyTooling.Versioning.html#pyTooling.Versioning.VersionSet" title="pyTooling.Versioning.VersionSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionSet</span></code></a> defines an ordered set (actually a list) of versions. It equivalently
+supports <a class="reference internal" href="#versioning-semanticversion"><span class="std std-ref">semantic</span></a> and <a class="reference internal" href="#versioning-calendarversion"><span class="std std-ref">calendar</span></a> versions or
+derived subclasses thereof.</p>
+<p class="rubric">Features</p>
+<dl>
+<dt>Accessing versions in the set</dt><dd><p>The versions within a version set can be accessed via index operation (<code class="docutils literal notranslate"><span class="pre">__getitem__</span></code>) or iterating
+(<code class="docutils literal notranslate"><span class="pre">__iter__</span></code>) the version set.</p>
+<p>The number of elements is accessible via length operation (<code class="docutils literal notranslate"><span class="pre">__len__</span></code>).</p>
+</dd>
+<dt>Comparison of two version sets</dt><dd><p>A version set can be compare to another version set using comparison operators: <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>.</p>
+</dd>
+<dt>Comparison of a version set and a version</dt><dd><p>A version can be compared with a version set and vise versa using comparison operators: <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>.</p>
+</dd>
+<dt>Contains checks</dt><dd><p>A version can be checked if it’s contained in a version set using <em>contains</em> operators: <code class="docutils literal notranslate"><span class="pre">in</span></code>, <code class="docutils literal notranslate"><span class="pre">not</span> <span class="pre">in</span></code>.</p>
+</dd>
+<dt>Intersection</dt><dd><p>Two version set can be intersected using the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> operator creating a new version set.</p>
+<p>In case of an empty intersection result, an exception is raised.</p>
+</dd>
+<dt>Union</dt><dd><p>Two version sets can be united using the <code class="docutils literal notranslate"><span class="pre">|</span></code> operator creating a new version set.</p>
+</dd>
+</dl>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p class="rubric">Condensed Class Definition</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VersionSet</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+   <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">versions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Version</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">V</span><span class="p">]]):</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">VersionSet</span><span class="p">[</span><span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">VersionSet</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">VersionSet</span><span class="p">[</span><span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">VersionSet</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">V</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">V</span><span class="p">]:</span>
+     <span class="k">pass</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
+     <span class="k">pass</span>
+</pre></div>
+</div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+Instantiation</label><div class="sd-tab-content docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">SemanticVersion</span><span class="p">,</span> <span class="n">VersionSet</span>
+
+<span class="n">versionSet</span> <span class="o">=</span> <span class="n">VersionSet</span><span class="p">((</span>
+  <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+  <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+  <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="p">))</span>
+
+<span class="n">testVersion</span> <span class="o">=</span> <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">testVersion</span> <span class="ow">in</span> <span class="n">versionSet</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+Iterating Elements</label><div class="sd-tab-content docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">SemanticVersion</span><span class="p">,</span> <span class="n">VersionSet</span>
+
+<span class="n">versionSet</span> <span class="o">=</span> <span class="n">VersionSet</span><span class="p">((</span>
+  <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+  <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+  <span class="n">YearMonthVersion</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="p">))</span>
+
+<span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">versionSet</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Stopwatch.html" class="btn btn-neutral float-left" title="Stopwatch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Configuration/index.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

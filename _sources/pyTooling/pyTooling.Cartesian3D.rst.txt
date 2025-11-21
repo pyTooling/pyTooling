@@ -1,0 +1,116 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=====================
+pyTooling.Cartesian3D
+=====================
+
+.. automodule:: pyTooling.Cartesian3D
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Cartesian3D.Volumes
+
+.. currentmodule:: pyTooling.Cartesian3D
+
+
+**Classes**
+
+- :py:class:`Point3D`:
+  An implementation of a 3D cartesian point.
+
+- :py:class:`Origin3D`:
+  An implementation of a 3D cartesian origin.
+
+- :py:class:`Offset3D`:
+  An implementation of a 3D cartesian offset.
+
+- :py:class:`Size3D`:
+  An implementation of a 3D cartesian size.
+
+- :py:class:`Segment3D`:
+  An implementation of a 3D cartesian segment.
+
+- :py:class:`LineSegment3D`:
+  An implementation of a 3D cartesian line segment.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Point3D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Point3D
+      :parts: 1
+
+.. autoclass:: Origin3D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Origin3D
+      :parts: 1
+
+.. autoclass:: Offset3D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Offset3D
+      :parts: 1
+
+.. autoclass:: Size3D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Size3D
+      :parts: 1
+
+.. autoclass:: Segment3D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Segment3D
+      :parts: 1
+
+.. autoclass:: LineSegment3D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LineSegment3D
+      :parts: 1

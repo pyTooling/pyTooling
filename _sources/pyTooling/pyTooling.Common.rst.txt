@@ -1,0 +1,123 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+================
+pyTooling.Common
+================
+
+.. automodule:: pyTooling.Common
+
+
+.. currentmodule:: pyTooling.Common
+
+
+**Functions**
+
+- :py:func:`getFullyQualifiedName`:
+  Assemble the fully qualified name of a type.
+
+- :py:func:`getResourceFile`:
+  Compute the path to a file within a resource package.
+
+- :py:func:`readResourceFile`:
+  Read a text file resource from resource package.
+
+- :py:func:`isnestedclass`:
+  Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
+
+- :py:func:`getsizeof`:
+  Recursively calculate the "true" size of an object including complex members like ``__dict__``.
+
+- :py:func:`count`:
+  Returns the number of elements in an iterable.
+
+- :py:func:`firstElement`:
+  Returns the first element from an indexable.
+
+- :py:func:`lastElement`:
+  Returns the last element from an indexable.
+
+- :py:func:`firstItem`:
+  Returns the first item from an iterable.
+
+- :py:func:`lastItem`:
+  Returns the last item from an iterable.
+
+- :py:func:`firstKey`:
+  Retrieves the first key from a dictionary's keys.
+
+- :py:func:`firstValue`:
+  Retrieves the first value from a dictionary's values.
+
+- :py:func:`firstPair`:
+  Retrieves the first key-value-pair from a dictionary.
+
+- :py:func:`mergedicts`:
+  Merge multiple dictionaries into a single new dictionary.
+
+- :py:func:`zipdicts`:
+  Iterate multiple dictionaries simultaneously.
+
+
+
+**Classes**
+
+- :py:class:`ChangeDirectory`:
+  A context manager for changing a directory.
+
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: getFullyQualifiedName
+
+.. autofunction:: getResourceFile
+
+.. autofunction:: readResourceFile
+
+.. autofunction:: isnestedclass
+
+.. autofunction:: getsizeof
+
+.. autofunction:: count
+
+.. autofunction:: firstElement
+
+.. autofunction:: lastElement
+
+.. autofunction:: firstItem
+
+.. autofunction:: lastItem
+
+.. autofunction:: firstKey
+
+.. autofunction:: firstValue
+
+.. autofunction:: firstPair
+
+.. autofunction:: mergedicts
+
+.. autofunction:: zipdicts
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: ChangeDirectory
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ChangeDirectory
+      :parts: 1

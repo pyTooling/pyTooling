@@ -1,0 +1,127 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===================
+pyTooling.Licensing
+===================
+
+.. automodule:: pyTooling.Licensing
+
+
+.. currentmodule:: pyTooling.Licensing
+
+
+**Variables**
+
+- :py:data:`PYTHON_LICENSE_NAMES`
+  
+- :py:data:`Apache_2_0_License`
+  
+- :py:data:`BSD_3_Clause_License`
+  
+- :py:data:`GPL_2_0_or_later`
+  
+- :py:data:`MIT_License`
+  
+- :py:data:`SPDX_INDEX`
+  
+
+
+**Classes**
+
+- :py:class:`PythonLicenseName`:
+  A *data class* to represent the license's short name and the package classifier for a license.
+
+- :py:class:`License`:
+  Representation of a license.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: PYTHON_LICENSE_NAMES
+   :annotation:
+
+   .. code-block:: text
+
+      {'Apache-2.0': PythonLicenseName(ShortName='Apache 2.0',
+                                       Classifier='Apache Software License'),
+       'BSD-3-Clause': PythonLicenseName(ShortName='BSD', Classifier='BSD License'),
+       'GPL-2.0-or-later': PythonLicenseName(ShortName='GPL-2.0-or-later',
+                                             Classifier='GNU General Public License '
+                                                        'v2 or later (GPLv2+)'),
+       'MIT': PythonLicenseName(ShortName='MIT', Classifier='MIT License')}
+
+.. autodata:: Apache_2_0_License
+   :annotation:
+
+   .. code-block:: text
+
+      Apache-2.0
+
+.. autodata:: BSD_3_Clause_License
+   :annotation:
+
+   .. code-block:: text
+
+      BSD-3-Clause
+
+.. autodata:: GPL_2_0_or_later
+   :annotation:
+
+   .. code-block:: text
+
+      GPL-2.0-or-later
+
+.. autodata:: MIT_License
+   :annotation:
+
+   .. code-block:: text
+
+      MIT
+
+.. autodata:: SPDX_INDEX
+   :annotation:
+
+   .. code-block:: text
+
+      {'Apache-2.0': Apache-2.0,
+       'BSD-3-Clause': BSD-3-Clause,
+       'GPL-2.0-or-later': GPL-2.0-or-later,
+       'MIT': MIT}
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: PythonLicenseName
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PythonLicenseName
+      :parts: 1
+
+.. autoclass:: License
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: License
+      :parts: 1

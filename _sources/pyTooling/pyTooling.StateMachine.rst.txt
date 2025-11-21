@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+======================
+pyTooling.StateMachine
+======================
+
+.. automodule:: pyTooling.StateMachine
+
+
+.. currentmodule:: pyTooling.StateMachine
+
+
+**Classes**
+
+- :py:class:`Base`:
+  Undocumented.
+
+- :py:class:`Transition`:
+  Represents a transition (edge) in a statemachine diagram (directed graph).
+
+- :py:class:`State`:
+  Represents a state (node/vertex) in a statemachine diagram (directed graph).
+
+- :py:class:`StateMachine`:
+  Represents a statemachine (graph) in a statemachine diagram (directed graph).
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Base
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Base
+      :parts: 1
+
+.. autoclass:: Transition
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Transition
+      :parts: 1
+
+.. autoclass:: State
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: State
+      :parts: 1
+
+.. autoclass:: StateMachine
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: StateMachine
+      :parts: 1

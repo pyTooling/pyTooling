@@ -1,0 +1,1138 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Stopwatch &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.Stopwatch</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Stopwatch</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#              _____           _ _               ____  _                           _       _                           #</span>
+<span class="c1">#   _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|| |_ ___  _ ____      ____ _| |_ ___| |__                        #</span>
+<span class="c1">#  | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | \___ \| __/ _ \| &#39;_ \ \ /\ / / _` | __/ __| &#39;_ \                       #</span>
+<span class="c1">#  | |_) | |_| || | (_) | (_) | | | | | | (_| |_ ___) | || (_) | |_) \ V  V / (_| | || (__| | | |                      #</span>
+<span class="c1">#  | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \__\___/| .__/ \_/\_/ \__,_|\__\___|_| |_|                      #</span>
+<span class="c1">#  |_|    |___/                          |___/                 |_|                                                     #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A stopwatch to measure execution times.</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;COMMON/Stopwatch&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">inspect</span><span class="w">  </span><span class="kn">import</span> <span class="n">Traceback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w">     </span><span class="kn">import</span> <span class="n">perf_counter_ns</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w">    </span><span class="kn">import</span> <span class="n">TracebackType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">   </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="c1"># Python 3.11: use Self if returning the own object: , Self</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlottedObject</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Platform</span><span class="w">    </span><span class="kn">import</span> <span class="n">CurrentPlatform</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Stopwatch] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">          </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">MetaClasses</span><span class="w">         </span><span class="kn">import</span> <span class="n">SlottedObject</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Exceptions</span><span class="w">          </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Platform</span><span class="w">            </span><span class="kn">import</span> <span class="n">CurrentPlatform</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Stopwatch] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<div class="viewcode-block" id="StopwatchException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.StopwatchException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StopwatchException</span><span class="p">(</span><span class="n">ToolingException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;This exception is caused by wrong usage of the stopwatch.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ExcludeContextManager">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.ExcludeContextManager">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExcludeContextManager</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A stopwatch context manager for excluding certain time spans from measurement.</span>
+
+<span class="sd">	While a normal stopwatch&#39;s embedded context manager (re)starts the stopwatch on every *enter* event and pauses the</span>
+<span class="sd">	stopwatch on every *exit* event, this context manager pauses on *enter* events and restarts on every *exit* event.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">_stopwatch</span><span class="p">:</span> <span class="s2">&quot;Stopwatch&quot;</span>  <span class="c1">#: Reference to the stopwatch.</span>
+
+<div class="viewcode-block" id="ExcludeContextManager.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.ExcludeContextManager.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stopwatch</span><span class="p">:</span> <span class="s2">&quot;Stopwatch&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes an excluding context manager.</span>
+
+<span class="sd">		:param stopwatch: Reference to the stopwatch.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopwatch</span> <span class="o">=</span> <span class="n">stopwatch</span></div>
+
+
+<div class="viewcode-block" id="ExcludeContextManager.__enter__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.ExcludeContextManager.__enter__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ExcludeContextManager&quot;</span><span class="p">:</span>  <span class="c1"># TODO: Python 3.11: -&gt; Self:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Enter the context and pause the stopwatch.</span>
+
+<span class="sd">		:returns: Excluding stopwatch context manager instance.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopwatch</span><span class="o">.</span><span class="n">Pause</span><span class="p">()</span>
+
+		<span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="ExcludeContextManager.__exit__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.ExcludeContextManager.__exit__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">exc_type</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">exc_val</span><span class="p">:</span>  <span class="n">Nullable</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">exc_tb</span><span class="p">:</span>   <span class="n">Nullable</span><span class="p">[</span><span class="n">TracebackType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Exit the context and restart stopwatch.</span>
+
+<span class="sd">		:param exc_type: Exception type</span>
+<span class="sd">		:param exc_val:  Exception instance</span>
+<span class="sd">		:param exc_tb:   Exception&#39;s traceback.</span>
+<span class="sd">		:returns:        ``None``</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopwatch</span><span class="o">.</span><span class="n">Resume</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Stopwatch">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Stopwatch</span><span class="p">(</span><span class="n">SlottedObject</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The stopwatch implements a solution to measure and collect timings.</span>
+
+<span class="sd">	The time measurement can be started, paused, resumed and stopped. More over, split times can be taken too. The</span>
+<span class="sd">	measurement is based on :func:`time.perf_counter_ns`. Additionally, starting and stopping is preserved as absolute</span>
+<span class="sd">	time via :meth:`datetime.datetime.now`.</span>
+
+<span class="sd">	Every split time taken is a time delta to the previous operation. These are preserved in an internal sequence of</span>
+<span class="sd">	splits. This sequence includes time deltas of activity and inactivity. Thus, a running stopwatch can be split as well</span>
+<span class="sd">	as a paused stopwatch.</span>
+
+<span class="sd">	The stopwatch can also be used in a :ref:`with-statement &lt;with&gt;`, because it implements the :ref:`context manager protocol &lt;context-managers&gt;`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_name</span><span class="p">:</span>         <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+	<span class="n">_preferPause</span><span class="p">:</span>  <span class="nb">bool</span>
+
+	<span class="n">_beginTime</span><span class="p">:</span>    <span class="n">Nullable</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span>
+	<span class="n">_endTime</span><span class="p">:</span>      <span class="n">Nullable</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span>
+	<span class="n">_startTime</span><span class="p">:</span>    <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+	<span class="n">_resumeTime</span><span class="p">:</span>   <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+	<span class="n">_pauseTime</span><span class="p">:</span>    <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+	<span class="n">_stopTime</span><span class="p">:</span>     <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+	<span class="n">_totalTime</span><span class="p">:</span>    <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+	<span class="n">_splits</span><span class="p">:</span>       <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span>
+
+	<span class="n">_excludeContextManager</span><span class="p">:</span> <span class="n">ExcludeContextManager</span>
+
+<div class="viewcode-block" id="Stopwatch.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">started</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">preferPause</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes the fields of the stopwatch.</span>
+
+<span class="sd">		If parameter ``started`` is set to true, the stopwatch will immediately start.</span>
+
+<span class="sd">		:param name:        Optional name of the stopwatch.</span>
+<span class="sd">		:param preferPause: Optional setting, if __exit__(...) in a contex should prefer pause or stop behavior.</span>
+<span class="sd">		:param started:     Optional flag, if the stopwatch should be started immediately.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span>         <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_preferPause</span> <span class="o">=</span>  <span class="n">preferPause</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_endTime</span> <span class="o">=</span>      <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span>    <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">=</span>     <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_totalTime</span> <span class="o">=</span>    <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="o">=</span>       <span class="p">[]</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_excludeContextManager</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="k">if</span> <span class="n">started</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span> <span class="o">=</span>  <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="o">=</span>  <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span> <span class="o">=</span>  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.Start">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.Start">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Start the stopwatch.</span>
+
+<span class="sd">		A stopwatch can only be started once. There is no restart or reset operation provided.</span>
+
+<span class="sd">		:raises StopwatchException: If stopwatch was already started.</span>
+<span class="sd">		:raises StopwatchException: If stopwatch was already started and stopped.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was already started.&quot;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was already used (started and stopped).&quot;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.Split">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.Split">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Take a split time and return the time delta to the previous stopwatch operation.</span>
+
+<span class="sd">		The stopwatch needs to be running to take a split time. See property :data:`IsRunning` to check if the stopwatch</span>
+<span class="sd">		is running and the split operation is possible. |br|</span>
+<span class="sd">		Depending on the previous operation, the time delta will be:</span>
+
+<span class="sd">		* the duration from start operation to the first split.</span>
+<span class="sd">		* the duration from last resume to this split.</span>
+
+<span class="sd">		:returns:                   Duration in seconds since last stopwatch operation</span>
+<span class="sd">		:raises StopwatchException: If stopwatch was not started or resumed.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">pauseTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was not started or resumed.&quot;</span><span class="p">)</span>
+
+		<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">pauseTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="n">pauseTime</span>
+
+		<span class="k">return</span> <span class="n">diff</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.Pause">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.Pause">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Pause</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Pause the stopwatch and return the time delta to the previous stopwatch operation.</span>
+
+<span class="sd">		The stopwatch needs to be running to pause it. See property :data:`IsRunning` to check if the stopwatch is running</span>
+<span class="sd">		and the pause operation is possible. |br|</span>
+<span class="sd">		Depending on the previous operation, the time delta will be:</span>
+
+<span class="sd">		* the duration from start operation to the first pause.</span>
+<span class="sd">		* the duration from last resume to this pause.</span>
+
+<span class="sd">		:returns:                   Duration in seconds since last stopwatch operation</span>
+<span class="sd">		:raises StopwatchException: If stopwatch was not started or resumed.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was not started or resumed.&quot;</span><span class="p">)</span>
+
+		<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="k">return</span> <span class="n">diff</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.Resume">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.Resume">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Resume</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Resume the stopwatch and return the time delta to the previous pause operation.</span>
+
+<span class="sd">		The stopwatch needs to be paused to resume it. See property :data:`IsPaused` to check if the stopwatch is paused</span>
+<span class="sd">		and the resume operation is possible. |br|</span>
+<span class="sd">		The time delta will be the duration from last pause to this resume.</span>
+
+<span class="sd">		:returns:                   Duration in seconds since last pause operation</span>
+<span class="sd">		:raises StopwatchException: If stopwatch was not paused.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was not paused.&quot;</span><span class="p">)</span>
+
+		<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="k">return</span> <span class="n">diff</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.Stop">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.Stop">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Stop the stopwatch and return the time delta to the previous stopwatch operation.</span>
+
+<span class="sd">		The stopwatch needs to be started to stop it. See property :data:`IsStarted` to check if the stopwatch was started</span>
+<span class="sd">		and the stop operation is possible. |br|</span>
+<span class="sd">		Depending on the previous operation, the time delta will be:</span>
+
+<span class="sd">		* the duration from start operation to the stop operation.</span>
+<span class="sd">		* the duration from last resume to the stop operation.</span>
+
+<span class="sd">		:returns:                   Duration in seconds since last stopwatch operation</span>
+<span class="sd">		:raises StopwatchException: If stopwatch was not started.</span>
+<span class="sd">		:raises StopwatchException: If stopwatch was already stopped.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_endTime</span> <span class="o">=</span>  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was never started.&quot;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_totalTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was already stopped.&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>    <span class="c1"># was never paused</span>
+			<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># is paused</span>
+			<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+		<span class="k">else</span><span class="p">:</span>                           <span class="c1"># is running</span>
+			<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span>  <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_totalTime</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span>
+
+		<span class="n">beginEndDiff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span>
+
+		<span class="k">return</span> <span class="n">diff</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the name of the stopwatch.</span>
+
+<span class="sd">		:return: Name of the stopwatch.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsStarted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the IsStarted state of the stopwatch.</span>
+
+<span class="sd">		:return: True, if stopwatch was started.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="ow">is</span> <span class="kc">None</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsRunning</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the IsRunning state of the stopwatch.</span>
+
+<span class="sd">		:return: True, if stopwatch was started and is currently not paused.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsPaused</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the IsPaused state of the stopwatch.</span>
+
+<span class="sd">		:return: True, if stopwatch was started and is currently paused.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsStopped</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the IsStopped state of the stopwatch.</span>
+
+<span class="sd">		:return: True, if stopwatch was stopped.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">StartTime</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">datetime</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the absolute time when the stopwatch was started.</span>
+
+<span class="sd">		:return: The time when the stopwatch was started, otherwise None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">StopTime</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">datetime</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the absolute time when the stopwatch was stopped.</span>
+
+<span class="sd">		:return: The time when the stopwatch was stopped, otherwise None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endTime</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">HasSplitTimes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property checking if split times have been taken.</span>
+
+<span class="sd">		:return: True, if split times have been taken.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">SplitCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the number of split times.</span>
+
+<span class="sd">		:return: Number of split times.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ActiveCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the number of active split times.</span>
+
+<span class="sd">		:return: Number of active split times.</span>
+
+<span class="sd">		.. warning::</span>
+
+<span class="sd">		   This won&#39;t include all activities, unless the stopwatch got stopped.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="mi">0</span>
+
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">))</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">InactiveCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the number of active split times.</span>
+
+<span class="sd">		:return: Number of active split times.</span>
+
+<span class="sd">		.. warning::</span>
+
+<span class="sd">		   This won&#39;t include all inactivities, unless the stopwatch got stopped.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="mi">0</span>
+
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">))</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Activity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the duration of all active split times.</span>
+
+<span class="sd">		If the stopwatch is currently running, the duration since start or last resume operation will be included.</span>
+
+<span class="sd">		:return: Duration of all active split times in seconds. If the stopwatch was never started, the return value will</span>
+<span class="sd">		         be 0.0.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="mf">0.0</span>
+
+		<span class="n">currentDiff</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">((</span><span class="n">perf_counter_ns</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">currentDiff</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Inactivity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the duration of all inactive split times.</span>
+
+<span class="sd">		If the stopwatch is currently paused, the duration since last pause operation will be included.</span>
+
+<span class="sd">		:return: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will</span>
+<span class="sd">		         be 0.0.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="mf">0.0</span>
+
+		<span class="n">currentDiff</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">((</span><span class="n">perf_counter_ns</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="n">currentDiff</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property returning the duration from start operation to stop operation.</span>
+
+<span class="sd">		If the stopwatch is not yet stopped, the duration from start to now is returned.</span>
+
+<span class="sd">		:return: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will</span>
+<span class="sd">		         be 0.0.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="mf">0.0</span>
+
+		<span class="k">return</span> <span class="p">((</span><span class="n">perf_counter_ns</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_totalTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Exclude</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExcludeContextManager</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return an *exclude* context manager for the stopwatch instance.</span>
+
+<span class="sd">		:returns: An excluding context manager.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excludeContextManager</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">excludeContextManager</span> <span class="o">=</span> <span class="n">ExcludeContextManager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_excludeContextManager</span> <span class="o">=</span> <span class="n">excludeContextManager</span>
+
+		<span class="k">return</span> <span class="n">excludeContextManager</span>
+
+<div class="viewcode-block" id="Stopwatch.__enter__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__enter__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Stopwatch&quot;</span><span class="p">:</span>  <span class="c1"># TODO: Python 3.11: -&gt; Self:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Implementation of the :ref:`context manager protocol&#39;s &lt;context-managers&gt;` ``__enter__(...)`` method.</span>
+
+<span class="sd">		An unstarted stopwatch will be started. A paused stopwatch will be resumed.</span>
+
+<span class="sd">		:return: The stopwatch itself.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>           <span class="c1"># start stopwatch</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>     <span class="c1"># resume after pause</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+
+			<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># is running?</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch is currently running and can not be started/resumed again.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>      <span class="c1"># is stopped?</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stopwatch was already stopped.&quot;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal error.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.__exit__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__exit__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="ne">Exception</span><span class="p">],</span> <span class="n">exc_val</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">:</span> <span class="n">Traceback</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Implementation of the :ref:`context manager protocol&#39;s &lt;context-managers&gt;` ``__exit__(...)`` method.</span>
+
+<span class="sd">		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.</span>
+
+<span class="sd">		:param exc_type: Exception type, otherwise None.</span>
+<span class="sd">		:param exc_val:  Exception object, otherwise None.</span>
+<span class="sd">		:param exc_tb:   Exception&#39;s traceback, otherwise None.</span>
+<span class="sd">		:returns:        True, if exceptions should be suppressed.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>           <span class="c1"># never started?</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was never started.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was already stopped.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># pause or stop</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preferPause</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+				<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_endTime</span> <span class="o">=</span>  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+				<span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">diff</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+				<span class="bp">self</span><span class="o">.</span><span class="n">_pauseTime</span> <span class="o">=</span>  <span class="kc">None</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_resumeTime</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_totalTime</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_stopTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startTime</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">StopwatchException</span><span class="p">(</span><span class="s2">&quot;Stopwatch was not resumed.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Stopwatch.__len__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__len__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Implementation of ``len(...)`` to return the number of split times.</span>
+
+<span class="sd">		:return: Number of split times.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.__getitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__getitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Implementation of ``split = object[i]`` to return the i-th split time.</span>
+
+<span class="sd">		:param index:     Index to access the i-th split time.</span>
+<span class="sd">		:return:          i-th split time as a tuple of: |br|</span>
+<span class="sd">		                  (1) delta time to the previous stopwatch operation and |br|</span>
+<span class="sd">		                  (2) a boolean indicating if the split was an activity (true) or inactivity (false).</span>
+<span class="sd">		:raises KeyError: If index *i* doesn&#39;t exist.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.__iter__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__iter__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return an iterator of tuples to iterate all split times.</span>
+
+<span class="sd">		If the stopwatch is not stopped yet, the last split won&#39;t be included.</span>
+
+<span class="sd">		:return: Iterator of split time tuples of: |br|</span>
+<span class="sd">		         (1) delta time to the previous stopwatch operation and |br|</span>
+<span class="sd">		         (2) a boolean indicating if the split was an activity (true) or inactivity (false).</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Stopwatch.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Stopwatch.html#pyTooling.Stopwatch.Stopwatch.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the stopwatch&#39;s state and its measured time span.</span>
+
+<span class="sd">		:returns: The string equivalent of the stopwatch.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">IsStopped</span><span class="p">:</span>
+			<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Stopwatch</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (stopped): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_endTime</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_totalTime</span><span class="si">}</span><span class="s2">&quot;</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">IsRunning</span><span class="p">:</span>
+			<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Stopwatch</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (running): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span><span class="si">}</span><span class="s2"> -&gt; now: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Duration</span><span class="si">}</span><span class="s2">&quot;</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">IsPaused</span><span class="p">:</span>
+			<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Stopwatch</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (paused): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beginTime</span><span class="si">}</span><span class="s2"> -&gt; now: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Duration</span><span class="si">}</span><span class="s2">&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Stopwatch</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: not started&quot;</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

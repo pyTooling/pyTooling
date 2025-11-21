@@ -1,0 +1,59 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="253pt" height="64pt" viewBox="0.00 0.00 253.00 64.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 60)">
+<ns0:title>inheritanceb30bff3491</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Base</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Base" ns1:title="Base" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-56 0,-56 0,-37 54,-37 54,-56" />
+<ns0:text text-anchor="middle" x="27" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Base</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Element</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Element" ns1:title="Element" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="147,-37 90,-37 90,-18 147,-18 147,-37" />
+<ns0:text text-anchor="middle" x="118.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Element</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Base-&gt;Element</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.37,-40.9C63.85,-38.89 74.67,-36.59 84.64,-34.48" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="85.24,-36.14 89.76,-33.39 84.51,-32.71 85.24,-36.14" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Filename</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename" ns1:title="Filename" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="245,-37 183,-37 183,-18 245,-18 245,-37" />
+<ns0:text text-anchor="middle" x="214" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Filename</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Element-&gt;Filename</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M147.05,-27.5C156.59,-27.5 167.42,-27.5 177.51,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="177.71,-29.25 182.71,-27.5 177.71,-25.75 177.71,-29.25" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-19 0,-19 0,0 54,0 54,-19" />
+<ns0:text text-anchor="middle" x="27" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Generic-&gt;Element</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.37,-14.8C63.85,-16.71 74.67,-18.89 84.64,-20.89" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.52,-22.65 89.76,-21.92 85.21,-19.22 84.52,-22.65" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

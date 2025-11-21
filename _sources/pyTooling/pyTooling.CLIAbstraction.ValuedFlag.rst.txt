@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===================================
+pyTooling.CLIAbstraction.ValuedFlag
+===================================
+
+.. automodule:: pyTooling.CLIAbstraction.ValuedFlag
+
+
+.. currentmodule:: pyTooling.CLIAbstraction.ValuedFlag
+
+
+**Classes**
+
+- :py:class:`ValuedFlag`:
+  Class and base-class for all ValuedFlag classes, which represents a flag argument with value.
+
+- :py:class:`ShortValuedFlag`:
+  Represents a :py:class:`ValuedFlagArgument` with a single dash.
+
+- :py:class:`LongValuedFlag`:
+  Represents a :py:class:`ValuedFlagArgument` with a double dash.
+
+- :py:class:`WindowsValuedFlag`:
+  Represents a :py:class:`ValuedFlagArgument` with a single slash.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: ValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ValuedFlag
+      :parts: 1
+
+.. autoclass:: ShortValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortValuedFlag
+      :parts: 1
+
+.. autoclass:: LongValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongValuedFlag
+      :parts: 1
+
+.. autoclass:: WindowsValuedFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsValuedFlag
+      :parts: 1

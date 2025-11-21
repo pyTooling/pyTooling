@@ -1,0 +1,92 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="508pt" height="122pt" viewBox="0.00 0.00 508.00 122.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 118)">
+<ns0:title>inheritancebefd66ca19</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Base</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Base" ns1:title="Base" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="144,-114 90,-114 90,-95 144,-95 144,-114" />
+<ns0:text text-anchor="middle" x="117" y="-102" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Base</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>BaseWithName</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.BaseWithName" ns1:title="BaseWithName" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="272,-76 180,-76 180,-57 272,-57 272,-76" />
+<ns0:text text-anchor="middle" x="226" y="-64" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseWithName</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Base-&gt;BaseWithName</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M144.18,-95.2C158.98,-89.95 177.59,-83.34 193.23,-77.78" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="193.85,-79.42 197.98,-76.1 192.68,-76.12 193.85,-79.42" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-57 0,-57 0,-38 54,-38 54,-57" />
+<ns0:text text-anchor="middle" x="27" y="-45" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Generic-&gt;Base</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M42.93,-57.17C57.81,-66.81 80.72,-81.65 96.92,-92.14" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="96.14,-93.72 101.29,-94.97 98.05,-90.79 96.14,-93.72" />
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Generic-&gt;BaseWithName</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.16,-50.02C84.81,-52.98 136.29,-57.94 174.74,-61.65" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="174.7,-63.41 179.84,-62.14 175.03,-59.92 174.7,-63.41" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>BaseWithVertices</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.BaseWithVertices" ns1:title="BaseWithVertices" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="410,-38 308,-38 308,-19 410,-19 410,-38" />
+<ns0:text text-anchor="middle" x="359" y="-26" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BaseWithVertices</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Generic-&gt;BaseWithVertices</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.17,-45.99C107.69,-42.91 230.67,-35.83 302.68,-31.68" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="302.89,-33.43 307.78,-31.39 302.69,-29.93 302.89,-33.43" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>View</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.View" ns1:title=".. todo:: GRAPH::View Needs documentation." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="500,-19 446,-19 446,0 500,0 500,-19" />
+<ns0:text text-anchor="middle" x="473" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">View</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge7" class="edge">
+<ns0:title>Generic-&gt;View</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.2,-42.54C65.23,-40.53 78.22,-38.27 90,-36.5 186.54,-21.97 210.56,-15.51 308,-9.5 354.13,-6.65 407.69,-7.42 440.72,-8.36" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="440.79,-10.11 445.84,-8.51 440.89,-6.61 440.79,-10.11" />
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>BaseWithName-&gt;BaseWithVertices</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M260.06,-56.91C278.21,-51.65 300.81,-45.09 319.72,-39.6" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="320.64,-41.16 324.95,-38.09 319.66,-37.8 320.64,-41.16" />
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>BaseWithVertices-&gt;View</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M410.1,-20C420.52,-18.23 431.22,-16.42 440.72,-14.81" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="441.23,-16.49 445.87,-13.93 440.65,-13.04 441.23,-16.49" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

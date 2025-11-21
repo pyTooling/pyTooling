@@ -1,0 +1,157 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================
+pyTooling.Filesystem
+====================
+
+.. automodule:: pyTooling.Filesystem
+
+
+.. currentmodule:: pyTooling.Filesystem
+
+
+**Exceptions**
+
+- :py:exc:`FilesystemException`:
+  Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`.
+
+
+
+**Classes**
+
+- :py:class:`NodeKind`:
+  Node kind for filesystem elements in a :ref:`tree <STRUCT/Tree>`.
+
+- :py:class:`Base`:
+  Undocumented.
+
+- :py:class:`Element`:
+  Abstract base class for generic types.
+
+- :py:class:`Directory`:
+  A **directory** represents a directory in the filesystem contains subdirectories, regular files and symbolic links.
+
+- :py:class:`Filename`:
+  Abstract base class for generic types.
+
+- :py:class:`SymbolicLink`:
+  Abstract base class for generic types.
+
+- :py:class:`Root`:
+  A **directory** represents a directory in the filesystem contains subdirectories, regular files and symbolic links.
+
+- :py:class:`File`:
+  Undocumented.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: FilesystemException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: FilesystemException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: NodeKind
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NodeKind
+      :parts: 1
+
+.. autoclass:: Base
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Base
+      :parts: 1
+
+.. autoclass:: Element
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Element
+      :parts: 1
+
+.. autoclass:: Directory
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Directory
+      :parts: 1
+
+.. autoclass:: Filename
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Filename
+      :parts: 1
+
+.. autoclass:: SymbolicLink
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SymbolicLink
+      :parts: 1
+
+.. autoclass:: Root
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Root
+      :parts: 1
+
+.. autoclass:: File
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: File
+      :parts: 1

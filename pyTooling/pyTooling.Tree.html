@@ -1,0 +1,1315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Tree &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Versioning" href="pyTooling.Versioning.html" />
+    <link rel="prev" title="pyTooling.TerminalUI" href="pyTooling.TerminalUI.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Tree</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Tree.TreeException"><code class="docutils literal notranslate"><span class="pre">TreeException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.TreeException.__new__"><code class="docutils literal notranslate"><span class="pre">TreeException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.TreeException.__init__"><code class="docutils literal notranslate"><span class="pre">TreeException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Tree.InternalError"><code class="docutils literal notranslate"><span class="pre">InternalError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.InternalError.__new__"><code class="docutils literal notranslate"><span class="pre">InternalError.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.InternalError.__init__"><code class="docutils literal notranslate"><span class="pre">InternalError.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError"><code class="docutils literal notranslate"><span class="pre">NoSiblingsError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError.__new__"><code class="docutils literal notranslate"><span class="pre">NoSiblingsError.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError.__init__"><code class="docutils literal notranslate"><span class="pre">NoSiblingsError.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError"><code class="docutils literal notranslate"><span class="pre">AlreadyInTreeError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError.__new__"><code class="docutils literal notranslate"><span class="pre">AlreadyInTreeError.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError.__init__"><code class="docutils literal notranslate"><span class="pre">AlreadyInTreeError.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Tree.NotInSameTreeError"><code class="docutils literal notranslate"><span class="pre">NotInSameTreeError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.NotInSameTreeError.__new__"><code class="docutils literal notranslate"><span class="pre">NotInSameTreeError.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.NotInSameTreeError.__init__"><code class="docutils literal notranslate"><span class="pre">NotInSameTreeError.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Tree.Node"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__init__"><code class="docutils literal notranslate"><span class="pre">Node.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._id"><code class="docutils literal notranslate"><span class="pre">Node._id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._value"><code class="docutils literal notranslate"><span class="pre">Node._value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._dict"><code class="docutils literal notranslate"><span class="pre">Node._dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._format"><code class="docutils literal notranslate"><span class="pre">Node._format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._nodesWithoutID"><code class="docutils literal notranslate"><span class="pre">Node._nodesWithoutID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._root"><code class="docutils literal notranslate"><span class="pre">Node._root</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._parent"><code class="docutils literal notranslate"><span class="pre">Node._parent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._level"><code class="docutils literal notranslate"><span class="pre">Node._level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._nodesWithID"><code class="docutils literal notranslate"><span class="pre">Node._nodesWithID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._children"><code class="docutils literal notranslate"><span class="pre">Node._children</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.ID"><code class="docutils literal notranslate"><span class="pre">Node.ID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Value"><code class="docutils literal notranslate"><span class="pre">Node.Value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__getitem__"><code class="docutils literal notranslate"><span class="pre">Node.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__setitem__"><code class="docutils literal notranslate"><span class="pre">Node.__setitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__delitem__"><code class="docutils literal notranslate"><span class="pre">Node.__delitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__contains__"><code class="docutils literal notranslate"><span class="pre">Node.__contains__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Root"><code class="docutils literal notranslate"><span class="pre">Node.Root</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Parent"><code class="docutils literal notranslate"><span class="pre">Node.Parent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Siblings"><code class="docutils literal notranslate"><span class="pre">Node.Siblings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.LeftSiblings"><code class="docutils literal notranslate"><span class="pre">Node.LeftSiblings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.RightSiblings"><code class="docutils literal notranslate"><span class="pre">Node.RightSiblings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node._GetPathAsLinkedList"><code class="docutils literal notranslate"><span class="pre">Node._GetPathAsLinkedList()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Path"><code class="docutils literal notranslate"><span class="pre">Node.Path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Level"><code class="docutils literal notranslate"><span class="pre">Node.Level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Size"><code class="docutils literal notranslate"><span class="pre">Node.Size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.IsRoot"><code class="docutils literal notranslate"><span class="pre">Node.IsRoot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.IsLeaf"><code class="docutils literal notranslate"><span class="pre">Node.IsLeaf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.HasChildren"><code class="docutils literal notranslate"><span class="pre">Node.HasChildren</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.AddChild"><code class="docutils literal notranslate"><span class="pre">Node.AddChild()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.AddChildren"><code class="docutils literal notranslate"><span class="pre">Node.AddChildren()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetPath"><code class="docutils literal notranslate"><span class="pre">Node.GetPath()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetAncestors"><code class="docutils literal notranslate"><span class="pre">Node.GetAncestors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetCommonAncestors"><code class="docutils literal notranslate"><span class="pre">Node.GetCommonAncestors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetChildren"><code class="docutils literal notranslate"><span class="pre">Node.GetChildren()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetSiblings"><code class="docutils literal notranslate"><span class="pre">Node.GetSiblings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetLeftSiblings"><code class="docutils literal notranslate"><span class="pre">Node.GetLeftSiblings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetRightSiblings"><code class="docutils literal notranslate"><span class="pre">Node.GetRightSiblings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetDescendants"><code class="docutils literal notranslate"><span class="pre">Node.GetDescendants()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetRelatives"><code class="docutils literal notranslate"><span class="pre">Node.GetRelatives()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetLeftRelatives"><code class="docutils literal notranslate"><span class="pre">Node.GetLeftRelatives()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetRightRelatives"><code class="docutils literal notranslate"><span class="pre">Node.GetRightRelatives()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.IterateLeafs"><code class="docutils literal notranslate"><span class="pre">Node.IterateLeafs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.IterateLevelOrder"><code class="docutils literal notranslate"><span class="pre">Node.IterateLevelOrder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.IteratePreOrder"><code class="docutils literal notranslate"><span class="pre">Node.IteratePreOrder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.IteratePostOrder"><code class="docutils literal notranslate"><span class="pre">Node.IteratePostOrder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.WalkTo"><code class="docutils literal notranslate"><span class="pre">Node.WalkTo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.GetNodeByID"><code class="docutils literal notranslate"><span class="pre">Node.GetNodeByID()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__iter__"><code class="docutils literal notranslate"><span class="pre">Node.__iter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__len__"><code class="docutils literal notranslate"><span class="pre">Node.__len__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__repr__"><code class="docutils literal notranslate"><span class="pre">Node.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.__str__"><code class="docutils literal notranslate"><span class="pre">Node.__str__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Tree.Node.Render"><code class="docutils literal notranslate"><span class="pre">Node.Render()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Tree</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Tree.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Tree">
+<span id="pytooling-tree"></span><h1>pyTooling.Tree<a class="headerlink" href="#module-pyTooling.Tree" title="Link to this heading"></a></h1>
+<p>A powerful tree data structure for Python.</p>
+<p><strong>Exceptions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Tree.TreeException" title="pyTooling.Tree.TreeException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TreeException</span></code></a>:
+Base exception of all exceptions raised by <a class="reference internal" href="#module-pyTooling.Tree" title="pyTooling.Tree"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Tree</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.InternalError" title="pyTooling.Tree.InternalError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InternalError</span></code></a>:
+The exception is raised when a data structure corruption is detected.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NoSiblingsError</span></code></a>:
+The exception is raised when a node has no parent and thus has no siblings.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError" title="pyTooling.Tree.AlreadyInTreeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AlreadyInTreeError</span></code></a>:
+The exception is raised when the current node and the other node are already in the same tree.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.NotInSameTreeError" title="pyTooling.Tree.NotInSameTreeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotInSameTreeError</span></code></a>:
+The exception is raised when the current node and the other node are not in the same tree.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>:
+A <strong>tree</strong> data structure can be constructed of <code class="docutils literal notranslate"><span class="pre">Node</span></code> instances.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Exceptions</strong></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Tree.TreeException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Tree.</span></span><span class="sig-name descname"><span class="pre">TreeException</span></span><a class="reference internal" href="../_modules/pyTooling/Tree.html#TreeException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.TreeException" title="Link to this definition"></a></dt>
+<dd><p>Base exception of all exceptions raised by <a class="reference internal" href="#module-pyTooling.Tree" title="pyTooling.Tree"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Tree</span></code></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-b9f0dc59f9b662c2df3e0d7e625c4d075c377916.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of TreeException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.TreeException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.TreeException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.TreeException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.TreeException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Tree.InternalError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Tree.</span></span><span class="sig-name descname"><span class="pre">InternalError</span></span><a class="reference internal" href="../_modules/pyTooling/Tree.html#InternalError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.InternalError" title="Link to this definition"></a></dt>
+<dd><p>The exception is raised when a data structure corruption is detected.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>This exception should never be raised.</p>
+<p>If so, please create an issue at GitHub so the data structure corruption can be investigated and fixed. <br />
+<a class="reference external" href="https://github.com/pyTooling/pyTooling/issues">⇒ Bug Tracker at GitHub</a></p>
+</div>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-b054e225d9e5dcb5e3e1081a82eb27dd0e5664b2.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of InternalError</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.InternalError.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.InternalError.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.InternalError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.InternalError.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Tree.NoSiblingsError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Tree.</span></span><span class="sig-name descname"><span class="pre">NoSiblingsError</span></span><a class="reference internal" href="../_modules/pyTooling/Tree.html#NoSiblingsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.NoSiblingsError" title="Link to this definition"></a></dt>
+<dd><p>The exception is raised when a node has no parent and thus has no siblings.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>A node with no parent is the root node of the tree.</p>
+</div>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-7064ea89a01fba926a32c32f3abcbb332b2e16c6.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of NoSiblingsError</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.NoSiblingsError.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.NoSiblingsError.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.NoSiblingsError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.NoSiblingsError.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Tree.AlreadyInTreeError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Tree.</span></span><span class="sig-name descname"><span class="pre">AlreadyInTreeError</span></span><a class="reference internal" href="../_modules/pyTooling/Tree.html#AlreadyInTreeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.AlreadyInTreeError" title="Link to this definition"></a></dt>
+<dd><p>The exception is raised when the current node and the other node are already in the same tree.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>A tree a an acyclic graph without cross-edges. Thus backward edges and cross edges are permitted.</p>
+</div>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-1401c3b834c0bb09c59ffeccec7977e83a52b78e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of AlreadyInTreeError</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.AlreadyInTreeError.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.AlreadyInTreeError.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.AlreadyInTreeError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.AlreadyInTreeError.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Tree.NotInSameTreeError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Tree.</span></span><span class="sig-name descname"><span class="pre">NotInSameTreeError</span></span><a class="reference internal" href="../_modules/pyTooling/Tree.html#NotInSameTreeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.NotInSameTreeError" title="Link to this definition"></a></dt>
+<dd><p>The exception is raised when the current node and the other node are not in the same tree.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-484870831a2008cef329374b6fe0fc1d294652fa.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of NotInSameTreeError</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.NotInSameTreeError.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.NotInSameTreeError.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.NotInSameTreeError.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Tree.NotInSameTreeError.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Tree.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node" title="Link to this definition"></a></dt>
+<dd><p>A <strong>tree</strong> data structure can be constructed of <code class="docutils literal notranslate"><span class="pre">Node</span></code> instances.</p>
+<p>Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
+tree top-down or bottom-up.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The top-down construction should be preferred, because it’s slightly faster.</p>
+</div>
+<p>Each tree uses the <strong>root</strong> node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
+all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the
+root node (<a class="reference internal" href="#pyTooling.Tree.Node._root" title="pyTooling.Tree.Node._root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_root</span></code></a>). In case of adding a tree to an existing tree, such data structures get merged and all added
+nodes get assigned with new root references. Use the read-only property <a class="reference internal" href="#pyTooling.Tree.Node.Root" title="pyTooling.Tree.Node.Root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Root</span></code></a> to access the root reference.</p>
+<p>The reference to the parent node (<a class="reference internal" href="#pyTooling.Tree.Node._parent" title="pyTooling.Tree.Node._parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_parent</span></code></a>) can be access via property <a class="reference internal" href="#pyTooling.Tree.Node.Parent" title="pyTooling.Tree.Node.Parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Parent</span></code></a>. If the property’s setter
+is used, a node and all its siblings are added to another tree or to a new position in the same tree.</p>
+<p>The references to all node’s children is stored in a list (<a class="reference internal" href="#pyTooling.Tree.Node._children" title="pyTooling.Tree.Node._children"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_children</span></code></a>). Children, siblings, ancestors, can be
+accessed via various generators:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node.GetAncestors" title="pyTooling.Tree.Node.GetAncestors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetAncestors()</span></code></a> → iterate all ancestors bottom-up.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node.GetChildren" title="pyTooling.Tree.Node.GetChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetChildren()</span></code></a> → iterate all direct children.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a> → iterate all descendants.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node.IterateLevelOrder" title="pyTooling.Tree.Node.IterateLevelOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLevelOrder()</span></code></a> → IterateLevelOrder.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node.IteratePreOrder" title="pyTooling.Tree.Node.IteratePreOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePreOrder()</span></code></a> → iterate siblings in pre-order.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.Node.IteratePostOrder" title="pyTooling.Tree.Node.IteratePostOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePostOrder()</span></code></a> → iterate siblings in post-order.</p></li>
+</ul>
+<p>Each node can have a <strong>unique ID</strong> or no ID at all (<code class="docutils literal notranslate"><span class="pre">nodeID=None</span></code>). The root node is used to store all IDs in a
+dictionary (<a class="reference internal" href="#pyTooling.Tree.Node._nodesWithID" title="pyTooling.Tree.Node._nodesWithID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_nodesWithID</span></code></a>). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a
+list of nodes. An ID can be modified after the Node was created. Use the read-only property <a class="reference internal" href="#pyTooling.Tree.Node.ID" title="pyTooling.Tree.Node.ID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ID</span></code></a> to access
+the ID.</p>
+<p>Each node can have a <strong>value</strong> (<a class="reference internal" href="#pyTooling.Tree.Node._value" title="pyTooling.Tree.Node._value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_value</span></code></a>), which can be given at node creation time, or it can be assigned and/or
+modified later. Use the property <a class="reference internal" href="#pyTooling.Tree.Node.Value" title="pyTooling.Tree.Node.Value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Value</span></code></a> to get or set the value.</p>
+<p>Moreover, each node can store various key-value-pairs (<a class="reference internal" href="#pyTooling.Tree.Node._dict" title="pyTooling.Tree.Node._dict"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_dict</span></code></a>). Use the dictionary syntax to get and set
+key-value-pairs.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-060d0c84ae46780bcc3cf678c7a3e471bff8762d.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Node</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodeID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keyValuePairs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__init__" title="Link to this definition"></a></dt>
+<dd><div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>TREE::Node::init Needs documentation.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nodeID</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">IDType</span></code>, bound= <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Hashable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hashable</span></code></a>)]</span>) – The optional unique ID of a node within the whole tree data structure.</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">ValueType</span></code>)]</span>) – The optional value of the node.</p></li>
+<li><p><strong>keyValuePairs</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">DictKeyType</span></code>), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">DictValueType</span></code>)]]</span>) – The optional mapping (dictionary) of key-value-pairs.</p></li>
+<li><p><strong>parent</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></span>) – The optional parent node in the tree.</p></li>
+<li><p><strong>children</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>]]</span>) – The optional list of child nodes.</p></li>
+<li><p><strong>format</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – The optional node formatting function returning a one-line representation for tree-rendering.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter parent is not an instance of Node.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If nodeID already exists in the tree.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter children is not iterable.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If an element of children is not an instance of Node.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._id">
+<span class="sig-name descname"><span class="pre">_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">IDType</span></code><span class="pre">,</span> <span class="pre">bound=</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Hashable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hashable</span></code></a><span class="pre">)]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._id" title="Link to this definition"></a></dt>
+<dd><p>Unique identifier of a node. <code class="docutils literal notranslate"><span class="pre">None</span></code> if not used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">ValueType</span></code><span class="pre">)]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._value" title="Link to this definition"></a></dt>
+<dd><p>Field to store the node’s value.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._dict">
+<span class="sig-name descname"><span class="pre">_dict</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">DictKeyType</span></code><span class="pre">),</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">DictValueType</span></code><span class="pre">)]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._dict" title="Link to this definition"></a></dt>
+<dd><p>Dictionary to store key-value-pairs attached to the node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._format">
+<span class="sig-name descname"><span class="pre">_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a><span class="pre">[[</span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._format" title="Link to this definition"></a></dt>
+<dd><p>A node formatting function returning a one-line representation for tree-rendering.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._nodesWithoutID">
+<span class="sig-name descname"><span class="pre">_nodesWithoutID</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._nodesWithoutID" title="Link to this definition"></a></dt>
+<dd><p>List of all nodes without an ID in the tree. <code class="docutils literal notranslate"><span class="pre">None</span></code> if it’s not the root node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._root">
+<span class="sig-name descname"><span class="pre">_root</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></em><a class="headerlink" href="#pyTooling.Tree.Node._root" title="Link to this definition"></a></dt>
+<dd><p>Reference to the root of a tree. <code class="docutils literal notranslate"><span class="pre">self</span></code> if it’s the root node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._parent">
+<span class="sig-name descname"><span class="pre">_parent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._parent" title="Link to this definition"></a></dt>
+<dd><p>Reference to the parent node. <code class="docutils literal notranslate"><span class="pre">None</span></code> if it’s the root node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._level">
+<span class="sig-name descname"><span class="pre">_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></em><a class="headerlink" href="#pyTooling.Tree.Node._level" title="Link to this definition"></a></dt>
+<dd><p>Level of the node (distance to the root).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._nodesWithID">
+<span class="sig-name descname"><span class="pre">_nodesWithID</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">IDType</span></code><span class="pre">,</span> <span class="pre">bound=</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Hashable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hashable</span></code></a><span class="pre">),</span> <a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._nodesWithID" title="Link to this definition"></a></dt>
+<dd><p>Dictionary of all IDs in the tree. <code class="docutils literal notranslate"><span class="pre">None</span></code> if it’s not the root node.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._children">
+<span class="sig-name descname"><span class="pre">_children</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Tree.Node._children" title="Link to this definition"></a></dt>
+<dd><p>List of all children</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.ID">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ID</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">IDType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.ID" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the unique ID of a node (<a class="reference internal" href="#pyTooling.Tree.Node._id" title="pyTooling.Tree.Node._id"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_id</span></code></a>).</p>
+<p>If no ID was given at node construction time, ID return None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Unique ID of a node, if ID was given at node creation time, else None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValueType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.Value" title="Link to this definition"></a></dt>
+<dd><p>Property to get and set the value (<a class="reference internal" href="#pyTooling.Tree.Node._value" title="pyTooling.Tree.Node._value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_value</span></code></a>) of a node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The value of a node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Read a node’s attached attributes (key-value-pairs) by key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">DictKeyType</span></code>)</span>) – The key to look for.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">DictValueType</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The value associated to the given key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__setitem__">
+<span class="sig-name descname"><span class="pre">__setitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__setitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__setitem__" title="Link to this definition"></a></dt>
+<dd><p>Create or update a node’s attached attributes (key-value-pairs) by key.</p>
+<p>If a key doesn’t exist yet, a new key-value-pair is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">DictKeyType</span></code>)</span>) – The key to create or update.</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">DictValueType</span></code>)</span>) – The value to associate to the given key.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__delitem__">
+<span class="sig-name descname"><span class="pre">__delitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__delitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__delitem__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>key</strong> (<em>DictKeyType</em>)</p>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>TREE::Node::__delitem__ Needs documentation.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__contains__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>key</strong> (<em>DictKeyType</em>)</p>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>TREE::Node::__contains__ Needs documentation.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Root">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Root</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><span class="pre">Node</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.Root" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to access the tree’s root node (<a class="reference internal" href="#pyTooling.Tree.Node._root" title="pyTooling.Tree.Node._root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_root</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The root node (representative node) of a tree.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Parent">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><span class="pre">Node</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.Parent" title="Link to this definition"></a></dt>
+<dd><p>Property to get and set the parent (<a class="reference internal" href="#pyTooling.Tree.Node._parent" title="pyTooling.Tree.Node._parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_parent</span></code></a>) of a node.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As the current node might be a tree itself, appending this node to a tree can lead to a merge of trees and
+especially to a merge of IDs. As IDs are unique, it might raise an <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The parent of a node.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">parent</span></code> is not a <a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError" title="pyTooling.Tree.AlreadyInTreeError"><strong>AlreadyInTreeError</strong></a> – Parent is already a child node in this tree.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Siblings">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Siblings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.Tree.Node.Siblings" title="Link to this definition"></a></dt>
+<dd><p>A read-only property to return a tuple of all siblings from the current node.</p>
+<p>If the current node is the only child, the tuple is empty.</p>
+<p>Siblings are child nodes of the current node’s parent node, without the current node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple of all siblings of the current node.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><strong>NoSiblingsError</strong></a> – If the current node has no parent node and thus no siblings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.LeftSiblings">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LeftSiblings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.Tree.Node.LeftSiblings" title="Link to this definition"></a></dt>
+<dd><p>A read-only property to return a tuple of all siblings left from the current node.</p>
+<p>If the current node is the only child, the tuple is empty.</p>
+<p>Siblings are child nodes of the current node’s parent node, without the current node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple of all siblings left of the current node.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><strong>NoSiblingsError</strong></a> – If the current node has no parent node and thus no siblings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.RightSiblings">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RightSiblings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.Tree.Node.RightSiblings" title="Link to this definition"></a></dt>
+<dd><p>A read-only property to return a tuple of all siblings right from the current node.</p>
+<p>If the current node is the only child, the tuple is empty.</p>
+<p>Siblings are child nodes of the current node’s parent node, without the current node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple of all siblings right of the current node.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><strong>NoSiblingsError</strong></a> – If the current node has no parent node and thus no siblings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node._GetPathAsLinkedList">
+<span class="sig-name descname"><span class="pre">_GetPathAsLinkedList</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node._GetPathAsLinkedList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node._GetPathAsLinkedList" title="Link to this definition"></a></dt>
+<dd><p>Compute the path from current node to root node by using a linked list (<code class="xref py py-class docutils literal notranslate"><span class="pre">deque</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Deque" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Deque</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path from node to root node as double-ended queue (deque).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Path">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.Tree.Node.Path" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to return the path from root node to the node as a tuple of nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple of nodes describing the path from root node to the node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Level">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.Level" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to return a node’s level in the tree.</p>
+<p>The level is the distance to the root node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node’s level.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.Size" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to return the size of the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Count of all nodes in the tree structure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.IsRoot">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsRoot</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.IsRoot" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the node is the root node (representative node of the tree).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if node is the root node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.IsLeaf">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsLeaf</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.IsLeaf" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the node is a leaf node (has no children).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if node has no children.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.HasChildren">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HasChildren</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Tree.Node.HasChildren" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the node has child nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if node has children.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.AddChild">
+<span class="sig-name descname"><span class="pre">AddChild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.AddChild"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.AddChild" title="Link to this definition"></a></dt>
+<dd><p>Add a child node to the current node of the tree.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">child</span></code> is a subtree, both trees get merged. So all nodes in <code class="docutils literal notranslate"><span class="pre">child</span></code> get a new <a class="reference internal" href="#pyTooling.Tree.Node._root" title="pyTooling.Tree.Node._root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_root</span></code></a> assigned and
+all IDs are merged into the node’s root’s ID lists (<a class="reference internal" href="#pyTooling.Tree.Node._nodesWithID" title="pyTooling.Tree.Node._nodesWithID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_nodesWithID</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>child</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></span>) – The child node to be added to the tree.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">child</span></code> is not a <a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError" title="pyTooling.Tree.AlreadyInTreeError"><strong>AlreadyInTreeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">child</span></code> is already a node in the tree.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.Parent" title="pyTooling.Tree.Node.Parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Parent</span></code></a> <br /></dt><dd><p>→ Set the parent of a node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.AddChildren" title="pyTooling.Tree.Node.AddChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AddChildren()</span></code></a> <br /></dt><dd><p>→ Add multiple children at once.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.AddChildren">
+<span class="sig-name descname"><span class="pre">AddChildren</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">children</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.AddChildren"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.AddChildren" title="Link to this definition"></a></dt>
+<dd><p>Add multiple children nodes to the current node of the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>children</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>]</span>) – The list of children nodes to be added to the tree.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">children</span></code> contains an item, which is not a <a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Tree.AlreadyInTreeError" title="pyTooling.Tree.AlreadyInTreeError"><strong>AlreadyInTreeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">children</span></code> contains an item, which is already a node in the tree.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.Parent" title="pyTooling.Tree.Node.Parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Parent</span></code></a> <br /></dt><dd><p>→ Set the parent of a node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.AddChild" title="pyTooling.Tree.Node.AddChild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AddChild()</span></code></a> <br /></dt><dd><p>→ Add a child node to the tree.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetPath">
+<span class="sig-name descname"><span class="pre">GetPath</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetPath" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>TREE::Node::GetPAth Needs documentation.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetAncestors">
+<span class="sig-name descname"><span class="pre">GetAncestors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetAncestors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetAncestors" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>TREE::Node::GetAncestors Needs documentation.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetCommonAncestors">
+<span class="sig-name descname"><span class="pre">GetCommonAncestors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetCommonAncestors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetCommonAncestors" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>others</strong> (<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><em>Node</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><em>Node</em></a><em>]</em>)</p>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">Todo</p>
+<p>TREE::Node::GetCommonAncestors Needs documentation.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetChildren">
+<span class="sig-name descname"><span class="pre">GetChildren</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetChildren"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetChildren" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all direct children of the current node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all children.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a> <br /></dt><dd><p>→ Iterate all descendants.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IterateLevelOrder" title="pyTooling.Tree.Node.IterateLevelOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLevelOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items level-by-level, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePreOrder" title="pyTooling.Tree.Node.IteratePreOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePreOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in pre-order, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePostOrder" title="pyTooling.Tree.Node.IteratePostOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePostOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in post-order, which includes the node itself as a last returned node.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetSiblings">
+<span class="sig-name descname"><span class="pre">GetSiblings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetSiblings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetSiblings" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all siblings.</p>
+<p>Siblings are child nodes of the current node’s parent node, without the current node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all siblings of the current node.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><strong>NoSiblingsError</strong></a> – If the current node has no parent node and thus no siblings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetLeftSiblings">
+<span class="sig-name descname"><span class="pre">GetLeftSiblings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetLeftSiblings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetLeftSiblings" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all siblings left from the current node.</p>
+<p>Siblings are child nodes of the current node’s parent node, without the current node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all siblings left of the current node.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><strong>NoSiblingsError</strong></a> – If the current node has no parent node and thus no siblings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetRightSiblings">
+<span class="sig-name descname"><span class="pre">GetRightSiblings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetRightSiblings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetRightSiblings" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all siblings right from the current node.</p>
+<p>Siblings are child nodes of the current node’s parent node, without the current node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all siblings right of the current node.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyTooling.Tree.NoSiblingsError" title="pyTooling.Tree.NoSiblingsError"><strong>NoSiblingsError</strong></a> – If the current node has no parent node and thus no siblings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetDescendants">
+<span class="sig-name descname"><span class="pre">GetDescendants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetDescendants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetDescendants" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all descendants of the current node. In contrast to <cite>IteratePreOrder</cite> and <cite>IteratePostOrder</cite>
+it doesn’t include the node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all descendants.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetChildren" title="pyTooling.Tree.Node.GetChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetChildren()</span></code></a> <br /></dt><dd><p>→ Iterate all children, but no grand-children.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IterateLevelOrder" title="pyTooling.Tree.Node.IterateLevelOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLevelOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items level-by-level, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePreOrder" title="pyTooling.Tree.Node.IteratePreOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePreOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in pre-order, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePostOrder" title="pyTooling.Tree.Node.IteratePostOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePostOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in post-order, which includes the node itself as a last returned node.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetRelatives">
+<span class="sig-name descname"><span class="pre">GetRelatives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetRelatives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetRelatives" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all relatives (all siblings and all their descendants) of the current node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A generator to iterate all relatives.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetLeftRelatives">
+<span class="sig-name descname"><span class="pre">GetLeftRelatives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetLeftRelatives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetLeftRelatives" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all left relatives (left siblings and all their descendants) of the current node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A generator to iterate all left relatives.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetRightRelatives">
+<span class="sig-name descname"><span class="pre">GetRightRelatives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetRightRelatives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetRightRelatives" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all right relatives (right siblings and all their descendants) of the current node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A generator to iterate all right relatives.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.IterateLeafs">
+<span class="sig-name descname"><span class="pre">IterateLeafs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.IterateLeafs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.IterateLeafs" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all leaf-nodes in a subtree, which subtree root is the current node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate leaf-nodes reachable from current node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.IterateLevelOrder">
+<span class="sig-name descname"><span class="pre">IterateLevelOrder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.IterateLevelOrder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.IterateLevelOrder" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all siblings of the current node level-by-level top-down. In contrast to <cite>GetDescendants</cite>,
+this includes also the node itself as the first returned node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all siblings level-by-level.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetChildren" title="pyTooling.Tree.Node.GetChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetChildren()</span></code></a> <br /></dt><dd><p>→ Iterate all children, but no grand-children.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a> <br /></dt><dd><p>→ Iterate all descendants.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePreOrder" title="pyTooling.Tree.Node.IteratePreOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePreOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in pre-order, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePostOrder" title="pyTooling.Tree.Node.IteratePostOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePostOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in post-order, which includes the node itself as a last returned node.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.IteratePreOrder">
+<span class="sig-name descname"><span class="pre">IteratePreOrder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.IteratePreOrder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.IteratePreOrder" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all siblings of the current node in pre-order. In contrast to <cite>GetDescendants</cite>, this includes
+also the node itself as the first returned node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all siblings in pre-order.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetChildren" title="pyTooling.Tree.Node.GetChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetChildren()</span></code></a> <br /></dt><dd><p>→ Iterate all children, but no grand-children.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a> <br /></dt><dd><p>→ Iterate all descendants.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IterateLevelOrder" title="pyTooling.Tree.Node.IterateLevelOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLevelOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items level-by-level, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePostOrder" title="pyTooling.Tree.Node.IteratePostOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePostOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in post-order, which includes the node itself as a last returned node.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.IteratePostOrder">
+<span class="sig-name descname"><span class="pre">IteratePostOrder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.IteratePostOrder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.IteratePostOrder" title="Link to this definition"></a></dt>
+<dd><p>A generator to iterate all siblings of the current node in post-order. In contrast to <cite>GetDescendants</cite>, this
+includes also the node itself as the last returned node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator to iterate all siblings in post-order.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetChildren" title="pyTooling.Tree.Node.GetChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetChildren()</span></code></a> <br /></dt><dd><p>→ Iterate all children, but no grand-children.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a> <br /></dt><dd><p>→ Iterate all descendants.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IterateLevelOrder" title="pyTooling.Tree.Node.IterateLevelOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLevelOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items level-by-level, which includes the node itself as a first returned node.</p>
+</dd>
+<dt><a class="reference internal" href="#pyTooling.Tree.Node.IteratePreOrder" title="pyTooling.Tree.Node.IteratePreOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePreOrder()</span></code></a> <br /></dt><dd><p>→ Iterate items in pre-order, which includes the node itself as a first returned node.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.WalkTo">
+<span class="sig-name descname"><span class="pre">WalkTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.WalkTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.WalkTo" title="Link to this definition"></a></dt>
+<dd><p>Returns a generator to iterate the path from node to another node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></span>) – Node to walk to.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Generator to iterate the path from node to other node.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Tree.NotInSameTreeError" title="pyTooling.Tree.NotInSameTreeError"><strong>NotInSameTreeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">other</span></code> is not part of the same tree.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.GetNodeByID">
+<span class="sig-name descname"><span class="pre">GetNodeByID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodeID</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.GetNodeByID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.GetNodeByID" title="Link to this definition"></a></dt>
+<dd><p>Lookup a node by its unique ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nodeID</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">IDType</span></code>, bound= <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Hashable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hashable</span></code></a>)</span>) – ID of a node to lookup in the tree.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Node for the given ID.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">nodeID</span></code> is None.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.14)"><strong>KeyError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">nodeID</span></code> is not found in the tree.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__iter__" title="Link to this definition"></a></dt>
+<dd><p>Returns an iterator to iterate all child nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference internal" href="#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Children iterator.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__len__" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of children, but not including grand-children.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of child nodes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Returns a detailed string representation of the node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The detailed string representation of the node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of the node.</p>
+<p>Order of resolution:</p>
+<ol class="arabic simple">
+<li><p>If <a class="reference internal" href="#pyTooling.Tree.Node._value" title="pyTooling.Tree.Node._value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_value</span></code></a> is not None, return the string representation of <a class="reference internal" href="#pyTooling.Tree.Node._value" title="pyTooling.Tree.Node._value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_value</span></code></a>.</p></li>
+<li><p>If <a class="reference internal" href="#pyTooling.Tree.Node._id" title="pyTooling.Tree.Node._id"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_id</span></code></a> is not None, return the string representation of <a class="reference internal" href="#pyTooling.Tree.Node._id" title="pyTooling.Tree.Node._id"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_id</span></code></a>.</p></li>
+<li><p>Else, return <a class="reference internal" href="#pyTooling.Tree.Node.__repr__" title="pyTooling.Tree.Node.__repr__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__repr__()</span></code></a>.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The resolved string representation of the node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Tree.Node.Render">
+<span class="sig-name descname"><span class="pre">Render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\\n'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeMarker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'├─'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lastNodeMarker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'└─'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bypassMarker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'│</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Tree.html#Node.Render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Tree.Node.Render" title="Link to this definition"></a></dt>
+<dd><p>Render the tree as ASCII art.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – A string printed in front of every line, e.g. for indentation. Default: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+<li><p><strong>lineend</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – A string printed at the end of every line. Default: <code class="docutils literal notranslate"><span class="pre">&quot;\n&quot;</span></code>.</p></li>
+<li><p><strong>nodeMarker</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – A string printed before every non-last tree node. Default: <code class="docutils literal notranslate"><span class="pre">&quot;├─&quot;</span></code>.</p></li>
+<li><p><strong>lastNodeMarker</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – A string printed before every last tree node. Default: <code class="docutils literal notranslate"><span class="pre">&quot;└─&quot;</span></code>.</p></li>
+<li><p><strong>bypassMarker</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – A string printed when there are further nodes in the parent level. Default: <code class="docutils literal notranslate"><span class="pre">&quot;│</span> <span class="pre">&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A rendered tree as multiline string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.TerminalUI.html" class="btn btn-neutral float-left" title="pyTooling.TerminalUI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Versioning.html" class="btn btn-neutral float-right" title="pyTooling.Versioning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

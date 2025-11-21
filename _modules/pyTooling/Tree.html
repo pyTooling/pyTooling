@@ -1,0 +1,1614 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Tree &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.Tree</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Tree</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _             _____                                                                    #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ ___  ___                                                       #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | || &#39;__/ _ \/ _ \                                                      #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | |  __/  __/                                                      #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \___|\___|                                                      #</span>
+<span class="c1"># |_|    |___/                          |___/                                                                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;A powerful tree data structure for Python.&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w">   </span><span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">        </span><span class="kn">import</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Deque</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">        </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Hashable</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Tree] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">          </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">MetaClasses</span><span class="w">         </span><span class="kn">import</span> <span class="n">ExtendedType</span><span class="p">,</span> <span class="n">mixin</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Exceptions</span><span class="w">          </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Common</span><span class="w">              </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Tree] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">IDType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;IDType&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Hashable</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;A type variable for a tree&#39;s ID.&quot;&quot;&quot;</span>
+
+<span class="n">ValueType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;ValueType&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;A type variable for a tree&#39;s value.&quot;&quot;&quot;</span>
+
+<span class="n">DictKeyType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;DictKeyType&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;A type variable for a tree&#39;s dictionary keys.&quot;&quot;&quot;</span>
+
+<span class="n">DictValueType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;DictValueType&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;A type variable for a tree&#39;s dictionary values.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="TreeException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.TreeException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TreeException</span><span class="p">(</span><span class="n">ToolingException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Base exception of all exceptions raised by :mod:`pyTooling.Tree`.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="InternalError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.InternalError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InternalError</span><span class="p">(</span><span class="n">TreeException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised when a data structure corruption is detected.</span>
+
+<span class="sd">	.. danger::</span>
+
+<span class="sd">	   This exception should never be raised.</span>
+
+<span class="sd">	   If so, please create an issue at GitHub so the data structure corruption can be investigated and fixed. |br|</span>
+<span class="sd">	   `⇒ Bug Tracker at GitHub &lt;https://github.com/pyTooling/pyTooling/issues&gt;`__</span>
+<span class="sd">	&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="NoSiblingsError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.NoSiblingsError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NoSiblingsError</span><span class="p">(</span><span class="n">TreeException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised when a node has no parent and thus has no siblings.</span>
+
+<span class="sd">	.. hint::</span>
+
+<span class="sd">	   A node with no parent is the root node of the tree.</span>
+<span class="sd">	&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="AlreadyInTreeError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.AlreadyInTreeError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AlreadyInTreeError</span><span class="p">(</span><span class="n">TreeException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised when the current node and the other node are already in the same tree.</span>
+
+<span class="sd">	.. hint::</span>
+
+<span class="sd">	   A tree a an acyclic graph without cross-edges. Thus backward edges and cross edges are permitted.</span>
+<span class="sd">	&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="NotInSameTreeError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.NotInSameTreeError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NotInSameTreeError</span><span class="p">(</span><span class="n">TreeException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;The exception is raised when the current node and the other node are not in the same tree.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Node">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">IDType</span><span class="p">,</span> <span class="n">ValueType</span><span class="p">,</span> <span class="n">DictKeyType</span><span class="p">,</span> <span class="n">DictValueType</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A **tree** data structure can be constructed of ``Node`` instances.</span>
+
+<span class="sd">	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a</span>
+<span class="sd">	tree top-down or bottom-up.</span>
+
+<span class="sd">	.. hint:: The top-down construction should be preferred, because it&#39;s slightly faster.</span>
+
+<span class="sd">	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of</span>
+<span class="sd">	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the</span>
+<span class="sd">	root node (:attr:`_root`). In case of adding a tree to an existing tree, such data structures get merged and all added</span>
+<span class="sd">	nodes get assigned with new root references. Use the read-only property :attr:`Root` to access the root reference.</span>
+
+<span class="sd">	The reference to the parent node (:attr:`_parent`) can be access via property :attr:`Parent`. If the property&#39;s setter</span>
+<span class="sd">	is used, a node and all its siblings are added to another tree or to a new position in the same tree.</span>
+
+<span class="sd">	The references to all node&#39;s children is stored in a list (:attr:`_children`). Children, siblings, ancestors, can be</span>
+<span class="sd">	accessed via various generators:</span>
+
+<span class="sd">	* :meth:`GetAncestors` |rarr| iterate all ancestors bottom-up.</span>
+<span class="sd">	* :meth:`GetChildren` |rarr| iterate all direct children.</span>
+<span class="sd">	* :meth:`GetDescendants` |rarr| iterate all descendants.</span>
+<span class="sd">	* :meth:`IterateLevelOrder` |rarr| IterateLevelOrder.</span>
+<span class="sd">	* :meth:`IteratePreOrder` |rarr| iterate siblings in pre-order.</span>
+<span class="sd">	* :meth:`IteratePostOrder` |rarr| iterate siblings in post-order.</span>
+
+<span class="sd">	Each node can have a **unique ID** or no ID at all (``nodeID=None``). The root node is used to store all IDs in a</span>
+<span class="sd">	dictionary (:attr:`_nodesWithID`). In case no ID is given, all such ID-less nodes are collected in a single bin and store as a</span>
+<span class="sd">	list of nodes. An ID can be modified after the Node was created. Use the read-only property :attr:`ID` to access</span>
+<span class="sd">	the ID.</span>
+
+<span class="sd">	Each node can have a **value** (:attr:`_value`), which can be given at node creation time, or it can be assigned and/or</span>
+<span class="sd">	modified later. Use the property :attr:`Value` to get or set the value.</span>
+
+<span class="sd">	Moreover, each node can store various key-value-pairs (:attr:`_dict`). Use the dictionary syntax to get and set</span>
+<span class="sd">	key-value-pairs.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_id</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">IDType</span><span class="p">]</span>                         <span class="c1">#: Unique identifier of a node. ``None`` if not used.</span>
+	<span class="n">_nodesWithID</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">IDType</span><span class="p">,</span> <span class="s1">&#39;Node&#39;</span><span class="p">]]</span>  <span class="c1">#: Dictionary of all IDs in the tree. ``None`` if it&#39;s not the root node.</span>
+	<span class="n">_nodesWithoutID</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]]</span>       <span class="c1">#: List of all nodes without an ID in the tree. ``None`` if it&#39;s not the root node.</span>
+	<span class="n">_root</span><span class="p">:</span> <span class="s1">&#39;Node&#39;</span>                                 <span class="c1">#: Reference to the root of a tree. ``self`` if it&#39;s the root node.</span>
+	<span class="n">_parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]</span>                     <span class="c1">#: Reference to the parent node. ``None`` if it&#39;s the root node.</span>
+	<span class="n">_children</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]</span>                       <span class="c1">#: List of all children</span>
+<span class="c1">#	_links: List[&#39;Node&#39;]</span>
+
+	<span class="n">_level</span><span class="p">:</span> <span class="nb">int</span>                                   <span class="c1">#: Level of the node (distance to the root).</span>
+	<span class="n">_value</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">ValueType</span><span class="p">]</span>                   <span class="c1">#: Field to store the node&#39;s value.</span>
+	<span class="n">_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">DictKeyType</span><span class="p">,</span> <span class="n">DictValueType</span><span class="p">]</span>       <span class="c1">#: Dictionary to store key-value-pairs attached to the node.</span>
+
+	<span class="n">_format</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;Node&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span>    <span class="c1">#: A node formatting function returning a one-line representation for tree-rendering.</span>
+
+<div class="viewcode-block" id="Node.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">nodeID</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">IDType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">value</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">ValueType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">keyValuePairs</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">DictKeyType</span><span class="p">,</span> <span class="n">DictValueType</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">parent</span><span class="p">:</span> <span class="s1">&#39;Node&#39;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">children</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="nb">format</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;Node&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		.. todo:: TREE::Node::init Needs documentation.</span>
+
+<span class="sd">		:param nodeID:        The optional unique ID of a node within the whole tree data structure.</span>
+<span class="sd">		:param value:         The optional value of the node.</span>
+<span class="sd">		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.</span>
+<span class="sd">		:param parent:        The optional parent node in the tree.</span>
+<span class="sd">		:param children:      The optional list of child nodes.</span>
+<span class="sd">		:param format:        The optional node formatting function returning a one-line representation for tree-rendering.</span>
+
+<span class="sd">		:raises TypeError:    If parameter parent is not an instance of Node.</span>
+<span class="sd">		:raises ValueError:   If nodeID already exists in the tree.</span>
+<span class="sd">		:raises TypeError:    If parameter children is not iterable.</span>
+<span class="sd">		:raises ValueError:   If an element of children is not an instance of Node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="n">nodeID</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">keyValuePairs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span> <span class="k">if</span> <span class="n">keyValuePairs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_format</span> <span class="o">=</span> <span class="nb">format</span>
+
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;parent&#39; is not of type &#39;Node&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="mi">0</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">if</span> <span class="n">nodeID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="n">nodeID</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="k">if</span> <span class="n">nodeID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">nodeID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ID &#39;</span><span class="si">{</span><span class="n">nodeID</span><span class="si">}</span><span class="s2">&#39; already exists in this tree.&quot;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="n">nodeID</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+			<span class="n">parent</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">if</span> <span class="n">children</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;children&#39; is not iterable.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">children</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+					<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item &#39;</span><span class="si">{</span><span class="n">child</span><span class="si">}</span><span class="s2">&#39; in parameter &#39;children&#39; is not of type &#39;Node&#39;.&quot;</span><span class="p">)</span>
+					<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">child</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+					<span class="k">raise</span> <span class="n">ex</span>
+
+				<span class="n">child</span><span class="o">.</span><span class="n">Parent</span> <span class="o">=</span> <span class="bp">self</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ID</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">IDType</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the unique ID of a node (:attr:`_id`).</span>
+
+<span class="sd">		If no ID was given at node construction time, ID return None.</span>
+
+<span class="sd">		:returns: Unique ID of a node, if ID was given at node creation time, else None.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id</span>
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">ValueType</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Property to get and set the value (:attr:`_value`) of a node.</span>
+
+<span class="sd">		:returns: The value of a node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+	<span class="nd">@Value</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">ValueType</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Node.__getitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__getitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">DictKeyType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DictValueType</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read a node&#39;s attached attributes (key-value-pairs) by key.</span>
+
+<span class="sd">		:param key: The key to look for.</span>
+<span class="sd">		:returns:   The value associated to the given key.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Node.__setitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__setitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">DictKeyType</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">DictValueType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Create or update a node&#39;s attached attributes (key-value-pairs) by key.</span>
+
+<span class="sd">		If a key doesn&#39;t exist yet, a new key-value-pair is created.</span>
+
+<span class="sd">		:param key:   The key to create or update.</span>
+<span class="sd">		:param value: The value to associate to the given key.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="Node.__delitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__delitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">DictKeyType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		.. todo:: TREE::Node::__delitem__ Needs documentation.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Node.__contains__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__contains__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">DictKeyType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		.. todo:: TREE::Node::__contains__ Needs documentation.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span></div>
+
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the number of attached attributes (key-value-pairs) on this node.</span>
+
+<span class="sd">		:returns: Number of attached attributes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Node&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the tree&#39;s root node (:attr:`_root`).</span>
+
+<span class="sd">		:returns: The root node (representative node) of a tree.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Property to get and set the parent (:attr:`_parent`) of a node.</span>
+
+<span class="sd">		.. note::</span>
+
+<span class="sd">		   As the current node might be a tree itself, appending this node to a tree can lead to a merge of trees and</span>
+<span class="sd">		   especially to a merge of IDs. As IDs are unique, it might raise an :exc:`Exception`.</span>
+
+<span class="sd">		:returns:                   The parent of a node.</span>
+<span class="sd">		:raises TypeError:          If parameter ``parent`` is not a :class:`Node`</span>
+<span class="sd">		:raises AlreadyInTreeError: Parent is already a child node in this tree.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
+
+	<span class="nd">@Parent</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="c1"># TODO: is moved inside the same tree, don&#39;t move nodes in _nodesWithID and don&#39;t change _root</span>
+
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="mi">0</span>
+
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">]</span>
+
+			<span class="k">for</span> <span class="n">sibling</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">():</span>
+				<span class="n">sibling</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="n">sibling</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">sibling</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+				<span class="k">if</span> <span class="n">sibling</span><span class="o">.</span><span class="n">_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sibling</span><span class="p">)</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">sibling</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="n">sibling</span><span class="o">.</span><span class="n">_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">sibling</span>
+					<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="n">sibling</span><span class="o">.</span><span class="n">_id</span><span class="p">]</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;parent&#39; is not of type &#39;Node&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">AlreadyInTreeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parent &#39;</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">&#39; is already a child node in this tree.&quot;</span><span class="p">)</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">():</span>
+				<span class="n">node</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_SetNewRoot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodesWithoutID</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="n">parent</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Siblings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A read-only property to return a tuple of all siblings from the current node.</span>
+
+<span class="sd">		If the current node is the only child, the tuple is empty.</span>
+
+<span class="sd">		Siblings are child nodes of the current node&#39;s parent node, without the current node itself.</span>
+
+<span class="sd">		:returns:                A tuple of all siblings of the current node.</span>
+<span class="sd">		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NoSiblingsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root node has no siblings.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">])</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">LeftSiblings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A read-only property to return a tuple of all siblings left from the current node.</span>
+
+<span class="sd">		If the current node is the only child, the tuple is empty.</span>
+
+<span class="sd">		Siblings are child nodes of the current node&#39;s parent node, without the current node itself.</span>
+
+<span class="sd">		:returns:                A tuple of all siblings left of the current node.</span>
+<span class="sd">		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NoSiblingsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root node has no siblings.&quot;</span><span class="p">)</span>
+
+		<span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">:</span>
+				<span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">break</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">InternalError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data structure corruption: Self is not part of parent&#39;s children.&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+
+		<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">RightSiblings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A read-only property to return a tuple of all siblings right from the current node.</span>
+
+<span class="sd">		If the current node is the only child, the tuple is empty.</span>
+
+<span class="sd">		Siblings are child nodes of the current node&#39;s parent node, without the current node itself.</span>
+
+<span class="sd">		:returns:                A tuple of all siblings right of the current node.</span>
+<span class="sd">		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NoSiblingsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root node has no siblings.&quot;</span><span class="p">)</span>
+
+		<span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+				<span class="k">break</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">InternalError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data structure corruption: Self is not part of parent&#39;s children.&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+			<span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Node._GetPathAsLinkedList">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node._GetPathAsLinkedList">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_GetPathAsLinkedList</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deque</span><span class="p">[</span><span class="s2">&quot;Node&quot;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compute the path from current node to root node by using a linked list (:class:`deque`).</span>
+
+<span class="sd">		:meta private:</span>
+<span class="sd">		:returns: Path from node to root node as double-ended queue (deque).</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">path</span><span class="p">:</span> <span class="n">Deque</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">path</span><span class="o">.</span><span class="n">appendleft</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_parent</span>
+
+		<span class="k">return</span> <span class="n">path</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to return the path from root node to the node as a tuple of nodes.</span>
+
+<span class="sd">		:returns: A tuple of nodes describing the path from root node to the node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_GetPathAsLinkedList</span><span class="p">())</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Level</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to return a node&#39;s level in the tree.</span>
+
+<span class="sd">		The level is the distance to the root node.</span>
+
+<span class="sd">		:returns: The node&#39;s level.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to return the size of the tree.</span>
+
+<span class="sd">		:returns: Count of all nodes in the tree structure.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsRoot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns true, if the node is the root node (representative node of the tree).</span>
+
+<span class="sd">		:returns: ``True``, if node is the root node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsLeaf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns true, if the node is a leaf node (has no children).</span>
+
+<span class="sd">		:returns: ``True``, if node has no children.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">HasChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns true, if the node has child nodes.</span>
+
+<span class="sd">		:returns: ``True``, if node has children.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_SetNewRoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodesWithIDs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="s1">&#39;Node&#39;</span><span class="p">],</span> <span class="n">nodesWithoutIDs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">nodeID</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodesWithIDs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">nodeID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ID &#39;</span><span class="si">{</span><span class="n">nodeID</span><span class="si">}</span><span class="s2">&#39; already exists in this tree.&quot;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="n">nodeID</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+				<span class="n">node</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodesWithoutIDs</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+			<span class="n">node</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+
+<div class="viewcode-block" id="Node.AddChild">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.AddChild">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AddChild</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">:</span> <span class="s1">&#39;Node&#39;</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add a child node to the current node of the tree.</span>
+
+<span class="sd">		If ``child`` is a subtree, both trees get merged. So all nodes in ``child`` get a new :attr:`_root` assigned and</span>
+<span class="sd">		all IDs are merged into the node&#39;s root&#39;s ID lists (:attr:`_nodesWithID`).</span>
+
+<span class="sd">		:param child:               The child node to be added to the tree.</span>
+<span class="sd">		:raises TypeError:          If parameter ``child`` is not a :class:`Node`.</span>
+<span class="sd">		:raises AlreadyInTreeError: If parameter ``child`` is already a node in the tree.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :attr:`Parent` |br|</span>
+<span class="sd">		      |rarr| Set the parent of a node.</span>
+<span class="sd">		   :meth:`AddChildren` |br|</span>
+<span class="sd">		      |rarr| Add multiple children at once.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;child&#39; is not of type &#39;Node&#39;.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">child</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">AlreadyInTreeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Child &#39;</span><span class="si">{</span><span class="n">child</span><span class="si">}</span><span class="s2">&#39; is already a node in this tree.&quot;</span><span class="p">)</span>
+
+		<span class="n">child</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+		<span class="n">child</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">child</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">child</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">():</span>
+			<span class="n">node</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_SetNewRoot</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">,</span> <span class="n">child</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="p">)</span>
+		<span class="n">child</span><span class="o">.</span><span class="n">_nodesWithID</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">_nodesWithoutID</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Node.AddChildren">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.AddChildren">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AddChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add multiple children nodes to the current node of the tree.</span>
+
+<span class="sd">		:param children:            The list of children nodes to be added to the tree.</span>
+<span class="sd">		:raises TypeError:          If parameter ``children`` contains an item, which is not a :class:`Node`.</span>
+<span class="sd">		:raises AlreadyInTreeError: If parameter ``children`` contains an item, which is already a node in the tree.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :attr:`Parent` |br|</span>
+<span class="sd">		      |rarr| Set the parent of a node.</span>
+<span class="sd">		   :meth:`AddChild` |br|</span>
+<span class="sd">		      |rarr| Add a child node to the tree.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item &#39;</span><span class="si">{</span><span class="n">child</span><span class="si">}</span><span class="s2">&#39; in parameter &#39;children&#39; is not of type &#39;Node&#39;.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">child</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">:</span>
+				<span class="c1"># TODO: create a more specific exception</span>
+				<span class="k">raise</span> <span class="n">AlreadyInTreeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Child &#39;</span><span class="si">{</span><span class="n">child</span><span class="si">}</span><span class="s2">&#39; is already a node in this tree.&quot;</span><span class="p">)</span>
+
+			<span class="n">child</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+			<span class="n">child</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="bp">self</span>
+			<span class="n">child</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">child</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">():</span>
+				<span class="n">node</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_level</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_SetNewRoot</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">,</span> <span class="n">child</span><span class="o">.</span><span class="n">_nodesWithoutID</span><span class="p">)</span>
+			<span class="n">child</span><span class="o">.</span><span class="n">_nodesWithID</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">_nodesWithoutID</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Node.GetPath">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetPath">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetPath</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		.. todo:: TREE::Node::GetPAth Needs documentation.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetPathAsLinkedList</span><span class="p">():</span>
+			<span class="k">yield</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="Node.GetAncestors">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetAncestors">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetAncestors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		.. todo:: TREE::Node::GetAncestors Needs documentation.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_parent</span></div>
+
+
+<div class="viewcode-block" id="Node.GetCommonAncestors">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetCommonAncestors">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetCommonAncestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">others</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		.. todo:: TREE::Node::GetCommonAncestors Needs documentation.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">others</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="c1"># Check for trivial case</span>
+			<span class="k">if</span> <span class="n">others</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetPathAsLinkedList</span><span class="p">():</span>
+					<span class="k">yield</span> <span class="n">node</span>
+				<span class="k">return</span>
+
+			<span class="c1"># Check if both are in the same tree.</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">others</span><span class="o">.</span><span class="n">_root</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">NotInSameTreeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node &#39;others&#39; is not in the same tree.&quot;</span><span class="p">)</span>
+
+			<span class="c1"># Compute paths top-down and walk both paths until they deviate</span>
+			<span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">others</span><span class="o">.</span><span class="n">Path</span><span class="p">):</span>
+				<span class="k">if</span> <span class="n">left</span> <span class="ow">is</span> <span class="n">right</span><span class="p">:</span>
+					<span class="k">yield</span> <span class="n">left</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">return</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">others</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generator &#39;GetCommonAncestors&#39; does not yet support an iterable of siblings to compute the common ancestors.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Node.GetChildren">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetChildren">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all direct children of the current node.</span>
+
+<span class="sd">		:returns: A generator to iterate all children.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :meth:`GetDescendants` |br|</span>
+<span class="sd">		      |rarr| Iterate all descendants.</span>
+<span class="sd">		   :meth:`IterateLevelOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePreOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePostOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="n">child</span></div>
+
+
+<div class="viewcode-block" id="Node.GetSiblings">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetSiblings">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetSiblings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all siblings.</span>
+
+<span class="sd">		Siblings are child nodes of the current node&#39;s parent node, without the current node itself.</span>
+
+<span class="sd">		:returns:                A generator to iterate all siblings of the current node.</span>
+<span class="sd">		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NoSiblingsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root node has no siblings.&quot;</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+				<span class="k">continue</span>
+
+			<span class="k">yield</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="Node.GetLeftSiblings">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetLeftSiblings">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetLeftSiblings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all siblings left from the current node.</span>
+
+<span class="sd">		Siblings are child nodes of the current node&#39;s parent node, without the current node itself.</span>
+
+<span class="sd">		:returns:                A generator to iterate all siblings left of the current node.</span>
+<span class="sd">		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NoSiblingsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root node has no siblings.&quot;</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+				<span class="k">break</span>
+
+			<span class="k">yield</span> <span class="n">node</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">InternalError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data structure corruption: Self is not part of parent&#39;s children.&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span></div>
+
+
+<div class="viewcode-block" id="Node.GetRightSiblings">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetRightSiblings">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetRightSiblings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all siblings right from the current node.</span>
+
+<span class="sd">		Siblings are child nodes of the current node&#39;s parent node, without the current node itself.</span>
+
+<span class="sd">		:returns:                A generator to iterate all siblings right of the current node.</span>
+<span class="sd">		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NoSiblingsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root node has no siblings.&quot;</span><span class="p">)</span>
+
+		<span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+				<span class="k">break</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">InternalError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data structure corruption: Self is not part of parent&#39;s children.&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="Node.GetDescendants">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetDescendants">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetDescendants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all descendants of the current node. In contrast to `IteratePreOrder` and `IteratePostOrder`</span>
+<span class="sd">		it doesn&#39;t include the node itself.</span>
+
+<span class="sd">		:returns: A generator to iterate all descendants.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :meth:`GetChildren` |br|</span>
+<span class="sd">		      |rarr| Iterate all children, but no grand-children.</span>
+<span class="sd">		   :meth:`IterateLevelOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePreOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePostOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="n">child</span>
+			<span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.GetRelatives">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetRelatives">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetRelatives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all relatives (all siblings and all their descendants) of the current node.</span>
+
+<span class="sd">		:returns: A generator to iterate all relatives.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSiblings</span><span class="p">():</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="k">yield from</span> <span class="n">node</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.GetLeftRelatives">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetLeftRelatives">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetLeftRelatives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all left relatives (left siblings and all their descendants) of the current node.</span>
+
+<span class="sd">		:returns: A generator to iterate all left relatives.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLeftSiblings</span><span class="p">():</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="k">yield from</span> <span class="n">node</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.GetRightRelatives">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetRightRelatives">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetRightRelatives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all right relatives (right siblings and all their descendants) of the current node.</span>
+
+<span class="sd">		:returns: A generator to iterate all right relatives.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRightSiblings</span><span class="p">():</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="k">yield from</span> <span class="n">node</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.IterateLeafs">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IterateLeafs">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IterateLeafs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all leaf-nodes in a subtree, which subtree root is the current node.</span>
+
+<span class="sd">		:returns: A generator to iterate leaf-nodes reachable from current node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">IsLeaf</span><span class="p">:</span>
+				<span class="k">yield</span> <span class="n">child</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">IterateLeafs</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.IterateLevelOrder">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IterateLevelOrder">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IterateLevelOrder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all siblings of the current node level-by-level top-down. In contrast to `GetDescendants`,</span>
+<span class="sd">		this includes also the node itself as the first returned node.</span>
+
+<span class="sd">		:returns: A generator to iterate all siblings level-by-level.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :meth:`GetChildren` |br|</span>
+<span class="sd">		      |rarr| Iterate all children, but no grand-children.</span>
+<span class="sd">		   :meth:`GetDescendants` |br|</span>
+<span class="sd">		      |rarr| Iterate all descendants.</span>
+<span class="sd">		   :meth:`IteratePreOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePostOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+		<span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+			<span class="n">currentNode</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+			<span class="k">yield</span> <span class="n">currentNode</span>
+			<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">currentNode</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+				<span class="n">queue</span><span class="o">.</span><span class="n">appendleft</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Node.IteratePreOrder">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IteratePreOrder">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IteratePreOrder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all siblings of the current node in pre-order. In contrast to `GetDescendants`, this includes</span>
+<span class="sd">		also the node itself as the first returned node.</span>
+
+<span class="sd">		:returns: A generator to iterate all siblings in pre-order.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :meth:`GetChildren` |br|</span>
+<span class="sd">		      |rarr| Iterate all children, but no grand-children.</span>
+<span class="sd">		   :meth:`GetDescendants` |br|</span>
+<span class="sd">		      |rarr| Iterate all descendants.</span>
+<span class="sd">		   :meth:`IterateLevelOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePostOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">yield</span> <span class="bp">self</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+			<span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">IteratePreOrder</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.IteratePostOrder">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IteratePostOrder">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IteratePostOrder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A generator to iterate all siblings of the current node in post-order. In contrast to `GetDescendants`, this</span>
+<span class="sd">		includes also the node itself as the last returned node.</span>
+
+<span class="sd">		:returns: A generator to iterate all siblings in post-order.</span>
+
+<span class="sd">		.. seealso::</span>
+
+<span class="sd">		   :meth:`GetChildren` |br|</span>
+<span class="sd">		      |rarr| Iterate all children, but no grand-children.</span>
+<span class="sd">		   :meth:`GetDescendants` |br|</span>
+<span class="sd">		      |rarr| Iterate all descendants.</span>
+<span class="sd">		   :meth:`IterateLevelOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.</span>
+<span class="sd">		   :meth:`IteratePreOrder` |br|</span>
+<span class="sd">		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+			<span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">IteratePostOrder</span><span class="p">()</span>
+		<span class="k">yield</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Node.WalkTo">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.WalkTo">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">WalkTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;Node&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns a generator to iterate the path from node to another node.</span>
+
+<span class="sd">		:param other:               Node to walk to.</span>
+<span class="sd">		:returns:                   Generator to iterate the path from node to other node.</span>
+<span class="sd">		:raises NotInSameTreeError: If parameter ``other`` is not part of the same tree.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Check for trivial case</span>
+		<span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+			<span class="k">yield from</span> <span class="p">()</span>
+
+		<span class="c1"># Check if both are in the same tree.</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">_root</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">NotInSameTreeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node &#39;other&#39; is not in the same tree.&quot;</span><span class="p">)</span>
+
+		<span class="c1"># Compute both paths to the root.</span>
+		<span class="c1"># 1. Walk from self to root, until a first common ancestor is found.</span>
+		<span class="c1"># 2. Walk from there to other (reverse paths)</span>
+		<span class="n">otherPath</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">Path</span>		<span class="c1"># TODO: Path generates a list and a tuple. Provide a generator for such a walk.</span>
+		<span class="n">index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">otherPath</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetAncestors</span><span class="p">():</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">index</span> <span class="o">=</span> <span class="n">otherPath</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+				<span class="k">break</span>
+			<span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+				<span class="k">yield</span> <span class="n">node</span>
+
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">otherPath</span><span class="p">)):</span>
+			<span class="k">yield</span> <span class="n">otherPath</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Node.GetNodeByID">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetNodeByID">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetNodeByID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodeID</span><span class="p">:</span> <span class="n">IDType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Node&#39;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Lookup a node by its unique ID.</span>
+
+<span class="sd">		:param nodeID:      ID of a node to lookup in the tree.</span>
+<span class="sd">		:returns:           Node for the given ID.</span>
+<span class="sd">		:raises ValueError: If parameter ``nodeID`` is None.</span>
+<span class="sd">		:raises KeyError:   If parameter ``nodeID`` is not found in the tree.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">nodeID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;None&#39; is not supported as an ID value.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_nodesWithID</span><span class="p">[</span><span class="n">nodeID</span><span class="p">]</span></div>
+
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">Find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;Find&#39; is not yet implemented.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Node.__iter__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__iter__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns an iterator to iterate all child nodes.</span>
+
+<span class="sd">		:returns: Children iterator.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Node.__len__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__len__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the number of children, but not including grand-children.</span>
+
+<span class="sd">		:returns: Number of child nodes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Node.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns a detailed string representation of the node.</span>
+
+<span class="sd">		:returns: The detailed string representation of the node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">nodeID</span> <span class="o">=</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">nodeID</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;; nodeID=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+			<span class="n">parent</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;; parent=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">_id</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;; value=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;node</span><span class="si">{</span><span class="n">nodeID</span><span class="si">}{</span><span class="n">parent</span><span class="si">}{</span><span class="n">value</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Node.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a string representation of the node.</span>
+
+<span class="sd">		Order of resolution:</span>
+
+<span class="sd">		1. If :attr:`_value` is not None, return the string representation of :attr:`_value`.</span>
+<span class="sd">		2. If :attr:`_id` is not None, return the string representation of :attr:`_id`.</span>
+<span class="sd">		3. Else, return :meth:`__repr__`.</span>
+
+<span class="sd">		:returns: The resolved string representation of the node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Node.Render">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Render">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Render</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+		<span class="n">lineend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+		<span class="n">nodeMarker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;├─&quot;</span><span class="p">,</span>
+		<span class="n">lastNodeMarker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;└─&quot;</span><span class="p">,</span>
+		<span class="n">bypassMarker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;│ &quot;</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Render the tree as ASCII art.</span>
+
+<span class="sd">		:param prefix:         A string printed in front of every line, e.g. for indentation. Default: ``&quot;&quot;``.</span>
+<span class="sd">		:param lineend:        A string printed at the end of every line. Default: ``&quot;\\n&quot;``.</span>
+<span class="sd">		:param nodeMarker:     A string printed before every non-last tree node. Default: ``&quot;├─&quot;``.</span>
+<span class="sd">		:param lastNodeMarker: A string printed before every last tree node. Default: ``&quot;└─&quot;``.</span>
+<span class="sd">		:param bypassMarker:   A string printed when there are further nodes in the parent level. Default: ``&quot;│ &quot;``.</span>
+<span class="sd">		:return:               A rendered tree as multiline string.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">emptyMarker</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">bypassMarker</span><span class="p">)</span>
+
+		<span class="k">def</span><span class="w"> </span><span class="nf">_render</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">markers</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+			<span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">HasChildren</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">_children</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+					<span class="n">nodeRepresentation</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">_format</span><span class="p">(</span><span class="n">child</span><span class="p">)</span> <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">_format</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+					<span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">markers</span><span class="si">}{</span><span class="n">nodeMarker</span><span class="si">}{</span><span class="n">nodeRepresentation</span><span class="si">}{</span><span class="n">lineend</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+					<span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_render</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">markers</span> <span class="o">+</span> <span class="n">bypassMarker</span><span class="p">))</span>
+
+				<span class="c1"># last child node</span>
+				<span class="n">child</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+				<span class="n">nodeRepresentation</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">_format</span><span class="p">(</span><span class="n">child</span><span class="p">)</span> <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">_format</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+				<span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">markers</span><span class="si">}{</span><span class="n">lastNodeMarker</span><span class="si">}{</span><span class="n">nodeRepresentation</span><span class="si">}{</span><span class="n">lineend</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+				<span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_render</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">markers</span> <span class="o">+</span> <span class="n">emptyMarker</span><span class="p">))</span>
+
+			<span class="k">return</span> <span class="n">result</span>
+
+		<span class="c1"># Root element</span>
+		<span class="n">nodeRepresentation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">nodeRepresentation</span><span class="si">}{</span><span class="n">lineend</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+		<span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+		<span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="346pt" height="27pt" viewBox="0.00 0.00 346.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritance153dc7632d</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>CallByRefBoolParam</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefBoolParam" ns1:title="A special *call-by-reference* implementation for boolean reference types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="338,-19 221,-19 221,0 338,0 338,-19" />
+<ns0:text text-anchor="middle" x="279.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CallByRefBoolParam</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>CallByRefParam</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.CallByRef.html#pyTooling.CallByRef.CallByRefParam" ns1:title="Implements a *call-by-reference* parameter." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="185,-19 90,-19 90,0 185,0 185,-19" />
+<ns0:text text-anchor="middle" x="137.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CallByRefParam</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>CallByRefParam-&gt;CallByRefBoolParam</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M185.12,-9.5C194.96,-9.5 205.5,-9.5 215.83,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="215.87,-11.25 220.87,-9.5 215.87,-7.75 215.87,-11.25" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-19 0,-19 0,0 54,0 54,-19" />
+<ns0:text text-anchor="middle" x="27" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Generic-&gt;CallByRefParam</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.26,-9.5C63.43,-9.5 74.06,-9.5 84.57,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.71,-11.25 89.71,-9.5 84.71,-7.75 84.71,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

@@ -1,0 +1,600 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ArgParse" href="ArgParse.html" />
+    <link rel="prev" title="Terminal Application" href="../Tutorials/TerminalApplication.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#design-goals">Design Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#use-cases">Use Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#predefined-attributes">Predefined Attributes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#attribute">Attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simpleattribute">SimpleAttribute</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#user-defined-attributes">User-Defined Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#searching-attributes">Searching Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filtering-attributes">Filtering Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#grouping-attributes">Grouping Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation-details">Implementation Details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#consumers">Consumers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Attributes/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="overview">
+<span id="attr"></span><h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#module-pyTooling.Attributes" title="pyTooling.Attributes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Attributes</span></code></a> package offers the base implementation of <a class="reference external" href="https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/">.NET-like attributes</a>
+realized with <a class="reference internal" href="../Glossary.html#term-Decorator"><span class="xref std std-term">Python decorators</span></a>. The annotated and declarative data is stored as instances of
+<a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a> classes in an additional <code class="docutils literal notranslate"><span class="pre">__pyattr__</span></code> field per class, method or function.
+The annotation syntax allows users to attach any structured data to classes, methods or functions. In many cases, a
+user will derive a custom attribute from <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a> and override the <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method,
+so user-defined parameters can be accepted when the attribute is constructed.</p>
+<p>Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance usage
+locations (see ‘Function Attributes’ example). Another option for class and method attributes is defining a new classes
+using pyTooling’s <a class="reference internal" href="../MetaClasses.html#meta-extendedtype"><span class="std std-ref">ExtendedType</span></a> meta-class. Here the class itself offers helper methods for discovering
+annotated methods (see ‘Method Attributes’ example). While all <em>user-defined</em> (and <em>pre-defined</em>) attributes offer a
+powerful API derived from <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a> class, the full potential can only be experienced
+when using class declarations constructed by the <code class="xref py py-class docutils literal notranslate"><span class="pre">pyTooling.MetaClass.ExtendedType</span></code> meta-class.</p>
+<p>Attributes can create a complex class hierarchy. This helps in finding and filtering for annotated data.</p>
+<section id="design-goals">
+<span id="attr-goals"></span><h2>Design Goals<a class="headerlink" href="#design-goals" title="Link to this heading"></a></h2>
+<p>The main design goals are:</p>
+<ul class="simple">
+<li><p>Allow meta-data annotation to Python language entities (class, method, function) as declarative syntax.</p></li>
+<li><p>Find applied attributes based on attribute type (methods on the attribute).</p></li>
+<li><p>Find applied attributes in a scope (find on class and on class’ methods).</p></li>
+<li><p>Allow building a hierarchy of attribute classes.</p></li>
+<li><p>Filter attributes based on their class hierarchy.</p></li>
+<li><p>Reduce overhead to class creation time (do not impact object creation time).</p></li>
+</ul>
+</section>
+<section id="example">
+<span id="attr-example"></span><h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p><strong>Function Attributes</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Command</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Flag</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">long</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="nd">@Command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print version information.&quot;</span><span class="p">)</span>
+<span class="nd">@Flag</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="n">short</span><span class="o">=</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="s2">&quot;--verbose&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Default handler.&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+<span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">Command</span><span class="o">.</span><span class="n">GetFunctions</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p><strong>Method Attributes</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCase</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Program</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">):</span>
+   <span class="nd">@TestCase</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Handler routine&quot;</span><span class="p">)</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+     <span class="k">pass</span>
+
+
+
+<span class="n">prog</span> <span class="o">=</span> <span class="n">Program</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">attributes</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">GetMethodsWithAttributes</span><span class="p">(</span><span class="n">predicate</span><span class="o">=</span><span class="n">TestCase</span><span class="p">):</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="use-cases">
+<span id="attr-usecases"></span><h2>Use Cases<a class="headerlink" href="#use-cases" title="Link to this heading"></a></h2>
+<p>In general all classes, methods and functions can be annotated with additional meta-data. It depends on the application,
+framework or library to decide if annotations should be applied imperatively as regular code or declaratively as
+attributes via Python decorators.</p>
+<p>With this in mind, the following use-cases and ideas can be derived:</p>
+<p class="rubric">Derived Use Cases:</p>
+<ul class="simple">
+<li><p>Describe a command line argument parser (like ArgParse) in a declarative form. <br />
+See <a class="reference internal" href="ArgParse.html#attr-argparse"><span class="std std-ref">pyTooling.Attributes.ArgParse Package and Examples</span></a></p></li>
+<li><p>Mark nested classes, so later when the outer class gets instantiated, these nested classes are indexed or
+automatically registered. <br />
+See <a class="reference internal" href="../CLIAbstraction/index.html#cliabs"><span class="std std-ref">CLIAbstraction</span></a> → <a class="reference internal" href="../CLIAbstraction/Program.html#cliabs-cliargument"><span class="std std-ref">CLIArgument</span></a></p></li>
+<li><p>Mark methods in a class as test cases and classes as test suites, so test cases and suites are not identified based on
+a magic method name. <br />
+<em>Investigation ongoing / planned feature.</em></p></li>
+<li><p>Mark class members as public or private and control visibility in auto-generated documentation. <br />
+See <a class="reference external" href="https://sphinxextensions.readthedocs.io/en/latest/">SphinxExtensions</a> → DocumentMemberAttribute</p></li>
+</ul>
+</section>
+<section id="predefined-attributes">
+<span id="attr-predefined"></span><h2>Predefined Attributes<a class="headerlink" href="#predefined-attributes" title="Link to this heading"></a></h2>
+<p>pyTooling’s attributes offers the <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a> base-class to derive further attribute
+classes. A derive <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.SimpleAttribute" title="pyTooling.Attributes.SimpleAttribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleAttribute</span></code></a> is also offered to accept any <code class="docutils literal notranslate"><span class="pre">*args,</span> <span class="pre">**kwargs</span></code>
+parameters for annotation of semi-structured meta-data.</p>
+<p>It’s recommended to derive an own hierarchy of attribute classes with well-defined parameter lists for the <code class="docutils literal notranslate"><span class="pre">__init__</span></code>
+method. Meta-data stored in attribute should be made accessible via (readonly) properties.</p>
+<p>In addition, an <a class="reference internal" href="../pyTooling/pyTooling.Attributes.ArgParse.html#module-pyTooling.Attributes.ArgParse" title="pyTooling.Attributes.ArgParse"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Attributes.ArgParse</span></code></a> subpackage is provided, which allows users to describe complex
+argparse command line argument parser structures in a declarative way.</p>
+<p class="rubric">Partial inheritance diagram:</p>
+<div class="graphviz"><object data="../_images/inheritance-6d5602bc17b41357ab7daa64f8abe342805652a5.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of pyTooling.Attributes.SimpleAttribute, pyTooling.Attributes.ArgParse.DefaultHandler, pyTooling.Attributes.ArgParse.CommandHandler, pyTooling.Attributes.ArgParse.CommandLineArgument</p></object></div>
+<section id="attribute">
+<span id="attr-predefined-attribute"></span><h3>Attribute<a class="headerlink" href="#attribute" title="Link to this heading"></a></h3>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a> class implements half of the attribute’s feature set. It implements the
+instantiation and storage of attribute internal values as well as the search and lookup methods to find attributes. The
+second half is implemented in the <a class="reference internal" href="../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType" title="pyTooling.MetaClasses.ExtendedType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtendedType</span></code></a> meta-class. It adds attribute specific
+methods to each class created by that meta-class.</p>
+<p>Any attribute is applied on a class, method or function using Python’s decorator syntax, because every attribute is
+actually a decorator. In addition, such a decorator accepts parameters, which are used to instantiate an attribute class
+and handover the parameters to that attribute instance.</p>
+<p>Every instance of an attribute is registered at its class in a class variable. Further more, these instances are
+distinguished if they are applied to a class, method or function.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetClasses" title="pyTooling.Attributes.Attribute.GetClasses"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetClasses()</span></code></a> returns a generator to iterate all classes, this attribute was
+applied to.</p></li>
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetMethods" title="pyTooling.Attributes.Attribute.GetMethods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetMethods()</span></code></a> returns a generator to iterate all methods, this attribute was
+applied to.</p></li>
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetFunctions" title="pyTooling.Attributes.Attribute.GetFunctions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetFunctions()</span></code></a> returns a generator to iterate all functions, this attribute was
+applied to.</p></li>
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetAttributes" title="pyTooling.Attributes.Attribute.GetAttributes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetAttributes()</span></code></a> returns a tuple of applied attributes to the given method.</p></li>
+</ul>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-3 sd-row-cols-xs-3 sd-row-cols-sm-3 sd-row-cols-md-3 sd-row-cols-lg-3 docutils">
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p><strong>Apply a class attribute</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+
+<span class="nd">@Attribute</span><span class="p">()</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p><strong>Apply a method attribute</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">:</span>
+  <span class="nd">@Attribute</span><span class="p">()</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">MyMethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p><strong>Apply a function attribute</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+
+<span class="nd">@Attribute</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">MyFunction</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-3 sd-row-cols-xs-3 sd-row-cols-sm-3 sd-row-cols-md-3 sd-row-cols-lg-3 docutils">
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p><strong>Find attribute usages of class attributes</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">Attribute</span><span class="o">.</span><span class="n">GetClasses</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p><strong>Find attribute usages of method attributes</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">Attribute</span><span class="o">.</span><span class="n">GetMethods</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p><strong>Find attribute usages of function attributes</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">Attribute</span><span class="o">.</span><span class="n">GetFunctions</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<p class="rubric">Condensed definition of class <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Attribute</span><span class="p">:</span>
+   <span class="nd">@classmethod</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">GetFunctions</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">TAttributeFilter</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TAttr</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+     <span class="o">...</span>
+
+   <span class="nd">@classmethod</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">GetClasses</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">TAttributeFilter</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TAttr</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+     <span class="o">...</span>
+
+   <span class="nd">@classmethod</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">GetMethods</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">TAttributeFilter</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TAttr</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+     <span class="o">...</span>
+
+   <span class="nd">@classmethod</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">GetAttributes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">MethodType</span><span class="p">,</span> <span class="n">includeSubClasses</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Attribute&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+     <span class="o">...</span>
+</pre></div>
+</div>
+<p class="rubric">Planned Features</p>
+<ul class="simple">
+<li><p>Allow attributes to be applied only once per kind.</p></li>
+<li><p>Allow limitation of attributes to classes, methods or functions, so an attribute meant for methods can’t be applied to
+a function or class.</p></li>
+<li><p>Allow filtering attribute with a predicate function, so values of an attribute instance can be checked too.</p></li>
+</ul>
+</section>
+<section id="simpleattribute">
+<span id="attr-predefined-simpleattribute"></span><h3>SimpleAttribute<a class="headerlink" href="#simpleattribute" title="Link to this heading"></a></h3>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.SimpleAttribute" title="pyTooling.Attributes.SimpleAttribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleAttribute</span></code></a> class accepts any positional and any keyword arguments as data. That
+data is made available via <code class="xref py py-attr docutils literal notranslate"><span class="pre">Args</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">KwArgs</span></code>
+properties.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleAttribute</span>
+
+<span class="nd">@SimpleAttribute</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;testsuite&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">:</span>
+  <span class="nd">@SimpleAttribute</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;testcase&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test and operator&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">test_and</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="o">...</span>
+
+  <span class="nd">@SimpleAttribute</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;testcase&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test xor operator&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">test_xor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><strong>Condensed definition of class</strong> <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.SimpleAttribute" title="pyTooling.Attributes.SimpleAttribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleAttribute</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SimpleAttribute</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+   <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="o">...</span>
+
+   <span class="nd">@readonly</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">Args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+      <span class="o">...</span>
+
+   <span class="nd">@readonly</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">KwArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+      <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="user-defined-attributes">
+<span id="attr-userdefined"></span><h2>User-Defined Attributes<a class="headerlink" href="#user-defined-attributes" title="Link to this heading"></a></h2>
+<p>It’s recommended to derive user-defined attributes from <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a>, so the <code class="docutils literal notranslate"><span class="pre">__init__</span></code>
+method can be overriden to accept a well defined parameter list including type hints.</p>
+<p>The example defines an <code class="docutils literal notranslate"><span class="pre">Annotation</span></code> attribute, which accepts a single string parameter. When the attribute is applied,
+the parameter is stored in an  instance. The inner field is then accessible via readonly <code class="docutils literal notranslate"><span class="pre">Annotation</span></code> property.</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p><strong>Find attribute usages of class attributes</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Application</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">):</span>
+  <span class="nd">@Annotation</span><span class="p">(</span><span class="s2">&quot;Some annotation data&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">AnnotatedMethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">Annotation</span><span class="o">.</span><span class="n">GetMethods</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p><strong>Find attribute usages of class attributes</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Annotation</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="n">_annotation</span><span class="p">:</span> <span class="nb">str</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_annotation</span> <span class="o">=</span> <span class="n">annotation</span>
+
+  <span class="nd">@readonly</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">Annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotation</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="searching-attributes">
+<span id="attr-searching"></span><h2>Searching Attributes<a class="headerlink" href="#searching-attributes" title="Link to this heading"></a></h2>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Attributes:: Searching Attributes</p>
+</div>
+</section>
+<section id="filtering-attributes">
+<span id="attr-filtering"></span><h2>Filtering Attributes<a class="headerlink" href="#filtering-attributes" title="Link to this heading"></a></h2>
+<p>Methods <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetClasses" title="pyTooling.Attributes.Attribute.GetClasses"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetClasses()</span></code></a>, <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetMethods" title="pyTooling.Attributes.Attribute.GetMethods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetMethods()</span></code></a>
+<a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetFunctions" title="pyTooling.Attributes.Attribute.GetFunctions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetFunctions()</span></code></a>, <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute.GetAttributes" title="pyTooling.Attributes.Attribute.GetAttributes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetAttributes()</span></code></a> accept an
+optional <code class="docutils literal notranslate"><span class="pre">predicate</span></code> parameter, which needs to be a subclass of <a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a>.</p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Attributes:: Filtering Attributes</p>
+</div>
+</section>
+<section id="grouping-attributes">
+<span id="attr-grouping"></span><h2>Grouping Attributes<a class="headerlink" href="#grouping-attributes" title="Link to this heading"></a></h2>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>Attributes:: Grouping Attributes</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span><span class="p">,</span> <span class="n">SimpleAttribute</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GroupAttribute</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+   <span class="n">_id</span><span class="p">:</span> <span class="nb">str</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="nb">id</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">Entity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Entity</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;attr1&quot;</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;attr2&quot;</span><span class="p">))</span>
+
+      <span class="k">return</span> <span class="n">entity</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Grouped</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">test_Group_Simple</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="nd">@SimpleAttribute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;my&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Class1&quot;</span><span class="p">)</span>
+      <span class="nd">@GroupAttribute</span><span class="p">(</span><span class="s2">&quot;grp&quot;</span><span class="p">)</span>
+      <span class="k">class</span><span class="w"> </span><span class="nc">MyClass1</span><span class="p">:</span>
+         <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="implementation-details">
+<span id="attr-details"></span><h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Link to this heading"></a></h2>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>Attributes:: Implementation details</p>
+</div>
+<p><a class="reference internal" href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME" title="pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME"><code class="xref py py-data docutils literal notranslate"><span class="pre">ATTRIBUTES_MEMBER_NAME</span></code></a></p>
+<p>The annotated data is stored in an additional <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> entry for each
+annotated method. By default the entry is called <code class="docutils literal notranslate"><span class="pre">__pyattr__</span></code>. Multiple
+attributes can be applied to the same method.</p>
+</section>
+<section id="consumers">
+<span id="attr-consumers"></span><h2>Consumers<a class="headerlink" href="#consumers" title="Link to this heading"></a></h2>
+<p>This abstraction layer is used by:</p>
+<ul class="simple">
+<li><p>✅ Declarative definition of ArgParse parser rules. <br />
+<a class="reference internal" href="ArgParse.html#attr-argparse"><span class="std std-ref">pyTooling.Attributes.ArgParse</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Tutorials/TerminalApplication.html" class="btn btn-neutral float-left" title="Terminal Application" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ArgParse.html" class="btn btn-neutral float-right" title="ArgParse" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

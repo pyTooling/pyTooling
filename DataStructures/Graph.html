@@ -1,0 +1,755 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Path" href="Path/index.html" />
+    <link rel="prev" title="2D Cartesian" href="Cartesian.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Graph</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#missing-features">Missing Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#planned-features">Planned Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#out-of-scope">Out of Scope</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#by-feature">By Feature</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#unique-id">Unique ID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#value">Value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-value-pairs">Key-Value-Pairs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inbound-edges">Inbound Edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outbound-edges">Outbound Edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graph-reference">Graph Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#competing-solutions">Competing Solutions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#networkx">NetworkX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#igraph">igraph</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Graph</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/DataStructures/Graph.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="graph">
+<span id="struct-graph"></span><h1>Graph<a class="headerlink" href="#graph" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Graph.html#module-pyTooling.Graph" title="pyTooling.Graph"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Graph</span></code></a> package provides a directed graph data structure. Compared to
+<a class="reference internal" href="#struct-graph-networkx"><span class="std std-ref">NetworkX</span></a> and <a class="reference internal" href="#struct-graph-igraph"><span class="std std-ref">igraph</span></a>, this implementation provides an
+object-oriented API.</p>
+<p class="rubric">Example Graph:</p>
+<figure class="align-default" id="id8">
+<pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph LR
+  A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
+
+  A --&gt; B --&gt; E
+  G --&gt; F
+  A --&gt; C --&gt; G --&gt; H --&gt; D
+  D -.-&gt; A
+  D &amp; F -.-&gt; B
+  I ---&gt; E --&gt; F --&gt; D
+
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+    </pre><figcaption>
+<p><span class="caption-text">A directed graph with backward-edges denoted by dotted vertex relations.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p class="rubric">Graph Properties:</p>
+<p>A <strong>graph</strong> data structure is represented by an instance of <a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Graph" title="pyTooling.Graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> holding references to all
+nodes. Nodes are instances of <a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Vertex" title="pyTooling.Graph.Vertex"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vertex</span></code></a> classes and directed links between nodes are made of
+<a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Edge" title="pyTooling.Graph.Edge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code></a> instances. A graph can have attached meta information as key-value pairs.</p>
+<p>Graph algorithms using all vertexes are provided as methods on the graph instance. Whereas graph algorithms based on a
+starting vertex are provided as methods on a vertex.</p>
+<p>A <strong>vertex</strong> can have a unique ID, a value and attached meta information as key-value pairs. A vertex has references to
+inbound and outbound edges, thus a graph can be traversed in reverse.</p>
+<p>An <strong>edge</strong> can have a unique ID, a value, a weight and attached meta information as key-value pairs. All edges are
+directed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The data structure reaches similar performance as <a class="extlink-gh reference external" href="https://GitHub.com/networkx/networkx">NetworkX</a>, while the API follows
+object-oriented-programming principles instead of procedural programming principles.</p>
+</div>
+<p>The following example code demonstrates a few features in a compact form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new graph</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Example Graph&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="features">
+<span id="struct-graph-features"></span><h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fast and powerful graph data structure.</p></li>
+<li><p>Operations on vertexes following directed edges.</p></li>
+<li><p>Operations on whole graph.</p></li>
+<li><p>A vertex and an edge can have a unique ID.</p></li>
+<li><p>A vertex and an edge can have a value.</p></li>
+<li><p>A graph, vertex and an edge can store key-value-pairs via dictionary syntax.</p></li>
+<li><p>A vertex knows its inbound and outbound edges.</p></li>
+<li><p>An edge can have a weight.</p></li>
+</ul>
+<section id="missing-features">
+<span id="struct-graph-missingfeatures"></span><h3>Missing Features<a class="headerlink" href="#missing-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>TBD</p></li>
+</ul>
+</section>
+<section id="planned-features">
+<span id="struct-graph-plannedfeatures"></span><h3>Planned Features<a class="headerlink" href="#planned-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>TBD</p></li>
+</ul>
+</section>
+<section id="out-of-scope">
+<span id="struct-graph-rejectedfeatures"></span><h3>Out of Scope<a class="headerlink" href="#out-of-scope" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Preserve or recover the graph data structure before an erroneous operation caused an exception and aborted a graph
+modification, which might leave the graph in a corrupted state.</p></li>
+<li><p>Export the graph data structure to various file formats like JSON, YAML, TOML, …</p></li>
+<li><p>Import a graph data structure from various file formats like JSON, YAML, TOML, …</p></li>
+<li><p>Graph visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, …</p></li>
+</ul>
+</section>
+</section>
+<section id="by-feature">
+<span id="struct-graph-byfeature"></span><h2>By Feature<a class="headerlink" href="#by-feature" title="Link to this heading"></a></h2>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Accessing internal fields of a graph, vertex or edge is strongly not recommended for users, as it might lead to a
+corrupted graph data structure. If a power-user wants to access these fields, feel free to use them for achieving a
+higher performance, but you got warned 😉.</p>
+</div>
+<section id="unique-id">
+<span id="struct-graph-id"></span><h3>Unique ID<a class="headerlink" href="#unique-id" title="Link to this heading"></a></h3>
+<p>A vertex can be created with a unique ID when the object is created. Afterwards, the <a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Vertex.ID" title="pyTooling.Graph.Vertex.ID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ID</span></code></a>
+is a readonly property. Any hashable object can be used as an ID. The ID must be unique per graph. If graphs are merged
+or vertexes are added to an existing graph, the newly added graph’s ID(s) are checked and might cause an exception.</p>
+<p>Also edges can be created with a unique ID when the object is created. Afterwards, the <a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Edge.ID" title="pyTooling.Graph.Edge.ID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ID</span></code></a>
+is a readonly property. Any hashable object can be used as an ID. The ID must be unique per graph. If graphs are merged
+or vertexes are added to an existing graph, the newly added graph’s ID(s) are checked and might cause an exception.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create vertex with unique ID 5</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">()</span>
+<span class="n">vertex</span> <span class="o">=</span> <span class="n">Vertex</span><span class="p">(</span><span class="n">vertexID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">)</span>
+
+<span class="c1"># Read a vertex&#39;s ID</span>
+<span class="n">vertexID</span> <span class="o">=</span> <span class="n">vertex</span><span class="o">.</span><span class="n">ID</span>
+</pre></div>
+</div>
+</section>
+<section id="value">
+<span id="struct-graph-value"></span><h3>Value<a class="headerlink" href="#value" title="Link to this heading"></a></h3>
+<p>A vertex’s value can be given at vertex creating time or it can be set ant any later time via property
+<a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Vertex.Value" title="pyTooling.Graph.Vertex.Value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Value</span></code></a>. Any data type is accepted. The internally stored value can be retrieved by
+the same property. If a vertex’s string representation is requested via <a class="reference internal" href="../pyTooling/pyTooling.Graph.html#pyTooling.Graph.Vertex.__str__" title="pyTooling.Graph.Vertex.__str__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code></a> and a
+vertex’s value isn’t None, then the value’s string representation is returned.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>GRAPH: setting / getting an edge’s values</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create vertex with unique ID 5</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">()</span>
+<span class="n">vertex</span> <span class="o">=</span> <span class="n">Vertex</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">)</span>
+
+<span class="c1"># Set or change a node&#39;s value</span>
+<span class="n">vertex</span><span class="o">.</span><span class="n">Value</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Access a vertex&#39;s Value</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">vertex</span><span class="o">.</span><span class="n">Value</span>
+</pre></div>
+</div>
+</section>
+<section id="key-value-pairs">
+<span id="struct-graph-keyvaluepairs"></span><h3>Key-Value-Pairs<a class="headerlink" href="#key-value-pairs" title="Link to this heading"></a></h3>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>GRAPH: setting / getting a vertex’s KVPs</p>
+</div>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>GRAPH: setting / getting an edge’s KVPs</p>
+</div>
+</section>
+<section id="inbound-edges">
+<span id="struct-graph-inbound"></span><h3>Inbound Edges<a class="headerlink" href="#inbound-edges" title="Link to this heading"></a></h3>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>GRAPH: inbound edges</p>
+</div>
+</section>
+<section id="outbound-edges">
+<span id="struct-graph-outbound"></span><h3>Outbound Edges<a class="headerlink" href="#outbound-edges" title="Link to this heading"></a></h3>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>GRAPH: outbound edges</p>
+</div>
+</section>
+<section id="graph-reference">
+<span id="struct-graph-graphref"></span><h3>Graph Reference<a class="headerlink" href="#graph-reference" title="Link to this heading"></a></h3>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">Todo</p>
+<p>GRAPH: reference to the graph</p>
+</div>
+</section>
+</section>
+<section id="competing-solutions">
+<span id="struct-graph-competitors"></span><h2>Competing Solutions<a class="headerlink" href="#competing-solutions" title="Link to this heading"></a></h2>
+<p>Compared to <a class="extlink-gh reference external" href="https://GitHub.com/networkx/networkx">NetworkX</a> and <a class="extlink-gh reference external" href="https://GitHub.com/igraph/python-igraph">igraph</a>, this implementation provides an
+object-oriented API.</p>
+<section id="networkx">
+<span id="struct-graph-networkx"></span><h3>NetworkX<a class="headerlink" href="#networkx" title="Link to this heading"></a></h3>
+<p class="rubric">Disadvantages</p>
+<ul class="simple">
+<li><p>Many operations are executed on the graph, but not on vertex/node objects or edge objects.</p></li>
+<li><p>Algorithms are provided as functions instead of methods.</p></li>
+<li><p>Vertices are created implicitly.</p></li>
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Standoff</p>
+<ul class="simple">
+<li><p>Arbitrary data can be attached to edges.</p></li>
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Advantages</p>
+<ul class="simple">
+<li><p>A huge variety of algorithms is provided.</p></li>
+<li><p>…</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="igraph">
+<span id="struct-graph-igraph"></span><h3>igraph<a class="headerlink" href="#igraph" title="Link to this heading"></a></h3>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>GRAPH::igraph write example and demonstrate missing OOP API.</p>
+</div>
+<p class="rubric">Disadvantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Standoff</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Advantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># add code here</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Cartesian.html" class="btn btn-neutral float-left" title="2D Cartesian" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Path/index.html" class="btn btn-neutral float-right" title="Path" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.GenericPath.URL &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Graph" href="pyTooling.Graph.html" />
+    <link rel="prev" title="pyTooling.GenericPath" href="pyTooling.GenericPath.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pyTooling.GenericPath.URL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL_PATTERN"><code class="docutils literal notranslate"><span class="pre">URL_PATTERN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL_REGEXP"><code class="docutils literal notranslate"><span class="pre">URL_REGEXP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols"><code class="docutils literal notranslate"><span class="pre">Protocols</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.TLS"><code class="docutils literal notranslate"><span class="pre">Protocols.TLS</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.HTTP"><code class="docutils literal notranslate"><span class="pre">Protocols.HTTP</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.HTTPS"><code class="docutils literal notranslate"><span class="pre">Protocols.HTTPS</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.FTP"><code class="docutils literal notranslate"><span class="pre">Protocols.FTP</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.FTPS"><code class="docutils literal notranslate"><span class="pre">Protocols.FTPS</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.FILE"><code class="docutils literal notranslate"><span class="pre">Protocols.FILE</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols._generate_next_value_"><code class="docutils literal notranslate"><span class="pre">Protocols._generate_next_value_()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__format__"><code class="docutils literal notranslate"><span class="pre">Protocols.__format__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__str__"><code class="docutils literal notranslate"><span class="pre">Protocols.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__repr__"><code class="docutils literal notranslate"><span class="pre">Protocols.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__or__"><code class="docutils literal notranslate"><span class="pre">Protocols.__or__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__and__"><code class="docutils literal notranslate"><span class="pre">Protocols.__and__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__xor__"><code class="docutils literal notranslate"><span class="pre">Protocols.__xor__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__ror__"><code class="docutils literal notranslate"><span class="pre">Protocols.__ror__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rand__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rand__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rxor__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rxor__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__invert__"><code class="docutils literal notranslate"><span class="pre">Protocols.__invert__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__new__"><code class="docutils literal notranslate"><span class="pre">Protocols.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__hash__"><code class="docutils literal notranslate"><span class="pre">Protocols.__hash__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__getattribute__"><code class="docutils literal notranslate"><span class="pre">Protocols.__getattribute__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__lt__"><code class="docutils literal notranslate"><span class="pre">Protocols.__lt__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__le__"><code class="docutils literal notranslate"><span class="pre">Protocols.__le__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__eq__"><code class="docutils literal notranslate"><span class="pre">Protocols.__eq__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__ne__"><code class="docutils literal notranslate"><span class="pre">Protocols.__ne__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__gt__"><code class="docutils literal notranslate"><span class="pre">Protocols.__gt__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__ge__"><code class="docutils literal notranslate"><span class="pre">Protocols.__ge__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__add__"><code class="docutils literal notranslate"><span class="pre">Protocols.__add__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__radd__"><code class="docutils literal notranslate"><span class="pre">Protocols.__radd__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__sub__"><code class="docutils literal notranslate"><span class="pre">Protocols.__sub__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rsub__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rsub__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__mul__"><code class="docutils literal notranslate"><span class="pre">Protocols.__mul__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rmul__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rmul__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__mod__"><code class="docutils literal notranslate"><span class="pre">Protocols.__mod__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rmod__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rmod__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__divmod__"><code class="docutils literal notranslate"><span class="pre">Protocols.__divmod__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rdivmod__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rdivmod__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__pow__"><code class="docutils literal notranslate"><span class="pre">Protocols.__pow__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rpow__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rpow__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__neg__"><code class="docutils literal notranslate"><span class="pre">Protocols.__neg__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__pos__"><code class="docutils literal notranslate"><span class="pre">Protocols.__pos__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__abs__"><code class="docutils literal notranslate"><span class="pre">Protocols.__abs__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__bool__"><code class="docutils literal notranslate"><span class="pre">Protocols.__bool__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__lshift__"><code class="docutils literal notranslate"><span class="pre">Protocols.__lshift__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rlshift__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rlshift__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rshift__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rshift__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rrshift__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rrshift__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__int__"><code class="docutils literal notranslate"><span class="pre">Protocols.__int__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__float__"><code class="docutils literal notranslate"><span class="pre">Protocols.__float__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__floordiv__"><code class="docutils literal notranslate"><span class="pre">Protocols.__floordiv__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rfloordiv__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rfloordiv__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__truediv__"><code class="docutils literal notranslate"><span class="pre">Protocols.__truediv__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__rtruediv__"><code class="docutils literal notranslate"><span class="pre">Protocols.__rtruediv__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__index__"><code class="docutils literal notranslate"><span class="pre">Protocols.__index__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.conjugate"><code class="docutils literal notranslate"><span class="pre">Protocols.conjugate()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.bit_length"><code class="docutils literal notranslate"><span class="pre">Protocols.bit_length()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.bit_count"><code class="docutils literal notranslate"><span class="pre">Protocols.bit_count()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.to_bytes"><code class="docutils literal notranslate"><span class="pre">Protocols.to_bytes()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.from_bytes"><code class="docutils literal notranslate"><span class="pre">Protocols.from_bytes()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.as_integer_ratio"><code class="docutils literal notranslate"><span class="pre">Protocols.as_integer_ratio()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__trunc__"><code class="docutils literal notranslate"><span class="pre">Protocols.__trunc__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__floor__"><code class="docutils literal notranslate"><span class="pre">Protocols.__floor__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__ceil__"><code class="docutils literal notranslate"><span class="pre">Protocols.__ceil__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__round__"><code class="docutils literal notranslate"><span class="pre">Protocols.__round__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__sizeof__"><code class="docutils literal notranslate"><span class="pre">Protocols.__sizeof__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.is_integer"><code class="docutils literal notranslate"><span class="pre">Protocols.is_integer()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.real"><code class="docutils literal notranslate"><span class="pre">Protocols.real</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.imag"><code class="docutils literal notranslate"><span class="pre">Protocols.imag</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.numerator"><code class="docutils literal notranslate"><span class="pre">Protocols.numerator</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.denominator"><code class="docutils literal notranslate"><span class="pre">Protocols.denominator</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols._numeric_repr_"><code class="docutils literal notranslate"><span class="pre">Protocols._numeric_repr_()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols._iter_member_by_value_"><code class="docutils literal notranslate"><span class="pre">Protocols._iter_member_by_value_()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols._iter_member_"><code class="docutils literal notranslate"><span class="pre">Protocols._iter_member_()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols._iter_member_by_def_"><code class="docutils literal notranslate"><span class="pre">Protocols._iter_member_by_def_()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols._missing_"><code class="docutils literal notranslate"><span class="pre">Protocols._missing_()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__contains__"><code class="docutils literal notranslate"><span class="pre">Protocols.__contains__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__iter__"><code class="docutils literal notranslate"><span class="pre">Protocols.__iter__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__len__"><code class="docutils literal notranslate"><span class="pre">Protocols.__len__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__dir__"><code class="docutils literal notranslate"><span class="pre">Protocols.__dir__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__getitem__"><code class="docutils literal notranslate"><span class="pre">Protocols.__getitem__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__init__"><code class="docutils literal notranslate"><span class="pre">Protocols.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols.__reduce_ex__"><code class="docutils literal notranslate"><span class="pre">Protocols.__reduce_ex__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host"><code class="docutils literal notranslate"><span class="pre">Host</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host.__init__"><code class="docutils literal notranslate"><span class="pre">Host.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host.Hostname"><code class="docutils literal notranslate"><span class="pre">Host.Hostname</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host.Port"><code class="docutils literal notranslate"><span class="pre">Host.Port</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host.__str__"><code class="docutils literal notranslate"><span class="pre">Host.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host.Copy"><code class="docutils literal notranslate"><span class="pre">Host.Copy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.Element"><code class="docutils literal notranslate"><span class="pre">Element</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Element.__init__"><code class="docutils literal notranslate"><span class="pre">Element.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Element.__str__"><code class="docutils literal notranslate"><span class="pre">Element.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path"><code class="docutils literal notranslate"><span class="pre">Path</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path.ELEMENT_DELIMITER"><code class="docutils literal notranslate"><span class="pre">Path.ELEMENT_DELIMITER</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path.ROOT_DELIMITER"><code class="docutils literal notranslate"><span class="pre">Path.ROOT_DELIMITER</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path.Parse"><code class="docutils literal notranslate"><span class="pre">Path.Parse()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path.__init__"><code class="docutils literal notranslate"><span class="pre">Path.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path.__len__"><code class="docutils literal notranslate"><span class="pre">Path.__len__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path.__str__"><code class="docutils literal notranslate"><span class="pre">Path.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL"><code class="docutils literal notranslate"><span class="pre">URL</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.__init__"><code class="docutils literal notranslate"><span class="pre">URL.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.Host"><code class="docutils literal notranslate"><span class="pre">URL.Host</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.Query"><code class="docutils literal notranslate"><span class="pre">URL.Query</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.Fragment"><code class="docutils literal notranslate"><span class="pre">URL.Fragment</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.Parse"><code class="docutils literal notranslate"><span class="pre">URL.Parse()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.__str__"><code class="docutils literal notranslate"><span class="pre">URL.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL.WithoutCredentials"><code class="docutils literal notranslate"><span class="pre">URL.WithoutCredentials()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.Base"><code class="docutils literal notranslate"><span class="pre">Base</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.RootMixIn"><code class="docutils literal notranslate"><span class="pre">RootMixIn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.ElementMixIn"><code class="docutils literal notranslate"><span class="pre">ElementMixIn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.PathMixIn"><code class="docutils literal notranslate"><span class="pre">PathMixIn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.SystemMixIn"><code class="docutils literal notranslate"><span class="pre">SystemMixIn</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+      <li class="breadcrumb-item active">pyTooling.GenericPath.URL</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.GenericPath.URL.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.GenericPath.URL">
+<span id="pytooling-genericpath-url"></span><h1>pyTooling.GenericPath.URL<a class="headerlink" href="#module-pyTooling.GenericPath.URL" title="Link to this heading"></a></h1>
+<p>This package provides a representation for a Uniform Resource Locator (URL).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
+</pre></div>
+</div>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.URL_PATTERN" title="pyTooling.GenericPath.URL.URL_PATTERN"><code class="xref py py-data docutils literal notranslate"><span class="pre">URL_PATTERN</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.URL_REGEXP" title="pyTooling.GenericPath.URL.URL_REGEXP"><code class="xref py py-data docutils literal notranslate"><span class="pre">URL_REGEXP</span></code></a></p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols" title="pyTooling.GenericPath.URL.Protocols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocols</span></code></a>:
+Enumeration of supported URL schemes.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.Host" title="pyTooling.GenericPath.URL.Host"><code class="xref py py-class docutils literal notranslate"><span class="pre">Host</span></code></a>:
+Represents a host as either hostname, DNS or IP-address including the port number in a URL.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.Element" title="pyTooling.GenericPath.URL.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>:
+Derived class for the URL context.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.Path" title="pyTooling.GenericPath.URL.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>:
+Represents a path in a URL.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.GenericPath.URL.URL" title="pyTooling.GenericPath.URL.URL"><code class="xref py py-class docutils literal notranslate"><span class="pre">URL</span></code></a>:
+Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Variables</strong></p>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL_PATTERN">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">URL_PATTERN</span></span><a class="headerlink" href="#pyTooling.GenericPath.URL.URL_PATTERN" title="Link to this definition"></a></dt>
+<dd><p>Regular expression pattern for validating and splitting a URL.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&#39;(?:(?P&lt;scheme&gt;\\w+)://)?(?:(?P&lt;user&gt;[-a-zA-Z0-9_]+)(?::(?P&lt;password&gt;[-a-zA-Z0-9_]+))?@)?(?:(?P&lt;host&gt;(?:[-a-zA-Z0-9_]+)(?:\\.[-a-zA-Z0-9_]+)*\\.?)(?:\\:(?P&lt;port&gt;\\d+))?)?(?P&lt;path&gt;[^?#]*?)(?:\\?(?P&lt;query&gt;[^#]+?))?(?:#(?P&lt;fragment&gt;.+?))?&#39;
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL_REGEXP">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">URL_REGEXP</span></span><a class="headerlink" href="#pyTooling.GenericPath.URL.URL_REGEXP" title="Link to this definition"></a></dt>
+<dd><p>Precompiled regular expression for URL validation.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>re.compile(&#39;^(?:(?P&lt;scheme&gt;\\w+)://)?(?:(?P&lt;user&gt;[-a-zA-Z0-9_]+)(?::(?P&lt;password&gt;[-a-zA-Z0-9_]+))?@)?(?:(?P&lt;host&gt;(?:[-a-zA-Z0-9_]+)(?:\\.[-a-zA-Z0-9_]+)*\\.?)(?:\\:(?P&lt;port&gt;\\d+))?)?(?P&lt;path&gt;[^?#]*?)(?:\\?(?P&lt;qu)
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">Protocols</span></span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Protocols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols" title="Link to this definition"></a></dt>
+<dd><p>Enumeration of supported URL schemes.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-d215976042b6db5765079bff683a35876573d8e7.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Protocols</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.TLS">
+<span class="sig-name descname"><span class="pre">TLS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.TLS" title="Link to this definition"></a></dt>
+<dd><p>Transport Layer Security</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.HTTP">
+<span class="sig-name descname"><span class="pre">HTTP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.HTTP" title="Link to this definition"></a></dt>
+<dd><p>Hyper Text Transfer Protocol</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.HTTPS">
+<span class="sig-name descname"><span class="pre">HTTPS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.HTTPS" title="Link to this definition"></a></dt>
+<dd><p>SSL/TLS secured HTTP</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.FTP">
+<span class="sig-name descname"><span class="pre">FTP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.FTP" title="Link to this definition"></a></dt>
+<dd><p>File Transfer Protocol</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.FTPS">
+<span class="sig-name descname"><span class="pre">FTPS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.FTPS" title="Link to this definition"></a></dt>
+<dd><p>SSL/TLS secured FTP</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.FILE">
+<span class="sig-name descname"><span class="pre">FILE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.FILE" title="Link to this definition"></a></dt>
+<dd><p>Local files</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols._generate_next_value_">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols._generate_next_value_" title="Link to this definition"></a></dt>
+<dd><p>Generate the next value when not given.</p>
+<p>name: the name of the member
+start: the initial start value or None
+count: the number of existing members
+last_values: the last value assigned or None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__format__">
+<span class="sig-name descname"><span class="pre">__format__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format_spec</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__format__" title="Link to this definition"></a></dt>
+<dd><p>Convert to a string according to format_spec.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__or__">
+<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__or__" title="Link to this definition"></a></dt>
+<dd><p>Return self|value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__and__">
+<span class="sig-name descname"><span class="pre">__and__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__and__" title="Link to this definition"></a></dt>
+<dd><p>Return self&amp;value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__xor__">
+<span class="sig-name descname"><span class="pre">__xor__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__xor__" title="Link to this definition"></a></dt>
+<dd><p>Return self^value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__ror__">
+<span class="sig-name descname"><span class="pre">__ror__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__ror__" title="Link to this definition"></a></dt>
+<dd><p>Return value|self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rand__">
+<span class="sig-name descname"><span class="pre">__rand__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rand__" title="Link to this definition"></a></dt>
+<dd><p>Return value&amp;self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rxor__">
+<span class="sig-name descname"><span class="pre">__rxor__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rxor__" title="Link to this definition"></a></dt>
+<dd><p>Return value^self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__invert__">
+<span class="sig-name descname"><span class="pre">__invert__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__invert__" title="Link to this definition"></a></dt>
+<dd><p>~self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__hash__">
+<span class="sig-name descname"><span class="pre">__hash__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__hash__" title="Link to this definition"></a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__getattribute__">
+<span class="sig-name descname"><span class="pre">__getattribute__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__getattribute__" title="Link to this definition"></a></dt>
+<dd><p>Return getattr(self, name).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__lt__">
+<span class="sig-name descname"><span class="pre">__lt__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__lt__" title="Link to this definition"></a></dt>
+<dd><p>Return self&lt;value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__le__">
+<span class="sig-name descname"><span class="pre">__le__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__le__" title="Link to this definition"></a></dt>
+<dd><p>Return self&lt;=value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__eq__">
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__eq__" title="Link to this definition"></a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__ne__">
+<span class="sig-name descname"><span class="pre">__ne__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__ne__" title="Link to this definition"></a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__gt__">
+<span class="sig-name descname"><span class="pre">__gt__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__gt__" title="Link to this definition"></a></dt>
+<dd><p>Return self&gt;value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__ge__">
+<span class="sig-name descname"><span class="pre">__ge__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__ge__" title="Link to this definition"></a></dt>
+<dd><p>Return self&gt;=value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__add__">
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__add__" title="Link to this definition"></a></dt>
+<dd><p>Return self+value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__radd__">
+<span class="sig-name descname"><span class="pre">__radd__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__radd__" title="Link to this definition"></a></dt>
+<dd><p>Return value+self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__sub__">
+<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__sub__" title="Link to this definition"></a></dt>
+<dd><p>Return self-value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rsub__">
+<span class="sig-name descname"><span class="pre">__rsub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rsub__" title="Link to this definition"></a></dt>
+<dd><p>Return value-self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__mul__">
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__mul__" title="Link to this definition"></a></dt>
+<dd><p>Return self*value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rmul__">
+<span class="sig-name descname"><span class="pre">__rmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rmul__" title="Link to this definition"></a></dt>
+<dd><p>Return value*self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__mod__">
+<span class="sig-name descname"><span class="pre">__mod__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__mod__" title="Link to this definition"></a></dt>
+<dd><p>Return self%value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rmod__">
+<span class="sig-name descname"><span class="pre">__rmod__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rmod__" title="Link to this definition"></a></dt>
+<dd><p>Return value%self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__divmod__">
+<span class="sig-name descname"><span class="pre">__divmod__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__divmod__" title="Link to this definition"></a></dt>
+<dd><p>Return divmod(self, value).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rdivmod__">
+<span class="sig-name descname"><span class="pre">__rdivmod__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rdivmod__" title="Link to this definition"></a></dt>
+<dd><p>Return divmod(value, self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__pow__">
+<span class="sig-name descname"><span class="pre">__pow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__pow__" title="Link to this definition"></a></dt>
+<dd><p>Return pow(self, value, mod).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rpow__">
+<span class="sig-name descname"><span class="pre">__rpow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rpow__" title="Link to this definition"></a></dt>
+<dd><p>Return pow(value, self, mod).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__neg__">
+<span class="sig-name descname"><span class="pre">__neg__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__neg__" title="Link to this definition"></a></dt>
+<dd><p>-self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__pos__">
+<span class="sig-name descname"><span class="pre">__pos__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__pos__" title="Link to this definition"></a></dt>
+<dd><p>+self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__abs__">
+<span class="sig-name descname"><span class="pre">__abs__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__abs__" title="Link to this definition"></a></dt>
+<dd><p>abs(self)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__bool__">
+<span class="sig-name descname"><span class="pre">__bool__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__bool__" title="Link to this definition"></a></dt>
+<dd><p>True if self else False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__lshift__">
+<span class="sig-name descname"><span class="pre">__lshift__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__lshift__" title="Link to this definition"></a></dt>
+<dd><p>Return self&lt;&lt;value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rlshift__">
+<span class="sig-name descname"><span class="pre">__rlshift__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rlshift__" title="Link to this definition"></a></dt>
+<dd><p>Return value&lt;&lt;self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rshift__">
+<span class="sig-name descname"><span class="pre">__rshift__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rshift__" title="Link to this definition"></a></dt>
+<dd><p>Return self&gt;&gt;value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rrshift__">
+<span class="sig-name descname"><span class="pre">__rrshift__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rrshift__" title="Link to this definition"></a></dt>
+<dd><p>Return value&gt;&gt;self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__int__">
+<span class="sig-name descname"><span class="pre">__int__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__int__" title="Link to this definition"></a></dt>
+<dd><p>int(self)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__float__">
+<span class="sig-name descname"><span class="pre">__float__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__float__" title="Link to this definition"></a></dt>
+<dd><p>float(self)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__floordiv__">
+<span class="sig-name descname"><span class="pre">__floordiv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__floordiv__" title="Link to this definition"></a></dt>
+<dd><p>Return self//value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rfloordiv__">
+<span class="sig-name descname"><span class="pre">__rfloordiv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rfloordiv__" title="Link to this definition"></a></dt>
+<dd><p>Return value//self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__truediv__">
+<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__truediv__" title="Link to this definition"></a></dt>
+<dd><p>Return self/value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__rtruediv__">
+<span class="sig-name descname"><span class="pre">__rtruediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__rtruediv__" title="Link to this definition"></a></dt>
+<dd><p>Return value/self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__index__">
+<span class="sig-name descname"><span class="pre">__index__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__index__" title="Link to this definition"></a></dt>
+<dd><p>Return self converted to an integer, if self is suitable for use as an index into a list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.conjugate">
+<span class="sig-name descname"><span class="pre">conjugate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.conjugate" title="Link to this definition"></a></dt>
+<dd><p>Returns self, the complex conjugate of any int.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.bit_length">
+<span class="sig-name descname"><span class="pre">bit_length</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.bit_length" title="Link to this definition"></a></dt>
+<dd><p>Number of bits necessary to represent self in binary.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">bin</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
+<span class="go">&#39;0b100101&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">37</span><span class="p">)</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.bit_count">
+<span class="sig-name descname"><span class="pre">bit_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.bit_count" title="Link to this definition"></a></dt>
+<dd><p>Number of ones in the binary representation of the absolute value of self.</p>
+<p>Also known as the population count.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">bin</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="go">&#39;0b1101&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.to_bytes">
+<span class="sig-name descname"><span class="pre">to_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'big'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.to_bytes" title="Link to this definition"></a></dt>
+<dd><p>Return an array of bytes representing an integer.</p>
+<dl class="simple">
+<dt>length</dt><dd><p>Length of bytes object to use.  An OverflowError is raised if the
+integer is not representable with the given number of bytes.  Default
+is length 1.</p>
+</dd>
+<dt>byteorder</dt><dd><p>The byte order used to represent the integer.  If byteorder is ‘big’,
+the most significant byte is at the beginning of the byte array.  If
+byteorder is ‘little’, the most significant byte is at the end of the
+byte array.  To request the native byte order of the host system, use
+sys.byteorder as the byte order value.  Default is to use ‘big’.</p>
+</dd>
+<dt>signed</dt><dd><p>Determines whether two’s complement is used to represent the integer.
+If signed is False and a negative integer is given, an OverflowError
+is raised.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.from_bytes">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'big'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.from_bytes" title="Link to this definition"></a></dt>
+<dd><p>Return the integer represented by the given array of bytes.</p>
+<dl class="simple">
+<dt>bytes</dt><dd><p>Holds the array of bytes to convert.  The argument must either
+support the buffer protocol or be an iterable object producing bytes.
+Bytes and bytearray are examples of built-in objects that support the
+buffer protocol.</p>
+</dd>
+<dt>byteorder</dt><dd><p>The byte order used to represent the integer.  If byteorder is ‘big’,
+the most significant byte is at the beginning of the byte array.  If
+byteorder is ‘little’, the most significant byte is at the end of the
+byte array.  To request the native byte order of the host system, use
+sys.byteorder as the byte order value.  Default is to use ‘big’.</p>
+</dd>
+<dt>signed</dt><dd><p>Indicates whether two’s complement is used to represent the integer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.as_integer_ratio">
+<span class="sig-name descname"><span class="pre">as_integer_ratio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.as_integer_ratio" title="Link to this definition"></a></dt>
+<dd><p>Return a pair of integers, whose ratio is equal to the original int.</p>
+<p>The ratio is in lowest terms and has a positive denominator.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(10, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(-10, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(0, 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__trunc__">
+<span class="sig-name descname"><span class="pre">__trunc__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__trunc__" title="Link to this definition"></a></dt>
+<dd><p>Truncating an Integral returns itself.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__floor__">
+<span class="sig-name descname"><span class="pre">__floor__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__floor__" title="Link to this definition"></a></dt>
+<dd><p>Flooring an Integral returns itself.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__ceil__">
+<span class="sig-name descname"><span class="pre">__ceil__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__ceil__" title="Link to this definition"></a></dt>
+<dd><p>Ceiling of an Integral returns itself.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__round__">
+<span class="sig-name descname"><span class="pre">__round__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__round__" title="Link to this definition"></a></dt>
+<dd><p>Rounding an Integral returns itself.</p>
+<p>Rounding with an ndigits argument also returns an integer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__sizeof__">
+<span class="sig-name descname"><span class="pre">__sizeof__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__sizeof__" title="Link to this definition"></a></dt>
+<dd><p>Returns size in memory, in bytes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.is_integer">
+<span class="sig-name descname"><span class="pre">is_integer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.is_integer" title="Link to this definition"></a></dt>
+<dd><p>Returns True. Exists for duck type compatibility with float.is_integer.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.real">
+<span class="sig-name descname"><span class="pre">real</span></span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.real" title="Link to this definition"></a></dt>
+<dd><p>the real part of a complex number</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.imag">
+<span class="sig-name descname"><span class="pre">imag</span></span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.imag" title="Link to this definition"></a></dt>
+<dd><p>the imaginary part of a complex number</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.numerator">
+<span class="sig-name descname"><span class="pre">numerator</span></span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.numerator" title="Link to this definition"></a></dt>
+<dd><p>the numerator of a rational number in lowest terms</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.denominator">
+<span class="sig-name descname"><span class="pre">denominator</span></span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.denominator" title="Link to this definition"></a></dt>
+<dd><p>the denominator of a rational number in lowest terms</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols._numeric_repr_">
+<span class="sig-name descname"><span class="pre">_numeric_repr_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols._numeric_repr_" title="Link to this definition"></a></dt>
+<dd><p>Return the canonical string representation of the object.</p>
+<p>For many object types, including most builtins, eval(repr(obj)) == obj.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols._iter_member_by_value_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_iter_member_by_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols._iter_member_by_value_" title="Link to this definition"></a></dt>
+<dd><p>Extract all members from the value in definition (i.e. increasing value) order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols._iter_member_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_iter_member_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols._iter_member_" title="Link to this definition"></a></dt>
+<dd><p>Extract all members from the value in definition (i.e. increasing value) order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols._iter_member_by_def_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_iter_member_by_def_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols._iter_member_by_def_" title="Link to this definition"></a></dt>
+<dd><p>Extract all members from the value in definition order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols._missing_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_missing_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols._missing_" title="Link to this definition"></a></dt>
+<dd><p>Create a composite member containing all canonical members present in <cite>value</cite>.</p>
+<p>If non-member values are present, result depends on <cite>_boundary_</cite> setting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__contains__" title="Link to this definition"></a></dt>
+<dd><p>Returns True if self has at least the same flags set as other.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__iter__" title="Link to this definition"></a></dt>
+<dd><p>Returns flags in definition order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__len__" title="Link to this definition"></a></dt>
+<dd><p>Return the number of members (no aliases)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__dir__">
+<span class="sig-name descname"><span class="pre">__dir__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__dir__" title="Link to this definition"></a></dt>
+<dd><p>Returns public methods and other interesting attributes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__getitem__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Return the member matching <cite>name</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Protocols.__reduce_ex__">
+<span class="sig-name descname"><span class="pre">__reduce_ex__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proto</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Protocols.__reduce_ex__" title="Link to this definition"></a></dt>
+<dd><p>Helper for pickle.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Host">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">Host</span></span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Host" title="Link to this definition"></a></dt>
+<dd><p>Represents a host as either hostname, DNS or IP-address including the port number in a URL.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-889934ed84602286a55d54e4d4902824dd562f87.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Host</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Host.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Host.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Host.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize a host instance described by host name and port number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostname</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Name of the host (either IP or DNS).</p></li>
+<li><p><strong>port</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – Port number.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Host.Hostname">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Host.Hostname" title="Link to this definition"></a></dt>
+<dd><p>Hostname or IP address as string.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Host.Port">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Port</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Host.Port" title="Link to this definition"></a></dt>
+<dd><p>Port number as integer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Host.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Host.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Host.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Host.Copy">
+<span class="sig-name descname"><span class="pre">Copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Host.Copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Host.Copy" title="Link to this definition"></a></dt>
+<dd><p>Create a copy of this object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.GenericPath.URL.Host" title="pyTooling.GenericPath.URL.Host"><code class="xref py py-class docutils literal notranslate"><span class="pre">Host</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Host instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Element">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">Element</span></span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Element" title="Link to this definition"></a></dt>
+<dd><p>Derived class for the URL context.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-dc79e5776b6ef1a93d9d63dad68b12d5c91675d1.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Element</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Element.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementName</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Element.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> (<a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.Base" title="pyTooling.GenericPath.Base"><em>Base</em></a>)</p></li>
+<li><p><strong>elementName</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Element.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Element.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">Path</span></span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Path" title="Link to this definition"></a></dt>
+<dd><p>Represents a path in a URL.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-2d6df2eb38de855fe2ae3d4a4bc9db40e526d5d6.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Path</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path.ELEMENT_DELIMITER">
+<span class="sig-name descname"><span class="pre">ELEMENT_DELIMITER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/'</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Path.ELEMENT_DELIMITER" title="Link to this definition"></a></dt>
+<dd><p>Delimiter symbol in URLs between path elements.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path.ROOT_DELIMITER">
+<span class="sig-name descname"><span class="pre">ROOT_DELIMITER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/'</span></em><a class="headerlink" href="#pyTooling.GenericPath.URL.Path.ROOT_DELIMITER" title="Link to this definition"></a></dt>
+<dd><p>Delimiter symbol in URLs between root element and first path element.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path.Parse">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#Path.Parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.Path.Parse" title="Link to this definition"></a></dt>
+<dd><p>Parses a string representation of a path and returns a path instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path" title="pyTooling.GenericPath.URL.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>root</strong> (<a class="reference internal" href="#pyTooling.GenericPath.URL.Host" title="pyTooling.GenericPath.URL.Host"><em>Host</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isAbsolute</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Path.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elements</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><em>List</em></a><em>[</em><a class="reference internal" href="pyTooling.GenericPath.html#pyTooling.GenericPath.ElementMixIn" title="pyTooling.GenericPath.ElementMixIn"><em>ElementMixIn</em></a><em>]</em>)</p></li>
+<li><p><strong>isAbsolute</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Path.__len__" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of path elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of path elements.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.Path.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.GenericPath.URL.Path.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.GenericPath.URL.</span></span><span class="sig-name descname"><span class="pre">URL</span></span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#URL"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.URL" title="Link to this definition"></a></dt>
+<dd><p>Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
+</pre></div>
+</div>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-67598f8d8d872fed585b760479e023c25fd4505d.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of URL</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#URL.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a Uniform Resource Locator (URL).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheme</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.GenericPath.URL.Protocols" title="pyTooling.GenericPath.URL.Protocols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocols</span></code></a></span>) – Transport scheme to be used for a specified resource.</p></li>
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.GenericPath.URL.Path" title="pyTooling.GenericPath.URL.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span>) – Path to the resource.</p></li>
+<li><p><strong>host</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#pyTooling.GenericPath.URL.Host" title="pyTooling.GenericPath.URL.Host"><code class="xref py py-class docutils literal notranslate"><span class="pre">Host</span></code></a>]</span>) – Hostname where the resource is located.</p></li>
+<li><p><strong>user</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Username for basic authentication.</p></li>
+<li><p><strong>password</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Password for basic authentication.</p></li>
+<li><p><strong>query</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – An optional query string.</p></li>
+<li><p><strong>fragment</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – An optional fragment.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.Host">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Host</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.GenericPath.URL.Host" title="pyTooling.GenericPath.URL.Host"><span class="pre">Host</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.Host" title="Link to this definition"></a></dt>
+<dd><p>Returns the host part (host name and port number) of the URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The host part of the URL.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.Query">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.Query" title="Link to this definition"></a></dt>
+<dd><p>Returns a dictionary of key-value pairs representing the query part in a URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary representing the query.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.Fragment">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Fragment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.Fragment" title="Link to this definition"></a></dt>
+<dd><p>Returns the fragment part of the URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fragment part of the URL.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.Parse">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#URL.Parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.Parse" title="Link to this definition"></a></dt>
+<dd><p>Parse a URL string and returns a URL object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – URL as string to be parsed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL" title="pyTooling.GenericPath.URL.URL"><code class="xref py py-class docutils literal notranslate"><span class="pre">URL</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A URL object.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="pyTooling.Exceptions.html#pyTooling.Exceptions.ToolingException" title="pyTooling.Exceptions.ToolingException"><strong>ToolingException</strong></a> – When syntax does not match.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#URL.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.__str__" title="Link to this definition"></a></dt>
+<dd><p>Formats the URL object as a string representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted URL object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.GenericPath.URL.URL.WithoutCredentials">
+<span class="sig-name descname"><span class="pre">WithoutCredentials</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/GenericPath/URL.html#URL.WithoutCredentials"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.GenericPath.URL.URL.WithoutCredentials" title="Link to this definition"></a></dt>
+<dd><p>Returns a URL object without credentials (username and password).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#pyTooling.GenericPath.URL.URL" title="pyTooling.GenericPath.URL.URL"><code class="xref py py-class docutils literal notranslate"><span class="pre">URL</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New URL object without credentials.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.GenericPath.html" class="btn btn-neutral float-left" title="pyTooling.GenericPath" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Graph.html" class="btn btn-neutral float-right" title="pyTooling.Graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

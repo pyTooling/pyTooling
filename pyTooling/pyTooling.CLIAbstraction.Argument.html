@@ -1,0 +1,1182 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.CLIAbstraction.Argument &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.CLIAbstraction.BooleanFlag" href="pyTooling.CLIAbstraction.BooleanFlag.html" />
+    <link rel="prev" title="pyTooling.CLIAbstraction" href="pyTooling.CLIAbstraction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pyTooling.CLIAbstraction.Argument</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValueT"><code class="docutils literal notranslate"><span class="pre">ValueT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__new__"><code class="docutils literal notranslate"><span class="pre">CommandLineArgument.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">CommandLineArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__str__"><code class="docutils literal notranslate"><span class="pre">CommandLineArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">CommandLineArgument.__repr__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__init__"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.Executable"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument.Executable</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__str__"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__new__"><code class="docutils literal notranslate"><span class="pre">ExecutableArgument.__new__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument"><code class="docutils literal notranslate"><span class="pre">DelimiterArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">DelimiterArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__str__"><code class="docutils literal notranslate"><span class="pre">DelimiterArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">DelimiterArgument.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__new__"><code class="docutils literal notranslate"><span class="pre">DelimiterArgument.__new__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument"><code class="docutils literal notranslate"><span class="pre">NamedArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.__new__"><code class="docutils literal notranslate"><span class="pre">NamedArgument.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.Name"><code class="docutils literal notranslate"><span class="pre">NamedArgument.Name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">NamedArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.__str__"><code class="docutils literal notranslate"><span class="pre">NamedArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">NamedArgument.__repr__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument"><code class="docutils literal notranslate"><span class="pre">ValuedArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__init__"><code class="docutils literal notranslate"><span class="pre">ValuedArgument.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.Value"><code class="docutils literal notranslate"><span class="pre">ValuedArgument.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">ValuedArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__str__"><code class="docutils literal notranslate"><span class="pre">ValuedArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">ValuedArgument.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__new__"><code class="docutils literal notranslate"><span class="pre">ValuedArgument.__new__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument"><code class="docutils literal notranslate"><span class="pre">StringArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">StringArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument.Value"><code class="docutils literal notranslate"><span class="pre">StringArgument.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__init__"><code class="docutils literal notranslate"><span class="pre">StringArgument.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__new__"><code class="docutils literal notranslate"><span class="pre">StringArgument.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">StringArgument.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__str__"><code class="docutils literal notranslate"><span class="pre">StringArgument.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument"><code class="docutils literal notranslate"><span class="pre">StringListArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__init__"><code class="docutils literal notranslate"><span class="pre">StringListArgument.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.Value"><code class="docutils literal notranslate"><span class="pre">StringListArgument.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">StringListArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__str__"><code class="docutils literal notranslate"><span class="pre">StringListArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">StringListArgument.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__new__"><code class="docutils literal notranslate"><span class="pre">StringListArgument.__new__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument"><code class="docutils literal notranslate"><span class="pre">PathArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__init__"><code class="docutils literal notranslate"><span class="pre">PathArgument.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument.Value"><code class="docutils literal notranslate"><span class="pre">PathArgument.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">PathArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__str__"><code class="docutils literal notranslate"><span class="pre">PathArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">PathArgument.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__new__"><code class="docutils literal notranslate"><span class="pre">PathArgument.__new__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument"><code class="docutils literal notranslate"><span class="pre">PathListArgument</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__new__"><code class="docutils literal notranslate"><span class="pre">PathListArgument.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__init__"><code class="docutils literal notranslate"><span class="pre">PathListArgument.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.Value"><code class="docutils literal notranslate"><span class="pre">PathListArgument.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.AsArgument"><code class="docutils literal notranslate"><span class="pre">PathListArgument.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__str__"><code class="docutils literal notranslate"><span class="pre">PathListArgument.__str__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__repr__"><code class="docutils literal notranslate"><span class="pre">PathListArgument.__repr__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.BooleanFlag.html">pyTooling.CLIAbstraction.BooleanFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Command.html">pyTooling.CLIAbstraction.Command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Flag.html">pyTooling.CLIAbstraction.Flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.KeyValueFlag.html">pyTooling.CLIAbstraction.KeyValueFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.OptionalValuedFlag.html">pyTooling.CLIAbstraction.OptionalValuedFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlag.html">pyTooling.CLIAbstraction.ValuedFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlagList.html">pyTooling.CLIAbstraction.ValuedFlagList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedTupleFlag.html">pyTooling.CLIAbstraction.ValuedTupleFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.CLIAbstractionException"><code class="docutils literal notranslate"><span class="pre">CLIAbstractionException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.DryRunException"><code class="docutils literal notranslate"><span class="pre">DryRunException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.CLIArgument"><code class="docutils literal notranslate"><span class="pre">CLIArgument</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Environment"><code class="docutils literal notranslate"><span class="pre">Environment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Program"><code class="docutils literal notranslate"><span class="pre">Program</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.OutputFilteredExecutable"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+      <li class="breadcrumb-item active">pyTooling.CLIAbstraction.Argument</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.CLIAbstraction.Argument.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.CLIAbstraction.Argument">
+<span id="pytooling-cliabstraction-argument"></span><h1>pyTooling.CLIAbstraction.Argument<a class="headerlink" href="#module-pyTooling.CLIAbstraction.Argument" title="Link to this heading"></a></h1>
+<p>This module implements command line arguments without prefix character(s).</p>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValueT" title="pyTooling.CLIAbstraction.Argument.ValueT"><code class="xref py py-data docutils literal notranslate"><span class="pre">ValueT</span></code></a></p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a>:
+Base-class for all <em>Argument</em> classes.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument" title="pyTooling.CLIAbstraction.Argument.ExecutableArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutableArgument</span></code></a>:
+Represents the executable.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument" title="pyTooling.CLIAbstraction.Argument.DelimiterArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelimiterArgument</span></code></a>:
+Represents a delimiter symbol like <code class="docutils literal notranslate"><span class="pre">--</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.NamedArgument" title="pyTooling.CLIAbstraction.Argument.NamedArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedArgument</span></code></a>:
+Base-class for all command line arguments with a name.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument" title="pyTooling.CLIAbstraction.Argument.ValuedArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedArgument</span></code></a>:
+Base-class for all command line arguments with a value.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument" title="pyTooling.CLIAbstraction.Argument.StringArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringArgument</span></code></a>:
+Represents a simple string argument.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument" title="pyTooling.CLIAbstraction.Argument.StringListArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringListArgument</span></code></a>:
+Represents a list of string argument (<a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument" title="pyTooling.CLIAbstraction.Argument.StringArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringArgument</span></code></a>).</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument" title="pyTooling.CLIAbstraction.Argument.PathArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathArgument</span></code></a>:
+Represents a single path argument.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument" title="pyTooling.CLIAbstraction.Argument.PathListArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathListArgument</span></code></a>:
+Represents a list of path arguments  (<a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument" title="pyTooling.CLIAbstraction.Argument.PathArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathArgument</span></code></a>).</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Variables</strong></p>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValueT">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">ValueT</span></span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValueT" title="Link to this definition"></a></dt>
+<dd><p>The type of value in a valued argument.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>~ValueT
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.CommandLineArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">CommandLineArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#CommandLineArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="Link to this definition"></a></dt>
+<dd><p>Base-class for all <em>Argument</em> classes.</p>
+<p>An argument instance can be converted via <code class="docutils literal notranslate"><span class="pre">AsArgument</span></code> to a single string value or a sequence of string values
+(tuple) usable e.g. with <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.Popen" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.Popen</span></code></a>. Each argument class implements at least one <code class="docutils literal notranslate"><span class="pre">pattern</span></code> parameter
+to specify how argument are formatted.</p>
+<p>There are multiple derived formats supporting:</p>
+<ul class="simple">
+<li><p>commands <br />
+→ <a class="reference internal" href="pyTooling.CLIAbstraction.Command.html#module-pyTooling.CLIAbstraction.Command" title="pyTooling.CLIAbstraction.Command"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Command</span></code></a></p></li>
+<li><p>simple names (flags) <br />
+→ <a class="reference internal" href="pyTooling.CLIAbstraction.Flag.html#module-pyTooling.CLIAbstraction.Flag" title="pyTooling.CLIAbstraction.Flag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Flag</span></code></a>, <a class="reference internal" href="pyTooling.CLIAbstraction.BooleanFlag.html#module-pyTooling.CLIAbstraction.BooleanFlag" title="pyTooling.CLIAbstraction.BooleanFlag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">BooleanFlag</span></code></a></p></li>
+<li><p>simple values (vlaued flags) <br />
+→ <a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument" title="pyTooling.CLIAbstraction.Argument.StringArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringArgument</span></code></a>, <a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument" title="pyTooling.CLIAbstraction.Argument.PathArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathArgument</span></code></a></p></li>
+<li><p>names and values <br />
+→ <a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlag.html#module-pyTooling.CLIAbstraction.ValuedFlag" title="pyTooling.CLIAbstraction.ValuedFlag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ValuedFlag</span></code></a>, <a class="reference internal" href="pyTooling.CLIAbstraction.OptionalValuedFlag.html#module-pyTooling.CLIAbstraction.OptionalValuedFlag" title="pyTooling.CLIAbstraction.OptionalValuedFlag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">OptionalValuedFlag</span></code></a></p></li>
+<li><p>key-value pairs <br />
+→ <code class="xref py py-mod docutils literal notranslate"><span class="pre">NamedKeyValuePair</span></code></p></li>
+</ul>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-112c44fe4c9b480fb4412237e9d690884eeab148.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of CommandLineArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.CommandLineArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#CommandLineArgument.__new__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#CommandLineArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal name and value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><strong>NotImplementedError</strong></a> – This is an abstract method and must be overwritten by a subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.CommandLineArgument.__str__">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#CommandLineArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><strong>NotImplementedError</strong></a> – This is an abstract method and must be overwritten by a subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.CommandLineArgument.__repr__">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#CommandLineArgument.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, this method is identical to <a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.CommandLineArgument.__str__" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument.__str__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code></a>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><strong>NotImplementedError</strong></a> – This is an abstract method and must be overwritten by a subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">ExecutableArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ExecutableArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument" title="Link to this definition"></a></dt>
+<dd><p>Represents the executable.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-6ad842b1b4d5f0fb0112f830502cd53ff57d7586.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of ExecutableArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ExecutableArgument.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a ExecutableArgument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>executable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to the executable.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘executable’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument.Executable">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Executable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><span class="pre">Path</span></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.Executable" title="Link to this definition"></a></dt>
+<dd><p>Get the internal path to the wrapped executable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal path to the executable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ExecutableArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal path to the wrapped executable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ExecutableArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ExecutableArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ExecutableArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.DelimiterArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">DelimiterArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#DelimiterArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument" title="Link to this definition"></a></dt>
+<dd><p>Represents a delimiter symbol like <code class="docutils literal notranslate"><span class="pre">--</span></code>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-38054423af84d609a7042c649b2788cccb5abd34.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of DelimiterArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.DelimiterArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#DelimiterArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.DelimiterArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#DelimiterArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.DelimiterArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.DelimiterArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.DelimiterArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.NamedArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">NamedArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#NamedArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.NamedArgument" title="Link to this definition"></a></dt>
+<dd><p>Base-class for all command line arguments with a name.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-929fabe28329adc5eae70a01837a99c08ede09a2.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of NamedArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.NamedArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#NamedArgument.__new__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.NamedArgument.Name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.Name" title="Link to this definition"></a></dt>
+<dd><p>Get the internal name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.NamedArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#NamedArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If internal name is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.NamedArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#NamedArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.NamedArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.NamedArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">ValuedArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ValuedArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument" title="Link to this definition"></a></dt>
+<dd><p>Base-class for all command line arguments with a value.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-1b5f4ef689c4bd05013caea142a2184d62da8dff.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of ValuedArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ValuedArgument.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a ValuedArgument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">ValueT</span></code>)</span>) – Value to be stored internally.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘value’ is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValueT</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ValuedArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#ValuedArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.ValuedArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.ValuedArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">StringArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#StringArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument" title="Link to this definition"></a></dt>
+<dd><p>Represents a simple string argument.</p>
+<p>A list of strings is available as <a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringListArgument" title="pyTooling.CLIAbstraction.Argument.StringListArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringListArgument</span></code></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-a6ef05033692d7ee42561990b1e07f98f391923e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of StringArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValueT</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a ValuedArgument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">ValueT</span></code>)</span>) – Value to be stored internally.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘value’ is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">StringListArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#StringListArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument" title="Link to this definition"></a></dt>
+<dd><p>Represents a list of string argument (<a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.StringArgument" title="pyTooling.CLIAbstraction.Argument.StringArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringArgument</span></code></a>).</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-95d4c830c43f0aa37c1e71cdabf8d12d1852ab91.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of StringListArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#StringListArgument.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a StringListArgument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – An iterable of str instances.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If iterable parameter ‘values’ contains elements not of type <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal list of str objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Reference to the internal list of str objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#StringListArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sequence of formatted arguments.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#StringListArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Space separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#StringListArgument.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Comma separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.StringListArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.StringListArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">PathArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument" title="Link to this definition"></a></dt>
+<dd><p>Represents a single path argument.</p>
+<p>A list of paths is available as <a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathListArgument" title="pyTooling.CLIAbstraction.Argument.PathListArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathListArgument</span></code></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-12e22981703a7b2b73222a9e9e93ed58846aade7.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of PathArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathArgument.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a PathArgument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to a filesystem object.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘path’ is not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><span class="pre">Path</span></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal path object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal path object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Argument formatted and enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.Argument.</span></span><span class="sig-name descname"><span class="pre">PathListArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathListArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument" title="Link to this definition"></a></dt>
+<dd><p>Represents a list of path arguments  (<a class="reference internal" href="#pyTooling.CLIAbstraction.Argument.PathArgument" title="pyTooling.CLIAbstraction.Argument.PathArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathArgument</span></code></a>).</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-5b5f56751dd6ab01ffead87738f6899215bd8523.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of PathListArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathListArgument.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a PathListArgument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>paths</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – An iterable os Path instances.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If iterable parameter ‘paths’ contains elements not of type <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><span class="pre">Path</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal list of path objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Reference to the internal list of path objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathListArgument.AsArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sequence of formatted arguments.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathListArgument.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Space separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Argument.PathListArgument.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/Argument.html#PathListArgument.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Argument.PathListArgument.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Comma separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.CLIAbstraction.html" class="btn btn-neutral float-left" title="pyTooling.CLIAbstraction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.CLIAbstraction.BooleanFlag.html" class="btn btn-neutral float-right" title="pyTooling.CLIAbstraction.BooleanFlag" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

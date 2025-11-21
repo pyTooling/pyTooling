@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation Coverage &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Static Type Checking Report" href="typing/index.html" />
+    <link rel="prev" title="Code Coverage Summary" href="CodeCoverage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Documentation Coverage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/DocCoverage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="documentation-coverage">
+<h1>Documentation Coverage<a class="headerlink" href="#documentation-coverage" title="Link to this heading"></a></h1>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-8 sd-col-xs-8 sd-col-sm-8 sd-col-md-8 sd-col-lg-8 docutils">
+<div class="docutils container">
+<table class="report-doccov-table report-doccov-src docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head" rowspan="2">Filename</th>
+<th class="head" rowspan="2">Total</th>
+<th class="head" rowspan="2">Covered</th>
+<th class="head" rowspan="2">Missing</th>
+<th class="head" rowspan="2">Coverage in %</th>
+</tr>
+<tr class="row-even"></tr>
+</thead>
+<tbody>
+<tr class="report-package report-cov-error row-odd"><td>📦pyTooling</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>-100.0%</td>
+</tr>
+<tr class="report-package report-cov-below70 row-even"><td> 📦Attributes</td>
+<td>15</td>
+<td>10</td>
+<td>5</td>
+<td>66.7%</td>
+</tr>
+<tr class="report-package report-cov-below80 row-odd"><td>  📦ArgParse</td>
+<td>28</td>
+<td>20</td>
+<td>8</td>
+<td>71.4%</td>
+</tr>
+<tr class="report-module report-cov-below100 row-even"><td>    ⚙️Argument</td>
+<td>26</td>
+<td>25</td>
+<td>1</td>
+<td>96.2%</td>
+</tr>
+<tr class="report-module report-cov-below10 row-odd"><td>    ⚙️BooleanFlag</td>
+<td>5</td>
+<td>0</td>
+<td>5</td>
+<td>0.0%</td>
+</tr>
+<tr class="report-module report-cov-below30 row-even"><td>    ⚙️Flag</td>
+<td>7</td>
+<td>2</td>
+<td>5</td>
+<td>28.6%</td>
+</tr>
+<tr class="report-module report-cov-below30 row-odd"><td>    ⚙️KeyValueFlag</td>
+<td>7</td>
+<td>2</td>
+<td>5</td>
+<td>28.6%</td>
+</tr>
+<tr class="report-module report-cov-below30 row-even"><td>    ⚙️OptionalValuedFlag</td>
+<td>7</td>
+<td>2</td>
+<td>5</td>
+<td>28.6%</td>
+</tr>
+<tr class="report-module report-cov-below30 row-odd"><td>    ⚙️ValuedFlag</td>
+<td>7</td>
+<td>2</td>
+<td>5</td>
+<td>28.6%</td>
+</tr>
+<tr class="report-package report-cov-below30 row-even"><td> 📦CLIAbstraction</td>
+<td>34</td>
+<td>10</td>
+<td>24</td>
+<td>29.4%</td>
+</tr>
+<tr class="report-module report-cov-below90 row-odd"><td>   ⚙️Argument</td>
+<td>59</td>
+<td>53</td>
+<td>6</td>
+<td>89.8%</td>
+</tr>
+<tr class="report-module report-cov-below80 row-even"><td>   ⚙️BooleanFlag</td>
+<td>15</td>
+<td>11</td>
+<td>4</td>
+<td>73.3%</td>
+</tr>
+<tr class="report-module report-cov-below70 row-odd"><td>   ⚙️Command</td>
+<td>12</td>
+<td>8</td>
+<td>4</td>
+<td>66.7%</td>
+</tr>
+<tr class="report-module report-cov-below50 row-even"><td>   ⚙️Flag</td>
+<td>12</td>
+<td>5</td>
+<td>7</td>
+<td>41.7%</td>
+</tr>
+<tr class="report-module report-cov-below50 row-odd"><td>   ⚙️KeyValueFlag</td>
+<td>16</td>
+<td>7</td>
+<td>9</td>
+<td>43.8%</td>
+</tr>
+<tr class="report-module report-cov-below50 row-even"><td>   ⚙️OptionalValuedFlag</td>
+<td>17</td>
+<td>7</td>
+<td>10</td>
+<td>41.2%</td>
+</tr>
+<tr class="report-module report-cov-below70 row-odd"><td>   ⚙️ValuedFlag</td>
+<td>13</td>
+<td>9</td>
+<td>4</td>
+<td>69.2%</td>
+</tr>
+<tr class="report-module report-cov-below70 row-even"><td>   ⚙️ValuedFlagList</td>
+<td>18</td>
+<td>12</td>
+<td>6</td>
+<td>66.7%</td>
+</tr>
+<tr class="report-module report-cov-below50 row-odd"><td>   ⚙️ValuedTupleFlag</td>
+<td>10</td>
+<td>4</td>
+<td>6</td>
+<td>40.0%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-even"><td> 📦CallByRef</td>
+<td>46</td>
+<td>46</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-odd"><td> 📦Cartesian2D</td>
+<td>43</td>
+<td>42</td>
+<td>1</td>
+<td>97.7%</td>
+</tr>
+<tr class="report-module report-cov-below100 row-even"><td>   ⚙️Shapes</td>
+<td>8</td>
+<td>8</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-odd"><td> 📦Cartesian3D</td>
+<td>43</td>
+<td>42</td>
+<td>1</td>
+<td>97.7%</td>
+</tr>
+<tr class="report-module report-cov-below100 row-even"><td>   ⚙️Volumes</td>
+<td>4</td>
+<td>4</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-odd"><td> 📦Common</td>
+<td>23</td>
+<td>22</td>
+<td>1</td>
+<td>95.7%</td>
+</tr>
+<tr class="report-package report-cov-below60 row-even"><td> 📦Configuration</td>
+<td>20</td>
+<td>10</td>
+<td>10</td>
+<td>50.0%</td>
+</tr>
+<tr class="report-module report-cov-below50 row-odd"><td>   ⚙️JSON</td>
+<td>32</td>
+<td>13</td>
+<td>19</td>
+<td>40.6%</td>
+</tr>
+<tr class="report-module report-cov-below50 row-even"><td>   ⚙️YAML</td>
+<td>32</td>
+<td>13</td>
+<td>19</td>
+<td>40.6%</td>
+</tr>
+<tr class="report-package report-cov-below80 row-odd"><td> 📦Decorators</td>
+<td>8</td>
+<td>6</td>
+<td>2</td>
+<td>75.0%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-even"><td> 📦Exceptions</td>
+<td>9</td>
+<td>9</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="report-package report-cov-below50 row-odd"><td> 📦Filesystem</td>
+<td>84</td>
+<td>35</td>
+<td>49</td>
+<td>41.7%</td>
+</tr>
+<tr class="report-package report-cov-below60 row-even"><td> 📦GenericPath</td>
+<td>14</td>
+<td>8</td>
+<td>6</td>
+<td>57.1%</td>
+</tr>
+<tr class="report-module report-cov-below80 row-odd"><td>   ⚙️URL</td>
+<td>23</td>
+<td>17</td>
+<td>6</td>
+<td>73.9%</td>
+</tr>
+<tr class="report-package report-cov-below85 row-even"><td> 📦Graph</td>
+<td>153</td>
+<td>128</td>
+<td>25</td>
+<td>83.7%</td>
+</tr>
+<tr class="report-module report-cov-below10 row-odd"><td>   ⚙️GraphML</td>
+<td>101</td>
+<td>7</td>
+<td>94</td>
+<td>6.9%</td>
+</tr>
+<tr class="report-package report-cov-below95 row-even"><td> 📦Licensing</td>
+<td>17</td>
+<td>16</td>
+<td>1</td>
+<td>94.1%</td>
+</tr>
+<tr class="report-package report-cov-below95 row-odd"><td> 📦LinkedList</td>
+<td>38</td>
+<td>36</td>
+<td>2</td>
+<td>94.7%</td>
+</tr>
+<tr class="report-package report-cov-below50 row-even"><td> 📦MetaClasses</td>
+<td>36</td>
+<td>17</td>
+<td>19</td>
+<td>47.2%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-odd"><td> 📦Packaging</td>
+<td>24</td>
+<td>23</td>
+<td>1</td>
+<td>95.8%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-even"><td> 📦Platform</td>
+<td>36</td>
+<td>35</td>
+<td>1</td>
+<td>97.2%</td>
+</tr>
+<tr class="report-package report-cov-below95 row-odd"><td> 📦StateMachine</td>
+<td>10</td>
+<td>9</td>
+<td>1</td>
+<td>90.0%</td>
+</tr>
+<tr class="report-package report-cov-below100 row-even"><td> 📦Stopwatch</td>
+<td>34</td>
+<td>34</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="report-package report-cov-below80 row-odd"><td> 📦TerminalUI</td>
+<td>82</td>
+<td>63</td>
+<td>19</td>
+<td>76.8%</td>
+</tr>
+<tr class="report-package report-cov-below95 row-even"><td> 📦Tree</td>
+<td>54</td>
+<td>51</td>
+<td>3</td>
+<td>94.4%</td>
+</tr>
+<tr class="report-package report-cov-below90 row-odd"><td> 📦Versioning</td>
+<td>123</td>
+<td>107</td>
+<td>16</td>
+<td>87.0%</td>
+</tr>
+<tr class="report-package report-cov-below50 row-even"><td> 📦Warning</td>
+<td>17</td>
+<td>8</td>
+<td>9</td>
+<td>47.1%</td>
+</tr>
+<tr class="report-summary report-cov-below80 row-odd"><td>Overall (46 files):</td>
+<td>963</td>
+<td>767</td>
+<td>196</td>
+<td>79.6%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<div class="docutils container">
+<table class="report-doccov-legend docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head" rowspan="2">Documentation Coverage</th>
+<th class="head" rowspan="2">Coverage Level</th>
+</tr>
+<tr class="row-even"></tr>
+</thead>
+<tbody>
+<tr class="report-doccov-legend-row report-cov-below10 row-odd"><td>≤10 %</td>
+<td><p>almost undocumented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below20 row-even"><td>≤20 %</td>
+<td><p>almost undocumented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below30 row-odd"><td>≤30 %</td>
+<td><p>almost undocumented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below40 row-even"><td>≤40 %</td>
+<td><p>poorly documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below50 row-odd"><td>≤50 %</td>
+<td><p>poorly documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below60 row-even"><td>≤60 %</td>
+<td><p>roughly documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below70 row-odd"><td>≤70 %</td>
+<td><p>roughly documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below80 row-even"><td>≤80 %</td>
+<td><p>roughly documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below85 row-odd"><td>≤85 %</td>
+<td><p>well documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below90 row-even"><td>≤90 %</td>
+<td><p>well documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below95 row-odd"><td>≤95 %</td>
+<td><p>well documented</p></td>
+</tr>
+<tr class="report-doccov-legend-row report-cov-below100 row-even"><td>≤100 %</td>
+<td><p>excellent documented</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<hr class="docutils" />
+<p>Documentation coverage generated with <a class="reference external" href="https://github.com/HunterMcGushion/docstr_coverage">docstr-coverage</a> and
+visualized by <a class="reference external" href="https://github.com/pyTooling/sphinx-reports">sphinx-reports</a>.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="CodeCoverage.html" class="btn btn-neutral float-left" title="Code Coverage Summary" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="typing/index.html" class="btn btn-neutral float-right" title="Static Type Checking Report" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

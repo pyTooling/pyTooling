@@ -1,0 +1,140 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+========================
+pyTooling.CLIAbstraction
+========================
+
+.. automodule:: pyTooling.CLIAbstraction
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.CLIAbstraction.Argument
+   pyTooling.CLIAbstraction.BooleanFlag
+   pyTooling.CLIAbstraction.Command
+   pyTooling.CLIAbstraction.Flag
+   pyTooling.CLIAbstraction.KeyValueFlag
+   pyTooling.CLIAbstraction.OptionalValuedFlag
+   pyTooling.CLIAbstraction.ValuedFlag
+   pyTooling.CLIAbstraction.ValuedFlagList
+   pyTooling.CLIAbstraction.ValuedTupleFlag
+
+.. currentmodule:: pyTooling.CLIAbstraction
+
+
+**Exceptions**
+
+- :py:exc:`CLIAbstractionException`:
+  The exception is raised by pyTooling internal features.
+
+- :py:exc:`DryRunException`:
+  This exception is raised if an executable is launched while in dry-run mode.
+
+
+
+**Classes**
+
+- :py:class:`CLIArgument`:
+  An attribute to annotate nested classes as an CLI argument.
+
+- :py:class:`Environment`:
+  Undocumented.
+
+- :py:class:`Program`:
+  Represent a simple command line interface (CLI) executable (program or script).
+
+- :py:class:`Executable`:
+  Represent a CLI executable derived from :class:`Program`, that adds an abstraction of :class:`subprocess.Popen`.
+
+- :py:class:`OutputFilteredExecutable`:
+  Represent a CLI executable derived from :class:`Program`, that adds an abstraction of :class:`subprocess.Popen`.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: CLIAbstractionException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CLIAbstractionException
+      :parts: 1
+
+.. autoexception:: DryRunException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DryRunException
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: CLIArgument
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CLIArgument
+      :parts: 1
+
+.. autoclass:: Environment
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Environment
+      :parts: 1
+
+.. autoclass:: Program
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Program
+      :parts: 1
+
+.. autoclass:: Executable
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Executable
+      :parts: 1
+
+.. autoclass:: OutputFilteredExecutable
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: OutputFilteredExecutable
+      :parts: 1

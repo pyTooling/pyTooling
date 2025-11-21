@@ -1,0 +1,2426 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unittest Summary Report &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Code Coverage Report" href="../coverage/index.html" />
+    <link rel="prev" title="pyTooling.Warning" href="../pyTooling/pyTooling.Warning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Unittest Summary Report</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/unittests/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="unittest-summary-report">
+<h1>Unittest Summary Report<a class="headerlink" href="#unittest-summary-report" title="Link to this heading"></a></h1>
+<div class="docutils container">
+<table class="report-unittest-table report-unittest-src docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head" rowspan="2">Testsuite / Testcase</th>
+<th class="head" rowspan="2">Testcases</th>
+<th class="head" rowspan="2">Skipped</th>
+<th class="head" rowspan="2">Errored</th>
+<th class="head" rowspan="2">Failed</th>
+<th class="head" rowspan="2">Passed</th>
+<th class="head" rowspan="2">Runtime (HH:MM:SS.sss)</th>
+</tr>
+<tr class="row-even"></tr>
+</thead>
+<tbody>
+<tr class="report-testsuitesummary testsuitesummary-passed row-odd"><td>✅TestsuiteSummary</td>
+<td>1139</td>
+<td>24</td>
+<td>0</td>
+<td>0</td>
+<td>1115</td>
+<td>00:00:13.077</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Attributes</td>
+<td>78</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>76</td>
+<td>00:00:00.128</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅ArgParse</td>
+<td>35</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>35</td>
+<td>00:00:00.079</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Commands</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Common</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.023</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Flags</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅MockedUserManager</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅UserManager</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ValueLists</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ValuedFlags</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Values</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.010</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅AttributesOnClasses</td>
+<td>12</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ApplyClassAttributes</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Filtering</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_Scope_Local</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅AttributesOnFunctions</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ApplyFunctionAttributes</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Filtering</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_Scope_Local</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅AttributesOnMethods</td>
+<td>22</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>22</td>
+<td>00:00:00.027</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ApplyMethodAttributes_NoMetaClass</td>
+<td>9</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ApplyMethodAttributes_WithMetaClass</td>
+<td>9</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.010</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Attribute_GetAttributes_Filtering</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Filtering</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅MetaTesting</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅MultipleInheritance</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅PredefinedAttributes</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Grouped</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Simple</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅CLIAbstraction</td>
+<td>113</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>106</td>
+<td>00:00:00.338</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Argument</td>
+<td>77</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>77</td>
+<td>00:00:00.078</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅BooleanFlags</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Commands</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Flags</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅KeyValueFlags</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅OptionalValuedFlags</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ValuedFlagLists</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ValuedFlags</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ValuedTupleFlags</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅WithoutPrefix</td>
+<td>15</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>15</td>
+<td>00:00:00.016</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Environment</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ArtificialEnvironment</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅DefaultEnvironment</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Executable</td>
+<td>6</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.201</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅CommonOptions</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.150</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ExplicitBinaryDirectoryOnFreeBSD</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_VersionFlag</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ExplicitBinaryDirectoryOnLinux</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ExplicitBinaryDirectoryOnWindows</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.049</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Program</td>
+<td>27</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>21</td>
+<td>00:00:00.056</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Commit</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅CommonOptions</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.033</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ExplicitPathsOnFreeBSD</td>
+<td>6</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>        ⚠️test_BinaryDirectory</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_BinaryDirectory_DoesNotExist</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>        ⚠️test_BinaryDirectory_NotAPath</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_ExecutablePath</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>        ⚠️test_ExecutablePath_DoesNotExist</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_ExecutablePath_NotAPath</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ExplicitPathsOnLinux</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ExplicitPathsOnWindows</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅CallByRef</td>
+<td>40</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>40</td>
+<td>00:00:00.040</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅CallByRef</td>
+<td>40</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>40</td>
+<td>00:00:00.040</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Any</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Boolean</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Integer</td>
+<td>32</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>32</td>
+<td>00:00:00.032</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Cartesian</td>
+<td>107</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>107</td>
+<td>00:00:00.107</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Cartesian2D</td>
+<td>49</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>49</td>
+<td>00:00:00.049</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Comparison</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Copy</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>14</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>14</td>
+<td>00:00:00.014</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅OffsetArithmetic</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅PointArithmetic</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Cartesian3D</td>
+<td>52</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>52</td>
+<td>00:00:00.052</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Comparison</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Copy</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>17</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>17</td>
+<td>00:00:00.017</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅OffsetArithmetic</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅PointArithmetic</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Shapes</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Volumes</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Common</td>
+<td>60</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>60</td>
+<td>00:00:10.632</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅ContextManager</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ChangeDirectory</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Dictionary</td>
+<td>20</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>20</td>
+<td>00:00:00.020</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅First</td>
+<td>9</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Merge</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Zip</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅IsNestedClass</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅IsNestedClass</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Iterable</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.010</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Count</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅First</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Last</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅SizeOf</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ObjectSizes</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Stopwatch</td>
+<td>20</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>20</td>
+<td>00:00:10.589</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ContextManagerProtocol</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:06.768</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Formatting</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Operations</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:03.813</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Configuration</td>
+<td>16</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>16</td>
+<td>00:00:00.141</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅JSON</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ReadingValues</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅YAML</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.129</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ReadingValues</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.129</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Decorators</td>
+<td>15</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>13</td>
+<td>00:00:00.015</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Decorators</td>
+<td>15</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>13</td>
+<td>00:00:00.015</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Export</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅InheritDocStrings</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ReadOnly</td>
+<td>3</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_Deleter</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>        ⚠️test_Setter</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Exceptions</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Exceptions</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Exceptions</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Filesystem</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Instantiation</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Graph</td>
+<td>93</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>93</td>
+<td>00:00:00.118</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Construction</td>
+<td>17</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>17</td>
+<td>00:00:00.018</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Dicts</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅EdgesAndLinks</td>
+<td>9</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅GraphML</td>
+<td>13</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>13</td>
+<td>00:00:00.019</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Construction</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.013</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅pyToolingGraph</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅pyToolingTree</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅GraphOperations</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅GraphProperties</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅GraphToTree</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅IDs</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅IterateOnGraph</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅IterateStartingFromVertex</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Names</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Subgraphs</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Values</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅VertexOperations</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Weights</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Licensing</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Licensing</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅LicenseDataClass</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅SPDXLicenses</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅LinkedList</td>
+<td>89</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>89</td>
+<td>00:00:00.092</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Conversion</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅GetNode</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Insert</td>
+<td>20</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>20</td>
+<td>00:00:00.020</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Instantiation</td>
+<td>16</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>16</td>
+<td>00:00:00.017</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Iterate</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅MiscOperations</td>
+<td>11</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Properties</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Remove</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.010</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Search</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Usecases</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅MetaClasses</td>
+<td>89</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>88</td>
+<td>00:00:00.110</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Abstract</td>
+<td>10</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅AbstractMethod</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅MustOverride</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅NotImplemented</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Extended</td>
+<td>31</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>31</td>
+<td>00:00:00.033</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ClassFieldInitializers_Extended</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ClassFieldInitializers_Slotted</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Normal</td>
+<td>14</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>14</td>
+<td>00:00:00.016</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ObjectFieldInitializers_Extended</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ObjectFieldInitializers_Slotted</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Overloading</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Overloading</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Singleton</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Singleton</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_DerivedClassWithOuterParameters</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅SlottedType</td>
+<td>42</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>42</td>
+<td>00:00:00.058</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅AttributeErrors</td>
+<td>11</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Hierarchy</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Inheritance</td>
+<td>26</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>26</td>
+<td>00:00:00.031</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ObjectSizes</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Packaging</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.882</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅DescribePackage</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.851</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅HelperFunctions</td>
+<td>9</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.030</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅VersionInformation</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Path</td>
+<td>19</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>19</td>
+<td>00:00:00.019</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅URL</td>
+<td>19</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>19</td>
+<td>00:00:00.019</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅GenericPath</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅URLs</td>
+<td>15</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>15</td>
+<td>00:00:00.015</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Platform</td>
+<td>13</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.014</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅AnyPlatform</td>
+<td>13</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>9</td>
+<td>00:00:00.014</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>      ⚠️test_Clang32</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>      ⚠️test_MSYS</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>      ⚠️test_MinGW32</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>      ⚠️test_NativeLinux_aarch64</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅TerminalUI</td>
+<td>71</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>71</td>
+<td>00:00:00.088</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Line</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Indentation</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Instantiation</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Severity</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Comparison</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Exceptions</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Terminal</td>
+<td>41</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>41</td>
+<td>00:00:00.049</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅DataToStdOut</td>
+<td>11</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.013</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ExitOnCounters</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Properties</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ToStdOut</td>
+<td>11</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ToStdOut_ToStdErr</td>
+<td>11</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅TerminalBase</td>
+<td>19</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>19</td>
+<td>00:00:00.027</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ExceptionHandling</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Exiting</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Instantiate</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅WriteMessages</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Tree</td>
+<td>56</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>54</td>
+<td>00:00:00.060</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Construction</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Exceptions</td>
+<td>13</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>13</td>
+<td>00:00:00.014</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Features</td>
+<td>11</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>00:00:00.011</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Iteration</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.012</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Loops</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅MergeTree</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>      ⚠️test_AddChildren</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Rendering</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅SplitTree</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>      ⚠️test_DeleteChild</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>  ✅Versioning</td>
+<td>236</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>230</td>
+<td>00:00:00.259</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅CalVersion</td>
+<td>74</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>69</td>
+<td>00:00:00.075</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅CompareInteger</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅CompareNone</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅CompareOtherType</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅CompareString</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅FormattingUsingFormat</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅FormattingUsingRepr</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_MajorPrefix</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅FormattingUsingStr</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_MajorPrefix</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅HashVersions</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅InstantiationOfYearMonthDayVersion</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅InstantiationOfYearMonthVersion</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅InstantiationOfYearReleaseVersion</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅InstantiationOfYearWeekVersion</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Parsing</td>
+<td>9</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_iString</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>        ⚠️test_rString</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-odd"><td>        ⚠️test_vString</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ValidatedMaxValue</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ValidatedWordSize</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Range</td>
+<td>19</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>19</td>
+<td>00:00:00.020</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Comparison</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Instantiation</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.009</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Intersection</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅SemVersion</td>
+<td>124</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>124</td>
+<td>00:00:00.145</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅CompareInteger</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅CompareNone</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅CompareOtherType</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅CompareString</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.007</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅CompareVersions</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>00:00:00.022</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅FormattingUsingFormat</td>
+<td>15</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>15</td>
+<td>00:00:00.015</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅FormattingUsingRepr</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅FormattingUsingStr</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.005</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅HashVersions</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Instantiation</td>
+<td>34</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>34</td>
+<td>00:00:00.034</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Parsing</td>
+<td>16</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>16</td>
+<td>00:00:00.016</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅RoundTrip</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅ValidatedMaxValue</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅ValidatedWordSize</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>00:00:00.008</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅Set</td>
+<td>19</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>18</td>
+<td>00:00:00.019</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Comparison</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Instantiation</td>
+<td>6</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>00:00:00.006</td>
+</tr>
+<tr class="report-testcase testcase-skipped row-even"><td>        ⚠️test_PyVer_SemVer</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Intersection</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.003</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>      ✅Ordering</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>      ✅Union</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>00:00:00.002</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>  ✅Warning</td>
+<td>12</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+<td>00:00:00.013</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅CallStack</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅Catch</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>00:00:00.001</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-odd"><td>    ✅NoWarningCollector</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-testsuite testsuite-passed row-even"><td>    ✅WarningCollection</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>00:00:00.004</td>
+</tr>
+<tr class="report-summary testsuitesummary-passed row-odd"><td>✅ PASSED</td>
+<td>1139</td>
+<td>24</td>
+<td>0</td>
+<td>0</td>
+<td>1115</td>
+<td>00:00:13.077</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr class="docutils" />
+<p>Unittest report generated with <a class="reference external" href="https://github.com/pytest-dev/pytest">pytest</a> and visualized by
+<a class="reference external" href="https://github.com/pyTooling/sphinx-reports">sphinx-reports</a>.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../pyTooling/pyTooling.Warning.html" class="btn btn-neutral float-left" title="pyTooling.Warning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../coverage/index.html" class="btn btn-neutral float-right" title="Code Coverage Report" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

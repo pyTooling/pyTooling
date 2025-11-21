@@ -1,0 +1,1463 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.LinkedList &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.LinkedList</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.LinkedList</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               _     _       _            _ _     _     _                             #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | |   (_)_ __ | | _____  __| | |   (_)___| |_                           #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | |   | | &#39;_ \| |/ / _ \/ _` | |   | / __| __|                          #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___| | | | |   &lt;  __/ (_| | |___| \__ \ |_                           #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____|_|_| |_|_|\_\___|\__,_|_____|_|___/\__|                          #</span>
+<span class="c1"># |_|    |___/                          |___/                                                                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2025-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;An object-oriented doubly linked-list data structure for Python.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">          </span><span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">export</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.LinkedList] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">export</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.LinkedList] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">_NodeKey</span> <span class="o">=</span>   <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_NodeKey&quot;</span><span class="p">)</span>
+<span class="n">_NodeValue</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_NodeValue&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LinkedListException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedListException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinkedListException</span><span class="p">(</span><span class="n">ToolingException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Base-exception of all exceptions raised by :mod:`pyTooling.LinkedList`.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Node">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The node in an object-oriented doubly linked-list.</span>
+
+<span class="sd">	It contains a reference to the doubly linked list (:attr:`_list`), the previous node (:attr:`_previous`), the next</span>
+<span class="sd">	node (:attr:`_next`) and the data (:attr:`_value`). Optionally, a key (:attr:`_key`) can be stored for sorting</span>
+<span class="sd">	purposes.</span>
+
+<span class="sd">	The :attr:`_previous` field of the **first node** in a doubly linked list is ``None``. Similarly, the :attr:`_next`</span>
+<span class="sd">	field of the **last node** is ``None``. ``None`` represents the end of the linked list when iterating it node-by-node.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_linkedList</span><span class="p">:</span>   <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;LinkedList[_NodeValue]&quot;</span><span class="p">]</span>      <span class="c1">#: Reference to the doubly linked list instance.</span>
+	<span class="n">_previousNode</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">]</span>  <span class="c1">#: Reference to the previous node.</span>
+	<span class="n">_nextNode</span><span class="p">:</span>     <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">]</span>  <span class="c1">#: Reference to the next node.</span>
+	<span class="n">_key</span><span class="p">:</span>          <span class="n">Nullable</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">]</span>                      <span class="c1">#: The sortable key of the node.</span>
+	<span class="n">_value</span><span class="p">:</span>        <span class="n">_NodeValue</span>                              <span class="c1">#: The value of the node.</span>
+
+<div class="viewcode-block" id="Node.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">value</span><span class="p">:</span>        <span class="n">_NodeValue</span><span class="p">,</span>
+		<span class="n">key</span><span class="p">:</span>          <span class="n">Nullable</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">previousNode</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">nextNode</span><span class="p">:</span>     <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initialize a linked list node.</span>
+
+<span class="sd">		:param value:        Value to store in the node.</span>
+<span class="sd">		:param key:          Optional sortable key to store in the node.</span>
+<span class="sd">		:param previousNode: Optional reference to the previous node.</span>
+<span class="sd">		:param nextNode:     Optional reference to the next node.</span>
+<span class="sd">		:raises TypeError:   If parameter &#39;previous&#39; is not of type :class:`Node`.</span>
+<span class="sd">		:raises TypeError:   If parameter &#39;next&#39; is not of type :class:`Node`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">previousNode</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">nextNode</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">value</span>
+
+		<span class="c1"># Attache to previous node</span>
+		<span class="k">if</span> <span class="n">previousNode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previousNode</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;previous&#39; is not of type Node.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">previousNode</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="c1"># PreviousNode is part of a list</span>
+			<span class="k">if</span> <span class="n">previousNode</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="n">previousNode</span><span class="o">.</span><span class="n">_linkedList</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+				<span class="c1"># Check if previous was the last node</span>
+				<span class="k">if</span> <span class="n">previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">previousNode</span><span class="o">.</span><span class="n">_nextNode</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="bp">self</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="n">previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span>
+
+			<span class="k">if</span> <span class="n">nextNode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nextNode</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+					<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;next&#39; is not of type Node.&quot;</span><span class="p">)</span>
+					<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">nextNode</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+					<span class="k">raise</span> <span class="n">ex</span>
+
+				<span class="k">if</span> <span class="n">nextNode</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+					<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+						<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">previousNode</span><span class="o">.</span><span class="n">_linkedList</span><span class="p">:</span>
+							<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+				<span class="n">previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">elif</span> <span class="n">nextNode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nextNode</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;next&#39; is not of type Node.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">nextNode</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="c1"># NextNode is part of a list</span>
+			<span class="k">if</span> <span class="n">nextNode</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="n">nextNode</span><span class="o">.</span><span class="n">_linkedList</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+				<span class="c1"># Check if next was the first node</span>
+				<span class="k">if</span> <span class="n">nextNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">nextNode</span><span class="o">.</span><span class="n">_previousNode</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="n">nextNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">List</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;LinkedList[_NodeValue]&quot;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the linked list, this node belongs to.</span>
+
+<span class="sd">		:return: The linked list, this node is part of, or ``None``.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">PreviousNode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access nodes predecessor.</span>
+
+<span class="sd">		This reference is ``None`` if the node is the first node in the doubly linked list.</span>
+
+<span class="sd">		:return: The node before the current node or ``None``.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">NextNode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access nodes successor.</span>
+
+<span class="sd">		This reference is ``None`` if the node is the last node in the doubly linked list.</span>
+
+<span class="sd">		:return: The node after the current node or ``None``.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span>
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_NodeKey</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Property to access the node&#39;s internal key.</span>
+
+<span class="sd">		The key can be a scalar or a reference to an object.</span>
+
+<span class="sd">		:return: The node&#39;s key.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+	<span class="nd">@Key</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">_NodeKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_NodeValue</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Property to access the node&#39;s internal data.</span>
+
+<span class="sd">		The data can be a scalar or a reference to an object.</span>
+
+<span class="sd">		:return: The node&#39;s value.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+	<span class="nd">@Value</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_NodeValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Node.InsertNodeBefore">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.InsertNodeBefore">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">InsertNodeBefore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Insert a node before this node.</span>
+
+<span class="sd">		:param node:                 Node to insert.</span>
+<span class="sd">		:raises ValueError:          If parameter &#39;node&#39; is ``None``.</span>
+<span class="sd">		:raises TypeError:           If parameter &#39;node&#39; is not of type :class:`Node`.</span>
+<span class="sd">		:raises LinkedListException: If parameter &#39;node&#39; is already part of another linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is not of type Node.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; belongs to another linked list.&quot;</span><span class="p">)</span>
+
+		<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="Node.InsertNodeAfter">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.InsertNodeAfter">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">InsertNodeAfter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Insert a node after this node.</span>
+
+<span class="sd">		:param node:                 Node to insert.</span>
+<span class="sd">		:raises ValueError:          If parameter &#39;node&#39; is ``None``.</span>
+<span class="sd">		:raises TypeError:           If parameter &#39;node&#39; is not of type :class:`Node`.</span>
+<span class="sd">		:raises LinkedListException: If parameter &#39;node&#39; is already part of another linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is not of type Node.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; belongs to another linked list.&quot;</span><span class="p">)</span>
+
+		<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+	<span class="c1"># move forward</span>
+	<span class="c1"># move backward</span>
+	<span class="c1"># move by relative pos</span>
+	<span class="c1"># move to position</span>
+	<span class="c1"># move to begin</span>
+	<span class="c1"># move to end</span>
+
+	<span class="c1"># insert tuple/list/linkedlist before</span>
+	<span class="c1"># insert tuple/list/linkedlist after</span>
+
+	<span class="c1"># iterate forward for n</span>
+	<span class="c1"># iterate backward for n</span>
+
+	<span class="c1"># slice to tuple / list starting from that node</span>
+
+	<span class="c1"># swap left by n</span>
+	<span class="c1"># swap right by n</span>
+
+<div class="viewcode-block" id="Node.Remove">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.Remove">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Remove</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_NodeValue</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Remove this node from the linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">-=</span> <span class="mi">1</span>
+
+				<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="kc">None</span>
+
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">-=</span> <span class="mi">1</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span><span class="o">.</span><span class="n">_count</span> <span class="o">-=</span> <span class="mi">1</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span></div>
+
+
+<div class="viewcode-block" id="Node.IterateToFirst">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.IterateToFirst">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IterateToFirst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includeSelf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a generator iterating backward from this node to the list&#39;s first node.</span>
+
+<span class="sd">		Optionally, this node can be included into the generated sequence.</span>
+
+<span class="sd">		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at previous node.</span>
+<span class="sd">		:return:            A sequence of nodes towards the list&#39;s first node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">previousNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousNode</span>
+
+		<span class="k">if</span> <span class="n">includeSelf</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="bp">self</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="n">previousNode</span>
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">previousNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">previousNode</span></div>
+
+
+<div class="viewcode-block" id="Node.IterateToLast">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.IterateToLast">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IterateToLast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includeSelf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;Node[_NodeKey, _NodeValue]&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a generator iterating forward from this node to the list&#39;s last node.</span>
+
+<span class="sd">		Optionally, this node can be included into the generated sequence by setting.</span>
+
+<span class="sd">		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at next node.</span>
+<span class="sd">		:return:            A sequence of nodes towards the list&#39;s last node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">nextNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextNode</span>
+
+		<span class="k">if</span> <span class="n">includeSelf</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="bp">self</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="n">nextNode</span>
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">nextNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">nextNode</span></div>
+
+
+<div class="viewcode-block" id="Node.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.Node.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Node: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinkedList">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinkedList</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;An object-oriented doubly linked-list.&quot;&quot;&quot;</span>
+
+	<span class="n">_firstNode</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]]</span>  <span class="c1">#: Reference to the first node of the linked list.</span>
+	<span class="n">_lastNode</span><span class="p">:</span>  <span class="n">Nullable</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]]</span>  <span class="c1">#: Reference to the last node of the linked list.</span>
+	<span class="n">_count</span><span class="p">:</span>     <span class="nb">int</span>                                   <span class="c1">#: Number of nodes in the linked list.</span>
+
+	<span class="c1"># allow iterable to initialize the list</span>
+<div class="viewcode-block" id="LinkedList.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initialize an empty linked list.</span>
+
+<span class="sd">		Optionally, an iterable can be given to initialize the linked list. The order is preserved.</span>
+
+<span class="sd">		:param nodes:                Optional iterable to initialize the linked list.</span>
+<span class="sd">		:raises TypeError:           If parameter &#39;nodes&#39; is not an :class:`iterable &lt;typing.Iterable&gt;`.</span>
+<span class="sd">		:raises TypeError:           If parameter &#39;nodes&#39; items are not of type :class:`Node`.</span>
+<span class="sd">		:raises LinkedListException: If parameter &#39;nodes&#39; contains items which are already part of another linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;nodes&#39; is not an iterable.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">Sized</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+				<span class="k">return</span>
+
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span> <span class="o">:=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">))</span>
+			<span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+				<span class="k">return</span>
+
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First element in parameter &#39;nodes&#39; is not of type Node.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">first</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+			<span class="k">elif</span> <span class="n">first</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First element in parameter &#39;nodes&#39; is assigned to different list.&quot;</span><span class="p">)</span>
+
+			<span class="n">position</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="n">first</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="bp">self</span>
+			<span class="n">first</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">previous</span> <span class="o">=</span> <span class="n">node</span> <span class="o">=</span> <span class="n">first</span>
+
+			<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+					<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s2">. element in parameter &#39;nodes&#39; is not of type Node.&quot;</span><span class="p">)</span>
+					<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+					<span class="k">raise</span> <span class="n">ex</span>
+				<span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s2">. element in parameter &#39;nodes&#39; is assigned to different list.&quot;</span><span class="p">)</span>
+
+				<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">previous</span>
+				<span class="n">previous</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">node</span>
+
+				<span class="n">previous</span> <span class="o">=</span> <span class="n">node</span>
+				<span class="n">position</span> <span class="o">+=</span> <span class="mi">1</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="n">node</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="n">position</span>
+			<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsEmpty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of .</span>
+
+<span class="sd">		This reference is ``None`` if the node is the last node in the doubly linked list.</span>
+
+<span class="sd">		:return: ``True`` if linked list is empty, otherwise ``False``</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">==</span> <span class="mi">0</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of nodes in the linked list.</span>
+
+<span class="sd">		:return: Number of nodes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">FirstNode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the first node in the linked list.</span>
+
+<span class="sd">		In case the list is empty, ``None`` is returned.</span>
+
+<span class="sd">		:return: First node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">LastNode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the last node in the linked list.</span>
+
+<span class="sd">		In case the list is empty, ``None`` is returned.</span>
+
+<span class="sd">		:return: Last node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span>
+
+<div class="viewcode-block" id="LinkedList.Clear">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.Clear">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Clear the linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.InsertBeforeFirst">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.InsertBeforeFirst">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">InsertBeforeFirst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Insert a node before the first node.</span>
+
+<span class="sd">		:param node:                 Node to insert.</span>
+<span class="sd">		:raises ValueError:          If parameter &#39;node&#39; is ``None``.</span>
+<span class="sd">		:raises TypeError:           If parameter &#39;node&#39; is not of type :class:`Node`.</span>
+<span class="sd">		:raises LinkedListException: If parameter &#39;node&#39; is already part of another linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is not of type Node.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; belongs to another linked list.&quot;</span><span class="p">)</span>
+
+		<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.InsertAfterLast">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.InsertAfterLast">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">InsertAfterLast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Insert a node after the last node.</span>
+
+<span class="sd">		:param node:                 Node to insert.</span>
+<span class="sd">		:raises ValueError:          If parameter &#39;node&#39; is ``None``.</span>
+<span class="sd">		:raises TypeError:           If parameter &#39;node&#39; is not of type :class:`Node`.</span>
+<span class="sd">		:raises LinkedListException: If parameter &#39;node&#39; is already part of another linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is None.&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; is not of type Node.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;node&#39; belongs to another linked list.&quot;</span><span class="p">)</span>
+
+		<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.RemoveFirst">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.RemoveFirst">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">RemoveFirst</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Remove first node from linked list.</span>
+
+<span class="sd">		:return:                     First node.</span>
+<span class="sd">		:raises LinkedListException: If linked list is empty.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linked list is empty.&quot;</span><span class="p">)</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">-=</span> <span class="mi">1</span>
+
+		<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">return</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.RemoveLast">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.RemoveLast">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">RemoveLast</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Remove last node from linked list.</span>
+
+<span class="sd">		:return:                     Last node.</span>
+<span class="sd">		:raises LinkedListException: If linked list is empty.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linked list is empty.&quot;</span><span class="p">)</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">-=</span> <span class="mi">1</span>
+
+		<span class="n">node</span><span class="o">.</span><span class="n">_linkedList</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">return</span> <span class="n">node</span></div>
+
+
+
+<div class="viewcode-block" id="LinkedList.GetNodeByIndex">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.GetNodeByIndex">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">GetNodeByIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Access a node in the linked list by position.</span>
+
+<span class="sd">		:param index:       Node position to access.</span>
+<span class="sd">		:return:            Node at the given position.</span>
+<span class="sd">		:raises ValueError: If parameter &#39;position&#39; is out of range.</span>
+
+<span class="sd">		.. note::</span>
+
+<span class="sd">		   The algorithm starts iterating nodes from the shorter end.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;position&#39; is out of range.&quot;</span><span class="p">)</span>
+				<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linked list is empty.&quot;</span><span class="p">)</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+		<span class="k">elif</span> <span class="n">index</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span>
+		<span class="k">elif</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">:</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;position&#39; is out of range.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linked list has </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="si">}</span><span class="s2"> elements. Requested index: </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
+			<span class="n">pos</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span><span class="o">.</span><span class="n">_nextNode</span>
+			<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="n">index</span><span class="p">:</span>
+					<span class="k">return</span> <span class="n">node</span>
+
+				<span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span>
+				<span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+				<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node position not found.&quot;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">-</span> <span class="mi">2</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span><span class="o">.</span><span class="n">_previousNode</span>
+			<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="n">index</span><span class="p">:</span>
+					<span class="k">return</span> <span class="n">node</span>
+
+				<span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span>
+				<span class="n">pos</span> <span class="o">-=</span> <span class="mi">1</span>
+			<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+				<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node position not found.&quot;</span><span class="p">)</span></div>
+
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">Search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Node</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linked list is empty.&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">reverse</span><span class="p">:</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+			<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+					<span class="k">break</span>
+
+				<span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node not found.&quot;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span>
+			<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+					<span class="k">break</span>
+
+				<span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">LinkedListException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node not found.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">node</span>
+
+<div class="viewcode-block" id="LinkedList.Reverse">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.Reverse">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Reverse the order of nodes in the linked list.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">last</span> <span class="o">=</span> <span class="n">node</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">last</span><span class="o">.</span><span class="n">_nextNode</span>
+			<span class="n">last</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">last</span><span class="o">.</span><span class="n">_previousNode</span>
+
+		<span class="n">last</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">last</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.Sort">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.Sort">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Sort the linked list in ascending or descending order.</span>
+
+<span class="sd">		The sort operation is **stable**.</span>
+
+<span class="sd">		:param key:     Optional function to access a user-defined key for sorting.</span>
+<span class="sd">		:param reverse: Optional parameter, if ``True`` sort in descending order, otherwise in ascending order.</span>
+
+<span class="sd">		.. note::</span>
+
+<span class="sd">		   The linked list is converted to an array, which is sorted by quicksort using the builtin :meth:`~list.sort`.</span>
+<span class="sd">		   Afterward, the sorted array is used to reconstruct the linked list in requested order.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span><span class="p">):</span>
+			<span class="k">return</span>
+
+		<span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">_value</span>
+
+		<span class="n">sequence</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IterateFromFirst</span><span class="p">()]</span>
+		<span class="n">sequence</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+
+		<span class="n">first</span> <span class="o">=</span> <span class="n">sequence</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+		<span class="n">position</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="n">first</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="o">=</span> <span class="n">previous</span> <span class="o">=</span> <span class="n">node</span> <span class="o">=</span> <span class="n">first</span>
+
+		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+			<span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span> <span class="o">=</span> <span class="n">previous</span>
+			<span class="n">previous</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="n">node</span>
+
+			<span class="n">previous</span> <span class="o">=</span> <span class="n">node</span>
+			<span class="n">position</span> <span class="o">+=</span> <span class="mi">1</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="o">=</span> <span class="n">node</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="n">position</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.IterateFromFirst">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.IterateFromFirst">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IterateFromFirst</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a generator iterating forward from list&#39;s first node to list&#39;s last node.</span>
+
+<span class="sd">		:return: A sequence of nodes towards the list&#39;s last node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firstNode</span>
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">nextNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_nextNode</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">nextNode</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.IterateFromLast">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.IterateFromLast">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IterateFromLast</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a generator iterating backward from list&#39;s last node to list&#39;s first node.</span>
+
+<span class="sd">		:return: A sequence of nodes towards the list&#39;s first node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lastNode</span>
+		<span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">previousNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_previousNode</span>
+			<span class="k">yield</span> <span class="n">node</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">previousNode</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.ToList">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.ToList">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ToList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert the linked list to a :class:`list`.</span>
+
+<span class="sd">		Optionally, the resulting list can be constructed in reverse order.</span>
+
+<span class="sd">		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.</span>
+<span class="sd">		:return:        A list (array) of this linked list&#39;s values.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[]</span>
+		<span class="k">elif</span> <span class="n">reverse</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">_value</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IterateFromLast</span><span class="p">()]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">_value</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IterateFromFirst</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.ToTuple">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.ToTuple">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ToTuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert the linked list to a :class:`tuple`.</span>
+
+<span class="sd">		Optionally, the resulting tuple can be constructed in reverse order.</span>
+
+<span class="sd">		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.</span>
+<span class="sd">		:return:        A tuple of this linked list&#39;s values.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+		<span class="k">elif</span> <span class="n">reverse</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">_value</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IterateFromLast</span><span class="p">())</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">_value</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IterateFromFirst</span><span class="p">())</span></div>
+
+
+	<span class="c1"># Copy</span>
+	<span class="c1"># Sort</span>
+
+  <span class="c1"># merge lists</span>
+	<span class="c1"># append / prepend lists</span>
+	<span class="c1"># split list</span>
+
+	<span class="c1"># Remove at position (= __delitem__)</span>
+	<span class="c1"># Remove by predicate (n times)</span>
+
+	<span class="c1"># Insert at position (= __setitem__)</span>
+
+  <span class="c1"># insert tuple/list/linkedlist at begin</span>
+	<span class="c1"># insert tuple/list/linkedlist at end</span>
+
+	<span class="c1"># Find by position (= __getitem__)</span>
+	<span class="c1"># Find by predicate from left (n times)</span>
+	<span class="c1"># Find by predicate from right (n times)</span>
+
+	<span class="c1"># Count by predicate</span>
+
+	<span class="c1"># slice by start, length from right -&gt; new list</span>
+	<span class="c1"># slice by start, length from left</span>
+	<span class="c1"># Slice by predicate</span>
+
+	<span class="c1"># iterate start, length from right</span>
+	<span class="c1"># iterate start, length from left</span>
+	<span class="c1"># iterate by predicate</span>
+
+<div class="viewcode-block" id="LinkedList.__len__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.__len__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the number of nodes in the linked list.</span>
+
+<span class="sd">		:returns: Number of nodes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.__getitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.__getitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_NodeValue</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Access a node&#39;s value by its index.</span>
+
+<span class="sd">		:param index:       Node index to access.</span>
+<span class="sd">		:return:            Node&#39;s value at the given index.</span>
+<span class="sd">		:raises ValueError: If parameter &#39;index&#39; is out of range.</span>
+
+<span class="sd">		.. note::</span>
+
+<span class="sd">		   The algorithm starts iterating nodes from the shorter end.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetNodeByIndex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">_value</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.__setitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.__setitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_NodeValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the value of node at the given position.</span>
+
+<span class="sd">		:param index: Index of the node to modify.</span>
+<span class="sd">		:param value: New value for the node&#39;s value addressed by index.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">GetNodeByIndex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="LinkedList.__delitem__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.LinkedList.html#pyTooling.LinkedList.LinkedList.__delitem__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">[</span><span class="n">_NodeKey</span><span class="p">,</span> <span class="n">_NodeValue</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Remove a node at the given index.</span>
+
+<span class="sd">		:param index: Index of the node to remove.</span>
+<span class="sd">		:return:      Removed node.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetNodeByIndex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">Remove</span><span class="p">()</span>
+		<span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">_value</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

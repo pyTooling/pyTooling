@@ -1,0 +1,102 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=====================
+pyTooling.GenericPath
+=====================
+
+.. automodule:: pyTooling.GenericPath
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.GenericPath.URL
+
+.. currentmodule:: pyTooling.GenericPath
+
+
+**Classes**
+
+- :py:class:`Base`:
+  Base-class for all pyTooling.GenericPath path elements.
+
+- :py:class:`RootMixIn`:
+  Mixin-class for root elements in a path system.
+
+- :py:class:`ElementMixIn`:
+  Mixin-class for elements in a path system.
+
+- :py:class:`PathMixIn`:
+  Mixin-class for a path.
+
+- :py:class:`SystemMixIn`:
+  Mixin-class for a path system.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Base
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Base
+      :parts: 1
+
+.. autoclass:: RootMixIn
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: RootMixIn
+      :parts: 1
+
+.. autoclass:: ElementMixIn
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ElementMixIn
+      :parts: 1
+
+.. autoclass:: PathMixIn
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PathMixIn
+      :parts: 1
+
+.. autoclass:: SystemMixIn
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SystemMixIn
+      :parts: 1

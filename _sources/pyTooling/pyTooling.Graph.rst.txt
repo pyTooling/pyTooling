@@ -1,0 +1,298 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+===============
+pyTooling.Graph
+===============
+
+.. automodule:: pyTooling.Graph
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Graph.GraphML
+
+.. currentmodule:: pyTooling.Graph
+
+
+**Exceptions**
+
+- :py:exc:`GraphException`:
+  Base exception of all exceptions raised by :mod:`pyTooling.Graph`.
+
+- :py:exc:`InternalError`:
+  The exception is raised when a data structure corruption is detected.
+
+- :py:exc:`NotInSameGraph`:
+  The exception is raised when creating an edge between two vertices, but these are not in the same graph.
+
+- :py:exc:`DuplicateVertexError`:
+  The exception is raised when the vertex already exists in the graph.
+
+- :py:exc:`DuplicateEdgeError`:
+  The exception is raised when the edge already exists in the graph.
+
+- :py:exc:`DestinationNotReachable`:
+  The exception is raised when a destination vertex is not reachable.
+
+- :py:exc:`NotATreeError`:
+  The exception is raised when a subgraph is not a tree.
+
+- :py:exc:`CycleError`:
+  The exception is raised when a not permitted cycle is found.
+
+
+
+**Classes**
+
+- :py:class:`Base`:
+  Abstract base class for generic types.
+
+- :py:class:`BaseWithIDValueAndWeight`:
+  Abstract base class for generic types.
+
+- :py:class:`BaseWithName`:
+  Abstract base class for generic types.
+
+- :py:class:`BaseWithVertices`:
+  Abstract base class for generic types.
+
+- :py:class:`Vertex`:
+  A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
+
+- :py:class:`BaseEdge`:
+  An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
+
+- :py:class:`Edge`:
+  An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
+
+- :py:class:`Link`:
+  A **link** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All links are
+
+- :py:class:`BaseGraph`:
+  .. todo:: GRAPH::BaseGraph Needs documentation.
+
+- :py:class:`Subgraph`:
+  .. todo:: GRAPH::Subgraph Needs documentation.
+
+- :py:class:`View`:
+  .. todo:: GRAPH::View Needs documentation.
+
+- :py:class:`Component`:
+  .. todo:: GRAPH::Component Needs documentation.
+
+- :py:class:`Graph`:
+  A **graph** data structure is represented by an instance of :class:`~pyTooling.Graph.Graph` holding references to
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: GraphException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: GraphException
+      :parts: 1
+
+.. autoexception:: InternalError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: InternalError
+      :parts: 1
+
+.. autoexception:: NotInSameGraph
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NotInSameGraph
+      :parts: 1
+
+.. autoexception:: DuplicateVertexError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DuplicateVertexError
+      :parts: 1
+
+.. autoexception:: DuplicateEdgeError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DuplicateEdgeError
+      :parts: 1
+
+.. autoexception:: DestinationNotReachable
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DestinationNotReachable
+      :parts: 1
+
+.. autoexception:: NotATreeError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NotATreeError
+      :parts: 1
+
+.. autoexception:: CycleError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: CycleError
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Base
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Base
+      :parts: 1
+
+.. autoclass:: BaseWithIDValueAndWeight
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseWithIDValueAndWeight
+      :parts: 1
+
+.. autoclass:: BaseWithName
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseWithName
+      :parts: 1
+
+.. autoclass:: BaseWithVertices
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseWithVertices
+      :parts: 1
+
+.. autoclass:: Vertex
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Vertex
+      :parts: 1
+
+.. autoclass:: BaseEdge
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseEdge
+      :parts: 1
+
+.. autoclass:: Edge
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Edge
+      :parts: 1
+
+.. autoclass:: Link
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Link
+      :parts: 1
+
+.. autoclass:: BaseGraph
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseGraph
+      :parts: 1
+
+.. autoclass:: Subgraph
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Subgraph
+      :parts: 1
+
+.. autoclass:: View
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: View
+      :parts: 1
+
+.. autoclass:: Component
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Component
+      :parts: 1
+
+.. autoclass:: Graph
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Graph
+      :parts: 1

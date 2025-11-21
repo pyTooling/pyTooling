@@ -1,0 +1,59 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="519pt" height="27pt" viewBox="0.00 0.00 519.00 27.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 23)">
+<ns0:title>inheritancef7955ccf7b</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="135,-19 0,-19 0,0 135,0 135,-19" />
+<ns0:text text-anchor="middle" x="67.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>NamedArgument</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.NamedArgument" ns1:title="Base-class for all command line arguments with a name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="271,-19 171,-19 171,0 271,0 271,-19" />
+<ns0:text text-anchor="middle" x="221" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>CommandLineArgument-&gt;NamedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M135.39,-9.5C145.52,-9.5 155.86,-9.5 165.67,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="165.75,-11.25 170.75,-9.5 165.75,-7.75 165.75,-11.25" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>FlagArgument</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Flag.html#pyTooling.CLIAbstraction.Flag.FlagArgument" ns1:title="Base-class for all Flag classes, which represents a simple flag argument like ``-v`` or ``--verbose``." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="393,-19 307,-19 307,0 393,0 393,-19" />
+<ns0:text text-anchor="middle" x="350" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">FlagArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>WindowsFlag</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.CLIAbstraction.Flag.html#pyTooling.CLIAbstraction.Flag.WindowsFlag" ns1:title="Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single slash." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="511,-19 429,-19 429,0 511,0 511,-19" />
+<ns0:text text-anchor="middle" x="470" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">WindowsFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>FlagArgument-&gt;WindowsFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M393.27,-9.5C403.18,-9.5 413.78,-9.5 423.81,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="424,-11.25 429,-9.5 424,-7.75 424,-11.25" />
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>NamedArgument-&gt;FlagArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M271.1,-9.5C281.09,-9.5 291.57,-9.5 301.5,-9.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="301.64,-11.25 306.64,-9.5 301.64,-7.75 301.64,-11.25" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

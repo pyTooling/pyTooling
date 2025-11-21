@@ -1,0 +1,842 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation/Updates" href="Installation.html" />
+    <link rel="prev" title="pyTooling Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">News</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#version-8-x-2025">Version 8.x (2025)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-7-x-2024">Version 7.x (2024)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-6-x-2024">Version 6.x (2024)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-5-x-2023">Version 5.x (2023)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-4-x-2023">Version 4.x (2023)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-3-x-2023">Version 3.x (2023)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jan-2023-graph-enhancements">Jan. 2023 - Graph enhancements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nov-2023-graph-implementation">Nov. 2023 - Graph implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#archive">Archive</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#attributes">Attributes</a><ul>
+<li><a class="reference internal" href="#jan-2024-direct-integration-into-pytooling">Jan. 2024 - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#nov-2021-moved-to-pytooling">Nov. 2021 - Moved to pyTooling</a></li>
+<li><a class="reference internal" href="#jan-2020-enhancements">Jan. 2020 - Enhancements</a></li>
+<li><a class="reference internal" href="#dec-2019-merge-from-ipcmi">Dec. 2019 - Merge from IPCMI</a></li>
+<li><a class="reference internal" href="#oct-2019-initial-release">Oct. 2019 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#callbyref">CallByRef</a><ul>
+<li><a class="reference internal" href="#xxx-20xx-direct-integration-into-pytooling">xxx. 20XX - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#sep-2020-bug-fixes">Sep. 2020 - Bug Fixes</a></li>
+<li><a class="reference internal" href="#dec-2019-initial-release">Dec. 2019 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cliabstraction">CLIAbstraction</a><ul>
+<li><a class="reference internal" href="#id2">Jan. 2024 - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#feb-2022-major-update">Feb. 2022 - Major Update</a></li>
+<li><a class="reference internal" href="#dec-2021-extracted-cliabstraction-from-pyipcmi">Dec. 2021 - Extracted CLIAbstraction from pyIPCMI</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#commonclasses">CommonClasses</a><ul>
+<li><a class="reference internal" href="#id3">xxx. 20XX - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#feb-2021-initial-release">Feb. 2021 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#exceptions">Exceptions</a><ul>
+<li><a class="reference internal" href="#id4">xxx. 20XX - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#sep-2020-unit-tests">Sep. 2020 - Unit tests</a></li>
+<li><a class="reference internal" href="#id5">Oct. 2019 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#genericpath">GenericPath</a><ul>
+<li><a class="reference internal" href="#id6">xxx. 20XX - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#dec-2021-namespace-package">Dec. 2021 - Namespace package</a></li>
+<li><a class="reference internal" href="#id7">Oct. 2019 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#metaclasses">MetaClasses</a><ul>
+<li><a class="reference internal" href="#id8">xxx. 20XX - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#aug-2020-overloading">Aug. 2020 - Overloading</a></li>
+<li><a class="reference internal" href="#id9">Dec. 2019 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#packaging">Packaging</a><ul>
+<li><a class="reference internal" href="#dec-2021-direct-integration-into-pytooling">Dec. 2021 - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#nov-2021-major-enhancements">Nov. 2021 - Major enhancements</a></li>
+<li><a class="reference internal" href="#nov-2021-initial-release">Nov. 2021 - Initial Release</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#terminalui">TerminalUI</a><ul>
+<li><a class="reference internal" href="#id10">xxx. 20XX - Direct integration into pyTooling</a></li>
+<li><a class="reference internal" href="#nov-2021-namespace-package">Nov. 2021 - Namespace package</a></li>
+<li><a class="reference internal" href="#aug-2020-enhancements">Aug. 2020 - Enhancements</a></li>
+<li><a class="reference internal" href="#id11">Dec. 2019 - Initial Release</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">News</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/News.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="news">
+<span id="id1"></span><h1>News<a class="headerlink" href="#news" title="Link to this heading"></a></h1>
+<p>See <a class="reference external" href="https://github.com/pyTooling/pyTooling/releases">pyTooling Release Pages</a> for detail release notes on every
+release.</p>
+<section id="version-8-x-2025">
+<h2>Version 8.x (2025)<a class="headerlink" href="#version-8-x-2025" title="Link to this heading"></a></h2>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.7.4">v8.7.4 - 19.10.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.7.3">v8.7.3 - 21.09.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.7.2">v8.7.2 - 04.09.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.7.1">v8.7.1 - 04.09.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.7.0">v8.7.0 - 24.08.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.6.0">v8.6.0 - 12.08.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.5.1">v8.5.1 - 14.06.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.5.0">v8.5.0 - 31.05.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.4.0">v8.4.0 - 25.01.2025</a></p>
+<p>tbd</p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.3.0">v8.3.0 - 25.01.2025</a></p>
+<ul class="simple">
+<li><p>New count function to count the number of elements in an iterator/generator.</p></li>
+<li><p>Added __setitem__ on pyTooling.CLIAbstraction.Environment.</p></li>
+<li><p>Added __delitem__ on pyTooling.CLIAbstraction.Environment.</p></li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.2.0">v8.2.0 - 25.01.2025</a></p>
+<ul class="simple">
+<li><p>Add WarningCollector to handle warnings similar to exceptions and send them along the call stack.</p></li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.1.0">v8.1.0 - 25.01.2025</a></p>
+<ul class="simple">
+<li><p>Graph</p>
+<ul>
+<li><p>Added methods HasVertexByID, HasVertexByValue.</p></li>
+<li><p>Added method GetVertexByValue.</p></li>
+</ul>
+</li>
+<li><p>Versioning</p>
+<ul>
+<li><p>Version classes are now hashable.</p></li>
+<li><p>Added gamma release level.</p></li>
+</ul>
+</li>
+<li><p>Stopwatch</p>
+<ul>
+<li><p>Added Exclude context manager</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v8.0.0">v8.0.0 - 09.11.2024</a></p>
+<ul class="simple">
+<li><p>Reworked semantic and calendar version classes:</p>
+<ul>
+<li><p>Moved common implementations to Version base-type.</p>
+<ul>
+<li><p>Moved major, minor, micro, build, post, dev, release level, release number, hash, prefix, postfix parts to the base-type.</p></li>
+<li><p>Moved implementations of comparison operators to the base-type: __eq__, __ne__, __lt__, __le__, __gt__, __ge__.</p></li>
+<li><p>Implemented minimum comparison operator using __rshift__ (&gt;&gt;) for PIP’s ~= operator.</p></li>
+<li><p>Implemented a formatting helper method _format.</p></li>
+</ul>
+</li>
+<li><p>Reworked SemanticVersion.</p>
+<ul>
+<li><p>Additionally allow comparisons with string and integer types.</p></li>
+<li><p>Enhanced SemanticVersion.Parse() class-method:</p>
+<ul>
+<li><p>Raise exceptions on invalid inputs.</p></li>
+<li><p>Use a regular expression to check and split the input.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Implemented CalendarVersion (previously a dummy).</p>
+<ul>
+<li><p>Added CalendarVersion.Parse() class-method: raise exceptions on invalid inputs.</p></li>
+<li><p>Implemented comparison operators.</p></li>
+</ul>
+</li>
+<li><p>Added validator classes WordSizeValidator and MaxValueValidator.</p></li>
+<li><p>Added doc-strings.</p></li>
+<li><p>Improved __str__() method to return only used version parts.</p></li>
+<li><p>Added __format__() for user defined formatting specifications.</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+</section>
+<section id="version-7-x-2024">
+<h2>Version 7.x (2024)<a class="headerlink" href="#version-7-x-2024" title="Link to this heading"></a></h2>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v7.0.0">v7.0.0 - 27.10.2024</a></p>
+<ul class="simple">
+<li><p>Added support for Python 3.13 (and dropped 3.8).</p>
+<ul>
+<li><p>Changed DEFAULT_PY_VERSIONS in pyTooling.Packaging to 3.9…3.13.</p></li>
+</ul>
+</li>
+<li><p>Reworked faulty Timer class and renamed it to StopWatch.</p>
+<ul>
+<li><p>Support start, pause, resume, split and stop operations.</p></li>
+<li><p>Collect active and inactive split times.</p></li>
+<li><p>Accept a name at instantiation.</p></li>
+<li><p>Take absolute time at start and stop via datetime.now().</p></li>
+<li><p>Can be used in a with-statement.</p></li>
+</ul>
+</li>
+<li><p>&#64;InheritDocString can be applied to classes too.</p></li>
+</ul>
+</aside>
+</section>
+<section id="version-6-x-2024">
+<h2>Version 6.x (2024)<a class="headerlink" href="#version-6-x-2024" title="Link to this heading"></a></h2>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.7.0">v6.7.0 - 29.09.2024</a></p>
+<ul class="simple">
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Terminal</span></code></p>
+<ul>
+<li><p>Added TerminalApplication.WriteCritical</p></li>
+<li><p>Added TerminalApplication.ExitOnPreviousCriticalWarnings</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.6.0">v6.6.0 - 18.09.2024</a></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Graph.html#module-pyTooling.Graph" title="pyTooling.Graph"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Graph</span></code></a></p>
+<ul>
+<li><p>Allow setting key-value-pairs for a graph when creating a new graph.</p></li>
+<li><p>Allow setting key-value-pairs for vertices when creating a new vertex.</p></li>
+<li><p>Allow setting key-value-pairs for edges when creating a new edge.</p></li>
+<li><p>Allow setting key-value-pairs for links when creating a new link.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#module-pyTooling.Packaging" title="pyTooling.Packaging"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Packaging</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadReadmeFile()</span></code></a> now supports new content formats:</p>
+<ul>
+<li><p>plain text</p></li>
+<li><p>ReStructured Text</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Platform.html#module-pyTooling.Platform" title="pyTooling.Platform"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Platform</span></code></a></p>
+<ul>
+<li><p>Added <a class="reference internal" href="pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platform.StaticLibraryExtension" title="pyTooling.Platform.Platform.StaticLibraryExtension"><code class="xref py py-attr docutils literal notranslate"><span class="pre">StaticLibraryExtension</span></code></a>.</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.5.0">v6.5.0 - 15.07.2024</a></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTooling/pyTooling.GenericPath.html#module-pyTooling.GenericPath" title="pyTooling.GenericPath"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.GenericPath</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.GenericPath.URL.html#pyTooling.GenericPath.URL.URL" title="pyTooling.GenericPath.URL.URL"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyTooling.GenericPath.URL.URL</span></code></a>:</p>
+<ul>
+<li><p>Added support for basic authentication credentials (username and password).</p></li>
+<li><p>Added <a class="reference internal" href="pyTooling/pyTooling.GenericPath.URL.html#pyTooling.GenericPath.URL.URL.WithoutCredentials" title="pyTooling.GenericPath.URL.URL.WithoutCredentials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyTooling.GenericPath.URL.URL.WithoutCredentials()</span></code></a> method.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.4.0">v6.4.0 - 04.07.2024</a></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Platform.html#module-pyTooling.Platform" title="pyTooling.Platform"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Platform</span></code></a></p>
+<ul>
+<li><p>Added readonly property <a class="reference internal" href="pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platform.IsNativeFreeBSD" title="pyTooling.Platform.Platform.IsNativeFreeBSD"><code class="xref py py-attr docutils literal notranslate"><span class="pre">IsNativeFreeBSD</span></code></a> to class Platform.</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.3.0">v6.3.0 - 02.06.2024</a></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Tree.html#module-pyTooling.Tree" title="pyTooling.Tree"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Tree</span></code></a></p>
+<ul>
+<li><p>Accept a custom formatting function per node to return a one-liner representation of a node for tree rendering.</p></li>
+<li><p>Accept a key-value-pair mapping (dictionary) for nodes in a tree in the initializer.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Graph.html#module-pyTooling.Graph" title="pyTooling.Graph"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Graph</span></code></a></p>
+<ul>
+<li><p>Accept a key-value-pair mapping (dictionary) for all data structures (graph, edges, links, vertices, views, …) in a graph in their initializers.</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.2.0">v6.2.0 - 30.05.2024</a></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Common.html#module-pyTooling.Common" title="pyTooling.Common"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Common</span></code></a></p>
+<ul>
+<li><p>New helper function <a class="reference internal" href="pyTooling/pyTooling.Common.html#pyTooling.Common.getFullyQualifiedName" title="pyTooling.Common.getFullyQualifiedName"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Common.getFullyQualifiedName()</span></code></a>.</p></li>
+<li><p>Python 3.8+: New helper functions <a class="reference internal" href="pyTooling/pyTooling.Common.html#pyTooling.Common.getResourceFile" title="pyTooling.Common.getResourceFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Common.getResourceFile()</span></code></a> and <a class="reference internal" href="pyTooling/pyTooling.Common.html#pyTooling.Common.readResourceFile" title="pyTooling.Common.readResourceFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Common.readResourceFile()</span></code></a>.</p></li>
+<li><p>Python 3.11+: In case of <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a> add a note to the exception describing the parameter/member type.</p></li>
+</ul>
+</li>
+</ul>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.1.0">v6.1.0 - 09.04.2024</a></p>
+</aside>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v6.0.0">v6.0.0 - 14.01.2024</a></p>
+<ul class="simple">
+<li><p>Integrated <code class="docutils literal notranslate"><span class="pre">pyAttributes</span></code> v2.5.1 as <a class="reference internal" href="pyTooling/pyTooling.Attributes.html#module-pyTooling.Attributes" title="pyTooling.Attributes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Attributes</span></code></a>.</p></li>
+<li><p>Integrated <a class="reference internal" href="pyTooling/pyTooling.CLIAbstraction.html#module-pyTooling.CLIAbstraction" title="pyTooling.CLIAbstraction"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.CLIAbstraction</span></code></a> v0.4.1.</p></li>
+</ul>
+</aside>
+</section>
+<section id="version-5-x-2023">
+<h2>Version 5.x (2023)<a class="headerlink" href="#version-5-x-2023" title="Link to this heading"></a></h2>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v5.0.0">v5.0.0 - 02.07.2023</a></p>
+<ul class="simple">
+<li><p>New <code class="docutils literal notranslate"><span class="pre">ExtendedType</span></code> features:</p>
+<ul>
+<li><p>Added support for mixin-classes and delayed creation of slots.</p></li>
+<li><p>Added automatic initializers for annotated fields (previously causing an exception due to slots).</p></li>
+<li><p>Added automatic initializers for annotated class fields (previously causing an exception due to slots).</p></li>
+</ul>
+</li>
+<li><p>Added new decorators: <code class="docutils literal notranslate"><span class="pre">&#64;slotted</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;mixin</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;singleton</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;readonly</span></code>, and <code class="docutils literal notranslate"><span class="pre">&#64;notimplemented</span></code>.</p></li>
+<li><p>Added JSON support for <code class="docutils literal notranslate"><span class="pre">pyTooling.Configuration</span></code>.</p></li>
+<li><p>New <code class="docutils literal notranslate"><span class="pre">Platform</span></code> features:</p>
+<ul>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">PythonVersion</span></code> to <code class="docutils literal notranslate"><span class="pre">Platform</span></code> to distinguish Python versions.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">PythonImplementation</span></code> to <code class="docutils literal notranslate"><span class="pre">Platform</span></code> to distinguish CPython and PyPy.</p></li>
+</ul>
+</li>
+<li><p>New graph features:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">GetVertexByID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GetVertexByValue</span></code></p></li>
+<li><p>New vertex operations: <code class="docutils literal notranslate"><span class="pre">IterateAllOutboundPathsAsVertexList</span></code>, <code class="docutils literal notranslate"><span class="pre">Delete</span></code> (itself), <code class="docutils literal notranslate"><span class="pre">DeleteEdgeTo</span></code>, <code class="docutils literal notranslate"><span class="pre">DeleteEdgeFrom</span></code>, <code class="docutils literal notranslate"><span class="pre">DeleteLinkTo</span></code>, <code class="docutils literal notranslate"><span class="pre">DeleteLinkFrom</span></code>.</p></li>
+<li><p>New edge operations: <code class="docutils literal notranslate"><span class="pre">Delete</span></code> (itself)</p></li>
+<li><p>New link operations: <code class="docutils literal notranslate"><span class="pre">Delete</span></code> (itself)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pyToolong.StateMachine</span></code> package (alpha version).</p></li>
+</ul>
+</aside>
+</section>
+<section id="version-4-x-2023">
+<h2>Version 4.x (2023)<a class="headerlink" href="#version-4-x-2023" title="Link to this heading"></a></h2>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v4.0.1">v4.0.1 - 26.03.2023</a></p>
+<ul class="simple">
+<li><p>Graphs are now supporting subgraphs and exporting subgraphs to GraphML.</p>
+<ul>
+<li><p>New <code class="docutils literal notranslate"><span class="pre">SubGraph</span></code> class.</p></li>
+<li><p>New <code class="docutils literal notranslate"><span class="pre">Link</span></code> class.</p></li>
+<li><p>New <code class="docutils literal notranslate"><span class="pre">View</span></code> class.</p></li>
+</ul>
+</li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Vertex.Link***Vertex</span></code> methods to link vertices from disjunctive subgraphs.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Vertex.HasLink***Vertex</span></code> methods check if two vertices from disjunctive subgraphs are connected.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Vertex.Iterate***boundLinks</span></code> to iterate links.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Graph.IterateLinks</span></code> to iterate all links.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Graph.ReverseLinks</span></code>, <code class="docutils literal notranslate"><span class="pre">Graph.RemoveLinks</span></code>.</p></li>
+<li><p>Applied generic types when deriving from subclasses.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">in</span></code> operator for key-value</p></li>
+</ul>
+</aside>
+</section>
+<section id="version-3-x-2023">
+<h2>Version 3.x (2023)<a class="headerlink" href="#version-3-x-2023" title="Link to this heading"></a></h2>
+<aside class="topic">
+<p class="topic-title"><a class="reference external" href="https://github.com/pyTooling/pyTooling/releases/v3.0.0">v3.0.0 - 10.03.2023</a></p>
+<ul class="simple">
+<li><p>Integrated <a class="reference internal" href="pyTooling/pyTooling.TerminalUI.html#module-pyTooling.TerminalUI" title="pyTooling.TerminalUI"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.TerminalUI</span></code></a>.</p></li>
+<li><p>Support for FreeBSD in <code class="docutils literal notranslate"><span class="pre">Platform</span></code>.</p></li>
+<li><p>A data model for GraphML (graph, node, edge, key, data and subgraph).</p></li>
+<li><p>A conversion from pyTooling’s graph data structure to GraphML XML files.</p></li>
+<li><p>A conversion from pyTooling’s tree data structure to GraphML XML files.</p></li>
+</ul>
+</aside>
+</section>
+<section id="jan-2023-graph-enhancements">
+<h2>Jan. 2023 - Graph enhancements<a class="headerlink" href="#jan-2023-graph-enhancements" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Improved exceptions.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">ConvertToTree</span></code> method to <code class="docutils literal notranslate"><span class="pre">Vertex</span></code>.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Render</span></code> method to <code class="docutils literal notranslate"><span class="pre">Node</span></code>.</p></li>
+</ul>
+</section>
+<section id="nov-2023-graph-implementation">
+<h2>Nov. 2023 - Graph implementation<a class="headerlink" href="#nov-2023-graph-implementation" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Added an object-oriented graph implementation.</p></li>
+</ul>
+</section>
+<section id="archive">
+<h2>Archive<a class="headerlink" href="#archive" title="Link to this heading"></a></h2>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<section id="jan-2024-direct-integration-into-pytooling">
+<h4>Jan. 2024 - Direct integration into pyTooling<a class="headerlink" href="#jan-2024-direct-integration-into-pytooling" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The standalone package <code class="docutils literal notranslate"><span class="pre">pyAttributes</span></code> v2.5.1 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.Attributes.html#module-pyTooling.Attributes" title="pyTooling.Attributes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Attributes</span></code></a> into pyTooling
+v6.0.0.</p></li>
+</ul>
+<section id="nov-2021-moved-to-pytooling">
+<h4>Nov. 2021 - Moved to pyTooling<a class="headerlink" href="#nov-2021-moved-to-pytooling" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Changed repository location from <code class="docutils literal notranslate"><span class="pre">Paebbels/pyAttributes</span></code> to <code class="docutils literal notranslate"><span class="pre">pyTooling/pyAttributes</span></code>.</p></li>
+</ul>
+<section id="jan-2020-enhancements">
+<h4>Jan. 2020 - Enhancements<a class="headerlink" href="#jan-2020-enhancements" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GetMethods</span></code> and <code class="docutils literal notranslate"><span class="pre">GetAttributes</span></code> adhere to method resolution order (MRO) to find attributes annotated to methods
+from base-classes.</p></li>
+<li><p>An <code class="docutils literal notranslate"><span class="pre">AttributeHelperMixinclass</span></code> to ease the usage of attributes on a class’ methods.</p></li>
+</ul>
+<section id="dec-2019-merge-from-ipcmi">
+<h4>Dec. 2019 - Merge from IPCMI<a class="headerlink" href="#dec-2019-merge-from-ipcmi" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Merged latest implementation updates from pyIPCMI.</p></li>
+</ul>
+<section id="oct-2019-initial-release">
+<h4>Oct. 2019 - Initial Release<a class="headerlink" href="#oct-2019-initial-release" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Basic attribute class.</p></li>
+<li><p>Attribute helper classes.</p></li>
+<li><p>Package for handling Python’s argparse as declarative code.</p></li>
+</ul>
+</section>
+<section id="callbyref">
+<h3>CallByRef<a class="headerlink" href="#callbyref" title="Link to this heading"></a></h3>
+<section id="xxx-20xx-direct-integration-into-pytooling">
+<h4>xxx. 20XX - Direct integration into pyTooling<a class="headerlink" href="#xxx-20xx-direct-integration-into-pytooling" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.CallByRef</span></code> v1.2.1 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.CallByRef.html#module-pyTooling.CallByRef" title="pyTooling.CallByRef"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.CallByRef</span></code></a> into pyTooling
+vX.X.X.</p></li>
+</ul>
+<section id="sep-2020-bug-fixes">
+<h4>Sep. 2020 - Bug Fixes<a class="headerlink" href="#sep-2020-bug-fixes" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Some bugfixes.</p></li>
+</ul>
+<section id="dec-2019-initial-release">
+<h4>Dec. 2019 - Initial Release<a class="headerlink" href="#dec-2019-initial-release" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Call-by-reference implementation for Python.</p></li>
+</ul>
+</section>
+<section id="cliabstraction">
+<h3>CLIAbstraction<a class="headerlink" href="#cliabstraction" title="Link to this heading"></a></h3>
+<section id="id2">
+<h4>Jan. 2024 - Direct integration into pyTooling<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.CLIAbstraction</span></code> v0.4.1 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.CLIAbstraction.html#module-pyTooling.CLIAbstraction" title="pyTooling.CLIAbstraction"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.CLIAbstraction</span></code></a> into
+pyTooling v6.0.0.</p></li>
+</ul>
+<section id="feb-2022-major-update">
+<h4>Feb. 2022 - Major Update<a class="headerlink" href="#feb-2022-major-update" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Reworked names of Argument classes.</p></li>
+<li><p>Added missing argument formats like PathArgument.</p></li>
+<li><p>Added more unit tests and improved code-coverage.</p></li>
+<li><p>Added doc-strings and extended documentation pages.</p></li>
+</ul>
+<section id="dec-2021-extracted-cliabstraction-from-pyipcmi">
+<h4>Dec. 2021 - Extracted CLIAbstraction from pyIPCMI<a class="headerlink" href="#dec-2021-extracted-cliabstraction-from-pyipcmi" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The CLI abstraction has been extracted from <a class="reference external" href="https://GitHub.com/Paebbels/pyIPCMI">pyIPCMI</a>.</p></li>
+</ul>
+</section>
+<section id="commonclasses">
+<h3>CommonClasses<a class="headerlink" href="#commonclasses" title="Link to this heading"></a></h3>
+<section id="id3">
+<h4>xxx. 20XX - Direct integration into pyTooling<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.CommonClasses</span></code> v0.2.3 has been integrated as <code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.CommonClasses</span></code> into
+pyTooling vX.X.X.</p></li>
+</ul>
+<section id="feb-2021-initial-release">
+<h4>Feb. 2021 - Initial Release<a class="headerlink" href="#feb-2021-initial-release" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Version</span></code> class.</p></li>
+</ul>
+</section>
+<section id="exceptions">
+<h3>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h3>
+<section id="id4">
+<h4>xxx. 20XX - Direct integration into pyTooling<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.Exceptions</span></code> v1.1.1 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.Exceptions.html#module-pyTooling.Exceptions" title="pyTooling.Exceptions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Exceptions</span></code></a> into
+pyTooling vX.X.X.</p></li>
+</ul>
+<section id="sep-2020-unit-tests">
+<h4>Sep. 2020 - Unit tests<a class="headerlink" href="#sep-2020-unit-tests" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Added unit tests.</p></li>
+</ul>
+<section id="id5">
+<h4>Oct. 2019 - Initial Release<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>An initial set of exceptions has been extracted from <a class="reference external" href="https://GitHub.com/Paebbels/pyIPCMI">pyIPCMI</a>.</p></li>
+</ul>
+</section>
+<section id="genericpath">
+<h3>GenericPath<a class="headerlink" href="#genericpath" title="Link to this heading"></a></h3>
+<section id="id6">
+<h4>xxx. 20XX - Direct integration into pyTooling<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.GenericPath</span></code> v0.2.5 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.GenericPath.html#module-pyTooling.GenericPath" title="pyTooling.GenericPath"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.GenericPath</span></code></a> into
+pyTooling vX.X.X.</p></li>
+</ul>
+<section id="dec-2021-namespace-package">
+<h4>Dec. 2021 - Namespace package<a class="headerlink" href="#dec-2021-namespace-package" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Renamed <code class="docutils literal notranslate"><span class="pre">pyGenericPath</span></code> to <a class="reference internal" href="pyTooling/pyTooling.GenericPath.html#module-pyTooling.GenericPath" title="pyTooling.GenericPath"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.GenericPath</span></code></a>.</p></li>
+</ul>
+<section id="id7">
+<h4>Oct. 2019 - Initial Release<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>An initial set of exceptions has been extracted from <a class="reference external" href="https://GitHub.com/Paebbels/pyIPCMI">pyIPCMI</a>.</p></li>
+</ul>
+</section>
+<section id="metaclasses">
+<h3>MetaClasses<a class="headerlink" href="#metaclasses" title="Link to this heading"></a></h3>
+<section id="id8">
+<h4>xxx. 20XX - Direct integration into pyTooling<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.MetaClasses</span></code> v1.3.1 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.MetaClasses.html#module-pyTooling.MetaClasses" title="pyTooling.MetaClasses"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.MetaClasses</span></code></a> into
+pyTooling vX.X.X.</p></li>
+</ul>
+<section id="aug-2020-overloading">
+<h4>Aug. 2020 - Overloading<a class="headerlink" href="#aug-2020-overloading" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>First implementation of method overloading via a meta-class.</p></li>
+</ul>
+<section id="id9">
+<h4>Dec. 2019 - Initial Release<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>First singleton metaclass to implement the singleton pattern in Python.</p></li>
+</ul>
+</section>
+<section id="packaging">
+<h3>Packaging<a class="headerlink" href="#packaging" title="Link to this heading"></a></h3>
+<section id="dec-2021-direct-integration-into-pytooling">
+<h4>Dec. 2021 - Direct integration into pyTooling<a class="headerlink" href="#dec-2021-direct-integration-into-pytooling" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.Packaging</span></code> v0.5.0 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.Packaging.html#module-pyTooling.Packaging" title="pyTooling.Packaging"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Packaging</span></code></a> into
+pyTooling vX.X.X.</p></li>
+</ul>
+<section id="nov-2021-major-enhancements">
+<h4>Nov. 2021 - Major enhancements<a class="headerlink" href="#nov-2021-major-enhancements" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Reading package information from Python source code via Python’s AST.</p></li>
+<li><p>Support more licenses.</p></li>
+</ul>
+<section id="nov-2021-initial-release">
+<h4>Nov. 2021 - Initial Release<a class="headerlink" href="#nov-2021-initial-release" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Abstract setuptools.setup to ease handling of Python package descriptions.</p></li>
+<li><p>Read long description from README.md</p></li>
+<li><p>Read package dependencies from requirements.txt</p></li>
+<li><p>Construct classifiers</p></li>
+<li><p>Construct URLs for packages hosted on GitHub.</p></li>
+</ul>
+</section>
+<section id="terminalui">
+<h3>TerminalUI<a class="headerlink" href="#terminalui" title="Link to this heading"></a></h3>
+<section id="id10">
+<h4>xxx. 20XX - Direct integration into pyTooling<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>The namespace package <code class="docutils literal notranslate"><span class="pre">pyTooling.TerminalUI</span></code> v1.5.9 has been integrated as <a class="reference internal" href="pyTooling/pyTooling.TerminalUI.html#module-pyTooling.TerminalUI" title="pyTooling.TerminalUI"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.TerminalUI</span></code></a> into pyTooling
+vX.X.X.</p></li>
+</ul>
+<section id="nov-2021-namespace-package">
+<h4>Nov. 2021 - Namespace package<a class="headerlink" href="#nov-2021-namespace-package" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>Renamed <code class="docutils literal notranslate"><span class="pre">pyTerminalUI</span></code> to <a class="reference internal" href="pyTooling/pyTooling.TerminalUI.html#module-pyTooling.TerminalUI" title="pyTooling.TerminalUI"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.TerminalUI</span></code></a>.</p></li>
+</ul>
+<section id="aug-2020-enhancements">
+<h4>Aug. 2020 - Enhancements<a class="headerlink" href="#aug-2020-enhancements" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>New <code class="docutils literal notranslate"><span class="pre">ExitOnPrevious***</span></code> methods.</p></li>
+</ul>
+<section id="id11">
+<h4>Dec. 2019 - Initial Release<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+</section>
+<ul class="simple">
+<li><p>TerminalUI has been extracted from <a class="reference external" href="https://GitHub.com/Paebbels/pyIPCMI">pyIPCMI</a>.</p></li>
+<li><p>Basic functionality to use a text based application in a terminal window.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="pyTooling Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Installation.html" class="btn btn-neutral float-right" title="Installation/Updates" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

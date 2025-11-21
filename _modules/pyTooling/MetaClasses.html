@@ -1,0 +1,1525 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.MetaClasses &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.MetaClasses</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.MetaClasses</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               __  __      _         ____ _                                           #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  \/  | ___| |_ __ _ / ___| | __ _ ___ ___  ___  ___                   #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | |\/| |/ _ \ __/ _` | |   | |/ _` / __/ __|/ _ \/ __|                  #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  | |  __/ || (_| | |___| | (_| \__ \__ \  __/\__ \                  #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|  |_|\___|\__\__,_|\____|_|\__,_|___/___/\___||___/                  #</span>
+<span class="c1"># |_|    |___/                          |___/                                                                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#   Sven Köhler                                                                                                        #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;META&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w">  </span><span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sys</span><span class="w">        </span><span class="kn">import</span> <span class="n">version_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w">  </span><span class="kn">import</span> <span class="n">Condition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w">      </span><span class="kn">import</span> <span class="n">FunctionType</span>  <span class="c1">#, MethodType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">     </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">     </span><span class="kn">import</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">_GenericAlias</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.MetaClasses] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.MetaClasses] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;M&quot;</span><span class="p">]</span>
+
+<span class="n">TAttr</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TAttr&quot;</span><span class="p">)</span>  <span class="c1"># , bound=&#39;Attribute&#39;)</span>
+<span class="sd">&quot;&quot;&quot;A type variable for :class:`~pyTooling.Attributes.Attribute`.&quot;&quot;&quot;</span>
+
+<span class="n">TAttributeFilter</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">TAttr</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TAttr</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;A type hint for a predicate parameter that accepts either a single :class:`~pyTooling.Attributes.Attribute` or an</span>
+<span class="sd">iterable of those.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="ExtendedTypeError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedTypeError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExtendedTypeError</span><span class="p">(</span><span class="n">ToolingException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="BaseClassWithoutSlotsError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.BaseClassWithoutSlotsError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseClassWithoutSlotsError</span><span class="p">(</span><span class="n">ExtendedTypeError</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   * :ref:`Python data model for slots &lt;slots&gt;`</span>
+<span class="sd">	   * :term:`Glossary entry __slots__ &lt;__slots__&gt;`</span>
+<span class="sd">	&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="BaseClassWithNonEmptySlotsError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseClassWithNonEmptySlotsError</span><span class="p">(</span><span class="n">ExtendedTypeError</span><span class="p">):</span>
+	<span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="BaseClassIsNotAMixinError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.BaseClassIsNotAMixinError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseClassIsNotAMixinError</span><span class="p">(</span><span class="n">ExtendedTypeError</span><span class="p">):</span>
+	<span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="DuplicateFieldInSlotsError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.DuplicateFieldInSlotsError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DuplicateFieldInSlotsError</span><span class="p">(</span><span class="n">ExtendedTypeError</span><span class="p">):</span>
+	<span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="AbstractClassError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.AbstractClassError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractClassError</span><span class="p">(</span><span class="n">ExtendedTypeError</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   :func:`@abstractmethod &lt;pyTooling.MetaClasses.abstractmethod&gt;`</span>
+<span class="sd">	      |rarr| Mark a method as *abstract*.</span>
+<span class="sd">	   :func:`@mustoverride &lt;pyTooling.MetaClasses.mustoverride&gt;`</span>
+<span class="sd">	      |rarr| Mark a method as *must overrride*.</span>
+<span class="sd">	   :exc:`~MustOverrideClassError`</span>
+<span class="sd">	      |rarr| Exception raised, if a method is marked as *must-override*.</span>
+<span class="sd">	&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="MustOverrideClassError">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.MustOverrideClassError">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MustOverrideClassError</span><span class="p">(</span><span class="n">AbstractClassError</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised, when a class contains methods marked with *must-override*.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   :func:`@abstractmethod &lt;pyTooling.MetaClasses.abstractmethod&gt;`</span>
+<span class="sd">	      |rarr| Mark a method as *abstract*.</span>
+<span class="sd">	   :func:`@mustoverride &lt;pyTooling.MetaClasses.mustoverride&gt;`</span>
+<span class="sd">	      |rarr| Mark a method as *must overrride*.</span>
+<span class="sd">	   :exc:`~AbstractClassError`</span>
+<span class="sd">	      |rarr| Exception raised, if a method is marked as *abstract*.</span>
+<span class="sd">	&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># &quot;&quot;&quot;</span>
+<span class="c1"># Metaclass that allows multiple dispatch of methods based on method signatures.</span>
+<span class="c1">#</span>
+<span class="c1"># .. seealso:</span>
+<span class="c1">#</span>
+<span class="c1">#    `Python Cookbook - Multiple dispatch with function annotations &lt;https://GitHub.com/dabeaz/python-cookbook/blob/master/src/9/multiple_dispatch_with_function_annotations/example1.py?ts=2&gt;`__</span>
+<span class="c1"># &quot;&quot;&quot;</span>
+
+
+<span class="n">M</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">)</span>   <span class="c1">#: A type variable for methods.</span>
+
+
+<div class="viewcode-block" id="slotted">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.slotted">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">slotted</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+	<span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">:</span>
+		<span class="n">metacls</span> <span class="o">=</span> <span class="n">ExtendedType</span>
+	<span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">ExtendedType</span><span class="p">):</span>
+		<span class="n">metacls</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span>
+		<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__methods__</span><span class="p">:</span>
+			<span class="nb">delattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">&quot;__classobj__&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">ExtendedTypeError</span><span class="p">(</span><span class="s2">&quot;Class uses an incompatible meta-class.&quot;</span><span class="p">)</span>  <span class="c1"># FIXME: create exception for it?</span>
+
+	<span class="n">bases</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base</span> <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span> <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">object</span><span class="p">)</span>
+	<span class="n">slots</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;__slots__&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;__slots__&quot;</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">()</span>
+	<span class="n">members</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;__qualname__&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span>
+	<span class="p">}</span>
+	<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+		<span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
+			<span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="k">return</span> <span class="n">metacls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">members</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mixin">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.mixin">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mixin</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+	<span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">:</span>
+		<span class="n">metacls</span> <span class="o">=</span> <span class="n">ExtendedType</span>
+	<span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">ExtendedType</span><span class="p">):</span>
+		<span class="n">metacls</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span>
+		<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__methods__</span><span class="p">:</span>
+			<span class="nb">delattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">&quot;__classobj__&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">ExtendedTypeError</span><span class="p">(</span><span class="s2">&quot;Class uses an incompatible meta-class.&quot;</span><span class="p">)</span>  <span class="c1"># FIXME: create exception for it?</span>
+
+	<span class="n">bases</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base</span> <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span> <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">object</span><span class="p">)</span>
+	<span class="n">slots</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;__slots__&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;__slots__&quot;</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">()</span>
+	<span class="n">members</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;__qualname__&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span>
+	<span class="p">}</span>
+	<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+		<span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
+			<span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="k">return</span> <span class="n">metacls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">members</span><span class="p">,</span> <span class="n">mixin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="singleton">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.singleton">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">singleton</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+	<span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">:</span>
+		<span class="n">metacls</span> <span class="o">=</span> <span class="n">ExtendedType</span>
+	<span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">ExtendedType</span><span class="p">):</span>
+		<span class="n">metacls</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span>
+		<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__methods__</span><span class="p">:</span>
+			<span class="nb">delattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">&quot;__classobj__&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">ExtendedTypeError</span><span class="p">(</span><span class="s2">&quot;Class uses an incompatible meta-class.&quot;</span><span class="p">)</span>  <span class="c1"># FIXME: create exception for it?</span>
+
+	<span class="n">bases</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base</span> <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span> <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">object</span><span class="p">)</span>
+	<span class="n">slots</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;__slots__&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;__slots__&quot;</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">()</span>
+	<span class="n">members</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;__qualname__&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span>
+	<span class="p">}</span>
+	<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+		<span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
+			<span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="k">return</span> <span class="n">metacls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">members</span><span class="p">,</span> <span class="n">singleton</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="abstractmethod">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.abstractmethod">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">abstractmethod</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="n">M</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">M</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.</span>
+
+<span class="sd">	The original method is stored in ``&lt;method&gt;.__wrapped__`` and it&#39;s doc-string is copied to the replacing method. In</span>
+<span class="sd">	additional field ``&lt;method&gt;.__abstract__`` is added.</span>
+
+<span class="sd">	.. warning::</span>
+
+<span class="sd">	   This decorator should be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.</span>
+<span class="sd">	   Otherwise, an abstract class itself doesn&#39;t throw a :exc:`~pyTooling.Exceptions.AbstractClassError` at</span>
+<span class="sd">	   instantiation.</span>
+
+<span class="sd">	.. admonition:: ``example.py``</span>
+
+<span class="sd">	   .. code-block:: python</span>
+
+<span class="sd">	      class Data(mataclass=ExtendedType):</span>
+<span class="sd">	        @abstractmethod</span>
+<span class="sd">	        def method(self) -&gt; bool:</span>
+<span class="sd">	          &#39;&#39;&#39;This method needs to be implemented&#39;&#39;&#39;</span>
+
+<span class="sd">	:param method: Method that is marked as *abstract*.</span>
+<span class="sd">	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   * :exc:`~pyTooling.Exceptions.AbstractClassError`</span>
+<span class="sd">	   * :func:`~pyTooling.Metaclasses.mustoverride`</span>
+<span class="sd">	   * :func:`~pyTooling.Metaclasses.notimplemented`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;</span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is abstract and needs to be overridden in a derived class.&quot;</span><span class="p">)</span>
+
+	<span class="n">func</span><span class="o">.</span><span class="n">__abstract__</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="k">return</span> <span class="n">func</span></div>
+
+
+
+<div class="viewcode-block" id="mustoverride">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.mustoverride">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mustoverride</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="n">M</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">M</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Mark a method as *must-override*.</span>
+
+<span class="sd">	The returned function is the original function, but with an additional field ``&lt;method&gt;.____mustOverride__``, so a</span>
+<span class="sd">	meta-class can identify a *must-override* method and raise an error. Such an error is not raised if the method is</span>
+<span class="sd">	overridden by an inheriting class.</span>
+
+<span class="sd">	A *must-override* methods can offer a partial implementation, which is called via ``super()...``.</span>
+
+<span class="sd">	.. warning::</span>
+
+<span class="sd">	   This decorator needs to be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.</span>
+<span class="sd">	   Otherwise, an abstract class itself doesn&#39;t throw a :exc:`~pyTooling.Exceptions.MustOverrideClassError` at</span>
+<span class="sd">	   instantiation.</span>
+
+<span class="sd">	.. admonition:: ``example.py``</span>
+
+<span class="sd">	   .. code-block:: python</span>
+
+<span class="sd">	      class Data(mataclass=ExtendedType):</span>
+<span class="sd">	        @mustoverride</span>
+<span class="sd">	        def method(self):</span>
+<span class="sd">	          &#39;&#39;&#39;This is a very basic implementation&#39;&#39;&#39;</span>
+
+<span class="sd">	:param method: Method that is marked as *must-override*.</span>
+<span class="sd">	:returns:      Same method, but with additional ``&lt;method&gt;.__mustOverride__`` field.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`</span>
+<span class="sd">	   * :func:`~pyTooling.Metaclasses.abstractmethod`</span>
+<span class="sd">	   * :func:`~pyTooling.Metaclasses.notimplemented`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">method</span><span class="o">.</span><span class="n">__mustOverride__</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="k">return</span> <span class="n">method</span></div>
+
+
+
+<span class="c1"># @export</span>
+<span class="c1"># def overloadable(method: M) -&gt; M:</span>
+<span class="c1"># 	method.__overloadable__ = True</span>
+<span class="c1"># 	return method</span>
+
+
+<span class="c1"># @export</span>
+<span class="c1"># class DispatchableMethod:</span>
+<span class="c1"># 	&quot;&quot;&quot;Represents a single multimethod.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1"># 	_methods: Dict[Tuple, Callable]</span>
+<span class="c1"># 	__name__: str</span>
+<span class="c1"># 	__slots__ = (&quot;_methods&quot;, &quot;__name__&quot;)</span>
+<span class="c1">#</span>
+<span class="c1"># 	def __init__(self, name: str) -&gt; None:</span>
+<span class="c1"># 		self.__name__ = name</span>
+<span class="c1"># 		self._methods = {}</span>
+<span class="c1">#</span>
+<span class="c1"># 	def __call__(self, *args: Any):</span>
+<span class="c1"># 		&quot;&quot;&quot;Call a method based on type signature of the arguments.&quot;&quot;&quot;</span>
+<span class="c1"># 		types = tuple(type(arg) for arg in args[1:])</span>
+<span class="c1"># 		meth = self._methods.get(types, None)</span>
+<span class="c1"># 		if meth:</span>
+<span class="c1"># 			return meth(*args)</span>
+<span class="c1"># 		else:</span>
+<span class="c1"># 			raise TypeError(f&quot;No matching method for types {types}.&quot;)</span>
+<span class="c1">#</span>
+<span class="c1"># 	def __get__(self, instance, cls):  # Starting with Python 3.11+, use typing.Self as return type</span>
+<span class="c1"># 		&quot;&quot;&quot;Descriptor method needed to make calls work in a class.&quot;&quot;&quot;</span>
+<span class="c1"># 		if instance is not None:</span>
+<span class="c1"># 			return MethodType(self, instance)</span>
+<span class="c1"># 		else:</span>
+<span class="c1"># 			return self</span>
+<span class="c1">#</span>
+<span class="c1"># 	def register(self, method: Callable) -&gt; None:</span>
+<span class="c1"># 		&quot;&quot;&quot;Register a new method as a dispatchable.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1"># 		# Build a signature from the method&#39;s type annotations</span>
+<span class="c1"># 		sig = signature(method)</span>
+<span class="c1"># 		types: List[Type] = []</span>
+<span class="c1">#</span>
+<span class="c1"># 		for name, parameter in sig.parameters.items():</span>
+<span class="c1"># 			if name == &quot;self&quot;:</span>
+<span class="c1"># 				continue</span>
+<span class="c1">#</span>
+<span class="c1"># 			if parameter.annotation is Parameter.empty:</span>
+<span class="c1"># 				raise TypeError(f&quot;Parameter &#39;{name}&#39; in method &#39;{method.__name__}&#39; must be annotated with a type.&quot;)</span>
+<span class="c1">#</span>
+<span class="c1"># 			if not isinstance(parameter.annotation, type):</span>
+<span class="c1"># 				raise TypeError(f&quot;Parameter &#39;{name}&#39; in method &#39;{method.__name__}&#39; annotation must be a type.&quot;)</span>
+<span class="c1">#</span>
+<span class="c1"># 			if parameter.default is not Parameter.empty:</span>
+<span class="c1"># 				self._methods[tuple(types)] = method</span>
+<span class="c1">#</span>
+<span class="c1"># 			types.append(parameter.annotation)</span>
+<span class="c1">#</span>
+<span class="c1"># 		self._methods[tuple(types)] = method</span>
+
+
+<span class="c1"># @export</span>
+<span class="c1"># class DispatchDictionary(dict):</span>
+<span class="c1"># 	&quot;&quot;&quot;Special dictionary to build dispatchable methods in a metaclass.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1"># 	def __setitem__(self, key: str, value: Any):</span>
+<span class="c1"># 		if callable(value) and key in self:</span>
+<span class="c1"># 			# If key already exists, it must be a dispatchable method or callable</span>
+<span class="c1"># 			currentValue = self[key]</span>
+<span class="c1"># 			if isinstance(currentValue, DispatchableMethod):</span>
+<span class="c1"># 				currentValue.register(value)</span>
+<span class="c1"># 			else:</span>
+<span class="c1"># 				dispatchable = DispatchableMethod(key)</span>
+<span class="c1"># 				dispatchable.register(currentValue)</span>
+<span class="c1"># 				dispatchable.register(value)</span>
+<span class="c1">#</span>
+<span class="c1"># 				super().__setitem__(key, dispatchable)</span>
+<span class="c1"># 		else:</span>
+<span class="c1"># 			super().__setitem__(key, value)</span>
+
+
+<div class="viewcode-block" id="ExtendedType">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExtendedType</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	An updates meta-class to construct new classes with an extended feature set.</span>
+
+<span class="sd">	.. todo:: META::ExtendedType Needs documentation.</span>
+<span class="sd">	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled</span>
+
+<span class="sd">	Features:</span>
+
+<span class="sd">	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.</span>
+<span class="sd">	* Allow only a single instance to be created (:term:`singleton`).</span>
+<span class="sd">	* Define methods as :term:`abstract &lt;abstract method&gt;` or :term:`must-override &lt;mustoverride method&gt;` and prohibit</span>
+<span class="sd">	  instantiation of :term:`abstract classes &lt;abstract class&gt;`.</span>
+
+<span class="sd">	.. #* Allow method overloading and dispatch overloads based on argument signatures.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># @classmethod</span>
+	<span class="c1"># def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):</span>
+	<span class="c1"># 	return DispatchDictionary()</span>
+
+<div class="viewcode-block" id="ExtendedType.__new__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType.__new__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">className</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span> <span class="n">members</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+							<span class="n">slots</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">mixin</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">singleton</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ExtendedType&quot;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Construct a new class using this :term:`meta-class`.</span>
+
+<span class="sd">		:param className:       The name of the class to construct.</span>
+<span class="sd">		:param baseClasses:     The tuple of :term:`base-classes &lt;base-class&gt;` the class is derived from.</span>
+<span class="sd">		:param members:         The dictionary of members for the constructed class.</span>
+<span class="sd">		:param slots:           If true, store object attributes in :term:`__slots__ &lt;slots&gt;` instead of ``__dict__``.</span>
+<span class="sd">		:param mixin:           If true, make the class a :term:`Mixin-Class`.</span>
+<span class="sd">		                        If false, create slots if ``slots`` is true.</span>
+<span class="sd">		                        If none, preserve behavior of primary base-class.</span>
+<span class="sd">		:param singleton:       If true, make the class a :term:`Singleton`.</span>
+<span class="sd">		:returns:               The new class.</span>
+<span class="sd">		:raises AttributeError: If base-class has no &#39;__slots__&#39; attribute.</span>
+<span class="sd">		:raises AttributeError: If slot already exists in base-class.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATTRIBUTES_MEMBER_NAME</span><span class="p">,</span> <span class="n">AttributeScope</span>
+		<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+			<span class="kn">from</span><span class="w"> </span><span class="nn">Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATTRIBUTES_MEMBER_NAME</span><span class="p">,</span> <span class="n">AttributeScope</span>
+
+		<span class="c1"># Inherit &#39;slots&#39; feature from primary base-class</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">primaryBaseClass</span> <span class="o">=</span> <span class="n">baseClasses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">primaryBaseClass</span><span class="p">,</span> <span class="bp">self</span><span class="p">):</span>
+				<span class="n">slots</span> <span class="o">=</span> <span class="n">primaryBaseClass</span><span class="o">.</span><span class="n">__slotted__</span>
+
+		<span class="c1"># Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.</span>
+		<span class="n">classFields</span><span class="p">,</span> <span class="n">objectFields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_computeSlots</span><span class="p">(</span><span class="n">className</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">,</span> <span class="n">members</span><span class="p">,</span> <span class="n">slots</span><span class="p">,</span> <span class="n">mixin</span><span class="p">)</span>
+
+		<span class="c1"># Compute abstract methods</span>
+		<span class="n">abstractMethods</span><span class="p">,</span> <span class="n">members</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checkForAbstractMethods</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">,</span> <span class="n">members</span><span class="p">)</span>
+
+		<span class="c1"># Create a new class</span>
+		<span class="n">newClass</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">className</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">,</span> <span class="n">members</span><span class="p">)</span>
+
+		<span class="c1"># Apply class fields</span>
+		<span class="k">for</span> <span class="n">fieldName</span><span class="p">,</span> <span class="n">typeAnnotation</span> <span class="ow">in</span> <span class="n">classFields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="nb">setattr</span><span class="p">(</span><span class="n">newClass</span><span class="p">,</span> <span class="n">fieldName</span><span class="p">,</span> <span class="n">typeAnnotation</span><span class="p">)</span>
+
+		<span class="c1"># Search in inheritance tree for abstract methods</span>
+		<span class="n">newClass</span><span class="o">.</span><span class="n">__abstractMethods__</span> <span class="o">=</span> <span class="n">abstractMethods</span>
+		<span class="n">newClass</span><span class="o">.</span><span class="n">__isAbstract__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapNewMethodIfAbstract</span><span class="p">(</span><span class="n">newClass</span><span class="p">)</span>
+		<span class="n">newClass</span><span class="o">.</span><span class="n">__isSingleton__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapNewMethodIfSingleton</span><span class="p">(</span><span class="n">newClass</span><span class="p">,</span> <span class="n">singleton</span><span class="p">)</span>
+
+		<span class="c1"># Check for inherited class attributes</span>
+		<span class="n">attributes</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">newClass</span><span class="p">,</span> <span class="n">ATTRIBUTES_MEMBER_NAME</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ATTRIBUTES_MEMBER_NAME</span><span class="p">):</span>
+				<span class="n">pyAttr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ATTRIBUTES_MEMBER_NAME</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">att</span> <span class="ow">in</span> <span class="n">pyAttr</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">AttributeScope</span><span class="o">.</span><span class="n">Class</span> <span class="ow">in</span> <span class="n">att</span><span class="o">.</span><span class="n">Scope</span><span class="p">:</span>
+						<span class="n">attributes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">att</span><span class="p">)</span>
+						<span class="n">att</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newClass</span><span class="p">)</span>
+
+		<span class="c1"># Check methods for attributes</span>
+		<span class="n">methods</span><span class="p">,</span> <span class="n">methodsWithAttributes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findMethods</span><span class="p">(</span><span class="n">newClass</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">,</span> <span class="n">members</span><span class="p">)</span>
+
+		<span class="c1"># Add new fields for found methods</span>
+		<span class="n">newClass</span><span class="o">.</span><span class="n">__methods__</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span>
+		<span class="n">newClass</span><span class="o">.</span><span class="n">__methodsWithAttributes__</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">methodsWithAttributes</span><span class="p">)</span>
+
+		<span class="c1"># Additional methods on a class</span>
+		<span class="k">def</span><span class="w"> </span><span class="nf">GetMethodsWithAttributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">TAttributeFilter</span><span class="p">[</span><span class="n">TAttr</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">&quot;Attribute&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">			</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">			:param predicate:</span>
+<span class="sd">			:return:</span>
+<span class="sd">			:raises ValueError:</span>
+<span class="sd">			:raises ValueError:</span>
+<span class="sd">			&quot;&quot;&quot;</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="kn">from</span><span class="w"> </span><span class="nn">..Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+			<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="kn">from</span><span class="w"> </span><span class="nn">Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+				<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="k">if</span> <span class="n">predicate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="n">predicate</span> <span class="o">=</span> <span class="n">Attribute</span>
+			<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">predicate</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+				<span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">predicate</span><span class="p">:</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span> <span class="n">Attribute</span><span class="p">):</span>
+						<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;predicate&#39; contains an element which is not a sub-class of &#39;Attribute&#39;.&quot;</span><span class="p">)</span>
+
+				<span class="n">predicate</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">predicate</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">predicate</span><span class="p">,</span> <span class="n">Attribute</span><span class="p">):</span>
+				<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;predicate&#39; is not a sub-class of &#39;Attribute&#39;.&quot;</span><span class="p">)</span>
+
+			<span class="n">methodAttributePairs</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">newClass</span><span class="o">.</span><span class="n">__methodsWithAttributes__</span><span class="p">:</span>
+				<span class="n">matchingAttributes</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">method</span><span class="o">.</span><span class="n">__pyattr__</span><span class="p">:</span>
+					<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span> <span class="n">predicate</span><span class="p">):</span>
+						<span class="n">matchingAttributes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attribute</span><span class="p">)</span>
+
+				<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matchingAttributes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+					<span class="n">methodAttributePairs</span><span class="p">[</span><span class="n">method</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matchingAttributes</span><span class="p">)</span>
+
+			<span class="k">return</span> <span class="n">methodAttributePairs</span>
+
+		<span class="n">newClass</span><span class="o">.</span><span class="n">GetMethodsWithAttributes</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">GetMethodsWithAttributes</span><span class="p">)</span>
+		<span class="n">GetMethodsWithAttributes</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">className</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">GetMethodsWithAttributes</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+
+		<span class="c1"># GetMethods(predicate) -&gt; dict[method, list[attribute]] / generator</span>
+		<span class="c1"># GetClassAtrributes -&gt; list[attributes] / generator</span>
+		<span class="c1"># MethodHasAttributes(predicate) -&gt; bool</span>
+		<span class="c1"># GetAttribute</span>
+
+		<span class="k">return</span> <span class="n">newClass</span></div>
+
+
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_findMethods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newClass</span><span class="p">:</span> <span class="s2">&quot;ExtendedType&quot;</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span> <span class="n">members</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="kn">from</span><span class="w"> </span><span class="nn">..Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+		<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="kn">from</span><span class="w"> </span><span class="nn">Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+			<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+				<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="c1"># Embedded bind function due to circular dependencies.</span>
+		<span class="k">def</span><span class="w"> </span><span class="nf">bind</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">FunctionType</span><span class="p">,</span> <span class="n">methodName</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">methodName</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="n">methodName</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+
+			<span class="n">boundMethod</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">instance</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+			<span class="nb">setattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">methodName</span><span class="p">,</span> <span class="n">boundMethod</span><span class="p">)</span>
+
+			<span class="k">return</span> <span class="n">boundMethod</span>
+
+		<span class="n">methods</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">methodsWithAttributes</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">attributeIndex</span> <span class="o">=</span> <span class="p">{}</span>
+
+		<span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s2">&quot;__methodsWithAttributes__&quot;</span><span class="p">):</span>
+				<span class="n">methodsWithAttributes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">__methodsWithAttributes__</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">memberName</span><span class="p">,</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">):</span>
+				<span class="n">method</span> <span class="o">=</span> <span class="n">newClass</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">memberName</span><span class="p">]</span>
+				<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">&quot;__classobj__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">&quot;__classobj__&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">newClass</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;</span><span class="si">{</span><span class="n">memberName</span><span class="si">}</span><span class="s2">&#39; is used by multiple classes: </span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">__classobj__</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">newClass</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="nb">setattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">&quot;__classobj__&quot;</span><span class="p">,</span> <span class="n">newClass</span><span class="p">)</span>
+
+				<span class="k">def</span><span class="w"> </span><span class="nf">GetAttributes</span><span class="p">(</span><span class="n">inst</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Attribute</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Attribute</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+					<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">inst</span><span class="o">.</span><span class="n">__pyattr__</span><span class="p">:</span>  <span class="c1"># type: Attribute</span>
+							<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span> <span class="n">predicate</span><span class="p">):</span>
+								<span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attribute</span><span class="p">)</span>
+						<span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+					<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+						<span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+
+				<span class="n">method</span><span class="o">.</span><span class="n">GetAttributes</span> <span class="o">=</span> <span class="n">bind</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">GetAttributes</span><span class="p">)</span>
+				<span class="n">methods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+
+				<span class="c1"># print(f&quot;  convert function: &#39;{memberName}&#39; to method&quot;)</span>
+				<span class="c1"># print(f&quot;    {member}&quot;)</span>
+				<span class="k">if</span> <span class="s2">&quot;__pyattr__&quot;</span> <span class="ow">in</span> <span class="n">member</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+					<span class="n">attributes</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">__pyattr__</span>           <span class="c1"># type: List[Attribute]</span>
+					<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributes</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+						<span class="n">methodsWithAttributes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+						<span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">attributes</span><span class="p">:</span>
+							<span class="n">attribute</span><span class="o">.</span><span class="n">_functions</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+							<span class="n">attribute</span><span class="o">.</span><span class="n">_methods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+
+							<span class="c1"># print(f&quot;    attributes: {attribute.__class__.__name__}&quot;)</span>
+							<span class="k">if</span> <span class="n">attribute</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attributeIndex</span><span class="p">:</span>
+								<span class="n">attributeIndex</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">member</span><span class="p">]</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">attributeIndex</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+				<span class="c1"># else:</span>
+				<span class="c1"># 	print(f&quot;    But has no attributes.&quot;)</span>
+			<span class="c1"># else:</span>
+			<span class="c1"># 	print(f&quot;  ??        {memberName}&quot;)</span>
+		<span class="k">return</span> <span class="n">methods</span><span class="p">,</span> <span class="n">methodsWithAttributes</span>
+
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_computeSlots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">className</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">,</span> <span class="n">members</span><span class="p">,</span> <span class="n">slots</span><span class="p">,</span> <span class="n">mixin</span><span class="p">):</span>
+		<span class="c1"># Compute which field are listed in __slots__ and which need to be initialized in an instance or class.</span>
+		<span class="n">slottedFields</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">objectFields</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="n">classFields</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">if</span> <span class="n">slots</span> <span class="ow">or</span> <span class="n">mixin</span><span class="p">:</span>
+			<span class="c1"># If slots are used, all base classes must use __slots__.</span>
+			<span class="k">for</span> <span class="n">baseClass</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterateBaseClasses</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">):</span>
+				<span class="c1"># Exclude object as a special case</span>
+				<span class="k">if</span> <span class="n">baseClass</span> <span class="ow">is</span> <span class="nb">object</span> <span class="ow">or</span> <span class="n">baseClass</span> <span class="ow">is</span> <span class="n">Generic</span><span class="p">:</span>
+					<span class="k">continue</span>
+
+				<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="s2">&quot;__slots__&quot;</span><span class="p">):</span>
+					<span class="n">ex</span> <span class="o">=</span> <span class="n">BaseClassWithoutSlotsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Base-classes &#39;</span><span class="si">{</span><span class="n">baseClass</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; doesn&#39;t use &#39;__slots__&#39;.&quot;</span><span class="p">)</span>
+					<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All base-classes of a class using &#39;__slots__&#39; must use &#39;__slots__&#39; itself.&quot;</span><span class="p">)</span>
+					<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="c1"># FIXME: should have a check for non-empty slots on secondary base-classes too</span>
+
+			<span class="c1"># Copy all field names from primary base-class&#39; __slots__, which are later needed for error checking.</span>
+			<span class="n">inheritedSlottedFields</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mro</span><span class="p">()):</span>
+					<span class="c1"># Exclude object as a special case</span>
+					<span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="nb">object</span> <span class="ow">or</span> <span class="n">base</span> <span class="ow">is</span> <span class="n">Generic</span><span class="p">:</span>
+						<span class="k">continue</span>
+
+					<span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">base</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">:</span>
+						<span class="n">inheritedSlottedFields</span><span class="p">[</span><span class="n">annotation</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span>
+
+			<span class="c1"># When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.</span>
+			<span class="k">if</span> <span class="s2">&quot;__annotations__&quot;</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+				<span class="c1"># WORKAROUND: LEGACY SUPPORT Python &lt;= 3.13</span>
+				<span class="c1">#   Accessing annotations was changed in Python 3.14.</span>
+				<span class="c1">#   The necessary &#39;annotationlib&#39; is not available for older Python versions.</span>
+				<span class="n">annotations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">members</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__annotations__&quot;</span><span class="p">,</span> <span class="p">{})</span>
+			<span class="k">elif</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">annotate</span> <span class="o">:=</span> <span class="n">members</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__annotate_func__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="kn">from</span><span class="w"> </span><span class="nn">annotationlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Format</span>
+				<span class="n">annotations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotate</span><span class="p">(</span><span class="n">Format</span><span class="o">.</span><span class="n">VALUE</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">annotations</span> <span class="o">=</span> <span class="p">{}</span>
+
+			<span class="k">for</span> <span class="n">fieldName</span><span class="p">,</span> <span class="n">typeAnnotation</span> <span class="ow">in</span> <span class="n">annotations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="k">if</span> <span class="n">fieldName</span> <span class="ow">in</span> <span class="n">inheritedSlottedFields</span><span class="p">:</span>
+					<span class="bp">cls</span> <span class="o">=</span> <span class="n">inheritedSlottedFields</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+					<span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Slot &#39;</span><span class="si">{</span><span class="n">fieldName</span><span class="si">}</span><span class="s2">&#39; already exists in base-class &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+				<span class="c1"># If annotated field is a ClassVar, and it has an initial value</span>
+				<span class="c1"># * copy field and initial value to classFields dictionary</span>
+				<span class="c1"># * remove field from members</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typeAnnotation</span><span class="p">,</span> <span class="n">_GenericAlias</span><span class="p">)</span> <span class="ow">and</span> <span class="n">typeAnnotation</span><span class="o">.</span><span class="n">__origin__</span> <span class="ow">is</span> <span class="n">ClassVar</span> <span class="ow">and</span> <span class="n">fieldName</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+					<span class="n">classFields</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span> <span class="o">=</span> <span class="n">members</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+					<span class="k">del</span> <span class="n">members</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+
+				<span class="c1"># If an annotated field has an initial value</span>
+				<span class="c1"># * copy field and initial value to objectFields dictionary</span>
+				<span class="c1"># * remove field from members</span>
+				<span class="k">elif</span> <span class="n">fieldName</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+					<span class="n">slottedFields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fieldName</span><span class="p">)</span>
+					<span class="n">objectFields</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span> <span class="o">=</span> <span class="n">members</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+					<span class="k">del</span> <span class="n">members</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">slottedFields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fieldName</span><span class="p">)</span>
+
+			<span class="n">mixinSlots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregateMixinSlots</span><span class="p">(</span><span class="n">className</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c1"># When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.</span>
+			<span class="n">annotations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">members</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__annotations__&quot;</span><span class="p">,</span> <span class="p">{})</span>
+			<span class="k">for</span> <span class="n">fieldName</span><span class="p">,</span> <span class="n">typeAnnotation</span> <span class="ow">in</span> <span class="n">annotations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="c1"># If annotated field is a ClassVar, and it has an initial value</span>
+				<span class="c1"># * copy field and initial value to classFields dictionary</span>
+				<span class="c1"># * remove field from members</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typeAnnotation</span><span class="p">,</span> <span class="n">_GenericAlias</span><span class="p">)</span> <span class="ow">and</span> <span class="n">typeAnnotation</span><span class="o">.</span><span class="n">__origin__</span> <span class="ow">is</span> <span class="n">ClassVar</span> <span class="ow">and</span> <span class="n">fieldName</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+					<span class="n">classFields</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span> <span class="o">=</span> <span class="n">members</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+					<span class="k">del</span> <span class="n">members</span><span class="p">[</span><span class="n">fieldName</span><span class="p">]</span>
+
+		<span class="c1"># FIXME: search for fields without annotation</span>
+		<span class="k">if</span> <span class="n">mixin</span><span class="p">:</span>
+			<span class="n">mixinSlots</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">slottedFields</span><span class="p">)</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__slotted__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__slots__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__isMixin__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__mixinSlots__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">mixinSlots</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">slots</span><span class="p">:</span>
+			<span class="n">slottedFields</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">mixinSlots</span><span class="p">)</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__slotted__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__slots__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slottedFields</span><span class="p">)</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__isMixin__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__mixinSlots__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__slotted__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+			<span class="c1"># NO     __slots__</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__isMixin__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+			<span class="n">members</span><span class="p">[</span><span class="s2">&quot;__mixinSlots__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+		<span class="k">return</span> <span class="n">classFields</span><span class="p">,</span> <span class="n">objectFields</span>
+
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_aggregateMixinSlots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">className</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">):</span>
+		<span class="n">mixinSlots</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="c1"># If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance</span>
+			<span class="c1"># paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.</span>
+			<span class="n">inheritancePaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterateBaseClassPaths</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">)]</span>
+			<span class="n">primaryInharitancePath</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">inheritancePaths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+			<span class="k">for</span> <span class="n">typePath</span> <span class="ow">in</span> <span class="n">inheritancePaths</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+				<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">typePath</span><span class="p">:</span>
+					<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;__slots__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">primaryInharitancePath</span><span class="p">:</span>
+						<span class="n">ex</span> <span class="o">=</span> <span class="n">BaseClassWithNonEmptySlotsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Base-class &#39;</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; has non-empty __slots__ and can&#39;t be used as a direct or indirect base-class for &#39;</span><span class="si">{</span><span class="n">className</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+						<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;In Python, only one inheritance branch can use non-empty __slots__.&quot;</span><span class="p">)</span>
+						<span class="c1"># ex.add_note(f&quot;With ExtendedType, only the primary base-class can use non-empty __slots__.&quot;)</span>
+						<span class="c1"># ex.add_note(f&quot;Secondary base-classes should be marked as mixin-classes.&quot;)</span>
+						<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="c1"># If current class is set to be a mixin, then aggregate all mixinSlots in a list.</span>
+			<span class="c1">#   Ensure all base-classes are either constructed</span>
+			<span class="c1">#     * by meta-class ExtendedType, or</span>
+			<span class="c1">#     * use no slots, or</span>
+			<span class="c1">#     * are typing.Generic</span>
+			<span class="c1">#   If it was constructed by ExtendedType, then ensure this class itself is a mixin-class.</span>
+			<span class="k">for</span> <span class="n">baseClass</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>  <span class="c1"># type: ExtendedType</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="n">_GenericAlias</span><span class="p">)</span> <span class="ow">and</span> <span class="n">baseClass</span><span class="o">.</span><span class="n">__origin__</span> <span class="ow">is</span> <span class="n">Generic</span><span class="p">:</span>
+					<span class="k">pass</span>
+				<span class="k">elif</span> <span class="n">baseClass</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">is</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">baseClass</span><span class="o">.</span><span class="n">__isMixin__</span><span class="p">:</span>
+					<span class="n">mixinSlots</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">baseClass</span><span class="o">.</span><span class="n">__mixinSlots__</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="s2">&quot;__mixinSlots__&quot;</span><span class="p">):</span>
+					<span class="n">mixinSlots</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">baseClass</span><span class="o">.</span><span class="n">__mixinSlots__</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">mixinSlots</span>
+
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_iterateBaseClasses</span><span class="p">(</span><span class="n">metacls</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="n">visited</span><span class="p">:</span>       <span class="n">Set</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span>            <span class="nb">set</span><span class="p">()</span>
+		<span class="n">iteratorStack</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+		<span class="k">for</span> <span class="n">baseClass</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="n">baseClass</span>
+			<span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">baseClass</span><span class="p">)</span>
+			<span class="n">iteratorStack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">baseClass</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">))</span>
+
+			<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">base</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iteratorStack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># type: type</span>
+					<span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+						<span class="k">yield</span> <span class="n">base</span>
+						<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+							<span class="n">iteratorStack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">))</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">continue</span>
+
+				<span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+					<span class="n">iteratorStack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+					<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">iteratorStack</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+						<span class="k">break</span>
+
+<div class="viewcode-block" id="ExtendedType._iterateBaseClassPaths">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType._iterateBaseClassPaths">[docs]</a>
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_iterateBaseClassPaths</span><span class="p">(</span><span class="n">metacls</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a generator to iterate all possible inheritance paths for a given list of base-classes.</span>
+
+<span class="sd">		An inheritance path is expressed as a tuple of base-classes from current base-class (left-most item) to</span>
+<span class="sd">		:class:`object` (right-most item).</span>
+
+<span class="sd">		:param baseClasses: List (tuple) of base-classes.</span>
+<span class="sd">		:returns:           Generator to iterate all inheritance paths. An inheritance path is a tuple of types (base-classes).</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseClasses</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="n">typeStack</span><span class="p">:</span>   <span class="n">List</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span>           <span class="nb">list</span><span class="p">()</span>
+		<span class="n">iteratorStack</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+		<span class="k">for</span> <span class="n">baseClass</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>
+			<span class="n">typeStack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">baseClass</span><span class="p">)</span>
+			<span class="n">iteratorStack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">baseClass</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">))</span>
+
+			<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">base</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iteratorStack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># type: type</span>
+					<span class="n">typeStack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+					<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+						<span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">typeStack</span><span class="p">)</span>
+						<span class="n">typeStack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">iteratorStack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">))</span>
+
+				<span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+					<span class="n">typeStack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+					<span class="n">iteratorStack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+					<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">typeStack</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+						<span class="k">break</span></div>
+
+
+<div class="viewcode-block" id="ExtendedType._checkForAbstractMethods">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType._checkForAbstractMethods">[docs]</a>
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_checkForAbstractMethods</span><span class="p">(</span><span class="n">metacls</span><span class="p">,</span> <span class="n">baseClasses</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span> <span class="n">members</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Check if the current class contains abstract methods and return a tuple of them.</span>
+
+<span class="sd">		These abstract methods might be inherited from any base-class. If there are inherited abstract methods, check if</span>
+<span class="sd">		they are now implemented (overridden) by the current class that&#39;s right now constructed.</span>
+
+<span class="sd">		:param baseClasses: The tuple of :term:`base-classes &lt;base-class&gt;` the class is derived from.</span>
+<span class="sd">		:param members:     The dictionary of members for the constructed class.</span>
+<span class="sd">		:returns:           A tuple of abstract method&#39;s names.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">abstractMethods</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">if</span> <span class="n">baseClasses</span><span class="p">:</span>
+			<span class="c1"># Aggregate all abstract methods from all base-classes.</span>
+			<span class="k">for</span> <span class="n">baseClass</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="s2">&quot;__abstractMethods__&quot;</span><span class="p">):</span>
+					<span class="n">abstractMethods</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">baseClass</span><span class="o">.</span><span class="n">__abstractMethods__</span><span class="p">)</span>
+
+			<span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">baseClasses</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">base</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+					<span class="k">if</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">abstractMethods</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">)</span> <span class="ow">and</span>
+						<span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;__abstract__&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;__mustOverride__&quot;</span><span class="p">))):</span>
+						<span class="k">def</span><span class="w"> </span><span class="nf">outer</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+							<span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+							<span class="k">def</span><span class="w"> </span><span class="nf">inner</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+								<span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+							<span class="k">return</span> <span class="n">inner</span>
+
+						<span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+		<span class="c1"># Check if methods are marked:</span>
+		<span class="c1"># * If so, add them to list of abstract methods</span>
+		<span class="c1"># * If not, method is now implemented and removed from list</span>
+		<span class="k">for</span> <span class="n">memberName</span><span class="p">,</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">member</span><span class="p">):</span>
+				<span class="k">if</span> <span class="p">((</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="s2">&quot;__abstract__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">member</span><span class="o">.</span><span class="n">__abstract__</span><span class="p">)</span> <span class="ow">or</span>
+						<span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="s2">&quot;__mustOverride__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">member</span><span class="o">.</span><span class="n">__mustOverride__</span><span class="p">)):</span>
+					<span class="n">abstractMethods</span><span class="p">[</span><span class="n">memberName</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span>
+				<span class="k">elif</span> <span class="n">memberName</span> <span class="ow">in</span> <span class="n">abstractMethods</span><span class="p">:</span>
+					<span class="k">del</span> <span class="n">abstractMethods</span><span class="p">[</span><span class="n">memberName</span><span class="p">]</span>
+
+		<span class="k">return</span> <span class="n">abstractMethods</span><span class="p">,</span> <span class="n">members</span></div>
+
+
+<div class="viewcode-block" id="ExtendedType._wrapNewMethodIfSingleton">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType._wrapNewMethodIfSingleton">[docs]</a>
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_wrapNewMethodIfSingleton</span><span class="p">(</span><span class="n">metacls</span><span class="p">,</span> <span class="n">newClass</span><span class="p">,</span> <span class="n">singleton</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		If a class is a singleton, wrap the ``_new__`` method, so it returns a cached object, if a first object was created.</span>
+
+<span class="sd">		Only the first object creation initializes the object.</span>
+
+<span class="sd">		This implementation is threadsafe.</span>
+
+<span class="sd">		:param newClass:  The newly constructed class for further modifications.</span>
+<span class="sd">		:param singleton: If ``True``, the class allows only a single instance to exist.</span>
+<span class="sd">		:returns:         ``True``, if the class is a singleton.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">newClass</span><span class="p">,</span> <span class="s2">&quot;__isSingleton__&quot;</span><span class="p">):</span>
+			<span class="n">singleton</span> <span class="o">=</span> <span class="n">newClass</span><span class="o">.</span><span class="n">__isSingleton__</span>
+
+		<span class="k">if</span> <span class="n">singleton</span><span class="p">:</span>
+			<span class="n">oldnew</span> <span class="o">=</span> <span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">oldnew</span><span class="p">,</span> <span class="s2">&quot;__singleton_wrapper__&quot;</span><span class="p">):</span>
+				<span class="n">oldnew</span> <span class="o">=</span> <span class="n">oldnew</span><span class="o">.</span><span class="n">__wrapped__</span>
+
+			<span class="n">oldinit</span> <span class="o">=</span> <span class="n">newClass</span><span class="o">.</span><span class="fm">__init__</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">oldinit</span><span class="p">,</span> <span class="s2">&quot;__singleton_wrapper__&quot;</span><span class="p">):</span>
+				<span class="n">oldinit</span> <span class="o">=</span> <span class="n">oldinit</span><span class="o">.</span><span class="n">__wrapped__</span>
+
+			<span class="nd">@wraps</span><span class="p">(</span><span class="n">oldnew</span><span class="p">)</span>
+			<span class="k">def</span><span class="w"> </span><span class="nf">singleton_new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+				<span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceCond__</span><span class="p">:</span>
+					<span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceCache__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+						<span class="n">obj</span> <span class="o">=</span> <span class="n">oldnew</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+						<span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceCache__</span> <span class="o">=</span> <span class="n">obj</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceCache__</span>
+
+				<span class="k">return</span> <span class="n">obj</span>
+
+			<span class="nd">@wraps</span><span class="p">(</span><span class="n">oldinit</span><span class="p">)</span>
+			<span class="k">def</span><span class="w"> </span><span class="nf">singleton_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+				<span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+				<span class="n">cv</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceCond__</span>
+				<span class="k">with</span> <span class="n">cv</span><span class="p">:</span>
+					<span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceInit__</span><span class="p">:</span>
+						<span class="n">oldinit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+						<span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceInit__</span> <span class="o">=</span> <span class="kc">False</span>
+						<span class="n">cv</span><span class="o">.</span><span class="n">notify_all</span><span class="p">()</span>
+					<span class="k">elif</span> <span class="n">args</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">:</span>
+						<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A further instance of a singleton can&#39;t be reinitialized with parameters.&quot;</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">while</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__singletonInstanceInit__</span><span class="p">:</span>
+							<span class="n">cv</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+			<span class="n">singleton_new</span><span class="o">.</span><span class="n">__singleton_wrapper__</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">singleton_init</span><span class="o">.</span><span class="n">__singleton_wrapper__</span> <span class="o">=</span> <span class="kc">True</span>
+
+			<span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span> <span class="o">=</span> <span class="n">singleton_new</span>
+			<span class="n">newClass</span><span class="o">.</span><span class="fm">__init__</span> <span class="o">=</span> <span class="n">singleton_init</span>
+			<span class="n">newClass</span><span class="o">.</span><span class="n">__singletonInstanceCond__</span> <span class="o">=</span> <span class="n">Condition</span><span class="p">()</span>
+			<span class="n">newClass</span><span class="o">.</span><span class="n">__singletonInstanceInit__</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">newClass</span><span class="o">.</span><span class="n">__singletonInstanceCache__</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="k">return</span> <span class="kc">True</span>
+
+		<span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ExtendedType._wrapNewMethodIfAbstract">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType._wrapNewMethodIfAbstract">[docs]</a>
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">_wrapNewMethodIfAbstract</span><span class="p">(</span><span class="n">metacls</span><span class="p">,</span> <span class="n">newClass</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.</span>
+
+<span class="sd">		:param newClass:            The newly constructed class for further modifications.</span>
+<span class="sd">		:returns:                   ``True``, if the class is abstract.</span>
+<span class="sd">		:raises AbstractClassError: If the class is abstract and can&#39;t be instantiated.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Replace &#39;__new__&#39; by a variant to throw an error on not overridden methods</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">newClass</span><span class="o">.</span><span class="n">__abstractMethods__</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">oldnew</span> <span class="o">=</span> <span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">oldnew</span><span class="p">,</span> <span class="s2">&quot;__raises_abstract_class_error__&quot;</span><span class="p">):</span>
+				<span class="n">oldnew</span> <span class="o">=</span> <span class="n">oldnew</span><span class="o">.</span><span class="n">__wrapped__</span>
+
+			<span class="nd">@wraps</span><span class="p">(</span><span class="n">oldnew</span><span class="p">)</span>
+			<span class="k">def</span><span class="w"> </span><span class="nf">abstract_new</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
+				<span class="k">raise</span> <span class="n">AbstractClassError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;Class &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; is abstract. The following methods: &#39;</span><span class="si">{</span><span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">newClass</span><span class="o">.</span><span class="n">__abstractMethods__</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39; need to be overridden in a derived class.&quot;&quot;&quot;</span><span class="p">)</span>
+
+			<span class="n">abstract_new</span><span class="o">.</span><span class="n">__raises_abstract_class_error__</span> <span class="o">=</span> <span class="kc">True</span>
+
+			<span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span> <span class="o">=</span> <span class="n">abstract_new</span>
+			<span class="k">return</span> <span class="kc">True</span>
+
+		<span class="c1"># Handle classes which are not abstract, especially derived classes, if not abstract anymore</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c1"># skip intermediate &#39;new&#39; function if class isn&#39;t abstract anymore</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span><span class="o">.</span><span class="n">__raises_abstract_class_error__</span><span class="p">:</span>
+					<span class="n">origNew</span> <span class="o">=</span> <span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span><span class="o">.</span><span class="n">__wrapped__</span>
+
+					<span class="c1"># WORKAROUND: __new__ checks tp_new and implements different behavior</span>
+					<span class="c1">#  Bugreport: https://github.com/python/cpython/issues/105888</span>
+					<span class="k">if</span> <span class="n">origNew</span> <span class="ow">is</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">:</span>
+						<span class="nd">@wraps</span><span class="p">(</span><span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">)</span>
+						<span class="k">def</span><span class="w"> </span><span class="nf">wrapped_new</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
+							<span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+
+						<span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span> <span class="o">=</span> <span class="n">wrapped_new</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span> <span class="o">=</span> <span class="n">origNew</span>
+				<span class="k">elif</span> <span class="n">newClass</span><span class="o">.</span><span class="fm">__new__</span><span class="o">.</span><span class="n">__isSingleton__</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.&quot;</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+				<span class="c1"># WORKAROUND:</span>
+				<span class="c1">#   AttributeError.name was added in Python 3.10. For version &lt;3.10 use a string contains operation.</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">ex</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;__raises_abstract_class_error__&quot;</span><span class="p">:</span>
+						<span class="k">raise</span> <span class="n">ex</span>
+				<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+					<span class="k">if</span> <span class="s2">&quot;__raises_abstract_class_error__&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">):</span>
+						<span class="k">raise</span> <span class="n">ex</span>
+
+			<span class="k">return</span> <span class="kc">False</span></div>
+
+
+	<span class="c1"># Additional properties and methods on a class</span>
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">HasClassAttributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to check if the class has Attributes (:attr:`__pyattr__`).</span>
+
+<span class="sd">		:returns: ``True``, if the class has Attributes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__pyattr__</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">HasMethodAttributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to check if the class has methods with Attributes (:attr:`__methodsWithAttributes__`).</span>
+
+<span class="sd">		:returns: ``True``, if the class has any method with Attributes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__methodsWithAttributes__</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="SlottedObject">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.SlottedObject">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlottedObject</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Classes derived from this class will store all members in ``__slots__``.&quot;&quot;&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

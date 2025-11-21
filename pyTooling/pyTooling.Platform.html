@@ -1,0 +1,1252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Platform &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.StateMachine" href="pyTooling.StateMachine.html" />
+    <link rel="prev" title="pyTooling.Packaging" href="pyTooling.Packaging.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Platform</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.CurrentPlatform"><code class="docutils literal notranslate"><span class="pre">CurrentPlatform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.PlatformException"><code class="docutils literal notranslate"><span class="pre">PlatformException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PlatformException.__new__"><code class="docutils literal notranslate"><span class="pre">PlatformException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PlatformException.__init__"><code class="docutils literal notranslate"><span class="pre">PlatformException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.UnknownPlatformException"><code class="docutils literal notranslate"><span class="pre">UnknownPlatformException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.UnknownPlatformException.__init__"><code class="docutils literal notranslate"><span class="pre">UnknownPlatformException.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.UnknownPlatformException.__new__"><code class="docutils literal notranslate"><span class="pre">UnknownPlatformException.__new__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException"><code class="docutils literal notranslate"><span class="pre">UnknownOperatingSystemException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException.__new__"><code class="docutils literal notranslate"><span class="pre">UnknownOperatingSystemException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException.__init__"><code class="docutils literal notranslate"><span class="pre">UnknownOperatingSystemException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation"><code class="docutils literal notranslate"><span class="pre">PythonImplementation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.Unknown"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.Unknown</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.CPython"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.CPython</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.PyPy"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.PyPy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.__contains__"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.__contains__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.__getitem__"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.__iter__"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.__iter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.PythonImplementation.__len__"><code class="docutils literal notranslate"><span class="pre">PythonImplementation.__len__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.Platforms"><code class="docutils literal notranslate"><span class="pre">Platforms</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.OS_FreeBSD"><code class="docutils literal notranslate"><span class="pre">Platforms.OS_FreeBSD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.OS_Linux"><code class="docutils literal notranslate"><span class="pre">Platforms.OS_Linux</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.OS_MacOS"><code class="docutils literal notranslate"><span class="pre">Platforms.OS_MacOS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.OS_Windows"><code class="docutils literal notranslate"><span class="pre">Platforms.OS_Windows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.OperatingSystem"><code class="docutils literal notranslate"><span class="pre">Platforms.OperatingSystem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.SEP_WindowsPath"><code class="docutils literal notranslate"><span class="pre">Platforms.SEP_WindowsPath</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.SEP_WindowsValue"><code class="docutils literal notranslate"><span class="pre">Platforms.SEP_WindowsValue</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ENV_Native"><code class="docutils literal notranslate"><span class="pre">Platforms.ENV_Native</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ENV_WSL"><code class="docutils literal notranslate"><span class="pre">Platforms.ENV_WSL</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ENV_MSYS2"><code class="docutils literal notranslate"><span class="pre">Platforms.ENV_MSYS2</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ENV_Cygwin"><code class="docutils literal notranslate"><span class="pre">Platforms.ENV_Cygwin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Environment"><code class="docutils literal notranslate"><span class="pre">Platforms.Environment</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ARCH_x86_32"><code class="docutils literal notranslate"><span class="pre">Platforms.ARCH_x86_32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ARCH_x86_64"><code class="docutils literal notranslate"><span class="pre">Platforms.ARCH_x86_64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.ARCH_AArch64"><code class="docutils literal notranslate"><span class="pre">Platforms.ARCH_AArch64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Arch_x86"><code class="docutils literal notranslate"><span class="pre">Platforms.Arch_x86</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Arch_Arm"><code class="docutils literal notranslate"><span class="pre">Platforms.Arch_Arm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Architecture"><code class="docutils literal notranslate"><span class="pre">Platforms.Architecture</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.FreeBSD"><code class="docutils literal notranslate"><span class="pre">Platforms.FreeBSD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Linux"><code class="docutils literal notranslate"><span class="pre">Platforms.Linux</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MacOS"><code class="docutils literal notranslate"><span class="pre">Platforms.MacOS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Linux_x86_64"><code class="docutils literal notranslate"><span class="pre">Platforms.Linux_x86_64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Linux_AArch64"><code class="docutils literal notranslate"><span class="pre">Platforms.Linux_AArch64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MacOS_Intel"><code class="docutils literal notranslate"><span class="pre">Platforms.MacOS_Intel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MacOS_ARM"><code class="docutils literal notranslate"><span class="pre">Platforms.MacOS_ARM</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_x86_64"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_x86_64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_AArch64"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_AArch64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MSYS"><code class="docutils literal notranslate"><span class="pre">Platforms.MSYS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MinGW32"><code class="docutils literal notranslate"><span class="pre">Platforms.MinGW32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MinGW64"><code class="docutils literal notranslate"><span class="pre">Platforms.MinGW64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.UCRT64"><code class="docutils literal notranslate"><span class="pre">Platforms.UCRT64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Clang32"><code class="docutils literal notranslate"><span class="pre">Platforms.Clang32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Clang64"><code class="docutils literal notranslate"><span class="pre">Platforms.Clang64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.MSYS2_Runtime"><code class="docutils literal notranslate"><span class="pre">Platforms.MSYS2_Runtime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_MSYS2_MSYS"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_MSYS2_MSYS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_MSYS2_MinGW32"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_MSYS2_MinGW32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_MSYS2_MinGW64"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_MSYS2_MinGW64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_MSYS2_UCRT64"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_MSYS2_UCRT64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_MSYS2_Clang32"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_MSYS2_Clang32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_MSYS2_Clang64"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_MSYS2_Clang64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_Cygwin32"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_Cygwin32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.Windows_Cygwin64"><code class="docutils literal notranslate"><span class="pre">Platforms.Windows_Cygwin64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms._generate_next_value_"><code class="docutils literal notranslate"><span class="pre">Platforms._generate_next_value_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms._numeric_repr_"><code class="docutils literal notranslate"><span class="pre">Platforms._numeric_repr_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms._iter_member_by_value_"><code class="docutils literal notranslate"><span class="pre">Platforms._iter_member_by_value_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms._iter_member_"><code class="docutils literal notranslate"><span class="pre">Platforms._iter_member_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms._iter_member_by_def_"><code class="docutils literal notranslate"><span class="pre">Platforms._iter_member_by_def_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms._missing_"><code class="docutils literal notranslate"><span class="pre">Platforms._missing_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__contains__"><code class="docutils literal notranslate"><span class="pre">Platforms.__contains__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__iter__"><code class="docutils literal notranslate"><span class="pre">Platforms.__iter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__len__"><code class="docutils literal notranslate"><span class="pre">Platforms.__len__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__repr__"><code class="docutils literal notranslate"><span class="pre">Platforms.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__str__"><code class="docutils literal notranslate"><span class="pre">Platforms.__str__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__bool__"><code class="docutils literal notranslate"><span class="pre">Platforms.__bool__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__or__"><code class="docutils literal notranslate"><span class="pre">Platforms.__or__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__ror__"><code class="docutils literal notranslate"><span class="pre">Platforms.__ror__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__new__"><code class="docutils literal notranslate"><span class="pre">Platforms.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platforms.__getitem__"><code class="docutils literal notranslate"><span class="pre">Platforms.__getitem__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Platform.Platform"><code class="docutils literal notranslate"><span class="pre">Platform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.__init__"><code class="docutils literal notranslate"><span class="pre">Platform.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.PythonImplementation"><code class="docutils literal notranslate"><span class="pre">Platform.PythonImplementation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsCPython"><code class="docutils literal notranslate"><span class="pre">Platform.IsCPython</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsPyPy"><code class="docutils literal notranslate"><span class="pre">Platform.IsPyPy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.PythonVersion"><code class="docutils literal notranslate"><span class="pre">Platform.PythonVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsNativePlatform"><code class="docutils literal notranslate"><span class="pre">Platform.IsNativePlatform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsNativeFreeBSD"><code class="docutils literal notranslate"><span class="pre">Platform.IsNativeFreeBSD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsNativeMacOS"><code class="docutils literal notranslate"><span class="pre">Platform.IsNativeMacOS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsNativeLinux"><code class="docutils literal notranslate"><span class="pre">Platform.IsNativeLinux</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsNativeWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsNativeWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsMSYS2Environment"><code class="docutils literal notranslate"><span class="pre">Platform.IsMSYS2Environment</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsMSYSOnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsMSYSOnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsMinGW32OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsMinGW32OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsMinGW64OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsMinGW64OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsUCRT64OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsUCRT64OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsClang32OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsClang32OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsClang64OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsClang64OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsCygwin32OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsCygwin32OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsCygwin64OnWindows"><code class="docutils literal notranslate"><span class="pre">Platform.IsCygwin64OnWindows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.IsPOSIX"><code class="docutils literal notranslate"><span class="pre">Platform.IsPOSIX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.PathSeperator"><code class="docutils literal notranslate"><span class="pre">Platform.PathSeperator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.ValueSeperator"><code class="docutils literal notranslate"><span class="pre">Platform.ValueSeperator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.ExecutableExtension"><code class="docutils literal notranslate"><span class="pre">Platform.ExecutableExtension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.StaticLibraryExtension"><code class="docutils literal notranslate"><span class="pre">Platform.StaticLibraryExtension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.DynamicLibraryExtension"><code class="docutils literal notranslate"><span class="pre">Platform.DynamicLibraryExtension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.__repr__"><code class="docutils literal notranslate"><span class="pre">Platform.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Platform.Platform.__str__"><code class="docutils literal notranslate"><span class="pre">Platform.__str__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Platform</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Platform.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Platform">
+<span id="pytooling-platform"></span><h1>pyTooling.Platform<a class="headerlink" href="#module-pyTooling.Platform" title="Link to this heading"></a></h1>
+<p>Common platform information gathered from various sources.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Common/Platform.html#common-platform"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Platform.CurrentPlatform" title="pyTooling.Platform.CurrentPlatform"><code class="xref py py-data docutils literal notranslate"><span class="pre">CurrentPlatform</span></code></a></p></li>
+</ul>
+<p><strong>Exceptions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Platform.PlatformException" title="pyTooling.Platform.PlatformException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">PlatformException</span></code></a>:
+Base-exception of all exceptions raised by <a class="reference internal" href="#module-pyTooling.Platform" title="pyTooling.Platform"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Platform</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Platform.UnknownPlatformException" title="pyTooling.Platform.UnknownPlatformException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnknownPlatformException</span></code></a>:
+The exception is raised by pyTooling.Platform when the platform can’t be determined.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException" title="pyTooling.Platform.UnknownOperatingSystemException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnknownOperatingSystemException</span></code></a>:
+The exception is raised by pyTooling.Platform when the operating system is unknown.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Platform.PythonImplementation" title="pyTooling.Platform.PythonImplementation"><code class="xref py py-class docutils literal notranslate"><span class="pre">PythonImplementation</span></code></a>:
+An enumeration describing the Python implementation (CPython, PyPy, …).</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Platform.Platforms" title="pyTooling.Platform.Platforms"><code class="xref py py-class docutils literal notranslate"><span class="pre">Platforms</span></code></a>:
+A flag describing on which platform Python is running on and/or in which environment it’s running in.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Platform.Platform" title="pyTooling.Platform.Platform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Platform</span></code></a>:
+An instance of this class contains all gathered information available from various sources.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Variables</strong></p>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Platform.CurrentPlatform">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">CurrentPlatform</span></span><a class="headerlink" href="#pyTooling.Platform.CurrentPlatform" title="Link to this definition"></a></dt>
+<dd><p>Gathered information for the current platform.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Platforms.Linux_x86_64
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Exceptions</strong></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Platform.PlatformException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">PlatformException</span></span><a class="reference internal" href="../_modules/pyTooling/Platform.html#PlatformException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.PlatformException" title="Link to this definition"></a></dt>
+<dd><p>Base-exception of all exceptions raised by <a class="reference internal" href="#module-pyTooling.Platform" title="pyTooling.Platform"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Platform</span></code></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-5bccd802b01ad7130144b2ec21477bf439b8da8a.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of PlatformException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.PlatformException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.PlatformException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.PlatformException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.PlatformException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Platform.UnknownPlatformException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">UnknownPlatformException</span></span><a class="reference internal" href="../_modules/pyTooling/Platform.html#UnknownPlatformException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.UnknownPlatformException" title="Link to this definition"></a></dt>
+<dd><p>The exception is raised by pyTooling.Platform when the platform can’t be determined.</p>
+<p>For debugging purposes, a list of system properties from various APIs is added as notes to this exception to ease
+debugging unknown or new platforms.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-f82f114f72368734b89e9d020007b319b7b8f9e2.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of UnknownPlatformException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.UnknownPlatformException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Platform.html#UnknownPlatformException.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.UnknownPlatformException.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize a new <a class="reference internal" href="#pyTooling.Platform.UnknownPlatformException" title="pyTooling.Platform.UnknownPlatformException"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnknownPlatformException</span></code></a> instance and add notes with further debugging information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – Forward positional parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.UnknownPlatformException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.UnknownPlatformException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.Platform.UnknownOperatingSystemException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">UnknownOperatingSystemException</span></span><a class="reference internal" href="../_modules/pyTooling/Platform.html#UnknownOperatingSystemException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.UnknownOperatingSystemException" title="Link to this definition"></a></dt>
+<dd><p>The exception is raised by pyTooling.Platform when the operating system is unknown.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-e01c1ba4bc5017fa2ed61ead0942159ea46c5808.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of UnknownOperatingSystemException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.UnknownOperatingSystemException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.UnknownOperatingSystemException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.UnknownOperatingSystemException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.UnknownOperatingSystemException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">PythonImplementation</span></span><a class="reference internal" href="../_modules/pyTooling/Platform.html#PythonImplementation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.PythonImplementation" title="Link to this definition"></a></dt>
+<dd><p>An enumeration describing the Python implementation (CPython, PyPy, …).</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-fb6b57313e1e080be5f5abf2539c740e8e47434b.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of PythonImplementation</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.Unknown">
+<span class="sig-name descname"><span class="pre">Unknown</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.Unknown" title="Link to this definition"></a></dt>
+<dd><p>Unknown Python implementation</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.CPython">
+<span class="sig-name descname"><span class="pre">CPython</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span> <span class="pre">implementation</span></span></em><span class="sig-paren">)</span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.CPython" title="Link to this definition"></a></dt>
+<dd><p>CPython (reference implementation)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.PyPy">
+<span class="sig-name descname"><span class="pre">PyPy</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.PyPy" title="Link to this definition"></a></dt>
+<dd><p>PyPy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.__contains__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.__contains__" title="Link to this definition"></a></dt>
+<dd><p>Return True if <cite>value</cite> is in <cite>cls</cite>.</p>
+<p><cite>value</cite> is in <cite>cls</cite> if:
+1) <cite>value</cite> is a member of <cite>cls</cite>, or
+2) <cite>value</cite> is the value of one of the <cite>cls</cite>’s members.
+3) <cite>value</cite> is a pseudo-member (flags)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.__getitem__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Return the member matching <cite>name</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.__iter__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.__iter__" title="Link to this definition"></a></dt>
+<dd><p>Return members in definition order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.PythonImplementation.__len__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.PythonImplementation.__len__" title="Link to this definition"></a></dt>
+<dd><p>Return the number of members (no aliases)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">Platforms</span></span><a class="reference internal" href="../_modules/pyTooling/Platform.html#Platforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.Platforms" title="Link to this definition"></a></dt>
+<dd><p>A flag describing on which platform Python is running on and/or in which environment it’s running in.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-f899bc76365b71e7e41d2970f577fdbd97732ea4.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Platforms</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.OS_FreeBSD">
+<span class="sig-name descname"><span class="pre">OS_FreeBSD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.OS_FreeBSD" title="Link to this definition"></a></dt>
+<dd><p>Operating System: BSD (Unix).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.OS_Linux">
+<span class="sig-name descname"><span class="pre">OS_Linux</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.OS_Linux" title="Link to this definition"></a></dt>
+<dd><p>Operating System: Linux.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.OS_MacOS">
+<span class="sig-name descname"><span class="pre">OS_MacOS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.OS_MacOS" title="Link to this definition"></a></dt>
+<dd><p>Operating System: macOS.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.OS_Windows">
+<span class="sig-name descname"><span class="pre">OS_Windows</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.OS_Windows" title="Link to this definition"></a></dt>
+<dd><p>Operating System: Windows.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.OperatingSystem">
+<span class="sig-name descname"><span class="pre">OperatingSystem</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.OperatingSystem" title="Link to this definition"></a></dt>
+<dd><p>Mask: Any operating system.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.SEP_WindowsPath">
+<span class="sig-name descname"><span class="pre">SEP_WindowsPath</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.SEP_WindowsPath" title="Link to this definition"></a></dt>
+<dd><p>Seperator: Path element seperator (e.g. for directories).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.SEP_WindowsValue">
+<span class="sig-name descname"><span class="pre">SEP_WindowsValue</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.SEP_WindowsValue" title="Link to this definition"></a></dt>
+<dd><p>Seperator: Value seperator in variables (e.g. for paths in PATH).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ENV_Native">
+<span class="sig-name descname"><span class="pre">ENV_Native</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">64</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ENV_Native" title="Link to this definition"></a></dt>
+<dd><p>Environment: <a class="reference internal" href="../Glossary.html#term-native"><span class="xref std std-term">native</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ENV_WSL">
+<span class="sig-name descname"><span class="pre">ENV_WSL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ENV_WSL" title="Link to this definition"></a></dt>
+<dd><p>Environment: <a class="reference internal" href="../Glossary.html#term-WSL"><span class="xref std std-term">Windows System for Linux</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ENV_MSYS2">
+<span class="sig-name descname"><span class="pre">ENV_MSYS2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">256</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ENV_MSYS2" title="Link to this definition"></a></dt>
+<dd><p>Environment: <a class="reference internal" href="../Glossary.html#term-MSYS2"><span class="xref std std-term">MSYS2</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ENV_Cygwin">
+<span class="sig-name descname"><span class="pre">ENV_Cygwin</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">512</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ENV_Cygwin" title="Link to this definition"></a></dt>
+<dd><p>Environment: <a class="reference internal" href="../Glossary.html#term-Cygwin"><span class="xref std std-term">Cygwin</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Environment">
+<span class="sig-name descname"><span class="pre">Environment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">960</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Environment" title="Link to this definition"></a></dt>
+<dd><p>Mask: Any environment.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ARCH_x86_32">
+<span class="sig-name descname"><span class="pre">ARCH_x86_32</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1024</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ARCH_x86_32" title="Link to this definition"></a></dt>
+<dd><p>Architecture: x86-32 (IA32).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ARCH_x86_64">
+<span class="sig-name descname"><span class="pre">ARCH_x86_64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2048</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ARCH_x86_64" title="Link to this definition"></a></dt>
+<dd><p>Architecture: x86-64 (AMD64).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.ARCH_AArch64">
+<span class="sig-name descname"><span class="pre">ARCH_AArch64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4096</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.ARCH_AArch64" title="Link to this definition"></a></dt>
+<dd><p>Architecture: AArch64 (arm64).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Arch_x86">
+<span class="sig-name descname"><span class="pre">Arch_x86</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3072</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Arch_x86" title="Link to this definition"></a></dt>
+<dd><p>Mask: Any x86 architecture.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Arch_Arm">
+<span class="sig-name descname"><span class="pre">Arch_Arm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4096</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Arch_Arm" title="Link to this definition"></a></dt>
+<dd><p>Mask: Any Arm architecture.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Architecture">
+<span class="sig-name descname"><span class="pre">Architecture</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7168</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Architecture" title="Link to this definition"></a></dt>
+<dd><p>Mask: Any architecture.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.FreeBSD">
+<span class="sig-name descname"><span class="pre">FreeBSD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">65</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.FreeBSD" title="Link to this definition"></a></dt>
+<dd><p>Group: native FreeBSD on x86-64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Linux">
+<span class="sig-name descname"><span class="pre">Linux</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">66</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Linux" title="Link to this definition"></a></dt>
+<dd><p>Group: native Linux on x86-64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MacOS">
+<span class="sig-name descname"><span class="pre">MacOS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">68</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MacOS" title="Link to this definition"></a></dt>
+<dd><p>Group: native macOS.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows">
+<span class="sig-name descname"><span class="pre">Windows</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">120</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows" title="Link to this definition"></a></dt>
+<dd><p>Group: native Windows on x86-64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Linux_x86_64">
+<span class="sig-name descname"><span class="pre">Linux_x86_64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2114</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Linux_x86_64" title="Link to this definition"></a></dt>
+<dd><p>Group: native Linux on x86-64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Linux_AArch64">
+<span class="sig-name descname"><span class="pre">Linux_AArch64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4162</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Linux_AArch64" title="Link to this definition"></a></dt>
+<dd><p>Group: native Linux on aarch64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MacOS_Intel">
+<span class="sig-name descname"><span class="pre">MacOS_Intel</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2116</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MacOS_Intel" title="Link to this definition"></a></dt>
+<dd><p>Group: native macOS on x86-64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MacOS_ARM">
+<span class="sig-name descname"><span class="pre">MacOS_ARM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4164</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MacOS_ARM" title="Link to this definition"></a></dt>
+<dd><p>Group: native macOS on aarch64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_x86_64">
+<span class="sig-name descname"><span class="pre">Windows_x86_64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2168</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_x86_64" title="Link to this definition"></a></dt>
+<dd><p>Group: native Windows on x86-64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_AArch64">
+<span class="sig-name descname"><span class="pre">Windows_AArch64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4216</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_AArch64" title="Link to this definition"></a></dt>
+<dd><p>Group: native Windows on aarch64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MSYS">
+<span class="sig-name descname"><span class="pre">MSYS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8192</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MSYS" title="Link to this definition"></a></dt>
+<dd><p>MSYS2 Runtime: MSYS.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MinGW32">
+<span class="sig-name descname"><span class="pre">MinGW32</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16384</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MinGW32" title="Link to this definition"></a></dt>
+<dd><p>MSYS2 Runtime: <a class="reference internal" href="../Glossary.html#term-MinGW"><span class="xref std std-term">MinGW32</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MinGW64">
+<span class="sig-name descname"><span class="pre">MinGW64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32768</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MinGW64" title="Link to this definition"></a></dt>
+<dd><p>MSYS2 Runtime: <a class="reference internal" href="../Glossary.html#term-MinGW"><span class="xref std std-term">MinGW64</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.UCRT64">
+<span class="sig-name descname"><span class="pre">UCRT64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">65536</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.UCRT64" title="Link to this definition"></a></dt>
+<dd><p>MSYS2 Runtime: <a class="reference internal" href="../Glossary.html#term-UCRT"><span class="xref std std-term">UCRT64</span></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Clang32">
+<span class="sig-name descname"><span class="pre">Clang32</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">131072</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Clang32" title="Link to this definition"></a></dt>
+<dd><p>MSYS2 Runtime: Clang32.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Clang64">
+<span class="sig-name descname"><span class="pre">Clang64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">262144</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Clang64" title="Link to this definition"></a></dt>
+<dd><p>MSYS2 Runtime: Clang64.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.MSYS2_Runtime">
+<span class="sig-name descname"><span class="pre">MSYS2_Runtime</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">516096</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.MSYS2_Runtime" title="Link to this definition"></a></dt>
+<dd><p>Mask: Any MSYS2 runtime environment.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_MSYS2_MSYS">
+<span class="sig-name descname"><span class="pre">Windows_MSYS2_MSYS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10504</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_MSYS2_MSYS" title="Link to this definition"></a></dt>
+<dd><p>Group: MSYS runtime running on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_MSYS2_MinGW32">
+<span class="sig-name descname"><span class="pre">Windows_MSYS2_MinGW32</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">17672</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_MSYS2_MinGW32" title="Link to this definition"></a></dt>
+<dd><p>Group: MinGW32 runtime running on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_MSYS2_MinGW64">
+<span class="sig-name descname"><span class="pre">Windows_MSYS2_MinGW64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">35080</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_MSYS2_MinGW64" title="Link to this definition"></a></dt>
+<dd><p>Group: MinGW64 runtime running on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_MSYS2_UCRT64">
+<span class="sig-name descname"><span class="pre">Windows_MSYS2_UCRT64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">67848</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_MSYS2_UCRT64" title="Link to this definition"></a></dt>
+<dd><p>Group: UCRT64 runtime running on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_MSYS2_Clang32">
+<span class="sig-name descname"><span class="pre">Windows_MSYS2_Clang32</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">132360</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_MSYS2_Clang32" title="Link to this definition"></a></dt>
+<dd><p>Group: Clang32 runtime running on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_MSYS2_Clang64">
+<span class="sig-name descname"><span class="pre">Windows_MSYS2_Clang64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">264456</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_MSYS2_Clang64" title="Link to this definition"></a></dt>
+<dd><p>Group: Clang64 runtime running on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_Cygwin32">
+<span class="sig-name descname"><span class="pre">Windows_Cygwin32</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1544</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_Cygwin32" title="Link to this definition"></a></dt>
+<dd><p>Group: 32-bit Cygwin runtime on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.Windows_Cygwin64">
+<span class="sig-name descname"><span class="pre">Windows_Cygwin64</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2568</span></em><a class="headerlink" href="#pyTooling.Platform.Platforms.Windows_Cygwin64" title="Link to this definition"></a></dt>
+<dd><p>Group: 64-bit Cygwin runtime on Windows x86-64</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms._generate_next_value_">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms._generate_next_value_" title="Link to this definition"></a></dt>
+<dd><p>Generate the next value when not given.</p>
+<p>name: the name of the member
+start: the initial start value or None
+count: the number of existing members
+last_values: the last value assigned or None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms._numeric_repr_">
+<span class="sig-name descname"><span class="pre">_numeric_repr_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms._numeric_repr_" title="Link to this definition"></a></dt>
+<dd><p>Return the canonical string representation of the object.</p>
+<p>For many object types, including most builtins, eval(repr(obj)) == obj.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms._iter_member_by_value_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_iter_member_by_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms._iter_member_by_value_" title="Link to this definition"></a></dt>
+<dd><p>Extract all members from the value in definition (i.e. increasing value) order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms._iter_member_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_iter_member_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms._iter_member_" title="Link to this definition"></a></dt>
+<dd><p>Extract all members from the value in definition (i.e. increasing value) order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms._iter_member_by_def_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_iter_member_by_def_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms._iter_member_by_def_" title="Link to this definition"></a></dt>
+<dd><p>Extract all members from the value in definition order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms._missing_">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_missing_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms._missing_" title="Link to this definition"></a></dt>
+<dd><p>Create a composite member containing all canonical members present in <cite>value</cite>.</p>
+<p>If non-member values are present, result depends on <cite>_boundary_</cite> setting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__contains__" title="Link to this definition"></a></dt>
+<dd><p>Returns True if self has at least the same flags set as other.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__iter__" title="Link to this definition"></a></dt>
+<dd><p>Returns flags in definition order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__len__" title="Link to this definition"></a></dt>
+<dd><p>Return the number of members (no aliases)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__bool__">
+<span class="sig-name descname"><span class="pre">__bool__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__bool__" title="Link to this definition"></a></dt>
+<dd><p>classes/types should always be True.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__or__">
+<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__or__" title="Link to this definition"></a></dt>
+<dd><p>Return self|value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__ror__">
+<span class="sig-name descname"><span class="pre">__ror__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__ror__" title="Link to this definition"></a></dt>
+<dd><p>Return value|self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__new__">
+<span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platforms.__getitem__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Platform.Platforms.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Return the member matching <cite>name</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Platform.</span></span><span class="sig-name descname"><span class="pre">Platform</span></span><a class="reference internal" href="../_modules/pyTooling/Platform.html#Platform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.Platform" title="Link to this definition"></a></dt>
+<dd><p>An instance of this class contains all gathered information available from various sources.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>StackOverflow question: <a class="reference external" href="https://stackoverflow.com/a/54837707/3719459">Python: What OS am I running on?</a></p>
+</div>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-97d701bdacf8adfdcaae6b13d38497cbaf644ac4.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Platform</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Platform.html#Platform.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.Platform.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a platform by accessing multiple APIs of Python to gather all necessary information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.PythonImplementation">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PythonImplementation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyTooling.Platform.PythonImplementation" title="pyTooling.Platform.PythonImplementation"><span class="pre">PythonImplementation</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.PythonImplementation" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to return the <a class="reference internal" href="#pyTooling.Platform.PythonImplementation" title="pyTooling.Platform.PythonImplementation"><code class="xref py py-class docutils literal notranslate"><span class="pre">PythonImplementation</span></code></a> of the current interpreter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Python implementation of the current interpreter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsCPython">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsCPython</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsCPython" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the Python implementation is a <a class="reference external" href="https://docs.python.org/3/glossary.html#term-CPython" title="(in Python v3.14)"><span class="xref std std-term">CPython</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the Python implementation is CPython.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsPyPy">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsPyPy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsPyPy" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the Python implementation is a <a class="reference internal" href="../Glossary.html#term-PyPy"><span class="xref std std-term">PyPy</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the Python implementation is PyPY.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.PythonVersion">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PythonVersion</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="pyTooling.Versioning.html#pyTooling.Versioning.PythonVersion" title="pyTooling.Versioning.PythonVersion"><span class="pre">PythonVersion</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.PythonVersion" title="Link to this definition"></a></dt>
+<dd><p>Read-only property to return the <a class="reference internal" href="pyTooling.Versioning.html#pyTooling.Versioning.PythonVersion" title="pyTooling.Versioning.PythonVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyTooling.Versioning.PythonVersion</span></code></a> of the current interpreter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Python version of the current interpreter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsNativePlatform">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsNativePlatform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsNativePlatform" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-native"><span class="xref std std-term">native</span></a> platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a native platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsNativeFreeBSD">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsNativeFreeBSD</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsNativeFreeBSD" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-native"><span class="xref std std-term">native</span></a> FreeBSD x86-64 platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a native FreeBSD x86-64 platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsNativeMacOS">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsNativeMacOS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsNativeMacOS" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-native"><span class="xref std std-term">native</span></a> macOS x86-64 platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a native macOS x86-64 platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsNativeLinux">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsNativeLinux</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsNativeLinux" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-native"><span class="xref std std-term">native</span></a> Linux x86-64 platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a native Linux x86-64 platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsNativeWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsNativeWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsNativeWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-native"><span class="xref std std-term">native</span></a> Windows x86-64 platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a native Windows x86-64 platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsMSYS2Environment">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsMSYS2Environment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsMSYS2Environment" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-MSYS2"><span class="xref std std-term">MSYS2</span></a> environment on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a MSYS2 environment on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsMSYSOnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsMSYSOnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsMSYSOnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a MSYS runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a MSYS runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsMinGW32OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsMinGW32OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsMinGW32OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-MinGW"><span class="xref std std-term">MinGW32</span></a> runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a MINGW32 runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsMinGW64OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsMinGW64OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsMinGW64OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-MinGW"><span class="xref std std-term">MinGW64</span></a> runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a MINGW64 runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsUCRT64OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsUCRT64OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsUCRT64OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a <a class="reference internal" href="../Glossary.html#term-UCRT"><span class="xref std std-term">UCRT64</span></a> runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a UCRT64 runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsClang32OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsClang32OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsClang32OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a Clang32 runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a Clang32 runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsClang64OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsClang64OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsClang64OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a Clang64 runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a Clang64 runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsCygwin32OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsCygwin32OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsCygwin32OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a 32-bit Cygwin runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a 32-bit Cygwin runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsCygwin64OnWindows">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsCygwin64OnWindows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsCygwin64OnWindows" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is a 64-bit Cygwin runtime on Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if the platform is a 64-bit Cygwin runtime on Windows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.IsPOSIX">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IsPOSIX</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.IsPOSIX" title="Link to this definition"></a></dt>
+<dd><p>Returns true, if the platform is POSIX or POSIX-like.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, if POSIX or POSIX-like.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.PathSeperator">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PathSeperator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.PathSeperator" title="Link to this definition"></a></dt>
+<dd><p>Returns the path element separation character (e.g. for directories).</p>
+<ul class="simple">
+<li><p>POSIX-like: <code class="docutils literal notranslate"><span class="pre">/</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">\</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path separation character.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.ValueSeperator">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValueSeperator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.ValueSeperator" title="Link to this definition"></a></dt>
+<dd><p>Returns the value separation character (e.g. for paths in PATH).</p>
+<ul class="simple">
+<li><p>POSIX-like: <code class="docutils literal notranslate"><span class="pre">:</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">;</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Value separation character.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.ExecutableExtension">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExecutableExtension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.ExecutableExtension" title="Link to this definition"></a></dt>
+<dd><p>Returns the file extension for an executable.</p>
+<ul class="simple">
+<li><p>FreeBSD: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> (empty string)</p></li>
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> (empty string)</p></li>
+<li><p>macOS: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> (empty string)</p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">&quot;exe&quot;</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>File extension of an executable.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException" title="pyTooling.Platform.UnknownOperatingSystemException"><strong>UnknownOperatingSystemException</strong></a> – If the operating system is unknown.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.StaticLibraryExtension">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StaticLibraryExtension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.StaticLibraryExtension" title="Link to this definition"></a></dt>
+<dd><p>Returns the file extension for a static library.</p>
+<ul class="simple">
+<li><p>FreeBSD: <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code></p></li>
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code></p></li>
+<li><p>macOS: <code class="docutils literal notranslate"><span class="pre">&quot;lib&quot;</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">&quot;lib&quot;</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>File extension of a static library.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException" title="pyTooling.Platform.UnknownOperatingSystemException"><strong>UnknownOperatingSystemException</strong></a> – If the operating system is unknown.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.DynamicLibraryExtension">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DynamicLibraryExtension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.Platform.Platform.DynamicLibraryExtension" title="Link to this definition"></a></dt>
+<dd><p>Returns the file extension for a dynamic/shared library.</p>
+<ul class="simple">
+<li><p>FreeBSD: <code class="docutils literal notranslate"><span class="pre">&quot;so&quot;</span></code></p></li>
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">&quot;so&quot;</span></code></p></li>
+<li><p>macOS: <code class="docutils literal notranslate"><span class="pre">&quot;dylib&quot;</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">&quot;dll&quot;</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>File extension of a dynamic library.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyTooling.Platform.UnknownOperatingSystemException" title="pyTooling.Platform.UnknownOperatingSystemException"><strong>UnknownOperatingSystemException</strong></a> – If the operating system is unknown.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Platform.html#Platform.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.Platform.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Returns the platform’s string representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The string representation of the current platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Platform.Platform.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Platform.html#Platform.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Platform.Platform.__str__" title="Link to this definition"></a></dt>
+<dd><p>Returns the platform’s string equivalent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The string equivalent of the platform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Packaging.html" class="btn btn-neutral float-left" title="pyTooling.Packaging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.StateMachine.html" class="btn btn-neutral float-right" title="pyTooling.StateMachine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

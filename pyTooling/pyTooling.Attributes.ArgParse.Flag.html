@@ -1,0 +1,987 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Attributes.ArgParse.Flag &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Attributes.ArgParse.KeyValueFlag" href="pyTooling.Attributes.ArgParse.KeyValueFlag.html" />
+    <link rel="prev" title="pyTooling.Attributes.ArgParse.BooleanFlag" href="pyTooling.Attributes.ArgParse.BooleanFlag.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html">pyTooling.Attributes.ArgParse</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.Argument.html">pyTooling.Attributes.ArgParse.Argument</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.BooleanFlag.html">pyTooling.Attributes.ArgParse.BooleanFlag</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyTooling.Attributes.ArgParse.Flag</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument"><code class="docutils literal notranslate"><span class="pre">FlagArgument</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag"><code class="docutils literal notranslate"><span class="pre">ShortFlag</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag"><code class="docutils literal notranslate"><span class="pre">LongFlag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.KeyValueFlag.html">pyTooling.Attributes.ArgParse.KeyValueFlag</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.OptionalValuedFlag.html">pyTooling.Attributes.ArgParse.OptionalValuedFlag</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.ValuedFlag.html">pyTooling.Attributes.ArgParse.ValuedFlag</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.ArgParseException"><code class="docutils literal notranslate"><span class="pre">ArgParseException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.ArgParseAttribute"><code class="docutils literal notranslate"><span class="pre">ArgParseAttribute</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse._HandlerMixin"><code class="docutils literal notranslate"><span class="pre">_HandlerMixin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandLineArgument"><code class="docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandGroupAttribute"><code class="docutils literal notranslate"><span class="pre">CommandGroupAttribute</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.DefaultHandler"><code class="docutils literal notranslate"><span class="pre">DefaultHandler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandHandler"><code class="docutils literal notranslate"><span class="pre">CommandHandler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.ArgParseHelperMixin"><code class="docutils literal notranslate"><span class="pre">ArgParseHelperMixin</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Entity"><code class="docutils literal notranslate"><span class="pre">Entity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.TAttr"><code class="docutils literal notranslate"><span class="pre">TAttr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.TAttributeFilter"><code class="docutils literal notranslate"><span class="pre">TAttributeFilter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME"><code class="docutils literal notranslate"><span class="pre">ATTRIBUTES_MEMBER_NAME</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.AttributeScope"><code class="docutils literal notranslate"><span class="pre">AttributeScope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute"><code class="docutils literal notranslate"><span class="pre">Attribute</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.SimpleAttribute"><code class="docutils literal notranslate"><span class="pre">SimpleAttribute</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.Attributes.ArgParse.html">pyTooling.Attributes.ArgParse</a></li>
+      <li class="breadcrumb-item active">pyTooling.Attributes.ArgParse.Flag</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Attributes.ArgParse.Flag.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Attributes.ArgParse.Flag">
+<span id="pytooling-attributes-argparse-flag"></span><h1>pyTooling.Attributes.ArgParse.Flag<a class="headerlink" href="#module-pyTooling.Attributes.ArgParse.Flag" title="Link to this heading"></a></h1>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument" title="pyTooling.Attributes.ArgParse.Flag.FlagArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlagArgument</span></code></a>:
+Defines a switch argument like <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag" title="pyTooling.Attributes.ArgParse.Flag.ShortFlag"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShortFlag</span></code></a>:
+Defines a switch argument like <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag" title="pyTooling.Attributes.ArgParse.Flag.LongFlag"><code class="xref py py-class docutils literal notranslate"><span class="pre">LongFlag</span></code></a>:
+Defines a switch argument like <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Attributes.ArgParse.Flag.</span></span><span class="sig-name descname"><span class="pre">FlagArgument</span></span><a class="reference internal" href="../_modules/pyTooling/Attributes/ArgParse/Flag.html#FlagArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument" title="Link to this definition"></a></dt>
+<dd><p>Defines a switch argument like <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p>
+<p>Some of the named parameters passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_argument()</span></code> are predefined (or overwritten) to create
+a boolean parameter passed to the registered handler method. The boolean parameter is <code class="docutils literal notranslate"><span class="pre">True</span></code> if the switch argument
+is present in the commandline arguments, otherwise <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-ff96c843184c31dabad4fde11699a0a843bc970a.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of FlagArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">short</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">help</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Attributes/ArgParse/Flag.html#FlagArgument.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.__init__" title="Link to this definition"></a></dt>
+<dd><p>The constructor expects positional (<code class="docutils literal notranslate"><span class="pre">*args</span></code>), the destination parameter name <code class="docutils literal notranslate"><span class="pre">dest</span></code> and/or named parameters
+(<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) which are passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_argument()</span></code>.</p>
+<p>To implement a switch argument, the following named parameters are predefined:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">action=&quot;store_const&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">const=True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default=False</span></code></p></li>
+</ul>
+<p>This implements a boolean parameter passed to the handler method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>short</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>long</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>help</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.Args">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.Args" title="Link to this definition"></a></dt>
+<dd><p>A tuple of additional positional parameters (<code class="docutils literal notranslate"><span class="pre">*args</span></code>) passed to the attribute. These additional parameters are
+passed without modification to <code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetAttributes">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeSubClasses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetAttributes" title="Link to this definition"></a></dt>
+<dd><p>Returns attached attributes of this kind for a given method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/types.html#types.MethodType" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">MethodType</span></code></a></span>)</p></li>
+<li><p><strong>includeSubClasses</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetClasses">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetClasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclassOf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetClasses" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all classes, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subclassOf</span></code> - when the item is a subclass of <code class="docutils literal notranslate"><span class="pre">subclassOf</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.ModuleType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleType</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span>) – Undocumented.</p></li>
+<li><p><strong>subclassOf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – An attribute class or tuple thereof, to filter for that attribute type or subtype.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of classes where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetFunctions">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetFunctions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetFunctions" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all functions, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of functions where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetMethods">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetMethods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.GetMethods" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all methods, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of methods where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.Handler">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.Handler" title="Link to this definition"></a></dt>
+<dd><p>Returns the handler method.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.KWArgs">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KWArgs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.KWArgs" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of additional named parameters (<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) passed to the attribute. These additional parameters are
+passed without modification to <code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument._AppendAttribute">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_AppendAttribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument._AppendAttribute" title="Link to this definition"></a></dt>
+<dd><p>Append an attribute to a language entity (class, method, function).</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This method can be used in attribute groups to apply multiple attributes within <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GroupAttribute</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">Entity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Entity</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">entity</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity, the attribute is attached to.</p></li>
+<li><p><strong>attribute</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a></span>) – Attribute to attach.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a class, method or function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument.__call__" title="Link to this definition"></a></dt>
+<dd><p>Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
+lookups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity (function, class, method), to attach an attribute to.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Same entity, with attached attribute.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a function, class nor method.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument._classes">
+<span class="sig-name descname"><span class="pre">_classes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument._classes" title="Link to this definition"></a></dt>
+<dd><p>List of classes, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument._functions">
+<span class="sig-name descname"><span class="pre">_functions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument._functions" title="Link to this definition"></a></dt>
+<dd><p>List of functions, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument._methods">
+<span class="sig-name descname"><span class="pre">_methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument._methods" title="Link to this definition"></a></dt>
+<dd><p>List of methods, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument._scope">
+<span class="sig-name descname"><span class="pre">_scope</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[AttributeScope]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument._scope" title="Link to this definition"></a></dt>
+<dd><p>Allowed language construct this attribute can be used with.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.FlagArgument._handler">
+<span class="sig-name descname"><span class="pre">_handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.FlagArgument._handler" title="Link to this definition"></a></dt>
+<dd><p>Reference to a method that is called to handle e.g. a sub-command.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Attributes.ArgParse.Flag.</span></span><span class="sig-name descname"><span class="pre">ShortFlag</span></span><a class="reference internal" href="../_modules/pyTooling/Attributes/ArgParse/Flag.html#ShortFlag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-87ffe96777583c14006cb847aeb58c0bbf724296.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of ShortFlag</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">short</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">help</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Attributes/ArgParse/Flag.html#ShortFlag.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.__init__" title="Link to this definition"></a></dt>
+<dd><p>The constructor expects positional (<code class="docutils literal notranslate"><span class="pre">*args</span></code>), the destination parameter name <code class="docutils literal notranslate"><span class="pre">dest</span></code> and/or named parameters
+(<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) which are passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_argument()</span></code>.</p>
+<p>To implement a switch argument, the following named parameters are predefined:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">action=&quot;store_const&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">const=True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default=False</span></code></p></li>
+</ul>
+<p>This implements a boolean parameter passed to the handler method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>short</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>help</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.Args">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.Args" title="Link to this definition"></a></dt>
+<dd><p>A tuple of additional positional parameters (<code class="docutils literal notranslate"><span class="pre">*args</span></code>) passed to the attribute. These additional parameters are
+passed without modification to <code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetAttributes">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeSubClasses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetAttributes" title="Link to this definition"></a></dt>
+<dd><p>Returns attached attributes of this kind for a given method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/types.html#types.MethodType" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">MethodType</span></code></a></span>)</p></li>
+<li><p><strong>includeSubClasses</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetClasses">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetClasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclassOf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetClasses" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all classes, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subclassOf</span></code> - when the item is a subclass of <code class="docutils literal notranslate"><span class="pre">subclassOf</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.ModuleType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleType</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span>) – Undocumented.</p></li>
+<li><p><strong>subclassOf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – An attribute class or tuple thereof, to filter for that attribute type or subtype.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of classes where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetFunctions">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetFunctions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetFunctions" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all functions, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of functions where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetMethods">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetMethods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.GetMethods" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all methods, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of methods where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.Handler">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.Handler" title="Link to this definition"></a></dt>
+<dd><p>Returns the handler method.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.KWArgs">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KWArgs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.KWArgs" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of additional named parameters (<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) passed to the attribute. These additional parameters are
+passed without modification to <code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag._AppendAttribute">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_AppendAttribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag._AppendAttribute" title="Link to this definition"></a></dt>
+<dd><p>Append an attribute to a language entity (class, method, function).</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This method can be used in attribute groups to apply multiple attributes within <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GroupAttribute</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">Entity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Entity</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">entity</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity, the attribute is attached to.</p></li>
+<li><p><strong>attribute</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a></span>) – Attribute to attach.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a class, method or function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag.__call__" title="Link to this definition"></a></dt>
+<dd><p>Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
+lookups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity (function, class, method), to attach an attribute to.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Same entity, with attached attribute.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a function, class nor method.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag._classes">
+<span class="sig-name descname"><span class="pre">_classes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag._classes" title="Link to this definition"></a></dt>
+<dd><p>List of classes, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag._functions">
+<span class="sig-name descname"><span class="pre">_functions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag._functions" title="Link to this definition"></a></dt>
+<dd><p>List of functions, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag._methods">
+<span class="sig-name descname"><span class="pre">_methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag._methods" title="Link to this definition"></a></dt>
+<dd><p>List of methods, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag._scope">
+<span class="sig-name descname"><span class="pre">_scope</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[AttributeScope]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag._scope" title="Link to this definition"></a></dt>
+<dd><p>Allowed language construct this attribute can be used with.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.ShortFlag._handler">
+<span class="sig-name descname"><span class="pre">_handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.ShortFlag._handler" title="Link to this definition"></a></dt>
+<dd><p>Reference to a method that is called to handle e.g. a sub-command.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Attributes.ArgParse.Flag.</span></span><span class="sig-name descname"><span class="pre">LongFlag</span></span><a class="reference internal" href="../_modules/pyTooling/Attributes/ArgParse/Flag.html#LongFlag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-e05d4d2c7037d05f0048c018643f891608546561.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of LongFlag</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">help</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Attributes/ArgParse/Flag.html#LongFlag.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.__init__" title="Link to this definition"></a></dt>
+<dd><p>The constructor expects positional (<code class="docutils literal notranslate"><span class="pre">*args</span></code>), the destination parameter name <code class="docutils literal notranslate"><span class="pre">dest</span></code> and/or named parameters
+(<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) which are passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_argument()</span></code>.</p>
+<p>To implement a switch argument, the following named parameters are predefined:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">action=&quot;store_const&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">const=True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default=False</span></code></p></li>
+</ul>
+<p>This implements a boolean parameter passed to the handler method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>help</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.Args">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.Args" title="Link to this definition"></a></dt>
+<dd><p>A tuple of additional positional parameters (<code class="docutils literal notranslate"><span class="pre">*args</span></code>) passed to the attribute. These additional parameters are
+passed without modification to <code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.GetAttributes">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeSubClasses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.GetAttributes" title="Link to this definition"></a></dt>
+<dd><p>Returns attached attributes of this kind for a given method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/types.html#types.MethodType" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">MethodType</span></code></a></span>)</p></li>
+<li><p><strong>includeSubClasses</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.GetClasses">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetClasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclassOf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.GetClasses" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all classes, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subclassOf</span></code> - when the item is a subclass of <code class="docutils literal notranslate"><span class="pre">subclassOf</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.ModuleType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleType</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span>) – Undocumented.</p></li>
+<li><p><strong>subclassOf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – An attribute class or tuple thereof, to filter for that attribute type or subtype.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of classes where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.GetFunctions">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetFunctions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.GetFunctions" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all functions, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of functions where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.GetMethods">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetMethods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.GetMethods" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all methods, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of methods where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.Handler">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.Handler" title="Link to this definition"></a></dt>
+<dd><p>Returns the handler method.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.KWArgs">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KWArgs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.KWArgs" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of additional named parameters (<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) passed to the attribute. These additional parameters are
+passed without modification to <code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag._AppendAttribute">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_AppendAttribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag._AppendAttribute" title="Link to this definition"></a></dt>
+<dd><p>Append an attribute to a language entity (class, method, function).</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This method can be used in attribute groups to apply multiple attributes within <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GroupAttribute</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">Entity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Entity</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">entity</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity, the attribute is attached to.</p></li>
+<li><p><strong>attribute</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a></span>) – Attribute to attach.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a class, method or function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag.__call__" title="Link to this definition"></a></dt>
+<dd><p>Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
+lookups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity (function, class, method), to attach an attribute to.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Same entity, with attached attribute.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a function, class nor method.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag._classes">
+<span class="sig-name descname"><span class="pre">_classes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag._classes" title="Link to this definition"></a></dt>
+<dd><p>List of classes, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag._functions">
+<span class="sig-name descname"><span class="pre">_functions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag._functions" title="Link to this definition"></a></dt>
+<dd><p>List of functions, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag._methods">
+<span class="sig-name descname"><span class="pre">_methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag._methods" title="Link to this definition"></a></dt>
+<dd><p>List of methods, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag._scope">
+<span class="sig-name descname"><span class="pre">_scope</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[AttributeScope]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag._scope" title="Link to this definition"></a></dt>
+<dd><p>Allowed language construct this attribute can be used with.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Attributes.ArgParse.Flag.LongFlag._handler">
+<span class="sig-name descname"><span class="pre">_handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#pyTooling.Attributes.ArgParse.Flag.LongFlag._handler" title="Link to this definition"></a></dt>
+<dd><p>Reference to a method that is called to handle e.g. a sub-command.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Attributes.ArgParse.BooleanFlag.html" class="btn btn-neutral float-left" title="pyTooling.Attributes.ArgParse.BooleanFlag" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Attributes.ArgParse.KeyValueFlag.html" class="btn btn-neutral float-right" title="pyTooling.Attributes.ArgParse.KeyValueFlag" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

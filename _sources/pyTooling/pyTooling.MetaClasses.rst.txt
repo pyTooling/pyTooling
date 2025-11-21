@@ -1,0 +1,183 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=====================
+pyTooling.MetaClasses
+=====================
+
+.. automodule:: pyTooling.MetaClasses
+
+
+.. currentmodule:: pyTooling.MetaClasses
+
+
+**Variables**
+
+- :py:data:`M`
+  
+
+
+**Functions**
+
+- :py:func:`slotted`:
+  Undocumented.
+
+- :py:func:`mixin`:
+  Undocumented.
+
+- :py:func:`singleton`:
+  Undocumented.
+
+- :py:func:`abstractmethod`:
+  Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
+
+- :py:func:`mustoverride`:
+  Mark a method as *must-override*.
+
+
+
+**Exceptions**
+
+- :py:exc:`ExtendedTypeError`:
+  The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+
+- :py:exc:`BaseClassWithoutSlotsError`:
+  The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
+
+- :py:exc:`BaseClassWithNonEmptySlotsError`:
+  The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+
+- :py:exc:`BaseClassIsNotAMixinError`:
+  The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+
+- :py:exc:`DuplicateFieldInSlotsError`:
+  The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
+
+- :py:exc:`AbstractClassError`:
+  The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
+
+- :py:exc:`MustOverrideClassError`:
+  The exception is raised, when a class contains methods marked with *must-override*.
+
+
+
+**Classes**
+
+- :py:class:`ExtendedType`:
+  An updates meta-class to construct new classes with an extended feature set.
+
+- :py:class:`SlottedObject`:
+  Classes derived from this class will store all members in ``__slots__``.
+
+
+
+---------------------
+
+**Variables**
+
+
+
+
+.. autodata:: M
+   :annotation:
+
+   .. code-block:: text
+
+      ~M
+
+
+---------------------
+
+**Functions**
+
+
+.. autofunction:: slotted
+
+.. autofunction:: mixin
+
+.. autofunction:: singleton
+
+.. autofunction:: abstractmethod
+
+.. autofunction:: mustoverride
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: ExtendedTypeError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ExtendedTypeError
+      :parts: 1
+
+.. autoexception:: BaseClassWithoutSlotsError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseClassWithoutSlotsError
+      :parts: 1
+
+.. autoexception:: BaseClassWithNonEmptySlotsError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseClassWithNonEmptySlotsError
+      :parts: 1
+
+.. autoexception:: BaseClassIsNotAMixinError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BaseClassIsNotAMixinError
+      :parts: 1
+
+.. autoexception:: DuplicateFieldInSlotsError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: DuplicateFieldInSlotsError
+      :parts: 1
+
+.. autoexception:: AbstractClassError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: AbstractClassError
+      :parts: 1
+
+.. autoexception:: MustOverrideClassError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: MustOverrideClassError
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: ExtendedType
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ExtendedType
+      :parts: 1
+
+.. autoclass:: SlottedObject
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: SlottedObject
+      :parts: 1

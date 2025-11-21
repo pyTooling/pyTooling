@@ -1,0 +1,641 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.CLIAbstraction.ValuedTupleFlag &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.CallByRef" href="pyTooling.CallByRef.html" />
+    <link rel="prev" title="pyTooling.CLIAbstraction.ValuedFlagList" href="pyTooling.CLIAbstraction.ValuedFlagList.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html">pyTooling.CLIAbstraction.Argument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.BooleanFlag.html">pyTooling.CLIAbstraction.BooleanFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Command.html">pyTooling.CLIAbstraction.Command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Flag.html">pyTooling.CLIAbstraction.Flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.KeyValueFlag.html">pyTooling.CLIAbstraction.KeyValueFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.OptionalValuedFlag.html">pyTooling.CLIAbstraction.OptionalValuedFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlag.html">pyTooling.CLIAbstraction.ValuedFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlagList.html">pyTooling.CLIAbstraction.ValuedFlagList</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pyTooling.CLIAbstraction.ValuedTupleFlag</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__new__"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.AsArgument"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.Name"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.Name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.Value"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__init__"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__repr__"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__str__"><code class="docutils literal notranslate"><span class="pre">ShortTupleFlag.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__new__"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.AsArgument"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.Name"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.Name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.Value"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__init__"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__repr__"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__str__"><code class="docutils literal notranslate"><span class="pre">LongTupleFlag.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__new__"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.__new__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.AsArgument"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.AsArgument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.Name"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.Name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.Value"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.Value</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__init__"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__repr__"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.__repr__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__str__"><code class="docutils literal notranslate"><span class="pre">WindowsTupleFlag.__str__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.CLIAbstractionException"><code class="docutils literal notranslate"><span class="pre">CLIAbstractionException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.DryRunException"><code class="docutils literal notranslate"><span class="pre">DryRunException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.CLIArgument"><code class="docutils literal notranslate"><span class="pre">CLIArgument</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Environment"><code class="docutils literal notranslate"><span class="pre">Environment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Program"><code class="docutils literal notranslate"><span class="pre">Program</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.OutputFilteredExecutable"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+      <li class="breadcrumb-item active">pyTooling.CLIAbstraction.ValuedTupleFlag</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.CLIAbstraction.ValuedTupleFlag.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.CLIAbstraction.ValuedTupleFlag">
+<span id="pytooling-cliabstraction-valuedtupleflag"></span><h1>pyTooling.CLIAbstraction.ValuedTupleFlag<a class="headerlink" href="#module-pyTooling.CLIAbstraction.ValuedTupleFlag" title="Link to this heading"></a></h1>
+<p>Valued tuple-flag arguments represent a name and a value as a 2-tuple.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>For flags with a value. <br />
+→ <a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlag.html#module-pyTooling.CLIAbstraction.ValuedFlag" title="pyTooling.CLIAbstraction.ValuedFlag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ValuedFlag</span></code></a></p></li>
+<li><p>For flags that have an optional value. <br />
+→ <code class="xref py py-mod docutils literal notranslate"><span class="pre">NamedOptionalValuedFlag</span></code></p></li>
+</ul>
+</div>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag" title="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShortTupleFlag</span></code></a>:
+Represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedTupleArgument</span></code> with a single dash in front of the switch name.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag" title="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag"><code class="xref py py-class docutils literal notranslate"><span class="pre">LongTupleFlag</span></code></a>:
+Represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedTupleArgument</span></code> with a double dash in front of the switch name.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag" title="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag"><code class="xref py py-class docutils literal notranslate"><span class="pre">WindowsTupleFlag</span></code></a>:
+Represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedTupleArgument</span></code> with a single slash in front of the switch name.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.ValuedTupleFlag.</span></span><span class="sig-name descname"><span class="pre">ShortTupleFlag</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/ValuedTupleFlag.html#ShortTupleFlag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag" title="Link to this definition"></a></dt>
+<dd><p>Represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedTupleArgument</span></code> with a single dash in front of the switch name.</p>
+<p><strong>Example:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-file</span> <span class="pre">file1.txt</span></code></p></li>
+</ul>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-da50bbccde0948a1dad64ddf4d7ca1642d91c348.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of ShortTupleFlag</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/ValuedTupleFlag.html#ShortTupleFlag.__new__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a sequence of string representations with proper escaping using the matching
+pattern based on the internal name and value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument as tuple of strings.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If internal name is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.Name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.Name" title="Link to this definition"></a></dt>
+<dd><p>Get the internal name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValueT</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>ValueT</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Comma separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.ShortTupleFlag.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Space separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.ValuedTupleFlag.</span></span><span class="sig-name descname"><span class="pre">LongTupleFlag</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/ValuedTupleFlag.html#LongTupleFlag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag" title="Link to this definition"></a></dt>
+<dd><p>Represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedTupleArgument</span></code> with a double dash in front of the switch name.</p>
+<p><strong>Example:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--file</span> <span class="pre">file1.txt</span></code></p></li>
+</ul>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-d91fe46946af4a6adb53d38eae4cce3154370900.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of LongTupleFlag</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/ValuedTupleFlag.html#LongTupleFlag.__new__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a sequence of string representations with proper escaping using the matching
+pattern based on the internal name and value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument as tuple of strings.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If internal name is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.Name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.Name" title="Link to this definition"></a></dt>
+<dd><p>Get the internal name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValueT</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>ValueT</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Comma separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.LongTupleFlag.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Space separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.ValuedTupleFlag.</span></span><span class="sig-name descname"><span class="pre">WindowsTupleFlag</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/ValuedTupleFlag.html#WindowsTupleFlag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag" title="Link to this definition"></a></dt>
+<dd><p>Represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValuedTupleArgument</span></code> with a single slash in front of the switch name.</p>
+<p><strong>Example:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/file</span> <span class="pre">file1.txt</span></code></p></li>
+</ul>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-0510be89dd6486f6e75a229eb0e6347d9f74fbeb.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of WindowsTupleFlag</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__new__">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction/ValuedTupleFlag.html#WindowsTupleFlag.__new__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__new__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.AsArgument">
+<span class="sig-name descname"><span class="pre">AsArgument</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.AsArgument" title="Link to this definition"></a></dt>
+<dd><p>Convert this argument instance to a sequence of string representations with proper escaping using the matching
+pattern based on the internal name and value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted argument as tuple of strings.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If internal name is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.Name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.Name" title="Link to this definition"></a></dt>
+<dd><p>Get the internal name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.Value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValueT</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.Value" title="Link to this definition"></a></dt>
+<dd><p>Get the internal value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Internal value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>ValueT</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Comma separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.ValuedTupleFlag.WindowsTupleFlag.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return a string representation of this argument instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Space separated sequence of arguments formatted and each enclosed in double quotes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.CLIAbstraction.ValuedFlagList.html" class="btn btn-neutral float-left" title="pyTooling.CLIAbstraction.ValuedFlagList" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.CallByRef.html" class="btn btn-neutral float-right" title="pyTooling.CallByRef" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

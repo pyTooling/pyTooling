@@ -1,0 +1,116 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+=====================
+pyTooling.Cartesian2D
+=====================
+
+.. automodule:: pyTooling.Cartesian2D
+
+
+
+**Submodules**
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Cartesian2D.Shapes
+
+.. currentmodule:: pyTooling.Cartesian2D
+
+
+**Classes**
+
+- :py:class:`Point2D`:
+  An implementation of a 2D cartesian point.
+
+- :py:class:`Origin2D`:
+  An implementation of a 2D cartesian origin.
+
+- :py:class:`Offset2D`:
+  An implementation of a 2D cartesian offset.
+
+- :py:class:`Size2D`:
+  An implementation of a 2D cartesian size.
+
+- :py:class:`Segment2D`:
+  An implementation of a 2D cartesian segment.
+
+- :py:class:`LineSegment2D`:
+  An implementation of a 2D cartesian line segment.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Point2D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Point2D
+      :parts: 1
+
+.. autoclass:: Origin2D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Origin2D
+      :parts: 1
+
+.. autoclass:: Offset2D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Offset2D
+      :parts: 1
+
+.. autoclass:: Size2D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Size2D
+      :parts: 1
+
+.. autoclass:: Segment2D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Segment2D
+      :parts: 1
+
+.. autoclass:: LineSegment2D
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LineSegment2D
+      :parts: 1

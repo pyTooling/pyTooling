@@ -1,0 +1,422 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Cartesian2D.Shapes &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Cartesian3D" href="pyTooling.Cartesian3D.html" />
+    <link rel="prev" title="pyTooling.Cartesian2D" href="pyTooling.Cartesian2D.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pyTooling.Cartesian2D.Shapes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Shape"><code class="docutils literal notranslate"><span class="pre">Shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Trapezium"><code class="docutils literal notranslate"><span class="pre">Trapezium</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Trapezium.__init__"><code class="docutils literal notranslate"><span class="pre">Trapezium.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Trapezium.points"><code class="docutils literal notranslate"><span class="pre">Trapezium.points</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Trapezium.segments"><code class="docutils literal notranslate"><span class="pre">Trapezium.segments</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Rectangle"><code class="docutils literal notranslate"><span class="pre">Rectangle</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Rectangle.__init__"><code class="docutils literal notranslate"><span class="pre">Rectangle.__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Rectangle.points"><code class="docutils literal notranslate"><span class="pre">Rectangle.points</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Rectangle.segments"><code class="docutils literal notranslate"><span class="pre">Rectangle.segments</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Square"><code class="docutils literal notranslate"><span class="pre">Square</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Square.points"><code class="docutils literal notranslate"><span class="pre">Square.points</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Square.segments"><code class="docutils literal notranslate"><span class="pre">Square.segments</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Square.__init__"><code class="docutils literal notranslate"><span class="pre">Square.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D"><code class="docutils literal notranslate"><span class="pre">Point2D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Origin2D"><code class="docutils literal notranslate"><span class="pre">Origin2D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Offset2D"><code class="docutils literal notranslate"><span class="pre">Offset2D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Size2D"><code class="docutils literal notranslate"><span class="pre">Size2D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Segment2D"><code class="docutils literal notranslate"><span class="pre">Segment2D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.LineSegment2D"><code class="docutils literal notranslate"><span class="pre">LineSegment2D</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+      <li class="breadcrumb-item active">pyTooling.Cartesian2D.Shapes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Cartesian2D.Shapes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Cartesian2D.Shapes">
+<span id="pytooling-cartesian2d-shapes"></span><h1>pyTooling.Cartesian2D.Shapes<a class="headerlink" href="#module-pyTooling.Cartesian2D.Shapes" title="Link to this heading"></a></h1>
+<p>An implementation of 2D cartesian shapes for Python.</p>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Shape" title="pyTooling.Cartesian2D.Shapes.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">Shape</span></code></a>:
+Base-class for all 2D cartesian shapes.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Trapezium" title="pyTooling.Cartesian2D.Shapes.Trapezium"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trapezium</span></code></a>:
+A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Rectangle" title="pyTooling.Cartesian2D.Shapes.Rectangle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Rectangle</span></code></a>:
+A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90°.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Cartesian2D.Shapes.Square" title="pyTooling.Cartesian2D.Shapes.Square"><code class="xref py py-class docutils literal notranslate"><span class="pre">Square</span></code></a>:
+A square is a rectangle, where all edges have the same length and all inner angels are 90°.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Shape">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Cartesian2D.Shapes.</span></span><span class="sig-name descname"><span class="pre">Shape</span></span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Shape" title="Link to this definition"></a></dt>
+<dd><p>Base-class for all 2D cartesian shapes.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-6e578cd647b465475537f5b648b8733e7e4d80c6.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Shape</p></object></div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Trapezium">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Cartesian2D.Shapes.</span></span><span class="sig-name descname"><span class="pre">Trapezium</span></span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Trapezium"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Trapezium" title="Link to this definition"></a></dt>
+<dd><p>A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-8a1bf13253f4d23949f9565517a302a94891b4b2.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Trapezium</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Trapezium.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p00</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Trapezium.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Trapezium.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a trapezium with 4 corners.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p00</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – First corner.</p></li>
+<li><p><strong>p01</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Second corner.</p></li>
+<li><p><strong>p11</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Third corner.</p></li>
+<li><p><strong>p10</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Forth corner</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Trapezium.points">
+<span class="sig-name descname"><span class="pre">points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code><span class="pre">,</span> <span class="pre">bound=</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a><span class="pre">])],</span> <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Trapezium.points" title="Link to this definition"></a></dt>
+<dd><p>A tuple of 2D-points describing the trapezium.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Trapezium.segments">
+<span class="sig-name descname"><span class="pre">segments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.LineSegment2D" title="pyTooling.Cartesian2D.LineSegment2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineSegment2D</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code><span class="pre">,</span> <span class="pre">bound=</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a><span class="pre">])],</span> <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Trapezium.segments" title="Link to this definition"></a></dt>
+<dd><p>A tuple of 2D line segments describing the trapezium.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Rectangle">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Cartesian2D.Shapes.</span></span><span class="sig-name descname"><span class="pre">Rectangle</span></span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Rectangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Rectangle" title="Link to this definition"></a></dt>
+<dd><p>A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90°.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-bfa0d38f8b7349c07023e1e20c984a00a31da5eb.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Rectangle</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Rectangle.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p00</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Rectangle.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Rectangle.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a rectangle with 4 corners.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p00</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – First corner.</p></li>
+<li><p><strong>p01</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Second corner.</p></li>
+<li><p><strong>p11</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Third corner.</p></li>
+<li><p><strong>p10</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Forth corner</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Rectangle.points">
+<span class="sig-name descname"><span class="pre">points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code><span class="pre">,</span> <span class="pre">bound=</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a><span class="pre">])],</span> <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Rectangle.points" title="Link to this definition"></a></dt>
+<dd><p>A tuple of 2D-points describing the trapezium.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Rectangle.segments">
+<span class="sig-name descname"><span class="pre">segments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.LineSegment2D" title="pyTooling.Cartesian2D.LineSegment2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineSegment2D</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code><span class="pre">,</span> <span class="pre">bound=</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a><span class="pre">])],</span> <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Rectangle.segments" title="Link to this definition"></a></dt>
+<dd><p>A tuple of 2D line segments describing the trapezium.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Square">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.Cartesian2D.Shapes.</span></span><span class="sig-name descname"><span class="pre">Square</span></span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Square" title="Link to this definition"></a></dt>
+<dd><p>A square is a rectangle, where all edges have the same length and all inner angels are 90°.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-9c0402857891f1db944cb4acbe3e6ddec6b3c75f.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Square</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Square.points">
+<span class="sig-name descname"><span class="pre">points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code><span class="pre">,</span> <span class="pre">bound=</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a><span class="pre">])],</span> <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Square.points" title="Link to this definition"></a></dt>
+<dd><p>A tuple of 2D-points describing the trapezium.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Square.segments">
+<span class="sig-name descname"><span class="pre">segments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.LineSegment2D" title="pyTooling.Cartesian2D.LineSegment2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineSegment2D</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a><span class="pre">(</span><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code><span class="pre">,</span> <span class="pre">bound=</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a><span class="pre">])],</span> <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Square.segments" title="Link to this definition"></a></dt>
+<dd><p>A tuple of 2D line segments describing the trapezium.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.Cartesian2D.Shapes.Square.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p00</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Cartesian2D/Shapes.html#Square.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Cartesian2D.Shapes.Square.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes a square with 4 corners.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p00</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – First corner.</p></li>
+<li><p><strong>p01</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Second corner.</p></li>
+<li><p><strong>p11</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Third corner.</p></li>
+<li><p><strong>p10</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Cartesian2D.html#pyTooling.Cartesian2D.Point2D" title="pyTooling.Cartesian2D.Point2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point2D</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Coordinate</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>])]</span>) – Forth corner</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Cartesian2D.html" class="btn btn-neutral float-left" title="pyTooling.Cartesian2D" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Cartesian3D.html" class="btn btn-neutral float-right" title="pyTooling.Cartesian3D" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

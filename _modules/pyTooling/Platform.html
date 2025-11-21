@@ -1,0 +1,1159 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Platform &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.Platform</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Platform</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               ____  _       _    __                                                  #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \| | __ _| |_ / _| ___  _ __ _ __ ___                              #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | |_) | |/ _` | __| |_ / _ \| &#39;__| &#39;_ ` _ \                             #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  __/| | (_| | |_|  _| (_) | |  | | | | | |                            #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|   |_|\__,_|\__|_|  \___/|_|  |_| |_| |_|                            #</span>
+<span class="c1"># |_|    |___/                          |___/                                                                          #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Common platform information gathered from various sources.</span>
+
+<span class="sd">.. hint:: See :ref:`high-level help &lt;COMMON/Platform&gt;` for explanations and usage examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w">                    </span><span class="kn">import</span> <span class="n">Flag</span><span class="p">,</span> <span class="n">auto</span><span class="p">,</span> <span class="n">Enum</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w">  </span><span class="kn">import</span> <span class="n">PythonVersion</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Platform] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Decorators</span><span class="w">          </span><span class="kn">import</span> <span class="n">export</span><span class="p">,</span> <span class="n">readonly</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Exceptions</span><span class="w">          </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">MetaClasses</span><span class="w">         </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">Versioning</span><span class="w">          </span><span class="kn">import</span> <span class="n">PythonVersion</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Platform] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CurrentPlatform&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="PlatformException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.PlatformException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PlatformException</span><span class="p">(</span><span class="n">ToolingException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Base-exception of all exceptions raised by :mod:`pyTooling.Platform`.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="UnknownPlatformException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.UnknownPlatformException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UnknownPlatformException</span><span class="p">(</span><span class="n">PlatformException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The exception is raised by pyTooling.Platform when the platform can&#39;t be determined.</span>
+
+<span class="sd">	For debugging purposes, a list of system properties from various APIs is added as notes to this exception to ease</span>
+<span class="sd">	debugging unknown or new platforms.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="UnknownPlatformException.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.UnknownPlatformException.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initialize a new :class:`UnknownPlatformException` instance and add notes with further debugging information.</span>
+
+<span class="sd">		:param args: Forward positional parameters.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+		<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">sysconfig</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;os.name:                </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;platform.system:        </span><span class="si">{</span><span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;platform.machine:       </span><span class="si">{</span><span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;platform.architecture:  </span><span class="si">{</span><span class="n">platform</span><span class="o">.</span><span class="n">architecture</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sys.platform:           </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sysconfig.get_platform: </span><span class="si">{</span><span class="n">sysconfig</span><span class="o">.</span><span class="n">get_platform</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="UnknownOperatingSystemException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.UnknownOperatingSystemException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UnknownOperatingSystemException</span><span class="p">(</span><span class="n">PlatformException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;The exception is raised by pyTooling.Platform when the operating system is unknown.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="PythonImplementation">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.PythonImplementation">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PythonImplementation</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;An enumeration describing the Python implementation (CPython, PyPy, ...).&quot;&quot;&quot;</span>
+	<span class="n">Unknown</span> <span class="o">=</span> <span class="mi">0</span>   <span class="c1">#: Unknown Python implementation</span>
+
+	<span class="n">CPython</span> <span class="o">=</span> <span class="mi">1</span>   <span class="c1">#: CPython (reference implementation)</span>
+	<span class="n">PyPy</span> <span class="o">=</span> <span class="mi">2</span>      <span class="c1">#: PyPy</span></div>
+
+
+
+<div class="viewcode-block" id="Platforms">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platforms">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Platforms</span><span class="p">(</span><span class="n">Flag</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;A flag describing on which platform Python is running on and/or in which environment it&#39;s running in.&quot;&quot;&quot;</span>
+	<span class="n">Unknown</span> <span class="o">=</span> <span class="mi">0</span>
+
+	<span class="n">OS_FreeBSD</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Operating System: BSD (Unix).</span>
+	<span class="n">OS_Linux</span> <span class="o">=</span>   <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Operating System: Linux.</span>
+	<span class="n">OS_MacOS</span> <span class="o">=</span>   <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Operating System: macOS.</span>
+	<span class="n">OS_Windows</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Operating System: Windows.</span>
+
+	<span class="n">OperatingSystem</span> <span class="o">=</span> <span class="n">OS_FreeBSD</span> <span class="o">|</span> <span class="n">OS_Linux</span> <span class="o">|</span> <span class="n">OS_MacOS</span> <span class="o">|</span> <span class="n">OS_Windows</span>  <span class="c1">#: Mask: Any operating system.</span>
+
+	<span class="n">SEP_WindowsPath</span> <span class="o">=</span>  <span class="n">auto</span><span class="p">()</span>  <span class="c1">#: Seperator: Path element seperator (e.g. for directories).</span>
+	<span class="n">SEP_WindowsValue</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>  <span class="c1">#: Seperator: Value seperator in variables (e.g. for paths in PATH).</span>
+
+	<span class="n">ENV_Native</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Environment: :term:`native`.</span>
+	<span class="n">ENV_WSL</span> <span class="o">=</span>    <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Environment: :term:`Windows System for Linux &lt;WSL&gt;`.</span>
+	<span class="n">ENV_MSYS2</span> <span class="o">=</span>  <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Environment: :term:`MSYS2`.</span>
+	<span class="n">ENV_Cygwin</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>        <span class="c1">#: Environment: :term:`Cygwin`.</span>
+
+	<span class="n">Environment</span> <span class="o">=</span> <span class="n">ENV_Native</span> <span class="o">|</span> <span class="n">ENV_WSL</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ENV_Cygwin</span>  <span class="c1">#: Mask: Any environment.</span>
+
+	<span class="n">ARCH_x86_32</span> <span class="o">=</span>  <span class="n">auto</span><span class="p">()</span>      <span class="c1">#: Architecture: x86-32 (IA32).</span>
+	<span class="n">ARCH_x86_64</span> <span class="o">=</span>  <span class="n">auto</span><span class="p">()</span>      <span class="c1">#: Architecture: x86-64 (AMD64).</span>
+	<span class="n">ARCH_AArch64</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>      <span class="c1">#: Architecture: AArch64 (arm64).</span>
+
+	<span class="n">Arch_x86</span> <span class="o">=</span>     <span class="n">ARCH_x86_32</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span>  <span class="c1">#: Mask: Any x86 architecture.</span>
+	<span class="n">Arch_Arm</span> <span class="o">=</span>     <span class="n">ARCH_AArch64</span>               <span class="c1">#: Mask: Any Arm architecture.</span>
+	<span class="n">Architecture</span> <span class="o">=</span> <span class="n">Arch_x86</span> <span class="o">|</span> <span class="n">Arch_Arm</span>        <span class="c1">#: Mask: Any architecture.</span>
+
+	<span class="n">FreeBSD</span> <span class="o">=</span> <span class="n">OS_FreeBSD</span> <span class="o">|</span> <span class="n">ENV_Native</span>                                       <span class="c1">#: Group: native FreeBSD on x86-64.</span>
+	<span class="n">Linux</span> <span class="o">=</span>   <span class="n">OS_Linux</span>   <span class="o">|</span> <span class="n">ENV_Native</span>                                       <span class="c1">#: Group: native Linux on x86-64.</span>
+	<span class="n">MacOS</span> <span class="o">=</span>   <span class="n">OS_MacOS</span>   <span class="o">|</span> <span class="n">ENV_Native</span>                                       <span class="c1">#: Group: native macOS.</span>
+	<span class="n">Windows</span> <span class="o">=</span> <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_Native</span> <span class="o">|</span> <span class="n">SEP_WindowsPath</span> <span class="o">|</span> <span class="n">SEP_WindowsValue</span>  <span class="c1">#: Group: native Windows on x86-64.</span>
+
+	<span class="n">Linux_x86_64</span> <span class="o">=</span>    <span class="n">Linux</span>   <span class="o">|</span> <span class="n">ARCH_x86_64</span>    <span class="c1">#: Group: native Linux on x86-64.</span>
+	<span class="n">Linux_AArch64</span> <span class="o">=</span>   <span class="n">Linux</span>   <span class="o">|</span> <span class="n">ARCH_AArch64</span>   <span class="c1">#: Group: native Linux on aarch64.</span>
+	<span class="n">MacOS_Intel</span> <span class="o">=</span>     <span class="n">MacOS</span>   <span class="o">|</span> <span class="n">ARCH_x86_64</span>    <span class="c1">#: Group: native macOS on x86-64.</span>
+	<span class="n">MacOS_ARM</span> <span class="o">=</span>       <span class="n">MacOS</span>   <span class="o">|</span> <span class="n">ARCH_AArch64</span>   <span class="c1">#: Group: native macOS on aarch64.</span>
+	<span class="n">Windows_x86_64</span> <span class="o">=</span>  <span class="n">Windows</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span>    <span class="c1">#: Group: native Windows on x86-64.</span>
+	<span class="n">Windows_AArch64</span> <span class="o">=</span> <span class="n">Windows</span> <span class="o">|</span> <span class="n">ARCH_AArch64</span>   <span class="c1">#: Group: native Windows on aarch64.</span>
+
+	<span class="n">MSYS</span> <span class="o">=</span>    <span class="n">auto</span><span class="p">()</span>     <span class="c1">#: MSYS2 Runtime: MSYS.</span>
+	<span class="n">MinGW32</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>     <span class="c1">#: MSYS2 Runtime: :term:`MinGW32 &lt;MinGW&gt;`.</span>
+	<span class="n">MinGW64</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>     <span class="c1">#: MSYS2 Runtime: :term:`MinGW64 &lt;MinGW&gt;`.</span>
+	<span class="n">UCRT64</span> <span class="o">=</span>  <span class="n">auto</span><span class="p">()</span>     <span class="c1">#: MSYS2 Runtime: :term:`UCRT64 &lt;UCRT&gt;`.</span>
+	<span class="n">Clang32</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>     <span class="c1">#: MSYS2 Runtime: Clang32.</span>
+	<span class="n">Clang64</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>     <span class="c1">#: MSYS2 Runtime: Clang64.</span>
+
+	<span class="n">MSYS2_Runtime</span> <span class="o">=</span> <span class="n">MSYS</span> <span class="o">|</span> <span class="n">MinGW32</span> <span class="o">|</span> <span class="n">MinGW64</span> <span class="o">|</span> <span class="n">UCRT64</span> <span class="o">|</span> <span class="n">Clang32</span> <span class="o">|</span> <span class="n">Clang64</span>    <span class="c1">#: Mask: Any MSYS2 runtime environment.</span>
+
+	<span class="n">Windows_MSYS2_MSYS</span> <span class="o">=</span>    <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span> <span class="o">|</span> <span class="n">MSYS</span>      <span class="c1">#: Group: MSYS runtime running on Windows x86-64</span>
+	<span class="n">Windows_MSYS2_MinGW32</span> <span class="o">=</span> <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ARCH_x86_32</span> <span class="o">|</span> <span class="n">MinGW32</span>   <span class="c1">#: Group: MinGW32 runtime running on Windows x86-64</span>
+	<span class="n">Windows_MSYS2_MinGW64</span> <span class="o">=</span> <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span> <span class="o">|</span> <span class="n">MinGW64</span>   <span class="c1">#: Group: MinGW64 runtime running on Windows x86-64</span>
+	<span class="n">Windows_MSYS2_UCRT64</span> <span class="o">=</span>  <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span> <span class="o">|</span> <span class="n">UCRT64</span>    <span class="c1">#: Group: UCRT64 runtime running on Windows x86-64</span>
+	<span class="n">Windows_MSYS2_Clang32</span> <span class="o">=</span> <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ARCH_x86_32</span> <span class="o">|</span> <span class="n">Clang32</span>   <span class="c1">#: Group: Clang32 runtime running on Windows x86-64</span>
+	<span class="n">Windows_MSYS2_Clang64</span> <span class="o">=</span> <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span> <span class="o">|</span> <span class="n">Clang64</span>   <span class="c1">#: Group: Clang64 runtime running on Windows x86-64</span>
+
+	<span class="n">Windows_Cygwin32</span> <span class="o">=</span>      <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_Cygwin</span> <span class="o">|</span> <span class="n">ARCH_x86_32</span>            <span class="c1">#: Group: 32-bit Cygwin runtime on Windows x86-64</span>
+	<span class="n">Windows_Cygwin64</span> <span class="o">=</span>      <span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">ENV_Cygwin</span> <span class="o">|</span> <span class="n">ARCH_x86_64</span>            <span class="c1">#: Group: 64-bit Cygwin runtime on Windows x86-64</span></div>
+
+
+
+<div class="viewcode-block" id="Platform">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platform">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Platform</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">singleton</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;An instance of this class contains all gathered information available from various sources.</span>
+
+<span class="sd">	.. seealso::</span>
+
+<span class="sd">	   StackOverflow question: `Python: What OS am I running on? &lt;https://stackoverflow.com/a/54837707/3719459&gt;`__</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_platform</span><span class="p">:</span>             <span class="n">Platforms</span>
+	<span class="n">_pythonImplementation</span><span class="p">:</span> <span class="n">PythonImplementation</span>
+	<span class="n">_pythonVersion</span><span class="p">:</span>        <span class="n">PythonVersion</span>
+
+<div class="viewcode-block" id="Platform.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platform.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initializes a platform by accessing multiple APIs of Python to gather all necessary information.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">sysconfig</span>
+
+		<span class="c1"># Discover the Python implementation</span>
+		<span class="n">pythonImplementation</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_implementation</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">pythonImplementation</span> <span class="o">==</span> <span class="s2">&quot;CPython&quot;</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_pythonImplementation</span> <span class="o">=</span> <span class="n">PythonImplementation</span><span class="o">.</span><span class="n">CPython</span>
+		<span class="k">elif</span> <span class="n">pythonImplementation</span> <span class="o">==</span> <span class="s2">&quot;PyPy&quot;</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_pythonImplementation</span> <span class="o">=</span> <span class="n">PythonImplementation</span><span class="o">.</span><span class="n">PyPy</span>
+		<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_pythonImplementation</span> <span class="o">=</span> <span class="n">PythonImplementation</span><span class="o">.</span><span class="n">Unknown</span>
+
+		<span class="c1"># Discover the Python version</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_pythonVersion</span> <span class="o">=</span> <span class="n">PythonVersion</span><span class="o">.</span><span class="n">FromSysVersionInfo</span><span class="p">()</span>
+
+		<span class="c1"># Discover the platform</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Unknown</span>
+
+		<span class="n">machine</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">()</span>
+		<span class="n">sys_platform</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
+		<span class="n">sysconfig_platform</span> <span class="o">=</span> <span class="n">sysconfig</span><span class="o">.</span><span class="n">get_platform</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span>
+
+			<span class="k">if</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_32</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsPath</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsValue</span>
+			<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;win-amd64&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsPath</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsValue</span>
+			<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;win-arm64&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_AArch64</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsPath</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsValue</span>
+			<span class="k">elif</span> <span class="n">sysconfig_platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;mingw&quot;</span><span class="p">):</span>
+				<span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;AMD64&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown architecture &#39;</span><span class="si">{</span><span class="n">machine</span><span class="si">}</span><span class="s2">&#39; for Windows.&quot;</span><span class="p">)</span>
+
+				<span class="k">if</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_i686_msvcrt_gnu&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MinGW32</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_x86_64_msvcrt_gnu&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MinGW64</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_x86_64_ucrt_gnu&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">UCRT64</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_x86_64_ucrt_llvm&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Clang64</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_i686&quot;</span><span class="p">:</span>          <span class="c1"># pragma: no cover</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MinGW32</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_x86_64&quot;</span><span class="p">:</span>        <span class="c1"># pragma: no cover</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MinGW64</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_x86_64_ucrt&quot;</span><span class="p">:</span>   <span class="c1"># pragma: no cover</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">UCRT64</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;mingw_x86_64_clang&quot;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Clang64</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown MSYS2 architecture &#39;</span><span class="si">{</span><span class="n">sysconfig_platform</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+				<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown platform &#39;</span><span class="si">{</span><span class="n">sysconfig_platform</span><span class="si">}</span><span class="s2">&#39; running on Windows.&quot;</span><span class="p">)</span>
+
+		<span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;posix&quot;</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">sys_platform</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Linux</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span>
+
+				<span class="k">if</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;linux-x86_64&quot;</span><span class="p">:</span>            <span class="c1"># native Linux x86_64; Windows 64 + WSL</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span>
+				<span class="k">elif</span> <span class="n">sysconfig_platform</span> <span class="o">==</span> <span class="s2">&quot;linux-aarch64&quot;</span><span class="p">:</span>         <span class="c1"># native Linux Aarch64</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_AArch64</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown architecture &#39;</span><span class="si">{</span><span class="n">sysconfig_platform</span><span class="si">}</span><span class="s2">&#39; for a native Linux.&quot;</span><span class="p">)</span>
+
+			<span class="k">elif</span> <span class="n">sys_platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_MacOS</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span>
+
+				<span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;x86_64&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span>
+				<span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;arm64&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_AArch64</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown architecture &#39;</span><span class="si">{</span><span class="n">machine</span><span class="si">}</span><span class="s2">&#39; for a native macOS.&quot;</span><span class="p">)</span>
+
+			<span class="k">elif</span> <span class="n">sys_platform</span> <span class="o">==</span> <span class="s2">&quot;msys&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="o">|</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MSYS</span>
+
+				<span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;i686&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_32</span>
+				<span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;x86_64&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown architecture &#39;</span><span class="si">{</span><span class="n">machine</span><span class="si">}</span><span class="s2">&#39; for MSYS2-MSYS on Windows.&quot;</span><span class="p">)</span>
+
+			<span class="k">elif</span> <span class="n">sys_platform</span> <span class="o">==</span> <span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span>
+
+				<span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;i686&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_32</span>
+				<span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;x86_64&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">|=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown architecture &#39;</span><span class="si">{</span><span class="n">machine</span><span class="si">}</span><span class="s2">&#39; for Cygwin on Windows.&quot;</span><span class="p">)</span>
+
+			<span class="k">elif</span> <span class="n">sys_platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;freebsd&quot;</span><span class="p">):</span>
+				<span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;amd64&quot;</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">=</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">FreeBSD</span>
+				<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+					<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown architecture &#39;</span><span class="si">{</span><span class="n">machine</span><span class="si">}</span><span class="s2">&#39; for FreeBSD.&quot;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+				<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown POSIX platform &#39;</span><span class="si">{</span><span class="n">sys_platform</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+			<span class="k">raise</span> <span class="n">UnknownPlatformException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown operating system &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">PythonImplementation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PythonImplementation</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to return the :class:`PythonImplementation` of the current interpreter.</span>
+
+<span class="sd">		:returns: Python implementation of the current interpreter.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pythonImplementation</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsCPython</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the Python implementation is a :term:`CPython`.</span>
+
+<span class="sd">		:returns: ``True``, if the Python implementation is CPython.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pythonImplementation</span> <span class="ow">is</span> <span class="n">PythonImplementation</span><span class="o">.</span><span class="n">CPython</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsPyPy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the Python implementation is a :term:`PyPy`.</span>
+
+<span class="sd">		:returns: ``True``, if the Python implementation is PyPY.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pythonImplementation</span> <span class="ow">is</span> <span class="n">PythonImplementation</span><span class="o">.</span><span class="n">PyPy</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">PythonVersion</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PythonVersion</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to return the :class:`pyTooling.Versioning.PythonVersion` of the current interpreter.</span>
+
+<span class="sd">		:returns: Python version of the current interpreter.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pythonVersion</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">HostOperatingSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Platforms</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span> <span class="o">&amp;</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OperatingSystem</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsNativePlatform</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`native` platform.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a native platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsNativeFreeBSD</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`native` FreeBSD x86-64 platform.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a native FreeBSD x86-64 platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">FreeBSD</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsNativeMacOS</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`native` macOS x86-64 platform.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a native macOS x86-64 platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MacOS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsNativeLinux</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`native` Linux x86-64 platform.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a native Linux x86-64 platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Linux</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsNativeWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`native` Windows x86-64 platform.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a native Windows x86-64 platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsMSYS2Environment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`MSYS2` environment on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a MSYS2 environment on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsMSYSOnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a MSYS runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a MSYS runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_MSYS2_MSYS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsMinGW32OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`MinGW32 &lt;MinGW&gt;` runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a MINGW32 runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_MSYS2_MinGW32</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsMinGW64OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`MinGW64 &lt;MinGW&gt;` runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a MINGW64 runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_MSYS2_MinGW64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsUCRT64OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a :term:`UCRT64 &lt;UCRT&gt;` runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a UCRT64 runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_MSYS2_UCRT64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsClang32OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a Clang32 runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a Clang32 runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_MSYS2_Clang32</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsClang64OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a Clang64 runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a Clang64 runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_MSYS2_Clang64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsCygwin32OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a 32-bit Cygwin runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a 32-bit Cygwin runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_Cygwin32</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsCygwin64OnWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;Returns true, if the platform is a 64-bit Cygwin runtime on Windows.</span>
+
+<span class="sd">		:returns: ``True``, if the platform is a 64-bit Cygwin runtime on Windows.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Windows_Cygwin64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">IsPOSIX</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns true, if the platform is POSIX or POSIX-like.</span>
+
+<span class="sd">		:returns: ``True``, if POSIX or POSIX-like.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsPath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">PathSeperator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the path element separation character (e.g. for directories).</span>
+
+<span class="sd">		* POSIX-like: ``/``</span>
+<span class="sd">		* Windows: ``\\``</span>
+
+<span class="sd">		:returns: Path separation character.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsPath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;/&quot;</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ValueSeperator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the value separation character (e.g. for paths in PATH).</span>
+
+<span class="sd">		* POSIX-like: ``:``</span>
+<span class="sd">		* Windows: ``;``</span>
+
+<span class="sd">		:returns: Value separation character.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">SEP_WindowsValue</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;;&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;:&quot;</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ExecutableExtension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the file extension for an executable.</span>
+
+<span class="sd">		* FreeBSD: ``&quot;&quot;`` (empty string)</span>
+<span class="sd">		* Linux: ``&quot;&quot;`` (empty string)</span>
+<span class="sd">		* macOS: ``&quot;&quot;`` (empty string)</span>
+<span class="sd">		* Windows: ``&quot;exe&quot;``</span>
+
+<span class="sd">		:returns:                                File extension of an executable.</span>
+<span class="sd">		:raises UnknownOperatingSystemException: If the operating system is unknown.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_FreeBSD</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Linux</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_MacOS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;exe&quot;</span>
+		<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+			<span class="k">raise</span> <span class="n">UnknownOperatingSystemException</span><span class="p">(</span><span class="s2">&quot;Unknown operating system.&quot;</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">StaticLibraryExtension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the file extension for a static library.</span>
+
+<span class="sd">		* FreeBSD: ``&quot;a&quot;``</span>
+<span class="sd">		* Linux: ``&quot;a&quot;``</span>
+<span class="sd">		* macOS: ``&quot;lib&quot;``</span>
+<span class="sd">		* Windows: ``&quot;lib&quot;``</span>
+
+<span class="sd">		:returns:                                File extension of a static library.</span>
+<span class="sd">		:raises UnknownOperatingSystemException: If the operating system is unknown.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_FreeBSD</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;a&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Linux</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;a&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_MacOS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;a&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;lib&quot;</span>
+		<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+			<span class="k">raise</span> <span class="n">UnknownOperatingSystemException</span><span class="p">(</span><span class="s2">&quot;Unknown operating system.&quot;</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">DynamicLibraryExtension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the file extension for a dynamic/shared library.</span>
+
+<span class="sd">		* FreeBSD: ``&quot;so&quot;``</span>
+<span class="sd">		* Linux: ``&quot;so&quot;``</span>
+<span class="sd">		* macOS: ``&quot;dylib&quot;``</span>
+<span class="sd">		* Windows: ``&quot;dll&quot;``</span>
+
+<span class="sd">		:returns:                                File extension of a dynamic library.</span>
+<span class="sd">		:raises UnknownOperatingSystemException: If the operating system is unknown.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_FreeBSD</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;so&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Linux</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;so&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_MacOS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;dylib&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;dll&quot;</span>
+		<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+			<span class="k">raise</span> <span class="n">UnknownOperatingSystemException</span><span class="p">(</span><span class="s2">&quot;Unknown operating system.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Platform.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platform.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the platform&#39;s string representation.</span>
+
+<span class="sd">		:returns: The string representation of the current platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Platform.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Platform.html#pyTooling.Platform.Platform.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns the platform&#39;s string equivalent.</span>
+
+<span class="sd">		:returns: The string equivalent of the platform.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_FreeBSD</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">platform</span> <span class="o">=</span> <span class="s2">&quot;FreeBSD&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_MacOS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">platform</span> <span class="o">=</span> <span class="s2">&quot;macOS&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Linux</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">platform</span> <span class="o">=</span> <span class="s2">&quot;Linux&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">OS_Windows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">platform</span> <span class="o">=</span> <span class="s2">&quot;Windows&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">platform</span> <span class="o">=</span> <span class="s2">&quot;plat:dec-err&quot;</span>
+
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Native</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_WSL</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;+WSL&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_MSYS2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;+MSYS2&quot;</span>
+
+			<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MSYS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot; - MSYS&quot;</span>
+			<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MinGW32</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot; - MinGW32&quot;</span>
+			<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">MinGW64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot; - MinGW64&quot;</span>
+			<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">UCRT64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot; - UCRT64&quot;</span>
+			<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Clang32</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot; - Clang32&quot;</span>
+			<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">Clang64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot; - Clang64&quot;</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">runtime</span> <span class="o">=</span> <span class="s2">&quot;rt:dec-err&quot;</span>
+
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ENV_Cygwin</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;+Cygwin&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;env:dec-err&quot;</span>
+
+		<span class="k">if</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_32</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">architecture</span> <span class="o">=</span> <span class="s2">&quot;x86-32&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_x86_64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">architecture</span> <span class="o">=</span> <span class="s2">&quot;x86-64&quot;</span>
+		<span class="k">elif</span> <span class="n">Platforms</span><span class="o">.</span><span class="n">ARCH_AArch64</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_platform</span><span class="p">:</span>
+			<span class="n">architecture</span> <span class="o">=</span> <span class="s2">&quot;aarch64&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">architecture</span> <span class="o">=</span> <span class="s2">&quot;arch:dec-err&quot;</span>
+
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">platform</span><span class="si">}{</span><span class="n">environment</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">architecture</span><span class="si">}</span><span class="s2">)</span><span class="si">{</span><span class="n">runtime</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</div>
+
+
+
+<span class="n">CurrentPlatform</span> <span class="o">=</span> <span class="n">Platform</span><span class="p">()</span>     <span class="c1">#: Gathered information for the current platform.</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

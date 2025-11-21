@@ -1,0 +1,35 @@
+.. # Template created by Patrick Lehmann
+
+Python Class Reference
+######################
+
+Reference of all packages and modules:
+
+.. automodule:: pyTooling
+
+.. toctree::
+   :maxdepth: 1
+
+   pyTooling.Attributes
+   pyTooling.CLIAbstraction
+   pyTooling.CallByRef
+   pyTooling.Cartesian2D
+   pyTooling.Cartesian3D
+   pyTooling.Common
+   pyTooling.Configuration
+   pyTooling.Decorators
+   pyTooling.Exceptions
+   pyTooling.Filesystem
+   pyTooling.GenericPath
+   pyTooling.Graph
+   pyTooling.Licensing
+   pyTooling.LinkedList
+   pyTooling.MetaClasses
+   pyTooling.Packaging
+   pyTooling.Platform
+   pyTooling.StateMachine
+   pyTooling.Stopwatch
+   pyTooling.TerminalUI
+   pyTooling.Tree
+   pyTooling.Versioning
+   pyTooling.Warning

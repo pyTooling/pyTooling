@@ -1,0 +1,838 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="File Formats" href="FileFormats.html" />
+    <link rel="prev" title="Versioning" href="../Common/Versioning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dictionary">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sequences">Sequences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-model">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-concrete-implementation">Creating a Concrete Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Configuration/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="configuration">
+<span id="config"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h1>
+<p>Module <a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#module-pyTooling.Configuration" title="pyTooling.Configuration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Configuration</span></code></a> provides an abstract configuration reader.</p>
+<p>It supports any configuration file syntax, which provides:</p>
+<ul class="simple">
+<li><p>scalar elements (integer, string, …),</p></li>
+<li><p>sequences (ordered lists), and</p></li>
+<li><p>dictionaries (key-value-pairs).</p></li>
+</ul>
+<p>The abstracted data model is based on a common <a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Node" title="pyTooling.Configuration.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> class, which is derived to a
+<a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Sequence" title="pyTooling.Configuration.Sequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>, <a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Dictionary" title="pyTooling.Configuration.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a> and
+<a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Configuration" title="pyTooling.Configuration.Configuration"><code class="xref py py-class docutils literal notranslate"><span class="pre">Configuration</span></code></a> class.</p>
+<p class="rubric">Inheritance diagram:</p>
+<div class="graphviz"><object data="../_images/inheritance-4edf8cb93c7342553c2dc68a76ab46baa626b288.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of pyTooling.Configuration</p></object></div>
+<section id="dictionary">
+<h2>Dictionary<a class="headerlink" href="#dictionary" title="Link to this heading"></a></h2>
+<p>A <a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Dictionary" title="pyTooling.Configuration.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a> represents key-value-pairs of information.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="JSON" for="sd-tab-item-0">
+JSON</label><div class="sd-tab-content docutils">
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="c1">// one-liner style</span>
+<span class="p">{</span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key3&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span><span class="p">}</span>
+
+<span class="c1">// multi-line style</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;key3&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="TOML" for="sd-tab-item-1">
+TOML</label><div class="sd-tab-content docutils">
+<div class="highlight-TOML notranslate"><div class="highlight"><pre><span></span><span class="c1"># one-liner style</span>
+<span class="n">section_1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">key1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">key2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">key3</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span><span class="p">}</span>
+
+<span class="c1"># section style</span>
+<span class="k">[section_2]</span>
+<span class="n">key1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;item1&quot;</span>
+<span class="n">key2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span>
+<span class="n">key3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="YAML" for="sd-tab-item-2">
+YAML</label><div class="sd-tab-content docutils">
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="c1"># one-liner style</span>
+<span class="p p-Indicator">{</span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="nv">item1</span><span class="p p-Indicator">,</span><span class="nt"> key2</span><span class="p">:</span><span class="w"> </span><span class="nv">item2</span><span class="p p-Indicator">,</span><span class="nt"> key3</span><span class="p">:</span><span class="w"> </span><span class="nv">item3</span><span class="p p-Indicator">}</span>
+
+<span class="c1"># multi-line style</span>
+<span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item1</span>
+<span class="nt">key2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item2</span>
+<span class="nt">key3</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item3</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="XML" for="sd-tab-item-3">
+XML</label><div class="sd-tab-content docutils">
+<div class="highlight-XML notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;items&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item</span><span class="w"> </span><span class="na">key=</span><span class="s">&quot;key1&quot;</span><span class="nt">&gt;</span>item1<span class="nt">&lt;/item&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item</span><span class="w"> </span><span class="na">key=</span><span class="s">&quot;key2&quot;</span><span class="nt">&gt;</span>item2<span class="nt">&lt;/item&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item</span><span class="w"> </span><span class="na">key=</span><span class="s">&quot;key3&quot;</span><span class="nt">&gt;</span>item3<span class="nt">&lt;/item&gt;</span>
+<span class="nt">&lt;/items&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>CONFIG:: Needs documentation for Dictionary</p>
+</div>
+</section>
+<section id="sequences">
+<h2>Sequences<a class="headerlink" href="#sequences" title="Link to this heading"></a></h2>
+<p>A <a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Sequence" title="pyTooling.Configuration.Sequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a> represents ordered information items.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="JSON" for="sd-tab-item-4">
+JSON</label><div class="sd-tab-content docutils">
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="c1">// one-liner style</span>
+<span class="p">[</span><span class="s2">&quot;item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span><span class="p">]</span>
+
+<span class="c1">// multi-line style</span>
+<span class="p">[</span>
+<span class="w">  </span><span class="s2">&quot;item1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;item3&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="TOML" for="sd-tab-item-5">
+TOML</label><div class="sd-tab-content docutils">
+<div class="highlight-TOML notranslate"><div class="highlight"><pre><span></span><span class="c1"># one-liner style</span>
+<span class="n">section_1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span><span class="p">]</span>
+
+<span class="c1"># multi-line style</span>
+<span class="n">section_2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="s2">&quot;item1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;item3&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-6" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="YAML" for="sd-tab-item-6">
+YAML</label><div class="sd-tab-content docutils">
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="c1"># one-liner style</span>
+<span class="p p-Indicator">[</span><span class="nv">item1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">item2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">item3</span><span class="p p-Indicator">]</span>
+
+<span class="c1"># multi-line style</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item1</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item2</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item3</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-7" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="XML" for="sd-tab-item-7">
+XML</label><div class="sd-tab-content docutils">
+<div class="highlight-XML notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;items&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item&gt;</span>item1<span class="nt">&lt;/item&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item&gt;</span>item2<span class="nt">&lt;/item&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item&gt;</span>item3<span class="nt">&lt;/item&gt;</span>
+<span class="nt">&lt;/items&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>CONFIG:: Needs documentation for Sequences</p>
+</div>
+</section>
+<section id="id3">
+<h2>Configuration<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>A <a class="reference internal" href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Configuration" title="pyTooling.Configuration.Configuration"><code class="xref py py-class docutils literal notranslate"><span class="pre">Configuration</span></code></a> represents the whole configuration (file) made of sequences,
+dictionaries and scalar information items.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="JSON" for="sd-tab-item-8">
+JSON</label><div class="sd-tab-content docutils">
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;path/to/file1.ext&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;path/to/file2.ext&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;path/to/file3.ext&quot;</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-9" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="TOML" for="sd-tab-item-9">
+TOML</label><div class="sd-tab-content docutils">
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Not yet implemented.</p>
+</div>
+<div class="highlight-TOML notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;1.0&quot;</span>
+
+<span class="k">[settings]</span>
+<span class="n">key1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;item1&quot;</span>
+<span class="n">key2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span>
+
+<span class="n">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="s2">&quot;path/to/file1.ext&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;path/to/file2.ext&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;path/to/file3.ext&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-10" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="YAML" for="sd-tab-item-10">
+YAML</label><div class="sd-tab-content docutils">
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.0&quot;</span>
+<span class="nt">settings</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item1</span>
+<span class="w">  </span><span class="nt">key2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">item2</span>
+<span class="nt">files</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">path/to/file1.ext</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">path/to/file2.ext</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">path/to/file3.ext</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="XML" for="sd-tab-item-11">
+XML</label><div class="sd-tab-content docutils">
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Not yet implemented.</p>
+</div>
+<div class="highlight-XML notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot; ?&gt;</span>
+<span class="nt">&lt;configuration</span><span class="w"> </span><span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;settings&gt;</span>
+<span class="w">    </span><span class="nt">&lt;setting</span><span class="w"> </span><span class="na">key=</span><span class="s">&quot;key1&quot;</span><span class="nt">&gt;</span>item1<span class="nt">&lt;/setting&gt;</span>
+<span class="w">    </span><span class="nt">&lt;setting</span><span class="w"> </span><span class="na">key=</span><span class="s">&quot;key2&quot;</span><span class="nt">&gt;</span>item2<span class="nt">&lt;/setting&gt;</span>
+<span class="w">  </span><span class="nt">&lt;/settings&gt;</span>
+<span class="w">  </span><span class="nt">&lt;files&gt;</span>
+<span class="w">    </span><span class="nt">&lt;file&gt;</span>path/to/file1.ext<span class="nt">&lt;/file&gt;</span>
+<span class="w">    </span><span class="nt">&lt;file&gt;</span>path/to/file2.ext<span class="nt">&lt;/file&gt;</span>
+<span class="w">    </span><span class="nt">&lt;file&gt;</span>path/to/file3.ext<span class="nt">&lt;/file&gt;</span>
+<span class="w">  </span><span class="nt">&lt;/files&gt;</span>
+<span class="nt">&lt;/configuration&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>CONFIG:: Needs documentation for Configuration</p>
+</div>
+</section>
+<section id="data-model">
+<h2>Data Model<a class="headerlink" href="#data-model" title="Link to this heading"></a></h2>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>CONFIG:: Needs documentation for Data Model</p>
+</div>
+<pre  class="mermaid">
+        flowchart TD
+  Configuration --&gt; Dictionary
+  Configuration --&gt; Sequence
+  Dictionary --&gt; Dictionary
+  Sequence --&gt; Sequence
+  Dictionary --&gt; Sequence
+  Sequence --&gt; Dictionary
+    </pre></section>
+<section id="creating-a-concrete-implementation">
+<h2>Creating a Concrete Implementation<a class="headerlink" href="#creating-a-concrete-implementation" title="Link to this heading"></a></h2>
+<p>Follow these steps to derive a concrete implementation of the abstract configuration data model.</p>
+<ol class="arabic">
+<li><p>Import classes from abstract data model</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+  <span class="n">Node</span> <span class="k">as</span> <span class="n">Abstract_Node</span><span class="p">,</span>
+  <span class="n">Dictionary</span> <span class="k">as</span> <span class="n">Abstract_Dict</span><span class="p">,</span>
+  <span class="n">Sequence</span> <span class="k">as</span> <span class="n">Abstract_Seq</span><span class="p">,</span>
+  <span class="n">Configuration</span> <span class="k">as</span> <span class="n">Abstract_Configuration</span><span class="p">,</span>
+  <span class="n">KeyT</span><span class="p">,</span> <span class="n">NodeT</span><span class="p">,</span> <span class="n">ValueT</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Derive a node, which might hold references to nodes in the source file’s parser for later usage.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">(</span><span class="n">Abstract_Node</span><span class="p">):</span>
+  <span class="n">_configNode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CommentedMap</span><span class="p">,</span> <span class="n">CommentedSeq</span><span class="p">]</span>
+  <span class="c1"># further local fields</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="s2">&quot;Configuration&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">NodeT</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">KeyT</span><span class="p">,</span> <span class="n">configNode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CommentedMap</span><span class="p">,</span> <span class="n">CommentedSeq</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">Abstract_Node</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_configNode</span> <span class="o">=</span> <span class="n">configNode</span>
+
+  <span class="c1"># Implement mandatory methods and properties</span>
+</pre></div>
+</div>
+</li>
+<li><p>Derive a dictionary class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dictionary</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="n">Abstract_Dict</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="s2">&quot;Configuration&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">NodeT</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">KeyT</span><span class="p">,</span> <span class="n">configNode</span><span class="p">:</span> <span class="n">CommentedMap</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">Node</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">configNode</span><span class="p">)</span>
+
+  <span class="c1"># Implement mandatory methods and properties</span>
+</pre></div>
+</div>
+</li>
+<li><p>Derive a sequence class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Sequence</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="n">Abstract_Seq</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="s2">&quot;Configuration&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">NodeT</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">KeyT</span><span class="p">,</span> <span class="n">configNode</span><span class="p">:</span> <span class="n">CommentedSeq</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">Node</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">configNode</span><span class="p">)</span>
+
+  <span class="c1"># Implement mandatory methods and properties</span>
+</pre></div>
+</div>
+</li>
+<li><p>Set new dictionary and sequence classes as types in the abstract node class.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">setattr</span><span class="p">(</span><span class="n">Abstract_Node</span><span class="p">,</span> <span class="s2">&quot;DICT_TYPE&quot;</span><span class="p">,</span> <span class="n">Dictionary</span><span class="p">)</span>
+<span class="nb">setattr</span><span class="p">(</span><span class="n">Abstract_Node</span><span class="p">,</span> <span class="s2">&quot;SEQ_TYPE&quot;</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Derive a configuration class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Configuration</span><span class="p">(</span><span class="n">Dictionary</span><span class="p">,</span> <span class="n">Abstract_Configuration</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configFile</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">configFile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="o">...</span>
+
+    <span class="n">Dictionary</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+
+  <span class="c1"># Implement mandatory methods and properties</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Common/Versioning.html" class="btn btn-neutral float-left" title="Versioning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FileFormats.html" class="btn btn-neutral float-right" title="File Formats" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

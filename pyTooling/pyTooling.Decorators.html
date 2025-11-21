@@ -1,0 +1,480 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Decorators &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.Exceptions" href="pyTooling.Exceptions.html" />
+    <link rel="prev" title="pyTooling.Configuration.YAML" href="pyTooling.Configuration.YAML.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CLIAbstraction.html">pyTooling.CLIAbstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.Decorators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.Param"><code class="docutils literal notranslate"><span class="pre">Param</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.RetType"><code class="docutils literal notranslate"><span class="pre">RetType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.Func"><code class="docutils literal notranslate"><span class="pre">Func</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.T"><code class="docutils literal notranslate"><span class="pre">T</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.export"><code class="docutils literal notranslate"><span class="pre">export()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.notimplemented"><code class="docutils literal notranslate"><span class="pre">notimplemented()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.readonly"><code class="docutils literal notranslate"><span class="pre">readonly()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.Decorators.InheritDocString"><code class="docutils literal notranslate"><span class="pre">InheritDocString()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.Decorators</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.Decorators.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.Decorators">
+<span id="pytooling-decorators"></span><h1>pyTooling.Decorators<a class="headerlink" href="#module-pyTooling.Decorators" title="Link to this heading"></a></h1>
+<p>Decorators controlling visibility of entities in a Python module.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference internal" href="../Decorators.html#deco"><span class="std std-ref">high-level help</span></a> for explanations and usage examples.</p>
+</div>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Decorators.Param" title="pyTooling.Decorators.Param"><code class="xref py py-data docutils literal notranslate"><span class="pre">Param</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Decorators.RetType" title="pyTooling.Decorators.RetType"><code class="xref py py-data docutils literal notranslate"><span class="pre">RetType</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Decorators.Func" title="pyTooling.Decorators.Func"><code class="xref py py-data docutils literal notranslate"><span class="pre">Func</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyTooling.Decorators.T" title="pyTooling.Decorators.T"><code class="xref py py-data docutils literal notranslate"><span class="pre">T</span></code></a></p></li>
+</ul>
+<p><strong>Functions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.Decorators.export" title="pyTooling.Decorators.export"><code class="xref py py-func docutils literal notranslate"><span class="pre">export()</span></code></a>:
+Register the given function or class as publicly accessible in a module.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Decorators.notimplemented" title="pyTooling.Decorators.notimplemented"><code class="xref py py-func docutils literal notranslate"><span class="pre">notimplemented()</span></code></a>:
+Mark a method as <em>not implemented</em> and replace the implementation with a new method raising a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Decorators.readonly" title="pyTooling.Decorators.readonly"><code class="xref py py-func docutils literal notranslate"><span class="pre">readonly()</span></code></a>:
+Marks a property as <em>read-only</em>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.Decorators.InheritDocString" title="pyTooling.Decorators.InheritDocString"><code class="xref py py-func docutils literal notranslate"><span class="pre">InheritDocString()</span></code></a>:
+Copy the doc-string from given base-class to the method this decorator is applied to.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Variables</strong></p>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Decorators.Param">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">Param</span></span><a class="headerlink" href="#pyTooling.Decorators.Param" title="Link to this definition"></a></dt>
+<dd><p>A parameter specification for function or method</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>~Param
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Decorators.RetType">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">RetType</span></span><a class="headerlink" href="#pyTooling.Decorators.RetType" title="Link to this definition"></a></dt>
+<dd><p>Type variable for a return type</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>~RetType
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Decorators.Func">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">Func</span></span><a class="headerlink" href="#pyTooling.Decorators.Func" title="Link to this definition"></a></dt>
+<dd><p>Type specification for a function</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>typing.Callable[~Param, ~RetType]
+</pre></div>
+</div>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#pyTooling.Decorators.Param" title="pyTooling.Decorators.Param"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Param</span></code></a>], <a class="reference internal" href="#pyTooling.Decorators.RetType" title="pyTooling.Decorators.RetType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RetType</span></code></a>]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyTooling.Decorators.T">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#pyTooling.Decorators.T" title="Link to this definition"></a></dt>
+<dd><p>A type variable for a classes or functions.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>~T
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Functions</strong></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Decorators.export">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Decorators.html#export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Decorators.export" title="Link to this definition"></a></dt>
+<dd><p>Register the given function or class as publicly accessible in a module.</p>
+<p>Creates or updates the <code class="docutils literal notranslate"><span class="pre">__all__</span></code> attribute in the module in which the decorated entity is defined to include the
+name of the decorated entity.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">to_export.py</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">another_file.py</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">export</span>
+
+<span class="nd">@export</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">exported</span><span class="p">():</span>
+  <span class="k">pass</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">not_exported</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</td>
+<td><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.to_export</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c1"># &#39;exported&#39; will be listed in __all__</span>
+<span class="k">assert</span> <span class="s2">&quot;exported&quot;</span>         <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span>
+
+<span class="c1"># &#39;not_exported&#39; won&#39;t be listed in __all__</span>
+<span class="k">assert</span> <span class="s2">&quot;not_exported&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">T</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.FunctionType" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">FunctionType</span></code></a>])</span>) – The function or class to include in <cite>__all__</cite>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">T</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.FunctionType" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">FunctionType</span></code></a>])</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The unmodified function or class.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#AttributeError" title="(in Python v3.14)"><strong>AttributeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">entity</span></code> has no <code class="docutils literal notranslate"><span class="pre">__module__</span></code> member.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">entity</span></code> is not a top-level entity in a module.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter <code class="docutils literal notranslate"><span class="pre">entity</span></code> has no <code class="docutils literal notranslate"><span class="pre">__name__</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Decorators.notimplemented">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">notimplemented</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Decorators.html#notimplemented"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Decorators.notimplemented" title="Link to this definition"></a></dt>
+<dd><p>Mark a method as <em>not implemented</em> and replace the implementation with a new method raising a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a>.</p>
+<p>The original method is stored in <code class="docutils literal notranslate"><span class="pre">&lt;method&gt;.__wrapped__</span></code> and it’s doc-string is copied to the replacing method. In
+additional the field <code class="docutils literal notranslate"><span class="pre">&lt;method&gt;.__notImplemented__</span></code> is added.</p>
+<div class="admonition-example-py admonition">
+<p class="admonition-title"><code class="docutils literal notranslate"><span class="pre">example.py</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Data</span><span class="p">:</span>
+  <span class="nd">@notimplemented</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;This method needs to be implemented&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – Method that is marked as <em>not implemented</em>.</p></li>
+<li><p><strong>message</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Replacement method, which raises a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a>.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">abstractmethod()</span></code></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">mustoverride()</span></code></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Decorators.readonly">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Decorators.html#readonly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Decorators.readonly" title="Link to this definition"></a></dt>
+<dd><p>Marks a property as <em>read-only</em>.</p>
+<p>The doc-string will be taken from the getter-function.</p>
+<p>It will remove <code class="docutils literal notranslate"><span class="pre">&lt;property&gt;.setter</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;property&gt;.deleter</span></code> from the property descriptor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>func</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span>) – Function to convert to a read-only property.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#property" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">property</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A property object with just a getter.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.python.org/3/library/functions.html#property" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">property</span></code></a></dt><dd><p>A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyTooling.Decorators.InheritDocString">
+<span class="sig-prename descclassname"><span class="pre">pyTooling.Decorators.</span></span><span class="sig-name descname"><span class="pre">InheritDocString</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/Decorators.html#InheritDocString"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.Decorators.InheritDocString" title="Link to this definition"></a></dt>
+<dd><p>Copy the doc-string from given base-class to the method this decorator is applied to.</p>
+<div class="admonition-example-py admonition">
+<p class="admonition-title"><code class="docutils literal notranslate"><span class="pre">example.py</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">InheritDocString</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Class1</span><span class="p">:</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Method&#39;s doc-string.&#39;&#39;&#39;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Class2</span><span class="p">(</span><span class="n">Class1</span><span class="p">):</span>
+  <span class="nd">@InheritDocString</span><span class="p">(</span><span class="n">Class1</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">method</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>baseClass</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a></span>) – Base-class to copy the doc-string from to the new method being decorated.</p></li>
+<li><p><strong>merge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ParamSpec" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamSpec</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Param</span></code>, bound= <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">RetType</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a>]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ParamSpec" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamSpec</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Param</span></code>, bound= <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">RetType</span></code>)], <a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Decorator function that copies the doc-string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Configuration.YAML.html" class="btn btn-neutral float-left" title="pyTooling.Configuration.YAML" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.Exceptions.html" class="btn btn-neutral float-right" title="pyTooling.Exceptions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

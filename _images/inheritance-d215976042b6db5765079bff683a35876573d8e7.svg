@@ -1,0 +1,80 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="353pt" height="64pt" viewBox="0.00 0.00 353.00 64.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 60)">
+<ns0:title>inheritancec9a5297390</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Enum</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/enum.html#enum.Enum" ns1:title="Create a collection of name/value pairs." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-37 0,-37 0,-18 54,-18 54,-37" />
+<ns0:text text-anchor="middle" x="27" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Enum</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Flag</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="https://docs.python.org/3/library/enum.html#enum.Flag" ns1:title="Support for flags" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="150.5,-56 96.5,-56 96.5,-37 150.5,-37 150.5,-56" />
+<ns0:text text-anchor="middle" x="123.5" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Flag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Enum-&gt;Flag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.07,-32.74C65.55,-35.05 79.12,-37.78 91.14,-40.19" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="90.94,-41.94 96.18,-41.21 91.63,-38.51 90.94,-41.94" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>ReprEnum</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="https://docs.python.org/3/library/enum.html#enum.ReprEnum" ns1:title="Only changes the repr(), leaving str() and format() to the mixed-in type." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="157,-19 90,-19 90,0 157,0 157,-19" />
+<ns0:text text-anchor="middle" x="123.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ReprEnum</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Enum-&gt;ReprEnum</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.07,-22.53C63.56,-20.73 74.48,-18.65 84.77,-16.69" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="85.17,-18.39 89.76,-15.74 84.52,-14.95 85.17,-18.39" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>IntFlag</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="https://docs.python.org/3/library/enum.html#enum.IntFlag" ns1:title="Support for integer-based Flags" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="247,-37 193,-37 193,-18 247,-18 247,-37" />
+<ns0:text text-anchor="middle" x="220" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">IntFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Flag-&gt;IntFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M150.57,-41.26C162.05,-38.95 175.62,-36.22 187.64,-33.81" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="188.13,-35.49 192.68,-32.79 187.44,-32.06 188.13,-35.49" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>Protocols</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.GenericPath.URL.html#pyTooling.GenericPath.URL.Protocols" ns1:title="Enumeration of supported URL schemes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="345,-37 283,-37 283,-18 345,-18 345,-37" />
+<ns0:text text-anchor="middle" x="314" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Protocols</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>IntFlag-&gt;Protocols</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M247.12,-27.5C256.62,-27.5 267.52,-27.5 277.68,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="277.92,-29.25 282.92,-27.5 277.92,-25.75 277.92,-29.25" />
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ReprEnum-&gt;IntFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M157.02,-15.69C167.02,-17.6 178,-19.69 187.91,-21.58" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="187.74,-23.33 192.98,-22.54 188.39,-19.89 187.74,-23.33" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

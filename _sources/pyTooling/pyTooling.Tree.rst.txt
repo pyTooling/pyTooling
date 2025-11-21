@@ -1,0 +1,95 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+==============
+pyTooling.Tree
+==============
+
+.. automodule:: pyTooling.Tree
+
+
+.. currentmodule:: pyTooling.Tree
+
+
+**Exceptions**
+
+- :py:exc:`TreeException`:
+  Base exception of all exceptions raised by :mod:`pyTooling.Tree`.
+
+- :py:exc:`InternalError`:
+  The exception is raised when a data structure corruption is detected.
+
+- :py:exc:`NoSiblingsError`:
+  The exception is raised when a node has no parent and thus has no siblings.
+
+- :py:exc:`AlreadyInTreeError`:
+  The exception is raised when the current node and the other node are already in the same tree.
+
+- :py:exc:`NotInSameTreeError`:
+  The exception is raised when the current node and the other node are not in the same tree.
+
+
+
+**Classes**
+
+- :py:class:`Node`:
+  A **tree** data structure can be constructed of ``Node`` instances.
+
+
+
+---------------------
+
+**Exceptions**
+
+
+
+
+.. autoexception:: TreeException
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: TreeException
+      :parts: 1
+
+.. autoexception:: InternalError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: InternalError
+      :parts: 1
+
+.. autoexception:: NoSiblingsError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NoSiblingsError
+      :parts: 1
+
+.. autoexception:: AlreadyInTreeError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: AlreadyInTreeError
+      :parts: 1
+
+.. autoexception:: NotInSameTreeError
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: NotInSameTreeError
+      :parts: 1
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: Node
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Node
+      :parts: 1

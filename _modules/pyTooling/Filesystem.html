@@ -1,0 +1,1587 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.Filesystem &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyTooling.Filesystem</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyTooling.Filesystem</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#             _____           _ _               _____ _ _                     _                                        #</span>
+<span class="c1">#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  ___(_) | ___  ___ _   _ ___| |_ ___ _ __ ___                         #</span>
+<span class="c1"># | &#39;_ \| | | || |/ _ \ / _ \| | | &#39;_ \ / _` | | |_  | | |/ _ \/ __| | | / __| __/ _ \ &#39;_ ` _ \                        #</span>
+<span class="c1"># | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  _| | | |  __/\__ \ |_| \__ \ ||  __/ | | | | |                       #</span>
+<span class="c1"># | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|   |_|_|\___||___/\__, |___/\__\___|_| |_| |_|                       #</span>
+<span class="c1"># |_|    |___/                          |___/                       |___/                                              #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Authors:                                                                                                             #</span>
+<span class="c1">#   Patrick Lehmann                                                                                                    #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># License:                                                                                                             #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1"># Copyright 2025-2025 Patrick Lehmann - Bötzingen, Germany                                                             #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);                                                      #</span>
+<span class="c1"># you may not use this file except in compliance with the License.                                                     #</span>
+<span class="c1"># You may obtain a copy of the License at                                                                              #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software                                                  #</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,                                                    #</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #</span>
+<span class="c1"># See the License for the specific language governing permissions and                                                  #</span>
+<span class="c1"># limitations under the License.                                                                                       #</span>
+<span class="c1">#                                                                                                                      #</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0                                                                                  #</span>
+<span class="c1"># ==================================================================================================================== #</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">An object-oriented file system abstraction for directory, file, symbolic link, ... statistics collection.</span>
+
+<span class="sd">.. important::</span>
+
+<span class="sd">   This isn&#39;t a replacement of :mod:`pathlib` introduced with Python 3.4.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w">                    </span><span class="kn">import</span> <span class="n">scandir</span><span class="p">,</span> <span class="n">readlink</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w">                  </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w">             </span><span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w">               </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w">                </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">Nullable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">export</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span><span class="p">,</span> <span class="n">abstractmethod</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span><span class="p">,</span> <span class="n">zipdicts</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Stopwatch</span><span class="w">   </span><span class="kn">import</span> <span class="n">Stopwatch</span>
+	<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Tree</span><span class="w">        </span><span class="kn">import</span> <span class="n">Node</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Filesystem] Could not import from &#39;pyTooling.*&#39;!&quot;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Decorators</span><span class="w">  </span><span class="kn">import</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">export</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Exceptions</span><span class="w">  </span><span class="kn">import</span> <span class="n">ToolingException</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span><span class="p">,</span> <span class="n">abstractmethod</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w">      </span><span class="kn">import</span> <span class="n">getFullyQualifiedName</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Stopwatch</span><span class="w">   </span><span class="kn">import</span> <span class="n">Stopwatch</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Tree</span><span class="w">        </span><span class="kn">import</span> <span class="n">Node</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[pyTooling.Filesystem] Could not import directly!&quot;</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">ex</span>
+
+
+<span class="n">_ParentType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_ParentType&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;Element&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="FilesystemException">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.FilesystemException">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FilesystemException</span><span class="p">(</span><span class="n">ToolingException</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="NodeKind">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.NodeKind">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NodeKind</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Node kind for filesystem elements in a :ref:`tree &lt;STRUCT/Tree&gt;`.</span>
+
+<span class="sd">	This enumeration is used when converting the filesystem statistics tree to an instance of :mod:`pyTooling.Tree`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">Directory</span> <span class="o">=</span>    <span class="mi">0</span>  <span class="c1">#: Node represents a directory.</span>
+	<span class="n">File</span> <span class="o">=</span>         <span class="mi">1</span>  <span class="c1">#: Node represents a regular file.</span>
+	<span class="n">SymbolicLink</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1">#: Node represents a symbolic link.</span></div>
+
+
+
+<div class="viewcode-block" id="Base">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Base">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+	<span class="n">_root</span><span class="p">:</span>   <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Root&quot;</span><span class="p">]</span>  <span class="c1">#: Reference to the root of the filesystem statistics scope.</span>
+	<span class="n">_size</span><span class="p">:</span>   <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>     <span class="c1">#: Actual or aggregated size of the filesystem element.</span>
+
+<div class="viewcode-block" id="Base.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Base.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">root</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Root&quot;</span><span class="p">],</span>
+		<span class="n">size</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">root</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="n">size</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Root&quot;</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Property to access the root of the filesystem statistics scope.</span>
+
+<span class="sd">		:returns: Root of the filesystem statistics scope.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+
+	<span class="nd">@Root</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="s2">&quot;Root&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the elements size in Bytes.</span>
+
+<span class="sd">		:returns:                    Size in Bytes.</span>
+<span class="sd">		:raises FilesystemException: If size is not computed, yet.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">FilesystemException</span><span class="p">(</span><span class="s2">&quot;Size is not computed, yet.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+
+	<span class="c1"># @abstractmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ToTree</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+		<span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="Element">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Element">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Element</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">_ParentType</span><span class="p">]):</span>
+	<span class="n">_name</span><span class="p">:</span>        <span class="nb">str</span>                   <span class="c1">#: Name of the filesystem element.</span>
+	<span class="n">_parent</span><span class="p">:</span>      <span class="n">_ParentType</span>           <span class="c1">#: Reference to the filesystem element&#39;s parent (:class:`Directory`)</span>
+	<span class="n">_linkSources</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;SymbolicLink&quot;</span><span class="p">]</span>  <span class="c1">#: A list of symbolic links pointing to this filesystem element.</span>
+
+<div class="viewcode-block" id="Element.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Element.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">size</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">_ParentType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">root</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># if parent is None else parent._root</span>
+
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_linkSources</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+	<span class="nd">@property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ParentType</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
+
+	<span class="nd">@Parent</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_ParentType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">value</span>
+
+		<span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">_root</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the elements name.</span>
+
+<span class="sd">		:returns: Element name.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Property &#39;Path&#39; is abstract.&quot;</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">AddLinkSources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">&quot;SymbolicLink&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_linkSources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Directory">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Directory</span><span class="p">(</span><span class="n">Element</span><span class="p">[</span><span class="s2">&quot;Directory&quot;</span><span class="p">]):</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A **directory** represents a directory in the filesystem contains subdirectories, regular files and symbolic links.</span>
+
+<span class="sd">	While scanning for subelements, the directory is populated with elements. Every file object added, gets registered in</span>
+<span class="sd">	the filesystems :class:`Root` for deduplication. In case a file identifier already exists, the found filename will</span>
+<span class="sd">	reference the same file objects. In turn, the file objects has then references to multiple filenames (parents). This</span>
+<span class="sd">	allows to detect :term:`hardlinks &lt;hardlink&gt;`.</span>
+
+<span class="sd">	The time needed for scanning the directory and its subelements is provided via :data:`ScanDuration`.</span>
+
+<span class="sd">	After scnaning the directory for subelements, certain directory properties get aggregated. The time needed for</span>
+<span class="sd">	aggregation is provided via :data:`AggregateDuration`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">_path</span><span class="p">:</span>              <span class="n">Nullable</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>             <span class="c1">#: Cached :class:`~pathlib.Path` object of this directory.</span>
+	<span class="n">_subdirectories</span><span class="p">:</span>    <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Directory&quot;</span><span class="p">]</span>     <span class="c1">#: Dictionary containing name-:class:`Directory` pairs.</span>
+	<span class="n">_files</span><span class="p">:</span>             <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Filename&quot;</span><span class="p">]</span>      <span class="c1">#: Dictionary containing name-:class:`Filename` pairs.</span>
+	<span class="n">_symbolicLinks</span><span class="p">:</span>     <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;SymbolicLink&quot;</span><span class="p">]</span>  <span class="c1">#: Dictionary containing name-:class:`SymbolicLink` pairs.</span>
+	<span class="n">_collapsed</span><span class="p">:</span>         <span class="nb">bool</span>                       <span class="c1">#: True, if this directory was collapsed. It contains no subelements.</span>
+	<span class="n">_scanDuration</span><span class="p">:</span>      <span class="n">Nullable</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>            <span class="c1">#: Duration for scanning the directory and all its subelements.</span>
+	<span class="n">_aggregateDuration</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>            <span class="c1">#: Duration for aggregating all subelements.</span>
+
+<div class="viewcode-block" id="Directory.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">name</span><span class="p">:</span>                  <span class="nb">str</span><span class="p">,</span>
+		<span class="n">collectSubdirectories</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+		<span class="n">parent</span><span class="p">:</span>                <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Directory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_collapsed</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_scanDuration</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_aggregateDuration</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">parent</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+			<span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span>
+
+		<span class="k">if</span> <span class="n">collectSubdirectories</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_collectSubdirectories</span><span class="p">()</span></div>
+
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_collectSubdirectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">with</span> <span class="n">Stopwatch</span><span class="p">()</span> <span class="k">as</span> <span class="n">sw1</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_scanSubdirectories</span><span class="p">()</span>
+
+		<span class="k">with</span> <span class="n">Stopwatch</span><span class="p">()</span> <span class="k">as</span> <span class="n">sw2</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_aggregateSizes</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_scanDuration</span> <span class="o">=</span> <span class="n">sw1</span><span class="o">.</span><span class="n">Duration</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_aggregateDuration</span> <span class="o">=</span> <span class="n">sw2</span><span class="o">.</span><span class="n">Duration</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_scanSubdirectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">items</span> <span class="o">=</span> <span class="n">scandir</span><span class="p">(</span><span class="n">directoryPath</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">PermissionError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="k">for</span> <span class="n">dirEntry</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">dirEntry</span><span class="o">.</span><span class="n">is_dir</span><span class="p">(</span><span class="n">follow_symlinks</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+				<span class="n">subdirectory</span> <span class="o">=</span> <span class="n">Directory</span><span class="p">(</span><span class="n">dirEntry</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">collectSubdirectories</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">dirEntry</span><span class="o">.</span><span class="n">is_file</span><span class="p">(</span><span class="n">follow_symlinks</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+				<span class="nb">id</span> <span class="o">=</span> <span class="n">dirEntry</span><span class="o">.</span><span class="n">inode</span><span class="p">()</span>
+				<span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_ids</span><span class="p">:</span>
+					<span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_ids</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+
+					<span class="n">hardLink</span> <span class="o">=</span> <span class="n">Filename</span><span class="p">(</span><span class="n">dirEntry</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">s</span> <span class="o">=</span> <span class="n">dirEntry</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">follow_symlinks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+					<span class="n">filename</span> <span class="o">=</span> <span class="n">Filename</span><span class="p">(</span><span class="n">dirEntry</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+					<span class="n">file</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">st_size</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+
+					<span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_ids</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">file</span>
+			<span class="k">elif</span> <span class="n">dirEntry</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">():</span>
+				<span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">readlink</span><span class="p">(</span><span class="n">directoryPath</span> <span class="o">/</span> <span class="n">dirEntry</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+				<span class="n">symlink</span> <span class="o">=</span> <span class="n">SymbolicLink</span><span class="p">(</span><span class="n">dirEntry</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">FilesystemException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown directory element.&quot;</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_connectSymbolicLinks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="nb">dir</span><span class="o">.</span><span class="n">_connectSymbolicLinks</span><span class="p">()</span>
+
+		<span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">_target</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+				<span class="k">pass</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">target</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">link</span><span class="o">.</span><span class="n">_target</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">elem</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
+						<span class="k">continue</span>
+					<span class="k">elif</span> <span class="n">elem</span> <span class="o">==</span> <span class="s2">&quot;..&quot;</span><span class="p">:</span>
+						<span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">_parent</span>
+						<span class="k">continue</span>
+
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+						<span class="k">continue</span>
+					<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+						<span class="k">pass</span>
+
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+						<span class="k">continue</span>
+					<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+						<span class="k">pass</span>
+
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+						<span class="k">continue</span>
+					<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+						<span class="k">pass</span>
+
+				<span class="n">target</span><span class="o">.</span><span class="n">AddLinkSources</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">_aggregateSizes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="p">(</span>
+			<span class="nb">sum</span><span class="p">(</span><span class="nb">dir</span><span class="o">.</span><span class="n">_size</span> <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span>
+			<span class="nb">sum</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">_size</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+		<span class="p">)</span>
+
+	<span class="nd">@Element</span><span class="o">.</span><span class="n">Root</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="s2">&quot;Root&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">Element</span><span class="o">.</span><span class="n">Root</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">subdir</span><span class="o">.</span><span class="n">Root</span> <span class="o">=</span> <span class="n">value</span>
+
+		<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">file</span><span class="o">.</span><span class="n">Root</span> <span class="o">=</span> <span class="n">value</span>
+
+		<span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">link</span><span class="o">.</span><span class="n">Root</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="nd">@Element</span><span class="o">.</span><span class="n">Parent</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_ParentType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">Element</span><span class="o">.</span><span class="n">Parent</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+		<span class="n">value</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Root</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Root</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of elements in a directory.</span>
+
+<span class="sd">		:returns: Number of files plus subdirectories.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">FileCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of files in a directory.</span>
+
+<span class="sd">		.. hint::</span>
+
+<span class="sd">		   Files include regular files and symbolic links.</span>
+
+<span class="sd">		:returns: Number of files.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">RegularFileCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of regular files in a directory.</span>
+
+<span class="sd">		:returns: Number of regular files.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">SymbolicLinkCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of symbolic links in a directory.</span>
+
+<span class="sd">		:returns: Number of symbolic links.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">SubdirectoryCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the number of subdirectories in a directory.</span>
+
+<span class="sd">		:returns: Number of subdirectories.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalFileCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the total number of files in all child hierarchy levels (recursively).</span>
+
+<span class="sd">		.. hint::</span>
+
+<span class="sd">		   Files include regular files and symbolic links.</span>
+
+<span class="sd">		:returns: Total number of files.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">TotalFileCount</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalRegularFileCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the total number of regular files in all child hierarchy levels (recursively).</span>
+
+<span class="sd">		:returns: Total number of regular files.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">TotalRegularFileCount</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalSymbolicLinkCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the total number of symbolic links in all child hierarchy levels (recursively).</span>
+
+<span class="sd">		:returns: Total number of symbolic links.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">TotalSymbolicLinkCount</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalSubdirectoryCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the total number of subdirectories in all child hierarchy levels (recursively).</span>
+
+<span class="sd">		:returns: Total number of subdirectories.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">TotalSubdirectoryCount</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Subdirectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;Directory&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Iterate all direct subdirectories of the directory.</span>
+
+<span class="sd">		:returns: A generator to iterate all direct subdirectories.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Filename&quot;</span><span class="p">,</span> <span class="s2">&quot;SymbolicLink&quot;</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Iterate all direct files of the directory.</span>
+
+<span class="sd">		.. hint::</span>
+
+<span class="sd">		   Files include regular files and symbolic links.</span>
+
+<span class="sd">		:returns: A generator to iterate all direct files.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">RegularFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;Filename&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Iterate all direct regular files of the directory.</span>
+
+<span class="sd">		:returns: A generator to iterate all direct regular files.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">SymbolicLinks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;SymbolicLink&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Iterate all direct symbolic links of the directory.</span>
+
+<span class="sd">		:returns: A generator to iterate all direct symbolic links.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the equivalent Path instance for accessing the represented directory.</span>
+
+<span class="sd">		:returns:                    Path to the directory.</span>
+<span class="sd">		:raises FilesystemException: If no parent is set.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">FilesystemException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No parent or root set for directory.&quot;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">Path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ScanDuration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).</span>
+
+<span class="sd">		:returns:                    The scan duration in seconds.</span>
+<span class="sd">		:raises FilesystemException: If the directory was not scanned.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scanDuration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">FilesystemException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Directory was not scanned, yet.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scanDuration</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">AggregateDuration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the time needed to aggregate the directory&#39;s and subelement&#39;s properties (recursively).</span>
+
+<span class="sd">		:returns:                    The aggregation duration in seconds.</span>
+<span class="sd">		:raises FilesystemException: If the directory properties were not aggregated.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scanDuration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">FilesystemException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Directory properties were not aggregated, yet.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregateDuration</span>
+
+<div class="viewcode-block" id="Directory.Copy">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.Copy">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;Directory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Directory&quot;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Copy the directory structure including all subelements and link it to the given parent.</span>
+
+<span class="sd">		.. hint::</span>
+
+<span class="sd">		   Statistics like aggregated directory size are copied too. |br|</span>
+<span class="sd">		   There is no rescan or repeated aggregation needed.</span>
+
+<span class="sd">		:param parent: The parent element of the copied directory.</span>
+<span class="sd">		:returns:      A deep copy of the directory structure.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="nb">dir</span> <span class="o">=</span> <span class="n">Directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+		<span class="nb">dir</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+
+		<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">subdir</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">file</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">link</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="nb">dir</span></div>
+
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">Collapse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;Directory&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+		<span class="c1"># if len(self._subdirectories) == 0 or all(subdir.Collapse(func) for subdir in self._subdirectories.values()):</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+				<span class="c1"># print(f&quot;collapse 1 {self.Path}&quot;)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_collapsed</span> <span class="o">=</span> <span class="kc">True</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+				<span class="k">return</span> <span class="kc">True</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="c1"># if all(subdir.Collapse(func) for subdir in self._subdirectories.values())</span>
+		<span class="n">collapsible</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="n">subdir</span><span class="o">.</span><span class="n">Collapse</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+			<span class="n">collapsible</span> <span class="o">=</span> <span class="n">collapsible</span> <span class="ow">and</span> <span class="n">result</span>
+
+		<span class="k">if</span> <span class="n">collapsible</span><span class="p">:</span>
+			<span class="c1"># print(f&quot;collapse 2 {self.Path}&quot;)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_collapsed</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+			<span class="k">return</span> <span class="kc">True</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Directory.ToTree">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.ToTree">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ToTree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Node</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert the directory to a :class:`~pyTooling.Tree.Node`.</span>
+
+<span class="sd">		The node&#39;s :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the directory. Additional data is</span>
+<span class="sd">		attached to the node&#39;s key-value store:</span>
+
+<span class="sd">		``kind``</span>
+<span class="sd">		  The node&#39;s kind. See :class:`NodeKind`.</span>
+<span class="sd">		``size``</span>
+<span class="sd">		  The directory&#39;s aggregated size.</span>
+
+<span class="sd">		:param format: A user defined formatting function for tree nodes.</span>
+<span class="sd">		:returns:      A tree node representing this directory.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+				<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e-6</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2"> MiB </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">_value</span><span class="o">.</span><span class="n">Name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+		<span class="n">directoryNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
+			<span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+			<span class="n">keyValuePairs</span><span class="o">=</span><span class="p">{</span>
+				<span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="n">NodeKind</span><span class="o">.</span><span class="n">File</span><span class="p">,</span>
+				<span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+			<span class="p">},</span>
+			<span class="nb">format</span><span class="o">=</span><span class="nb">format</span>
+		<span class="p">)</span>
+		<span class="n">directoryNode</span><span class="o">.</span><span class="n">AddChildren</span><span class="p">(</span>
+			<span class="n">e</span><span class="o">.</span><span class="n">ToTree</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>  <span class="c1">#, self._files.values(), self._symbolicLinks.values())</span>
+		<span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">directoryNode</span></div>
+
+
+<div class="viewcode-block" id="Directory.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.__eq__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Directory instances for equality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both directories and all its subelements are equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`Directory`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Directory</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;other&#39; is not of type Directory.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">dir1</span> <span class="o">==</span> <span class="n">dir2</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">dir1</span><span class="p">,</span> <span class="n">dir2</span> <span class="ow">in</span> <span class="n">zipdicts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_subdirectories</span><span class="p">)):</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">file1</span> <span class="o">==</span> <span class="n">file2</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">file1</span><span class="p">,</span> <span class="n">file2</span> <span class="ow">in</span> <span class="n">zipdicts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_files</span><span class="p">)):</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">link1</span> <span class="o">==</span> <span class="n">link2</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">link1</span><span class="p">,</span> <span class="n">link2</span> <span class="ow">in</span> <span class="n">zipdicts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">)):</span>
+			<span class="k">return</span> <span class="kc">False</span>
+
+		<span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Directory.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.__ne__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Directory instances for inequality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both directories and all its subelements are unequal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`Directory`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Directory.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Directory: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Path</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="Directory.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Directory.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Filename">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Filename</span><span class="p">(</span><span class="n">Element</span><span class="p">[</span><span class="n">Directory</span><span class="p">]):</span>
+	<span class="n">_file</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Filename.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+		<span class="n">file</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+		<span class="n">parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Directory</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="n">file</span>
+			<span class="n">file</span><span class="o">.</span><span class="n">_parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">parent</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+			<span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span></div>
+
+
+	<span class="nd">@Element</span><span class="o">.</span><span class="n">Root</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="s2">&quot;Root&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">value</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="nd">@Element</span><span class="o">.</span><span class="n">Parent</span><span class="o">.</span><span class="n">setter</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_ParentType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">Element</span><span class="o">.</span><span class="n">Parent</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+		<span class="n">value</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Root</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Root</span> <span class="o">=</span> <span class="n">value</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">File</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Nullable</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">ToolingException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filename isn&#39;t linked to a File object.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">_size</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">ToolingException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filename has no parent object.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">Path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">Copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Directory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Filename&quot;</span><span class="p">:</span>
+		<span class="n">fileID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">_id</span>
+
+		<span class="k">if</span> <span class="n">fileID</span> <span class="ow">in</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_ids</span><span class="p">:</span>
+			<span class="n">file</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_ids</span><span class="p">[</span><span class="n">fileID</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">fileSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">_size</span>
+			<span class="n">file</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">fileID</span><span class="p">,</span> <span class="n">fileSize</span><span class="p">)</span>
+
+			<span class="n">parent</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">_ids</span><span class="p">[</span><span class="n">fileID</span><span class="p">]</span> <span class="o">=</span> <span class="n">file</span>
+
+		<span class="k">return</span> <span class="n">Filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">ToTree</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+		<span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+			<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e-6</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2"> MiB </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">_value</span><span class="o">.</span><span class="n">Name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+		<span class="n">fileNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
+			<span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+			<span class="n">keyValuePairs</span><span class="o">=</span><span class="p">{</span>
+				<span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="n">NodeKind</span><span class="o">.</span><span class="n">File</span><span class="p">,</span>
+				<span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+			<span class="p">},</span>
+			<span class="nb">format</span><span class="o">=</span><span class="nb">format</span>
+		<span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">fileNode</span>
+
+<div class="viewcode-block" id="Filename.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename.__eq__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Filename instances for equality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both filenames are equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`Filename`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Filename</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;other&#39; is not of type Filename.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_name</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">Size</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Size</span></div>
+
+
+<div class="viewcode-block" id="Filename.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename.__ne__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two Filename instances for inequality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both filenames are unequal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`Filename`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Filename</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;other&#39; is not of type Filename.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">Size</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">Size</span></div>
+
+
+<div class="viewcode-block" id="Filename.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;File: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Path</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="Filename.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Filename.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SymbolicLink">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.SymbolicLink">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SymbolicLink</span><span class="p">(</span><span class="n">Element</span><span class="p">[</span><span class="n">Directory</span><span class="p">]):</span>
+	<span class="n">_target</span><span class="p">:</span> <span class="n">Path</span>
+
+<div class="viewcode-block" id="SymbolicLink.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.SymbolicLink.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">name</span><span class="p">:</span>   <span class="nb">str</span><span class="p">,</span>
+		<span class="n">target</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+		<span class="n">parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Directory</span><span class="p">]</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
+
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">parent</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+			<span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">_root</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">Path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">Copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Directory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SymbolicLink&quot;</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">SymbolicLink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">ToTree</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+		<span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+			<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e-6</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2"> MiB </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">_value</span><span class="o">.</span><span class="n">Name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+		<span class="n">symbolicLinkNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
+			<span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+			<span class="n">keyValuePairs</span><span class="o">=</span><span class="p">{</span>
+				<span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="n">NodeKind</span><span class="o">.</span><span class="n">SymbolicLink</span><span class="p">,</span>
+				<span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+			<span class="p">},</span>
+			<span class="nb">format</span><span class="o">=</span><span class="nb">format</span>
+		<span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">symbolicLinkNode</span>
+
+<div class="viewcode-block" id="SymbolicLink.__eq__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.SymbolicLink.__eq__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two SymbolicLink instances for equality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both symbolic links are equal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SymbolicLink`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SymbolicLink</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;other&#39; is not of type SymbolicLink.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_name</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_target</span></div>
+
+
+<div class="viewcode-block" id="SymbolicLink.__ne__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.SymbolicLink.__ne__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compare two SymbolicLink instances for inequality.</span>
+
+<span class="sd">		:param other:      Parameter to compare against.</span>
+<span class="sd">		:returns:          ``True``, if both symbolic links are unequal.</span>
+<span class="sd">		:raises TypeError: If parameter ``other`` is not of type :class:`SymbolicLink`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SymbolicLink</span><span class="p">):</span>
+			<span class="n">ex</span> <span class="o">=</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;other&#39; is not of type SymbolicLink.&quot;</span><span class="p">)</span>
+			<span class="n">ex</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got type &#39;</span><span class="si">{</span><span class="n">getFullyQualifiedName</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">ex</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_target</span></div>
+
+
+<div class="viewcode-block" id="SymbolicLink.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.SymbolicLink.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SymLink: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="SymbolicLink.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.SymbolicLink.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Root">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Root">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Root</span><span class="p">(</span><span class="n">Directory</span><span class="p">):</span>
+	<span class="n">_ids</span><span class="p">:</span>  <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;File&quot;</span><span class="p">]</span>   <span class="c1">#: Dictionary of file identifier - file objects pairs found while scanning the directory structure.</span>
+
+<div class="viewcode-block" id="Root.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Root.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="n">rootDirectory</span><span class="p">:</span>         <span class="n">Path</span><span class="p">,</span>
+		<span class="n">collectSubdirectories</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">rootDirectory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;path&#39; is None.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rootDirectory</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;path&#39; is not of type Path.&quot;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="n">rootDirectory</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+			<span class="k">raise</span> <span class="n">ToolingException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Path &#39;</span><span class="si">{</span><span class="n">rootDirectory</span><span class="si">}</span><span class="s2">&#39; doesn&#39;t exist.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">FileNotFoundError</span><span class="p">(</span><span class="n">rootDirectory</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_ids</span> <span class="o">=</span> <span class="p">{}</span>
+
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">rootDirectory</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">rootDirectory</span>
+
+		<span class="k">if</span> <span class="n">collectSubdirectories</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_collectSubdirectories</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_connectSymbolicLinks</span><span class="p">()</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalHardLinkCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">l</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="p">(</span><span class="n">l</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_parents</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalHardLinkCount2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_parents</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalHardLinkCount3</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_parents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Size2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_size</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_parents</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Size3</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_size</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_parents</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_parents</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">TotalUniqueFileCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="p">)</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the path of the filesystem statistics root.</span>
+
+<span class="sd">		:returns: Path to the root of the filesystem statistics root directory.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+<div class="viewcode-block" id="Root.Copy">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Root.Copy">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Root&quot;</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Copy the directory structure including all subelements and link it to the given parent.</span>
+
+<span class="sd">		The duration for the deep copy process is provided in :attr:`ScanDuration`</span>
+
+<span class="sd">		.. hint::</span>
+
+<span class="sd">		   Statistics like aggregated directory size are copied too. |br|</span>
+<span class="sd">		   There is no rescan or repeated aggregation needed.</span>
+
+<span class="sd">		:returns: A deep copy of the directory structure.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">with</span> <span class="n">Stopwatch</span><span class="p">()</span> <span class="k">as</span> <span class="n">sw</span><span class="p">:</span>
+			<span class="n">root</span> <span class="o">=</span> <span class="n">Root</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+			<span class="n">root</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+
+			<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdirectories</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+				<span class="n">subdir</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
+			<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+				<span class="n">file</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
+			<span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbolicLinks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+				<span class="n">link</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
+		<span class="n">root</span><span class="o">.</span><span class="n">_scanDuration</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">Duration</span>
+		<span class="n">root</span><span class="o">.</span><span class="n">_aggregateDuration</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+		<span class="k">return</span> <span class="n">root</span></div>
+
+
+<div class="viewcode-block" id="Root.__repr__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Root.__repr__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Root: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Path</span><span class="si">}</span><span class="s2"> (dirs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TotalSubdirectoryCount</span><span class="si">}</span><span class="s2">, files: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TotalRegularFileCount</span><span class="si">}</span><span class="s2">, symlinks: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TotalSymbolicLinkCount</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="Root.__str__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.Root.__str__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="File">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.File">[docs]</a>
+<span class="nd">@export</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">File</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+	<span class="n">_id</span><span class="p">:</span> <span class="nb">int</span>
+	<span class="n">_parents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Filename</span><span class="p">]</span>
+
+<div class="viewcode-block" id="File.__init__">
+<a class="viewcode-back" href="../../pyTooling/pyTooling.Filesystem.html#pyTooling.Filesystem.File.__init__">[docs]</a>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+		<span class="bp">self</span><span class="p">,</span>
+		<span class="nb">id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+		<span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+		<span class="n">parent</span><span class="p">:</span> <span class="n">Nullable</span><span class="p">[</span><span class="n">Filename</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="nb">id</span>
+		<span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parents</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">_root</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">parent</span><span class="p">]</span>
+			<span class="n">parent</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="bp">self</span></div>
+
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">ID</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the file object&#39;s unique identifier.</span>
+
+<span class="sd">		:returns: Unique file object identifier.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id</span>
+
+	<span class="nd">@readonly</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">Parents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Filename</span><span class="p">]:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read-only property to access the list of filenames using the file object.</span>
+
+<span class="sd">		.. hint::</span>
+
+<span class="sd">		   This allows to check if a file object has multiple filenames a.k.a hardlinks.</span>
+
+<span class="sd">		:returns: List of filenames for the file object.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">AddParent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">ToolingException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filename is already referencing an other file object (</span><span class="si">{</span><span class="n">file</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">_id</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+		<span class="n">file</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="bp">self</span>
+
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">_root</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

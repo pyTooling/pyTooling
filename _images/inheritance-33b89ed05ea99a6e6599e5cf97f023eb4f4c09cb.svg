@@ -1,0 +1,110 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="576pt" height="48pt" viewBox="0.00 0.00 576.00 48.38">
+<ns0:g id="graph0" class="graph" transform="scale(0.76 0.76) rotate(0) translate(4 60)">
+<ns0:title>inheritanceef179b97f4</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ArgParseAttribute</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.ArgParseAttribute" ns1:title="Base-class for all attributes to describe a :mod:`argparse`-base command line argument parser." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="197,-37 95,-37 95,-18 197,-18 197,-37" />
+<ns0:text text-anchor="middle" x="146" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ArgParseAttribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>CommandLineArgument</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.html#pyTooling.Attributes.ArgParse.CommandLineArgument" ns1:title="Base-class for all *Argument* classes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="368,-37 233,-37 233,-18 368,-18 368,-37" />
+<ns0:text text-anchor="middle" x="300.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">CommandLineArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>ArgParseAttribute-&gt;CommandLineArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M197.36,-27.5C207.12,-27.5 217.53,-27.5 227.83,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="227.88,-29.25 232.88,-27.5 227.88,-25.75 227.88,-29.25" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Attribute</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.html#pyTooling.Attributes.Attribute" ns1:title="Base-class for all pyTooling attributes." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="59,-37 0,-37 0,-18 59,-18 59,-37" />
+<ns0:text text-anchor="middle" x="29.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Attribute</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Attribute-&gt;ArgParseAttribute</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M59.1,-27.5C68.43,-27.5 79.14,-27.5 89.75,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="89.95,-29.25 94.95,-27.5 89.95,-25.75 89.95,-29.25" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>BooleanFlag</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.BooleanFlag.html#pyTooling.Attributes.ArgParse.BooleanFlag.BooleanFlag" ns1:title="BooleanFlag" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="617,-37 540,-37 540,-18 617,-18 617,-37" />
+<ns0:text text-anchor="middle" x="578.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">BooleanFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node7" class="node">
+<ns0:title>LongBooleanFlag</ns0:title>
+<ns0:g id="a_node7"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.BooleanFlag.html#pyTooling.Attributes.ArgParse.BooleanFlag.LongBooleanFlag" ns1:title="LongBooleanFlag" target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="754,-37 653,-37 653,-18 754,-18 754,-37" />
+<ns0:text text-anchor="middle" x="703.5" y="-25" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">LongBooleanFlag</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>BooleanFlag-&gt;LongBooleanFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M617.07,-27.5C626.79,-27.5 637.44,-27.5 647.84,-27.5" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="647.91,-29.25 652.91,-27.5 647.91,-25.75 647.91,-29.25" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>NamedArgument</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.Argument.html#pyTooling.Attributes.ArgParse.Argument.NamedArgument" ns1:title="Base-class for all command line arguments with a name." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="504,-56 404,-56 404,-37 504,-37 504,-56" />
+<ns0:text text-anchor="middle" x="454" y="-44" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">NamedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>NamedArgument-&gt;BooleanFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M504.12,-38.88C514.21,-37.32 524.76,-35.68 534.61,-34.15" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="535.01,-35.86 539.69,-33.36 534.48,-32.4 535.01,-35.86" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>ValuedArgument</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../pyTooling/pyTooling.Attributes.ArgParse.Argument.html#pyTooling.Attributes.ArgParse.Argument.ValuedArgument" ns1:title="Base-class for all command line arguments with a value." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="503,-19 405,-19 405,0 503,0 503,-19" />
+<ns0:text text-anchor="middle" x="454" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">ValuedArgument</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>ValuedArgument-&gt;BooleanFlag</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M503.06,-16.56C513.55,-18.1 524.57,-19.72 534.83,-21.23" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="534.6,-22.96 539.8,-21.96 535.1,-19.5 534.6,-22.96" />
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>CommandLineArgument-&gt;NamedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M368.39,-35.89C378.52,-37.16 388.86,-38.46 398.67,-39.69" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="398.57,-41.44 403.75,-40.32 399.01,-37.97 398.57,-41.44" />
+</ns0:g>
+
+<ns0:g id="edge7" class="edge">
+<ns0:title>CommandLineArgument-&gt;ValuedArgument</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M368.39,-19.55C378.79,-18.32 389.41,-17.06 399.46,-15.86" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="399.9,-17.57 404.65,-15.24 399.48,-14.1 399.9,-17.57" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

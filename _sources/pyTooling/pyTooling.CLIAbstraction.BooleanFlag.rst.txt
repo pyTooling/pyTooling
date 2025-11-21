@@ -1,0 +1,80 @@
+.. # Template modified by Patrick Lehmann
+     * removed automodule on top, because private members are activated for autodoc (no doubled documentation).
+     * Made sections like 'submodules' bold text, but no headlines to reduce number of ToC levels.
+
+====================================
+pyTooling.CLIAbstraction.BooleanFlag
+====================================
+
+.. automodule:: pyTooling.CLIAbstraction.BooleanFlag
+
+
+.. currentmodule:: pyTooling.CLIAbstraction.BooleanFlag
+
+
+**Classes**
+
+- :py:class:`BooleanFlag`:
+  Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern for an
+
+- :py:class:`ShortBooleanFlag`:
+  Represents a :py:class:`BooleanFlag` with a single dash.
+
+- :py:class:`LongBooleanFlag`:
+  Represents a :py:class:`BooleanFlag` with a double dash.
+
+- :py:class:`WindowsBooleanFlag`:
+  Represents a :py:class:`BooleanFlag` with a slash.
+
+
+
+---------------------
+
+**Classes**
+
+
+
+
+.. autoclass:: BooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: BooleanFlag
+      :parts: 1
+
+.. autoclass:: ShortBooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: ShortBooleanFlag
+      :parts: 1
+
+.. autoclass:: LongBooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LongBooleanFlag
+      :parts: 1
+
+.. autoclass:: WindowsBooleanFlag
+   :members:
+   :private-members:
+   :special-members:
+   :inherited-members:
+   :exclude-members: __weakref__, __init_subclass__, __class_getitem__
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: WindowsBooleanFlag
+      :parts: 1

@@ -1,0 +1,47 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="162pt" height="45pt" viewBox="0.00 0.00 162.00 45.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 41)">
+<ns0:title>inheritance073049eef1</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Node</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.YAML.html#pyTooling.Configuration.YAML.Node" ns1:title="Abstract node in a configuration data structure." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-19 0,-19 0,0 54,0 54,-19" />
+<ns0:text text-anchor="middle" x="27" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Node</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Node-&gt;Node</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M12.51,-19.08C5.46,-27.73 10.29,-37 27,-37 40.84,-37 46.53,-30.65 44.07,-23.55" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="45.51,-22.54 41.49,-19.08 42.48,-24.29 45.51,-22.54" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Sequence</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.YAML.html#pyTooling.Configuration.YAML.Sequence" ns1:title="A sequence node (ordered list) in a YAML data file." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="154,-19 90,-19 90,0 154,0 154,-19" />
+<ns0:text text-anchor="middle" x="122" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Sequence</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Node-&gt;Sequence</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.4,-3.34C63.82,-2.75 74.6,-2.6 84.71,-2.9" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.86,-4.65 89.92,-3.09 84.99,-1.16 84.86,-4.65" />
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Node-&gt;Sequence</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.4,-15.66C63.82,-16.25 74.6,-16.4 84.71,-16.1" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.99,-17.84 89.92,-15.91 84.86,-14.35 84.99,-17.84" />
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Sequence-&gt;Sequence</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M107.51,-19.08C100.46,-27.73 105.29,-37 122,-37 135.84,-37 141.53,-30.65 139.07,-23.55" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="140.51,-22.54 136.49,-19.08 137.48,-24.29 140.51,-22.54" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

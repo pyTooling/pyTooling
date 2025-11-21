@@ -1,0 +1,1556 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling Documentation &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="News" href="News.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">pyTooling Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><div class="line-block">
+<div class="line"><a class="reference external" href="https://GitHub.com/pyTooling/pyTooling"><img alt="Sourcecode on GitHub" src="https://img.shields.io/badge/pyTooling-pyTooling-63bf7f?longCache=true&amp;style=flat-square&amp;longCache=true&amp;logo=GitHub" style="height: 22px;" /></a> <a class="reference external" href="Code-License.html"><img alt="Code license" src="https://img.shields.io/pypi/l/pyTooling?longCache=true&amp;style=flat-square&amp;logo=Apache&amp;label=code" style="height: 22px;" /></a> <a class="reference external" href="https://pyTooling.github.io/pyTooling/"><img alt="Documentation - Read Now!" src="https://img.shields.io/website?longCache=true&amp;style=flat-square&amp;label=pyTooling.github.io%2FpyTooling&amp;logo=GitHub&amp;logoColor=fff&amp;up_color=blueviolet&amp;up_message=Read%20now%20%E2%9E%9A&amp;url=https%3A%2F%2FpyTooling.github.io%2FpyTooling%2Findex.html" style="height: 22px;" /></a> <a class="reference external" href="License.html"><img alt="Documentation License" src="https://img.shields.io/badge/doc-CC--BY%204.0-green?longCache=true&amp;style=flat-square&amp;logo=CreativeCommons&amp;logoColor=fff" style="height: 22px;" /></a></div>
+<div class="line"><a class="reference external" href="https://pypi.org/project/pyTooling/"><img alt="PyPI - Tag" src="https://img.shields.io/pypi/v/pyTooling?longCache=true&amp;style=flat-square&amp;logo=PyPI&amp;logoColor=FBE072" style="height: 22px;" /></a> <a class="reference internal" href="https://img.shields.io/pypi/status/pyTooling?longCache=true&amp;style=flat-square&amp;logo=PyPI&amp;logoColor=FBE072"><img alt="PyPI - Status" src="https://img.shields.io/pypi/status/pyTooling?longCache=true&amp;style=flat-square&amp;logo=PyPI&amp;logoColor=FBE072" style="height: 22px;" /></a> <a class="reference internal" href="https://img.shields.io/pypi/pyversions/pyTooling?longCache=true&amp;style=flat-square&amp;logo=PyPI&amp;logoColor=FBE072"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/pyTooling?longCache=true&amp;style=flat-square&amp;logo=PyPI&amp;logoColor=FBE072" style="height: 22px;" /></a></div>
+<div class="line"><a class="reference external" href="https://GitHub.com/pyTooling/pyTooling/actions/workflows/Pipeline.yml"><img alt="GitHub Workflow - Build and Test Status" src="https://img.shields.io/github/actions/workflow/status/pyTooling/pyTooling/Pipeline.yml?branch=main&amp;longCache=true&amp;style=flat-square&amp;label=Build%20and%20Test&amp;logo=GitHub%20Actions&amp;logoColor=FFFFFF" style="height: 22px;" /></a> <a class="reference external" href="https://libraries.io/github/pyTooling/pyTooling"><img alt="Libraries.io status for latest release" src="https://img.shields.io/librariesio/release/pypi/pyTooling?longCache=true&amp;style=flat-square&amp;logo=Libraries.io&amp;logoColor=fff" style="height: 22px;" /></a> <a class="reference external" href="https://www.codacy.com/gh/pyTooling/pyTooling"><img alt="Codacy - Quality" src="https://img.shields.io/codacy/grade/08ef744c0b70490289712b02a7a4cebe?longCache=true&amp;style=flat-square&amp;logo=codacy" style="height: 22px;" /></a> <a class="reference external" href="https://www.codacy.com/gh/pyTooling/pyTooling"><img alt="Codacy - Line Coverage" src="https://img.shields.io/codacy/coverage/08ef744c0b70490289712b02a7a4cebe?longCache=true&amp;style=flat-square&amp;logo=codacy" style="height: 22px;" /></a> <a class="reference external" href="https://codecov.io/gh/pyTooling/pyTooling"><img alt="Codecov - Branch Coverage" src="https://img.shields.io/codecov/c/github/pyTooling/pyTooling?longCache=true&amp;style=flat-square&amp;logo=Codecov" style="height: 22px;" /></a></div>
+</div>
+<hr class="docutils" />
+<section id="pytooling-documentation">
+<h1>pyTooling Documentation<a class="headerlink" href="#pytooling-documentation" title="Link to this heading"></a></h1>
+<p><strong>pyTooling</strong> is a powerful collection of arbitrary and useful (abstract) data models, lacking classes, decorators, a
+new performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
+handling of package descriptions or to unify multiple existing APIs into a single API.</p>
+<p>It’s useful ‒ if not even essential ‒ for <strong>any</strong> Python-based project independent if it’s a library, framework, CLI
+tool or just a “script”.</p>
+<p>In addition, pyTooling provides a collection of <a class="reference external" href="https://github.com/pyTooling/Actions">CI job templates for GitHub Actions</a>.
+This drastically simplifies GHA-based CI pipelines for Python projects.</p>
+<section id="package-details">
+<h2>Package Details<a class="headerlink" href="#package-details" title="Link to this heading"></a></h2>
+<p>The following descriptions and code examples give peak onto pyTooling’s highlights. But be ensured, there is more to
+explore, which can’t be highlighted on the main landing page.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>The <a class="reference internal" href="Attributes/index.html#attr"><span class="std std-ref">pyTooling.Attributes</span></a> module offers the base implementation of
+<a class="reference external" href="https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/">.NET-like attributes</a>
+realized with <a class="reference internal" href="Glossary.html#term-Decorator"><span class="xref std std-term">Python decorators</span></a>. The annotated and declarative data is stored as instances of
+<a class="reference internal" href="Attributes/index.html#attr-predefined-attribute"><span class="std std-ref">Attribute</span></a> classes in an additional <code class="docutils literal notranslate"><span class="pre">__pyattr__</span></code> field per class, method or
+function.</p>
+<p>The annotation syntax (decorator syntax) allows users to attach any structured data to classes, methods or
+functions. In many cases, a user will derive a custom attribute from <a class="reference internal" href="Attributes/index.html#attr-predefined-attribute"><span class="std std-ref">Attribute</span></a>
+and override the <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method, so user-defined parameters can be accepted when the attribute is constructed.</p>
+<p>Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance
+usage locations (see example to the right). Another option for class and method attributes is declaring a classes
+using pyTooling’s <a class="reference internal" href="MetaClasses.html#meta-extendedtype"><span class="std std-ref">ExtendedType</span></a> meta-class. Here the class itself offers helper methods for discovering
+annotated methods.</p>
+<p>A <a class="reference internal" href="Attributes/index.html#attr-predefined-simpleattribute"><span class="std std-ref">SimpleAttribute</span></a> class is offered accepting any positional and keyword
+parameters. In a more advanced use case, users are encouraged to derive their own attribute class hierarchy from
+<a class="reference internal" href="Attributes/index.html#attr-predefined-attribute"><span class="std std-ref">Attribute</span></a>.</p>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+Function Attributes</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Command</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Flag</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">long</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="nd">@Command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print version information.&quot;</span><span class="p">)</span>
+<span class="nd">@Flag</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="n">short</span><span class="o">=</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="s2">&quot;--verbose&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Default handler.&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+  <span class="k">pass</span>
+
+<span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">Command</span><span class="o">.</span><span class="n">GetFunctions</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+Method Attributes</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCase</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Program</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">):</span>
+   <span class="nd">@TestCase</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Handler routine&quot;</span><span class="p">)</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+
+
+<span class="n">prog</span> <span class="o">=</span> <span class="n">Program</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">attributes</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">GetMethodsWithAttributes</span><span class="p">(</span><span class="n">predicate</span><span class="o">=</span><span class="n">TestCase</span><span class="p">):</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+Class Attributes</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attribute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.MetaClasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtendedType</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestSuite</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="nd">@TestSuite</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Command line interface tests&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Program</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">):</span>
+   <span class="k">def</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+     <span class="k">pass</span>
+
+<span class="n">prog</span> <span class="o">=</span> <span class="n">Program</span><span class="p">()</span>
+
+
+<span class="k">for</span> <span class="n">testsuite</span> <span class="ow">in</span> <span class="n">TestSuite</span><span class="o">.</span><span class="n">GetClasses</span><span class="p">():</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section id="argparse">
+<h4>ArgParse<a class="headerlink" href="#argparse" title="Link to this heading"></a></h4>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>Defining commands, arguments or flags for a command line argument parser like <a class="reference external" href="https://docs.python.org/3/library/argparse.html#module-argparse" title="(in Python v3.14)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> is done imperatively.
+This means code executed in-order defines how the parser will accept inputs. Then more user-defined code is needed
+to dispatch the collected and type-converted arguments to handler routines. See an example to the right as
+“Traditional argparse”.</p>
+<p>In contrast, <a class="reference internal" href="Attributes/ArgParse.html#attr-argparse"><span class="std std-ref">pyTooling.Attributes.ArgParse</span></a> allows the definition of <a class="reference internal" href="Attributes/ArgParse.html#attr-argparse-commands"><span class="std std-ref">commands</span></a>,
+<a class="reference internal" href="Attributes/ArgParse.html#attr-argparse-arguments"><span class="std std-ref">arguments</span></a> or <a class="reference internal" href="Attributes/ArgParse.html#attr-argparse-flags"><span class="std std-ref">flags</span></a> as declarative code attached to
+handler routines using pyTooling’s attributes. This allow a cleaner and more readable coding style. Also
+maintainability is improved, as arguments are defined using clear attribute names attached to the matching handler
+routine. Thus parser and handler code is not separated.</p>
+<p>If the command line interface uses many commands, handlers and their arguments can be spread across
+<a class="reference internal" href="Attributes/ArgParse.html#attr-argparse-mixin"><span class="std std-ref">mixin classes</span></a>. Later, the whole CLI is assembled by using multiple inheritance. In
+case handlers use shared argument sets, arguments can be <a class="reference internal" href="Attributes/ArgParse.html#attr-argparse-grouping"><span class="std std-ref">grouped</span></a> and shared by
+defining grouping attributes.</p>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+Traditional ArgParse</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Program</span><span class="p">:</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">mainParser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+              <span class="n">mainParser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HandleDefault</span><span class="p">)</span>
+    <span class="n">mainParser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;--verbose&quot;</span><span class="p">)</span>
+    <span class="n">subParsers</span> <span class="o">=</span> <span class="n">mainParser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">()</span>
+
+    <span class="n">newUserParser</span> <span class="o">=</span> <span class="n">subParsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;new-user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Add a new user.&quot;</span><span class="p">)</span>
+    <span class="n">newUserParser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">metaName</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the new user.&quot;</span><span class="p">)</span>
+    <span class="n">newUserParser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--quota&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;quota&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Max usable disk space.&quot;</span><span class="p">)</span>
+    <span class="n">newUserParser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">NewUserHandler</span><span class="p">)</span>
+
+    <span class="n">deleteUserParser</span> <span class="o">=</span> <span class="n">subParsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;delete-user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Delete a user.&quot;</span><span class="p">)</span>
+    <span class="n">deleteUserParser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">metaName</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the user.&quot;</span><span class="p">)</span>
+    <span class="n">deleteUserParser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;--force&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;force&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Ignore internal checks.&quot;</span><span class="p">)</span>
+    <span class="n">deleteUserParser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DeleteUserHandler</span><span class="p">)</span>
+
+    <span class="n">listUserParser</span> <span class="o">=</span> <span class="n">subParsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;list-user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List all users.&quot;</span><span class="p">)</span>
+    <span class="n">listUserParser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ListUserHandler</span><span class="p">)</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="nf">HandleDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="nf">NewUserHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="nf">DeleteUserHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="nf">ListUserHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+pyTooling.Attributes.ArgParse</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Program</span><span class="p">:</span>
+  <span class="nd">@DefaultHandler</span><span class="p">()</span>
+  <span class="nd">@FlagArgument</span><span class="p">(</span><span class="n">short</span><span class="o">=</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="s2">&quot;--verbose&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show verbose messages.&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">HandleDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@CommandHandler</span><span class="p">(</span><span class="s2">&quot;new-user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Add a new user.&quot;</span><span class="p">)</span>
+  <span class="nd">@StringArgument</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">metaName</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the new user.&quot;</span><span class="p">)</span>
+  <span class="nd">@LongValuedFlag</span><span class="p">(</span><span class="s2">&quot;--quota&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;quota&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Max usable disk space.&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">NewUserHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@CommandHandler</span><span class="p">(</span><span class="s2">&quot;delete-user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Delete a user.&quot;</span><span class="p">)</span>
+  <span class="nd">@StringArgument</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">metaName</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the user.&quot;</span><span class="p">)</span>
+  <span class="nd">@FlagArgument</span><span class="p">(</span><span class="n">short</span><span class="o">=</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="s2">&quot;--force&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;force&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Ignore internal checks.&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">DeleteUserHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@CommandHandler</span><span class="p">(</span><span class="s2">&quot;list-user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List all users.&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">ListUserHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="cli-abstraction">
+<h3>CLI Abstraction<a class="headerlink" href="#cli-abstraction" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p><a class="reference internal" href="CLIAbstraction/index.html#cliabs"><span class="std std-ref">pyTooling.CLIAbstraction</span></a> offers an abstraction layer for command line programs, so they can be
+used easily in Python. There is no need for manually assembling parameter lists or considering the order of
+parameters. All parameters like <code class="docutils literal notranslate"><span class="pre">-v</span></code> or <code class="docutils literal notranslate"><span class="pre">--value=42</span></code> are described using nested classes on a
+<a class="reference internal" href="CLIAbstraction/Program.html#cliabs-program"><span class="std std-ref">Program</span></a> class. Each nested class derived from predefined argument classes knows about the
+correct formatting pattern, character escaping, and if needed about necessary type conversions.</p>
+<p>Such an instance of a program can be converted to an argument list suitable for <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.Popen" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.Popen</span></code></a>.
+In stead of deriving from <a class="reference internal" href="CLIAbstraction/Program.html#cliabs-program"><span class="std std-ref">Program</span></a>, abstracted command line tools can derive from
+<a class="reference internal" href="CLIAbstraction/Executable.html#cliabs-executable"><span class="std std-ref">Executable</span></a> which offers embedded <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.Popen" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Popen</span></code></a> behavior.</p>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Git</span><span class="p">(</span><span class="n">Executable</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="bp">self</span><span class="p">:</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_executableNames</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s2">&quot;Darwin&quot;</span><span class="p">:</span> <span class="s2">&quot;git&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;FreeBSD&quot;</span><span class="p">:</span> <span class="s2">&quot;git&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Linux&quot;</span><span class="p">:</span> <span class="s2">&quot;git&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Windows&quot;</span><span class="p">:</span> <span class="s2">&quot;git.exe&quot;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+  <span class="nd">@CLIArgument</span><span class="p">()</span>
+  <span class="k">class</span><span class="w"> </span><span class="nc">FlagHelp</span><span class="p">(</span><span class="n">ShortFlag</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">):</span> <span class="o">...</span>
+
+  <span class="nd">@CLIArgument</span><span class="p">()</span>
+  <span class="k">class</span><span class="w"> </span><span class="nc">FlagVersion</span><span class="p">(</span><span class="n">LongFlag</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;version&quot;</span><span class="p">):</span> <span class="o">...</span>
+
+  <span class="nd">@CLIArgument</span><span class="p">()</span>
+  <span class="k">class</span><span class="w"> </span><span class="nc">CommandHelp</span><span class="p">(</span><span class="n">CommandArgument</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;help&quot;</span><span class="p">):</span> <span class="o">...</span>
+
+  <span class="nd">@CLIArgument</span><span class="p">()</span>
+  <span class="k">class</span><span class="w"> </span><span class="nc">CommandCommit</span><span class="p">(</span><span class="n">CommandArgument</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;commit&quot;</span><span class="p">):</span> <span class="o">...</span>
+
+  <span class="nd">@CLIArgument</span><span class="p">()</span>
+  <span class="k">class</span><span class="w"> </span><span class="nc">ValueCommitMessage</span><span class="p">(</span><span class="n">ShortTupleFlag</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">):</span> <span class="o">...</span>
+
+<span class="n">tool</span> <span class="o">=</span> <span class="n">Git</span><span class="p">()</span>
+<span class="n">tool</span><span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">FlagVersion</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="n">tool</span><span class="o">.</span><span class="n">StartProcess</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="common-helper-functions">
+<h3>Common Helper Functions<a class="headerlink" href="#common-helper-functions" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>This is a set of useful <a class="reference internal" href="Common/index.html#common-helperfunctions"><span class="std std-ref">helper functions</span></a>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="Common/index.html#common-helper-firstelement"><span class="std std-ref">firstElement</span></a>, <a class="reference internal" href="Common/index.html#common-helper-lastelement"><span class="std std-ref">lastElement</span></a> get the first/last element from an indexable.</p></li>
+<li><p><a class="reference internal" href="Common/index.html#common-helper-firstitem"><span class="std std-ref">firstItem</span></a>, <a class="reference internal" href="Common/index.html#common-helper-lastitem"><span class="std std-ref">lastItem</span></a> get the first/last item from an iterable.</p></li>
+<li><p><a class="reference internal" href="Common/index.html#common-helper-firstkey"><span class="std std-ref">firstKey</span></a>, <a class="reference internal" href="Common/index.html#common-helper-firstvalue"><span class="std std-ref">firstValue</span></a>, <a class="reference internal" href="Common/index.html#common-helper-firstpair"><span class="std std-ref">firstPair</span></a> get the first
+key/value/pair from an ordered dictionary.</p></li>
+<li><p><a class="reference internal" href="Common/index.html#common-helper-getsizeof"><span class="std std-ref">getsizeof</span></a> calculates the “real” size of a data structure.</p></li>
+<li><p><a class="reference internal" href="Common/index.html#common-helper-isnestedclass"><span class="std std-ref">isnestedclass</span></a> checks if a class is nested inside another class.</p></li>
+<li><p><a class="reference internal" href="Common/index.html#common-helper-mergedicts"><span class="std std-ref">mergedicts</span></a> merges multiple dictionaries into a new dictionary.</p></li>
+<li><p><a class="reference internal" href="Common/index.html#common-helper-zipdicts"><span class="std std-ref">zipdicts</span></a> iterate multiple dictionaries simultaneously.</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+firstItem</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">myFunction</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>
+  <span class="n">myList</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">]</span>
+  <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">myList</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+  <span class="k">else</span>
+    <span class="k">return</span> <span class="n">myList</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">beginOfSequence</span> <span class="o">=</span> <span class="n">myFunction</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">first</span> <span class="o">=</span> <span class="n">firstItem</span><span class="p">(</span><span class="n">beginOfSequence</span><span class="p">)</span>
+
+
+<span class="c1"># 3</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+mergedicts</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w"> </span><span class="kn">import</span> <span class="n">mergedicts</span>
+
+<span class="n">dictA</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
+<span class="n">dictB</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">21</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">}</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">mergedicts</span><span class="p">(</span><span class="n">dictA</span><span class="p">,</span> <span class="n">dictB</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+<span class="c1"># (&quot;a&quot;, 11)</span>
+<span class="c1"># (&quot;b&quot;, 12)</span>
+<span class="c1"># (&quot;x&quot;, 21)</span>
+<span class="c1"># (&quot;y&quot;, 22)</span>
+</pre></div>
+</div>
+</div>
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+zipdicts</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w"> </span><span class="kn">import</span> <span class="n">zipdicts</span>
+
+<span class="n">dictA</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mi">13</span><span class="p">}</span>
+<span class="n">dictB</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">21</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mi">23</span><span class="p">}</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">valueA</span><span class="p">,</span> <span class="n">valueB</span> <span class="ow">in</span> <span class="n">zipdicts</span><span class="p">(</span><span class="n">dictA</span><span class="p">,</span> <span class="n">dictB</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+
+<span class="c1"># (&quot;a&quot;, 11, 21)</span>
+<span class="c1"># (&quot;a&quot;, 12, 22)</span>
+<span class="c1"># (&quot;a&quot;, 13, 23)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="common-classes">
+<h3>Common Classes<a class="headerlink" href="#common-classes" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<ul class="simple">
+<li><p><a class="reference internal" href="Common/CallByRef.html#common-callbyref"><span class="std std-ref">Call-by-reference parameters</span></a>: Python doesn’t provide <em>call-by-reference parameters</em> for
+simple types. <br />
+This behavior can be emulated with classes provided by the <a class="reference internal" href="pyTooling/pyTooling.CallByRef.html#module-pyTooling.CallByRef" title="pyTooling.CallByRef"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.CallByRef</span></code></a> module.</p></li>
+<li><p><a class="reference internal" href="Common/Licensing.html#licensing"><span class="std std-ref">Unified license names</span></a>: Setuptools, PyPI, and others have a varying understanding of license names. <br />
+The <a class="reference internal" href="pyTooling/pyTooling.Licensing.html#module-pyTooling.Licensing" title="pyTooling.Licensing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Licensing</span></code></a> module provides <a class="reference internal" href="Common/Licensing.html#licensing"><span class="std std-ref">unified license names</span></a> as well as license name
+mappings or translations.</p></li>
+<li><p><a class="reference internal" href="Common/Platform.html#common-platform"><span class="std std-ref">Unified platform and environment description</span></a>: Python has many ways in figuring out the
+current platform using APIs from <code class="docutils literal notranslate"><span class="pre">sys</span></code>, <code class="docutils literal notranslate"><span class="pre">platform</span></code>, <code class="docutils literal notranslate"><span class="pre">os</span></code>, …. Unfortunately, none of the provided standard
+APIs offers a comprehensive answer. pyTooling provides a <a class="reference internal" href="Common/Platform.html#common-currentplatform"><span class="std std-ref">CurrentPlatform</span></a>
+singleton summarizing multiple platform APIs into a single class instance.</p></li>
+<li><p><a class="reference internal" href="Common/Versioning.html#versioning"><span class="std std-ref">Representations of version numbers</span></a>: While Python itself has a good versioning schema, there
+are no classes provided to abstract a version numbers. pyTooling provides such representations following
+semantic versioning (SemVer) and calendar versioning (CalVer) schemes. The implementation can parse many common
+formats and allows user defined formatting. In addition, versions can be compared with various operators
+including PIPs <code class="docutils literal notranslate"><span class="pre">~=</span></code> operator.</p></li>
+<li><p><a class="reference internal" href="Common/Stopwatch.html#common-stopwatch"><span class="std std-ref">Measuring execution times</span></a> can be achieved by using a stopwatch implementation
+providing start, pause, resume, split and stop features. Internally, Python’s <em>high resolution clock</em> is used.
+The stopwatch also provides a context manager, so it can be used in a <code class="docutils literal notranslate"><span class="pre">with</span></code>-statement.</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input id="sd-tab-item-8" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+Licenses</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+Platform</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pytest</span><span class="w"> </span><span class="kn">import</span> <span class="n">mark</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">unittest</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Common</span><span class="w"> </span><span class="kn">import</span> <span class="n">CurrentPlatform</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyTests</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+  <span class="nd">@mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span><span class="ow">not</span> <span class="n">CurrentPlatform</span><span class="o">.</span><span class="n">IsNativeWindows</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Skipped, if platform isn&#39;t native Windows.&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">test_OnlyNativeWindows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span><span class="ow">not</span> <span class="n">CurrentPlatform</span><span class="o">.</span><span class="n">IsMinGW64OnWindows</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Skipped, if platform isn&#39;t MinGW64.&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">test_OnlyMinGW64</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+  <span class="nd">@mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span><span class="n">CurrentPlatform</span><span class="o">.</span><span class="n">IsPyPy</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;getsizeof: not supported on PyPy&quot;</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">test_ObjectSize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+Version Classes</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">SemanticVersion</span><span class="p">,</span> <span class="n">PythonVersion</span><span class="p">,</span> <span class="n">CalendarVersion</span>
+
+<span class="n">version</span> <span class="o">=</span> <span class="n">SemanticVersion</span><span class="p">(</span><span class="s2">&quot;v2.5.4&quot;</span><span class="p">)</span>
+
+<span class="n">version</span><span class="o">.</span><span class="n">Major</span>
+<span class="n">version</span><span class="o">.</span><span class="n">Minor</span>
+<span class="n">version</span><span class="o">.</span><span class="n">Patch</span>
+
+<span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s2">&quot;2.5&quot;</span><span class="p">:</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">version</span><span class="si">:</span><span class="s2">%p%M.%m.%u</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Python versioning from sys.version_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">PythonVersion</span><span class="p">,</span> <span class="n">CalendarVersion</span>
+
+<span class="n">pythonVersion</span> <span class="o">=</span> <span class="n">PythonVersion</span><span class="o">.</span><span class="n">FromSysVersionInfo</span><span class="p">()</span>
+
+<span class="c1"># Calendar versioning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Versioning</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalendarVersion</span>
+
+<span class="n">osvvmVersion</span> <span class="o">=</span> <span class="n">CalendarVersion</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="s2">&quot;2024.07&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+Stopwatch</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Stopwatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stopwatch</span>
+
+<span class="n">sw</span> <span class="o">=</span> <span class="n">Stopwatch</span><span class="p">(</span><span class="s2">&quot;my name&quot;</span><span class="p">,</span> <span class="n">preferPause</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">sw</span><span class="o">.</span><span class="n">Start</span><span class="p">()</span>
+<span class="c1"># do something</span>
+<span class="n">sw</span><span class="o">.</span><span class="n">Pause</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">sw</span><span class="p">:</span>
+  <span class="c1"># do something</span>
+
+<span class="n">sw</span><span class="o">.</span><span class="n">Resume</span><span class="p">()</span>
+<span class="c1"># do something</span>
+<span class="n">sw</span><span class="o">.</span><span class="n">Stop</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start:      </span><span class="si">{</span><span class="n">sw</span><span class="o">.</span><span class="n">StartTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stop:       </span><span class="si">{</span><span class="n">sw</span><span class="o">.</span><span class="n">StopTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duration:   </span><span class="si">{</span><span class="n">sw</span><span class="o">.</span><span class="n">Duration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Activity:   </span><span class="si">{</span><span class="n">sw</span><span class="o">.</span><span class="n">Activity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inactivity: </span><span class="si">{</span><span class="n">sw</span><span class="o">.</span><span class="n">Inactivity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Splits:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">duration</span><span class="p">,</span> <span class="n">activity</span> <span class="ow">in</span> <span class="n">sw</span><span class="p">:</span>
+   <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="s1">&#39;running for&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">activity</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;paused for &#39;</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>Various file formats suitable for configuration information share the same features supporting: key-value pairs
+(dictionaries), sequences (lists), and simple types like string, integer and float. pyTooling provides an
+<a class="reference internal" href="Configuration/index.html#config"><span class="std std-ref">abstract configuration file data model</span></a> supporting these features. Moreover, concrete
+<a class="reference internal" href="Configuration/FileFormats.html#config-fileformat"><span class="std std-ref">configuration file format reader</span></a> implementations are provided as well.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="Configuration/JSON.html#config-fileformat-json"><span class="std std-ref">JSON configuration reader</span></a> for the JSON file format.</p></li>
+<li><p><a class="reference internal" href="Configuration/TOML.html#config-fileformat-toml"><span class="std std-ref">TOML configuration reader</span></a>  → To be implemented.</p></li>
+<li><p><a class="reference internal" href="Configuration/YAML.html#config-fileformat-yaml"><span class="std std-ref">YAML configuration reader</span></a> for the YAML file format.</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+JSON</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Configuration.JSON</span><span class="w"> </span><span class="kn">import</span> <span class="n">Configuration</span>
+
+<span class="n">configFile</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;config.json&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="n">configFile</span><span class="p">)</span>
+
+<span class="c1"># Accessing root-level scalar value</span>
+<span class="n">configFileFormatVersion</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+<span class="c1"># Accessing value in a sequence</span>
+<span class="n">firstItemInList</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># Accessing first value in dictionary</span>
+<span class="n">firstItemInDict</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;dict&quot;</span><span class="p">][</span><span class="s2">&quot;key_1&quot;</span><span class="p">]</span>
+
+<span class="c1"># Iterate simple list</span>
+<span class="n">simpleList</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">simpleList</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
+TOML</label><div class="sd-tab-content docutils">
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Needs example code</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
+YAML</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Configuration.YAML</span><span class="w"> </span><span class="kn">import</span> <span class="n">Configuration</span>
+
+<span class="n">configFile</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;config.yml&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="n">configFile</span><span class="p">)</span>
+
+<span class="c1"># Accessing root-level scalar value</span>
+<span class="n">configFileFormatVersion</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+<span class="c1"># Accessing value in a sequence</span>
+<span class="n">firstItemInList</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># Accessing first value in dictionary</span>
+<span class="n">firstItemInDict</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;dict&quot;</span><span class="p">][</span><span class="s2">&quot;key_1&quot;</span><span class="p">]</span>
+
+<span class="c1"># Iterate simple list</span>
+<span class="n">simpleList</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">simpleList</span><span class="p">:</span>
+  <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-15" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-15">
+XML</label><div class="sd-tab-content docutils">
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Needs example code</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="data-structures">
+<h3>Data Structures<a class="headerlink" href="#data-structures" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>pyTooling also provides <a class="reference internal" href="DataStructures/index.html#struct"><span class="std std-ref">fast and powerful data structures</span></a> offering object-oriented APIs:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="DataStructures/Graph.html#struct-graph"><span class="std std-ref">Graph data structure</span></a> <br />
+→ A directed graph implementation using a <a class="reference internal" href="pyTooling/pyTooling.Graph.html#pyTooling.Graph.Vertex" title="pyTooling.Graph.Vertex"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vertex</span></code></a> and an
+<a class="reference internal" href="pyTooling/pyTooling.Graph.html#pyTooling.Graph.Edge" title="pyTooling.Graph.Edge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code></a> class.</p></li>
+<li><p><a class="reference internal" href="DataStructures/Tree.html#struct-tree"><span class="std std-ref">Tree data structure</span></a> <br />
+→ A fast and simple implementation using a single <a class="reference internal" href="pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> class.</p></li>
+<li><p><a class="reference internal" href="DataStructures/LinkedList.html#struct-linkedlist"><span class="std std-ref">Doubly Linked List</span></a> <br />
+→ An object-oriented implementation using a <code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code> and a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">LinkedList</span></code> class.</p></li>
+<li><p><a class="reference internal" href="DataStructures/Path/index.html#struct-path"><span class="std std-ref">Path data structure</span></a> <br />
+→ To be documented.</p></li>
+<li><p><a class="reference internal" href="DataStructures/StateMachine.html#struct-statemachine"><span class="std std-ref">Finite State Machine data structure</span></a> <br />
+→ A data model for state machines using a <a class="reference internal" href="pyTooling/pyTooling.StateMachine.html#pyTooling.StateMachine.State" title="pyTooling.StateMachine.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> and a
+<a class="reference internal" href="pyTooling/pyTooling.StateMachine.html#pyTooling.StateMachine.Transition" title="pyTooling.StateMachine.Transition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transition</span></code></a> class.</p></li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-16" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-16">
+Graph</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">Vertex</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;myGraph&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create new vertices and an edge between them</span>
+<span class="n">vertex1</span> <span class="o">=</span> <span class="n">Vertex</span><span class="p">(</span><span class="n">vertexID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">)</span>
+<span class="n">vertex2</span> <span class="o">=</span> <span class="n">Vertex</span><span class="p">(</span><span class="n">vertexID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">)</span>
+<span class="n">edge12</span> <span class="o">=</span> <span class="n">vertex1</span><span class="o">.</span><span class="n">EdgeToVertex</span><span class="p">(</span><span class="n">vertex2</span><span class="p">,</span> <span class="n">edgeValue</span><span class="o">=</span><span class="s2">&quot;1 -&gt; 2&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+
+<span class="c1"># Create an edge to a new vertex</span>
+<span class="n">edge2x</span> <span class="o">=</span> <span class="n">vertex2</span><span class="o">.</span><span class="n">EdgeToNewVertex</span><span class="p">(</span><span class="n">vertexID</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">vertex3</span> <span class="o">=</span> <span class="n">edge2x</span><span class="o">.</span><span class="n">Destination</span>
+
+<span class="c1"># Create a link between two vertices</span>
+<span class="n">link31</span> <span class="o">=</span> <span class="n">vertex3</span><span class="o">.</span><span class="n">LinkToVertex</span><span class="p">(</span><span class="n">vertex1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-17" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-17">
+Statemachine</label><div class="sd-tab-content docutils">
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>Needs example code</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-18" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-18">
+Tree</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Tree</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+
+<span class="c1"># Create a new tree by creating a root node (no parent reference)</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;OSVVM Regression Tests&quot;</span><span class="p">)</span>
+
+<span class="c1"># Construct the tree top-down</span>
+<span class="n">lib</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Utility Library&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+
+<span class="c1"># Another standalone node with unique ID (actually an independent tree)</span>
+<span class="n">common</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;Common&quot;</span><span class="p">)</span>
+
+<span class="c1"># Construct bottom-up</span>
+<span class="n">axi</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI&quot;</span><span class="p">)</span>
+<span class="n">axiCommon</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4 Common&quot;</span><span class="p">)</span>
+<span class="n">axi</span><span class="o">.</span><span class="n">AddChild</span><span class="p">(</span><span class="n">axiCommon</span><span class="p">)</span>
+
+<span class="c1"># Group nodes and handover children at node creation time</span>
+<span class="n">vcList</span> <span class="o">=</span> <span class="p">[</span><span class="n">common</span><span class="p">,</span> <span class="n">axi</span><span class="p">]</span>
+<span class="n">vcs</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Verification Components&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">vcList</span><span class="p">)</span>
+
+<span class="c1"># Add multiple nodes at once</span>
+<span class="n">axiProtocols</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4-Stream&quot;</span><span class="p">),</span>
+  <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4-Lite&quot;</span><span class="p">),</span>
+  <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">axi</span><span class="o">.</span><span class="n">AddChildren</span><span class="p">(</span><span class="n">axiProtocols</span><span class="p">)</span>
+
+<span class="c1"># Create another standalone node and attach it later to a tree.</span>
+<span class="n">uart</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;UART&quot;</span><span class="p">)</span>
+<span class="n">uart</span><span class="o">.</span><span class="n">Parent</span> <span class="o">=</span> <span class="n">vcs</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-19" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-19">
+Doubly Linked List</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.List</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+
+<span class="c1"># Create a new doubly linked list from an iterable</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">linkedList</span> <span class="o">=</span> <span class="n">LinkedList</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+<span class="c1"># Add node before first element</span>
+<span class="n">linkedList</span><span class="o">.</span><span class="n">InsertBeforeFirst</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Add node after last element</span>
+<span class="n">linkedList</span><span class="o">.</span><span class="n">InsertAfterLast</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+<span class="c1"># Get length</span>
+<span class="n">linkedList</span><span class="o">.</span><span class="n">Count</span>   <span class="c1"># alternatively: len(linkedList)</span>
+
+<span class="c1"># Delete node</span>
+<span class="n">node</span><span class="o">.</span><span class="n">Remove</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-3 sd-row-cols-xs-3 sd-row-cols-sm-3 sd-row-cols-md-3 sd-row-cols-lg-3 docutils">
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 docutils">
+<p>Graph</p>
+<figure class="align-default" id="id10">
+<pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph LR
+  A(A); B(B); C(C); D(D); E(E); F(F) ; G(G); H(H); I(I)
+
+  A --&gt; B --&gt; E
+  G --&gt; F
+  A --&gt; C --&gt; G --&gt; H --&gt; D
+  D -.-&gt; A
+  D &amp; F -.-&gt; B
+  I ---&gt; E --&gt; F --&gt; D
+
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+    </pre><figcaption>
+<p><span class="caption-text">A directed graph with backward-edges denoted by dotted vertex relations.</span><a class="headerlink" href="#id10" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-3 sd-col-xs-3 sd-col-sm-3 sd-col-md-3 sd-col-lg-3 docutils">
+<p>Statemachine</p>
+<figure class="align-default" id="id11">
+<pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  A(Idle); B(Check); C(Prepare); D(Read); E(Finished); F(Write) ; G(Retry); H(WriteWait); I(ReadWait)
+
+  A:::mark1 --&gt; B --&gt; C --&gt; F
+  F --&gt; H --&gt; E:::cur
+  B --&gt; G --&gt; B
+  G -.-&gt; A --&gt; C
+  D -.-&gt; A
+  C ---&gt; D --&gt; I --&gt; E -.-&gt; A
+
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+    </pre><figcaption>
+<p><span class="caption-text">A statemachine graph.</span><a class="headerlink" href="#id11" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-5 sd-col-xs-5 sd-col-sm-5 sd-col-md-5 sd-col-lg-5 docutils">
+<p>Tree</p>
+<figure class="align-default" id="id12">
+<pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R:::mark1 --&gt; A
+  A --&gt; BL &amp; B &amp; BR
+  B --&gt; CL &amp; C &amp; CR
+  C --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+    </pre><figcaption>
+<p><span class="caption-text">Root of the current node are marked in blue.</span><a class="headerlink" href="#id12" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="decorators">
+<h3>Decorators<a class="headerlink" href="#decorators" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<ul class="simple">
+<li><p><a class="reference internal" href="MetaClasses.html#meta-abstract"><span class="std std-ref">Abstract Method</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="Decorators.html#deco-abstractmethod"><span class="std std-ref">&#64;abstractmethod</span></a>: Methods marked with <code class="code highlight python docutils literal highlight-python"><span class="nd">@abstractmethod</span></code> are abstract and need to be overwritten in
+a derived class. <br />
+An <em>abstract method</em> might be called from the overwriting method.</p></li>
+<li><p><a class="reference internal" href="Decorators.html#deco-mustoverride"><span class="std std-ref">&#64;mustoverride</span></a>: Methods marked with <code class="code highlight python docutils literal highlight-python"><span class="nd">@mustoverride</span></code> are abstract and need to be overridden in a
+derived class. <br />
+It’s not allowed to call a <em>mustoverride method</em>.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="Decorators.html#deco-dataaccess"><span class="std std-ref">Data Access</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="Decorators.html#deco-readonly"><span class="std std-ref">&#64;readonly</span></a>: Methods marked with <code class="code highlight python docutils literal highlight-python"><span class="nd">@readonly</span></code> get transformed into a read-only property.</p></li>
+<li><p>⚠BROKEN⚠: Methods with <a class="reference internal" href="Decorators.html#deco-classproperty"><span class="std std-ref">&#64;classproperty</span></a> decorator transform methods to class-properties.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="Decorators.html#deco-documentation"><span class="std std-ref">Documentation</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="Decorators.html#deco-export"><span class="std std-ref">&#64;export</span></a>: Register a given function or class as publicly accessible in a module. <br />
+Functions and classes exposed like this are also used by Sphinx extensions to (auto-)document public module members.</p></li>
+<li><p><a class="reference internal" href="Decorators.html#deco-inheritdocstring"><span class="std std-ref">&#64;InheritDocString</span></a>: The decorator copies the doc-string from a given base-class to the annotated method.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="Decorators.html#deco-performance"><span class="std std-ref">Performance</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="Decorators.html#deco-slotted"><span class="std std-ref">&#64;slotted</span></a>: Classes marked with <code class="code highlight python docutils literal highlight-python"><span class="nd">@slotted</span></code> get transformed into classes using <code class="docutils literal notranslate"><span class="pre">__slots__</span></code>. <br />
+This is achieve by exchanging the meta-class to <a class="reference internal" href="pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType" title="pyTooling.MetaClasses.ExtendedType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtendedType</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="Decorators.html#deco-mixin"><span class="std std-ref">&#64;mixin</span></a>: Classes marked with <code class="code highlight python docutils literal highlight-python"><span class="nd">@mixin</span></code> do not store their fields in <code class="docutils literal notranslate"><span class="pre">__slots__</span></code>. <br />
+When such a <a class="reference internal" href="Glossary.html#term-Mixin-Class"><span class="xref std std-term">mixin-class</span></a> is inherited by a class using slots, the fields of the mixin become slots.</p></li>
+<li><p><a class="reference internal" href="Decorators.html#deco-singleton"><span class="std std-ref">&#64;singleton</span></a>: Classes marked with <code class="code highlight python docutils literal highlight-python"><span class="nd">@singleton</span></code> get transformed into singleton classes. <br />
+This is achieve by exchanging the meta-class to <a class="reference internal" href="pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType" title="pyTooling.MetaClasses.ExtendedType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtendedType</span></code></a>.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="Decorators.html#deco-misc"><span class="std std-ref">Miscellaneous</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="Decorators.html#deco-notimplemented"><span class="std std-ref">&#64;notimplemented</span></a>: This decorator replaces a callable (function or method) with a callable raising a
+<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a>. The original code becomes unreachable.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>Needs example code</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="exceptions">
+<h3>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.EnvironmentException" title="pyTooling.Exceptions.EnvironmentException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">EnvironmentException</span></code></a> <br />
+… is raised when an expected environment variable is missing.</p></li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.PlatformNotSupportedException" title="pyTooling.Exceptions.PlatformNotSupportedException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">PlatformNotSupportedException</span></code></a> <br />
+… is raise if the platform is not supported.</p></li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Exceptions.html#pyTooling.Exceptions.NotConfiguredException" title="pyTooling.Exceptions.NotConfiguredException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotConfiguredException</span></code></a> <br />
+… is raise if the requested setting is not configured.</p></li>
+</ul>
+</section>
+<section id="meta-classes">
+<h3>Meta-Classes<a class="headerlink" href="#meta-classes" title="Link to this heading"></a></h3>
+<p>pyTooling provides an <a class="reference internal" href="MetaClasses.html#meta"><span class="std std-ref">enhanced meta-class</span></a> called <a class="reference internal" href="pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType" title="pyTooling.MetaClasses.ExtendedType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtendedType</span></code></a> to replace
+the default meta-class <a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a>. It combines features like using slots, abstract methods and creating singletons by
+applying a single meta-class. In comparison, Python’s approach in to provide multiple specific meta-classes (see
+<a class="reference external" href="https://docs.python.org/3/library/abc.html#module-abc" title="(in Python v3.14)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">abc</span></code></a>) that can’t be combined e.g. to a singleton using slots.</p>
+<p><a class="reference internal" href="MetaClasses.html#meta-extendedtype"><span class="std std-ref">ExtendedType</span></a> allows to implement <a class="reference internal" href="MetaClasses.html#meta-slotted"><span class="std std-ref">slotted types</span></a>,
+<a class="reference internal" href="MetaClasses.html#meta-mixin"><span class="std std-ref">mixins</span></a>, <a class="reference internal" href="MetaClasses.html#meta-abstract"><span class="std std-ref">abstract and override methods</span></a> and <a class="reference internal" href="MetaClasses.html#meta-singleton"><span class="std std-ref">singletons</span></a>,
+and combinations thereof. Exception messages in case of errors have been improved too.</p>
+<p>Slotted types significantly reduce the memory footprint by 4x and decrease the class field access time by 10..25%. While
+setting up slotted types needed a lot of manual coding, this is now fully automated by this meta-class. It assumes,
+annotated fields are going to be slots. Moreover, it also takes care deferred slots in multiple-inheritance scenarios by
+marking secondary base-classes as mixins. This defers slot creation until a mixin is inherited.</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<dl class="simple">
+<dt><code class="code highlight python docutils literal highlight-python"><span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">):</span></code></dt><dd><p>A class definition using the <a class="reference internal" href="pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.ExtendedType" title="pyTooling.MetaClasses.ExtendedType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtendedType</span></code></a> meta-class. I can now implement
+<a class="reference internal" href="MetaClasses.html#meta-abstract"><span class="std std-ref">abstract methods</span></a> using the decorators <a class="reference internal" href="Decorators.html#deco-abstractmethod"><span class="std std-ref">&#64;abstractmethod</span></a> or <a class="reference internal" href="Decorators.html#deco-mustoverride"><span class="std std-ref">&#64;mustoverride</span></a>.</p>
+</dd>
+<dt><code class="code highlight python docutils literal highlight-python"><span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">singleton</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span></code></dt><dd><p>A class defined with enabled <a class="reference internal" href="MetaClasses.html#meta-singleton"><span class="std std-ref">singleton</span></a> behavior allows only a single instance of that class to
+exist. If another instance is going to be created, a previously cached instance of that class will be returned.</p>
+</dd>
+<dt><code class="code highlight python docutils literal highlight-python"><span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span></code></dt><dd><p>A class defined with enabled <a class="reference internal" href="MetaClasses.html#meta-slotted"><span class="std std-ref">slots</span></a> behavior stores instance fields in slots. The meta-class,
+translates all type-annotated fields in the class definition to slots. Slots allow a more efficient field storage and
+access compared to dynamically stored and accessed fields hosted in <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>. This improves the memory footprint
+as well as the field access performance of all class instances. This behavior is automatically inherited to all
+derived classes.</p>
+</dd>
+<dt><code class="code highlight python docutils literal highlight-python"><span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mixin</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span></code></dt><dd><p>A class defined with enabled <a class="reference internal" href="MetaClasses.html#meta-mixin"><span class="std std-ref">mixin</span></a> behavior collects type-annotated instance fields so they can be
+added to slots in an inherited class. Thus, slots are not created for mixin-classes but deferred in the inheritance
+hierarchy.</p>
+</dd>
+<dt><code class="code highlight python docutils literal highlight-python"><span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">(</span><span class="n">SlottedObject</span><span class="p">):</span></code></dt><dd><p>A class definition deriving from <a class="reference internal" href="pyTooling/pyTooling.MetaClasses.html#pyTooling.MetaClasses.SlottedObject" title="pyTooling.MetaClasses.SlottedObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">SlottedObject</span></code></a> will bring the slotted type behavior to
+that class and all its derived classes.</p>
+</dd>
+</dl>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-20" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-20">
+Singleton</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Application</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">singleton</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+   <span class="n">_x</span><span class="p">:</span> <span class="nb">int</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Instance of &#39;App1WithoutParameters&#39; was created&quot;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="n">instance1</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span>
+<span class="n">instance2</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">instance1</span> <span class="ow">is</span> <span class="n">instance2</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-21" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-21">
+Slotted Class</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Data</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtendedType</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+   <span class="n">_x</span><span class="p">:</span> <span class="nb">int</span>
+   <span class="n">_y</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span>
+
+   <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+     <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-22" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-22">
+MixIn Class</label><div class="sd-tab-content docutils">
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>Needs example code</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="packaging">
+<h3>Packaging<a class="headerlink" href="#packaging" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>A set of helper functions to describe a Python package for setuptools.</p>
+<ul class="simple">
+<li><p>Helper Functions:</p>
+<ul>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.loadReadmeFile" title="pyTooling.Packaging.loadReadmeFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Packaging.loadReadmeFile()</span></code></a> <br />
+Load a <code class="docutils literal notranslate"><span class="pre">README.md</span></code> file from disk and provide the content as long description for setuptools.</p></li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.loadRequirementsFile" title="pyTooling.Packaging.loadRequirementsFile"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Packaging.loadRequirementsFile()</span></code></a> <br />
+Load a <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file from disk and provide the content for setuptools.</p></li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.extractVersionInformation" title="pyTooling.Packaging.extractVersionInformation"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Packaging.extractVersionInformation()</span></code></a> <br />
+Extract version information from Python source files and provide the data to setuptools.</p></li>
+</ul>
+</li>
+<li><p>Package Descriptions</p>
+<ul>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.DescribePythonPackage" title="pyTooling.Packaging.DescribePythonPackage"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Packaging.DescribePythonPackage()</span></code></a> <br />
+tbd</p></li>
+<li><p><a class="reference internal" href="pyTooling/pyTooling.Packaging.html#pyTooling.Packaging.DescribePythonPackageHostedOnGitHub" title="pyTooling.Packaging.DescribePythonPackageHostedOnGitHub"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyTooling.Packaging.DescribePythonPackageHostedOnGitHub()</span></code></a> <br />
+tbd</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="sd-tab-set docutils">
+<input id="sd-tab-item-23" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-23">
+DescribePythonPackage</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w">          </span><span class="kn">import</span> <span class="n">setup</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w">             </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Packaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">DescribePythonPackage</span>
+
+<span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<input checked="checked" id="sd-tab-item-24" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-24">
+DescribePythonPackageHostedOnGitHub</label><div class="sd-tab-content docutils">
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w">          </span><span class="kn">import</span> <span class="n">setup</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w">             </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyTooling.Packaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">DescribePythonPackageHostedOnGitHub</span>
+
+<span class="n">gitHubNamespace</span> <span class="o">=</span>        <span class="s2">&quot;Paebbels&quot;</span>
+<span class="n">packageName</span> <span class="o">=</span>            <span class="s2">&quot;pyVersioning&quot;</span>
+<span class="n">packageDirectory</span> <span class="o">=</span>       <span class="n">packageName</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="n">packageInformationFile</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">packageDirectory</span><span class="si">}</span><span class="s2">/__init__.py&quot;</span><span class="p">)</span>
+
+<span class="n">setup</span><span class="p">(</span>
+  <span class="o">**</span><span class="n">DescribePythonPackageHostedOnGitHub</span><span class="p">(</span>
+    <span class="n">packageName</span><span class="o">=</span><span class="n">packageName</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Write version information collected from (CI) environment for any programming language as source file.&quot;</span><span class="p">,</span>
+    <span class="n">gitHubNamespace</span><span class="o">=</span><span class="n">gitHubNamespace</span><span class="p">,</span>
+    <span class="n">sourceFileWithVersion</span><span class="o">=</span><span class="n">packageInformationFile</span><span class="p">,</span>
+    <span class="n">consoleScripts</span><span class="o">=</span><span class="p">{</span>
+      <span class="s2">&quot;pyVersioning&quot;</span><span class="p">:</span> <span class="s2">&quot;pyVersioning.CLI:main&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+  <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="terminal">
+<h3>Terminal<a class="headerlink" href="#terminal" title="Link to this heading"></a></h3>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<p>The <a class="reference internal" href="Terminal/index.html#term"><span class="std std-ref">pyTooling.TerminalUI</span></a> package offers a set of helpers to implement a text user interface (TUI) in
+a terminal. It’s designed on the idea that command line programs emit one line of text per message. Each message
+can be categorized as normal text, warnings, errors, and many more.</p>
+<p>Therefore, this package offers a <a class="reference internal" href="Terminal/index.html#term-lineterminal"><span class="std std-ref">LineTerminal</span></a> implementation, derived from a basic
+<a class="reference internal" href="Terminal/index.html#term-terminal"><span class="std std-ref">Terminal</span></a> class. Of cause, it also includes colored outputs based on <cite>colorama</cite>.</p>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">Todo</p>
+<p>Terminal helpers.</p>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-6 sd-col-xs-6 sd-col-sm-6 sd-col-md-6 sd-col-lg-6 docutils">
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>Needs example code</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="contributors">
+<span id="id8"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://GitHub.com/Paebbels">Patrick Lehmann</a> (Maintainer)</p></li>
+<li><p><a class="reference external" href="https://GitHub.com/skoehler">Sven Köhler</a></p></li>
+<li><p><a class="reference external" href="https://GitHub.com/umarcor/">Unai Martinez-Corral</a></p></li>
+<li><p><a class="reference external" href="https://GitHub.com/pyTooling/pyTooling/graphs/contributors">and more…</a></p></li>
+</ul>
+</section>
+<section id="license">
+<span id="id9"></span><h2>License<a class="headerlink" href="#license" title="Link to this heading"></a></h2>
+<p>This Python package (source code) is licensed under <a class="reference external" href="Code-License.html">Apache License 2.0</a>. <br />
+The accompanying documentation is licensed under <a class="reference external" href="Doc-License.html">Creative Commons - Attribution 4.0 (CC-BY 4.0)</a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="News.html" class="btn btn-neutral float-right" title="News" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

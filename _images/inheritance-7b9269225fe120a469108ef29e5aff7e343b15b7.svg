@@ -1,0 +1,47 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="165pt" height="45pt" viewBox="0.00 0.00 165.00 45.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 41)">
+<ns0:title>inheritanceae75da5dd5</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Dictionary</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.JSON.html#pyTooling.Configuration.JSON.Dictionary" ns1:title="A dictionary node in a JSON data file." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="157,-19 90,-19 90,0 157,0 157,-19" />
+<ns0:text text-anchor="middle" x="123.5" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Dictionary</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Dictionary-&gt;Dictionary</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M108.7,-19.08C101.51,-27.73 106.44,-37 123.5,-37 137.63,-37 143.44,-30.65 140.93,-23.55" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="142.35,-22.5 138.3,-19.08 139.33,-24.28 142.35,-22.5" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Node</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../pyTooling/pyTooling.Configuration.html#pyTooling.Configuration.Node" ns1:title="Abstract node in a configuration data structure." target="_top">
+<ns0:polygon fill="white" stroke="#1e90ff" points="54,-19 0,-19 0,0 54,0 54,-19" />
+<ns0:text text-anchor="middle" x="27" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00">Node</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Node-&gt;Dictionary</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.07,-3.39C63.47,-2.78 74.28,-2.61 84.49,-2.87" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.7,-4.62 89.76,-3.04 84.82,-1.13 84.7,-4.62" />
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Node-&gt;Dictionary</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M54.07,-15.61C63.47,-16.22 74.28,-16.39 84.49,-16.13" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="84.82,-17.87 89.76,-15.96 84.7,-14.38 84.82,-17.87" />
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Node-&gt;Node</ns0:title>
+<ns0:path fill="none" stroke="black" stroke-width="0.5" d="M12.2,-19.08C5.01,-27.73 9.94,-37 27,-37 41.13,-37 46.94,-30.65 44.43,-23.55" />
+<ns0:polygon fill="black" stroke="black" stroke-width="0.5" points="45.85,-22.5 41.8,-19.08 42.83,-24.28 45.85,-22.5" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

@@ -1,0 +1,855 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyTooling.CLIAbstraction &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyTooling.CLIAbstraction.Argument" href="pyTooling.CLIAbstraction.Argument.html" />
+    <link rel="prev" title="pyTooling.Attributes.ArgParse.ValuedFlag" href="pyTooling.Attributes.ArgParse.ValuedFlag.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DataStructures/Tree.html">Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pyTooling.html">Python Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Attributes.html">pyTooling.Attributes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyTooling.CLIAbstraction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html">pyTooling.CLIAbstraction.Argument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.BooleanFlag.html">pyTooling.CLIAbstraction.BooleanFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Command.html">pyTooling.CLIAbstraction.Command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.Flag.html">pyTooling.CLIAbstraction.Flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.KeyValueFlag.html">pyTooling.CLIAbstraction.KeyValueFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.OptionalValuedFlag.html">pyTooling.CLIAbstraction.OptionalValuedFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlag.html">pyTooling.CLIAbstraction.ValuedFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlagList.html">pyTooling.CLIAbstraction.ValuedFlagList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedTupleFlag.html">pyTooling.CLIAbstraction.ValuedTupleFlag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIAbstractionException"><code class="docutils literal notranslate"><span class="pre">CLIAbstractionException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIAbstractionException.__new__"><code class="docutils literal notranslate"><span class="pre">CLIAbstractionException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIAbstractionException.__init__"><code class="docutils literal notranslate"><span class="pre">CLIAbstractionException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.DryRunException"><code class="docutils literal notranslate"><span class="pre">DryRunException</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.DryRunException.__new__"><code class="docutils literal notranslate"><span class="pre">DryRunException.__new__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.DryRunException.__init__"><code class="docutils literal notranslate"><span class="pre">DryRunException.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument"><code class="docutils literal notranslate"><span class="pre">CLIArgument</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument.GetAttributes"><code class="docutils literal notranslate"><span class="pre">CLIArgument.GetAttributes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument.GetClasses"><code class="docutils literal notranslate"><span class="pre">CLIArgument.GetClasses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument.GetFunctions"><code class="docutils literal notranslate"><span class="pre">CLIArgument.GetFunctions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument.GetMethods"><code class="docutils literal notranslate"><span class="pre">CLIArgument.GetMethods()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument._AppendAttribute"><code class="docutils literal notranslate"><span class="pre">CLIArgument._AppendAttribute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument.__call__"><code class="docutils literal notranslate"><span class="pre">CLIArgument.__call__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument._classes"><code class="docutils literal notranslate"><span class="pre">CLIArgument._classes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument._functions"><code class="docutils literal notranslate"><span class="pre">CLIArgument._functions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument._methods"><code class="docutils literal notranslate"><span class="pre">CLIArgument._methods</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument._scope"><code class="docutils literal notranslate"><span class="pre">CLIArgument._scope</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.Environment"><code class="docutils literal notranslate"><span class="pre">Environment</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Environment.__init__"><code class="docutils literal notranslate"><span class="pre">Environment.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program"><code class="docutils literal notranslate"><span class="pre">Program</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program._executableNames"><code class="docutils literal notranslate"><span class="pre">Program._executableNames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program.__cliOptions__"><code class="docutils literal notranslate"><span class="pre">Program.__cliOptions__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program.__init__"><code class="docutils literal notranslate"><span class="pre">Program.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program._platform"><code class="docutils literal notranslate"><span class="pre">Program._platform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program._dryRun"><code class="docutils literal notranslate"><span class="pre">Program._dryRun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program._executablePath"><code class="docutils literal notranslate"><span class="pre">Program._executablePath</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program.__cliParameters__"><code class="docutils literal notranslate"><span class="pre">Program.__cliParameters__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program.__getitem__"><code class="docutils literal notranslate"><span class="pre">Program.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program.__repr__"><code class="docutils literal notranslate"><span class="pre">Program.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Program.__str__"><code class="docutils literal notranslate"><span class="pre">Program.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable.__init__"><code class="docutils literal notranslate"><span class="pre">Executable.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable.__cliOptions__"><code class="docutils literal notranslate"><span class="pre">Executable.__cliOptions__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable.__cliParameters__"><code class="docutils literal notranslate"><span class="pre">Executable.__cliParameters__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable.__getitem__"><code class="docutils literal notranslate"><span class="pre">Executable.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable.__repr__"><code class="docutils literal notranslate"><span class="pre">Executable.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable.__str__"><code class="docutils literal notranslate"><span class="pre">Executable.__str__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable._dryRun"><code class="docutils literal notranslate"><span class="pre">Executable._dryRun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable._executableNames"><code class="docutils literal notranslate"><span class="pre">Executable._executableNames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable._executablePath"><code class="docutils literal notranslate"><span class="pre">Executable._executablePath</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable._platform"><code class="docutils literal notranslate"><span class="pre">Executable._platform</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__cliOptions__"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.__cliOptions__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__cliParameters__"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.__cliParameters__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__getitem__"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__repr__"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__str__"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.__str__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._dryRun"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable._dryRun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._executableNames"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable._executableNames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._executablePath"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable._executablePath</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._platform"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable._platform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__init__"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.HasWarnings"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.HasWarnings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.HasErrors"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.HasErrors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.HasFatals"><code class="docutils literal notranslate"><span class="pre">OutputFilteredExecutable.HasFatals</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.CallByRef.html">pyTooling.CallByRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian2D.html">pyTooling.Cartesian2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Cartesian3D.html">pyTooling.Cartesian3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Common.html">pyTooling.Common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Configuration.html">pyTooling.Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Decorators.html">pyTooling.Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Exceptions.html">pyTooling.Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Filesystem.html">pyTooling.Filesystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.GenericPath.html">pyTooling.GenericPath</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Graph.html">pyTooling.Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Licensing.html">pyTooling.Licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.LinkedList.html">pyTooling.LinkedList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.MetaClasses.html">pyTooling.MetaClasses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Packaging.html">pyTooling.Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Platform.html">pyTooling.Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.StateMachine.html">pyTooling.StateMachine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Stopwatch.html">pyTooling.Stopwatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.TerminalUI.html">pyTooling.TerminalUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Tree.html">pyTooling.Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Versioning.html">pyTooling.Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyTooling.Warning.html">pyTooling.Warning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="pyTooling.html">Python Class Reference</a></li>
+      <li class="breadcrumb-item active">pyTooling.CLIAbstraction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pyTooling/pyTooling.CLIAbstraction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="module-pyTooling.CLIAbstraction">
+<span id="pytooling-cliabstraction"></span><h1>pyTooling.CLIAbstraction<a class="headerlink" href="#module-pyTooling.CLIAbstraction" title="Link to this heading"></a></h1>
+<p>Basic abstraction layer for executables.</p>
+<p><strong>Submodules</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html">pyTooling.CLIAbstraction.Argument</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.BooleanFlag.html">pyTooling.CLIAbstraction.BooleanFlag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.Command.html">pyTooling.CLIAbstraction.Command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.Flag.html">pyTooling.CLIAbstraction.Flag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.KeyValueFlag.html">pyTooling.CLIAbstraction.KeyValueFlag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.OptionalValuedFlag.html">pyTooling.CLIAbstraction.OptionalValuedFlag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlag.html">pyTooling.CLIAbstraction.ValuedFlag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedFlagList.html">pyTooling.CLIAbstraction.ValuedFlagList</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyTooling.CLIAbstraction.ValuedTupleFlag.html">pyTooling.CLIAbstraction.ValuedTupleFlag</a></li>
+</ul>
+</div>
+<p><strong>Exceptions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIAbstractionException" title="pyTooling.CLIAbstraction.CLIAbstractionException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">CLIAbstractionException</span></code></a>:
+The exception is raised by pyTooling internal features.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.DryRunException" title="pyTooling.CLIAbstraction.DryRunException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DryRunException</span></code></a>:
+This exception is raised if an executable is launched while in dry-run mode.</p></li>
+</ul>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.CLIArgument" title="pyTooling.CLIAbstraction.CLIArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CLIArgument</span></code></a>:
+An attribute to annotate nested classes as an CLI argument.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Environment" title="pyTooling.CLIAbstraction.Environment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>:
+Undocumented.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Program" title="pyTooling.CLIAbstraction.Program"><code class="xref py py-class docutils literal notranslate"><span class="pre">Program</span></code></a>:
+Represent a simple command line interface (CLI) executable (program or script).</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.Executable" title="pyTooling.CLIAbstraction.Executable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executable</span></code></a>:
+Represent a CLI executable derived from <a class="reference internal" href="#pyTooling.CLIAbstraction.Program" title="pyTooling.CLIAbstraction.Program"><code class="xref py py-class docutils literal notranslate"><span class="pre">Program</span></code></a>, that adds an abstraction of <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.Popen" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.Popen</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable" title="pyTooling.CLIAbstraction.OutputFilteredExecutable"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputFilteredExecutable</span></code></a>:
+Represent a CLI executable derived from <a class="reference internal" href="#pyTooling.CLIAbstraction.Program" title="pyTooling.CLIAbstraction.Program"><code class="xref py py-class docutils literal notranslate"><span class="pre">Program</span></code></a>, that adds an abstraction of <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.Popen" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.Popen</span></code></a>.</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Exceptions</strong></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIAbstractionException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">CLIAbstractionException</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#CLIAbstractionException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIAbstractionException" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-8131841621c5f0d4b3f243dbf625900f8d0fc25e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of CLIAbstractionException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIAbstractionException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIAbstractionException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIAbstractionException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIAbstractionException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.DryRunException">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">DryRunException</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#DryRunException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.DryRunException" title="Link to this definition"></a></dt>
+<dd><p>This exception is raised if an executable is launched while in dry-run mode.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-5ec78ce2812247ac523c32e9c6e27d38ea34e68c.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of DryRunException</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.DryRunException.__new__">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__new__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.DryRunException.__new__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.DryRunException.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.DryRunException.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<p><strong>Classes</strong></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">CLIArgument</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#CLIArgument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument" title="Link to this definition"></a></dt>
+<dd><p>An attribute to annotate nested classes as an CLI argument.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-ab29db209ede4ec3bbd1fe0f6e7d5e2c4b822dee.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of CLIArgument</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument.GetAttributes">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeSubClasses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument.GetAttributes" title="Link to this definition"></a></dt>
+<dd><p>Returns attached attributes of this kind for a given method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/types.html#types.MethodType" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">MethodType</span></code></a></span>)</p></li>
+<li><p><strong>includeSubClasses</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument.GetClasses">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetClasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclassOf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument.GetClasses" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all classes, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subclassOf</span></code> - when the item is a subclass of <code class="docutils literal notranslate"><span class="pre">subclassOf</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/types.html#types.ModuleType" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleType</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span>) – Undocumented.</p></li>
+<li><p><strong>subclassOf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – An attribute class or tuple thereof, to filter for that attribute type or subtype.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of classes where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument.GetFunctions">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetFunctions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument.GetFunctions" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all functions, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of functions where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument.GetMethods">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GetMethods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument.GetMethods" title="Link to this definition"></a></dt>
+<dd><p>Return a generator for all methods, where this attribute is attached to.</p>
+<dl class="simple">
+<dt>The resulting item stream can be filtered by:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scope</span></code> - when the item is a nested class in scope <code class="docutils literal notranslate"><span class="pre">scope</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scope</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</span>) – Undocumented.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">TAttr</span></code>, bound= Attribute), <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of methods where this attribute is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument._AppendAttribute">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_AppendAttribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument._AppendAttribute" title="Link to this definition"></a></dt>
+<dd><p>Append an attribute to a language entity (class, method, function).</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This method can be used in attribute groups to apply multiple attributes within <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GroupAttribute</span><span class="p">(</span><span class="n">Attribute</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">Entity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Entity</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_AppendAttribute</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">SimpleAttribute</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">entity</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity, the attribute is attached to.</p></li>
+<li><p><strong>attribute</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="pyTooling.Attributes.html#pyTooling.Attributes.Attribute" title="pyTooling.Attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a></span>) – Attribute to attach.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a class, method or function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument.__call__" title="Link to this definition"></a></dt>
+<dd><p>Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
+lookups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entity</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span>) – Entity (function, class, method), to attach an attribute to.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Entity</span></code>, bound= <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>])</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Same entity, with attached attribute.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If parameter ‘entity’ is not a function, class nor method.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument._classes">
+<span class="sig-name descname"><span class="pre">_classes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument._classes" title="Link to this definition"></a></dt>
+<dd><p>List of classes, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument._functions">
+<span class="sig-name descname"><span class="pre">_functions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument._functions" title="Link to this definition"></a></dt>
+<dd><p>List of functions, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument._methods">
+<span class="sig-name descname"><span class="pre">_methods</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[List[Any]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument._methods" title="Link to this definition"></a></dt>
+<dd><p>List of methods, this Attribute was attached to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.CLIArgument._scope">
+<span class="sig-name descname"><span class="pre">_scope</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[AttributeScope]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.CLIArgument._scope" title="Link to this definition"></a></dt>
+<dd><p>Allowed language construct this attribute can be used with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Environment">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">Environment</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Environment" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-bd90be9beb097a259c2207efbaae90dfe1ddd4ec.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Environment</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Environment.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newVariables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addVariables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delVariables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Environment.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Environment.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newVariables</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.14)"><em>Mapping</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>addVariables</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.14)"><em>Mapping</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>delVariables</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">Program</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Program"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Program" title="Link to this definition"></a></dt>
+<dd><p>Represent a simple command line interface (CLI) executable (program or script).</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-91109ed74a204673b797c2cd1cda11fa8b8b334f.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Program</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program._executableNames">
+<span class="sig-name descname"><span class="pre">_executableNames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">ClassVar</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Program._executableNames" title="Link to this definition"></a></dt>
+<dd><p>Dictionary of platform specific executable names.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program.__cliOptions__">
+<span class="sig-name descname"><span class="pre">__cliOptions__</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">ClassVar</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Program.__cliOptions__" title="Link to this definition"></a></dt>
+<dd><p>List of all possible CLI options.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executablePath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binaryDirectoryPath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dryRun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Program.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Program.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>executablePath</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>binaryDirectoryPath</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>dryRun</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program._platform">
+<span class="sig-name descname"><span class="pre">_platform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Program._platform" title="Link to this definition"></a></dt>
+<dd><p>Current platform the executable runs on (Linux, Windows, …)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program._dryRun">
+<span class="sig-name descname"><span class="pre">_dryRun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Program._dryRun" title="Link to this definition"></a></dt>
+<dd><p>True, if program shall run in <em>dry-run mode</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program._executablePath">
+<span class="sig-name descname"><span class="pre">_executablePath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Program._executablePath" title="Link to this definition"></a></dt>
+<dd><p>The path to the executable (binary, script, …).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program.__cliParameters__">
+<span class="sig-name descname"><span class="pre">__cliParameters__</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Program.__cliParameters__" title="Link to this definition"></a></dt>
+<dd><p>List of all CLI parameters (used CLI options).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Program.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Program.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Access to a CLI parameter by CLI option (key must be of type <code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code>), which is already used.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Program.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Program.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Program.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Program.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Program.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">Executable</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Executable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable" title="Link to this definition"></a></dt>
+<dd><p>Represent a CLI executable derived from <a class="reference internal" href="#pyTooling.CLIAbstraction.Program" title="pyTooling.CLIAbstraction.Program"><code class="xref py py-class docutils literal notranslate"><span class="pre">Program</span></code></a>, that adds an abstraction of <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.Popen" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.Popen</span></code></a>.</p>
+<p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-b5ac7b6a1c95b9892550f8e88ca8c03b22025317.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Executable</p></object></div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executablePath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binaryDirectoryPath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workingDirectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dryRun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#Executable.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>executablePath</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a>)</p></li>
+<li><p><strong>binaryDirectoryPath</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a>)</p></li>
+<li><p><strong>workingDirectory</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a>)</p></li>
+<li><p><strong>environment</strong> (<a class="reference internal" href="#pyTooling.CLIAbstraction.Environment" title="pyTooling.CLIAbstraction.Environment"><em>Environment</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>dryRun</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable.__cliOptions__">
+<span class="sig-name descname"><span class="pre">__cliOptions__</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">ClassVar</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable.__cliOptions__" title="Link to this definition"></a></dt>
+<dd><p>List of all possible CLI options.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable.__cliParameters__">
+<span class="sig-name descname"><span class="pre">__cliParameters__</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable.__cliParameters__" title="Link to this definition"></a></dt>
+<dd><p>List of all CLI parameters (used CLI options).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Access to a CLI parameter by CLI option (key must be of type <code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code>), which is already used.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable._dryRun">
+<span class="sig-name descname"><span class="pre">_dryRun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable._dryRun" title="Link to this definition"></a></dt>
+<dd><p>True, if program shall run in <em>dry-run mode</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable._executableNames">
+<span class="sig-name descname"><span class="pre">_executableNames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">ClassVar</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable._executableNames" title="Link to this definition"></a></dt>
+<dd><p>Dictionary of platform specific executable names.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable._executablePath">
+<span class="sig-name descname"><span class="pre">_executablePath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable._executablePath" title="Link to this definition"></a></dt>
+<dd><p>The path to the executable (binary, script, …).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.Executable._platform">
+<span class="sig-name descname"><span class="pre">_platform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.Executable._platform" title="Link to this definition"></a></dt>
+<dd><p>Current platform the executable runs on (Linux, Windows, …)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyTooling.CLIAbstraction.</span></span><span class="sig-name descname"><span class="pre">OutputFilteredExecutable</span></span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#OutputFilteredExecutable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable" title="Link to this definition"></a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-9078231c0d5530ff71c8e467a99cca7ffc21163b.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of OutputFilteredExecutable</p></object></div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.__cliOptions__">
+<span class="sig-name descname"><span class="pre">__cliOptions__</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">ClassVar</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__cliOptions__" title="Link to this definition"></a></dt>
+<dd><p>List of all possible CLI options.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.__cliParameters__">
+<span class="sig-name descname"><span class="pre">__cliParameters__</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">],</span> <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference internal" href="pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument" title="pyTooling.CLIAbstraction.Argument.CommandLineArgument"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__cliParameters__" title="Link to this definition"></a></dt>
+<dd><p>List of all CLI parameters (used CLI options).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Access to a CLI parameter by CLI option (key must be of type <code class="xref py py-class docutils literal notranslate"><span class="pre">CommandLineArgument</span></code>), which is already used.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__str__" title="Link to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable._dryRun">
+<span class="sig-name descname"><span class="pre">_dryRun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._dryRun" title="Link to this definition"></a></dt>
+<dd><p>True, if program shall run in <em>dry-run mode</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable._executableNames">
+<span class="sig-name descname"><span class="pre">_executableNames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">ClassVar</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">,</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._executableNames" title="Link to this definition"></a></dt>
+<dd><p>Dictionary of platform specific executable names.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable._executablePath">
+<span class="sig-name descname"><span class="pre">_executablePath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></em><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._executablePath" title="Link to this definition"></a></dt>
+<dd><p>The path to the executable (binary, script, …).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable._platform">
+<span class="sig-name descname"><span class="pre">_platform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable._platform" title="Link to this definition"></a></dt>
+<dd><p>Current platform the executable runs on (Linux, Windows, …)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">platform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dryrun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">executablePath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyTooling/CLIAbstraction.html#OutputFilteredExecutable.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.HasWarnings">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HasWarnings</span></span><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.HasWarnings" title="Link to this definition"></a></dt>
+<dd><p>True if warnings were found while processing the output stream.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.HasErrors">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HasErrors</span></span><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.HasErrors" title="Link to this definition"></a></dt>
+<dd><p>True if errors were found while processing the output stream.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyTooling.CLIAbstraction.OutputFilteredExecutable.HasFatals">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HasFatals</span></span><a class="headerlink" href="#pyTooling.CLIAbstraction.OutputFilteredExecutable.HasFatals" title="Link to this definition"></a></dt>
+<dd><p>True if fatals were found while processing the output stream.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyTooling.Attributes.ArgParse.ValuedFlag.html" class="btn btn-neutral float-left" title="pyTooling.Attributes.ArgParse.ValuedFlag" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyTooling.CLIAbstraction.Argument.html" class="btn btn-neutral float-right" title="pyTooling.CLIAbstraction.Argument" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

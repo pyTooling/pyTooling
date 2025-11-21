@@ -1,0 +1,1584 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tree &mdash; pyTooling 8.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-reports.089ed2e62f89368aa21ac7591d90c12a.css?v=83177741" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/override.css?v=ddb7e066" />
+
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ce2bb500"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const style = document.createElement('style');
+style.textContent = `.mermaid-container {
+    position: relative !important;
+    display: inline-block;
+    width: 100%;
+}
+
+.mermaid-fullscreen-btn {
+    position: absolute !important;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-fullscreen-content .mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-fullscreen-content .mermaid svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}
+`;
+document.head.appendChild(style);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const initFullscreen = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(initFullscreen, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", initFullscreen);
+</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Overview" href="../Decorators.html" />
+    <link rel="prev" title="StateMachine" href="StateMachine.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../News.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation/Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependency.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/index.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Attributes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Attributes/ArgParse.html">ArgParse</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Abstraction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Program.html">Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Executable.html">Executable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CLIAbstraction/Arguments.html">Arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Common</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Common/index.html">Common Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/CallByRef.html">CallByRef</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Licensing.html">Licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Filesystem.html">Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Platform.html">Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Stopwatch.html">Stopwatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Common/Versioning.html">Versioning</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/index.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration/FileFormats.html">File Formats</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Structures</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedList.html">Doubly Linked List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Cartesian.html">2D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Cartesian.html#struct-cartesian3d">3D Cartesian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Graph.html">Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Path/index.html">Path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="StateMachine.html">StateMachine</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tree</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#missing-features">Missing Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#planned-features">Planned Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#out-of-scope">Out of Scope</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#by-feature">By Feature</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#unique-id">Unique ID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#level">Level</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#value">Value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-value-pairs">Key-Value-Pairs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parent-reference">Parent Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#merging-trees">Merging Trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#splitting-trees">Splitting Trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#moving-a-branch-in-same-tree">Moving a branch in same tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#moving-a-branch-to-another-tree">Moving a branch to another tree</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#root-reference">Root Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#path">Path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ancestors">Ancestors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#common-ancestors">Common Ancestors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#children">Children</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#descendants">Descendants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#siblings">Siblings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#relatives">Relatives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#iterating-a-tree">Iterating a Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#struct-tree-merging">Merging Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#struct-tree-splitting">Splitting Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tree-rendering">Tree Rendering</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#competing-solutions">Competing Solutions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#anytree">anytree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#itertree">itertree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#treelib">treelib</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Decorators</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#abstract-methods">Abstract Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#data-access">Data Access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#documentation">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#performance">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Decorators.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exceptions and Warnings</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#exception-base-classes">Exception Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Exceptions.html#predefined-exceptions">Predefined Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Warning/index.html">Warnings</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meta Classes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#extendedtype">ExtendedType</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MetaClasses.html#overloading">Overloading</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Packaging</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#helper-functions">Helper Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Packaging.html#packagedescriptions">PackageDescriptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Terminal</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html">Terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Terminal/index.html#line">Line</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">References and Reports</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pyTooling/pyTooling.html">Python Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unittests/index.html">Unittest Summary Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coverage/index.html">Code Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodeCoverage.html">Code Coverage Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DocCoverage.html">Doc. Coverage Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/index.html">Static Type Check Report ➚</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">Apache License 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Doc-License.html">Creative Commons Attribution 4.0 International</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TODO.html">TODOs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyTooling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tree</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/DataStructures/Tree.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="tree">
+<span id="struct-tree"></span><h1>Tree<a class="headerlink" href="#tree" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#module-pyTooling.Tree" title="pyTooling.Tree"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyTooling.Tree</span></code></a> package provides fast and simple tree data structure based on a single
+<a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> class.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This tree data structure outperforms <a class="extlink-gh reference external" href="https://GitHub.com/c0fec0de/anytree">anytree</a> by far and even <a class="extlink-gh reference external" href="https://GitHub.com/BR1py/itertree">itertree</a>
+by factor of 2.</p>
+<p>Further alternatives:</p>
+<dl class="simple">
+<dt><strong>treelib</strong></dt><dd><p><a class="extlink-gh reference external" href="https://GitHub.com/caesar0301/treelib">treelib</a></p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Example Tree:</p>
+<figure class="align-default" id="id10">
+<pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R:::mark1 --&gt; A
+  A --&gt; BL &amp; B &amp; BR
+  B --&gt; CL &amp; C &amp; CR
+  C --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+    </pre><figcaption>
+<p><span class="caption-text">Root of the current node are marked in blue.</span><a class="headerlink" href="#id10" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p class="rubric">Comprehensive Example:</p>
+<p>The following example code demonstrates a few features in a compact form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new tree by creating a root node (no parent reference)</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;OSVVM Regression Tests&quot;</span><span class="p">)</span>
+
+<span class="c1"># Construct the tree top-down</span>
+<span class="n">lib</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Utility Library&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+
+<span class="c1"># Another standalone node with unique ID (actually an independent tree)</span>
+<span class="n">common</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;Common&quot;</span><span class="p">)</span>
+
+<span class="c1"># Construct bottom-up</span>
+<span class="n">axi</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI&quot;</span><span class="p">)</span>
+<span class="n">axiCommon</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4 Common&quot;</span><span class="p">)</span>
+<span class="n">axi</span><span class="o">.</span><span class="n">AddChild</span><span class="p">(</span><span class="n">axiCommon</span><span class="p">)</span>
+
+<span class="c1"># Group nodes and handover children at node creation time</span>
+<span class="n">vcList</span> <span class="o">=</span> <span class="p">[</span><span class="n">common</span><span class="p">,</span> <span class="n">axi</span><span class="p">]</span>
+<span class="n">vcs</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Verification Components&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">vcList</span><span class="p">)</span>
+
+<span class="c1"># Add multiple nodes at once</span>
+<span class="n">axiProtocols</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4-Stream&quot;</span><span class="p">),</span>
+  <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4-Lite&quot;</span><span class="p">),</span>
+  <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;AXI4&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">axi</span><span class="o">.</span><span class="n">AddChildren</span><span class="p">(</span><span class="n">axiProtocols</span><span class="p">)</span>
+
+<span class="c1"># Create another standalone node and attach it later to a tree.</span>
+<span class="n">uart</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;UART&quot;</span><span class="p">)</span>
+<span class="n">uart</span><span class="o">.</span><span class="n">Parent</span> <span class="o">=</span> <span class="n">vcs</span>
+</pre></div>
+</div>
+<p>The presented code will generate this tree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>OSVVM Regression Tests
+├── Utility Library
+├── Verification Components
+    ├── Common
+    ├── AXI
+    │   ├── AXI4 Common
+    │   ├── AXI4-Stream
+    │   ├── AXI4-Lite
+    │   ├── AXI4
+    ├── UART
+</pre></div>
+</div>
+<section id="features">
+<span id="struct-tree-features"></span><h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fast and simple tree data structure based on a single <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node" title="pyTooling.Tree.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> class.</p></li>
+<li><p>A tree can be constructed top-down and bottom-up.</p></li>
+<li><p>A node can have a unique ID.</p></li>
+<li><p>A node knows its level (distance from root).</p></li>
+<li><p>A node can have a value.</p></li>
+<li><p>A node can store key-value-pairs via dictionary syntax.</p></li>
+<li><p>A node has a reference to its parent node.</p></li>
+<li><p>A node has a reference to the root node in a tree (representative node).</p></li>
+<li><p>Rendering to simple ASCII art for debugging purposes.</p></li>
+</ul>
+<section id="missing-features">
+<span id="struct-tree-missingfeatures"></span><h3>Missing Features<a class="headerlink" href="#missing-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Insert a node (currently, only add/append is supported).</p></li>
+<li><p>Move a node in same hierarchy level.</p></li>
+<li><p>Move node to a different level/node in the same tree in a single operation.</p></li>
+<li><p>Allow node deletion.</p></li>
+</ul>
+</section>
+<section id="planned-features">
+<span id="struct-tree-plannedfeatures"></span><h3>Planned Features<a class="headerlink" href="#planned-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Allow filters (predicates) in generators to allow node filtering.</p></li>
+<li><p>Tree export to formats like GraphML, …</p></li>
+<li><p>Export the tree data structure to file the YAML format.</p></li>
+<li><p>Allow nodes to have tags and group nodes by tags.</p></li>
+<li><p>Allow nodes to link to other nodes (implement proxy behavior?)</p></li>
+</ul>
+</section>
+<section id="out-of-scope">
+<span id="struct-tree-rejectedfeatures"></span><h3>Out of Scope<a class="headerlink" href="#out-of-scope" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Preserve or recover the tree data structure before an erroneous operation caused an exception and aborted a tree
+modification, which might leave the tree in a corrupted state.</p></li>
+<li><p>Export the tree data structure to various file formats like JSON, TOML, …</p></li>
+<li><p>Import a tree data structure from various file formats like JSON, YAML, TOML, …</p></li>
+<li><p>Tree visualization or rendering to complex formats like GraphViz, Mermaid, …</p></li>
+</ul>
+</section>
+</section>
+<section id="by-feature">
+<span id="struct-tree-byfeature"></span><h2>By Feature<a class="headerlink" href="#by-feature" title="Link to this heading"></a></h2>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Accessing internal fields of a node is strongly not recommended for users, as it might lead to a corrupted tree data
+structure. If a power-user wants to access these fields, feel free to use them for achieving a higher performance,
+but you got warned 😉.</p>
+</div>
+<section id="unique-id">
+<span id="struct-tree-id"></span><h3>Unique ID<a class="headerlink" href="#unique-id" title="Link to this heading"></a></h3>
+<p>A node can be created with a unique ID when the object is created. Afterwards, the <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.ID" title="pyTooling.Tree.Node.ID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ID</span></code></a> is
+a readonly property. Any hashable object can be used as an ID. The ID must be unique per tree. If trees are merged or
+nodes are added to an existing tree, the newly added node’s ID(s) are checked and might cause an exception.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create node with unique ID 5</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Read a node&#39;s ID</span>
+<span class="n">nodeID</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ID</span>
+</pre></div>
+</div>
+</section>
+<section id="level">
+<span id="struct-tree-level"></span><h3>Level<a class="headerlink" href="#level" title="Link to this heading"></a></h3>
+<p>Each node has a level describing the distance from <a class="reference internal" href="../Glossary.html#term-Root"><span class="xref std std-term">root node</span></a>. It can be accessed via the read-only
+property <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Level" title="pyTooling.Tree.Node.Level"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Level</span></code></a>.</p>
+<p>The root node has a level of <code class="docutils literal notranslate"><span class="pre">0</span></code>, children of root have a level of <code class="docutils literal notranslate"><span class="pre">1</span></code>, and so on.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create node</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+
+<span class="c1"># Read a node&#39;s level</span>
+<span class="n">nodeLevel</span> <span class="o">=</span> <span class="n">node2</span><span class="o">.</span><span class="n">Level</span>
+</pre></div>
+</div>
+</section>
+<section id="value">
+<span id="struct-tree-value"></span><h3>Value<a class="headerlink" href="#value" title="Link to this heading"></a></h3>
+<p>A node’s value can be given at node creating time or it can be set ant any later time via property
+<a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Value" title="pyTooling.Tree.Node.Value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Value</span></code></a>. Any data type is accepted. The internally stored value can be retrieved by the
+same property. If a node’s string representation is requested via <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.__str__" title="pyTooling.Tree.Node.__str__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code></a> and a node’s
+value isn’t None, then the value’s string representation is returned.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create node with value 5</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Set or change a node&#39;s value</span>
+<span class="n">node</span><span class="o">.</span><span class="n">Value</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Access a node&#39;s Value</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">Value</span>
+</pre></div>
+</div>
+</section>
+<section id="key-value-pairs">
+<span id="struct-tree-keyvaluepairs"></span><h3>Key-Value-Pairs<a class="headerlink" href="#key-value-pairs" title="Link to this heading"></a></h3>
+<p>Besides a <a class="reference internal" href="#struct-tree-id"><span class="std std-ref">unique ID</span></a> and a <a class="reference internal" href="#struct-tree-value"><span class="std std-ref">value</span></a>, each node can hold an arbitrary set
+of key-value-pairs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create node</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">()</span>
+
+<span class="c1"># Create or update a key-value-pair</span>
+<span class="n">node</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+<span class="c1"># Access a value by key</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+
+<span class="c1"># Delete a key-value-pair</span>
+<span class="k">del</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="parent-reference">
+<span id="struct-tree-parent"></span><h3>Parent Reference<a class="headerlink" href="#parent-reference" title="Link to this heading"></a></h3>
+<p>Each node has a reference to its <a class="reference internal" href="../Glossary.html#term-Parent"><span class="xref std std-term">parent node</span></a>. In case, the node is the <a class="reference internal" href="../Glossary.html#term-Root"><span class="xref std std-term">root node</span></a>, the
+parent reference is <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">None</span></code></a>. The parent-child relation can be set at node creation time, or a parent can be assigned to a node at any later time via
+property <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Parent" title="pyTooling.Tree.Node.Parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Parent</span></code></a>. The same property can be used to retrieve the current parent reference.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create node without parent relation ship (root node)</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Create a node add directly attach it to an existing tree</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+
+<span class="c1"># Access a node&#39;s parent</span>
+<span class="n">parent</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">Parent</span>
+</pre></div>
+</div>
+<section id="merging-trees">
+<h4>Merging Trees<a class="headerlink" href="#merging-trees" title="Link to this heading"></a></h4>
+<p>In case, two trees were created (a single node is already a minimal tree), trees get merged if one tree’s root node is
+assigned a parent relationship.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a tree with a single node</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Create a second minimalistic tree</span>
+<span class="n">otherTree</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># Set parent relationship and merge trees</span>
+<span class="n">otherTree</span><span class="o">.</span><span class="n">Parent</span> <span class="o">=</span> <span class="n">root</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="#struct-tree-merging"><span class="std std-ref">Merging Trees</span></a> for more details.</p>
+</div>
+</section>
+<section id="splitting-trees">
+<h4>Splitting Trees<a class="headerlink" href="#splitting-trees" title="Link to this heading"></a></h4>
+<p>In case, a node within a tree’s hierarchy is updated with respect to it’s parent relationship to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">None</span></code></a>, then
+the tree gets split into 2 trees.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a tree of 4 nodes</span>
+<span class="n">root1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root1</span><span class="p">)</span>
+
+<span class="n">root2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">node1</span><span class="p">)</span>
+<span class="n">node3</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root2</span><span class="p">)</span>
+
+<span class="c1"># Split the tree between node1 and root2</span>
+<span class="n">root2</span><span class="o">.</span><span class="n">Parent</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="#struct-tree-splitting"><span class="std std-ref">Splitting Trees</span></a> for more details.</p>
+</div>
+</section>
+<section id="moving-a-branch-in-same-tree">
+<h4>Moving a branch in same tree<a class="headerlink" href="#moving-a-branch-in-same-tree" title="Link to this heading"></a></h4>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>TREE::Parent::move-branch in same tree - needs also testcases</p>
+</div>
+</section>
+<section id="moving-a-branch-to-another-tree">
+<h4>Moving a branch to another tree<a class="headerlink" href="#moving-a-branch-to-another-tree" title="Link to this heading"></a></h4>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>TREE::Parent::move-branch into another tree - needs also testcases</p>
+</div>
+</section>
+</section>
+<section id="root-reference">
+<span id="struct-tree-root"></span><h3>Root Reference<a class="headerlink" href="#root-reference" title="Link to this heading"></a></h3>
+<p>Each node has a reference to the tree’s <a class="reference internal" href="../Glossary.html#term-Root"><span class="xref std std-term">root node</span></a>. The root node can also be considered the
+representative node of a tree and can be accessed via read-only property <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Root" title="pyTooling.Tree.Node.Root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Root</span></code></a>.</p>
+<p>When a node is assigned a new parent relation and this parent is a node in another tree, the root reference will change.
+(A.k.a. moving a branch to another tree.)</p>
+<p>The root node of a tree contains tree-wide data structures like the list of unique IDs
+(<a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node._nodesWithID" title="pyTooling.Tree.Node._nodesWithID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_nodesWithID</span></code></a>, <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node._nodesWithoutID" title="pyTooling.Tree.Node._nodesWithoutID"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_nodesWithoutID</span></code></a>). By utilizing the root
+reference, each node can access these data structures by just one additional reference hop.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a simple tree</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">()</span>
+<span class="n">nodeA</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">nodeB</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+
+<span class="c1"># Check if nodeA and nodeB are in same tree</span>
+<span class="n">isSameTree</span> <span class="o">=</span> <span class="n">nodeA</span> <span class="ow">is</span> <span class="n">nodeB</span>
+</pre></div>
+</div>
+</section>
+<section id="path">
+<span id="struct-tree-path"></span><h3>Path<a class="headerlink" href="#path" title="Link to this heading"></a></h3>
+<p>The property <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Path" title="pyTooling.Tree.Node.Path"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Path</span></code></a> returns a tuple describing the path top-down from root node to the
+current node.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a simple tree representing directories</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;C:&quot;</span><span class="p">)</span>
+<span class="nb">dir</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">file</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;test.log&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="nb">dir</span><span class="p">)</span>
+
+<span class="c1"># Convert a path to string</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">.join(file.Path)</span>
+</pre></div>
+</div>
+<p>While the tuple returned by <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Path" title="pyTooling.Tree.Node.Path"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Path</span></code></a> can be used in an iteration (e.g. a for-loop), also a
+generator is provided by method <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetPath" title="pyTooling.Tree.Node.GetPath"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetPath()</span></code></a> for iterations.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a simple tree representing directories</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;C:&quot;</span><span class="p">)</span>
+<span class="nb">dir</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">file</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;test.log&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="nb">dir</span><span class="p">)</span>
+
+<span class="c1"># Render path from root to node with indentations to ASCII art</span>
+<span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">GetPath</span><span class="p">()):</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;  &#39;</span><span class="o">*</span><span class="n">level</span><span class="si">}</span><span class="s2">&#39;\-&#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># \-C:</span>
+<span class="c1">#   \-temp</span>
+<span class="c1">#     \-test.log</span>
+</pre></div>
+</div>
+</section>
+<section id="ancestors">
+<span id="struct-tree-ancestors"></span><h3>Ancestors<a class="headerlink" href="#ancestors" title="Link to this heading"></a></h3>
+<p>The method <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetAncestors" title="pyTooling.Tree.Node.GetAncestors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetAncestors()</span></code></a> returns a generator to traverse bottom-up from current node to
+the root node. If the top-down direction is needed, see <a class="reference internal" href="#struct-tree-path"><span class="std std-ref">Path</span></a> for more details.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Python Code</p></th>
+<th class="head"><p>Diagram</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="rubric">Tree Construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an example tree</span>
+<span class="n">root</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dots</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">grandParent</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">uncle</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">parent</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">aunt</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">sibling1</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">me</span> <span class="o">=</span>          <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">sibling2</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">niece1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">nephew1</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">child1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child3</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">niece2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">nephew2</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">grandChild1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+<span class="n">grandChild2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Walk bottom-up all the way to root</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetAncestors</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">6</span>   <span class="c1"># parent</span>
+<span class="mi">3</span>   <span class="c1"># grandparent</span>
+<span class="mi">1</span>   <span class="c1"># ...</span>
+<span class="mi">0</span>   <span class="c1"># root</span>
+</pre></div>
+</div>
+</td>
+<td><pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R:::mark1 --&gt; A
+  A:::mark2 --&gt; BL &amp; B &amp; BR
+  B:::mark2 --&gt; CL &amp; C &amp; CR
+  C:::mark2 --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+  classDef mark2 fill:#69f,stroke:#37f;
+    </pre></td>
+</tr>
+</tbody>
+</table>
+<section id="common-ancestors">
+<span id="struct-tree-commonancestors"></span><h4>Common Ancestors<a class="headerlink" href="#common-ancestors" title="Link to this heading"></a></h4>
+<p>If needed, method <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetCommonAncestors" title="pyTooling.Tree.Node.GetCommonAncestors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetCommonAncestors()</span></code></a> provides a generator to iterate the common
+ancestors of two nodes in a tree. It iterates from root node top-down until the common branch in the tree splits of.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Python Code</p></th>
+<th class="head"><p>Diagram</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="rubric">Tree Construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an example tree</span>
+<span class="n">root</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dots</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">grandParent</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">uncle</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">parent</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">aunt</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">sibling1</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">me</span> <span class="o">=</span>          <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">sibling2</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">niece1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">nephew1</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">child1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child3</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">niece2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">nephew2</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">grandChild1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+<span class="n">grandChild2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Walk bottom-up all the way to root</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nephew1</span><span class="o">.</span><span class="n">GetCommonAncestors</span><span class="p">(</span><span class="n">grandChild2</span><span class="p">):</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>   <span class="c1"># root</span>
+<span class="mi">1</span>   <span class="c1"># ...</span>
+<span class="mi">3</span>   <span class="c1"># grandparent</span>
+<span class="mi">6</span>   <span class="c1"># parent</span>
+</pre></div>
+</div>
+</td>
+<td><pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R:::mark1 --&gt; A
+  A:::mark2 --&gt; BL &amp; B &amp; BR
+  B:::mark2 --&gt; CL &amp; C &amp; CR
+  C:::mark2 --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+  ELN2:::cur; F2:::cur
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+  classDef mark2 fill:#69f,stroke:#37f;
+    </pre></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="children">
+<span id="struct-tree-children"></span><h3>Children<a class="headerlink" href="#children" title="Link to this heading"></a></h3>
+<p><a class="reference internal" href="../Glossary.html#term-Child"><span class="xref std std-term">Children</span></a> are all direct successors of a <a class="reference internal" href="../Glossary.html#term-Node"><span class="xref std std-term">node</span></a>.</p>
+<p>A node object supports returning children either as a tuple via a property or as a generator via a method call.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>Return a Tuple</p></th>
+<th class="head"><p>Return a Generator</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Children</p></td>
+<td><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Children</span></code></p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetChildren" title="pyTooling.Tree.Node.GetChildren"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetChildren()</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Children and children thereof</p></td>
+<td><p>— — — —</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Python Code</p></th>
+<th class="head"><p>Diagram</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="rubric">Tree Construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an example tree</span>
+<span class="n">root</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dots</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">grandParent</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">uncle</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">parent</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">aunt</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">sibling1</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">me</span> <span class="o">=</span>          <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">sibling2</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">niece1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">nephew1</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">child1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child3</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">niece2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">nephew2</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">grandChild1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+<span class="n">grandChild2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Walk bottom-up all the way to root</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetChildren</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">13</span>  <span class="c1"># child1</span>
+<span class="mi">14</span>  <span class="c1"># child2</span>
+<span class="mi">15</span>  <span class="c1"># child3</span>
+</pre></div>
+</div>
+</td>
+<td><pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R --&gt; A
+  A --&gt; BL &amp; B &amp; BR
+  B --&gt; CL &amp; C &amp; CR
+  C --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+  EL:::mark2; E:::mark2; ER:::mark2
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+  classDef mark2 fill:#69f,stroke:#37f;
+    </pre></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="descendants">
+<span id="struct-tree-descendants"></span><h3>Descendants<a class="headerlink" href="#descendants" title="Link to this heading"></a></h3>
+<p><a class="reference internal" href="../Glossary.html#term-Descendant"><span class="xref std std-term">Descendants</span></a> are all direct and indirect successors of a <a class="reference internal" href="../Glossary.html#term-Node"><span class="xref std std-term">node</span></a> (<a class="reference internal" href="../Glossary.html#term-Child"><span class="xref std std-term">child nodes</span></a>
+and child nodes thereof a.k.a. <a class="reference internal" href="../Glossary.html#term-Grandchild"><span class="xref std std-term">grandchild</span></a>, grand-grandchildren, …).</p>
+<p>A node object supports returning descendants as a generator via a method call to <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetDescendants" title="pyTooling.Tree.Node.GetDescendants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetDescendants()</span></code></a>,
+due to the recursive behavior.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="#struct-tree-iterating"><span class="std std-ref">Iterating a Tree</span></a> for various other forms for iterating nodes in a tree.</p>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Python Code</p></th>
+<th class="head"><p>Diagram</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="rubric">Tree Construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an example tree</span>
+<span class="n">root</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dots</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">grandParent</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">uncle</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">parent</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">aunt</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">sibling1</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">me</span> <span class="o">=</span>          <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">sibling2</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">niece1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">nephew1</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">child1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child3</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">niece2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">nephew2</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">grandChild1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+<span class="n">grandChild2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Walk bottom-up all the way to root</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetDescendants</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">13</span>  <span class="c1"># child1</span>
+<span class="mi">14</span>  <span class="c1"># child2</span>
+<span class="mi">18</span>  <span class="c1"># grandChild1</span>
+<span class="mi">19</span>  <span class="c1"># grandChild2</span>
+<span class="mi">15</span>  <span class="c1"># child3</span>
+</pre></div>
+</div>
+</td>
+<td><pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R --&gt; A
+  A --&gt; BL &amp; B &amp; BR
+  B --&gt; CL &amp; C &amp; CR
+  C --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+  EL:::mark2; E:::mark2; ER:::mark2; F1:::mark2; F2:::mark2
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+  classDef mark2 fill:#69f,stroke:#37f;
+    </pre></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="siblings">
+<span id="struct-tree-siblings"></span><h3>Siblings<a class="headerlink" href="#siblings" title="Link to this heading"></a></h3>
+<p><a class="reference internal" href="../Glossary.html#term-Sibling"><span class="xref std std-term">Siblings</span></a> are all direct <a class="reference internal" href="../Glossary.html#term-Child"><span class="xref std std-term">child nodes</span></a> of a node’s <a class="reference internal" href="../Glossary.html#term-Parent"><span class="xref std std-term">parent</span></a> node except itself.</p>
+<p>A node object supports returning siblings either as tuples via a property or as a generator via a method call. Either
+all siblings are returned or just siblings left from the current node (left siblings) or right from the current node
+(right siblings). Left and right is based on the order of child references in the current node’s parent.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Sibling Selection</p></th>
+<th class="head"><p>Return a Tuple</p></th>
+<th class="head"><p>Return a Generator</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Left Siblings</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.LeftSiblings" title="pyTooling.Tree.Node.LeftSiblings"><code class="xref py py-attr docutils literal notranslate"><span class="pre">LeftSiblings</span></code></a></p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetLeftSiblings" title="pyTooling.Tree.Node.GetLeftSiblings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetLeftSiblings()</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>All Siblings</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Siblings" title="pyTooling.Tree.Node.Siblings"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Siblings</span></code></a></p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetSiblings" title="pyTooling.Tree.Node.GetSiblings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetSiblings()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Right Siblings</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.RightSiblings" title="pyTooling.Tree.Node.RightSiblings"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RightSiblings</span></code></a></p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetRightSiblings" title="pyTooling.Tree.Node.GetRightSiblings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetRightSiblings()</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>In case a node has no parent, an exception is raised, because siblings cannot exist.</p>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Python Code</p></th>
+<th class="head"><p>Diagram</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="rubric">Tree Construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an example tree</span>
+<span class="n">root</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dots</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">grandParent</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">uncle</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">parent</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">aunt</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">sibling1</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">me</span> <span class="o">=</span>          <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">sibling2</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">niece1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">nephew1</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">child1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child3</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">niece2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">nephew2</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">grandChild1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+<span class="n">grandChild2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Walk bottom-up all the way to root</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetLeftSiblings</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetRightSiblings</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">8</span>   <span class="c1"># sibling1</span>
+<span class="mi">10</span>  <span class="c1"># sibling2</span>
+</pre></div>
+</div>
+</td>
+<td><pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R --&gt; A
+  A --&gt; BL &amp; B &amp; BR
+  B --&gt; CL &amp; C &amp; CR
+  C --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+  DL:::mark2; DR:::mark2
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+  classDef mark2 fill:#69f,stroke:#37f;
+    </pre></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="relatives">
+<span id="struct-tree-relatives"></span><h3>Relatives<a class="headerlink" href="#relatives" title="Link to this heading"></a></h3>
+<p><a class="reference internal" href="../Glossary.html#term-Relative"><span class="xref std std-term">Relatives</span></a> are <a class="reference internal" href="../Glossary.html#term-Sibling"><span class="xref std std-term">siblings</span></a> and their <a class="reference internal" href="../Glossary.html#term-Descendant"><span class="xref std std-term">descendants</span></a>.</p>
+<p>A node object supports returning relatives as a generator via a method call, due to the recursive behavior. Either
+all relatives are returned or just relatives left from the current node (left relatives) or right from the current node
+(right relatives). Left and right is based on the order of child references in the current node’s parent.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Relative Selection</p></th>
+<th class="head"><p>Return a Generator</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Left Siblings</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetLeftRelatives" title="pyTooling.Tree.Node.GetLeftRelatives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetLeftRelatives()</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>All Siblings</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetRelatives" title="pyTooling.Tree.Node.GetRelatives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetRelatives()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Right Siblings</p></td>
+<td><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.GetRightRelatives" title="pyTooling.Tree.Node.GetRightRelatives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GetRightRelatives()</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>In case a node has no parent, an exception is raised, because siblings and therefore relatives cannot exist.</p>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Python Code</p></th>
+<th class="head"><p>Diagram</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="rubric">Tree Construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an example tree</span>
+<span class="n">root</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dots</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">node1</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">grandParent</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">node2</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dots</span><span class="p">)</span>
+<span class="n">uncle</span> <span class="o">=</span>       <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">parent</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">aunt</span> <span class="o">=</span>        <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">grandParent</span><span class="p">)</span>
+<span class="n">sibling1</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">me</span> <span class="o">=</span>          <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">sibling2</span> <span class="o">=</span>    <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">niece1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">nephew1</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling1</span><span class="p">)</span>
+<span class="n">child1</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">child3</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+<span class="n">niece2</span> <span class="o">=</span>      <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">nephew2</span> <span class="o">=</span>     <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">sibling2</span><span class="p">)</span>
+<span class="n">grandChild1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+<span class="n">grandChild2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeID</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">child2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Walk bottom-up all the way to root</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetLeftRelatives</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">me</span><span class="o">.</span><span class="n">GetRightRelatives</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">8</span>   <span class="c1"># sibling1</span>
+<span class="mi">11</span>  <span class="c1"># niece1</span>
+<span class="mi">12</span>  <span class="c1"># nephew1</span>
+
+<span class="mi">10</span>  <span class="c1"># sibling2</span>
+<span class="mi">16</span>  <span class="c1"># niece2</span>
+<span class="mi">17</span>  <span class="c1"># nephew2</span>
+</pre></div>
+</div>
+</td>
+<td><pre  class="mermaid">
+        %%{init: { &quot;flowchart&quot;: { &quot;nodeSpacing&quot;: 15, &quot;rankSpacing&quot;: 30, &quot;curve&quot;: &quot;linear&quot;, &quot;useMaxWidth&quot;: false } } }%%
+graph TD
+  R(Root)
+  A(...)
+  BL(Node); B(GrandParent); BR(Node)
+  CL(Uncle); C(Parent); CR(Aunt)
+  DL(Sibling); D(Node);  DR(Sibling)
+  ELN1(Niece); ELN2(Nephew)
+  EL(Child);   E(Child); ER(Child);
+  ERN1(Niece);ERN2(Nephew)
+  F1(GrandChild); F2(GrandChild)
+
+  R --&gt; A
+  A --&gt; BL &amp; B &amp; BR
+  B --&gt; CL &amp; C &amp; CR
+  C --&gt; DL &amp; D &amp; DR
+  DL --&gt; ELN1 &amp; ELN2
+  D:::cur --&gt; EL &amp; E &amp; ER
+  DR --&gt; ERN1 &amp; ERN2
+  E --&gt; F1 &amp; F2
+  DL:::mark2; ELN1:::mark2; ELN2:::mark2; DR:::mark2; ERN1:::mark2; ERN2:::mark2
+  classDef node fill:#eee,stroke:#777,font-size:smaller;
+  classDef cur fill:#9e9,stroke:#6e6;
+  classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+  classDef mark2 fill:#69f,stroke:#37f;
+    </pre></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="iterating-a-tree">
+<span id="struct-tree-iterating"></span><h3>Iterating a Tree<a class="headerlink" href="#iterating-a-tree" title="Link to this heading"></a></h3>
+<p>A tree (starting at the <a class="reference internal" href="../Glossary.html#term-Root"><span class="xref std std-term">root node</span></a>) or a subtree (starting at any node in the tree) can be iterated in
+various orders:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IterateLeafs" title="pyTooling.Tree.Node.IterateLeafs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLeafs()</span></code></a> - iterates only over leafs from left to right</p></li>
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IterateLevelOrder" title="pyTooling.Tree.Node.IterateLevelOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IterateLevelOrder()</span></code></a> - iterates all sub nodes level by level</p></li>
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IteratePreOrder" title="pyTooling.Tree.Node.IteratePreOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePreOrder()</span></code></a> - iterates left to right and returns itself before its descendants</p></li>
+<li><p><a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.IteratePostOrder" title="pyTooling.Tree.Node.IteratePostOrder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">IteratePostOrder()</span></code></a> - iterates left to right and returns its descendants before itself</p></li>
+</ul>
+</section>
+<section id="struct-tree-merging">
+<span id="id3"></span><h3>Merging Trees<a class="headerlink" href="#struct-tree-merging" title="Link to this heading"></a></h3>
+<p>A tree <strong>B</strong> is merged into an existing tree <strong>A</strong>, when a tree <strong>B</strong>’s parent relation is set to a non-<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">None</span></code></a>
+value. Therefore use the <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Parent" title="pyTooling.Tree.Node.Parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">B.Parent</span></code></a> property and set it to <strong>A</strong>:
+<code class="code highlight python docutils literal highlight-python"><span class="n">B</span><span class="o">.</span><span class="n">Parent</span> <span class="o">=</span> <span class="n">A</span></code>.</p>
+<p>The following operations are executed on the tree <strong>B</strong>:</p>
+<ol class="arabic simple">
+<li><p>register all nodes of <strong>B</strong> with and without ID in <strong>A</strong>, then</p></li>
+<li><p>delete the list and dictionary objects for nodes with and without IDs from <strong>B</strong>.</p></li>
+</ol>
+<p>The following operations are executed on all nodes in tree <strong>B</strong>:</p>
+<ul class="simple">
+<li><p>set root reference to <strong>A</strong>.</p></li>
+<li><p>recompute the level within <strong>A</strong>.</p></li>
+</ul>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>In case a node’s ID already exists in <strong>A</strong>, an exception is raised, because IDs are unique.</p>
+</div>
+</section>
+<section id="struct-tree-splitting">
+<span id="id4"></span><h3>Splitting Trees<a class="headerlink" href="#struct-tree-splitting" title="Link to this heading"></a></h3>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>TREE: splitting a tree</p>
+</div>
+</section>
+<section id="tree-rendering">
+<span id="struct-tree-rendering"></span><h3>Tree Rendering<a class="headerlink" href="#tree-rendering" title="Link to this heading"></a></h3>
+<p>The tree data structure can be rendered as ASCII art. The <a class="reference internal" href="../pyTooling/pyTooling.Tree.html#pyTooling.Tree.Node.Render" title="pyTooling.Tree.Node.Render"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Render()</span></code></a> method renders the tree
+into a multi line string.</p>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">Todo</p>
+<p>TREE:Render:: explain parameters</p>
+</div>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Root</span> <span class="mi">0</span><span class="o">&gt;</span>
+<span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">1</span><span class="o">&gt;</span>
+<span class="o">|</span>   <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">4</span><span class="o">&gt;</span>
+<span class="o">|</span>   <span class="o">|</span>   <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">8</span><span class="o">&gt;</span>
+<span class="o">|</span>   <span class="o">|</span>       <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">9</span><span class="o">&gt;</span>
+<span class="o">|</span>   <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">5</span><span class="o">&gt;</span>
+<span class="o">|</span>       <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">10</span><span class="o">&gt;</span>
+<span class="o">|</span>           <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">11</span><span class="o">&gt;</span>
+<span class="o">|</span>           <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">12</span><span class="o">&gt;</span>
+<span class="o">|</span>           <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">13</span><span class="o">&gt;</span>
+<span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">2</span><span class="o">&gt;</span>
+<span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">3</span><span class="o">&gt;</span>
+    <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">6</span><span class="o">&gt;</span>
+    <span class="n">o</span><span class="o">--</span> <span class="o">&lt;</span><span class="n">Node</span> <span class="mi">7</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="competing-solutions">
+<span id="struct-tree-competitors"></span><h2>Competing Solutions<a class="headerlink" href="#competing-solutions" title="Link to this heading"></a></h2>
+<p>This tree data structure outperforms <a class="extlink-gh reference external" href="https://GitHub.com/c0fec0de/anytree">anytree</a> by far and even <a class="extlink-gh reference external" href="https://GitHub.com/BR1py/itertree">itertree</a>
+by factor of 2.</p>
+<section id="anytree">
+<span id="struct-tree-anytree"></span><h3>anytree<a class="headerlink" href="#anytree" title="Link to this heading"></a></h3>
+<p>Source: <a class="extlink-gh reference external" href="https://GitHub.com/c0fec0de/anytree">anytree</a></p>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>TREE::anytree write comparison here.</p>
+</div>
+<p class="rubric">Disadvantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Standoff</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Advantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># add code here</span>
+</pre></div>
+</div>
+</section>
+<section id="itertree">
+<span id="struct-tree-itertree"></span><h3>itertree<a class="headerlink" href="#itertree" title="Link to this heading"></a></h3>
+<p>Source: <a class="extlink-gh reference external" href="https://GitHub.com/BR1py/itertree">itertree</a></p>
+<div class="admonition-todo admonition" id="id8">
+<p class="admonition-title">Todo</p>
+<p>TREE::itertree write comparison here.</p>
+</div>
+<p class="rubric">Disadvantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Standoff</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Advantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># add code here</span>
+</pre></div>
+</div>
+</section>
+<section id="treelib">
+<span id="struct-tree-treelib"></span><h3>treelib<a class="headerlink" href="#treelib" title="Link to this heading"></a></h3>
+<p>Source: <a class="extlink-gh reference external" href="https://GitHub.com/caesar0301/treelib">treelib</a></p>
+<div class="admonition-todo admonition" id="id9">
+<p class="admonition-title">Todo</p>
+<p>TREE::treelib write comparison here.</p>
+</div>
+<p class="rubric">Disadvantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Standoff</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<p class="rubric">Advantages</p>
+<ul class="simple">
+<li><p>…</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># add code here</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="StateMachine.html" class="btn btn-neutral float-left" title="StateMachine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Decorators.html" class="btn btn-neutral float-right" title="Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2025, Patrick Lehmann.
+      <span class="lastupdated">Last updated on 21.11.2025.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
