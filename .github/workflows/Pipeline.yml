@@ -49,7 +49,6 @@ jobs:
       - UnitTestingParams
     with:
       jobs:                     ${{ needs.UnitTestingParams.outputs.python_jobs }}
-      requirements:             '-r tests/unit/requirements.txt'
       pacboy:                   'msys/git'
       unittest_report_xml:      ${{ needs.ConfigParams.outputs.unittest_report_xml }}
       coverage_report_xml:      ${{ needs.ConfigParams.outputs.coverage_report_xml }}
@@ -66,6 +65,7 @@ jobs:
     with:
       jobs:                     ${{ needs.PlatformTestingParams.outputs.python_jobs }}
       unittest_directory:       'unit/Platform'
+      requirements:             '-r tests/unit/requirements.txt'
       unittest_report_xml:      ${{ needs.ConfigParams.outputs.unittest_report_xml }}
       coverage_report_xml:      ${{ needs.ConfigParams.outputs.coverage_report_xml }}
       coverage_report_json:     ${{ needs.ConfigParams.outputs.coverage_report_json }}
