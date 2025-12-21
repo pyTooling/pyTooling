@@ -6,10 +6,10 @@ on:
 
 jobs:
   ConfigParams:
-    uses: pyTooling/Actions/.github/workflows/ExtractConfiguration.yml@r6
+    uses: pyTooling/Actions/.github/workflows/ExtractConfiguration.yml@r7
 
   PerformanceTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r6
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r7
     with:
       name: Performance
       python_version_list: "3.12 3.13 3.14 pypy-3.11"
@@ -17,7 +17,7 @@ jobs:
       pipeline-delay: 300
 
   PerformanceTesting:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r6
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r7
     needs:
       - ConfigParams
       - PerformanceTestingParams
@@ -30,7 +30,7 @@ jobs:
       unittest_xml_artifact: 'pyTooling-PerformanceTestReportSummary-XML'
 
 #  PublishTestResults:
-#    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r6
+#    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
 #    needs:
 ##      - PerformanceTesting
 #    with:
