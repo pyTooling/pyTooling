@@ -81,7 +81,7 @@ class Event(metaclass=ExtendedType, slots=True):
 			self._parent = None
 		elif isinstance(parent, Span):
 			self._parent = parent
-			parent._events[name] = self
+			parent._events.append(self)
 		else:
 			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
@@ -135,6 +135,9 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
+	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+		return iter(self._dict.items())
+
 	def __len__(self) -> int:
 		"""
 		Returns the number of attached attributes (key-value-pairs) on this event.
@@ -174,7 +177,7 @@ class Span(metaclass=ExtendedType, slots=True):
 			self._parent = None
 		elif isinstance(parent, Span):
 			self._parent = parent
-			parent._events[name] = self
+			parent._spans.append(self)
 		else:
 			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
