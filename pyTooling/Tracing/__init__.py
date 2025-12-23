@@ -33,12 +33,14 @@ from datetime  import datetime
 from time      import perf_counter_ns
 from threading import local
 from types     import TracebackType
-from typing import Optional as Nullable, List, Iterator, Type, Self, Iterable
+from typing import Optional as Nullable, List, Iterator, Type, Self, Iterable, Dict, Any, Tuple
+
 
 try:
 	from pyTooling.Decorators  import export, readonly
 	from pyTooling.MetaClasses import ExtendedType
 	from pyTooling.Exceptions  import ToolingException
+	from pyTooling.Common      import getFullyQualifiedName
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Tracing] Could not import from 'pyTooling.*'!")
 
@@ -46,6 +48,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Decorators          import export, readonly
 		from MetaClasses         import ExtendedType
 		from Exceptions          import ToolingException
+		from Common              import getFullyQualifiedName
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Tracing] Could not import directly!")
 		raise ex
@@ -60,9 +63,95 @@ class TracingException(ToolingException):
 
 
 @export
+class Event(metaclass=ExtendedType, slots=True):
+	_name:      str
+	_parent:    Nullable["Span"]
+	_time:      Nullable[datetime]
+	_dict:      Dict[str, Any]
+
+	def __init__(self, name: str, parent: Nullable["Span"] = None) -> None:
+		if isinstance(name, str):
+			self._name =   name
+		else:
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		if parent is None:
+			self._parent = None
+		elif isinstance(parent, Span):
+			self._parent = parent
+			parent._events[name] = self
+		else:
+			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._dict =   {}
+
+	@readonly
+	def Name(self) -> str:
+		return self._name
+
+	@readonly
+	def Parent(self) -> Nullable["Span"]:
+		return self._parent
+
+	def __getitem__(self, key: str) -> Any:
+		"""
+		Read an event's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: str, value: Any) -> None:
+		"""
+		Create or update an event's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key:   The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: str) -> None:
+		"""
+		Remove an entry from event's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the event's attributes.
+		"""
+		del self._dict[key]
+
+	def __contains__(self, key: str) -> bool:
+		"""
+		Checks if the key is an attached attribute (key-value-pairs) on this event.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of attached attributes (key-value-pairs) on this event.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
+
+	def __str__(self) -> str:
+		return self._name
+
+
+@export
 class Span(metaclass=ExtendedType, slots=True):
 	_name:      str
-	_parent:    "Span"
+	_parent:    Nullable["Span"]
+
 	_beginTime: Nullable[datetime]
 	_endTime:   Nullable[datetime]
 	_startTime: Nullable[int]
@@ -70,10 +159,27 @@ class Span(metaclass=ExtendedType, slots=True):
 	_totalTime: Nullable[int]
 
 	_spans:     List["Span"]
+	_events:    List[Event]
+	_dict:      Dict[str, Any]
 
-	def __init__(self, name: str) -> None:
-		self._name =      name
-		self._parent =    None
+	def __init__(self, name: str, parent: Nullable["Span"] = None) -> None:
+		if isinstance(name, str):
+			self._name = name
+		else:
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		if parent is None:
+			self._parent = None
+		elif isinstance(parent, Span):
+			self._parent = parent
+			parent._events[name] = self
+		else:
+			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
 		self._beginTime = None
 		self._startTime = None
 		self._endTime =   None
@@ -81,13 +187,15 @@ class Span(metaclass=ExtendedType, slots=True):
 		self._totalTime = None
 
 		self._spans =     []
+		self._events =    []
+		self._dict =      {}
 
 	@readonly
 	def Name(self) -> str:
 		return self._name
 
 	@readonly
-	def Parent(self) -> "Span":
+	def Parent(self) -> Nullable["Span"]:
 		return self._parent
 
 	def _AddSpan(self, span: "Span") -> Self:
@@ -97,8 +205,38 @@ class Span(metaclass=ExtendedType, slots=True):
 		return span
 
 	@readonly
-	def HasNestedSpans(self) -> bool:
+	def HasSubSpans(self) -> bool:
 		return len(self._spans) > 0
+
+	@readonly
+	def SubSpanCount(self) -> int:
+		"""
+		Return the number of sub-spans within this span.
+
+		:return: Number of nested spans.
+		"""
+		return len(self._spans)
+
+	# iterate subspans with optional predicate
+	def IterateSubSpans(self) -> Iterator["Span"]:
+		return iter(self._spans)
+
+	@readonly
+	def HasEvents(self) -> bool:
+		return len(self._events) > 0
+
+	@readonly
+	def EventCount(self) -> int:
+		"""
+		Return the number of events within this span.
+
+		:return: Number of events.
+		"""
+		return len(self._events)
+
+	# iterate events with optional predicate
+	def IterateEvents(self) -> Iterator[Event]:
+		return iter(self._events)
 
 	@readonly
 	def StartTime(self) -> Nullable[datetime]:
@@ -195,16 +333,54 @@ class Span(metaclass=ExtendedType, slots=True):
 		currentSpan = _threadLocalData.currentSpan
 		_threadLocalData.currentSpan = currentSpan._parent
 
+	def __getitem__(self, key: str) -> Any:
+		"""
+		Read an event's attached attributes (key-value-pairs) by key.
+
+		:param key: The key to look for.
+		:returns:   The value associated to the given key.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: str, value: Any) -> None:
+		"""
+		Create or update an event's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key:   The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: str) -> None:
+		"""
+		Remove an entry from event's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the event's attributes.
+		"""
+		del self._dict[key]
+
+	def __contains__(self, key: str) -> bool:
+		"""
+		Checks if the key is an attached attribute (key-value-pairs) on this event.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
+	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+		return iter(self._dict.items())
+
 	def __len__(self) -> int:
 		"""
-		Implementation of ``len(...)`` to return the number of nested spans.
+		Returns the number of attached attributes (key-value-pairs) on this event.
 
-		:return: Number of nested spans.
+		:returns: Number of attached attributes.
 		"""
-		return len(self._spans)
-
-	def __iter__(self) -> Iterator["Span"]:
-		return iter(self._spans)
+		return len(self._dict)
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
 		result = []
@@ -263,8 +439,8 @@ class Trace(Span):
 		self._endTime =   datetime.now()
 		self._totalTime = self._stopTime - self._startTime
 
-		_threadLocalData.currentTrace = None
-		_threadLocalData.currentSpan =  None
+		del _threadLocalData.currentTrace
+		del _threadLocalData.currentSpan
 
 		return None
 
