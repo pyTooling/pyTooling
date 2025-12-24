@@ -398,15 +398,18 @@ class OutputFilteredExecutable(Executable):
 
 	@readonly
 	def HasWarnings(self):
+		# TODO: update doc-string
 		"""True if warnings were found while processing the output stream."""
 		return self._hasWarnings
 
 	@readonly
 	def HasErrors(self):
+		# TODO: update doc-string
 		"""True if errors were found while processing the output stream."""
 		return self._hasErrors
 
 	@readonly
 	def HasFatals(self):
+		# TODO: update doc-string
 		"""True if fatals were found while processing the output stream."""
 		return self._hasErrors

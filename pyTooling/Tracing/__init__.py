@@ -54,27 +54,54 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		raise ex
 
 
+__all__ = ["_threadLocalData"]
+
 _threadLocalData = local()
+"""A reference to the thread local data needed by the pyTooling.Tracing classes."""
 
 
 @export
 class TracingException(ToolingException):
-	"""This exception is caused by wrong usage of the stopwatch."""
+	"""This exception is caused by wrong usage of the :class:`traces <Trace>` or :class:`spans <Span>`."""
 
 
 @export
 class Event(metaclass=ExtendedType, slots=True):
-	_name:      str
-	_parent:    Nullable["Span"]
-	_time:      Nullable[datetime]
-	_dict:      Dict[str, Any]
+	"""
+	Represents a named event within a timespan (:class:`Span`) used in a software execution trace.
 
-	def __init__(self, name: str, parent: Nullable["Span"] = None) -> None:
+	It may contain arbitrary attributes (key-value pairs).
+	"""
+	_name:      str                 #: Name of the event.
+	_parent:    Nullable["Span"]    #: Reference to the parent span.
+	_time:      Nullable[datetime]  #: Timestamp of the event.
+	_dict:      Dict[str, Any]			#: Dictionary of associated attributes.
+
+	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable["Span"] = None) -> None:
+		"""
+		Initializes a named event.
+
+		:param name:   The name of the event.
+		:param time:   The optional time when the event happened.
+		:param parent: Reference to the parent span.
+		"""
 		if isinstance(name, str):
-			self._name =   name
+			if name == "":
+				raise ValueError(f"Parameter 'name' is empty.")
+
+			self._name = name
 		else:
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+
+		if time is None:
+			self._time = None
+		elif isinstance(time, datetime):
+			self._time = time
+		else:
+			ex = TypeError("Parameter 'time' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(time)}'.")
 			raise ex
 
 		if parent is None:
@@ -91,10 +118,29 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def Name(self) -> str:
+		"""
+		Read-only property to access the event's name.
+
+		:returns: Name of the event.
+		"""
 		return self._name
 
 	@readonly
+	def Time(self) -> datetime:
+		"""
+		Read-only property to access the event's timestamp.
+
+		:returns: Timestamp of the event.
+		"""
+		return self._time
+
+	@readonly
 	def Parent(self) -> Nullable["Span"]:
+		"""
+		Read-only property to access the event's parent span.
+
+		:returns: Parent span.
+		"""
 		return self._parent
 
 	def __getitem__(self, key: str) -> Any:
@@ -136,6 +182,11 @@ class Event(metaclass=ExtendedType, slots=True):
 		return key in self._dict
 
 	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+		"""
+		Returns an iterator to iterate all associated attributes of this event as :pycode:`(key, value)` tuples.
+
+		:returns: Iterator to iterate all attributes.
+		"""
 		return iter(self._dict.items())
 
 	def __len__(self) -> int:
@@ -147,26 +198,45 @@ class Event(metaclass=ExtendedType, slots=True):
 		return len(self._dict)
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of the event.
+
+		:returns: The event's name.
+		"""
 		return self._name
 
 
 @export
 class Span(metaclass=ExtendedType, slots=True):
-	_name:      str
-	_parent:    Nullable["Span"]
+	"""
+	Represents a timespan (span) within another timespan or trace.
 
-	_beginTime: Nullable[datetime]
-	_endTime:   Nullable[datetime]
+	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
+	"""
+	_name:      str                 #: Name of the timespan
+	_parent:    Nullable["Span"]    #: Reference to the parent span (or trace).
+
+	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
+	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.
 	_startTime: Nullable[int]
 	_stopTime:  Nullable[int]
-	_totalTime: Nullable[int]
+	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
 
-	_spans:     List["Span"]
-	_events:    List[Event]
-	_dict:      Dict[str, Any]
+	_spans:     List["Span"]        #: Sub-timespans
+	_events:    List[Event]         #: Events happened within this timespan
+	_dict:      Dict[str, Any]      #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, parent: Nullable["Span"] = None) -> None:
+		"""
+		Initializes a timespan as part of a software execution trace.
+
+		:param name:   Name of the timespan.
+		:param parent: Reference to a parent span or trace.
+		"""
 		if isinstance(name, str):
+			if name == "":
+				raise ValueError(f"Parameter 'name' is empty.")
+
 			self._name = name
 		else:
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -195,10 +265,20 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def Name(self) -> str:
+		"""
+		Read-only property to access the timespan's name.
+
+		:returns: Name of the timespan.
+		"""
 		return self._name
 
 	@readonly
 	def Parent(self) -> Nullable["Span"]:
+		"""
+		Read-only property to access the span's parent span or trace.
+
+		:returns: Parent span.
+		"""
 		return self._parent
 
 	def _AddSpan(self, span: "Span") -> Self:
@@ -209,6 +289,11 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def HasSubSpans(self) -> bool:
+		"""
+		Check if this timespan contains nested sub-spans.
+
+		:returns: ``True``, if the span has nested spans.
+		"""
 		return len(self._spans) > 0
 
 	@readonly
@@ -222,10 +307,20 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	# iterate subspans with optional predicate
 	def IterateSubSpans(self) -> Iterator["Span"]:
+		"""
+		Returns an iterator to iterate all nested sub-spans.
+
+		:returns: Iterator to iterate all sub-spans.
+		"""
 		return iter(self._spans)
 
 	@readonly
 	def HasEvents(self) -> bool:
+		"""
+		Check if this timespan contains events.
+
+		:returns: ``True``, if the span has events.
+		"""
 		return len(self._events) > 0
 
 	@readonly
@@ -239,12 +334,17 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	# iterate events with optional predicate
 	def IterateEvents(self) -> Iterator[Event]:
+		"""
+		Returns an iterator to iterate all embedded events.
+
+		:returns: Iterator to iterate all events.
+		"""
 		return iter(self._events)
 
 	@readonly
 	def StartTime(self) -> Nullable[datetime]:
 		"""
-		Read-only property returning the absolute time when the span was started.
+		Read-only property accessing the absolute time when the span was started.
 
 		:return: The time when the span was entered, otherwise None.
 		"""
@@ -253,7 +353,7 @@ class Span(metaclass=ExtendedType, slots=True):
 	@readonly
 	def StopTime(self) -> Nullable[datetime]:
 		"""
-		Read-only property returning the absolute time when the span was stopped.
+		Read-only property accessing the absolute time when the span was stopped.
 
 		:return: The time when the span was exited, otherwise None.
 		"""
@@ -262,12 +362,12 @@ class Span(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Duration(self) -> float:
 		"""
-		Read-only property returning the duration from start operation to stop operation.
+		Read-only property accessing the duration from start operation to stop operation.
 
-		If the stopwatch is not yet stopped, the duration from start to now is returned.
+		If the span is not yet stopped, the duration from start to now is returned.
 
-		:return: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		:return:                  Duration since span was started in seconds.
+		:raises TracingException: When span was never started.
 		"""
 		if self._startTime is None:
 			raise TracingException(f"{self.__class__.__name__} was never started.")
@@ -276,11 +376,16 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	@classmethod
 	def CurrentSpan(cls) -> "Span":
+		"""
+		Class-method to return the currently active timespan (span) or ``None``.
+
+		:returns: Currently active span or ``None``.
+		"""
 		global _threadLocalData
 
 		try:
 			currentSpan = _threadLocalData.currentSpan
-		except AttributeError as ex:
+		except AttributeError:
 			currentSpan = None
 
 		return currentSpan
@@ -375,6 +480,11 @@ class Span(metaclass=ExtendedType, slots=True):
 		return key in self._dict
 
 	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+		"""
+		Returns an iterator to iterate all associated attributes of this timespan as :pycode:`(key, value)` tuples.
+
+		:returns: Iterator to iterate all attributes.
+		"""
 		return iter(self._dict.items())
 
 	def __len__(self) -> int:
@@ -397,12 +507,34 @@ class Span(metaclass=ExtendedType, slots=True):
 		return f"{self._name} -> {self._parent!r}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of the timespan.
+
+		:returns: The span's name.
+		"""
 		return self._name
 
 
 @export
 class Trace(Span):
+	"""
+	Represents a software execution trace made up of timespans (:class:`Span`).
+
+	The trace is the top-most element in a tree of timespans. All timespans share the same *TraceID*, thus even in a
+	distributed software execution, timespans can be aggregated with delay in a centralized database and the flow of
+	execution can be reassembled by grouping all timespans with same *TraceID*. Execution order can be derived from
+	timestamps and parallel execution is represented by overlapping timespans sharing the same parent *SpanID*. Thus, the
+	tree structure can be reassembled by inspecting the parent *SpanID* relations within the same *TraceID*.
+
+	A trace may contain sub-spans, events and arbitrary attributes (key-value pairs).
+	"""
+
 	def __init__(self, name: str) -> None:
+		"""
+		Initializes a software execution trace.
+
+		:param name:   Name of the trace.
+		"""
 		super().__init__(name)
 
 	def __enter__(self) -> Self:
@@ -449,6 +581,11 @@ class Trace(Span):
 
 	@classmethod
 	def CurrentTrace(cls) -> "Trace":
+		"""
+		Class-method to return the currently active trace or ``None``.
+
+		:returns: Currently active trace or ``None``.
+		"""
 		try:
 			currentTrace = _threadLocalData.currentTrace
 		except AttributeError:

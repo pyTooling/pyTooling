@@ -113,7 +113,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Size(self) -> int:
 		"""
-		Read-only property to access the elements size in Bytes.
+		Read-only property to access the element's size in Bytes.
 
 		:returns:                    Size in Bytes.
 		:raises FilesystemException: If size is not computed, yet.
@@ -162,7 +162,7 @@ class Element(Base, Generic[_ParentType]):
 	@readonly
 	def Name(self) -> str:
 		"""
-		Read-only property to access the elements name.
+		Read-only property to access the element's name.
 
 		:returns: Element name.
 		"""
