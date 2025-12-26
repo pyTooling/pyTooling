@@ -44,7 +44,7 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
    * For list of paths. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
 """
-from typing import List, Union, Iterable, cast, Any
+from typing import List, Union, Iterable, cast, Any, Self
 
 try:
 	from pyTooling.Decorators              import export
@@ -75,7 +75,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 	* ``file=file1.log file=file2.log``
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -88,7 +88,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -162,7 +162,7 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 	* ``-file=file1.log -file=file2.log``
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -175,7 +175,7 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -198,7 +198,7 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 	* ``--file=file1.log --file=file2.log``
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -211,7 +211,7 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -235,7 +235,7 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 	"""
 
 	# TODO: Is it possible to copy the doc-string from super?
-	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}:{1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}:{1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -248,7 +248,7 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 

@@ -45,7 +45,7 @@ The usual delimiter sign between name and value is an equal sign (``=``).
    * For list of valued flags. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlagList`
 """
-from typing import Any
+from typing import Any, Self
 
 try:
 	from pyTooling.Decorators              import export
@@ -74,7 +74,7 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 	* ``width=100``
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -87,7 +87,7 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -110,7 +110,7 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 	* ``-optimizer=on``
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -123,7 +123,7 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -146,7 +146,7 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 	* ``--optimizer=on``
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -159,7 +159,7 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -183,7 +183,7 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 	"""
 
 	# TODO: Is it possible to copy the doc-string from super?
-	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}:{1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}:{1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -196,7 +196,7 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 

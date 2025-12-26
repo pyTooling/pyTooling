@@ -34,7 +34,7 @@
 .. TODO:: Write module documentation.
 
 """
-from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
 
 try:
 	from pyTooling.Decorators              import export
@@ -63,14 +63,14 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 	"""
 	_patternWithValue: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any) -> None:
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._patternWithValue = patternWithValue
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -130,14 +130,14 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 
 	Example: ``-optimizer=on``
 	"""
-	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", patternWithValue: str = "-{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", patternWithValue: str = "-{0}={1}", **kwargs: Any) -> None:
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -157,14 +157,14 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 
 	Example: ``--optimizer=on``
 	"""
-	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", patternWithValue: str = "--{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", patternWithValue: str = "--{0}={1}", **kwargs: Any) -> None:
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -184,14 +184,14 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 
 	Example: ``/optimizer:on``
 	"""
-	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", patternWithValue: str = "/{0}:{1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", patternWithValue: str = "/{0}:{1}", **kwargs: Any) -> None:
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 

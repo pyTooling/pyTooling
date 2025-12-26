@@ -36,7 +36,7 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable, Self
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -83,7 +83,7 @@ class CommandLineArgument:
 
 	_pattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any) -> None:
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -95,7 +95,7 @@ class CommandLineArgument:
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -217,7 +217,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 	Represents a delimiter symbol like ``--``.
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "--", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -255,7 +255,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	_name: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -270,7 +270,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -323,7 +323,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 
 	_value: ValueT
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -393,7 +393,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	Base-class for all command line arguments with a name and a value.
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
@@ -450,7 +450,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 	_valuePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any) -> None:
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -458,7 +458,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -523,7 +523,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 	A list of strings is available as :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`.
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 

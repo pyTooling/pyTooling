@@ -41,7 +41,7 @@ Boolean flags are arguments with a name and different pattern for a positive (``
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
 
 try:
 	from pyTooling.Decorators              import export
@@ -74,7 +74,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 	_falsePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any) -> None:
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -93,7 +93,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -136,7 +136,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 	* False: ``-without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Any) -> None:
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -151,7 +151,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -174,7 +174,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 	* False: ``--without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Any) -> None:
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -189,7 +189,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -212,7 +212,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 	* False: ``/without-checks``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Any) -> None:
 		"""This method is called when a class is derived.
 
 		:param args: Any positional arguments.
@@ -227,7 +227,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 

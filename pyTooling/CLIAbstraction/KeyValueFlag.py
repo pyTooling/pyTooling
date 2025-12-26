@@ -41,7 +41,7 @@ Flag arguments represent simple boolean values by being present or absent.
    * For flags that have an optional value. |br|
      |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
 """
-from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable
+from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable, Self
 
 try:
 	from pyTooling.Decorators              import export
@@ -74,14 +74,14 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	* ``-gWidth=100``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}{1}={2}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}{1}={2}", **kwargs: Any) -> None:
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -163,14 +163,14 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 	* ``-DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-{0}{1}={2}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-{0}{1}={2}", **kwargs: Any) -> None:
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -193,14 +193,14 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 	* ``--DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--{0}{1}={2}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--{0}{1}={2}", **kwargs: Any) -> None:
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
@@ -223,14 +223,14 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 	* ``--DDEBUG=TRUE``
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/{0}:{1}={2}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/{0}:{1}={2}", **kwargs: Any) -> None:
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
 	# TODO: the whole class should be marked as abstract
 	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		"""
 		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
 
