@@ -75,12 +75,15 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 	_falsePattern: ClassVar[str]
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any) -> None:
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
-		:param pattern: This pattern is used to format an argument when the value is ``True``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``.
-		:param kwargs: Any keyword argument.
+		:param args:         Any positional arguments.
+		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		                     Default: ``"with-{0}"``.
+		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		                     Default: ``"without-{0}"``.
+		:param kwargs:       Any keyword argument.
 		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
@@ -137,12 +140,15 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-with-{0}", falsePattern: str = "-without-{0}", **kwargs: Any) -> None:
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
-		:param pattern: This pattern is used to format an argument when the value is ``True``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``.
-		:param kwargs: Any keyword argument.
+		:param args:         Any positional arguments.
+		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		                     Default: ``"-with-{0}"``.
+		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		                     Default: ``"-without-{0}"``.
+		:param kwargs:       Any keyword argument.
 		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
@@ -175,12 +181,15 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--with-{0}", falsePattern: str = "--without-{0}", **kwargs: Any) -> None:
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
-		:param pattern: This pattern is used to format an argument when the value is ``True``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``.
-		:param kwargs: Any keyword argument.
+		:param args:         Any positional arguments.
+		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		                     Default: ``"--with-{0}"``.
+		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		                     Default: ``"--without-{0}"``.
+		:param kwargs:       Any keyword argument.
 		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
@@ -213,12 +222,15 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/with-{0}", falsePattern: str = "/without-{0}", **kwargs: Any) -> None:
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
-		:param pattern: This pattern is used to format an argument when the value is ``True``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``.
-		:param kwargs: Any keyword argument.
+		:param args:         Any positional arguments.
+		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		                     Default: ``"/with-{0}"``.
+		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		                     Default: ``"/without-{0}"``.
+		:param kwargs:       Any keyword argument.
 		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern

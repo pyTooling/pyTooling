@@ -84,11 +84,13 @@ class CommandLineArgument:
 	_pattern: ClassVar[str]
 
 	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any) -> None:
-		"""This method is called when a class is derived.
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``None``.
+		:param kwargs:  Any keyword argument.
 		"""
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
@@ -222,7 +224,8 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. Default: ``"--"``.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"--"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -260,8 +263,9 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the argument.
-		:param pattern: This pattern is used to format an argument.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -328,7 +332,8 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -398,8 +403,9 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the argument.
-		:param pattern: This pattern is used to format an argument.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["name"] = name
@@ -451,6 +457,17 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 	_valuePattern: ClassVar[str]
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:         Any positional arguments.
+		:param name:         Name of the CLI argument.
+		:param pattern:      This pattern is used to format the CLI argument name. |br|
+		                     Default: ``"{0}"``.
+		:param valuePattern: This pattern is used to format the value. |br|
+		                     Default: ``"{0}"``.
+		:param kwargs:       Any keyword argument.
+		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -528,7 +545,8 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern

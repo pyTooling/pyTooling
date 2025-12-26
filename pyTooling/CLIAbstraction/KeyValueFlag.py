@@ -75,6 +75,15 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}{1}={2}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}{1}={2}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -164,6 +173,15 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "-{0}{1}={2}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"-{0}{1}={2}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -194,6 +212,15 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "--{0}{1}={2}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"--{0}{1}={2}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
@@ -224,6 +251,15 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "/{0}:{1}={2}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"/{0}:{1}={2}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)

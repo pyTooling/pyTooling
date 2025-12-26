@@ -65,6 +65,14 @@ class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 	* ``-file file1.txt``
 	"""
 	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"-{0}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
@@ -93,6 +101,14 @@ class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 	* ``--file file1.txt``
 	"""
 	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"--{0}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
@@ -121,6 +137,14 @@ class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
 	* ``/file file1.txt``
 	"""
 	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"/{0}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 

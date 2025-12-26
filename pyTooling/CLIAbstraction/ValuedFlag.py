@@ -79,7 +79,8 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -115,7 +116,8 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"-{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -151,7 +153,8 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"--{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -188,7 +191,8 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"/{0}:{1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern

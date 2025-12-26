@@ -64,6 +64,16 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 	_patternWithValue: ClassVar[str]
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"{0}={1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._patternWithValue = patternWithValue
@@ -131,6 +141,16 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 	Example: ``-optimizer=on``
 	"""
 	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", patternWithValue: str = "-{0}={1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"-{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"-{0}={1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
@@ -158,6 +178,16 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 	Example: ``--optimizer=on``
 	"""
 	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", patternWithValue: str = "--{0}={1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"--{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"--{0}={1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
@@ -185,6 +215,16 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 	Example: ``/optimizer:on``
 	"""
 	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", patternWithValue: str = "/{0}:{1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"/{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"/{0}:{1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)

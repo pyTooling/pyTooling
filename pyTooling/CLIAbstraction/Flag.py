@@ -91,6 +91,14 @@ class ShortFlag(FlagArgument, pattern="-{0}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"-{0}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
@@ -120,6 +128,14 @@ class LongFlag(FlagArgument, pattern="--{0}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"--{0}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
@@ -149,6 +165,14 @@ class WindowsFlag(FlagArgument, pattern="/{0}"):
 	"""
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"/{0}"``.
+		:param kwargs:  Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
