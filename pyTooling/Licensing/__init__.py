@@ -40,7 +40,9 @@ The Licensing module implements mapping tables for various license names and ide
 
    List of `Python classifiers <https://pypi.org/classifiers/>`__
 
-.. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
 from typing       import Any, Dict, Optional as Nullable

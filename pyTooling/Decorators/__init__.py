@@ -30,7 +30,9 @@
 #
 """Decorators controlling visibility of entities in a Python module.
 
-.. hint:: See :ref:`high-level help <DECO>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <DECO>` for explanations and usage examples.
 """
 import sys
 from functools import wraps

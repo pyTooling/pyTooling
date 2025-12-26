@@ -31,7 +31,9 @@
 """
 Common types, helper functions and classes.
 
-.. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <COMMON>` for explanations and usage examples.
 """
 __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"

@@ -31,10 +31,12 @@
 """
 Configuration reader for YAML files.
 
-.. hint:: See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
 from pathlib       import Path
-from typing        import Dict, List, Union, Iterator as typing_Iterator
+from typing        import Dict, List, Union, Iterator as typing_Iterator, Self
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
@@ -67,12 +69,30 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 @export
 class Node(Abstract_Node):
-	_yamlNode: Union[CommentedMap, CommentedSeq]
-	_cache:    Dict[str, ValueT]
-	_key:      KeyT
-	_length:   int
+	"""
+	Node in a YAML configuration data structure.
+	"""
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: Union[CommentedMap, CommentedSeq]) -> None:
+	_yamlNode: Union[CommentedMap, CommentedSeq]  #: Reference to the associated YAML node.
+	_cache:    Dict[str, ValueT]
+	_key:      KeyT                               #: Key of this node.
+	_length:   int                                #: Number of sub-elements.
+
+	def __init__(
+		self,
+		root:     "Configuration",
+		parent:   NodeT,
+		key:      KeyT,
+		yamlNode: Union[CommentedMap, CommentedSeq]
+	) -> None:
+		"""
+		Initializes a YAML node.
+
+		:param root:     Reference to the root node.
+		:param parent:   Reference to the parent node.
+		:param key:
+		:param yamlNode: Reference to the YAML node.
+		"""
 		Abstract_Node.__init__(self, root, parent)
 
 		self._yamlNode = yamlNode
@@ -89,10 +109,21 @@ class Node(Abstract_Node):
 		return self._length
 
 	def __getitem__(self, key: KeyT) -> ValueT:
+		"""
+		Access an element in the node by index or key.
+
+		:param key: Index or key of the element.
+		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
+		"""
 		return self._GetNodeOrValue(str(key))
 
 	@property
 	def Key(self) -> KeyT:
+		"""
+		Property to access the node's key.
+
+		:returns: Key of the node.
+		"""
 		return self._key
 
 	@Key.setter
@@ -100,6 +131,12 @@ class Node(Abstract_Node):
 		raise NotImplementedError()
 
 	def QueryPath(self, query: str) -> ValueT:
+		"""
+		Return a node or value based on a path description to that node or value.
+
+		:param query: String describing the path to the node or value.
+		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
+		"""
 		path = self._ToPath(query)
 		return self._GetNodeOrValueByPathExpression(path)
 
@@ -204,26 +241,59 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
-	_keys: List[KeyT]
+	_keys: List[KeyT]  #: List of keys in this dictionary.
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedMap) -> None:
+	def __init__(
+		self,
+		root:     "Configuration",
+		parent:   NodeT,
+		key:      KeyT,
+		yamlNode: CommentedMap
+	) -> None:
+		"""
+		Initializes a YAML dictionary.
+
+		:param root:     Reference to the root node.
+		:param parent:   Reference to the parent node.
+		:param key:
+		:param yamlNode: Reference to the YAML node.
+		"""
 		Node.__init__(self, root, parent, key, yamlNode)
 
 		self._keys = [str(k) for k in yamlNode.keys()]
 
 	def __contains__(self, key: KeyT) -> bool:
+		"""
+		Checks if the key is in this dictionary.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is in the dictionary.
+		"""
 		return key in self._keys
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
+		"""
+		Returns an iterator to iterate dictionary keys.
+
+		:returns: Dictionary key iterator.
+		"""
+
 		class Iterator(metaclass=ExtendedType, slots=True):
+			"""Iterator to iterate dictionary items."""
+
 			_iter: typing_Iterator[ValueT]
-			_obj: Dictionary
+			_obj:  Dictionary
 
 			def __init__(self, obj: Dictionary) -> None:
+				"""
+				Initializes an iterator for a YAML dictionary node.
+
+				:param obj: YAML dictionary to iterate.
+				"""
 				self._iter = iter(obj._keys)
 				self._obj = obj
 
-			def __iter__(self) -> "Iterator":
+			def __iter__(self) -> Self:
 				"""
 				Return itself to fulfil the iterator protocol.
 
@@ -247,13 +317,24 @@ class Dictionary(Node, Abstract_Dict):
 class Sequence(Node, Abstract_Seq):
 	"""A sequence node (ordered list) in a YAML data file."""
 
-	def __init__(self, root: "Configuration", parent: NodeT, key: KeyT, yamlNode: CommentedSeq) -> None:
+	def __init__(
+		self,
+		root:     "Configuration",
+		parent:   NodeT,
+		key:      KeyT,
+		yamlNode: CommentedSeq
+	) -> None:
+		"""
+		Initializes a YAML sequence (list).
+
+		:param root:     Reference to the root node.
+		:param parent:   Reference to the parent node.
+		:param key:
+		:param yamlNode: Reference to the YAML node.
+		"""
 		Node.__init__(self, root, parent, key, yamlNode)
 
 		self._length = len(yamlNode)
-
-	def __getitem__(self, key: KeyT) -> ValueT:
-		return self._GetNodeOrValue(str(key))
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
@@ -264,14 +345,19 @@ class Sequence(Node, Abstract_Seq):
 		class Iterator(metaclass=ExtendedType, slots=True):
 			"""Iterator to iterate sequence items."""
 
-			_i: int         #: internal iterator position
+			_i:   int       #: internal iterator position
 			_obj: Sequence  #: Sequence object to iterate
 
 			def __init__(self, obj: Sequence) -> None:
+				"""
+				Initializes an iterator for a YAML sequence node.
+
+				:param obj: YAML sequence to iterate.
+				"""
 				self._i = 0
 				self._obj = obj
 
-			def __iter__(self) -> "Iterator":
+			def __iter__(self) -> Self:
 				"""
 				Return itself to fulfil the iterator protocol.
 

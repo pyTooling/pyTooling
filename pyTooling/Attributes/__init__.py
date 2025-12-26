@@ -36,7 +36,9 @@ This module comes also with a mixin-class to ease using classes having annotated
 The annotated data is stored as instances of :class:`~pyTooling.Attributes.Attribute` classes in an additional field per
 class, method or function. By default, this field is called ``__pyattr__``.
 
-.. hint:: See :ref:`high-level help <ATTR>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <ATTR>` for explanations and usage examples.
 """
 from enum   import IntFlag
 from types  import MethodType, FunctionType, ModuleType

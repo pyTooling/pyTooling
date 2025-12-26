@@ -31,7 +31,9 @@
 """
 Auxiliary classes to implement call-by-reference.
 
-.. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """
 from decimal       import Decimal
 from typing        import Any, Generic, TypeVar, Optional as Nullable

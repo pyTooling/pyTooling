@@ -118,7 +118,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
 	tree top-down or bottom-up.
 
-	.. hint:: The top-down construction should be preferred, because it's slightly faster.
+	.. hint::
+
+     The top-down construction should be preferred, because it's slightly faster.
 
 	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
 	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the

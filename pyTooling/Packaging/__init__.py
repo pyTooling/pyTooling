@@ -31,7 +31,9 @@
 """
 A set of helper functions to describe a Python package for setuptools.
 
-.. hint:: See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
 """
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from collections.abc import Sized

@@ -31,7 +31,9 @@
 """
 Implementation of semantic and date versioning version-numbers.
 
-.. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
@@ -2402,6 +2404,8 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		:param index: The index of the version to access.
 		:returns:     The indexed version.
 
-		.. hint:: Versions are ordered from lowest to highest version number.
+		.. hint::
+
+		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]

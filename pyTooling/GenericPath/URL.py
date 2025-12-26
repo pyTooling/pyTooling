@@ -87,18 +87,18 @@ class Protocols(IntFlag):
 class Host(RootMixIn):
 	"""Represents a host as either hostname, DNS or IP-address including the port number in a URL."""
 
-	_hostname: str
-	_port:     Nullable[int]
+	_hostname: str            #: Name of the host (DNS name or IP address).
+	_port:     Nullable[int]  #: Optional port number.
 
 	def __init__(
 		self,
 		hostname: str,
-		port: Nullable[int] = None
+		port:     Nullable[int] = None
 	) -> None:
 		"""
 		Initialize a host instance described by host name and port number.
 
-		:param hostname: Name of the host (either IP or DNS).
+		:param hostname: Name of the host (either IP address or DNS).
 		:param port:     Port number.
 		"""
 		super().__init__()
@@ -107,28 +107,38 @@ class Host(RootMixIn):
 			ex = TypeError("Parameter 'hostname' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
+
 		self._hostname = hostname
 
 		if port is None:
 			pass
 		elif not isinstance(port, int):
 			ex = TypeError("Parameter 'port' is not of type 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(port)}'.")
 			raise ex
 		elif not (0 <= port < 65536):
 			ex = ValueError("Parameter 'port' is out of range 0..65535.")
 			ex.add_note(f"Got value '{port}'.")
 			raise ex
+
 		self._port = port
 
 	@readonly
 	def Hostname(self) -> str:
-		"""Hostname or IP address as string."""
+		"""
+		Read-only property to access the hostname.
+
+		:returns: Hostname as DNS name or IP address.
+		"""
 		return self._hostname
 
 	@readonly
 	def Port(self) -> Nullable[int]:
-		"""Port number as integer."""
+		"""
+		Read-only property to access the optional port number.
+
+		:returns: Optional port number.
+		"""
 		return self._port
 
 	def __str__(self) -> str:
@@ -142,7 +152,7 @@ class Host(RootMixIn):
 		"""
 		Create a copy of this object.
 
-		:return: A new Host instance.
+		:return: A new :class:`Host` instance.
 		"""
 		return self.__class__(
 			self._hostname,
@@ -187,12 +197,12 @@ class URL:
 
 	def __init__(
 		self,
-		scheme: Protocols,
-		path: Path,
-		host: Nullable[Host] = None,
-		user: Nullable[str] = None,
+		scheme:   Protocols,
+		path:     Path,
+		host:     Nullable[Host] = None,
+		user:     Nullable[str] = None,
 		password: Nullable[str] = None,
-		query: Nullable[Mapping[str, str]] = None,
+		query:    Nullable[Mapping[str, str]] = None,
 		fragment: Nullable[str] = None
 	) -> None:
 		"""
@@ -210,18 +220,21 @@ class URL:
 			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
 			raise ex
+
 		self._scheme = scheme
 
 		if user is not None and not isinstance(user, str):
 			ex = TypeError("Parameter 'user' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
 			raise ex
+
 		self._user = user
 
 		if password is not None and not isinstance(password, str):
 			ex = TypeError(f"Parameter 'password' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
 			raise ex
+
 		self._password = password
 
 		if host is not None and not isinstance(host, Host):
@@ -234,6 +247,7 @@ class URL:
 			ex = TypeError(f"Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
+
 		self._path = path
 
 		if query is not None:
@@ -250,48 +264,69 @@ class URL:
 			ex = TypeError(f"Parameter 'fragment' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
 			raise ex
+
 		self._fragment = fragment
 
 	@readonly
 	def Scheme(self) -> Protocols:
+		"""
+		Read-only property to access the URL scheme.
+
+		:returns: URL scheme of the URL.
+		"""
 		return self._scheme
 
 	@readonly
 	def User(self) -> Nullable[str]:
+		"""
+		Read-only property to access the optional username.
+
+		:returns: Optional username within the URL.
+		"""
 		return self._user
 
 	@readonly
 	def Password(self) -> Nullable[str]:
+		"""
+		Read-only property to access the optional password.
+
+		:returns: Optional password within a URL.
+		"""
 		return self._password
 
 	@readonly
 	def Host(self) -> Nullable[Host]:
 		"""
-		Returns the host part (host name and port number) of the URL.
+		Read-only property to access the host part (hostname and port number) of the URL.
 
-		:return: The host part of the URL.
+		:returns: The host part of the URL.
 		"""
 		return self._host
 
 	@readonly
 	def Path(self) -> Path:
+		"""
+		Read-only property to access the path part of the URL.
+
+		:returns: Path part of the URL.
+		"""
 		return self._path
 
 	@readonly
 	def Query(self) -> Nullable[Dict[str, str]]:
 		"""
-		Returns a dictionary of key-value pairs representing the query part in a URL.
+		Read-only property to access the dictionary of key-value pairs representing the query part in the URL.
 
-		:returns: A dictionary representing the query.
+		:returns: A dictionary representing the query as key-value pairs.
 		"""
 		return self._query
 
 	@readonly
 	def Fragment(self) -> Nullable[str]:
 		"""
-		Returns the fragment part of the URL.
+		Read-only property to access the fragment part of the URL.
 
-		:return: The fragment part of the URL.
+		:returns: The fragment part of the URL.
 		"""
 		return self._fragment
 
@@ -299,7 +334,7 @@ class URL:
 	@classmethod
 	def Parse(cls, url: str) -> "URL":
 		"""
-		Parse a URL string and returns a URL object.
+		Parse a URL string and returns the URL object.
 
 		:param url:               URL as string to be parsed.
 		:returns:                 A URL object.
@@ -346,7 +381,7 @@ class URL:
 		"""
 		Formats the URL object as a string representation.
 
-		:return: Formatted URL object.
+		:returns: Formatted URL object.
 		"""
 		result = str(self._path)
 
@@ -374,7 +409,7 @@ class URL:
 		"""
 		Returns a URL object without credentials (username and password).
 
-		:return: New URL object without credentials.
+		:returns: New URL object without credentials.
 		"""
 		return self.__class__(
 			scheme=self._scheme,

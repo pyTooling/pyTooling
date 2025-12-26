@@ -62,7 +62,7 @@ _threadLocalData = local()
 
 @export
 class TracingException(ToolingException):
-	"""This exception is caused by wrong usage of the :class:`traces <Trace>` or :class:`spans <Span>`."""
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
 
 
 @export

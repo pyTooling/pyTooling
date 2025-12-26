@@ -32,12 +32,14 @@
 """
 The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).
 
-.. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <META>` for explanations and usage examples.
 """
 from functools  import wraps
 from sys        import version_info
 from threading  import Condition
-from types      import FunctionType  #, MethodType
+from types      import FunctionType, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
@@ -73,7 +75,7 @@ class ExtendedTypeError(ToolingException):
 @export
 class BaseClassWithoutSlotsError(ExtendedTypeError):
 	"""
-	The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
+	This exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
 
 	.. seealso::
 
@@ -84,7 +86,15 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 
 @export
 class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
-	pass
+	"""
+	This exception is raised when a mixin-class uses slots, but Python prohibits slots.
+
+	.. important::
+
+	   To fulfill Python's requirements on slots, pyTooling uses slots only on the prinmary inheritance line.
+	   Mixin-classes collect slots, which get materialized when the mixin-class (secondary inheritance lines) gets merged
+	   into the primary inheritance line.
+	"""
 
 
 @export
@@ -94,13 +104,15 @@ class BaseClassIsNotAMixinError(ExtendedTypeError):
 
 @export
 class DuplicateFieldInSlotsError(ExtendedTypeError):
-	pass
+	"""
+	This exception is raised when a slot name is used multiple times within the inheritance hierarchy.
+	"""
 
 
 @export
 class AbstractClassError(ExtendedTypeError):
 	"""
-	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
+	This exception is raised, when a class contains methods marked with *abstractmethod* or *must-override*.
 
 	.. seealso::
 
@@ -116,7 +128,7 @@ class AbstractClassError(ExtendedTypeError):
 @export
 class MustOverrideClassError(AbstractClassError):
 	"""
-	The exception is raised, when a class contains methods marked with *must-override*.
+	This exception is raised, when a class contains methods marked with *must-override*.
 
 	.. seealso::
 
@@ -505,7 +517,24 @@ class ExtendedType(type):
 		return newClass
 
 	@classmethod
-	def _findMethods(self, newClass: "ExtendedType", baseClasses: Tuple[type], members: Dict[str, Any]):
+	def _findMethods(
+		self,
+		newClass:    "ExtendedType",
+		baseClasses: Tuple[type],
+		members:     Dict[str, Any]
+	) -> Tuple[List[MethodType], List[MethodType]]:
+		"""
+		Find methods and methods with :mod:`pyTooling.Attributes`.
+
+		.. todo::
+
+		   Describe algorithm.
+
+		:param newClass:    Newly created class instance.
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:     Members of the new class.
+		:return:
+		"""
 		try:
 			from ..Attributes import Attribute
 		except (ImportError, ModuleNotFoundError):  # pragma: no cover
@@ -575,11 +604,32 @@ class ExtendedType(type):
 		return methods, methodsWithAttributes
 
 	@classmethod
-	def _computeSlots(self, className, baseClasses, members, slots, mixin):
+	def _computeSlots(
+		self,
+		className:   str,
+		baseClasses: Tuple[type],
+		members:     Dict[str, Any],
+		slots:       bool,
+		mixin:       bool
+	) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+		"""
+		Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
+
+		.. todo::
+
+		   Describe algorithm.
+
+		:param className:   The name of the class to construct.
+		:param baseClasses: Tuple of base-classes.
+		:param members:     Dictionary of class members.
+		:param slots:       True, if the class should setup ``__slots__``.
+		:param mixin:       True, if the class should behave as a mixin-class.
+		:returns:           A 2-tuple with a dictionary of class members and object members.
+		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
-		objectFields = {}
-		classFields = {}
+		classFields =   {}
+		objectFields =  {}
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -652,6 +702,7 @@ class ExtendedType(type):
 					del members[fieldName]
 
 		# FIXME: search for fields without annotation
+		# TODO: document a list of added members due to ExtendedType
 		if mixin:
 			mixinSlots.extend(slottedFields)
 			members["__slotted__"] = True
@@ -672,7 +723,18 @@ class ExtendedType(type):
 		return classFields, objectFields
 
 	@classmethod
-	def _aggregateMixinSlots(self, className, baseClasses):
+	def _aggregateMixinSlots(self, className: str, baseClasses: Tuple[type]) -> List[str]:
+		"""
+		Aggregate slot names requested by mixin-base-classes.
+
+		.. todo::
+
+		   Describe algorithm.
+
+		:param className:   The name of the class to construct.
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:           A list of slot names.
+		"""
 		mixinSlots = []
 		if len(baseClasses) > 0:
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
@@ -706,6 +768,16 @@ class ExtendedType(type):
 
 	@classmethod
 	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
+		"""
+		Return a generator to iterate (visit) all base-classes ...
+
+		.. todo::
+
+		   Describe iteration order.
+
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:           Generator to iterate all base-classes.
+		"""
 		if len(baseClasses) == 0:
 			return
 
@@ -741,13 +813,14 @@ class ExtendedType(type):
 		An inheritance path is expressed as a tuple of base-classes from current base-class (left-most item) to
 		:class:`object` (right-most item).
 
-		:param baseClasses: List (tuple) of base-classes.
-		:returns:           Generator to iterate all inheritance paths. An inheritance path is a tuple of types (base-classes).
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:           Generator to iterate all inheritance paths. |br|
+		                    An inheritance path is a tuple of types (base-classes).
 		"""
 		if len(baseClasses) == 0:
 			return
 
-		typeStack:   List[type] =           list()
+		typeStack:     List[type] =           list()
 		iteratorStack: List[Iterator[type]] = list()
 
 		for baseClass in baseClasses:

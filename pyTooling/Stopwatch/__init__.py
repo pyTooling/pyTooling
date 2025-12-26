@@ -31,7 +31,9 @@
 """
 A stopwatch to measure execution times.
 
-.. hint:: See :ref:`high-level help <COMMON/Stopwatch>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <COMMON/Stopwatch>` for explanations and usage examples.
 """
 
 from datetime import datetime
