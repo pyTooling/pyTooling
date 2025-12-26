@@ -93,7 +93,16 @@ class CommandLineArgument:
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is CommandLineArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 
@@ -259,7 +268,16 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		super().__init_subclass__(*args, **kwargs)
 		cls._name = name
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is NamedArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -438,7 +456,16 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		super().__init_subclass__(*args, **kwargs)
 		cls._valuePattern = valuePattern
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is NamedTupledArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

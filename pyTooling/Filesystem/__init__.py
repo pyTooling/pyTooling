@@ -146,6 +146,14 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	# FIXME: @abstractmethod
 	def ToTree(self) -> Node:
+		"""
+		Convert a filesystem element to a node in :mod:`pyTooling.Tree`.
+
+		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
+		will be stored in the node's key-value store.
+
+		:returns: A tree's node referencing this filesystem element.
+		"""
 		raise NotImplementedError()
 
 
@@ -285,6 +293,9 @@ class Directory(Element["Directory"]):
 			self._collectSubdirectories()
 
 	def _collectSubdirectories(self) -> None:
+		"""
+		Helper method for scanning subdirectories and aggregating found element sizes therein.
+		"""
 		with Stopwatch() as sw1:
 			self._scanSubdirectories()
 
@@ -295,6 +306,13 @@ class Directory(Element["Directory"]):
 		self._aggregateDuration = sw2.Duration
 
 	def _scanSubdirectories(self) -> None:
+		"""
+		Helper method for scanning subdirectories (recursively) and building a
+		:class:`Directory`-:class:`Filename`-:class:`File` object tree.
+
+		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
+		storage object is assumed.
+		"""
 		try:
 			items = scandir(directoryPath := self.Path)
 		except PermissionError as ex:

@@ -91,7 +91,16 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 		cls._falsePattern = falsePattern
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is BooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -140,7 +149,16 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is ShortBooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -169,7 +187,16 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is LongBooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -198,7 +225,16 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is WindowsBooleanFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

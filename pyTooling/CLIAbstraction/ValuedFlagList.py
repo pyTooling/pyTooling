@@ -86,7 +86,16 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is ValuedFlagList:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -164,7 +173,16 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is ShortValuedFlagList:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -191,7 +209,16 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is LongValuedFlagList:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -219,7 +246,16 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
 	def __new__(cls, *args: Any, **kwargs: Any):
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is WindowsValuedFlagList:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
