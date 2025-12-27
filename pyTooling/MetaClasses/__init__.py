@@ -40,7 +40,7 @@ from functools  import wraps
 from sys        import version_info
 from threading  import Condition
 from types      import FunctionType, MethodType
-from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
+from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 try:
@@ -255,7 +255,7 @@ def abstractmethod(method: M) -> M:
 	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
 	@wraps(method)
-	def func(self):
+	def func(self) -> NoReturn:
 		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
 
 	func.__abstract__ = True

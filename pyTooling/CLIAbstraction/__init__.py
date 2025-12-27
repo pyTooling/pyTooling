@@ -296,10 +296,10 @@ class Program(metaclass=ExtendedType, slots=True):
 		self.__cliParameters__ = {}
 
 	@staticmethod
-	def _NeedsParameterInitialization(key):
+	def _NeedsParameterInitialization(key) -> bool:
 		return issubclass(key, (ValuedFlag, ValuedArgument, NamedAndValuedArgument, NamedTupledArgument, PathArgument, PathListArgument))
 
-	def __getitem__(self, key):
+	def __getitem__(self, key: Type[CommandLineArgument]) -> CommandLineArgument:
 		"""Access to a CLI parameter by CLI option (key must be of type :class:`CommandLineArgument`), which is already used."""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
@@ -309,7 +309,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		# TODO: is nested check
 		return self.__cliParameters__[key]
 
-	def __setitem__(self, key, value):
+	def __setitem__(self, key: Type[CommandLineArgument], value: CommandLineArgument) -> None:
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
@@ -357,7 +357,7 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		return result
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		"""
 		Returns the string representation as coma-separated list of double-quoted CLI argument strings within square brackets.
 
@@ -368,7 +368,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		return "[" + ", ".join([f"\"{item}\"" for item in self.ToArgumentList()]) + "]"  # WORKAROUND: Python <3.12
 		# return f"[{", ".join([f"\"{item}\"" for item in self.ToArgumentList()])}]"
 
-	def __str__(self):
+	def __str__(self) -> str:
 		"""
 		Returns the string representation as space-separated list of double-quoted CLI argument strings.
 
@@ -529,7 +529,7 @@ class OutputFilteredExecutable(Executable):
 	_hasErrors:   bool
 	_hasFatals:   bool
 
-	def __init__(self, platform: Platform, dryrun: bool, executablePath: Path): #, environment=None, logger=None) -> None:
+	def __init__(self, platform: Platform, dryrun: bool, executablePath: Path) -> None: #, environment=None, logger=None) -> None:
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 
 		self._hasOutput =   False
@@ -538,19 +538,19 @@ class OutputFilteredExecutable(Executable):
 		self._hasFatals =   False
 
 	@readonly
-	def HasWarnings(self):
+	def HasWarnings(self) -> bool:
 		# TODO: update doc-string
 		"""True if warnings were found while processing the output stream."""
 		return self._hasWarnings
 
 	@readonly
-	def HasErrors(self):
+	def HasErrors(self) -> bool:
 		# TODO: update doc-string
 		"""True if errors were found while processing the output stream."""
 		return self._hasErrors
 
 	@readonly
-	def HasFatals(self):
+	def HasFatals(self) -> bool:
 		# TODO: update doc-string
 		"""True if fatals were found while processing the output stream."""
 		return self._hasErrors

@@ -90,7 +90,7 @@ class ReleaseLevel(Enum):
 	Beta =             -40  #:
 	Alpha =            -50  #:
 
-	def __eq__(self, other: Any):
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is equal to the second operand.
 
@@ -108,7 +108,7 @@ class ReleaseLevel(Enum):
 
 		return self is other
 
-	def __ne__(self, other: Any):
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is unequal to the second operand.
 
@@ -126,7 +126,7 @@ class ReleaseLevel(Enum):
 
 		return self is not other
 
-	def __lt__(self, other: Any):
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is less than the second operand.
 
@@ -144,7 +144,7 @@ class ReleaseLevel(Enum):
 
 		return self.value < other.value
 
-	def __le__(self, other: Any):
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is less than or equal the second operand.
 
@@ -162,7 +162,7 @@ class ReleaseLevel(Enum):
 
 		return self.value <= other.value
 
-	def __gt__(self, other: Any):
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is greater than the second operand.
 
@@ -180,7 +180,7 @@ class ReleaseLevel(Enum):
 
 		return self.value > other.value
 
-	def __ge__(self, other: Any):
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is greater than or equal the second operand.
 
@@ -2175,7 +2175,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
 	_items: List[V]  #: An ordered list of set members.
 
-	def __init__(self, versions: Union[Version, Iterable[V]]):
+	def __init__(self, versions: Union[Version, Iterable[V]]) -> None:
 		"""
 		Initializes a version set either by a single version or an iterable of versions.
 

@@ -539,7 +539,7 @@ class GraphMLDocument(Base):
 	def HasKey(self, keyName: str) -> bool:
 		return keyName in self._keys
 
-	def FromGraph(self, graph: pyToolingGraph):
+	def FromGraph(self, graph: pyToolingGraph) -> None:
 		document = self
 		self._graph._id = graph._name
 
@@ -626,7 +626,7 @@ class GraphMLDocument(Base):
 
 		translateGraph(self._graph, graph)
 
-	def FromTree(self, tree: pyToolingNode):
+	def FromTree(self, tree: pyToolingNode) -> None:
 		self._graph._id = tree._id
 
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))

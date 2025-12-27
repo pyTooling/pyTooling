@@ -517,7 +517,7 @@ class Severity(Enum):
 	Debug =      2    #: Debug messages
 	All =        0    #: All messages
 
-	def __hash__(self):
+	def __hash__(self) -> int:
 		return hash(self.name)
 
 	def __eq__(self, other: Any) -> bool:
@@ -848,7 +848,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._criticalWarningCount = 0
 		self._warningCount =         0
 
-	def __InitializeLogLevelRouting(self, mode: Mode):
+	def __InitializeLogLevelRouting(self, mode: Mode) -> None:
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
 			for severity in Severity:
 				if severity >= Severity.Warning and severity != Severity.Quiet:
@@ -909,7 +909,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"License:   {license}")
 		self.WriteNormal(f"Version:   {version}")
 
-	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True):
+	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True) -> None:
 		self._verbose =       True if debug else verbose
 		self._debug =         debug
 		self._quiet =         quiet

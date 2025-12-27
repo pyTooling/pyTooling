@@ -257,7 +257,7 @@ class Stopwatch(SlottedObject):
 
 		return diff
 
-	def Stop(self):
+	def Stop(self) -> float:
 		"""
 		Stop the stopwatch and return the time delta to the previous stopwatch operation.
 
@@ -536,7 +536,7 @@ class Stopwatch(SlottedObject):
 		else:
 			raise StopwatchException("Stopwatch was not resumed.")
 
-	def __len__(self):
+	def __len__(self) -> int:
 		"""
 		Implementation of ``len(...)`` to return the number of split times.
 
@@ -568,7 +568,7 @@ class Stopwatch(SlottedObject):
 		"""
 		return self._splits.__iter__()
 
-	def __str__(self):
+	def __str__(self) -> str:
 		"""
 		Returns the stopwatch's state and its measured time span.
 

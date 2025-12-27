@@ -54,26 +54,26 @@ class Comparison(TestCase):
 
 
 class Exceptions(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal == 0
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal != 0
 
-	def test_Less(self):
+	def test_Less(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal < 0
 
-	def test_LessOrEqual(self):
+	def test_LessOrEqual(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal <= 0
 
-	def test_Greater(self):
+	def test_Greater(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal > 0
 
-	def test_GreaterOrEqual(self):
+	def test_GreaterOrEqual(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal >= 0

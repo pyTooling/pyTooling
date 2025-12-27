@@ -913,7 +913,7 @@ class ApplyMethodAttributes_WithMetaClass(TestCase):
 
 
 class MetaTesting(TestCase):
-	def test_Meta(self):
+	def test_Meta(self) -> None:
 		print()
 
 		class AttributeA(Attribute):
@@ -1064,7 +1064,7 @@ class Attribute_GetAttributes_Filtering(TestCase):
 
 
 class MultipleInheritance(TestCase):
-	def test_1(self):
+	def test_1(self) -> None:
 		class AttributeA(Attribute):
 			pass
 

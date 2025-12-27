@@ -179,7 +179,7 @@ class ExecutableArgument(CommandLineArgument):
 		return self._executable
 
 	@Executable.setter
-	def Executable(self, value):
+	def Executable(self, value: Path) -> None:
 		"""
 		Set the internal path to the wrapped executable.
 
@@ -584,7 +584,7 @@ class StringListArgument(ValuedArgument):
 		return self._values
 
 	@Value.setter
-	def Value(self, value: Iterable[str]):
+	def Value(self, value: Iterable[str]) -> None:
 		"""
 		Overwrite all elements in the internal list of str objects.
 
@@ -661,7 +661,7 @@ class PathArgument(CommandLineArgument):
 		return self._path
 
 	@Value.setter
-	def Value(self, value: Path):
+	def Value(self, value: Path) -> None:
 		"""
 		Set the internal path object.
 
@@ -729,7 +729,7 @@ class PathListArgument(CommandLineArgument):
 		return self._paths
 
 	@Value.setter
-	def Value(self, value: Iterable[Path]):
+	def Value(self, value: Iterable[Path]) -> None:
 		"""
 		Overwrite all elements in the internal list of path objects.
 

@@ -85,11 +85,11 @@ class GlobalAttribute(Attribute):
 
 @ModuleAttribute()
 @GlobalAttribute()
-def ModuleFunction():
+def ModuleFunction() -> None:
 	pass
 
 	@GlobalAttribute()
-	def NestedFunction():
+	def NestedFunction() -> None:
 		pass
 
 	return NestedFunction

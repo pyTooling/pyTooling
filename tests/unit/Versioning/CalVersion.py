@@ -43,32 +43,32 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Instantiation(TestCase):
-	def test_Major(self):
+	def test_Major(self) -> None:
 		version = CalendarVersion(1)
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(0, version.Minor)
 		self.assertEqual(Flags.Clean, version.Flags)
 
-	def test_MajorMinor(self):
+	def test_MajorMinor(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	def test_Major_String(self):
+	def test_Major_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = CalendarVersion("1")
 
-	def test_Major_Negative(self):
+	def test_Major_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = CalendarVersion(-1)
 
-	def test_Major_Minor_String(self):
+	def test_Major_Minor_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = CalendarVersion(1, "2")
 
-	def test_Major_Minor_Negative(self):
+	def test_Major_Minor_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = CalendarVersion(1, -2)
 
@@ -224,64 +224,64 @@ class Parsing(TestCase):
 
 
 class HashVersions(TestCase):
-	def test_CalendarVersion(self):
+	def test_CalendarVersion(self) -> None:
 		version = CalendarVersion.Parse("2024.2")
 
 		self.assertIsNotNone(version.__hash__())
 
-	def test_YearMonthVersion(self):
+	def test_YearMonthVersion(self) -> None:
 		version = YearMonthVersion(2024, 2)
 
 		self.assertIsNotNone(version.__hash__())
 
-	def test_YearWeekVersion(self):
+	def test_YearWeekVersion(self) -> None:
 		version = YearWeekVersion(2024, 42)
 
 		self.assertIsNotNone(version.__hash__())
 
-	def test_YearReleaseVersion(self):
+	def test_YearReleaseVersion(self) -> None:
 		version = YearReleaseVersion(2024, 25)
 
 		self.assertIsNotNone(version.__hash__())
 
-	def test_YearMonthDayVersion(self):
+	def test_YearMonthDayVersion(self) -> None:
 		version = YearMonthDayVersion(2024, 8, 25)
 
 		self.assertIsNotNone(version.__hash__())
 
 
 class CompareNone(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(ValueError):
 			_ = version == None
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(ValueError):
 			_ = version != None
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(ValueError):
 			_ = version < None
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(ValueError):
 			_ = version <= None
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(ValueError):
 			_ = version > None
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(ValueError):
@@ -289,101 +289,101 @@ class CompareNone(TestCase):
 
 
 class CompareString(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertEqual("1.2", version)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertNotEqual("1.3", version)
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertLess("1.1", version)
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertLessEqual("1.2", version)
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertGreater("1.3", version)
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertGreaterEqual("1.2", version)
 
 
 class CompareInteger(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = CalendarVersion(1)
 
 		self.assertEqual(1, version)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = CalendarVersion(1)
 
 		self.assertNotEqual(2, version)
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertLess(0, version)
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertLessEqual(1, version)
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertGreater(3, version)
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		self.assertGreaterEqual(2, version)
 
 
 class CompareOtherType(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(TypeError):
 			_ = version == 1.2
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(TypeError):
 			_ = version != 1.2
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(TypeError):
 			_ = version < 1.2
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(TypeError):
 			_ = version <= 1.2
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(TypeError):
 			_ = version > 1.2
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = CalendarVersion(1, 2)
 
 		with self.assertRaises(TypeError):
@@ -518,7 +518,7 @@ class FormattingUsingFormat(TestCase):
 
 
 class InstantiationOfYearMonthVersion(TestCase):
-	def test_Year(self):
+	def test_Year(self) -> None:
 		version = YearMonthVersion(1)
 
 		self.assertEqual(1, version.Year)
@@ -526,7 +526,7 @@ class InstantiationOfYearMonthVersion(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
 
-	def test_YearMonth(self):
+	def test_YearMonth(self) -> None:
 		version = YearMonthVersion(1, 2)
 
 		self.assertEqual(1, version.Year)
@@ -536,7 +536,7 @@ class InstantiationOfYearMonthVersion(TestCase):
 
 
 class InstantiationOfYearWeekVersion(TestCase):
-	def test_Year(self):
+	def test_Year(self) -> None:
 		version = YearWeekVersion(1)
 
 		self.assertEqual(1, version.Year)
@@ -544,7 +544,7 @@ class InstantiationOfYearWeekVersion(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
 
-	def test_YearWeek(self):
+	def test_YearWeek(self) -> None:
 		version = YearWeekVersion(1, 2)
 
 		self.assertEqual(1, version.Year)
@@ -554,7 +554,7 @@ class InstantiationOfYearWeekVersion(TestCase):
 
 
 class InstantiationOfYearReleaseVersion(TestCase):
-	def test_Year(self):
+	def test_Year(self) -> None:
 		version = YearReleaseVersion(1)
 
 		self.assertEqual(1, version.Year)
@@ -562,7 +562,7 @@ class InstantiationOfYearReleaseVersion(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
 
-	def test_YearRelease(self):
+	def test_YearRelease(self) -> None:
 		version = YearReleaseVersion(1, 2)
 
 		self.assertEqual(1, version.Year)
@@ -572,7 +572,7 @@ class InstantiationOfYearReleaseVersion(TestCase):
 
 
 class InstantiationOfYearMonthDayVersion(TestCase):
-	def test_Year(self):
+	def test_Year(self) -> None:
 		version = YearMonthDayVersion(1)
 
 		self.assertEqual(1, version.Year)
@@ -581,7 +581,7 @@ class InstantiationOfYearMonthDayVersion(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
 
-	def test_YearMonth(self):
+	def test_YearMonth(self) -> None:
 		version = YearMonthDayVersion(1, 2)
 
 		self.assertEqual(1, version.Year)
@@ -589,7 +589,7 @@ class InstantiationOfYearMonthDayVersion(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
 
-	def test_YearMonthDay(self):
+	def test_YearMonthDay(self) -> None:
 		version = YearMonthDayVersion(1, 2, 3)
 
 		self.assertEqual(1, version.Year)

@@ -124,7 +124,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		raise NotImplementedError()
 
 	@Key.setter
-	def Key(self, value: KeyT):
+	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError()
 
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]

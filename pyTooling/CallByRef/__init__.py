@@ -516,7 +516,7 @@ class CallByRefIntParam(CallByRefParam):
 		:returns: The wrapped value."""
 		return self.Value
 
-	def __float__(self):
+	def __float__(self) -> float:
 		"""
 		Type conversion to :class:`float`.
 

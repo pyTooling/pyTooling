@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """A generic path to derive domain specific path libraries."""
-from typing import List, Optional as Nullable
+from typing import List, Optional as Nullable, Type
 
 try:
 	from pyTooling.Decorators  import export
@@ -134,7 +134,13 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return result
 
 	@classmethod
-	def Parse(cls, path: str, root, pathCls, elementCls):
+	def Parse(
+		cls,
+		path: str,
+		root: RootMixIn,
+		pathCls: Type["PathMixIn"],
+		elementCls: Type[ElementMixIn]
+	) -> "PathMixIn":
 		"""
 		Parses a string representation of a path and returns a path instance.
 
