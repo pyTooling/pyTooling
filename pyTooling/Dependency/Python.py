@@ -55,7 +55,7 @@ try:
 	from pyTooling.Common          import getFullyQualifiedName, firstKey
 	from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
 	from pyTooling.GenericPath.URL import URL
-	from pyTooling.Versioning      import SemanticVersion, PythonVersion
+	from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	print("[pyTooling.Dependency] Could not import from 'pyTooling.*'!")
 
@@ -66,7 +66,7 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		from Common              import getFullyQualifiedName, firstKey, firstValue
 		from Dependency          import Package, PackageStorage, PackageVersion, PackageDependencyGraph
 		from GenericPath.URL     import URL
-		from Versioning          import SemanticVersion, PythonVersion
+		from Versioning          import SemanticVersion, PythonVersion, Parts
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Dependency] Could not import directly!")
 		raise ex
@@ -254,6 +254,54 @@ class PythonPackageIndex(PackageStorage):
 	@readonly
 	def Projects(self) -> Dict[str, Project]:
 		return self._packages
+
+	def DownloadProject(self, projectName: str) -> Project:
+		response = self._session.get(url=f"{self._api}{projectName.lower()}/json")
+		response.raise_for_status()
+
+		json = response.json()
+		infoNode = json["info"]
+		releasesNode = json["releases"]
+
+		project = Project(
+			projectName,
+			infoNode["project_url"],
+			index=self
+		)
+
+		# Convert key to Version number, skip empty releases
+		convertedReleasesNode = {}
+		for k, v in releasesNode.items():
+			if len(v) == 0:
+				continue
+
+			try:
+				version = PythonVersion.Parse(k)
+				convertedReleasesNode[version] = v
+			except Exception as ex:
+				print(f"Unsupported version format '{k}' - {ex}")
+
+		for version, releaseNode in sorted(convertedReleasesNode.items(), key=lambda t: t[0]):
+			if Parts.Postfix in version._parts:
+				pass
+
+			files = [Distribution(file["filename"], file["url"], datetime.fromisoformat(file["upload_time_iso_8601"]), ) for file in releaseNode]
+			release = Release(
+				version,
+				files[0]._uploadTime,
+				files,
+				project=project
+			)
+
+			# try:
+			# 	self.DownloadAdditionalReleaseInformation(release)
+			# except Exception as ex:
+			# 	print(ex)
+			# 	continue
+
+		# asyncio_run(self.DownloadAdditionalReleaseInformation_2(project))
+
+		return project
 
 	def __repr__(self) -> str:
 		return f"{self._name}"

@@ -67,3 +67,38 @@ class Instantiation(TestCase):
 		release = Release(PythonVersion.Parse("v1.0.0"), (now := datetime.now()), project=project)
 
 		self.assertEqual(now, release.ReleasedAt)
+
+
+class PyPI(TestCase):
+	def test_pyTooling(self) -> None:
+		print()
+
+		graph = PythonPackageDependencyGraph("pyTooling")
+		pypi = PythonPackageIndex("PyPI", "https://pypi.org", "https://pypi.org/pypi/", graph=graph)
+
+		project = pypi.DownloadProject("pyTooling")
+
+		self.assertEqual("pyTooling", project.Name)
+		self.assertEqual("https://pypi.org/project/pyTooling/", str(project.URL))
+		self.assertEqual(83, len(project))
+
+		for release in project:
+			self.assertEqual(project, release.Package)
+			self.assertEqual(0, len(release))
+
+	def test_pyVersioning(self) -> None:
+		print()
+
+		graph = PythonPackageDependencyGraph("pyTooling")
+		pypi = PythonPackageIndex("PyPI", "https://pypi.org", "https://pypi.org/pypi/", graph=graph)
+
+		project = pypi.DownloadProject("pyVersioning")
+
+		self.assertEqual("pyVersioning", project.Name)
+		self.assertEqual("https://pypi.org/project/pyVersioning/", str(project.URL))
+		self.assertEqual(39, len(project))
+
+		for release in project:
+			self.assertEqual(project, release.Package)
+			self.assertEqual(0, len(release))
+			release.
