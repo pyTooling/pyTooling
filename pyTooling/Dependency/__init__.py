@@ -35,7 +35,8 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from typing import Optional as Nullable, Dict, Union, Iterable, Set, Self
+from datetime import datetime
+from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self
 
 
 try:
@@ -67,24 +68,47 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:   "Package"                                                 #: Reference to the corresponding package
-	_version:   SemanticVersion                                           #: :class:`SemanticVersion` of this package version.
+	_package:    "Package"                                                #: Reference to the corresponding package
+	_version:    SemanticVersion                                          #: :class:`SemanticVersion` of this package version.
+	_releasedAt: Nullable[datetime]
 
 	_dependsOn: Dict["Package", Dict[SemanticVersion, "PackageVersion"]]  #: Versioned dependencies to other packages.
 
-	def __init__(self, version: SemanticVersion, package: "Package") -> None:
+	def __init__(self, version: SemanticVersion, package: "Package", releasedAt: Nullable[datetime] = None) -> None:
 		"""
 		Initializes a package version.
 
-		:param version: Semantic version of this package.
-		:param package: Package this version is associated to.
+		:param version:           Semantic version of this package.
+		:param package:           Package this version is associated to.
+		:param releasedAt:        Optional release date and time.
+		:raises TypeError:        When parameter 'version' is not of type 'SemanticVersion'.
+		:raises TypeError:        When parameter 'package' is not of type 'Package'.
+		:raises TypeError:        When parameter 'releasedAt' is not of type 'datetime'.
+		:raises ToolingException: When version already exists for the associated package.
 		"""
-		if version in package._versions:
+		if not isinstance(version, SemanticVersion):
+			ex = TypeError("Parameter 'version' is not of type 'SemanticVersion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+		elif version in package._versions:
 			raise ToolingException(f"Version '{version}' is already registered in package '{package._name}'.")
 
-		self._package = package
 		self._version = version
 		package._versions[version] = self
+
+		if not isinstance(package, Package):
+			ex = TypeError("Parameter 'package' is not of type 'Package'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(package)}'.")
+			raise ex
+
+		self._package = package
+
+		if releasedAt is not None and not isinstance(releasedAt, datetime):
+			ex = TypeError("Parameter 'releasedAt' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(releasedAt)}'.")
+			raise ex
+
+		self._releasedAt = releasedAt
 
 		self._dependsOn = {}
 
@@ -105,6 +129,15 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:returns: Semantic version of a package.
 		"""
 		return self._version
+
+	@readonly
+	def ReleasedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to access the release date and time.
+
+		:returns: Optional release date and time.
+		"""
+		return self._releasedAt
 
 	@readonly
 	def DependsOn(self) -> Dict["Package", Dict[SemanticVersion, "PackageVersion"]]:
@@ -164,7 +197,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:return:
 		"""
 		if isinstance(package, str):
-			package = self._package._graph._packages[package]
+			package = self._package._storage._packages[package]
 		elif not isinstance(package, Package):
 			ex = TypeError(f"Parameter 'package' is not of type 'str' nor 'Package'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(package)}'.")
@@ -312,32 +345,43 @@ class Package(metaclass=ExtendedType, slots=True):
 	"""
 	The package, which exists in multiple versions (:class:`PackageVersion`).
 	"""
-	_graph:    "PackageDependencyGraph"               #: Reference to the overall dependency graph data structure.
+	_storage:  "PackageStorage"                       #: Reference to the package's storage.
 	_name:     str                                    #: Name of the package.
 
 	_versions: Dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
-	def __init__(self, name: str, *, graph: "PackageDependencyGraph") -> None:
+	def __init__(self, name: str, *, storage: "PackageStorage") -> None:
 		"""
 		Initializes a package.
 
-		:param name:  Name of the package.
-		:param graph: PackageDependencyGraph instance (parent).
+		:param name:    Name of the package.
+		:param storage: The package's storage.
 		"""
-		graph._packages[name] = self
-		self._graph = graph
+		if not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+
 		self._name = name
+
+		if not isinstance(storage, PackageStorage):
+			ex = TypeError("Parameter 'storage' is not of type 'PackageStorage'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(storage)}'.")
+			raise ex
+
+		self._storage = storage
+		storage._packages[name] = self
 
 		self._versions = {}
 
 	@readonly
-	def Graph(self) -> "PackageDependencyGraph":
+	def Storage(self) -> "PackageStorage":
 		"""
-		Read-only property to access the package dependency graph.
+		Read-only property to access the package's storage.
 
-		:returns: Package dependency graph.
+		:returns: Package storage.
 		"""
-		return self._graph
+		return self._storage
 
 	@readonly
 	def Name(self) -> str:
@@ -399,21 +443,46 @@ class Package(metaclass=ExtendedType, slots=True):
 
 
 @export
-class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
+class PackageStorage(metaclass=ExtendedType, slots=True):
 	"""
-	A package dependency graph collecting all known packages.
+	A storage for packages.
 	"""
-	_name:     str                 #: Package dependency graph name
-	_packages: Dict[str, Package]  #: Dictionary of known packages.
+	_graph:    "PackageDependencyGraph"  #: Reference to the overall dependency graph data structure.
+	_name:     str                       #: Package dependency graph name
+	_packages: Dict[str, Package]        #: Dictionary of known packages.
 
-	def __init__(self, name: str) -> None:
+	def __init__(self, name: str, graph: "PackageDependencyGraph") -> None:
 		"""
-		Initializes the package dependency graph.
+		Initializes the package storage.
 
-		:param name: Name of the dependency graph.
+		:param name:  Name of the package storage.
+		:param graph: PackageDependencyGraph instance (parent).
 		"""
+		if not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+
 		self._name = name
+
+		if not isinstance(graph, PackageDependencyGraph):
+			ex = TypeError("Parameter 'graph' is not of type 'PackageDependencyGraph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+			raise ex
+
+		self._graph = graph
+		graph._storages[name] = self
+
 		self._packages = {}
+
+	@readonly
+	def Graph(self) -> "PackageDependencyGraph":
+		"""
+		Read-only property to access the package dependency graph.
+
+		:returns: Package dependency graph.
+		"""
+		return self._graph
 
 	@readonly
 	def Name(self) -> str:
@@ -440,7 +509,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		:param packageName: Name of the new package.
 		:returns:           New package's instance.
 		"""
-		return Package(packageName, graph=self)
+		return Package(packageName, storage=self)
 
 	def CreatePackages(self, packageNames: Iterable[str]) -> Iterable[Package]:
 		"""
@@ -449,7 +518,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		:param packageNames: List of package names.
 		:returns:            List of new package instances.
 		"""
-		return [Package(packageName, graph=self) for packageName in packageNames]
+		return [Package(packageName, storage=self) for packageName in packageNames]
 
 	def CreatePackageVersion(self, packageName: str, version: str) -> PackageVersion:
 		"""
@@ -459,7 +528,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		:param version:     Version string.
 		:returns:           New package version instance.
 		"""
-		package = Package(packageName, graph=self)
+		package = Package(packageName, storage=self)
 		return PackageVersion(SemanticVersion.Parse(version), package)
 
 	def CreatePackageVersions(self, packageName: str, versions: Iterable[str]) -> Iterable[PackageVersion]:
@@ -470,7 +539,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		:param versions:    List of version string.s
 		:returns:           List of new package version instances.
 		"""
-		package = Package(packageName, graph=self)
+		package = Package(packageName, storage=self)
 		return [PackageVersion(SemanticVersion.Parse(version), package) for version in versions]
 
 	def SortPackageVersions(self) -> None:
@@ -508,3 +577,122 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 			return f"{self._name} (empty)"
 		else:
 			return f"{self._name} ({len(self._packages)})"
+
+
+@export
+class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
+	"""
+	A package dependency graph collecting all known packages.
+	"""
+	_name:     str                        #: Package dependency graph name
+	_storages: Dict[str, PackageStorage]  #: Dictionary of known package storages.
+
+	def __init__(self, name: str) -> None:
+		"""
+		Initializes the package dependency graph.
+
+		:param name: Name of the dependency graph.
+		"""
+		if not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+
+		self._name = name
+
+		self._storages = {}
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to access the package dependency graph's name.
+
+		:returns: Name of the package dependency graph.
+		"""
+		return self._name
+
+	@readonly
+	def Storages(self) -> Dict[str, PackageStorage]:
+		"""
+		Read-only property to access the dictionary of known package storages.
+
+		:returns: Known package storage dictionary.
+		"""
+		return self._storages
+
+	# def CreatePackage(self, packageName: str) -> Package:
+	# 	"""
+	# 	Create a new package in the package dependency graph.
+	#
+	# 	:param packageName: Name of the new package.
+	# 	:returns:           New package's instance.
+	# 	"""
+	# 	return Package(packageName, storage=self)
+	#
+	# def CreatePackages(self, packageNames: Iterable[str]) -> Iterable[Package]:
+	# 	"""
+	# 	Create multiple new packages in the package dependency graph.
+	#
+	# 	:param packageNames: List of package names.
+	# 	:returns:            List of new package instances.
+	# 	"""
+	# 	return [Package(packageName, storage=self) for packageName in packageNames]
+	#
+	# def CreatePackageVersion(self, packageName: str, version: str) -> PackageVersion:
+	# 	"""
+	# 	Create a new package and a package version in the package dependency graph.
+	#
+	# 	:param packageName: Name of the new package.
+	# 	:param version:     Version string.
+	# 	:returns:           New package version instance.
+	# 	"""
+	# 	package = Package(packageName, storage=self)
+	# 	return PackageVersion(SemanticVersion.Parse(version), package)
+	#
+	# def CreatePackageVersions(self, packageName: str, versions: Iterable[str]) -> Iterable[PackageVersion]:
+	# 	"""
+	# 	Create a new package and multiple package versions in the package dependency graph.
+	#
+	# 	:param packageName: Name of the new package.
+	# 	:param versions:    List of version string.s
+	# 	:returns:           List of new package version instances.
+	# 	"""
+	# 	package = Package(packageName, storage=self)
+	# 	return [PackageVersion(SemanticVersion.Parse(version), package) for version in versions]
+
+	def SortPackageVersions(self) -> None:
+		"""
+		Sort versions within all known packages in reverse order (latest first).
+		"""
+		for storage in self._storages.values():
+			storage.SortPackageVersions()
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of known packages.
+
+		:returns: Number of packages.
+		"""
+		return len(self._storages)
+
+	def __getitem__(self, name: str) -> PackageStorage:
+		"""
+		Access a known package storage in the package dependency graph by storage name.
+
+		:param name:      Name of the package storage.
+		:returns:         The package storage.
+		:raises KeyError: If package storage is not known within the package dependency graph.
+		"""
+		return self._storages[name]
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of this graph.
+
+		:returns: The graph's name and number of known packages.
+		"""
+		count = sum(len(storage) for storage in self._storages.values())
+		if count == 0:
+			return f"{self._name} (empty)"
+		else:
+			return f"{self._name} ({count})"

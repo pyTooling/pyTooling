@@ -33,7 +33,8 @@ from unittest             import TestCase
 
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Versioning import SemanticVersion
-from pyTooling.Dependency import PackageDependencyGraph, Package, PackageVersion
+
+from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -48,17 +49,32 @@ class Instantiation(TestCase):
 
 		self.assertEqual("graph", graph.Name)
 		self.assertEqual(0, len(graph))
-		self.assertEqual(0, len(graph.Packages))
+		self.assertEqual(0, len(graph.Storages))
 		self.assertEqual("graph (empty)", str(graph))
+
+	def test_Storage(self) -> None:
+		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
+
+		self.assertIs(graph, storage.Graph)
+		self.assertEqual("storage", storage.Name)
+		self.assertEqual(0, len(storage))
+		self.assertEqual(0, len(storage.Packages))
+		self.assertEqual("storage (empty)", str(storage))
 
 	def test_Package(self) -> None:
 		graph = PackageDependencyGraph("graph")
-		package = Package("pack", graph=graph)
+		storage = PackageStorage("storage", graph=graph)
+		package = Package("pack", storage=storage)
 
 		self.assertEqual(1, len(graph))
-		self.assertEqual(1, len(graph.Packages))
+		self.assertEqual(1, len(graph.Storages))
 
-		self.assertIs(graph, package.Graph)
+		self.assertIs(graph, storage.Graph)
+		self.assertEqual(1, len(storage))
+		self.assertEqual(1, len(storage.Packages))
+
+		self.assertIs(storage, package.Storage)
 		self.assertEqual("pack", package.Name)
 		self.assertEqual(0, len(package))
 		self.assertEqual(0, len(package.Versions))
@@ -66,13 +82,14 @@ class Instantiation(TestCase):
 
 	def test_CreatePackage(self) -> None:
 		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
 
-		package = graph.CreatePackage("pack")
+		package = storage.CreatePackage("pack")
 
-		self.assertEqual(1, len(graph))
-		self.assertEqual(1, len(graph.Packages))
+		self.assertEqual(1, len(storage))
+		self.assertEqual(1, len(storage.Packages))
 
-		self.assertIs(graph, package.Graph)
+		self.assertIs(storage, package.Storage)
 		self.assertEqual("pack", package.Name)
 		self.assertEqual(0, len(package))
 		self.assertEqual(0, len(package.Versions))
@@ -80,23 +97,25 @@ class Instantiation(TestCase):
 
 	def test_CreatePackages(self) -> None:
 		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
 
-		for i, package in enumerate(graph.CreatePackages((
+		for i, package in enumerate(storage.CreatePackages((
 			"pack1",
 			"pack2",
 		)), start=1):
-			self.assertIs(graph, package.Graph)
+			self.assertIs(storage, package.Storage)
 			self.assertEqual(f"pack{i}", package.Name)
 			self.assertEqual(0, len(package))
 			self.assertEqual(0, len(package.Versions))
 			self.assertEqual(f"pack{i} (empty)", str(package))
 
-		self.assertEqual(2, len(graph))
-		self.assertEqual(2, len(graph.Packages))
+		self.assertEqual(2, len(storage))
+		self.assertEqual(2, len(storage.Packages))
 
 	def test_PackageVersion(self) -> None:
 		graph = PackageDependencyGraph("graph")
-		package = Package("pack", graph=graph)
+		storage = PackageStorage("storage", graph=graph)
+		package = Package("pack", storage=storage)
 		v10 = SemanticVersion.Parse("v1.0")
 		v11 = SemanticVersion.Parse("v1.1")
 		packageVersion10 = PackageVersion(v10, package)
@@ -116,25 +135,27 @@ class Instantiation(TestCase):
 
 	def test_CreatePackageVersion(self) -> None:
 		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
 
-		packageVersion = graph.CreatePackageVersion("pack", "v1.0")
+		packageVersion = storage.CreatePackageVersion("pack", "v1.0")
 		package = packageVersion.Package
 
-		self.assertIs(graph, package.Graph)
+		self.assertIs(storage, package.Storage)
 		self.assertEqual("v1.0", packageVersion.Version)
 		self.assertEqual("pack - v1.0", str(packageVersion))
 
 	def test_CreatePackageVersions(self) -> None:
 		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
 
-		for i, packageVersion in enumerate(graph.CreatePackageVersions("pack", (
+		for i, packageVersion in enumerate(storage.CreatePackageVersions("pack", (
 			"v1.0",
 			"v1.1",
 			"v1.2",
 		))):
 			package = packageVersion.Package
 
-			self.assertIs(graph, package.Graph)
+			self.assertIs(storage, package.Storage)
 			self.assertEqual(f"v1.{i}", packageVersion.Version)
 			self.assertEqual(f"pack - v1.{i}", str(packageVersion))
 
@@ -146,8 +167,9 @@ class Instantiation(TestCase):
 class Construct(TestCase):
 	def test_Package(self) -> None:
 		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
 
-		package = graph.CreatePackage("pack")
+		package = storage.CreatePackage("pack")
 
 		self.assertEqual("pack", package.Name)
 		self.assertEqual(0, len(package))
@@ -158,12 +180,13 @@ class Construct(TestCase):
 class DependsOn(TestCase):
 	def test_ByObject(self) -> None:
 		graph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=graph)
 
-		packageA = Package("packA", graph=graph)
+		packageA = Package("packA", storage=storage)
 		packageA_v10 = PackageVersion(pA_v10 := SemanticVersion.Parse("v1.0"), packageA)
 		packageA_v11 = PackageVersion(pA_v11 := SemanticVersion.Parse("v1.1"), packageA)
 
-		packageB = Package("packB", graph=graph)
+		packageB = Package("packB", storage=storage)
 		packageB_v10 = PackageVersion(pB_v10 := SemanticVersion.Parse("v1.0"), packageB)
 		packageB_v20 = PackageVersion(pB_v20 := SemanticVersion.Parse("v2.0"), packageB)
 		packageB_v21 = PackageVersion(pB_v21 := SemanticVersion.Parse("v2.1"), packageB)
@@ -174,25 +197,26 @@ class DependsOn(TestCase):
 
 	def test_ByName(self) -> None:
 		graph = PackageDependencyGraph("graph")
-		root = graph.CreatePackageVersion("app", "v0.0")
+		storage = PackageStorage("storage", graph=graph)
+		root = storage.CreatePackageVersion("app", "v0.0")
 
-		graph.CreatePackageVersions("packA", (
+		storage.CreatePackageVersions("packA", (
 			"v1.0",
 			"v1.1"
 		))
-		graph.CreatePackageVersions("packB", (
+		storage.CreatePackageVersions("packB", (
 			"v1.0",
 			"v2.0",
 			"v2.1"
 		))
 
-		self.assertEqual(3, len(graph))
+		self.assertEqual(3, len(storage))
 
 		root.AddDependencyTo("packA", "v1.0")
 		root.AddDependencyTo("packA", "v1.1")
 
-		(pAv10 := graph["packA"]["v1.0"]).AddDependencyTo("packB", "v1.0")
-		(pAv11 := graph["packA"]["v1.1"]).AddDependencyTo("packB", ("v2.0", "v2.1"))
+		(pAv10 := storage["packA"]["v1.0"]).AddDependencyTo("packB", "v1.0")
+		(pAv11 := storage["packA"]["v1.1"]).AddDependencyTo("packB", ("v2.0", "v2.1"))
 
 		self.assertEqual(1, len(pAv10))
 		self.assertEqual(1, len(pAv11))
@@ -201,9 +225,10 @@ class DependsOn(TestCase):
 class SolveLatest(TestCase):
 	def test_Simple(self) -> None:
 		graph = PackageDependencyGraph("graph")
-		root = graph.CreatePackageVersion("app", "v1.0")
+		storage = PackageStorage("storage", graph=graph)
+		root = storage.CreatePackageVersion("app", "v1.0")
 
-		packA = graph.CreatePackageVersions("packA", ("v1.0", "v1.1", "v1.2"))
+		packA = storage.CreatePackageVersions("packA", ("v1.0", "v1.1", "v1.2"))
 		root.AddDependencyToPackageVersions(packA)
 
 		graph.SortPackageVersions()
@@ -215,18 +240,19 @@ class SolveLatest(TestCase):
 	def test_Advanced(self) -> None:
 		print()
 		graph = PackageDependencyGraph("graph")
-		root = graph.CreatePackageVersion("app", "v0.0")
+		storage = PackageStorage("storage", graph=graph)
+		root = storage.CreatePackageVersion("app", "v0.0")
 
-		packA = graph.CreatePackageVersions("packA", (
+		packA = storage.CreatePackageVersions("packA", (
 			"v1.0",
 			"v1.1"
 		))
-		packB = graph.CreatePackageVersions("packB", (
+		packB = storage.CreatePackageVersions("packB", (
 			"v1.0",
 			"v2.0",
 			"v2.1"
 		))
-		packC = graph.CreatePackageVersions("packC", (
+		packC = storage.CreatePackageVersions("packC", (
 			"v1.0",
 			"v1.1",
 			"v1.2",
@@ -235,7 +261,7 @@ class SolveLatest(TestCase):
 			"v2.0",
 			"v2.1"
 		))
-		packD = graph.CreatePackageVersions("packD", (
+		packD = storage.CreatePackageVersions("packD", (
 			"v1.0",
 			"v2.0",
 			"v3.0"
@@ -244,15 +270,15 @@ class SolveLatest(TestCase):
 		root.AddDependencyTo("packA", ("v1.0", "v1.1"))
 		root.AddDependencyTo("packC", ("v1.3", "v1.4", "v2.0", "v2.1"))
 
-		graph["packA"]["v1.0"].AddDependencyTo("packB", "v1.0")
-		graph["packA"]["v1.1"].AddDependencyTo("packB", ("v2.0", "v2.1"))
-		graph["packC"]["v1.0"].AddDependencyTo("packD", "v1.0")
-		graph["packC"]["v1.1"].AddDependencyTo("packD", "v1.0")
-		graph["packC"]["v1.2"].AddDependencyTo("packD", ("v1.0", "v2.0"))
-		graph["packC"]["v1.3"].AddDependencyTo("packD", ("v1.0", "v2.0"))
-		graph["packC"]["v1.4"].AddDependencyTo("packD", ("v1.0", "v2.0", "v3.0"))
-		graph["packC"]["v2.0"].AddDependencyTo("packD", ("v2.0", "v3.0"))
-		graph["packC"]["v2.1"].AddDependencyTo("packD", "v3.0")
+		storage["packA"]["v1.0"].AddDependencyTo("packB", "v1.0")
+		storage["packA"]["v1.1"].AddDependencyTo("packB", ("v2.0", "v2.1"))
+		storage["packC"]["v1.0"].AddDependencyTo("packD", "v1.0")
+		storage["packC"]["v1.1"].AddDependencyTo("packD", "v1.0")
+		storage["packC"]["v1.2"].AddDependencyTo("packD", ("v1.0", "v2.0"))
+		storage["packC"]["v1.3"].AddDependencyTo("packD", ("v1.0", "v2.0"))
+		storage["packC"]["v1.4"].AddDependencyTo("packD", ("v1.0", "v2.0", "v3.0"))
+		storage["packC"]["v2.0"].AddDependencyTo("packD", ("v2.0", "v3.0"))
+		storage["packC"]["v2.1"].AddDependencyTo("packD", "v3.0")
 
 		graph.SortPackageVersions()
 		solution = root.SolveLatest()
@@ -270,17 +296,18 @@ class SolveLatest(TestCase):
 		# * Solver must reject packA v2.0.0 and pick packA v1.0.0 instead.
 
 		graph = PackageDependencyGraph("graph")
-		root = graph.CreatePackageVersion("app", "v1.0")
+		storage = PackageStorage("storage", graph=graph)
+		root = storage.CreatePackageVersion("app", "v1.0")
 
-		graph.CreatePackageVersions("packA", ("v1.0", "v2.0"))
-		graph.CreatePackageVersions("packB", ("v1.0", "v2.0"))
+		storage.CreatePackageVersions("packA", ("v1.0", "v2.0"))
+		storage.CreatePackageVersions("packB", ("v1.0", "v2.0"))
 
 		root.AddDependencyTo("packA", "v1.0")
 		root.AddDependencyTo("packA", "v2.0")
 		root.AddDependencyTo("packB", "v1.0")
 
-		graph["packA"]["v2.0"].AddDependencyTo("packB", "v2.0")
-		graph["packA"]["v1.0"].AddDependencyTo("packB", "v1.0")
+		storage["packA"]["v2.0"].AddDependencyTo("packB", "v2.0")
+		storage["packA"]["v1.0"].AddDependencyTo("packB", "v1.0")
 
 		graph.SortPackageVersions()
 		solution = {pv.Package.Name: pv.Version for pv in root.SolveLatest()}
@@ -292,10 +319,11 @@ class SolveLatest(TestCase):
 
 	def test_CircularDependency(self) -> None:
 		graph = PackageDependencyGraph("Circular")
-		root = graph.CreatePackageVersion("app", "v1.0")
+		storage = PackageStorage("storage", graph=graph)
+		root = storage.CreatePackageVersion("app", "v1.0")
 
-		pAv10 = graph.CreatePackageVersion("packA", "v1.0")
-		pBv10 = graph.CreatePackageVersion("packB", "v1.0")
+		pAv10 = storage.CreatePackageVersion("packA", "v1.0")
+		pBv10 = storage.CreatePackageVersion("packB", "v1.0")
 
 		root.AddDependencyToPackageVersion(pAv10)
 		pAv10.AddDependencyToPackageVersion(pBv10)
@@ -312,12 +340,13 @@ class SolveLatest(TestCase):
 	def test_ComplexSuccessWithBacktracking(self) -> None:
 		# Created by Google Gemini
 		graph = PackageDependencyGraph("ComplexSuccess")
-		packages = graph.CreatePackages([f"pack{i}" for i in range(10)])
+		storage = PackageStorage("storage", graph=graph)
+		packages = storage.CreatePackages([f"pack{i}" for i in range(10)])
 
 		for package in packages:
-			graph.CreatePackageVersions(package.Name, ("v1.0", "v1.1", "v1.2", "v1.3"))
+			storage.CreatePackageVersions(package.Name, ("v1.0", "v1.1", "v1.2", "v1.3"))
 
-		root = graph["pack0"]["v1.3"]
+		root = storage["pack0"]["v1.3"]
 
 		# 1. Greedy Path: Root prefers latest of pack1, pack2, pack3
 		root.AddDependencyTo("pack1", "v1.3")
@@ -327,21 +356,21 @@ class SolveLatest(TestCase):
 		root.AddDependencyTo("pack3", "v1.3")
 
 		# 2. The Conflict: pack1 v1.3.0 requires pack9 v1.3.0
-		graph["pack1"]["v1.3"].AddDependencyTo("pack9", "v1.3")
+		storage["pack1"]["v1.3"].AddDependencyTo("pack9", "v1.3")
 
 		# 3. The Constraint: pack3 v1.3.0 is older-leaning; it requires pack9 v1.0.0
 		# This forces the solver to backtrack from pack1 v1.3.0 to pack1 v1.2.0
-		graph["pack3"]["v1.3"].AddDependencyTo("pack9", "v1.0")
+		storage["pack3"]["v1.3"].AddDependencyTo("pack9", "v1.0")
 
 		# 4. Deep Dependency: pack1 v1.2.0 depends on pack4, which depends on pack5...
-		graph["pack1"]["v1.2"].AddDependencyTo("pack4", "v1.3")
-		graph["pack4"]["v1.3"].AddDependencyTo("pack5", "v1.3")
+		storage["pack1"]["v1.2"].AddDependencyTo("pack4", "v1.3")
+		storage["pack4"]["v1.3"].AddDependencyTo("pack5", "v1.3")
 
 		# 5. Second Backtrack: pack2 v1.3.0 requires pack5 v1.1.0
 		# But pack4 v1.3.0 already locked in pack5 v1.3.0.
 		# Solver must backtrack pack2 from 1.3.0 to 1.2.0.
-		graph["pack2"]["v1.3"].AddDependencyTo("pack5", "v1.1")
-		graph["pack2"]["v1.2"].AddDependencyTo("pack5", "v1.3")
+		storage["pack2"]["v1.3"].AddDependencyTo("pack5", "v1.1")
+		storage["pack2"]["v1.2"].AddDependencyTo("pack5", "v1.3")
 
 		graph.SortPackageVersions()
 		solution = {pv.Package.Name: pv.Version for pv in root.SolveLatest()}
@@ -354,20 +383,21 @@ class SolveLatest(TestCase):
 	def test_ComplexFailureDeepConflict(self) -> None:
 		# Created by Google Gemini
 		graph = PackageDependencyGraph("ComplexFailure")
-		packages = graph.CreatePackages([f"pack{i}" for i in range(10)])
+		storage = PackageStorage("storage", graph=graph)
+		packages = storage.CreatePackages([f"pack{i}" for i in range(10)])
 
 		for package in packages:
-			graph.CreatePackageVersions(package.Name, ("v1.0", "v1.1", "v1.2", "v1.3"))
+			storage.CreatePackageVersions(package.Name, ("v1.0", "v1.1", "v1.2", "v1.3"))
 
-		root = graph["pack0"]["v1.3"]
+		root = storage["pack0"]["v1.3"]
 
 		# Chain of dependencies:
 		#   pack0 -> pack1 -> pack2 -> pack3 -> pack4 -> pack5 -> pack6 -> pack7 -> pack8 -> pack9
 		# Each allows multiple versions to keep the search space large
 		# But, every version of pack8 (which is deep in the chain) requires pack9 to be v1.0.0
 		for i in range(9):
-			fromPackage = graph[f"pack{i}"]
-			toPackage =   graph[f"pack{i + 1}"]
+			fromPackage = storage[f"pack{i}"]
+			toPackage =   storage[f"pack{i + 1}"]
 			for fromPackageVersion in (fromPackage[f"v1.{v}"] for v in range(4)):
 				if i == 8:
 					fromPackageVersion.AddDependencyToPackageVersion(toPackage["v1.0"])
