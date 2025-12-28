@@ -36,8 +36,7 @@ Implementation of package dependencies.
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
 from datetime import datetime
-from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self
-
+from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self, Iterator
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -414,6 +413,9 @@ class Package(metaclass=ExtendedType, slots=True):
 		:returns: Number of versions.
 		"""
 		return len(self._versions)
+
+	def __iter__(self) -> Iterator[PackageVersion]:
+		return iter(self._versions.values())
 
 	def __getitem__(self, version: Union[str, SemanticVersion]) -> PackageVersion:
 		"""

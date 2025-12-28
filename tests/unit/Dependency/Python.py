@@ -1,17 +1,17 @@
 # ==================================================================================================================== #
-#             _____           _ _                                                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _                                                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |                                                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |                                                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |                                                                         #
-# |_|    |___/                          |___/                                                                          #
+#             _____           _ _               ____                            _                                      #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  ___ _ __   ___ _ __   __| | ___ _ __   ___ _   _                #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | | | |/ _ \ '_ \ / _ \ '_ \ / _` |/ _ \ '_ \ / __| | | |               #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| |  __/ |_) |  __/ | | | (_| |  __/ | | | (__| |_| |               #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \___| .__/ \___|_| |_|\__,_|\___|_| |_|\___|\__, |               #
+# |_|    |___/                          |___/             |_|                                     |___/                #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2025 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2025-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,42 +28,42 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""
-Package installer for 'pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and
-exceptions.'.
-"""
-# Add package itself to PYTHON_PATH, so it can be used to package itself.
-from os.path    import abspath
-from sys        import path as sys_path
-sys_path.insert(0, abspath('./pyTooling'))
+"""Unit tests for :mod:`pyTooling.Dependency`."""
+from datetime                    import datetime
+from unittest                    import TestCase
 
-from setuptools import setup
+from pyTooling.Versioning        import PythonVersion
+from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release
 
-from pathlib    import Path
-from Packaging  import DescribePythonPackageHostedOnGitHub
 
-gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling.*"
-packageDirectory =       packageName[:-2]
-packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
 
-setup(
-	**DescribePythonPackageHostedOnGitHub(
-		packageName=packageName,
-		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-		gitHubNamespace=gitHubNamespace,
-		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements={
-			"pypi":      ["requests >= 2.32", "aiohttp >= 3.13"],
-			"packaging": ["setuptools >= 80.0"],
-			"terminal":  ["colorama ~= 0.4.6"],
-			"yaml":      ["ruamel.yaml ~= 0.18"],
-		},
-		sourceFileWithVersion=packageInformationFile,
-		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
-		dataFiles={
-			packageName[:-1] + "Common": ["../py.typed"]
-		},
-		debug=True
-	)
-)
+
+class Instantiation(TestCase):
+	def test_Graph(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+
+	def test_Index(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+
+		self.assertEqual("https://index.org/", str(index.URL))
+		self.assertEqual("https://api.index.org/v4/", str(index.API))
+
+	def test_Project(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		project = Project("project", "https://index.org/project/", index=index)
+
+		self.assertEqual("https://index.org/project/", str(project.URL))
+
+	def test_Release(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		project = Project("project", "https://index.org/project/", index=index)
+		release = Release(PythonVersion.Parse("v1.0.0"), (now := datetime.now()), project=project)
+
+		self.assertEqual(now, release.ReleasedAt)

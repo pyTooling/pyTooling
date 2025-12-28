@@ -614,7 +614,7 @@ def DescribePythonPackage(
 	try:
 		from setuptools import find_packages, find_namespace_packages
 	except ImportError as ex:
-		raise ToolingException(f"Optional dependency 'setuptools' is not available.") from ex
+		raise Exception(f"Optional dependency 'setuptools' not installed. Either install pyTooling with extra dependencies 'pyTooling[packaging]' or install 'setuptools' directly.") from ex
 
 	print(f"[pyTooling.Packaging] Python: {version_info.major}.{version_info.minor}.{version_info.micro}, pyTooling: {__version__}")
 
