@@ -388,14 +388,55 @@ class ExtendedType(type):
 	.. todo:: META::ExtendedType Needs documentation.
 	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
 
-	Features:
+	.. rubric:: Features:
 
 	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
-	* Allow only a single instance to be created (:term:`singleton`).
+
+	  * Implement ``__slots__`` only on primary inheritance line.
+	  * Collect class variables on secondary inheritance lines (mixin-classes) and defer implementation as ``__slots__``.
+
+	* Allow only a single instance to be created (:term:`singleton`). |br|
+	  Further instantiations will return the previously create instance (identical object).
 	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
 	  instantiation of :term:`abstract classes <abstract class>`.
 
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
+
+	.. rubric:: Added class fields:
+
+	:__slotted__:                Class uses `__slots__`.
+	:__slots__:                  Class fields stored in slots instead of ``__dict__``.
+	:__isMixin__:                Class is a mixin-class
+	:__mixinSlots__:             List of collected slots from secondary inheritance hierarchy (mixin hierarchy).
+	:__methods__:                List of methods.
+	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
+	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
+	:__isAbstract__:             Class is abstract.
+	:__isSingleton__:            Class is a singleton
+	:__singletonInstanceCond__:  Condition variable to protect the singleton creation.
+	:__singletonInstanceInit__:  Singleton is initialized.
+	:__singletonInstanceCache__: The singleton object, once created.
+	:__pyattr__:                 List of class attributes.
+
+	.. rubric:: Added class properties:
+
+	:HasClassAttributes:  Read-only property to check if the class has Attributes.
+	:HasMethodAttributes: Read-only property to check if the class has methods with Attributes.
+
+	.. rubric:: Modified ``__new__`` method:
+
+	If class is a singleton, ``__new__`` will be replaced by a wrapper method. This wrapper is marked with ``__singleton_wrapper__``.
+
+	If class is abstract, ``__new__`` will be replaced by a method raising an exception. This replacement is marked with ``__raises_abstract_class_error__``.
+
+	.. rubric:: Modified ``__init__`` method:
+
+	If class is a singleton, ``__init__`` will be replaced by a wrapper method. This wrapper is marked by ``__singleton_wrapper__``.
+
+	.. rubric:: Modified abstract methods:
+
+	If a method is abstract, its marked with ``__abstract__``. |br|
+	If a method is must override, its marked with ``__mustOverride__``.
 	"""
 
 	# @classmethod
@@ -864,9 +905,9 @@ class ExtendedType(type):
 					abstractMethods.update(baseClass.__abstractMethods__)
 
 			for base in baseClasses:
-				for key, value in base.__dict__.items():
-					if (key in abstractMethods and isinstance(value, FunctionType) and
-						not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__"))):
+				for memberName, member in base.__dict__.items():
+					if (memberName in abstractMethods and isinstance(member, FunctionType) and
+						not (hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"))):
 						def outer(method):
 							@wraps(method)
 							def inner(cls, *args: Any, **kwargs: Any):
@@ -874,7 +915,7 @@ class ExtendedType(type):
 
 							return inner
 
-						members[key] = outer(value)
+						members[memberName] = outer(member)
 
 		# Check if methods are marked:
 		# * If so, add them to list of abstract methods
@@ -1008,7 +1049,7 @@ class ExtendedType(type):
 			return False
 
 	# Additional properties and methods on a class
-	@property
+	@readonly
 	def HasClassAttributes(self) -> bool:
 		"""
 		Read-only property to check if the class has Attributes (:attr:`__pyattr__`).
@@ -1020,7 +1061,7 @@ class ExtendedType(type):
 		except AttributeError:
 			return False
 
-	@property
+	@readonly
 	def HasMethodAttributes(self) -> bool:
 		"""
 		Read-only property to check if the class has methods with Attributes (:attr:`__methodsWithAttributes__`).

@@ -101,4 +101,3 @@ class PyPI(TestCase):
 		for release in project:
 			self.assertEqual(project, release.Package)
 			self.assertEqual(0, len(release))
-			release.

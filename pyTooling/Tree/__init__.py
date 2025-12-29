@@ -120,7 +120,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	.. hint::
 
-     The top-down construction should be preferred, because it's slightly faster.
+	   The top-down construction should be preferred, because it's slightly faster.
 
 	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
 	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the

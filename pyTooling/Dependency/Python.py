@@ -195,11 +195,11 @@ class Project(Package):
 
 	@readonly
 	def Releases(self) -> Dict[PythonVersion, Release]:
-		return self._releases
+		return self._versions
 
 	@readonly
 	def ReleaseCount(self) -> int:
-		return len(self._releases)
+		return len(self._versions)
 
 	@readonly
 	def LatestRelease(self) -> Release:

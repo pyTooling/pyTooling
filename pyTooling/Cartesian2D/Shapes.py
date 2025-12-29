@@ -109,7 +109,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 @export
 class Rectangle(Trapezium[Coordinate]):
 	"""
-	A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90°.
+	A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90\ |deg|\ .
 	"""
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
@@ -134,7 +134,7 @@ class Rectangle(Trapezium[Coordinate]):
 @export
 class Square(Rectangle[Coordinate]):
 	"""
-	A square is a rectangle, where all edges have the same length and all inner angels are 90°.
+	A square is a rectangle, where all edges have the same length and all inner angels are 90\ |deg|\ .
 	"""
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
