@@ -511,21 +511,28 @@ class ExtendedType(type):
 
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
-			def __getstate__(self) -> Dict[str, Any]:
-				try:
-					return {slotName: getattr(self, slotName) for slotName in self.__allSlots__}
-				except AttributeError as ex:
-					raise ExtendedTypeError(f"Unassigned field '{ex.name}' in object '{self}' of type '{self.__class__.__name__}'.") from ex
+			if "__getstate__" not in members:
+				def __getstate__(self) -> Dict[str, Any]:
+					try:
+						return {slotName: getattr(self, slotName) for slotName in self.__allSlots__}
+					except AttributeError as ex:
+						raise ExtendedTypeError(f"Unassigned field '{ex.name}' in object '{self}' of type '{self.__class__.__name__}'.") from ex
 
-			def __setstate__(self, state: Dict[str, Any]) -> None:
-				if self.__allSlots__ !=  (slots := set(state.keys())):
-					raise ExtendedTypeError(f"Missing fields in parameter 'state': {self.__allSlots__.difference(slots)}")
+				newClass.__getstate__ = __getstate__
 
-				for slotName, value in state.items():
-					setattr(self, slotName, value)
+			if "__setstate__" not in members:
+				def __setstate__(self, state: Dict[str, Any]) -> None:
+					if self.__allSlots__ !=  (slots := set(state.keys())):
+						if len(diff := self.__allSlots__.difference(slots)) > 0:
+							raise ExtendedTypeError(f"Missing fields in parameter 'state': '{"', '".join(diff)}'")
+						else:
+							diff = slots.difference(self.__allSlots__)
+							raise ExtendedTypeError(f"Unexpected fields in parameter 'state': '{"', '".join(diff)}'")
 
-			newClass.__getstate__ = __getstate__
-			newClass.__setstate__ = __setstate__
+					for slotName, value in state.items():
+						setattr(self, slotName, value)
+
+				newClass.__setstate__ = __setstate__
 
 		# Check for inherited class attributes
 		attributes = []

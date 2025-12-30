@@ -37,9 +37,10 @@ This test suite tests decorators:
 * :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
 """
 from pickle                import loads, dumps
+from typing                import Dict, Any
 from unittest              import TestCase
 
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
 from pyTooling.Graph       import Graph, Vertex, Edge
 from pyTooling.Tree        import Node
 
@@ -81,6 +82,18 @@ class MixedClass(DerivedClass, MixinClass):
 		self._data4 = data + 3
 
 
+class LessFields(SimpleClass):
+	def __setstate__(self, state: Dict[str, Any]):
+		del state["_data1"]
+		super().__setstate__(state)
+
+
+class MoreFields(SimpleClass):
+	def __setstate__(self, state: Dict[str, Any]):
+		state["more"] = -2
+		super().__setstate__(state)
+
+
 class Pickleing(TestCase):
 	def test_SimpleClass(self) -> None:
 		rootInstance = SimpleClass(10)
@@ -110,6 +123,24 @@ class Pickleing(TestCase):
 		self.assertEqual(12, recreatedInstance._data3)
 		self.assertEqual(13, recreatedInstance._data4)
 
+	def test_LessFields(self) -> None:
+		rootInstance = LessFields(10)
+
+		serialized = dumps(rootInstance)
+		with self.assertRaises(ExtendedTypeError) as ex:
+			_ = loads(serialized)
+
+		self.assertIn("_data1", str(ex.exception))
+
+	def test_MoreFields(self) -> None:
+		rootInstance = MoreFields(10)
+
+		serialized = dumps(rootInstance)
+		with self.assertRaises(ExtendedTypeError) as ex:
+			_ = loads(serialized)
+
+		self.assertIn("more", str(ex.exception))
+
 
 def format(value: Node) -> str:
 	return ""
@@ -119,9 +150,9 @@ class PickledTree(TestCase):
 	def test_SimpleTree(self) -> None:
 		root = Node(value="Root")
 
-		node1 = Node(nodeID=1, value="node1", keyValuePairs=(kvp1 := {"a": 1, "b": 2}), format=format, parent=root)
-		node2 = Node(nodeID=2, value="node2", keyValuePairs=(kvp2 := {"g": 1, "h": 2}), format=format, parent=root)
-		node3 = Node(nodeID=3, value="node3", keyValuePairs=(kvp3 := {"x": 1, "y": 2}), format=format, parent=root)
+		n1 = Node(nodeID=1, value="node1", keyValuePairs=(kvp1 := {"a": 1, "b": 2}), format=format, parent=root)
+		n2 = Node(nodeID=2, value="node2", keyValuePairs=(kvp2 := {"g": 1, "h": 2}), format=format, parent=root)
+		n3 = Node(nodeID=3, value="node3", keyValuePairs=(kvp3 := {"x": 1, "y": 2}), format=format, parent=root)
 
 		serialized = dumps(root)
 		recreated: Node = loads(serialized)
