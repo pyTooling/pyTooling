@@ -40,6 +40,7 @@ from pickle                import loads, dumps
 from unittest              import TestCase
 
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Graph       import Graph, Vertex, Edge
 from pyTooling.Tree        import Node
 
 
@@ -116,16 +117,16 @@ def format(value: Node) -> str:
 
 class PickledTree(TestCase):
 	def test_SimpleTree(self) -> None:
-		print()
-		root = Node("")
+		root = Node(value="Root")
 
 		node1 = Node(nodeID=1, value="node1", keyValuePairs=(kvp1 := {"a": 1, "b": 2}), format=format, parent=root)
 		node2 = Node(nodeID=2, value="node2", keyValuePairs=(kvp2 := {"g": 1, "h": 2}), format=format, parent=root)
 		node3 = Node(nodeID=3, value="node3", keyValuePairs=(kvp3 := {"x": 1, "y": 2}), format=format, parent=root)
 
 		serialized = dumps(root)
-		recreated = loads(serialized)
+		recreated: Node = loads(serialized)
 
+		self.assertEqual("Root",  recreated.Value)
 		self.assertEqual("node1", recreated.GetNodeByID(1).Value)
 		self.assertEqual("node2", recreated.GetNodeByID(2).Value)
 		self.assertEqual("node3", recreated.GetNodeByID(3).Value)
@@ -135,3 +136,37 @@ class PickledTree(TestCase):
 		self.assertDictEqual(kvp1, recreated.GetNodeByID(1)._dict)
 		self.assertDictEqual(kvp2, recreated.GetNodeByID(2)._dict)
 		self.assertDictEqual(kvp3, recreated.GetNodeByID(3)._dict)
+
+
+class PickledGraph(TestCase):
+	def test_SimpleGraph(self) -> None:
+		graph = Graph("Graph")
+		v1 = Vertex(vertexID=1, value="v1", weight=120, keyValuePairs=(kvp1 := {"a": 1, "b": 2}), graph=graph)
+		v2 = Vertex(vertexID=2, value="v2", weight=230, keyValuePairs=(kvp2 := {"g": 1, "h": 2}), graph=graph)
+		v3 = Vertex(vertexID=3, value="v3", weight=310, keyValuePairs=(kvp3 := {"x": 1, "y": 2}), graph=graph)
+
+		v1.EdgeToVertex(v2, edgeID=12, edgeValue="12", edgeWeight=125, keyValuePairs=(kvp12 := {"e": 1, "f": 2}))
+		v2.EdgeToVertex(v3, edgeID=23, edgeValue="23", edgeWeight=235, keyValuePairs=(kvp23 := {"i": 1, "j": 2}))
+		v3.EdgeToVertex(v1, edgeID=31, edgeValue="31", edgeWeight=315, keyValuePairs=(kvp31 := {"k": 1, "l": 2}))
+
+		serialized = dumps(graph)
+		recreated: Graph = loads(serialized)
+
+		self.assertEqual("Graph", recreated.Name)
+		self.assertEqual(3, graph.VertexCount)
+		self.assertEqual(3, graph.EdgeCount)
+
+		r1 = graph.GetVertexByID(1)
+		r2 = graph.GetVertexByID(2)
+		r3 = graph.GetVertexByID(3)
+
+		self.assertIs((e12 := r1.OutboundEdges[0]).Destination, r2)
+		self.assertIs((e23 := r2.OutboundEdges[0]).Destination, r3)
+		self.assertIs((e31 := r3.OutboundEdges[0]).Destination, r1)
+
+		self.assertDictEqual(kvp1, r1._dict)
+		self.assertDictEqual(kvp2, r2._dict)
+		self.assertDictEqual(kvp3, r3._dict)
+		self.assertDictEqual(kvp12, e12._dict)
+		self.assertDictEqual(kvp23, e23._dict)
+		self.assertDictEqual(kvp31, e31._dict)
