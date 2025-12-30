@@ -54,7 +54,7 @@ setup(
 		gitHubNamespace=gitHubNamespace,
 		unittestRequirementsFile=Path("tests/requirements.txt"),
 		additionalRequirements={
-			"pypi":      ["requests >= 2.32", "aiohttp >= 3.13"],
+			"pypi":      ["requests >= 2.32", "aiohttp >= 3.12"],  # aiohttp limited on MSYS2 to 3.12.x
 			"packaging": ["setuptools >= 80.0"],
 			"terminal":  ["colorama ~= 0.4.6"],
 			"yaml":      ["ruamel.yaml ~= 0.18"],
