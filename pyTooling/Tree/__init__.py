@@ -218,6 +218,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._parent = parent
 			self._level = parent._level + 1
 			self._nodesWithID = None
+			self._nodesWithoutID = None
 
 			if nodeID is None:
 				self._root._nodesWithoutID.append(self)
