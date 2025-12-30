@@ -37,10 +37,11 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
    See :ref:`high-level help <META>` for explanations and usage examples.
 """
 from functools  import wraps
+from itertools  import chain
 from sys        import version_info
 from threading  import Condition
 from types      import FunctionType, MethodType
-from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn
+from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 try:
@@ -394,6 +395,7 @@ class ExtendedType(type):
 
 	  * Implement ``__slots__`` only on primary inheritance line.
 	  * Collect class variables on secondary inheritance lines (mixin-classes) and defer implementation as ``__slots__``.
+	  * Handle object state exporting and importing for slots (:mod:`pickle` support) via ``__getstate__``/``__setstate__``.
 
 	* Allow only a single instance to be created (:term:`singleton`). |br|
 	  Further instantiations will return the previously create instance (identical object).
@@ -404,15 +406,17 @@ class ExtendedType(type):
 
 	.. rubric:: Added class fields:
 
-	:__slotted__:                Class uses `__slots__`.
-	:__slots__:                  Class fields stored in slots instead of ``__dict__``.
-	:__isMixin__:                Class is a mixin-class
+	:__slotted__:                True, if class uses `__slots__`.
+	:__allSlots__:               Set of class fields stored in slots for all classes in the inheritance hierarchy.
+	:__slots__:                  Tuple of class fields stored in slots for current class in the inheritance hierarchy. |br|
+	                             See :pep:`253` for details.
+	:__isMixin__:                True, if class is a mixin-class
 	:__mixinSlots__:             List of collected slots from secondary inheritance hierarchy (mixin hierarchy).
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
-	:__isAbstract__:             Class is abstract.
-	:__isSingleton__:            Class is a singleton
+	:__isAbstract__:             True, if class is abstract.
+	:__isSingleton__:            True, if class is a singleton
 	:__singletonInstanceCond__:  Condition variable to protect the singleton creation.
 	:__singletonInstanceInit__:  Singleton is initialized.
 	:__singletonInstanceCache__: The singleton object, once created.
@@ -422,6 +426,15 @@ class ExtendedType(type):
 
 	:HasClassAttributes:  Read-only property to check if the class has Attributes.
 	:HasMethodAttributes: Read-only property to check if the class has methods with Attributes.
+
+	.. rubric:: Added methods:
+
+	If slots are used, the following methods are added to support :mod:`pickle`:
+
+	:__getstate__: Export an object's state for serialization. |br|
+	               See :pep:`307` for details.
+	:__setstate__: Import an object's state for deserialization. |br|
+	               See :pep:`307` for details.
 
 	.. rubric:: Modified ``__new__`` method:
 
@@ -443,8 +456,15 @@ class ExtendedType(type):
 	# def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):
 	# 	return DispatchDictionary()
 
-	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
-							slots: bool = False, mixin: bool = False, singleton: bool = False) -> "ExtendedType":
+	def __new__(
+		self,
+		className: str,
+		baseClasses: Tuple[type],
+		members: Dict[str, Any],
+		slots: bool = False,
+		mixin: bool = False,
+		singleton: bool = False
+	) -> Self:
 		"""
 		Construct a new class using this :term:`meta-class`.
 
@@ -488,6 +508,24 @@ class ExtendedType(type):
 		newClass.__abstractMethods__ = abstractMethods
 		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		if slots:
+			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
+			def __getstate__(self) -> Dict[str, Any]:
+				try:
+					return {slotName: getattr(self, slotName) for slotName in self.__allSlots__}
+				except AttributeError as ex:
+					raise ExtendedTypeError(f"Unassigned field '{ex.name}' in object '{self}' of type '{self.__class__.__name__}'.") from ex
+
+			def __setstate__(self, state: Dict[str, Any]) -> None:
+				if self.__allSlots__ !=  (slots := set(state.keys())):
+					raise ExtendedTypeError(f"Missing fields in parameter 'state': {self.__allSlots__.difference(slots)}")
+
+				for slotName, value in state.items():
+					setattr(self, slotName, value)
+
+			newClass.__getstate__ = __getstate__
+			newClass.__setstate__ = __setstate__
 
 		# Check for inherited class attributes
 		attributes = []
@@ -743,22 +781,24 @@ class ExtendedType(type):
 					del members[fieldName]
 
 		# FIXME: search for fields without annotation
-		# TODO: document a list of added members due to ExtendedType
 		if mixin:
 			mixinSlots.extend(slottedFields)
 			members["__slotted__"] = True
 			members["__slots__"] = tuple()
+			members["__allSlots__"] = set()
 			members["__isMixin__"] = True
 			members["__mixinSlots__"] = tuple(mixinSlots)
 		elif slots:
 			slottedFields.extend(mixinSlots)
 			members["__slotted__"] = True
 			members["__slots__"] = tuple(slottedFields)
+			members["__allSlots__"] = set(chain(slottedFields, inheritedSlottedFields.keys()))
 			members["__isMixin__"] = False
 			members["__mixinSlots__"] = tuple()
 		else:
 			members["__slotted__"] = False
 			# NO     __slots__
+			# members["__allSlots__"] = set()
 			members["__isMixin__"] = False
 			members["__mixinSlots__"] = tuple()
 		return classFields, objectFields
