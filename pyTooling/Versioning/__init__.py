@@ -981,7 +981,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by %= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >> operator.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -1108,8 +1108,7 @@ class SemanticVersion(Version):
 		if versionString == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 
-		match = cls._PATTERN.match(versionString)
-		if match is None:
+		if (match := cls._PATTERN.match(versionString)) is None:
 			raise ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:

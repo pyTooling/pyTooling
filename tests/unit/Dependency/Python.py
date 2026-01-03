@@ -89,7 +89,7 @@ class PyPI(TestCase):
 	def test_pyVersioning(self) -> None:
 		print()
 
-		graph = PythonPackageDependencyGraph("pyTooling")
+		graph = PythonPackageDependencyGraph("pyVersioning")
 		pypi = PythonPackageIndex("PyPI", "https://pypi.org", "https://pypi.org/pypi/", graph=graph)
 
 		project = pypi.DownloadProject("pyVersioning")

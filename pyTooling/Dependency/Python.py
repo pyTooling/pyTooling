@@ -35,13 +35,20 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
+from asyncio  import run as asyncio_run, gather as asyncio_gather
 from datetime import datetime
-from typing   import Optional as Nullable, List, Dict, Union, Iterable, Mapping
+from re       import compile as re_compile, Pattern
+from typing   import Optional as Nullable, List, Dict, Union, Iterable, Mapping, Self, ClassVar
 
 try:
 	from aiohttp import ClientSession
 except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'aiohttp' not installed. Either install pyTooling with extra dependencies 'pyTooling[pypi]' or install 'aiohttp' directly.") from ex
+
+try:
+	from packaging.requirements import Requirement
+except ImportError as ex:  # pragma: no cover
+	raise Exception(f"Optional dependency 'packaging' not installed. Either install pyTooling with extra dependencies 'pyTooling[pypi]' or install 'packaging' directly.") from ex
 
 try:
 	from requests import Session
@@ -70,10 +77,6 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
 		print("[pyTooling.Dependency] Could not import directly!")
 		raise ex
-
-
-class Requirement:
-	pass
 
 
 @export
@@ -293,15 +296,59 @@ class PythonPackageIndex(PackageStorage):
 				project=project
 			)
 
-			# try:
-			# 	self.DownloadAdditionalReleaseInformation(release)
-			# except Exception as ex:
-			# 	print(ex)
-			# 	continue
-
-		# asyncio_run(self.DownloadAdditionalReleaseInformation_2(project))
+		asyncio_run(self.ParallelDownloadAdditionalReleaseInformation(project))
 
 		return project
+
+	async def ParallelDownloadAdditionalReleaseInformation(self, project: Project):
+		async def routine(session, release: Release):
+			if Parts.Postfix in release._version._parts:
+				pass
+
+			async with session.get(f"{release.Project.Name.lower()}/{release._version}/json") as response:
+				json = await response.json()
+				response.raise_for_status()
+
+				infoNode = json["info"]
+				if (extras := infoNode["provides_extra"]) is not None:
+					for extra in extras:
+						release._requirements[extra] = []
+
+				if (requirements := infoNode["requires_dist"]) is not None:
+					broken = []
+					for requirement in requirements:
+						req = Requirement(requirement)
+
+						# Handle requirements without an extra marker
+						if req.marker is None:
+							release._requirements[None].append(req)
+							continue
+
+						for extra in release._requirements.keys():
+							if extra is not None and req.marker.evaluate({"extra": extra}):
+								release._requirements[extra].append(req)
+								break
+						else:
+							broken.append(req)
+
+					if len(broken) > 0:
+						release._requirements[0] = broken
+
+		async with ClientSession(base_url=str(self._api), headers={"accept": "application/json"}) as session:
+			tasks = []
+			for release in project.Releases.values():
+				tasks.append(routine(session, release))
+
+			results = await asyncio_gather(*tasks, return_exceptions=True)
+			delList = []
+			for release, result in zip(project.Releases.values(), results):
+				if isinstance(result, Exception):
+					delList.append((release, result))
+
+			for release, ex in delList:
+				print(f"  Removing {release.Project._name} {release.Version} - {ex}")
+				del project.Releases[release.Version]
+
 
 	def __repr__(self) -> str:
 		return f"{self._name}"

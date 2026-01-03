@@ -340,8 +340,7 @@ class URL:
 		:returns:                 A URL object.
 		:raises ToolingException: When syntax does not match.
 		"""
-		matches = URL_REGEXP.match(url)
-		if matches is not None:
+		if (matches := URL_REGEXP.match(url)) is not None:
 			scheme =    matches.group("scheme")
 			user =      matches.group("user")
 			password =  matches.group("password")

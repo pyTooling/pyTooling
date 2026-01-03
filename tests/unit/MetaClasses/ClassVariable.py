@@ -118,7 +118,41 @@ class WithSlots(TestCase):
 
 
 class Inheritance_WithSlots(TestCase):
-	def test_InitValue_NoDunderInit_ClassCheck(self) -> None:
+	def test_BaseAssigned(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int] = 1
+
+		class Parent(Base):
+			pass
+
+		self.assertEqual(1, Base._data0)
+		self.assertEqual(1, Parent._data0)
+
+		base = Base()
+
+		self.assertEqual(1, base._data0)
+
+		parent = Parent()
+
+		self.assertEqual(1, parent._data0)
+
+	def test_BaseDeclared_ParentAssigned(self) -> None:
+		print()
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int]
+
+		print(Base.__slots__)
+
+		class Parent(Base):
+			_data0: ClassVar[int] = 2
+
+		self.assertEqual(2, Parent._data0)
+
+		parent = Parent()
+
+		self.assertEqual(2, parent._data0)
+
+	def test_BaseAssigned_ParentAssigned(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
 
