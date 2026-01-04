@@ -14,7 +14,7 @@ treelib ~= 1.7
 
 # For performance testing of Graph/Vertex (graph)
 networkx ~= 3.4
-igraph ~= 0.11
+igraph ~= 0.11.0
 
 # For performance testing of LinkedList/Node (linked list)
 doubly-py-linked-list ~= 1.1

@@ -1,12 +1,12 @@
 -r ../requirements.txt
 
 colorama >= 0.4.6
-ruamel.yaml ~= 0.18
+ruamel.yaml ~= 0.18.0
 setuptools >= 80.0
 
 # Enforce latest version on ReadTheDocs
 sphinx ~= 8.2
-docutils ~= 0.21
+docutils ~= 0.21.0
 docutils_stubs ~= 0.0.22
 
 # ReadTheDocs Theme
@@ -15,7 +15,7 @@ sphinx_rtd_theme ~= 3.0
 # Sphinx Extenstions
 sphinxcontrib-mermaid ~= 1.0
 autoapi >= 2.0.1
-sphinx_design ~= 0.6
-sphinx-copybutton >= 0.5
+sphinx_design ~= 0.6.0
+sphinx-copybutton >= 0.5.0
 sphinx_autodoc_typehints ~= 3.5
-sphinx_reports ~= 0.9
+sphinx_reports ~= 0.9.0

@@ -12,7 +12,7 @@ aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
 requests >= 2.32
 
 # For pyTooling.Configuration.YAML testing
-ruamel.yaml ~= 0.18
+ruamel.yaml ~= 0.18.0
 
 # For pyTooling.Packaging testing
 setuptools >= 80.0
