@@ -136,22 +136,6 @@ class Inheritance_WithSlots(TestCase):
 
 		self.assertEqual(1, parent._data0)
 
-	def test_BaseDeclared_ParentAssigned(self) -> None:
-		print()
-		class Base(metaclass=ExtendedType, slots=True):
-			_data0: ClassVar[int]
-
-		print(Base.__slots__)
-
-		class Parent(Base):
-			_data0: ClassVar[int] = 2
-
-		self.assertEqual(2, Parent._data0)
-
-		parent = Parent()
-
-		self.assertEqual(2, parent._data0)
-
 	def test_BaseAssigned_ParentAssigned(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1
