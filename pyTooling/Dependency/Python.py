@@ -150,7 +150,7 @@ class Release(PackageVersion):
 		files:        Nullable[Iterable[Distribution]] = None,
 		requirements: Nullable[Mapping[str, List[Requirement]]] = None,
 		project:      Nullable["Project"] = None,
-		lazy:         LazyLoaderState = LazyLoaderState.PartiallyLoaded
+		lazy:         LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
 		super().__init__(version, project, timestamp)
 
@@ -285,7 +285,7 @@ class Project(Package):
 		url:      Union[str, URL],
 		releases: Nullable[Iterable[Release]] = None,
 		index:    Nullable["PythonPackageIndex"] = None,
-		lazy:     LazyLoaderState = LazyLoaderState.PartiallyLoaded
+		lazy:     LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
 		super().__init__(name, storage=index)
 
