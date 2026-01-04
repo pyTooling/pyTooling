@@ -1092,10 +1092,11 @@ class SemanticVersion(Version):
 		* ``rev|REV`` - revision
 
 		:param versionString: The version string to parse.
+		:param validator:     Optional, a validation function.
 		:returns:             An object representing a semantic version.
-		:raises TypeError:    If parameter ``other`` is not a string.
-		:raises ValueError:   If parameter ``other`` is None.
-		:raises ValueError:   If parameter ``other`` is empty.
+		:raises TypeError:    When parameter ``versionString`` is not a string.
+		:raises ValueError:   When parameter ``versionString`` is None.
+		:raises ValueError:   When parameter ``versionString`` is empty.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1103,9 +1104,7 @@ class SemanticVersion(Version):
 			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
-
-		versionString = versionString.strip()
-		if versionString == "":
+		elif (versionString := versionString.strip()) == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 
 		if (match := cls._PATTERN.match(versionString)) is None:
@@ -1114,6 +1113,7 @@ class SemanticVersion(Version):
 		def toInt(value: Nullable[str]) -> Nullable[int]:
 			if value is None or value == "":
 				return None
+
 			try:
 				return int(value)
 			except ValueError as ex:  # pragma: no cover
@@ -1158,8 +1158,10 @@ class SemanticVersion(Version):
 			# hash=match["hash"],
 			flags=Flags.Clean
 		)
+
 		if validator is not None and not validator(version):
-			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
+			# TODO: VersionValidatorException
+			raise ValueError(f"Failed to validate version string '{versionString}'.")
 
 		return version
 

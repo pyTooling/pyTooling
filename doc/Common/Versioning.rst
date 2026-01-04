@@ -336,7 +336,7 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
         (version), ``rev`` (revision).
 
       Comparison operators
-        Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``%=``.
+        Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
 
       .. rubric:: Missing Features
 
