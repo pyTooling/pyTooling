@@ -35,10 +35,12 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from asyncio  import run as asyncio_run, gather as asyncio_gather
-from datetime import datetime
-from enum     import IntEnum
-from typing   import Optional as Nullable, List, Dict, Union, Iterable, Mapping
+from asyncio   import run as asyncio_run, gather as asyncio_gather
+from datetime  import datetime
+from enum      import IntEnum
+from functools import wraps, update_wrapper
+from threading import RLock
+from typing    import Optional as Nullable, List, Dict, Union, Iterable, Mapping, Callable, Iterator
 
 try:
 	from aiohttp import ClientSession
@@ -78,12 +80,76 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		print("[pyTooling.Dependency] Could not import directly!")
 		raise ex
 
+
+@export
 class LazyLoaderState(IntEnum):
 	Uninitialized =   0  #: No data or minimal data like ID or name.
 	Initialized =     1  #: Initialized by some __init__ parameters.
 	PartiallyLoaded = 2  #: Some additional data was loaded.
 	FullyLoaded =     3  #: All data is loaded.
 	PostProcessed =   4  #: Loaded data triggered further processing.
+
+
+@export
+class lazy:
+	"""
+	Unified decorator that supports:
+	1. @lazy(state) def method()
+	2. @lazy(state) @property def prop()
+	"""
+
+	def __init__(self, _requiredState: LazyLoaderState = LazyLoaderState.PartiallyLoaded):
+		self._requiredState = _requiredState
+		self._wrapped = None
+
+	def __call__(self, wrapped):
+		self._wrapped = wrapped
+		# If it's a function, we update metadata.
+		# If it's a property, it doesn't support update_wrapper directly.
+		if hasattr(wrapped, "__name__"):
+			update_wrapper(self, wrapped)
+
+		return self
+
+	def __get__(self, obj, objtype=None):
+		if obj is None:
+			return self
+
+		# 1. Thread-safe state check
+		with obj.__lazy_lock__:
+			if obj.__lazy_state__ < self._requiredState:
+				obj.__lazy_loader__(self._requiredState)
+
+		# 2. Determine if we are wrapping a property or a method
+		if isinstance(self._wrapped, property):
+			# If it's a property, call its __get__ to return the value
+			return self._wrapped.__get__(obj, objtype)
+
+		# 3. Otherwise, treat as a method and return a bound wrapper
+		@wraps(self._wrapped)
+		def wrapper(*args, **kwargs):
+			return self._wrapped(obj, *args, **kwargs)
+
+		return wrapper
+
+
+@export
+class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
+	__lazy_state__: LazyLoaderState
+	__lazy_lock__:  RLock
+
+	def __init__(self, targetLevel: LazyLoaderState = LazyLoaderState.Initialized) -> None:
+		self.__lazy_state__ = LazyLoaderState.Initialized
+		self.__lazy_lock__ = RLock()
+
+		if targetLevel > self.__lazy_state__:
+			with self.__lazy_lock__:
+				self.__lazy_loader__(targetLevel)
+
+	@abstractmethod
+	def __lazy_loader__(self, targetLevel: LazyLoaderState) -> None:
+		pass
+
 
 @export
 class Distribution(metaclass=ExtendedType, slots=True):
@@ -135,11 +201,10 @@ class Distribution(metaclass=ExtendedType, slots=True):
 
 
 @export
-class Release(PackageVersion):
+class Release(PackageVersion, LazyLoadableMixin):
 	_files:        List[Distribution]
 	_requirements: Dict[Union[str, None], List[Requirement]]
 
-	_loaderState:  LazyLoaderState
 	_api:          Nullable[URL]
 	_session:      Nullable[Session]
 
@@ -153,8 +218,8 @@ class Release(PackageVersion):
 		lazy:         LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
 		super().__init__(version, project, timestamp)
+		LazyLoadableMixin.__init__(self, lazy)
 
-		self._loaderState = LazyLoaderState.Initialized
 		self._files = [file for file in files] if files is not None else []
 		self._requirements = {k: v for k, v in requirements} if requirements is not None else {None: []}
 
@@ -165,36 +230,29 @@ class Release(PackageVersion):
 			self._api =     None
 			self._session = None
 
-		if lazy >= LazyLoaderState.PartiallyLoaded:
+	def __lazy_loader__(self, targetLevel: LazyLoaderState) -> None:
+		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
-		if lazy >= LazyLoaderState.PostProcessed:
+		if targetLevel >= LazyLoaderState.PostProcessed:
 			self.PostProcess()
 
+	@lazy(LazyLoaderState.PostProcessed)
 	@PackageVersion.DependsOn.getter
 	def DependsOn(self) -> Dict["Package", Dict[SemanticVersion, "PackageVersion"]]:
-		if self._loaderState < LazyLoaderState.FullyLoaded:
-			self.DownloadDetails()
-		if self._loaderState < LazyLoaderState.PostProcessed:
-			self.PostProcess()
-
 		return super().DependsOn
 
 	@readonly
 	def Project(self) -> "Project":
 		return self._package
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def Files(self) -> List[Distribution]:
-		if self._loaderState < LazyLoaderState.PartiallyLoaded:
-			self.DownloadDetails()
-
 		return self._files
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def Requirements(self) -> Dict[str, List[Requirement]]:
-		if self._loaderState < LazyLoaderState.PartiallyLoaded:
-			self.DownloadDetails()
-
 		return self._requirements
 
 	def _GetPyPIEndpoint(self) -> str:
@@ -247,7 +305,7 @@ class Release(PackageVersion):
 			if len(brokenRequirements) > 0:
 				self._requirements[0] = brokenRequirements
 
-		self._loaderState = LazyLoaderState.FullyLoaded
+		self.__lazy_state__ = LazyLoaderState.FullyLoaded
 
 	def PostProcess(self) -> None:
 		index: PythonPackageIndex = self._package._storage
@@ -259,12 +317,10 @@ class Release(PackageVersion):
 					self.AddDependencyToPackageVersion(release)
 
 		self.SortDependencies()
-		self._loaderState = LazyLoaderState.PostProcessed
+		self.__lazy_state__ = LazyLoaderState.PostProcessed
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	def __repr__(self) -> str:
-		if self._loaderState < LazyLoaderState.PartiallyLoaded:
-			self.DownloadDetails()
-
 		return f"Release: {self._package._name}:{self._version} Files: {len(self._files)}"
 
 	def __str__(self) -> str:
@@ -272,10 +328,9 @@ class Release(PackageVersion):
 
 
 @export
-class Project(Package):
+class Project(Package, LazyLoadableMixin):
 	_url:         Nullable[URL]
 
-	_loaderState: LazyLoaderState
 	_api:         Nullable[URL]
 	_session:     Nullable[Session]
 
@@ -287,7 +342,15 @@ class Project(Package):
 		index:    Nullable["PythonPackageIndex"] = None,
 		lazy:     LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
+		if index is not None:
+			self._api =     index._api
+			self._session = index._session
+		else:
+			self._api =     None
+			self._session = None
+
 		super().__init__(name, storage=index)
+		LazyLoadableMixin.__init__(self, lazy)
 
 		if isinstance(url, str):
 			url = URL.Parse(url)
@@ -297,19 +360,13 @@ class Project(Package):
 			raise ex
 
 		self._url = url
-		self._loaderState = LazyLoaderState.Initialized
 		# self._releases = {release.Version: release for release in sorted(releases, key=lambda r: r.Version)} if releases is not None else {}
 
-		if index is not None:
-			self._api =     index._api
-			self._session = index._session
-		else:
-			self._api =     None
-			self._session = None
 
-		if lazy >= LazyLoaderState.PartiallyLoaded:
+	def __lazy_loader__(self, targetLevel: LazyLoaderState) -> None:
+		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
-		if lazy >= LazyLoaderState.PostProcessed:
+		if targetLevel >= LazyLoaderState.PostProcessed:
 			self.DownloadReleaseDetails()
 
 	@readonly
@@ -320,25 +377,19 @@ class Project(Package):
 	def URL(self) -> URL:
 		return self._url
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def Releases(self) -> Dict[PythonVersion, Release]:
-		if self._loaderState < LazyLoaderState.PartiallyLoaded:
-			self.DownloadDetails()
-
 		return self._versions
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def ReleaseCount(self) -> int:
-		if self._loaderState < LazyLoaderState.PartiallyLoaded:
-			self.DownloadDetails()
-
 		return len(self._versions)
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def LatestRelease(self) -> Release:
-		if self._loaderState < LazyLoaderState.PartiallyLoaded:
-			self.DownloadDetails()
-
 		return firstValue(self._versions)
 
 	def _GetPyPIEndpoint(self) -> str:
@@ -384,7 +435,7 @@ class Project(Package):
 
 			files = [Distribution(file["filename"], file["url"], datetime.fromisoformat(file["upload_time_iso_8601"]), ) for
 							 file in releaseNode]
-			lazy = LazyLoaderState.PartiallyLoaded if LazyLoaderState.PartiallyLoaded <= self._loaderState <= LazyLoaderState.FullyLoaded else LazyLoaderState.Initialized
+			lazy = LazyLoaderState.PartiallyLoaded if LazyLoaderState.PartiallyLoaded <= self.__lazy_state__ <= LazyLoaderState.FullyLoaded else LazyLoaderState.Initialized
 			Release(
 				version,
 				files[0]._uploadTime,
@@ -394,7 +445,7 @@ class Project(Package):
 			)
 
 		self.SortVersions()
-		self._loaderState = LazyLoaderState.FullyLoaded
+		self.__lazy_state__ = LazyLoaderState.FullyLoaded
 
 	def DownloadReleaseDetails(self) -> None:
 		async def ParallelDownloadReleaseDetails():
@@ -425,7 +476,7 @@ class Project(Package):
 					del self.Releases[release.Version]
 
 		asyncio_run(ParallelDownloadReleaseDetails())
-		self._loaderState = LazyLoaderState.PostProcessed
+		self.__lazy_state__ = LazyLoaderState.PostProcessed
 
 	def __repr__(self) -> str:
 		return f"Project: {self._name} latest: {self.LatestRelease._version}"

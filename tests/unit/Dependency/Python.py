@@ -101,3 +101,20 @@ class PyPI(TestCase):
 		for release in project:
 			self.assertEqual(project, release.Package)
 			self.assertEqual(0, len(release))
+
+	def test_SphinxReports(self) -> None:
+		print()
+
+		graph = PythonPackageDependencyGraph("sphinx-reports")
+		pypi = PythonPackageIndex("PyPI", "https://pypi.org", "https://pypi.org/pypi/", graph=graph)
+
+		project = pypi.DownloadProject("sphinx-reports")
+
+		self.assertEqual("sphinx-reports", project.Name)
+		self.assertEqual("https://pypi.org/project/sphinx-reports/", str(project.URL))
+		self.assertEqual(23, len(project))
+
+		for release in project:
+			print(f"{release!r}")
+			self.assertEqual(project, release.Package)
+			self.assertEqual(0, len(release))
