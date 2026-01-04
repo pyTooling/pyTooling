@@ -37,8 +37,8 @@ Implementation of package dependencies.
 """
 from asyncio  import run as asyncio_run, gather as asyncio_gather
 from datetime import datetime
-from re       import compile as re_compile, Pattern
-from typing   import Optional as Nullable, List, Dict, Union, Iterable, Mapping, Self, ClassVar
+from enum     import IntEnum
+from typing   import Optional as Nullable, List, Dict, Union, Iterable, Mapping
 
 try:
 	from aiohttp import ClientSession
@@ -51,7 +51,7 @@ except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'packaging' not installed. Either install pyTooling with extra dependencies 'pyTooling[pypi]' or install 'packaging' directly.") from ex
 
 try:
-	from requests import Session
+	from requests import Session, HTTPError
 except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'requests' not installed. Either install pyTooling with extra dependencies 'pyTooling[pypi]' or install 'requests' directly.") from ex
 
@@ -59,7 +59,7 @@ try:
 	from pyTooling.Decorators      import export, readonly
 	from pyTooling.MetaClasses     import ExtendedType, abstractmethod, mustoverride
 	from pyTooling.Exceptions      import ToolingException
-	from pyTooling.Common          import getFullyQualifiedName, firstKey
+	from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 	from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
 	from pyTooling.GenericPath.URL import URL
 	from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
@@ -78,6 +78,12 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		print("[pyTooling.Dependency] Could not import directly!")
 		raise ex
 
+class LazyLoaderState(IntEnum):
+	Uninitialized =   0  #: No data or minimal data like ID or name.
+	Initialized =     1  #: Initialized by some __init__ parameters.
+	PartiallyLoaded = 2  #: Some additional data was loaded.
+	FullyLoaded =     3  #: All data is loaded.
+	PostProcessed =   4  #: Loaded data triggered further processing.
 
 @export
 class Distribution(metaclass=ExtendedType, slots=True):
@@ -133,18 +139,45 @@ class Release(PackageVersion):
 	_files:        List[Distribution]
 	_requirements: Dict[Union[str, None], List[Requirement]]
 
+	_loaderState:  LazyLoaderState
+	_api:          Nullable[URL]
+	_session:      Nullable[Session]
+
 	def __init__(
 		self,
 		version:      PythonVersion,
 		timestamp:    datetime,
 		files:        Nullable[Iterable[Distribution]] = None,
 		requirements: Nullable[Mapping[str, List[Requirement]]] = None,
-		project:      Nullable["Project"] = None
+		project:      Nullable["Project"] = None,
+		lazy:         LazyLoaderState = LazyLoaderState.PartiallyLoaded
 	) -> None:
 		super().__init__(version, project, timestamp)
 
+		self._loaderState = LazyLoaderState.Initialized
 		self._files = [file for file in files] if files is not None else []
 		self._requirements = {k: v for k, v in requirements} if requirements is not None else {None: []}
+
+		if project is not None and (storage := project._storage) is not None:
+			self._api =     storage._api
+			self._session = storage._session
+		else:
+			self._api =     None
+			self._session = None
+
+		if lazy >= LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+		if lazy >= LazyLoaderState.PostProcessed:
+			self.PostProcess()
+
+	@PackageVersion.DependsOn.getter
+	def DependsOn(self) -> Dict["Package", Dict[SemanticVersion, "PackageVersion"]]:
+		if self._loaderState < LazyLoaderState.FullyLoaded:
+			self.DownloadDetails()
+		if self._loaderState < LazyLoaderState.PostProcessed:
+			self.PostProcess()
+
+		return super().DependsOn
 
 	@readonly
 	def Project(self) -> "Project":
@@ -152,13 +185,86 @@ class Release(PackageVersion):
 
 	@readonly
 	def Files(self) -> List[Distribution]:
+		if self._loaderState < LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+
 		return self._files
 
 	@readonly
 	def Requirements(self) -> Dict[str, List[Requirement]]:
+		if self._loaderState < LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+
 		return self._requirements
 
+	def _GetPyPIEndpoint(self) -> str:
+		return f"{self._package._name.lower()}/{self._version}/json"
+
+	def DownloadDetails(self) -> None:
+		if self._session is None:
+			# TODO: NoSessionAvailableException
+			raise ToolingException(f"No session available.")
+
+		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
+		try:
+			response.raise_for_status()
+		except HTTPError as ex:
+			if ex.response.status_code == 404:
+				# TODO: ReleaseNotFoundException
+				raise ToolingException(f"Release '{self._version}' of package '{self._package._name}' not found.")
+
+		self.UpdateDetailsFromPyPIJSON(response.json())
+
+		index: PythonPackageIndex = self._package._storage
+		for requirement in self._requirements[None]:
+			packageName = requirement.name
+			index.DownloadProject(packageName, True)
+
+	def UpdateDetailsFromPyPIJSON(self, json) -> None:
+		infoNode = json["info"]
+		if (extras := infoNode["provides_extra"]) is not None:
+			self._requirements = {extra: [] for extra in extras}
+			self._requirements[None] = []
+
+		if (requirements := infoNode["requires_dist"]) is not None:
+			brokenRequirements = []
+			for requirement in requirements:
+				req = Requirement(requirement)
+
+				# Handle requirements without an extra marker
+				if req.marker is None:
+					self._requirements[None].append(req)
+					continue
+
+				for extra in self._requirements.keys():
+					if extra is not None and req.marker.evaluate({"extra": extra}):
+						self._requirements[extra].append(req)
+						break
+				else:
+					brokenRequirements.append(req)
+
+			# TODO: raise a warning
+			if len(brokenRequirements) > 0:
+				self._requirements[0] = brokenRequirements
+
+		self._loaderState = LazyLoaderState.FullyLoaded
+
+	def PostProcess(self) -> None:
+		index: PythonPackageIndex = self._package._storage
+		for requirement in self._requirements[None]:
+			package = index.DownloadProject(requirement.name, False)
+
+			for release in package:
+				if str(release._version) in requirement.specifier:
+					self.AddDependencyToPackageVersion(release)
+
+		self.SortDependencies()
+		self._loaderState = LazyLoaderState.PostProcessed
+
 	def __repr__(self) -> str:
+		if self._loaderState < LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+
 		return f"Release: {self._package._name}:{self._version} Files: {len(self._files)}"
 
 	def __str__(self) -> str:
@@ -167,14 +273,19 @@ class Release(PackageVersion):
 
 @export
 class Project(Package):
-	_url:       URL
+	_url:         Nullable[URL]
+
+	_loaderState: LazyLoaderState
+	_api:         Nullable[URL]
+	_session:     Nullable[Session]
 
 	def __init__(
 		self,
 		name:     str,
 		url:      Union[str, URL],
 		releases: Nullable[Iterable[Release]] = None,
-		index:    Nullable["PythonPackageIndex"] = None
+		index:    Nullable["PythonPackageIndex"] = None,
+		lazy:     LazyLoaderState = LazyLoaderState.PartiallyLoaded
 	) -> None:
 		super().__init__(name, storage=index)
 
@@ -186,7 +297,20 @@ class Project(Package):
 			raise ex
 
 		self._url = url
+		self._loaderState = LazyLoaderState.Initialized
 		# self._releases = {release.Version: release for release in sorted(releases, key=lambda r: r.Version)} if releases is not None else {}
+
+		if index is not None:
+			self._api =     index._api
+			self._session = index._session
+		else:
+			self._api =     None
+			self._session = None
+
+		if lazy >= LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+		if lazy >= LazyLoaderState.PostProcessed:
+			self.DownloadReleaseDetails()
 
 	@readonly
 	def PackageIndex(self) -> "PythonPackageIndex":
@@ -198,15 +322,110 @@ class Project(Package):
 
 	@readonly
 	def Releases(self) -> Dict[PythonVersion, Release]:
+		if self._loaderState < LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+
 		return self._versions
 
 	@readonly
 	def ReleaseCount(self) -> int:
+		if self._loaderState < LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+
 		return len(self._versions)
 
 	@readonly
 	def LatestRelease(self) -> Release:
+		if self._loaderState < LazyLoaderState.PartiallyLoaded:
+			self.DownloadDetails()
+
 		return firstValue(self._versions)
+
+	def _GetPyPIEndpoint(self) -> str:
+		return f"{self._name.lower()}/json"
+
+	def DownloadDetails(self) -> None:
+		if self._session is None:
+			# TODO: NoSessionAvailableException
+			raise ToolingException(f"No session available.")
+
+		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
+		try:
+			response.raise_for_status()
+		except HTTPError as ex:
+			if ex.response.status_code == 404:
+				# TODO: ReleaseNotFoundException
+				raise ToolingException(f"Package '{self._name}' not found.")
+
+		self.UpdateDetailsFromPyPIJSON(response.json())
+
+	def UpdateDetailsFromPyPIJSON(self, json) -> None:
+		infoNode = json["info"]
+		releasesNode = json["releases"]
+
+		# Update project/package URL
+		self._url = URL.Parse(infoNode["project_url"])
+
+		# Convert key to Version number, skip empty releases
+		convertedReleasesNode = {}
+		for k, v in releasesNode.items():
+			if len(v) == 0:
+				continue
+
+			try:
+				version = PythonVersion.Parse(k)
+				convertedReleasesNode[version] = v
+			except ValueError as ex:
+				print(f"Unsupported version format '{k}' - {ex}")
+
+		for version, releaseNode in sorted(convertedReleasesNode.items(), key=lambda t: t[0]):
+			if Parts.Postfix in version._parts:
+				pass
+
+			files = [Distribution(file["filename"], file["url"], datetime.fromisoformat(file["upload_time_iso_8601"]), ) for
+							 file in releaseNode]
+			lazy = LazyLoaderState.PartiallyLoaded if LazyLoaderState.PartiallyLoaded <= self._loaderState <= LazyLoaderState.FullyLoaded else LazyLoaderState.Initialized
+			Release(
+				version,
+				files[0]._uploadTime,
+				files,
+				project=self,
+				lazy=lazy
+			)
+
+		self.SortVersions()
+		self._loaderState = LazyLoaderState.FullyLoaded
+
+	def DownloadReleaseDetails(self) -> None:
+		async def ParallelDownloadReleaseDetails():
+			async def routine(session, release: Release):
+				if Parts.Postfix in release._version._parts:
+					pass
+
+				async with session.get(self._GetPyPIEndpoint()) as response:
+					json = await response.json()
+					response.raise_for_status()
+
+					release.UpdateDetailsFromPyPIJSON(json)
+
+			async with ClientSession(base_url=str(self._api), headers={"accept": "application/json"}) as session:
+				tasks = []
+				for release in self._versions.values():  # type: Release
+					tasks.append(routine(session, release))
+
+				results = await asyncio_gather(*tasks, return_exceptions=True)
+				delList = []
+				for release, result in zip(self.Releases.values(), results):
+					if isinstance(result, Exception):
+						delList.append((release, result))
+
+				# TODO: raise a warning
+				for release, ex in delList:
+					print(f"  Removing {release.Project._name} {release.Version} - {ex}")
+					del self.Releases[release.Version]
+
+		asyncio_run(ParallelDownloadReleaseDetails())
+		self._loaderState = LazyLoaderState.PostProcessed
 
 	def __repr__(self) -> str:
 		return f"Project: {self._name} latest: {self.LatestRelease._version}"
@@ -218,8 +437,8 @@ class Project(Package):
 @export
 class PythonPackageIndex(PackageStorage):
 	_url:     URL
-	_api:     URL
 
+	_api:     URL
 	_session: Session
 
 	def __init__(self, name: str, url: Union[str, URL], api: Union[str, URL], graph: "PackageDependencyGraph") -> None:
@@ -258,97 +477,17 @@ class PythonPackageIndex(PackageStorage):
 	def Projects(self) -> Dict[str, Project]:
 		return self._packages
 
-	def DownloadProject(self, projectName: str) -> Project:
-		response = self._session.get(url=f"{self._api}{projectName.lower()}/json")
-		response.raise_for_status()
+	@readonly
+	def ProjectCount(self) -> int:
+		return len(self._packages)
 
-		json = response.json()
-		infoNode = json["info"]
-		releasesNode = json["releases"]
+	def _GetPyPIEndpoint(self, projectName: str) -> str:
+		return f"{self._api}{projectName.lower()}/json"
 
-		project = Project(
-			projectName,
-			infoNode["project_url"],
-			index=self
-		)
-
-		# Convert key to Version number, skip empty releases
-		convertedReleasesNode = {}
-		for k, v in releasesNode.items():
-			if len(v) == 0:
-				continue
-
-			try:
-				version = PythonVersion.Parse(k)
-				convertedReleasesNode[version] = v
-			except Exception as ex:
-				print(f"Unsupported version format '{k}' - {ex}")
-
-		for version, releaseNode in sorted(convertedReleasesNode.items(), key=lambda t: t[0]):
-			if Parts.Postfix in version._parts:
-				pass
-
-			files = [Distribution(file["filename"], file["url"], datetime.fromisoformat(file["upload_time_iso_8601"]), ) for file in releaseNode]
-			release = Release(
-				version,
-				files[0]._uploadTime,
-				files,
-				project=project
-			)
-
-		asyncio_run(self.ParallelDownloadAdditionalReleaseInformation(project))
+	def DownloadProject(self, projectName: str, lazy: LazyLoaderState = LazyLoaderState.PartiallyLoaded) -> Project:
+		project = Project(projectName, "", index=self, lazy=lazy)
 
 		return project
-
-	async def ParallelDownloadAdditionalReleaseInformation(self, project: Project):
-		async def routine(session, release: Release):
-			if Parts.Postfix in release._version._parts:
-				pass
-
-			async with session.get(f"{release.Project.Name.lower()}/{release._version}/json") as response:
-				json = await response.json()
-				response.raise_for_status()
-
-				infoNode = json["info"]
-				if (extras := infoNode["provides_extra"]) is not None:
-					for extra in extras:
-						release._requirements[extra] = []
-
-				if (requirements := infoNode["requires_dist"]) is not None:
-					broken = []
-					for requirement in requirements:
-						req = Requirement(requirement)
-
-						# Handle requirements without an extra marker
-						if req.marker is None:
-							release._requirements[None].append(req)
-							continue
-
-						for extra in release._requirements.keys():
-							if extra is not None and req.marker.evaluate({"extra": extra}):
-								release._requirements[extra].append(req)
-								break
-						else:
-							broken.append(req)
-
-					if len(broken) > 0:
-						release._requirements[0] = broken
-
-		async with ClientSession(base_url=str(self._api), headers={"accept": "application/json"}) as session:
-			tasks = []
-			for release in project.Releases.values():
-				tasks.append(routine(session, release))
-
-			results = await asyncio_gather(*tasks, return_exceptions=True)
-			delList = []
-			for release, result in zip(project.Releases.values(), results):
-				if isinstance(result, Exception):
-					delList.append((release, result))
-
-			for release, ex in delList:
-				print(f"  Removing {release.Project._name} {release.Version} - {ex}")
-				del project.Releases[release.Version]
-
 
 	def __repr__(self) -> str:
 		return f"{self._name}"

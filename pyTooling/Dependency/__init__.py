@@ -253,7 +253,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			# 1. Identify all required packages based on current selection
 			requiredPackages: Set["Package"] = set()
 			for packageVersion in currentSolution.values():
-				requiredPackages.update(packageVersion._dependsOn.keys())
+				requiredPackages.update(packageVersion.DependsOn.keys())
 
 			# 2. Identify which required packages are missing from the solution
 			missingPackages = requiredPackages - currentSolution.keys()
@@ -271,10 +271,10 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			allowedVersions: Nullable[Set[SemanticVersion]] = None
 
 			for parentPackageVersion in currentSolution.values():
-				if targetPackage in parentPackageVersion._dependsOn:
+				if targetPackage in parentPackageVersion.DependsOn:
 					# Get the set of versions allowed by this specific parent
 					# (Keys of the inner dict are SemanticVersion objects)
-					parentConstraints = set(parentPackageVersion._dependsOn[targetPackage].keys())
+					parentConstraints = set(parentPackageVersion.DependsOn[targetPackage].keys())
 
 					if allowedVersions is None:
 						allowedVersions = parentConstraints
@@ -289,16 +289,16 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			# 5. Try candidates (sorted descending to prioritize latest)
 			# We convert the set to a list and sort it reverse
 			for version_key in sorted(list(allowedVersions), reverse=True):
-				candidate = targetPackage._versions[version_key]
+				candidate = targetPackage.Versions[version_key]
 
 				# 6. Check compatibility (reverse dependencies)
 				# Does the candidate depend on anything we have already selected?
 				# If so, does the candidate accept the version we already picked?
 				isCompatible = True
 				for existingPackage, existingPackageVersion in currentSolution.items():
-					if existingPackage in candidate._dependsOn:
+					if existingPackage in candidate.DependsOn:
 						# If candidate relies on 'existingPackage', check if 'existingPackageVersion' is in the allowed list
-						if existingPackageVersion._version not in candidate._dependsOn[existingPackage]:
+						if existingPackageVersion._version not in candidate.DependsOn[existingPackage]:
 							isCompatible = False
 							break
 
@@ -399,6 +399,10 @@ class Package(metaclass=ExtendedType, slots=True):
 		:returns: Available version dictionary.
 		"""
 		return self._versions
+
+	@readonly
+	def VersionCount(self) -> int:
+		return len(self._versions)
 
 	def SortVersions(self) -> None:
 		"""
@@ -504,6 +508,10 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		"""
 		return self._packages
 
+	@readonly
+	def PackageCount(self) -> int:
+		return len(self._packages)
+
 	def CreatePackage(self, packageName: str) -> Package:
 		"""
 		Create a new package in the package dependency graph.
@@ -558,6 +566,9 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		:returns: Number of packages.
 		"""
 		return len(self._packages)
+
+	def __iter__(self) -> Iterator[Package]:
+		return iter(self._packages.values())
 
 	def __getitem__(self, name: str) -> Package:
 		"""
@@ -676,6 +687,9 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		:returns: Number of packages.
 		"""
 		return len(self._storages)
+
+	def __iter__(self) -> Iterator[PackageStorage]:
+		return iter(self._storages.values())
 
 	def __getitem__(self, name: str) -> PackageStorage:
 		"""
