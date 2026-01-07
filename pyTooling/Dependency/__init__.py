@@ -432,7 +432,8 @@ class Package(metaclass=ExtendedType, slots=True):
 		if isinstance(version, str):
 			version = SemanticVersion.Parse(version)
 		elif not isinstance(version, SemanticVersion):
-			raise ToolingException()
+			# TODO: raise proper type error
+			raise TypeError()
 
 		return self._versions[version]
 

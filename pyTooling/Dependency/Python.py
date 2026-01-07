@@ -217,18 +217,18 @@ class Release(PackageVersion, LazyLoadableMixin):
 		project:      Nullable["Project"] = None,
 		lazy:         LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
-		super().__init__(version, project, timestamp)
-		LazyLoadableMixin.__init__(self, lazy)
-
-		self._files = [file for file in files] if files is not None else []
-		self._requirements = {k: v for k, v in requirements} if requirements is not None else {None: []}
-
 		if project is not None and (storage := project._storage) is not None:
 			self._api =     storage._api
 			self._session = storage._session
 		else:
 			self._api =     None
 			self._session = None
+
+		super().__init__(version, project, timestamp)
+		LazyLoadableMixin.__init__(self, lazy)
+
+		self._files = [file for file in files] if files is not None else []
+		self._requirements = {k: v for k, v in requirements} if requirements is not None else {None: []}
 
 	def __lazy_loader__(self, targetLevel: LazyLoaderState) -> None:
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
@@ -310,7 +310,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 	def PostProcess(self) -> None:
 		index: PythonPackageIndex = self._package._storage
 		for requirement in self._requirements[None]:
-			package = index.DownloadProject(requirement.name, False)
+			package = index.DownloadProject(requirement.name)
 
 			for release in package:
 				if str(release._version) in requirement.specifier:
@@ -352,16 +352,15 @@ class Project(Package, LazyLoadableMixin):
 		super().__init__(name, storage=index)
 		LazyLoadableMixin.__init__(self, lazy)
 
-		if isinstance(url, str):
-			url = URL.Parse(url)
-		elif not isinstance(url, URL):
-			ex = TypeError("Parameter 'url' is not of type 'URL'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
-			raise ex
-
-		self._url = url
+		# if isinstance(url, str):
+		# 	url = URL.Parse(url)
+		# elif not isinstance(url, URL):
+		# 	ex = TypeError("Parameter 'url' is not of type 'URL'.")
+		# 	ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
+		# 	raise ex
+		#
+		# self._url = url
 		# self._releases = {release.Version: release for release in sorted(releases, key=lambda r: r.Version)} if releases is not None else {}
-
 
 	def __lazy_loader__(self, targetLevel: LazyLoaderState) -> None:
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
@@ -373,6 +372,7 @@ class Project(Package, LazyLoadableMixin):
 	def PackageIndex(self) -> "PythonPackageIndex":
 		return self._storage
 
+	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def URL(self) -> URL:
 		return self._url
