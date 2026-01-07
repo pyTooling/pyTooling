@@ -31,6 +31,8 @@
 """
 Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
+from sys                   import version_info
+from typing                import Any
 from unittest              import TestCase
 
 from pyTooling.MetaClasses import ExtendedType
@@ -43,6 +45,14 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class WithoutSlots(TestCase):
+	# WORKAROUND: for Python versions before 3.14
+	if version_info < (3, 14):
+		def assertHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
+			self.assertTrue(hasattr(obj, attr))
+
+		def assertNotHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
+			self.assertFalse(hasattr(obj, attr))
+
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType):
 			pass
@@ -488,6 +498,14 @@ class WithoutSlots(TestCase):
 
 
 class WithSlots(TestCase):
+	# WORKAROUND: for Python versions before 3.14
+	if version_info < (3, 14):
+		def assertHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
+			self.assertTrue(hasattr(obj, attr))
+
+		def assertNotHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
+			self.assertFalse(hasattr(obj, attr))
+
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			pass
@@ -533,6 +551,14 @@ class WithSlots(TestCase):
 
 
 class Mixin(TestCase):
+	# WORKAROUND: for Python versions before 3.14
+	if version_info < (3, 14):
+		def assertHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
+			self.assertTrue(hasattr(obj, attr))
+
+		def assertNotHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
+			self.assertFalse(hasattr(obj, attr))
+
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType, mixin=True):
 			pass

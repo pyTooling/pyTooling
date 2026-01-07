@@ -524,10 +524,10 @@ class ExtendedType(type):
 				def __setstate__(self, state: Dict[str, Any]) -> None:
 					if self.__allSlots__ !=  (slots := set(state.keys())):
 						if len(diff := self.__allSlots__.difference(slots)) > 0:
-							raise ExtendedTypeError(f"Missing fields in parameter 'state': '{"', '".join(diff)}'")
+							raise ExtendedTypeError(f"""Missing fields in parameter 'state': '{"', '".join(diff)}'""")     # WORKAROUND: Python <3.12
 						else:
 							diff = slots.difference(self.__allSlots__)
-							raise ExtendedTypeError(f"Unexpected fields in parameter 'state': '{"', '".join(diff)}'")
+							raise ExtendedTypeError(f"""Unexpected fields in parameter 'state': '{"', '".join(diff)}'""")  # WORKAROUND: Python <3.12
 
 					for slotName, value in state.items():
 						setattr(self, slotName, value)
