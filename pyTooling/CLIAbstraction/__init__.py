@@ -37,7 +37,7 @@ from os         import environ as os_environ
 from pathlib    import Path
 from platform   import system
 from shutil     import which as shutil_which
-from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut
+from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut, TimeoutExpired
 from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any, Mapping, Iterable
 
 
@@ -388,6 +388,8 @@ class Executable(Program):  # (ILogable):
 	_workingDirectory: Nullable[Path]              #: Path to the working directory
 	_environment:      Nullable[Environment]       #: Environment to use when executing.
 	_process:          Nullable[Subprocess_Popen]  #: Reference to the running process.
+	_exitCode:         Nullable[int]               #: The child's process exit code.
+	_killed:           Nullable[bool]              #: True, if the child-process got killed (e.g. by a timeout).
 	_iterator:         Nullable[Iterator]          #: Iterator for reading STDOUT.
 
 	def __init__(
@@ -411,7 +413,9 @@ class Executable(Program):  # (ILogable):
 
 		self._workingDirectory = None
 		self._environment = environment
-		self._process = None
+		self._process =  None
+		self._exitCode = None
+		self._killed =   None
 		self._iterator = None
 
 	def StartProcess(self, environment: Nullable[Environment] = None) -> None:
@@ -487,26 +491,84 @@ class Executable(Program):  # (ILogable):
 		# finally:
 			# self._process.terminate()
 
-	def Terminate(self) -> None:
+	def Wait(self, timeout: Nullable[float] = None, kill: bool = False) -> Nullable[int]:
+		"""
+		Wait on the child-process with an optional timeout.
+
+		When the timeout period exceeds, the child-process can be forcefully terminated.
+
+		:param timeout:                  Optional, timeout in seconds. |br|
+		                                 Default: infinitely wait on the child-process.
+		:param kill:                     If true, terminate (kill) the child-process if it didn't terminate by itself within
+		                                 the timeout period.
+		:returns:                        ``None`` when the child-process is still running, otherwise the exit code.
+		:raises CLIAbstractionException: When the child-process is not started yet.
+
+		.. topic:: Usecases
+
+		   :pycode:`executable.Wait()`
+		     Infinitely wait on the child-process. When the child-process terminates by itself, the exit code is returned.
+
+		     This is a blocking call.
+
+		   :pycode:`executable.Wait(timeout=5.4)`
+		     Wait for a specified time on the child-process' termination. If it terminated by itself within the specified
+		     timeout period, the exit code is returned; otherwise ``None``.
+
+		     Thus :pycode:`.Wait(timeout=0.0)` returning ``None`` indicates a running process.
+
+		   :pycode:`executable.Wait(timeout=20.0, kill=True)`
+		     Wait for a specified time on the child-process' termination. If it terminated by itself within the specified
+		     timeout period, the exit code is returned; otherwise the child-process gets killed and it's exit code is returned.
+
+ 		   :pycode:`executable.Wait(timeout=0.0, kill=True)`
+ 		     Kill immediately.
+
+		.. seealso::
+
+		   :meth:`Terminate` - Terminate the child-process.
+		"""
+		if self._process is None:
+			raise CLIAbstractionException(f"Process not yet started.")
+
+		try:
+			self._exitCode = self._process.wait(timeout=timeout)
+		except TimeoutExpired:
+			# when timed out, the process isn't terminated/killed automatically
+			if kill:
+				self._killed = True
+				self._process.terminate()
+				# After killing, wait to clean up the "zombie" process
+				self._exitCode = self._process.wait()
+
+		return self._exitCode
+
+	def Terminate(self) -> Nullable[int]:
 		"""
 		Terminate the child-process.
+
+		:returns:                        The child-process' exit code.
+		:raises CLIAbstractionException: When the child-process is not started yet.
+
+		.. seealso::
+
+		   :meth:`Wait` - Wait on the child-process with an optional timeout.
 		"""
-		self._process.terminate()
+		return self.Wait(timeout=0.0, kill=True)
 
 	@readonly
 	def ExitCode(self) -> int:
 		"""
-		Read-only property returning the child-process' exit code.
+		Read-only property accessing the child-process' exit code.
 
-		:returns:                        Child-process' exit code.
-		:raises CLIAbstractionException: When the child-process was not started.
+		:returns: Child-process' exit code or ``None`` if it's still running.
+
+		.. seealso::
+
+		   * :meth:`Wait` - Wait on the child-process with an optional timeout.
+		   * :meth:`Terminate` - Terminate the child-process.
 		"""
-		if self._process is None:
-			raise CLIAbstractionException(f"Process not yet started, thus no exit code.")
-
-		# FIXME: check if process is still running
-
-		return self._process.returncode
+		return self._exitCode
 
 	# This is TCL specific
 	# def ReadUntilBoundary(self, indent=0):
