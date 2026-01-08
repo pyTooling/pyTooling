@@ -118,7 +118,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	Therefore, nodes can be connected to parent nodes or a parent node can add child nodes. This allows to construct a
 	tree top-down or bottom-up.
 
-	.. hint:: The top-down construction should be preferred, because it's slightly faster.
+	.. hint::
+
+	   The top-down construction should be preferred, because it's slightly faster.
 
 	Each tree uses the **root** node (a.k.a. tree-representative) to store some per-tree data structures. E.g. a list of
 	all IDs in a tree. For easy and quick access to such data structures, each sibling node contains a reference to the
@@ -216,6 +218,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._parent = parent
 			self._level = parent._level + 1
 			self._nodesWithID = None
+			self._nodesWithoutID = None
 
 			if nodeID is None:
 				self._root._nodesWithoutID.append(self)
@@ -534,7 +537,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			self._root._nodesWithoutID.append(node)
 			node._root = self._root
 
-	def AddChild(self, child: 'Node'):
+	def AddChild(self, child: 'Node') -> None:
 		"""
 		Add a child node to the current node of the tree.
 
@@ -569,7 +572,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		child._nodesWithID = child._nodesWithoutID = None
 		self._children.append(child)
 
-	def AddChildren(self, children: Iterable['Node']):
+	def AddChildren(self, children: Iterable['Node']) -> None:
 		"""
 		Add multiple children nodes to the current node of the tree.
 
@@ -748,7 +751,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield child
 			yield from child.GetDescendants()
 
-	def GetRelatives(self):
+	def GetRelatives(self) -> Generator['Node', None, None]:
 		"""
 		A generator to iterate all relatives (all siblings and all their descendants) of the current node.
 
@@ -758,7 +761,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield node
 			yield from node.GetDescendants()
 
-	def GetLeftRelatives(self):
+	def GetLeftRelatives(self) -> Generator['Node', None, None]:
 		"""
 		A generator to iterate all left relatives (left siblings and all their descendants) of the current node.
 
@@ -768,7 +771,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			yield node
 			yield from node.GetDescendants()
 
-	def GetRightRelatives(self):
+	def GetRightRelatives(self) -> Generator['Node', None, None]:
 		"""
 		A generator to iterate all right relatives (right siblings and all their descendants) of the current node.
 

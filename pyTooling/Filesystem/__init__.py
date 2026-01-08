@@ -64,7 +64,10 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		raise ex
 
 
+__all__ = ["_ParentType"]
+
 _ParentType = TypeVar("_ParentType", bound="Element")
+"""The type variable for a parent reference."""
 
 
 @export
@@ -86,16 +89,34 @@ class NodeKind(Enum):
 
 @export
 class Base(metaclass=ExtendedType, slots=True):
+	"""
+	Base-class for all filesystem elements in :mod:`pyTooling.Filesystem`.
+
+	It implements a size and a reference to the root element of the filesystem.
+	"""
 	_root:   Nullable["Root"]  #: Reference to the root of the filesystem statistics scope.
 	_size:   Nullable[int]     #: Actual or aggregated size of the filesystem element.
 
 	def __init__(
 		self,
-		root: Nullable["Root"],
 		size: Nullable[int],
+		root: Nullable["Root"]
 	) -> None:
-		self._root = root
+		"""
+		Initialize the base-class with filesystem element size and root reference.
+
+		:param size: Optional size of the element.
+		:param root: Optional reference to the filesystem root element.
+		"""
+		if size is None:
+			pass
+		elif not isinstance(size, int):
+			ex = TypeError("Parameter 'size' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(size)}'.")
+			raise ex
+
 		self._size = size
+		self._root = root
 
 	@property
 	def Root(self) -> Nullable["Root"]:
@@ -113,7 +134,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Size(self) -> int:
 		"""
-		Read-only property to access the elements size in Bytes.
+		Read-only property to access the element's size in Bytes.
 
 		:returns:                    Size in Bytes.
 		:raises FilesystemException: If size is not computed, yet.
@@ -123,26 +144,50 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		return self._size
 
-	# @abstractmethod
+	# FIXME: @abstractmethod
 	def ToTree(self) -> Node:
-		pass
+		"""
+		Convert a filesystem element to a node in :mod:`pyTooling.Tree`.
+
+		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
+		will be stored in the node's key-value store.
+
+		:returns: A tree's node referencing this filesystem element.
+		"""
+		raise NotImplementedError()
 
 
 @export
 class Element(Base, Generic[_ParentType]):
+	"""
+	Base-class for all named elements within a filesystem.
+
+	It adds a name, parent reference and list of symbolic-link sources.
+
+	.. hint::
+
+	   Symbolic link sources are reverse references describing which symbolic links point to this element.
+	"""
 	_name:        str                   #: Name of the filesystem element.
 	_parent:      _ParentType           #: Reference to the filesystem element's parent (:class:`Directory`)
 	_linkSources: List["SymbolicLink"]  #: A list of symbolic links pointing to this filesystem element.
 
 	def __init__(
 		self,
-		name: str,
-		size: Nullable[int] = None,
+		name:   str,
+		size:   Nullable[int] = None,
 		parent: Nullable[_ParentType] = None
 	) -> None:
-		root = None # if parent is None else parent._root
+		"""
+		Initialize the element base-class with name, size and parent reference.
 
-		super().__init__(root, size)
+		:param name:   Name of the element.
+		:param size:   Optional size of the element.
+		:param parent: Optional parent reference.
+		"""
+		root = None # FIXME: if parent is None else parent._root
+
+		super().__init__(size, root)
 
 		self._parent = parent
 		self._name = name
@@ -150,6 +195,11 @@ class Element(Base, Generic[_ParentType]):
 
 	@property
 	def Parent(self) -> _ParentType:
+		"""
+		Property to access the element's parent.
+
+		:returns: Parent element.
+		"""
 		return self._parent
 
 	@Parent.setter
@@ -162,7 +212,7 @@ class Element(Base, Generic[_ParentType]):
 	@readonly
 	def Name(self) -> str:
 		"""
-		Read-only property to access the elements name.
+		Read-only property to access the element's name.
 
 		:returns: Element name.
 		"""
@@ -173,13 +223,23 @@ class Element(Base, Generic[_ParentType]):
 		raise NotImplemented(f"Property 'Path' is abstract.")
 
 	def AddLinkSources(self, source: "SymbolicLink") -> None:
+		"""
+		Add a link source of a symbolic link to the named element (reverse reference).
+
+		:param source: The referenced symbolic link.
+		"""
+		if not isinstance(source, SymbolicLink):
+			ex = TypeError("Parameter 'source' is not of type 'SymbolicLink'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
+			raise ex
+
 		self._linkSources.append(source)
 
 
 @export
 class Directory(Element["Directory"]):
 	"""
-	A **directory** represents a directory in the filesystem contains subdirectories, regular files and symbolic links.
+	A **directory** represents a directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 
 	While scanning for subelements, the directory is populated with elements. Every file object added, gets registered in
 	the filesystems :class:`Root` for deduplication. In case a file identifier already exists, the found filename will
@@ -206,6 +266,13 @@ class Directory(Element["Directory"]):
 		collectSubdirectories: bool = False,
 		parent:                Nullable["Directory"] = None
 	) -> None:
+		"""
+		Initialize the directory with name and parent reference.
+
+		:param name:                  Name of the element.
+		:param collectSubdirectories: If true, collect subdirectory statistics.
+		:param parent:                Optional parent reference.
+		"""
 		super().__init__(name, None, parent)
 
 		self._path = None
@@ -226,6 +293,9 @@ class Directory(Element["Directory"]):
 			self._collectSubdirectories()
 
 	def _collectSubdirectories(self) -> None:
+		"""
+		Helper method for scanning subdirectories and aggregating found element sizes therein.
+		"""
 		with Stopwatch() as sw1:
 			self._scanSubdirectories()
 
@@ -236,6 +306,13 @@ class Directory(Element["Directory"]):
 		self._aggregateDuration = sw2.Duration
 
 	def _scanSubdirectories(self) -> None:
+		"""
+		Helper method for scanning subdirectories (recursively) and building a
+		:class:`Directory`-:class:`Filename`-:class:`File` object tree.
+
+		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
+		storage object is assumed.
+		"""
 		try:
 			items = scandir(directoryPath := self.Path)
 		except PermissionError as ex:
@@ -631,6 +708,14 @@ class Directory(Element["Directory"]):
 
 @export
 class Filename(Element[Directory]):
+	"""
+	Represents a filename in the filesystem, but not the file storage object (:class:`File`).
+
+	.. hint::
+
+	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
+	   object.
+	"""
 	_file: Nullable["File"]
 
 	def __init__(
@@ -639,6 +724,13 @@ class Filename(Element[Directory]):
 		file: Nullable["File"] = None,
 		parent: Nullable[Directory] = None
 	) -> None:
+		"""
+		Initialize the filename with name, file (storage) object and parent reference.
+
+		:param name:   Name of the file.
+		:param size:   Optional file (storage) object.
+		:param parent: Optional parent reference.
+		"""
 		super().__init__(name, None, parent)
 
 		if file is None:
@@ -837,6 +929,9 @@ class SymbolicLink(Element[Directory]):
 
 @export
 class Root(Directory):
+	"""
+	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
+	"""
 	_ids:  Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
 
 	def __init__(
@@ -845,9 +940,9 @@ class Root(Directory):
 		collectSubdirectories: bool = True
 	) -> None:
 		if rootDirectory is None:
-			raise ValueError(f"Parameter 'path' is None.")
+			raise ValueError(f"Parameter 'rootDirectory' is None.")
 		elif not isinstance(rootDirectory, Path):
-			raise TypeError(f"Parameter 'path' is not of type Path.")
+			raise TypeError(f"Parameter 'rootDirectory' is not of type 'Path'.")
 		elif not rootDirectory.exists():
 			raise ToolingException(f"Path '{rootDirectory}' doesn't exist.") from FileNotFoundError(rootDirectory)
 
@@ -934,23 +1029,45 @@ class Root(Directory):
 
 @export
 class File(Base):
-	_id: int
-	_parents: List[Filename]
+	"""
+	A **File** represents a file storage object in the filesystem, which is accessible by one or more :class:`Filename` objects.
+
+	Each file has an internal id, which is associated to a unique ID within the host's filesystem.
+	"""
+	_id:      int             #: Unique (host internal) file object ID)
+	_parents: List[Filename]  #: List of reverse references to :class:`Filename` objects.
 
 	def __init__(
 		self,
-		id: int,
-		size: int,
+		id:     int,
+		size:   int,
 		parent: Nullable[Filename] = None
 	) -> None:
+		"""
+		Initialize the File storage object with an ID, size and parent reference.
+
+		:param id:     Unique ID of the file object.
+		:param size:   Size of the file object.
+		:param parent: Optional parent reference.
+		"""
+		if not isinstance(id, int):
+			ex = TypeError("Parameter 'id' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(id)}'.")
+			raise ex
+
 		self._id = id
+
 		if parent is None:
-			super().__init__(None, size)
+			super().__init__(size, None)
 			self._parents = []
-		else:
-			super().__init__(parent._root, size)
+		elif isinstance(parent, Filename):
+			super().__init__(size, parent._root)
 			self._parents = [parent]
 			parent._file = self
+		else:
+			ex = TypeError("Parameter 'parent' is not of type 'Filename'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 
 	@readonly
 	def ID(self) -> int:
@@ -964,18 +1081,27 @@ class File(Base):
 	@readonly
 	def Parents(self) -> List[Filename]:
 		"""
-		Read-only property to access the list of filenames using the file object.
+		Read-only property to access the list of filenames using the same file storage object.
 
 		.. hint::
 
 		   This allows to check if a file object has multiple filenames a.k.a hardlinks.
 
-		:returns: List of filenames for the file object.
+		:returns: List of filenames for the file storage object.
 		"""
 		return self._parents
 
 	def AddParent(self, file: Filename) -> None:
-		if file._file is not None:
+		"""
+		Add another parent reference to a :class:`Filename`.
+
+		:param file: Reference to a filename object.
+		"""
+		if not isinstance(file, Filename):
+			ex = TypeError("Parameter 'file' is not of type 'Filename'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+			raise ex
+		elif file._file is not None:
 			raise ToolingException(f"Filename is already referencing an other file object ({file._file._id}).")
 
 		self._parents.append(file)

@@ -31,13 +31,15 @@
 """
 Common types, helper functions and classes.
 
-.. hint:: See :ref:`high-level help <COMMON>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <COMMON>` for explanations and usage examples.
 """
 __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2025, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.8.0"
+__version__ =       "8.9.0"
 __keywords__ =      [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",

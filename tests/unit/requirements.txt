@@ -1,3 +1,21 @@
--r ../requirements.txt
+-r ../../requirements.txt
 
+# Coverage collection
+Coverage ~= 7.13
+
+# Test Runner
+pytest ~= 9.0
+pytest-cov ~= 7.0
+
+# For pyTooling.Dependency.Python testing
+aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
+requests >= 2.32
+
+# For pyTooling.Configuration.YAML testing
+ruamel.yaml ~= 0.18.0
+
+# For pyTooling.Packaging testing
 setuptools >= 80.0
+
+# For pyTooling.TerminalUI testing
+colorama ~= 0.4.6

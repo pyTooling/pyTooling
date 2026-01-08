@@ -393,35 +393,44 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
 		"""
-		from traceback import print_tb, walk_tb
+		from traceback import format_tb, walk_tb
 
 		frame, sourceLine = lastItem(walk_tb(ex.__traceback__))
 		filename = frame.f_code.co_filename
 		funcName = frame.f_code.co_name
 
-		self.WriteLineToStdErr(dedent(f"""\
-			{{RED}}[FATAL] An unknown or unhandled exception reached the topmost exception handler!{{NOCOLOR}}
-			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{RED}}{ex.__class__.__name__}{{NOCOLOR}}
-			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {ex!s}
-			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
-			""").format(indent=self.INDENT, **self.Foreground))
+		message  = f"{{RED}}[FATAL] An unknown or unhandled exception reached the topmost exception handler!{{NOCOLOR}}\n"
+		message += f"{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{ex.__class__.__name__}{{NOCOLOR}}\n"
+		message += f"{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}\n"
 
-		if ex.__cause__ is not None:
-			self.WriteLineToStdErr(dedent(f"""\
-				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{RED}}{ex.__cause__.__class__.__name__}{{NOCOLOR}}
-				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {ex.__cause__!s}\
-				""").format(indent2=self.INDENT*2, **self.Foreground))
+		if hasattr(ex, "__notes__") and len(ex.__notes__) > 0:
+			note = next(iterator := iter(ex.__notes__))
+			message += f"{{indent}}{{YELLOW}}Notes:{{NOCOLOR}}                {{DARK_CYAN}}{note}{{NOCOLOR}}\n"
+			for note in iterator:
+				message += f"{{indent}}                      {{DARK_CYAN}}{note}{{NOCOLOR}}\n"
 
-		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
-		print_tb(ex.__traceback__, file=self._stderr)
-		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
+
+		if (ex2 := ex.__cause__) is not None:
+			message += f"{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{ex2.__class__.__name__}{{NOCOLOR}}\n"
+			message += f"{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {ex2!s}{{NOCOLOR}}\n"
+
+			if hasattr(ex2, "__notes__") and len(ex2.__notes__) > 0:
+				note = next(iterator := iter(ex2.__notes__))
+				message += f"{{indent2}}{{DARK_YELLOW}}Notes:{{NOCOLOR}}              {{DARK_CYAN}}{note}{{NOCOLOR}}\n"
+				for note in iterator:
+					message += f"{{indent2}}                    {{DARK_CYAN}}{note}{{NOCOLOR}}\n"
+
+		message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}\n"
+		for line in format_tb(ex.__traceback__):
+			message += f"{line.replace('{', '{{').replace('}', '}}')}"
+		message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		if self.ISSUE_TRACKER_URL is not None:
-			self.WriteLineToStdErr(dedent(f"""\
-				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
-				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
-				""").format(indent=self.INDENT, **self.Foreground))
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
 	def PrintNotImplementedError(self, ex: NotImplementedError) -> NoReturn:
@@ -432,20 +441,23 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		filename = frame.f_code.co_filename
 		funcName = frame.f_code.co_name
 
-		self.WriteLineToStdErr(dedent(f"""\
-			{{RED}}[NOT IMPLEMENTED] An unimplemented function or abstract method was called!{{NOCOLOR}}
-			{{indent}}{{YELLOW}}Function or method:{{NOCOLOR}}   {{RED}}{funcName}(...){{NOCOLOR}}
-			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {ex!s}
-			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
-			""").format(indent=self.INDENT, **self.Foreground))
+		message  = f"{{RED}}[NOT IMPLEMENTED] An unimplemented function or abstract method was called!{{NOCOLOR}}\n"
+		message += f"{{indent}}{{YELLOW}}Function or method:{{NOCOLOR}}   {{DARK_RED}}{funcName}(...){{NOCOLOR}}\n"
+		message += f"{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}\n"
+
+		if hasattr(ex, "__notes__") and len(ex.__notes__) > 0:
+			note = next(iterator := iter(ex.__notes__))
+			message += f"{{indent}}{{YELLOW}}Notes:{{NOCOLOR}}                {{DARK_CYAN}}{note}{{NOCOLOR}}\n"
+			for note in iterator:
+				message += f"{{indent}}                      {{DARK_CYAN}}{note}{{NOCOLOR}}\n"
+
+		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
 
 		if self.ISSUE_TRACKER_URL is not None:
-			self.WriteLineToStdErr(dedent(f"""\
-				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}
-				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
-				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
-				""").format(indent=self.INDENT, **self.Foreground))
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
 		self.Exit(self.NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE)
 
 	def PrintExceptionBase(self, ex: Exception) -> NoReturn:
@@ -464,15 +476,15 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		self.WriteLineToStdErr(dedent(f"""\
 			{{RED}}[FATAL] A known but unhandled exception reached the topmost exception handler!{{NOCOLOR}}
-			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{RED}}{ex.__class__.__name__}{{NOCOLOR}}
-			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {ex!s}
+			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{ex.__class__.__name__}{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
 			""").format(indent=self.INDENT, **self.Foreground))
 
 		if ex.__cause__ is not None:
 			self.WriteLineToStdErr(dedent(f"""\
-				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{RED}}{ex.__cause__.__class__.__name__}{{NOCOLOR}}
-				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {ex.__cause__!s}\
+				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{ex.__cause__.__class__.__name__}{{NOCOLOR}}
+				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {{RED}}{ex.__cause__!s}{{NOCOLOR}}\
 				""").format(indent2=self.INDENT * 2, **self.Foreground))
 
 		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
@@ -505,7 +517,7 @@ class Severity(Enum):
 	Debug =      2    #: Debug messages
 	All =        0    #: All messages
 
-	def __hash__(self):
+	def __hash__(self) -> int:
 		return hash(self.name)
 
 	def __eq__(self, other: Any) -> bool:
@@ -836,7 +848,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._criticalWarningCount = 0
 		self._warningCount =         0
 
-	def __InitializeLogLevelRouting(self, mode: Mode):
+	def __InitializeLogLevelRouting(self, mode: Mode) -> None:
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
 			for severity in Severity:
 				if severity >= Severity.Warning and severity != Severity.Quiet:
@@ -897,7 +909,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"License:   {license}")
 		self.WriteNormal(f"Version:   {version}")
 
-	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True):
+	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True) -> None:
 		self._verbose =       True if debug else verbose
 		self._debug =         debug
 		self._quiet =         quiet

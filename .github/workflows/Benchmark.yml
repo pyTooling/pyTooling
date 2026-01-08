@@ -1,22 +1,22 @@
 name: Benchmark
 
 on:
-  push:
+#  push:
   workflow_dispatch:
 
 jobs:
   ConfigParams:
-    uses: pyTooling/Actions/.github/workflows/ExtractConfiguration.yml@r6
+    uses: pyTooling/Actions/.github/workflows/ExtractConfiguration.yml@r7
 
   BenchmarkingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r6
+    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r7
     with:
       name: Benchmark
       python_version_list: "3.12 3.13 3.14 pypy-3.11"
       pipeline-delay: 240
 
   Benchmarking:
-    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r6
+    uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r7
     needs:
       - ConfigParams
       - BenchmarkingParams
@@ -29,7 +29,7 @@ jobs:
       unittest_xml_artifact: 'pyTooling-BenchmarkTestReportSummary-XML'
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r6
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
     needs:
       - ConfigParams
       - Benchmarking

@@ -35,7 +35,7 @@ Testcase for operating system program ``mkdir``.
 :license: Apache License, Version 2.0
 """
 from pathlib      import Path
-from typing       import Any
+from typing       import Any, Self
 
 from pytest       import mark
 from sys          import platform as sys_platform
@@ -54,7 +54,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Git(Program, GitArgumentsMixin):
-	def __new__(cls, *args: Any, **kwargs: Any):
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
 		cls._executableNames = {
 			"Darwin":  "git",
 			"FreeBSD": "git",

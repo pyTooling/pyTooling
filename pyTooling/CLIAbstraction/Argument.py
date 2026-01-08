@@ -36,7 +36,7 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable, Self
 
 try:
 	from pyTooling.Decorators  import export, readonly
@@ -83,17 +83,28 @@ class CommandLineArgument:
 
 	_pattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any):
-		"""This method is called when a class is derived.
+	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
 
-		:param args: Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
-		:param kwargs: Any keyword argument.
+		:param args:    Any positional arguments.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``None``.
+		:param kwargs:  Any keyword argument.
 		"""
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is CommandLineArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 
@@ -168,7 +179,7 @@ class ExecutableArgument(CommandLineArgument):
 		return self._executable
 
 	@Executable.setter
-	def Executable(self, value):
+	def Executable(self, value: Path) -> None:
 		"""
 		Set the internal path to the wrapped executable.
 
@@ -208,12 +219,13 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 	Represents a delimiter symbol like ``--``.
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "--", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. Default: ``"--"``.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"--"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -246,20 +258,30 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	_name: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the argument.
-		:param pattern: This pattern is used to format an argument.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._name = name
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is NamedArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -305,12 +327,13 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 
 	_value: ValueT
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -375,13 +398,14 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	Base-class for all command line arguments with a name and a value.
 	"""
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}={1}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the argument.
-		:param pattern: This pattern is used to format an argument.
+		:param name:    Name of the CLI argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["name"] = name
@@ -432,13 +456,33 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 	_valuePattern: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:         Any positional arguments.
+		:param name:         Name of the CLI argument.
+		:param pattern:      This pattern is used to format the CLI argument name. |br|
+		                     Default: ``"{0}"``.
+		:param valuePattern: This pattern is used to format the value. |br|
+		                     Default: ``"{0}"``.
+		:param kwargs:       Any keyword argument.
+		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._valuePattern = valuePattern
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is NamedTupledArgument:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -496,12 +540,13 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 	A list of strings is available as :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`.
 	"""
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument.
+		:param pattern: This pattern is used to format an argument. |br|
+		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
@@ -539,7 +584,7 @@ class StringListArgument(ValuedArgument):
 		return self._values
 
 	@Value.setter
-	def Value(self, value: Iterable[str]):
+	def Value(self, value: Iterable[str]) -> None:
 		"""
 		Overwrite all elements in the internal list of str objects.
 
@@ -616,7 +661,7 @@ class PathArgument(CommandLineArgument):
 		return self._path
 
 	@Value.setter
-	def Value(self, value: Path):
+	def Value(self, value: Path) -> None:
 		"""
 		Set the internal path object.
 
@@ -684,7 +729,7 @@ class PathListArgument(CommandLineArgument):
 		return self._paths
 
 	@Value.setter
-	def Value(self, value: Iterable[Path]):
+	def Value(self, value: Iterable[Path]) -> None:
 		"""
 		Overwrite all elements in the internal list of path objects.
 

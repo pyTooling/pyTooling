@@ -31,7 +31,9 @@
 """
 Auxiliary classes to implement call-by-reference.
 
-.. hint:: See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """
 from decimal       import Decimal
 from typing        import Any, Generic, TypeVar, Optional as Nullable
@@ -514,7 +516,7 @@ class CallByRefIntParam(CallByRefParam):
 		:returns: The wrapped value."""
 		return self.Value
 
-	def __float__(self):
+	def __float__(self) -> float:
 		"""
 		Type conversion to :class:`float`.
 

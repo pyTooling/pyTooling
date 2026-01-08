@@ -163,7 +163,7 @@ class Operations(TestCase):
 
 
 class Formatting(TestCase):
-	def test_NoName(self):
+	def test_NoName(self) -> None:
 		print()
 		sw = Stopwatch()
 
@@ -172,7 +172,7 @@ class Formatting(TestCase):
 		print(result)
 		self.assertEqual("Stopwatch: not started", result)
 
-	def test_WithName(self):
+	def test_WithName(self) -> None:
 		print()
 		sw = Stopwatch("foo")
 
@@ -181,7 +181,7 @@ class Formatting(TestCase):
 		print(result)
 		self.assertEqual("Stopwatch foo: not started", result)
 
-	def test_WithName_Running(self):
+	def test_WithName_Running(self) -> None:
 		print()
 		sw = Stopwatch("foo")
 		sw.Start()
@@ -193,7 +193,7 @@ class Formatting(TestCase):
 		print(result)
 		self.assertRegex(result, r"Stopwatch foo \(running\): ")
 
-	def test_WithName_Paused(self):
+	def test_WithName_Paused(self) -> None:
 		print()
 		sw = Stopwatch("foo")
 		sw.Start()
@@ -206,7 +206,7 @@ class Formatting(TestCase):
 		print(result)
 		self.assertRegex(result, r"Stopwatch foo \(paused\): ")
 
-	def test_WithName_Resumed(self):
+	def test_WithName_Resumed(self) -> None:
 		print()
 		sw = Stopwatch("foo")
 		sw.Start()
@@ -220,7 +220,7 @@ class Formatting(TestCase):
 		print(result)
 		self.assertRegex(result, r"Stopwatch foo \(running\): ")
 
-	def test_WithName_Stopped(self):
+	def test_WithName_Stopped(self) -> None:
 		print()
 		sw = Stopwatch("foo")
 		sw.Start()

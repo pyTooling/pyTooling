@@ -31,7 +31,9 @@
 """
 Implementation of semantic and date versioning version-numbers.
 
-.. hint:: See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
 """
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
@@ -88,7 +90,7 @@ class ReleaseLevel(Enum):
 	Beta =             -40  #:
 	Alpha =            -50  #:
 
-	def __eq__(self, other: Any):
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is equal to the second operand.
 
@@ -106,7 +108,7 @@ class ReleaseLevel(Enum):
 
 		return self is other
 
-	def __ne__(self, other: Any):
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is unequal to the second operand.
 
@@ -124,7 +126,7 @@ class ReleaseLevel(Enum):
 
 		return self is not other
 
-	def __lt__(self, other: Any):
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is less than the second operand.
 
@@ -142,7 +144,7 @@ class ReleaseLevel(Enum):
 
 		return self.value < other.value
 
-	def __le__(self, other: Any):
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is less than or equal the second operand.
 
@@ -160,7 +162,7 @@ class ReleaseLevel(Enum):
 
 		return self.value <= other.value
 
-	def __gt__(self, other: Any):
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is greater than the second operand.
 
@@ -178,7 +180,7 @@ class ReleaseLevel(Enum):
 
 		return self.value > other.value
 
-	def __ge__(self, other: Any):
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two release levels if the level is greater than or equal the second operand.
 
@@ -979,7 +981,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by %= operator.")
+			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >> operator.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -1090,10 +1092,11 @@ class SemanticVersion(Version):
 		* ``rev|REV`` - revision
 
 		:param versionString: The version string to parse.
+		:param validator:     Optional, a validation function.
 		:returns:             An object representing a semantic version.
-		:raises TypeError:    If parameter ``other`` is not a string.
-		:raises ValueError:   If parameter ``other`` is None.
-		:raises ValueError:   If parameter ``other`` is empty.
+		:raises TypeError:    When parameter ``versionString`` is not a string.
+		:raises ValueError:   When parameter ``versionString`` is None.
+		:raises ValueError:   When parameter ``versionString`` is empty.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1101,18 +1104,16 @@ class SemanticVersion(Version):
 			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
-
-		versionString = versionString.strip()
-		if versionString == "":
+		elif (versionString := versionString.strip()) == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 
-		match = cls._PATTERN.match(versionString)
-		if match is None:
+		if (match := cls._PATTERN.match(versionString)) is None:
 			raise ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
 			if value is None or value == "":
 				return None
+
 			try:
 				return int(value)
 			except ValueError as ex:  # pragma: no cover
@@ -1157,8 +1158,10 @@ class SemanticVersion(Version):
 			# hash=match["hash"],
 			flags=Flags.Clean
 		)
+
 		if validator is not None and not validator(version):
-			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
+			# TODO: VersionValidatorException
+			raise ValueError(f"Failed to validate version string '{versionString}'.")
 
 		return version
 
@@ -2173,7 +2176,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
 	_items: List[V]  #: An ordered list of set members.
 
-	def __init__(self, versions: Union[Version, Iterable[V]]):
+	def __init__(self, versions: Union[Version, Iterable[V]]) -> None:
 		"""
 		Initializes a version set either by a single version or an iterable of versions.
 
@@ -2402,6 +2405,8 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		:param index: The index of the version to access.
 		:returns:     The indexed version.
 
-		.. hint:: Versions are ordered from lowest to highest version number.
+		.. hint::
+
+		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]

@@ -113,7 +113,7 @@ class MySimpleAttribute(SimpleAttribute):
 class GroupAttribute(Attribute):
 	_id: str
 
-	def __init__(self, identifier: str):
+	def __init__(self, identifier: str) -> None:
 		self._id = identifier
 
 	def __call__(self, entity: Entity) -> Entity:

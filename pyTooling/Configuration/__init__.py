@@ -28,10 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""\
+"""
 Abstract configuration reader.
 
-.. hint:: See :ref:`high-level help <CONFIG>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <CONFIG>` for explanations and usage examples.
 """
 from pathlib       import Path
 from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
@@ -52,14 +54,17 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 		raise ex
 
 
-KeyT = Union[str, int]
-NodeT = Union["Dictionary", "Sequence"]
-ValueT = Union[NodeT, str, int, float]
+__all__ = ["KeyT", "NodeT", "ValueT"]
+
+
+KeyT =   Union[str, int]                  #: Type variable for keys.
+NodeT =  Union["Dictionary", "Sequence"]  #: Type variable for nodes.
+ValueT = Union[NodeT, str, int, float]    #: Type variable for values.
 
 
 @export
 class ConfigurationException(ToolingException):
-	pass
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Configuration`."""
 
 
 @export
@@ -89,12 +94,29 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 
 	def __getitem__(self, key: KeyT) -> ValueT:  # type: ignore[empty-body]
+		"""
+		Access an element in the node by index or key.
+
+		:param key: Index or key of the element.
+		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
+		"""
 		raise NotImplementedError()
 
 	def __setitem__(self, key: KeyT, value: ValueT) -> None:  # type: ignore[empty-body]
+		"""
+		Set an element in the node by index or key.
+
+		:param key:   Index or key of the element.
+		:param value: Value to set
+		"""
 		raise NotImplementedError()
 
 	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
+		"""
+		Returns an iterator to iterate a node.
+
+		:returns: Node iterator.
+		"""
 		raise NotImplementedError()
 
 	@property
@@ -102,10 +124,16 @@ class Node(metaclass=ExtendedType, slots=True):
 		raise NotImplementedError()
 
 	@Key.setter
-	def Key(self, value: KeyT):
+	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError()
 
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
+		"""
+		Return a node or value based on a path description to that node or value.
+
+		:param query: String describing the path to the node or value.
+		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
+		"""
 		raise NotImplementedError()
 
 
@@ -157,7 +185,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 class Configuration(Node):
 	"""Abstract root node in a configuration."""
 
-	_configFile:   Path
+	_configFile: Path  #: Path to the configuration file.
 
 	def __init__(self, configFile: Path, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
 		"""
@@ -172,4 +200,9 @@ class Configuration(Node):
 
 	@readonly
 	def ConfigFile(self) -> Path:
+		"""
+		Read-only property to access the configuration file's path.
+
+		:returns: Path to the configuration file.
+		"""
 		return self._configFile

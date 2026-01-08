@@ -174,7 +174,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	@readonly
 	def PreviousNode(self) -> Nullable["Node[_NodeKey, _NodeValue]"]:
 		"""
-		Read-only property to access nodes predecessor.
+		Read-only property to access node's predecessor.
 
 		This reference is ``None`` if the node is the first node in the doubly linked list.
 
@@ -185,7 +185,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	@readonly
 	def NextNode(self) -> Nullable["Node[_NodeKey, _NodeValue]"]:
 		"""
-		Read-only property to access nodes successor.
+		Read-only property to access node's successor.
 
 		This reference is ``None`` if the node is the last node in the doubly linked list.
 

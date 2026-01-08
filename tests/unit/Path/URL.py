@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Uni tests for :mod:`pyTooling.GenericPath.URL`."""
+"""Unit tests for :mod:`pyTooling.GenericPath.URL`."""
 from unittest import TestCase
 from pyTooling.GenericPath.URL import URL, Protocols
 
@@ -56,7 +56,7 @@ class GenericPath(TestCase):
 
 
 class URLs(TestCase):
-	def test_Host(self):
+	def test_Host(self) -> None:
 		resource = "github"
 		url = URL.Parse(resource)
 
@@ -71,7 +71,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_IP(self):
+	def test_IP(self) -> None:
 		resource = "192.168.1.1"
 		url = URL.Parse(resource)
 
@@ -86,7 +86,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS(self):
+	def test_DNS(self) -> None:
 		resource = "github.com"
 		url = URL.Parse(resource)
 
@@ -101,7 +101,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS_Port(self):
+	def test_DNS_Port(self) -> None:
 		resource = "github.com:80"
 		url = URL.Parse(resource)
 
@@ -116,7 +116,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS_Port_Path(self):
+	def test_DNS_Port_Path(self) -> None:
 		resource = "github.com:80/entrypoint"
 		url = URL.Parse(resource)
 
@@ -131,7 +131,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS_Port_Path_File(self):
+	def test_DNS_Port_Path_File(self) -> None:
 		resource = "github.com:80/path/file.png"
 		url = URL.Parse(resource)
 
@@ -146,7 +146,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS_Port_Path_File_Query(self):
+	def test_DNS_Port_Path_File_Query(self) -> None:
 		resource = "github.com:80/path/file.png?width=1024"
 		url = URL.Parse(resource)
 
@@ -161,7 +161,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS_Port_Path_File_QueryQuery(self):
+	def test_DNS_Port_Path_File_QueryQuery(self) -> None:
 		resource = "github.com:80/path/file.png?width=1024&height=912"
 		url = URL.Parse(resource)
 
@@ -176,7 +176,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_DNS_Port_Path_File_Fragment(self):
+	def test_DNS_Port_Path_File_Fragment(self) -> None:
 		resource = "github.com:80/entrypoint#chapter-3"
 		url = URL.Parse(resource)
 
@@ -191,7 +191,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_HTTP_DNS(self):
+	def test_HTTP_DNS(self) -> None:
 		resource = "http://github.com"
 		url = URL.Parse(resource)
 
@@ -206,7 +206,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_HTTPS_DNS(self):
+	def test_HTTPS_DNS(self) -> None:
 		resource = "https://github.com"
 		url = URL.Parse(resource)
 
@@ -221,7 +221,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_HTTPS_DNS_Port(self):
+	def test_HTTPS_DNS_Port(self) -> None:
 		resource = "https://github.com:443"
 		url = URL.Parse(resource)
 
@@ -236,7 +236,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_HTTPS_User_DNS_Port(self):
+	def test_HTTPS_User_DNS_Port(self) -> None:
 		resource = "https://paebbels@v-4.github.com:25005"
 		url = URL.Parse(resource)
 
@@ -251,7 +251,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_HTTPS_User_Pwd_DNS(self):
+	def test_HTTPS_User_Pwd_DNS(self) -> None:
 		resource = "https://paebbels:foobar@v4.api.github.com"
 		url = URL.Parse(resource)
 
@@ -266,7 +266,7 @@ class URLs(TestCase):
 
 		self.assertEqual(resource, str(url))
 
-	def test_GitLabCIToken(self):
+	def test_GitLabCIToken(self) -> None:
 		resource = "https://gitlab-ci-token:glcbt-64_2yjksyWRz6mPq57YFsvx@gitlab.company.com/path/to/resource.ext?query1=34&query2=343#ref-45"
 		url = URL.Parse(resource)
 

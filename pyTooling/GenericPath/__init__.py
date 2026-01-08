@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """A generic path to derive domain specific path libraries."""
-from typing import List, Optional as Nullable
+from typing import List, Optional as Nullable, Type
 
 try:
 	from pyTooling.Decorators  import export
@@ -47,13 +47,18 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover
 
 @export
 class Base(metaclass=ExtendedType, mixin=True):
-	"""Base-class for all pyTooling.GenericPath path elements."""
+	"""Base-mixin-class for all :mod:`pyTooling.GenericPath` path elements."""
 
-	DELIMITER = "/"
+	DELIMITER = "/"            #: Path element delimiter sign.
 
-	_parent: Nullable["Base"]
+	_parent: Nullable["Base"]  #: Reference to the parent object.
 
-	def __init__(self, parent: Nullable["Base"]) -> None:
+	def __init__(self, parent: Nullable["Base"] = None) -> None:
+		"""
+		Initialize the base-mixin-class with a parent reference.
+
+		:param parent: Optional parent reference.
+		"""
 		self._parent = parent
 
 
@@ -62,6 +67,9 @@ class RootMixIn(Base, mixin=True):
 	"""Mixin-class for root elements in a path system."""
 
 	def __init__(self) -> None:
+		"""
+		Initialize the mixin-class for a root element.
+		"""
 		super().__init__(None)
 
 
@@ -69,10 +77,17 @@ class RootMixIn(Base, mixin=True):
 class ElementMixIn(Base, mixin=True):
 	"""Mixin-class for elements in a path system."""
 
-	_elementName: str
+	_elementName: str  #: Name of the path element.
 
 	def __init__(self, parent: Base, elementName: str) -> None:
+		"""
+		Initialize the mixin-class for a path element.
+
+		:param parent:      Reference to a parent path element.
+		:param elementName: Name of the path element.
+		"""
 		super().__init__(parent)
+
 		self._elementName = elementName
 
 	def __str__(self) -> str:
@@ -83,13 +98,19 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER = "/"
-	ROOT_DELIMITER =    "/"
+	ELEMENT_DELIMITER = "/"          #: Path element delimiter sign.
+	ROOT_DELIMITER =    "/"          #: Root element delimiter sign.
 
-	_isAbsolute: bool
-	_elements:   List[ElementMixIn]
+	_isAbsolute: bool                #: True, if the path is absolute.
+	_elements:   List[ElementMixIn]  #: List of path elements.
 
 	def __init__(self, elements: List[ElementMixIn], isAbsolute: bool) -> None:
+		"""
+		Initialize the mixin-class for a path.
+
+		:param elements:   Reference to a parent path element.
+		:param isAbsolute: Assign to true, if a path is absolute, otherwise false.
+		"""
 		self._isAbsolute = isAbsolute
 		self._elements =   elements
 
@@ -113,22 +134,33 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return result
 
 	@classmethod
-	def Parse(cls, path: str, root, pathCls, elementCls):
-		"""Parses a string representation of a path and returns a path instance."""
+	def Parse(
+		cls,
+		path: str,
+		root: RootMixIn,
+		pathCls: Type["PathMixIn"],
+		elementCls: Type[ElementMixIn]
+	) -> "PathMixIn":
+		"""
+		Parses a string representation of a path and returns a path instance.
 
-		parent = root
-
+		:param path:       Path to be parsed.
+		:param root:
+		:param pathCls:    Type used to create the path.
+		:param elementCls: Type used to create the path elements.
+		:return:
+		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True
 			path = path[len(cls.ELEMENT_DELIMITER):]
 		else:
 			isAbsolute = False
 
-		parts = path.split(cls.ELEMENT_DELIMITER)
+		parent = root
 		elements = []
-		for part in parts:
+		for part in path.split(cls.ELEMENT_DELIMITER):
 			element = elementCls(parent, part)
-			parent =  element
+			parent = element
 			elements.append(element)
 
 		return pathCls(elements, isAbsolute)

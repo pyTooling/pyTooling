@@ -31,7 +31,9 @@
 """
 A set of helper functions to describe a Python package for setuptools.
 
-.. hint:: See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
 """
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from collections.abc import Sized
@@ -612,7 +614,7 @@ def DescribePythonPackage(
 	try:
 		from setuptools import find_packages, find_namespace_packages
 	except ImportError as ex:
-		raise ToolingException(f"Optional dependency 'setuptools' is not available.") from ex
+		raise Exception(f"Optional dependency 'setuptools' not installed. Either install pyTooling with extra dependencies 'pyTooling[packaging]' or install 'setuptools' directly.") from ex
 
 	print(f"[pyTooling.Packaging] Python: {version_info.major}.{version_info.minor}.{version_info.micro}, pyTooling: {__version__}")
 

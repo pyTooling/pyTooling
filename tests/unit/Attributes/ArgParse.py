@@ -65,7 +65,7 @@ class ProgramBase(ArgParseHelperMixin, mixin=True):
 
 
 class Common(TestCase):
-	def test_NoArgs(self):
+	def test_NoArgs(self) -> None:
 		class Program(ProgramBase):
 			@DefaultHandler()
 			def HandleDefault(self, args) -> None:
@@ -82,7 +82,7 @@ class Common(TestCase):
 		self.assertIs(prog.handler.__func__, Program.HandleDefault)
 		self.assertEqual(1 + 0, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 
-	def test_DefaultHelpShort(self):
+	def test_DefaultHelpShort(self) -> None:
 		print()
 
 		class Program(ProgramBase, ArgParseHelperMixin):
@@ -100,7 +100,7 @@ class Common(TestCase):
 
 		self.assertEqual(0, ex.exception.code)
 
-	def test_DefaultHelpLong(self):
+	def test_DefaultHelpLong(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -118,7 +118,7 @@ class Common(TestCase):
 
 		self.assertEqual(0, ex.exception.code)
 
-	def test_Help(self):
+	def test_Help(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -144,7 +144,7 @@ class Common(TestCase):
 		self.assertIs(prog.handler.__func__, Program.HandleHelp)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 
-	def test_HelpPlusArgWithoutArg(self):
+	def test_HelpPlusArgWithoutArg(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -171,7 +171,7 @@ class Common(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.Command)
 
-	def test_HelpPlusArgWithArg(self):
+	def test_HelpPlusArgWithArg(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -198,7 +198,7 @@ class Common(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual("info", prog.args.Command)
 
-	def test_HelpShort(self):
+	def test_HelpShort(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -220,7 +220,7 @@ class Common(TestCase):
 		# An internal help page is printed and the parser causes a SystemExit exception
 		# self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 
-	def test_HelpLong(self):
+	def test_HelpLong(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -242,7 +242,7 @@ class Common(TestCase):
 		# An internal help page is printed and the parser causes a SystemExit exception
 		# self.assertEqual(0, len(nonProcessedArgs), f"Remaining options: {nonProcessedArgs}")
 
-	def test_VerboseShortWithoutV(self):
+	def test_VerboseShortWithoutV(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -264,7 +264,7 @@ class Common(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(False, prog.args.verbose)
 
-	def test_VerboseShortWithV(self):
+	def test_VerboseShortWithV(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -288,7 +288,7 @@ class Common(TestCase):
 
 
 class Commands(TestCase):
-	def test_TwoCommands(self):
+	def test_TwoCommands(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -348,7 +348,7 @@ class Commands(TestCase):
 
 
 class Values(TestCase):
-	def test_Positional(self):
+	def test_Positional(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -371,7 +371,7 @@ class Values(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual("paebbels", prog.args.username)
 
-	def test_String(self):
+	def test_String(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -394,7 +394,7 @@ class Values(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual("paebbels", prog.args.username)
 
-	def test_Integer(self):
+	def test_Integer(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -417,7 +417,7 @@ class Values(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(24, prog.args.count)
 
-	def test_Float(self):
+	def test_Float(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -440,7 +440,7 @@ class Values(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(12.4, prog.args.maxVoltage)
 
-	def test_Path(self):
+	def test_Path(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -466,7 +466,7 @@ class Values(TestCase):
 
 
 class ValueLists(TestCase):
-	def test_Lists(self):
+	def test_Lists(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -490,7 +490,7 @@ class ValueLists(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertListEqual(lst, prog.args.usernames)
 
-	def test_StringList(self):
+	def test_StringList(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -514,7 +514,7 @@ class ValueLists(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertListEqual(lst, prog.args.usernames)
 
-	def test_IntegerList(self):
+	def test_IntegerList(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -538,7 +538,7 @@ class ValueLists(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertListEqual(lst, prog.args.counts)
 
-	def test_FloatList(self):
+	def test_FloatList(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -562,7 +562,7 @@ class ValueLists(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertListEqual(lst, prog.args.maxVoltages)
 
-	def test_PathList(self):
+	def test_PathList(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -590,7 +590,7 @@ class ValueLists(TestCase):
 
 
 class Flags(TestCase):
-	def test_DefaultHandler_ShortAndLong(self):
+	def test_DefaultHandler_ShortAndLong(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -648,7 +648,7 @@ class Flags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(False, prog.args.verbose)
 
-	def test_DefaultHandler_Short(self):
+	def test_DefaultHandler_Short(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -683,7 +683,7 @@ class Flags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(False, prog.args.verbose)
 
-	def test_DefaultHandler_Long(self):
+	def test_DefaultHandler_Long(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -718,7 +718,7 @@ class Flags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(False, prog.args.verbose)
 
-	def test_CommandHandler_ShortAndLong(self):
+	def test_CommandHandler_ShortAndLong(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -781,7 +781,7 @@ class Flags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(False, prog.args.verbose)
 
-	def test_CommandHandler_Short(self):
+	def test_CommandHandler_Short(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -821,7 +821,7 @@ class Flags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertEqual(False, prog.args.verbose)
 
-	def test_CommandHandler_Long(self):
+	def test_CommandHandler_Long(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -863,7 +863,7 @@ class Flags(TestCase):
 
 
 class ValuedFlags(TestCase):
-	def test_DefaultHandler_ShortAndLong(self):
+	def test_DefaultHandler_ShortAndLong(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -921,7 +921,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.count)
 
-	def test_DefaultHandler_Short(self):
+	def test_DefaultHandler_Short(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -956,7 +956,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.count)
 
-	def test_DefaultHandler_Long(self):
+	def test_DefaultHandler_Long(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -991,7 +991,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.count)
 
-	def test_CommandHandler_ShortAndLong(self):
+	def test_CommandHandler_ShortAndLong(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -1054,7 +1054,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.count)
 
-	def test_CommandHandler_Short(self):
+	def test_CommandHandler_Short(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -1094,7 +1094,7 @@ class ValuedFlags(TestCase):
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.count)
 
-	def test_CommandHandler_Long(self):
+	def test_CommandHandler_Long(self) -> None:
 		print()
 
 		class Program(ProgramBase):
@@ -1163,7 +1163,7 @@ class Program(ProgramBase, mixin=True):
 
 
 class UserManager(TestCase):
-	def test_UserManager(self):
+	def test_UserManager(self) -> None:
 		print()
 
 		class Application(Program):
@@ -1186,7 +1186,7 @@ class UserManager(TestCase):
 class Application(TerminalApplication, Program):
 	HeadLine = "Application"
 
-	def __init__(self):
+	def __init__(self) -> None:
 		super().__init__()
 		Program.__init__(self)
 
@@ -1221,7 +1221,7 @@ class MockedUserManager(TestCase):
 		return stdout, stderr
 
 	@patch("sys.argv", ["help", "expand"])
-	def test_HelpForExport(self):
+	def test_HelpForExport(self) -> None:
 		print()
 
 		app = Application()

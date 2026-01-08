@@ -140,7 +140,7 @@ class VersionInformation(TestCase):
 
 class DescribePackage(TestCase):
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
-	def test_PythonPackage(self):
+	def test_PythonPackage(self) -> None:
 		print()
 
 		from pyTooling.Packaging import DescribePythonPackage
@@ -164,7 +164,7 @@ class DescribePackage(TestCase):
 		# TODO: more checks
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
-	def test_PythonPackageFromGitHub(self):
+	def test_PythonPackageFromGitHub(self) -> None:
 		print()
 
 		from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub

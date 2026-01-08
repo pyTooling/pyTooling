@@ -41,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Instantiation(TestCase):
-	def test_Major(self):
+	def test_Major(self) -> None:
 		version = SemanticVersion(1)
 
 		self.assertEqual("", version.Prefix)
@@ -56,7 +56,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinor(self):
+	def test_MajorMinor(self) -> None:
 		version = SemanticVersion(1, 2)
 
 		self.assertEqual("", version.Prefix)
@@ -71,7 +71,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicro(self):
+	def test_MajorMinorMicro(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("", version.Prefix)
@@ -86,7 +86,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevel(self):
+	def test_MajorMinorMicroReleaseLevel(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha)
 
 		self.assertEqual("", version.Prefix)
@@ -101,7 +101,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumber(self):
+	def test_MajorMinorMicroReleaseLevelNumber(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4)
 
 		self.assertEqual("", version.Prefix)
@@ -116,7 +116,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPost(self):
+	def test_MajorMinorMicroReleaseLevelNumberPost(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5)
 
 		self.assertEqual("", version.Prefix)
@@ -131,7 +131,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPostDev(self):
+	def test_MajorMinorMicroReleaseLevelNumberPostDev(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6)
 
 		self.assertEqual("", version.Prefix)
@@ -146,7 +146,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPostDevBuild(self):
+	def test_MajorMinorMicroReleaseLevelNumberPostDevBuild(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7)
 
 		self.assertEqual("", version.Prefix)
@@ -161,7 +161,7 @@ class Instantiation(TestCase):
 		self.assertEqual(7, version.Build)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfix(self):
+	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfix(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p")
 
 		self.assertEqual("", version.Prefix)
@@ -177,7 +177,7 @@ class Instantiation(TestCase):
 		self.assertEqual("p", version.Postfix)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfixPrefix(self):
+	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfixPrefix(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v")
 
 		self.assertEqual("v", version.Prefix)
@@ -193,7 +193,7 @@ class Instantiation(TestCase):
 		self.assertEqual("p", version.Postfix)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfixPrefixHash(self):
+	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfixPrefixHash(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v", hash="abcdef")
 
 		self.assertEqual("v", version.Prefix)
@@ -209,7 +209,7 @@ class Instantiation(TestCase):
 		self.assertEqual("p", version.Postfix)
 		self.assertEqual(Flags.NoVCS, version.Flags)
 
-	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfixPrefixHashFlags(self):
+	def test_MajorMinorMicroReleaseLevelNumberPostDevBuildPostfixPrefixHashFlags(self) -> None:
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v", hash="abcdef", flags=Flags.Git)
 
 		self.assertEqual("v", version.Prefix)
@@ -226,91 +226,91 @@ class Instantiation(TestCase):
 		self.assertEqual("abcdef", version.Hash)
 		self.assertEqual(Flags.Git, version.Flags)
 
-	def test_Major_String(self):
+	def test_Major_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion("1")
 
-	def test_Major_Negative(self):
+	def test_Major_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(-1)
 
-	def test_Major_Minor_String(self):
+	def test_Major_Minor_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, "2")
 
-	def test_Major_Minor_Negative(self):
+	def test_Major_Minor_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, -2)
 
-	def test_Major_Micro_String(self):
+	def test_Major_Micro_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, "3")
 
-	def test_Major_Micro_Negative(self):
+	def test_Major_Micro_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2,-3)
 
-	def test_Major_ReleaseLevel_None(self):
+	def test_Major_ReleaseLevel_None(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, None)
 
-	def test_Major_ReleaseLevel_String(self):
+	def test_Major_ReleaseLevel_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, "RL")
 
-	def test_Major_ReleaseLevel_Final(self):
+	def test_Major_ReleaseLevel_Final(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Final, 1)
 
-	def test_Major_Number_String(self):
+	def test_Major_Number_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, "4")
 
-	def test_Major_Number_Negative(self):
+	def test_Major_Number_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, -4)
 
-	def test_Major_Postv_String(self):
+	def test_Major_Postv_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, "5")
 
-	def test_Major_Post_Negative(self):
+	def test_Major_Post_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, -5)
 
-	def test_Major_Dev_String(self):
+	def test_Major_Dev_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, "6")
 
-	def test_Major_Dev_Negative(self):
+	def test_Major_Dev_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, -6)
 
-	def test_Major_Build_String(self):
+	def test_Major_Build_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build="7")
 
-	def test_Major_Build_Negative(self):
+	def test_Major_Build_Negative(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=-7)
 
-	def test_Major_Postfix_Integer(self):
+	def test_Major_Postfix_Integer(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix=8)
 
-	def test_Major_Prefix_Integer(self):
+	def test_Major_Prefix_Integer(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix=9)
 
-	def test_Major_Hash_Integer(self):
+	def test_Major_Hash_Integer(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v", hash=10)
 
-	def test_Major_Flags_None(self):
+	def test_Major_Flags_None(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v", hash="ab", flags=None)
 
-	def test_Major_Flags_String(self):
+	def test_Major_Flags_String(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v", hash="ab", flags="d")
 
@@ -436,7 +436,7 @@ class Parsing(TestCase):
 
 
 class HashVersions(TestCase):
-	def test_SemanticVersion(self):
+	def test_SemanticVersion(self) -> None:
 		version = SemanticVersion.Parse("v1.2.3")
 
 		self.assertIsNotNone(version.__hash__())
@@ -562,43 +562,43 @@ class CompareVersions(TestCase):
 
 
 class CompareNone(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
 			_ = version == None
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
 			_ = version != None
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
 			_ = version < None
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
 			_ = version <= None
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
 			_ = version > None
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
 			_ = version >= None
 
-	def test_Minimum(self):
+	def test_Minimum(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(ValueError):
@@ -606,117 +606,117 @@ class CompareNone(TestCase):
 
 
 class CompareString(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertEqual("1.2.3", version)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertNotEqual("1.2.4", version)
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertLess("1.2.2", version)
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertLessEqual("1.2.3", version)
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertGreater("1.2.4", version)
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertGreaterEqual("1.2.3", version)
 
-	def test_Minimum(self):
+	def test_Minimum(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertTrue(version >> "1.2.3")
 
 
 class CompareInteger(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = SemanticVersion(1)
 
 		self.assertEqual(1, version)
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = SemanticVersion(1)
 
 		self.assertNotEqual(2, version)
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertLess(0, version)
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertLessEqual(1, version)
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertGreater(3, version)
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertGreaterEqual(2, version)
 
-	def test_Minimum(self):
+	def test_Minimum(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		self.assertTrue(version >> 1)
 
 
 class CompareOtherType(TestCase):
-	def test_Equal(self):
+	def test_Equal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):
 			_ = version == 1.2
 
-	def test_Unequal(self):
+	def test_Unequal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):
 			_ = version != 1.2
 
-	def test_LessThan(self):
+	def test_LessThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):
 			_ = version < 1.2
 
-	def test_LessThanOrEqual(self):
+	def test_LessThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):
 			_ = version <= 1.2
 
-	def test_GreaterThan(self):
+	def test_GreaterThan(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):
 			_ = version > 1.2
 
-	def test_GreaterThanOrEqual(self):
+	def test_GreaterThanOrEqual(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):
 			_ = version >= 1.2
 
-	def test_Minimum(self):
+	def test_Minimum(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
 		with self.assertRaises(TypeError):

@@ -40,7 +40,9 @@ The Licensing module implements mapping tables for various license names and ide
 
    List of `Python classifiers <https://pypi.org/classifiers/>`__
 
-.. hint:: See :ref:`high-level help <LICENSING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
 from typing       import Any, Dict, Optional as Nullable
@@ -107,7 +109,7 @@ class License(metaclass=ExtendedType, slots=True):
 	_osiApproved: bool    #: OSI approval status
 	_fsfApproved: bool    #: FSF approval status
 
-	def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False):
+	def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False) -> None:
 		self._spdxIdentifier = spdxIdentifier
 		self._name = name
 		self._osiApproved = osiApproved

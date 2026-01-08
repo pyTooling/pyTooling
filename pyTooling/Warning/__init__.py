@@ -31,54 +31,83 @@
 """
 A solution to send warnings like exceptions to a handler in the upper part of the call-stack.
 
-.. hint:: See :ref:`high-level help <WARNING>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <WARNING>` for explanations and usage examples.
 """
 from threading import local
 from types     import TracebackType
-from typing    import List, Callable, Optional as Nullable, Type, Iterator
+from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self
 
 try:
 	from pyTooling.Decorators import export, readonly
 	from pyTooling.Common     import getFullyQualifiedName
 	from pyTooling.Exceptions import ExceptionBase
 except ModuleNotFoundError:  # pragma: no cover
-	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
+	print("[pyTooling.Warning] Could not import from 'pyTooling.*'!")
 
 	try:
 		from Decorators         import export, readonly
 		from Common             import getFullyQualifiedName
 		from Exceptions         import ExceptionBase
 	except ModuleNotFoundError as ex:  # pragma: no cover
-		print("[pyTooling.Common] Could not import directly!")
+		print("[pyTooling.Warning] Could not import directly!")
 		raise ex
 
 
+__all__ = ["_threadLocalData"]
+
 _threadLocalData = local()
+"""A reference to the thread local data needed by the pyTooling.Warning classes."""
 
 
 @export
 class Warning(BaseException):
-	pass
+	"""
+	Base-exception of all warnings handled by :class:`WarningCollector`.
+
+	.. tip::
+
+	   Warnings can be unhandled within a call hierarchy.
+	"""
 
 
 @export
 class CriticalWarning(BaseException):
-	pass
+	"""
+	Base-exception of all critical warnings handled by :class:`WarningCollector`.
+
+	.. tip::
+
+	   Critical warnings must be unhandled within a call hierarchy, otherwise a :exc:`UnhandledCriticalWarningException`
+	   will be raised.
+	"""
 
 
 @export
 class UnhandledWarningException(ExceptionBase):   # FIXME: to be removed in v9.0.0
-	pass
+	"""
+	Deprecated.
+
+	.. deprecated:: v9.0.0
+
+	   Please use :exc:`UnhandledCriticalWarningException`.
+	"""
 
 
 @export
 class UnhandledCriticalWarningException(UnhandledWarningException):
-	pass
+	"""
+	This exception is raised when a critical warning isn't handled by a :class:`WarningCollector` within the
+	call-hierarchy.
+	"""
 
 
 @export
 class UnhandledExceptionException(UnhandledWarningException):
-	pass
+	"""
+	This exception is raised when an exception isn't handled by a :class:`WarningCollector` within the call-hierarchy.
+	"""
 
 
 @export
@@ -123,6 +152,11 @@ class WarningCollector:
 		self._handler =  handler
 
 	def __len__(self) -> int:
+		"""
+		Returns the number of collected warnings.
+
+		:returns: Number of collected warnings.
+		"""
 		return len(self._warnings)
 
 	def __iter__(self) -> Iterator[BaseException]:
@@ -131,7 +165,7 @@ class WarningCollector:
 	def __getitem__(self, index: int) -> BaseException:
 		return self._warnings[index]
 
-	def __enter__(self) -> 'WarningCollector':  # -> Self: needs Python 3.11
+	def __enter__(self) -> Self:
 		"""
 		Enter the warning collector context.
 
@@ -151,8 +185,8 @@ class WarningCollector:
 	def __exit__(
 		self,
 		exc_type: Nullable[Type[BaseException]] = None,
-		exc_val: Nullable[BaseException] = None,
-		exc_tb: Nullable[TracebackType] = None
+		exc_val:  Nullable[BaseException] = None,
+		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
 		Exit the warning collector context.
@@ -160,6 +194,7 @@ class WarningCollector:
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
+		:returns:        ``None``
 		"""
 		global _threadLocalData
 
@@ -167,6 +202,11 @@ class WarningCollector:
 
 	@property
 	def Parent(self) -> Nullable["WarningCollector"]:
+		"""
+		Property to access the parent warning collected.
+
+		:returns: The parent warning collector or ``None``.
+		"""
 		return self._parent
 
 	@Parent.setter

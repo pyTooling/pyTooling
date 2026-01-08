@@ -491,8 +491,9 @@ Configuration
       :ref:`configuration file format reader <CONFIG/FileFormat>` implementations are provided as well.
 
       * :ref:`JSON configuration reader <CONFIG/FileFormat/JSON>` for the JSON file format.
-      * :ref:`TOML configuration reader <CONFIG/FileFormat/TOML>`  |rarr| To be implemented.
+      * 🚧 :ref:`TOML configuration reader <CONFIG/FileFormat/TOML>` |rarr| To be implemented.
       * :ref:`YAML configuration reader <CONFIG/FileFormat/YAML>` for the YAML file format.
+      * 🚧 :ref:`XML configuration reader <CONFIG/FileFormat/XML>` |rarr| To be implemented.
 
    .. grid-item::
       :columns: 6
@@ -763,19 +764,21 @@ Decorators
    .. grid-item::
       :columns: 6
 
-      * :ref:`META/Abstract`
+      * :ref:`META/Abstract` |br|
+        If there is at least one *abstract method* in a class' definition, then the whole class is considered *abstract*
+        and this class can't be instantiated.
 
-        * :ref:`DECO/AbstractMethod`: Methods marked with :pycode:`@abstractmethod` are abstract and need to be overwritten in
-          a derived class. |br|
+        * :ref:`DECO/AbstractMethod`: Methods marked with :pycode:`@abstractmethod` are abstract and need to be
+          overwritten in a derived class. |br|
           An *abstract method* might be called from the overwriting method.
-        * :ref:`DECO/MustOverride`: Methods marked with :pycode:`@mustoverride` are abstract and need to be overridden in a
-          derived class. |br|
+        * :ref:`DECO/MustOverride`: Methods marked with :pycode:`@mustoverride` are abstract and need to be overridden
+          in a derived class. |br|
           It's not allowed to call a *mustoverride method*.
 
       * :ref:`DECO/DataAccess`
 
         * :ref:`DECO/readonly`: Methods marked with :pycode:`@readonly` get transformed into a read-only property.
-        * ⚠BROKEN⚠: Methods with :ref:`DECO/classproperty` decorator transform methods to class-properties.
+        * ⚠️BROKEN⚠️: Methods with :ref:`DECO/classproperty` decorator transform methods to class-properties.
 
       * :ref:`DECO/Documentation`
 

@@ -31,7 +31,9 @@
 """
 Common platform information gathered from various sources.
 
-.. hint:: See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
 """
 from enum                    import Flag, auto, Enum
 

@@ -32,13 +32,16 @@
 """
 The MetaClasses package implements Python meta-classes (classes to construct other classes in Python).
 
-.. hint:: See :ref:`high-level help <META>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <META>` for explanations and usage examples.
 """
 from functools  import wraps
+from itertools  import chain
 from sys        import version_info
 from threading  import Condition
-from types      import FunctionType  #, MethodType
-from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union
+from types      import FunctionType, MethodType
+from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 try:
@@ -73,7 +76,7 @@ class ExtendedTypeError(ToolingException):
 @export
 class BaseClassWithoutSlotsError(ExtendedTypeError):
 	"""
-	The exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
+	This exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
 
 	.. seealso::
 
@@ -84,7 +87,15 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 
 @export
 class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
-	pass
+	"""
+	This exception is raised when a mixin-class uses slots, but Python prohibits slots.
+
+	.. important::
+
+	   To fulfill Python's requirements on slots, pyTooling uses slots only on the prinmary inheritance line.
+	   Mixin-classes collect slots, which get materialized when the mixin-class (secondary inheritance lines) gets merged
+	   into the primary inheritance line.
+	"""
 
 
 @export
@@ -94,13 +105,15 @@ class BaseClassIsNotAMixinError(ExtendedTypeError):
 
 @export
 class DuplicateFieldInSlotsError(ExtendedTypeError):
-	pass
+	"""
+	This exception is raised when a slot name is used multiple times within the inheritance hierarchy.
+	"""
 
 
 @export
 class AbstractClassError(ExtendedTypeError):
 	"""
-	The exception is raised, when a class contains methods marked with *abstractmethod* or *mustoverride*.
+	This exception is raised, when a class contains methods marked with *abstractmethod* or *must-override*.
 
 	.. seealso::
 
@@ -116,7 +129,7 @@ class AbstractClassError(ExtendedTypeError):
 @export
 class MustOverrideClassError(AbstractClassError):
 	"""
-	The exception is raised, when a class contains methods marked with *must-override*.
+	This exception is raised, when a class contains methods marked with *must-override*.
 
 	.. seealso::
 
@@ -243,7 +256,7 @@ def abstractmethod(method: M) -> M:
 	   * :func:`~pyTooling.Metaclasses.notimplemented`
 	"""
 	@wraps(method)
-	def func(self):
+	def func(self) -> NoReturn:
 		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
 
 	func.__abstract__ = True
@@ -376,22 +389,82 @@ class ExtendedType(type):
 	.. todo:: META::ExtendedType Needs documentation.
 	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
 
-	Features:
+	.. rubric:: Features:
 
 	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
-	* Allow only a single instance to be created (:term:`singleton`).
+
+	  * Implement ``__slots__`` only on primary inheritance line.
+	  * Collect class variables on secondary inheritance lines (mixin-classes) and defer implementation as ``__slots__``.
+	  * Handle object state exporting and importing for slots (:mod:`pickle` support) via ``__getstate__``/``__setstate__``.
+
+	* Allow only a single instance to be created (:term:`singleton`). |br|
+	  Further instantiations will return the previously create instance (identical object).
 	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
 	  instantiation of :term:`abstract classes <abstract class>`.
 
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
+
+	.. rubric:: Added class fields:
+
+	:__slotted__:                True, if class uses `__slots__`.
+	:__allSlots__:               Set of class fields stored in slots for all classes in the inheritance hierarchy.
+	:__slots__:                  Tuple of class fields stored in slots for current class in the inheritance hierarchy. |br|
+	                             See :pep:`253` for details.
+	:__isMixin__:                True, if class is a mixin-class
+	:__mixinSlots__:             List of collected slots from secondary inheritance hierarchy (mixin hierarchy).
+	:__methods__:                List of methods.
+	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
+	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
+	:__isAbstract__:             True, if class is abstract.
+	:__isSingleton__:            True, if class is a singleton
+	:__singletonInstanceCond__:  Condition variable to protect the singleton creation.
+	:__singletonInstanceInit__:  Singleton is initialized.
+	:__singletonInstanceCache__: The singleton object, once created.
+	:__pyattr__:                 List of class attributes.
+
+	.. rubric:: Added class properties:
+
+	:HasClassAttributes:  Read-only property to check if the class has Attributes.
+	:HasMethodAttributes: Read-only property to check if the class has methods with Attributes.
+
+	.. rubric:: Added methods:
+
+	If slots are used, the following methods are added to support :mod:`pickle`:
+
+	:__getstate__: Export an object's state for serialization. |br|
+	               See :pep:`307` for details.
+	:__setstate__: Import an object's state for deserialization. |br|
+	               See :pep:`307` for details.
+
+	.. rubric:: Modified ``__new__`` method:
+
+	If class is a singleton, ``__new__`` will be replaced by a wrapper method. This wrapper is marked with ``__singleton_wrapper__``.
+
+	If class is abstract, ``__new__`` will be replaced by a method raising an exception. This replacement is marked with ``__raises_abstract_class_error__``.
+
+	.. rubric:: Modified ``__init__`` method:
+
+	If class is a singleton, ``__init__`` will be replaced by a wrapper method. This wrapper is marked by ``__singleton_wrapper__``.
+
+	.. rubric:: Modified abstract methods:
+
+	If a method is abstract, its marked with ``__abstract__``. |br|
+	If a method is must override, its marked with ``__mustOverride__``.
 	"""
 
 	# @classmethod
 	# def __prepare__(cls, className, baseClasses, slots: bool = False, mixin: bool = False, singleton: bool = False):
 	# 	return DispatchDictionary()
 
-	def __new__(self, className: str, baseClasses: Tuple[type], members: Dict[str, Any],
-							slots: bool = False, mixin: bool = False, singleton: bool = False) -> "ExtendedType":
+	def __new__(
+		self,
+		className: str,
+		baseClasses: Tuple[type],
+		members: Dict[str, Any],
+		slots: bool = False,
+		mixin: bool = False,
+		singleton: bool = False
+	) -> Self:
 		"""
 		Construct a new class using this :term:`meta-class`.
 
@@ -435,6 +508,31 @@ class ExtendedType(type):
 		newClass.__abstractMethods__ = abstractMethods
 		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		if slots:
+			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
+			if "__getstate__" not in members:
+				def __getstate__(self) -> Dict[str, Any]:
+					try:
+						return {slotName: getattr(self, slotName) for slotName in self.__allSlots__}
+					except AttributeError as ex:
+						raise ExtendedTypeError(f"Unassigned field '{ex.name}' in object '{self}' of type '{self.__class__.__name__}'.") from ex
+
+				newClass.__getstate__ = __getstate__
+
+			if "__setstate__" not in members:
+				def __setstate__(self, state: Dict[str, Any]) -> None:
+					if self.__allSlots__ !=  (slots := set(state.keys())):
+						if len(diff := self.__allSlots__.difference(slots)) > 0:
+							raise ExtendedTypeError(f"""Missing fields in parameter 'state': '{"', '".join(diff)}'""")     # WORKAROUND: Python <3.12
+						else:
+							diff = slots.difference(self.__allSlots__)
+							raise ExtendedTypeError(f"""Unexpected fields in parameter 'state': '{"', '".join(diff)}'""")  # WORKAROUND: Python <3.12
+
+					for slotName, value in state.items():
+						setattr(self, slotName, value)
+
+				newClass.__setstate__ = __setstate__
 
 		# Check for inherited class attributes
 		attributes = []
@@ -505,7 +603,24 @@ class ExtendedType(type):
 		return newClass
 
 	@classmethod
-	def _findMethods(self, newClass: "ExtendedType", baseClasses: Tuple[type], members: Dict[str, Any]):
+	def _findMethods(
+		self,
+		newClass:    "ExtendedType",
+		baseClasses: Tuple[type],
+		members:     Dict[str, Any]
+	) -> Tuple[List[MethodType], List[MethodType]]:
+		"""
+		Find methods and methods with :mod:`pyTooling.Attributes`.
+
+		.. todo::
+
+		   Describe algorithm.
+
+		:param newClass:    Newly created class instance.
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:     Members of the new class.
+		:return:
+		"""
 		try:
 			from ..Attributes import Attribute
 		except (ImportError, ModuleNotFoundError):  # pragma: no cover
@@ -575,11 +690,32 @@ class ExtendedType(type):
 		return methods, methodsWithAttributes
 
 	@classmethod
-	def _computeSlots(self, className, baseClasses, members, slots, mixin):
+	def _computeSlots(
+		self,
+		className:   str,
+		baseClasses: Tuple[type],
+		members:     Dict[str, Any],
+		slots:       bool,
+		mixin:       bool
+	) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+		"""
+		Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
+
+		.. todo::
+
+		   Describe algorithm.
+
+		:param className:   The name of the class to construct.
+		:param baseClasses: Tuple of base-classes.
+		:param members:     Dictionary of class members.
+		:param slots:       True, if the class should setup ``__slots__``.
+		:param mixin:       True, if the class should behave as a mixin-class.
+		:returns:           A 2-tuple with a dictionary of class members and object members.
+		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
-		objectFields = {}
-		classFields = {}
+		classFields =   {}
+		objectFields =  {}
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -656,23 +792,37 @@ class ExtendedType(type):
 			mixinSlots.extend(slottedFields)
 			members["__slotted__"] = True
 			members["__slots__"] = tuple()
+			members["__allSlots__"] = set()
 			members["__isMixin__"] = True
 			members["__mixinSlots__"] = tuple(mixinSlots)
 		elif slots:
 			slottedFields.extend(mixinSlots)
 			members["__slotted__"] = True
 			members["__slots__"] = tuple(slottedFields)
+			members["__allSlots__"] = set(chain(slottedFields, inheritedSlottedFields.keys()))
 			members["__isMixin__"] = False
 			members["__mixinSlots__"] = tuple()
 		else:
 			members["__slotted__"] = False
 			# NO     __slots__
+			# members["__allSlots__"] = set()
 			members["__isMixin__"] = False
 			members["__mixinSlots__"] = tuple()
 		return classFields, objectFields
 
 	@classmethod
-	def _aggregateMixinSlots(self, className, baseClasses):
+	def _aggregateMixinSlots(self, className: str, baseClasses: Tuple[type]) -> List[str]:
+		"""
+		Aggregate slot names requested by mixin-base-classes.
+
+		.. todo::
+
+		   Describe algorithm.
+
+		:param className:   The name of the class to construct.
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:           A list of slot names.
+		"""
 		mixinSlots = []
 		if len(baseClasses) > 0:
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
@@ -706,6 +856,16 @@ class ExtendedType(type):
 
 	@classmethod
 	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
+		"""
+		Return a generator to iterate (visit) all base-classes ...
+
+		.. todo::
+
+		   Describe iteration order.
+
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:           Generator to iterate all base-classes.
+		"""
 		if len(baseClasses) == 0:
 			return
 
@@ -741,13 +901,14 @@ class ExtendedType(type):
 		An inheritance path is expressed as a tuple of base-classes from current base-class (left-most item) to
 		:class:`object` (right-most item).
 
-		:param baseClasses: List (tuple) of base-classes.
-		:returns:           Generator to iterate all inheritance paths. An inheritance path is a tuple of types (base-classes).
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:           Generator to iterate all inheritance paths. |br|
+		                    An inheritance path is a tuple of types (base-classes).
 		"""
 		if len(baseClasses) == 0:
 			return
 
-		typeStack:   List[type] =           list()
+		typeStack:     List[type] =           list()
 		iteratorStack: List[Iterator[type]] = list()
 
 		for baseClass in baseClasses:
@@ -791,9 +952,9 @@ class ExtendedType(type):
 					abstractMethods.update(baseClass.__abstractMethods__)
 
 			for base in baseClasses:
-				for key, value in base.__dict__.items():
-					if (key in abstractMethods and isinstance(value, FunctionType) and
-						not (hasattr(value, "__abstract__") or hasattr(value, "__mustOverride__"))):
+				for memberName, member in base.__dict__.items():
+					if (memberName in abstractMethods and isinstance(member, FunctionType) and
+						not (hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"))):
 						def outer(method):
 							@wraps(method)
 							def inner(cls, *args: Any, **kwargs: Any):
@@ -801,7 +962,7 @@ class ExtendedType(type):
 
 							return inner
 
-						members[key] = outer(value)
+						members[memberName] = outer(member)
 
 		# Check if methods are marked:
 		# * If so, add them to list of abstract methods
@@ -935,7 +1096,7 @@ class ExtendedType(type):
 			return False
 
 	# Additional properties and methods on a class
-	@property
+	@readonly
 	def HasClassAttributes(self) -> bool:
 		"""
 		Read-only property to check if the class has Attributes (:attr:`__pyattr__`).
@@ -947,7 +1108,7 @@ class ExtendedType(type):
 		except AttributeError:
 			return False
 
-	@property
+	@readonly
 	def HasMethodAttributes(self) -> bool:
 		"""
 		Read-only property to check if the class has methods with Attributes (:attr:`__methodsWithAttributes__`).

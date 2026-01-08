@@ -32,7 +32,9 @@
 """
 A common set of missing exceptions in Python.
 
-.. hint:: See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
 try:
 	from pyTooling.Decorators import export

@@ -1,0 +1,14 @@
+-r ../../requirements.txt
+
+# Static Type Checking
+mypy[reports] ~= 1.19
+typing_extensions ~= 4.15
+types-colorama >= 0.4.15
+types-setuptools >= 80.9
+lxml >= 5.4, <7.0
+
+# For pyTooling.Configuration.YAML testing
+ruamel.yaml ~= 0.18.0
+
+# For pyTooling.TerminalUI testing
+colorama ~= 0.4.6

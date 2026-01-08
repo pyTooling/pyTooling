@@ -234,7 +234,7 @@ class Base(
 		"""
 		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Base::del Needs documentation.
 
@@ -457,7 +457,7 @@ class BaseWithVertices(
 		self._graph = graph
 		self._vertices = set() if vertices is None else {v for v in vertices}
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseWithVertices::del Needs documentation.
 
@@ -575,7 +575,7 @@ class Vertex(
 		self._inboundLinks =  []
 		self._outboundLinks = []
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseEdge::del Needs documentation.
 
@@ -1270,7 +1270,7 @@ class Vertex(
 
 		return False
 
-	def DeleteEdgeTo(self, destination: 'Vertex'):
+	def DeleteEdgeTo(self, destination: 'Vertex') -> None:
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
@@ -1279,7 +1279,7 @@ class Vertex(
 
 		edge.Delete()
 
-	def DeleteEdgeFrom(self, source: 'Vertex'):
+	def DeleteEdgeFrom(self, source: 'Vertex') -> None:
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
@@ -1288,7 +1288,7 @@ class Vertex(
 
 		edge.Delete()
 
-	def DeleteLinkTo(self, destination: 'Vertex'):
+	def DeleteLinkTo(self, destination: 'Vertex') -> None:
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
@@ -1297,7 +1297,7 @@ class Vertex(
 
 		link.Delete()
 
-	def DeleteLinkFrom(self, source: 'Vertex'):
+	def DeleteLinkFrom(self, source: 'Vertex') -> None:
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
@@ -2086,7 +2086,7 @@ class BaseGraph(
 		self._linksWithoutID = []
 		self._linksWithID = {}
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseGraph::del Needs documentation.
 
@@ -2399,7 +2399,7 @@ class BaseGraph(
 				if predicate(link):
 					link.Reverse()
 
-	def RemoveEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None):
+	def RemoveEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> None:
 		"""
 		Remove all or selected edges of a graph.
 
@@ -2442,7 +2442,7 @@ class BaseGraph(
 					edge._destination._inboundEdges.remove(edge)
 					edge._Delete()
 
-	def RemoveLinks(self, predicate: Nullable[Callable[[Link], bool]] = None):
+	def RemoveLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> None:
 		"""
 		Remove all or selected links of a graph.
 
@@ -2585,7 +2585,7 @@ class Subgraph(
 
 		self._graph = graph
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Subgraph::del Needs documentation.
 
@@ -2650,7 +2650,7 @@ class View(
 
 		graph._views.add(self)
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::View::del Needs documentation.
 
@@ -2706,7 +2706,7 @@ class Component(
 
 		graph._components.add(self)
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Component::del Needs documentation.
 
@@ -2765,7 +2765,7 @@ class Graph(
 		self._views = set()
 		self._components = set()
 
-	def __del__(self):
+	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Graph::del Needs documentation.
 

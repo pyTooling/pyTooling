@@ -34,7 +34,7 @@
 .. TODO:: Write module documentation.
 
 """
-from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
 
 try:
 	from pyTooling.Decorators              import export
@@ -63,12 +63,31 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 	"""
 	_patternWithValue: ClassVar[str]
 
-	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"{0}={1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._patternWithValue = patternWithValue
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is OptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -121,12 +140,31 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 
 	Example: ``-optimizer=on``
 	"""
-	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", patternWithValue: str = "-{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "-{0}", patternWithValue: str = "-{0}={1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"-{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"-{0}={1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is ShortOptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -139,12 +177,31 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 
 	Example: ``--optimizer=on``
 	"""
-	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", patternWithValue: str = "--{0}={1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "--{0}", patternWithValue: str = "--{0}={1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"--{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"--{0}={1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is LongOptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)
@@ -157,12 +214,31 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 
 	Example: ``/optimizer:on``
 	"""
-	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", patternWithValue: str = "/{0}:{1}", **kwargs: Any):
+	def __init_subclass__(cls, *args: Any, pattern: str = "/{0}", patternWithValue: str = "/{0}:{1}", **kwargs: Any) -> None:
+		"""
+		This method is called when a class is derived.
+
+		:param args:             Any positional arguments.
+		:param pattern:          This pattern is used to format an argument without a value. |br|
+		                         Default: ``"/{0}"``.
+		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		                         Default: ``"/{0}:{1}"``.
+		:param kwargs:           Any keyword argument.
+		"""
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	def __new__(cls, *args: Any, **kwargs: Any):
+	# TODO: the whole class should be marked as abstract
+	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
+	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+		"""
+		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+
+		:param args:       Any positional arguments.
+		:param kwargs:     Any keyword arguments.
+		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		"""
 		if cls is WindowsOptionalValuedFlag:
 			raise TypeError(f"Class '{cls.__name__}' is abstract.")
 		return super().__new__(cls, *args, **kwargs)

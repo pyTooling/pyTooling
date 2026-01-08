@@ -31,7 +31,9 @@
 """
 This packages provides a data structure to describe statemachines.
 
-.. hint:: See :ref:`high-level help <STRUCT/StateMachine>` for explanations and usage examples.
+.. hint::
+
+   See :ref:`high-level help <STRUCT/StateMachine>` for explanations and usage examples.
 """
 from typing import List
 
