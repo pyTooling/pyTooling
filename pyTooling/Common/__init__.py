@@ -39,7 +39,7 @@ __author__ =        "Patrick Lehmann"
 __email__ =         "Paebbels@gmail.com"
 __copyright__ =     "2017-2026, Patrick Lehmann"
 __license__ =       "Apache License, Version 2.0"
-__version__ =       "8.9.1"
+__version__ =       "8.10.0"
 __keywords__ =      [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
