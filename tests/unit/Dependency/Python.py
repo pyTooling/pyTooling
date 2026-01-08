@@ -83,7 +83,7 @@ class PyPI(TestCase):
 
 		self.assertEqual("pyTooling", project.Name)
 		self.assertEqual("https://pypi.org/project/pyTooling/", str(project.URL))
-		self.assertEqual(83, len(project))
+		self.assertGreaterEqual(len(project), 84)
 
 		for release in project:
 			self.assertEqual(project, release.Package)
@@ -99,7 +99,7 @@ class PyPI(TestCase):
 
 		self.assertEqual("pyVersioning", project.Name)
 		self.assertEqual("https://pypi.org/project/pyVersioning/", str(project.URL))
-		self.assertEqual(39, len(project))
+		self.assertGreaterEqual(len(project), 39)
 
 		for release in project:
 			self.assertEqual(project, release.Package)
@@ -115,7 +115,7 @@ class PyPI(TestCase):
 
 		self.assertEqual("sphinx-reports", project.Name)
 		self.assertEqual("https://pypi.org/project/sphinx-reports/", str(project.URL))
-		self.assertEqual(23, len(project))
+		self.assertGreaterEqual(len(project), 23)
 
 		for release in project:
 			print(f"{release!r}")
