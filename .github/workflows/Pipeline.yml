@@ -17,20 +17,23 @@ jobs:
   UnitTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@r7
     with:
-      package_namespace: 'pyTooling.*'
+      package_namespace:   'pyTooling.*'
+      version_file:        'Common/__init__.py'
       python_version:      '3.13'
       python_version_list: '3.11 3.12 3.13 3.14 pypy-3.11'
-      system_list:  'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw64 ucrt64'
-      disable_list: 'ubuntu-arm:* windows-arm:pypy-3.11'
+      system_list:         'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw64 ucrt64'
+      disable_list:        'ubuntu-arm:* windows-arm:pypy-3.11'
 
   PlatformTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@r7
     with:
-      name: Platform
+      name:                'Platform'
+      package_namespace:   'pyTooling.*'
+      version_file:        'Common/__init__.py'
       python_version_list: ''
-      system_list: 'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw32 mingw64 ucrt64 clang64'
-      disable_list: 'ubuntu-arm:* mingw32:*'  # no ruamel-yaml for MinGW32
-      pipeline-delay: 30
+      system_list:         'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw32 mingw64 ucrt64 clang64'
+      disable_list:        'ubuntu-arm:* mingw32:*'  # no ruamel-yaml for MinGW32
+      pipeline-delay:      30
 
   InstallParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@r7
@@ -38,6 +41,7 @@ jobs:
       - UnitTestingParams
     with:
       package_namespace:   'pyTooling.*'
+      version_file:        'Common/__init__.py'
       python_version:      ${{ needs.UnitTestingParams.outputs.python_version }}
       python_version_list: ''
       system_list:         'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw64 ucrt64'
