@@ -10,7 +10,15 @@ release.
 Version 8.x (2025)
 ******************
 
-.. topic:: `v8.9.0 - xx.yy.2025 <https://github.com/pyTooling/pyTooling/releases/v8.9.0>`__
+.. topic:: `v8.10.0 - 09.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.10.0>`__
+
+   tbd
+
+.. topic:: `v8.9.1 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.9.1>`__
+
+   tbd
+
+.. topic:: `v8.9.0 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.9.0>`__
 
    tbd
 
