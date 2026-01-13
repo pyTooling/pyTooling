@@ -333,4 +333,5 @@ class AnyPlatform(TestCase):
 		self.assertEqual("dll", platform.DynamicLibraryExtension)
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
+# TODO: Check IsCI and IsGitHub flag
 # TODO: FreeBSD

@@ -2070,7 +2070,7 @@ class BaseGraph(
 		name: Nullable[str] = None,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 		#, vertices: Nullable[Iterable[Vertex]] = None) -> None:
-	):
+	) -> None:
 		"""
 		.. todo:: GRAPH::BaseGraph::init Needs documentation.
 
