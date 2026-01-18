@@ -373,6 +373,36 @@ def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 	return next(iter(d.items()))
 
 
+# @overload
+# def mergedicts(
+# 	m1: Mapping[_DictKey1, _DictValue1],
+# 	filter: Optional[Callable[[Hashable, Any], bool]]
+# ) -> Dict[Union[_DictKey1], Union[_DictValue1]]:
+# #) -> Generator[Tuple[Union[_DictKey1], Union[_DictValue1]], None, None]:
+# 	...  # pragma: no cover
+#
+#
+# @overload
+# def mergedicts(
+# 	m1: Mapping[_DictKey1, _DictValue1],
+# 	m2: Mapping[_DictKey2, _DictValue2],
+# 	filter: Optional[Callable[[Hashable, Any], bool]]
+# ) -> Dict[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]]:
+# # ) -> Generator[Tuple[Union[_DictKey1, _DictKey2], Union[_DictValue1, _DictValue2]], None, None]:
+# 	...  # pragma: no cover
+#
+#
+# @overload
+# def mergedicts(
+# 	m1: Mapping[_DictKey1, _DictValue1],
+# 	m2: Mapping[_DictKey2, _DictValue2],
+# 	m3: Mapping[_DictKey3, _DictValue3],
+# 	filter: Optional[Callable[[Hashable, Any], bool]]
+# ) -> Dict[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]]:
+# #) -> Generator[Tuple[Union[_DictKey1, _DictKey2, _DictKey3], Union[_DictValue1, _DictValue2, _DictValue3]], None, None]:
+# 	...  # pragma: no cover
+
+
 @export
 def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
 	"""
@@ -397,6 +427,30 @@ def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] =
 		return {k: v for d in dicts for k, v in d.items()}
 	else:
 		return {k: v for d in dicts for k, v in d.items() if filter(k, v)}
+
+
+# @overload
+# def zipdicts(
+# 	m1: Mapping[_DictKey, _DictValue1]
+# ) -> Generator[Tuple[_DictKey, _DictValue1], None, None]:
+# 	...  # pragma: no cover
+#
+#
+# @overload
+# def zipdicts(
+# 	m1: Mapping[_DictKey, _DictValue1],
+# 	m2: Mapping[_DictKey, _DictValue2]
+# ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2], None, None]:
+# 	...  # pragma: no cover
+#
+#
+# @overload
+# def zipdicts(
+# 	m1: Mapping[_DictKey, _DictValue1],
+# 	m2: Mapping[_DictKey, _DictValue2],
+# 	m3: Mapping[_DictKey, _DictValue3]
+# ) -> Generator[Tuple[_DictKey, _DictValue1, _DictValue2, _DictValue3], None, None]:
+# 	...  # pragma: no cover
 
 
 @export
