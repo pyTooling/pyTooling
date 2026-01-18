@@ -129,6 +129,14 @@ class Platforms(Flag):
 
 	Environment = ENV_Native | ENV_WSL | ENV_MSYS2 | ENV_Cygwin  #: Mask: Any environment.
 
+	CI_None =          auto()  #: CI: No CI environment detected. Running on host.
+	CI_AppVeyor =      auto()  #: CI: AppVayor
+	CI_GitHubActions = auto()  #: CI: GitHub Actions
+	CI_GitLabCI =      auto()  #: CI: GitLab CI
+	CI_TravisCI =      auto()  #: CI: Travis CI
+
+	ContinuousIntegration = CI_None | CI_AppVeyor | CI_GitHubActions | CI_GitLabCI | CI_TravisCI  #: Mask: Any CI environment.
+
 	ARCH_x86_32 =  auto()      #: Architecture: x86-32 (IA32).
 	ARCH_x86_64 =  auto()      #: Architecture: x86-64 (AMD64).
 	ARCH_AArch64 = auto()      #: Architecture: AArch64 (arm64).
@@ -209,6 +217,17 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		machine = platform.machine()
 		sys_platform = sys.platform
 		sysconfig_platform = sysconfig.get_platform()
+
+		if "APPVEYOR" in os.environ:
+			self._platform |= Platforms.CI_AppVeyor
+		elif "GITHUB_ACTIONS" in os.environ:
+			self._platform |= Platforms.CI_GitHubActions
+		elif "GITLAB_CI" in os.environ:
+			self._platform |= Platforms.CI_GitLabCI
+		elif "TRAVIS" in os.environ:
+			self._platform |= Platforms.CI_TravisCI
+		else:
+			self._platform |= Platforms.CI_None
 
 		if os.name == "nt":
 			self._platform |= Platforms.OS_Windows
@@ -455,6 +474,51 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		:returns: ``True``, if POSIX or POSIX-like.
 		"""
 		return Platforms.SEP_WindowsPath not in self._platform
+
+	@readonly
+	def IsCI(self) -> bool:
+		"""
+		Returns true, if the platform is a CI environment.
+
+		:returns: ``True``, if on CI runner.
+		"""
+		return Platforms.CI_None not in self._platform
+
+	@readonly
+	def IsAppVeyor(self) -> bool:
+		"""
+		Returns true, if the platform is on AppVeyor.
+
+		:returns: ``True``, if on AppVeyor.
+		"""
+		return Platforms.CI_AppVeyor in self._platform
+
+	@readonly
+	def IsGitHub(self) -> bool:
+		"""
+		Returns true, if the platform is on GitHub.
+
+		:returns: ``True``, if on GitHub.
+		"""
+		return Platforms.CI_GitHubActions in self._platform
+
+	@readonly
+	def IsGitLab(self) -> bool:
+		"""
+		Returns true, if the platform is on GitLab CI.
+
+		:returns: ``True``, if on GitLab CI.
+		"""
+		return Platforms.CI_GitLabCI in self._platform
+
+	@readonly
+	def IsTravisCI(self) -> bool:
+		"""
+		Returns true, if the platform is on Travis CI.
+
+		:returns: ``True``, if on Travis CI.
+		"""
+		return Platforms.CI_TravisCI in self._platform
 
 	@readonly
 	def PathSeperator(self) -> str:

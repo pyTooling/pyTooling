@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for TBD."""
-from os       import getenv as os_getenv
+from os       import getenv as os_getenv, environ as os_environ
 from pytest   import mark
 from unittest import TestCase
 
@@ -44,6 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 class AnyPlatform(TestCase):
 	expected = os_getenv("ENVIRONMENT_NAME", default="Windows (x86-64)")
+	isOnGitHub = "GITHUB_SHA" in os_environ
 
 	@mark.skipif(os_getenv("ENVIRONMENT_NAME", "skip") == "skip", reason="Skipped, if environment variable 'ENVIRONMENT_NAME' isn't set.")
 	def test_PlatformString(self) -> None:
@@ -55,7 +56,21 @@ class AnyPlatform(TestCase):
 	def test_NativeLinux_x86_64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Linux_x86_64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Linux_x86_64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Linux_x86_64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertTrue(platform.IsNativeLinux)
@@ -79,7 +94,21 @@ class AnyPlatform(TestCase):
 	def test_NativeLinux_aarch64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Linux_AArch64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Linux_AArch64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Linux_AArch64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertTrue(platform.IsNativeLinux)
@@ -103,7 +132,21 @@ class AnyPlatform(TestCase):
 	def test_NativeMacOS_Intel(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.MacOS_Intel), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.MacOS_Intel | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.MacOS_Intel | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
@@ -127,7 +170,21 @@ class AnyPlatform(TestCase):
 	def test_NativeMacOS_ARM(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.MacOS_ARM), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.MacOS_ARM | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.MacOS_ARM | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
@@ -151,7 +208,21 @@ class AnyPlatform(TestCase):
 	def test_NativeWindows_x86_64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_x86_64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_x86_64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_x86_64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertTrue(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
@@ -175,7 +246,21 @@ class AnyPlatform(TestCase):
 	def test_NativeWindows_aarch64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_AArch64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_AArch64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_AArch64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertTrue(platform.IsNativePlatform)
 		self.assertTrue(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
@@ -199,7 +284,21 @@ class AnyPlatform(TestCase):
 	def test_MSYS(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_MSYS2_MSYS), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_MSYS2_MSYS | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_MSYS2_MSYS | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -222,7 +321,21 @@ class AnyPlatform(TestCase):
 	def test_MinGW32(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_MSYS2_MinGW32), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_MSYS2_MinGW32 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_MSYS2_MinGW32 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -245,7 +358,21 @@ class AnyPlatform(TestCase):
 	def test_MinGW64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_MSYS2_MinGW64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_MSYS2_MinGW64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_MSYS2_MinGW64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -268,7 +395,21 @@ class AnyPlatform(TestCase):
 	def test_UCRT64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_MSYS2_UCRT64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_MSYS2_UCRT64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_MSYS2_UCRT64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -291,7 +432,21 @@ class AnyPlatform(TestCase):
 	def test_Clang32(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_MSYS2_Clang32), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_MSYS2_Clang32 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_MSYS2_Clang32 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)
@@ -314,7 +469,21 @@ class AnyPlatform(TestCase):
 	def test_Clang64(self) -> None:
 		platform = Platform()
 
-		self.assertEqual(str(Platforms.Windows_MSYS2_Clang64), repr(platform))
+		if self.isOnGitHub:
+			self.assertEqual(str(Platforms.Windows_MSYS2_Clang64 | Platforms.CI_GitHubActions), repr(platform))
+			self.assertTrue(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertTrue(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+		else:
+			self.assertEqual(str(Platforms.Windows_MSYS2_Clang64 | Platforms.CI_None), repr(platform))
+			self.assertFalse(platform.IsCI)
+			self.assertFalse(platform.IsAppVeyor)
+			self.assertFalse(platform.IsGitHub)
+			self.assertFalse(platform.IsGitLab)
+			self.assertFalse(platform.IsTravisCI)
+
 		self.assertFalse(platform.IsNativeWindows)
 		self.assertFalse(platform.IsNativeLinux)
 		self.assertFalse(platform.IsNativeMacOS)

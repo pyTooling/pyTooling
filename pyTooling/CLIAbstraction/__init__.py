@@ -399,7 +399,7 @@ class Executable(Program):  # (ILogable):
 		workingDirectory:    Nullable[Path] = None,
 		environment:         Nullable[Environment] = None,
 		dryRun:              bool = False
-	):
+	) -> None:
 		"""
 		Initializes an executable instance.
 
