@@ -43,20 +43,9 @@ Flag arguments represent simple boolean values by being present or absent.
 """
 from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable, Self
 
-try:
-	from pyTooling.Decorators              import export
-	from pyTooling.Common                  import getFullyQualifiedName
-	from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators                      import export
-		from Common                          import getFullyQualifiedName
-		from CLIAbstraction.Argument         import NamedAndValuedArgument
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Versioning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators              import export
+from pyTooling.Common                  import getFullyQualifiedName
+from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 
 @export

@@ -59,16 +59,7 @@ from typing              import Type, TypeVar, Callable, Generator, Hashable, Li
 from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
 
 
-try:
-	from pyTooling.Decorators  import export
-except ModuleNotFoundError:  # pragma: no cover
-	print("[pyTooling.Common] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators         import export
-	except ModuleNotFoundError as ex:  # pragma: no cover
-		print("[pyTooling.Common] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export
 
 
 @export

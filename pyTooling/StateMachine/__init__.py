@@ -37,18 +37,8 @@ This packages provides a data structure to describe statemachines.
 """
 from typing import List
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.StateMachine] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, mixin
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.StateMachine] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType
 
 
 @export

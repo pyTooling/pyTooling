@@ -41,22 +41,10 @@ from time     import perf_counter_ns
 from types    import TracebackType
 from typing   import List, Optional as Nullable, Iterator, Tuple, Type, Self
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import SlottedObject
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Platform    import CurrentPlatform
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Stopwatch] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import SlottedObject
-		from Exceptions          import ToolingException
-		from Platform            import CurrentPlatform
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Stopwatch] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import SlottedObject
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Platform    import CurrentPlatform
 
 
 @export

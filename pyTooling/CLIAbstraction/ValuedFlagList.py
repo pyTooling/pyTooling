@@ -46,20 +46,9 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
 """
 from typing import List, Union, Iterable, cast, Any, Self
 
-try:
-	from pyTooling.Decorators              import export
-	from pyTooling.Common                  import getFullyQualifiedName
-	from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators                      import export
-		from Common                          import getFullyQualifiedName
-		from CLIAbstraction.Argument         import ValueT, NamedAndValuedArgument
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Versioning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators              import export
+from pyTooling.Common                  import getFullyQualifiedName
+from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
 
 
 @export

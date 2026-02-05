@@ -41,18 +41,8 @@ Valued tuple-flag arguments represent a name and a value as a 2-tuple.
 """
 from typing import Any, Self
 
-try:
-	from pyTooling.Decorators              import export
-	from pyTooling.CLIAbstraction.Argument import NamedTupledArgument
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators                      import export
-		from CLIAbstraction.Argument         import NamedTupledArgument
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Versioning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators              import export
+from pyTooling.CLIAbstraction.Argument import NamedTupledArgument
 
 
 @export

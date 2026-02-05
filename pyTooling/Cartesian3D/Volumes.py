@@ -30,24 +30,11 @@
 #
 """An implementation of 3D cartesian volumes for Python."""
 
-try:
-	from pyTooling.Decorators  import readonly, export
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Common      import getFullyQualifiedName
-	from pyTooling.Cartesian3D import Point3D, Offset3D
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Cartesian3D] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators  import readonly, export
-		from Exceptions  import ToolingException
-		from MetaClasses import ExtendedType
-		from Common      import getFullyQualifiedName
-		from Cartesian3D import Point3D, Offset3D
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Cartesian3D] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import readonly, export
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.Cartesian3D import Point3D, Offset3D
 
 
 @export

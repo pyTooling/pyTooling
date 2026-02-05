@@ -33,22 +33,10 @@ from collections   import deque
 from typing        import TypeVar, Generic, List, Tuple, Dict, Deque, Union, Optional as Nullable
 from typing        import Callable, Iterator, Generator, Iterable, Mapping, Hashable
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import getFullyQualifiedName
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Tree] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, mixin
-		from Exceptions          import ToolingException
-		from Common              import getFullyQualifiedName
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Tree] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import getFullyQualifiedName
 
 
 IDType = TypeVar("IDType", bound=Hashable)

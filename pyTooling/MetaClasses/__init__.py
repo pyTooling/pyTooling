@@ -44,18 +44,8 @@ from types      import FunctionType, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
-try:
-	from pyTooling.Exceptions import ToolingException
-	from pyTooling.Decorators import export, readonly
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.MetaClasses] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Exceptions import ToolingException
-		from Decorators import export, readonly
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.MetaClasses] Could not import directly!")
-		raise ex
+from pyTooling.Exceptions import ToolingException
+from pyTooling.Decorators import export, readonly
 
 
 __all__ = ["M"]
@@ -480,11 +470,8 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		try:
-			from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
-		except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-			from Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
-
+		from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
+		
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
@@ -561,13 +548,7 @@ class ExtendedType(type):
 			:raises ValueError:
 			:raises ValueError:
 			"""
-			try:
-				from ..Attributes import Attribute
-			except (ImportError, ModuleNotFoundError):  # pragma: no cover
-				try:
-					from Attributes import Attribute
-				except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-					raise ex
+			from pyTooling.Attributes import Attribute
 
 			if predicate is None:
 				predicate = Attribute
@@ -621,13 +602,7 @@ class ExtendedType(type):
 		:param members:     Members of the new class.
 		:return:
 		"""
-		try:
-			from ..Attributes import Attribute
-		except (ImportError, ModuleNotFoundError):  # pragma: no cover
-			try:
-				from Attributes import Attribute
-			except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-				raise ex
+		from pyTooling.Attributes import Attribute
 
 		# Embedded bind function due to circular dependencies.
 		def bind(instance: object, func: FunctionType, methodName: Nullable[str] = None):

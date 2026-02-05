@@ -41,32 +41,15 @@ from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOU
 from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any, Mapping, Iterable
 
 
-try:
-	from pyTooling.Decorators                import export, readonly
-	from pyTooling.MetaClasses               import ExtendedType
-	from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedException
-	from pyTooling.Common                    import getFullyQualifiedName
-	from pyTooling.Attributes                import Attribute
-	from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
-	from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
-	from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
-	from pyTooling.Platform                  import Platform
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.CLIAbstraction] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators                import export, readonly
-		from MetaClasses               import ExtendedType
-		from Exceptions                import ToolingException, PlatformNotSupportedException
-		from Common                    import getFullyQualifiedName
-		from Attributes                import Attribute
-		from CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
-		from CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
-		from CLIAbstraction.ValuedFlag import ValuedFlag
-		from Platform                  import Platform
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.CLIAbstraction] Could not import directly!")
-		raise ex
+from pyTooling.Decorators                import export, readonly
+from pyTooling.MetaClasses               import ExtendedType
+from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedException
+from pyTooling.Common                    import getFullyQualifiedName
+from pyTooling.Attributes                import Attribute
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, ExecutableArgument
+from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
+from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
+from pyTooling.Platform                  import Platform
 
 
 @export

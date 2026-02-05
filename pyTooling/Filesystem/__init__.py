@@ -42,26 +42,12 @@ from itertools             import chain
 from pathlib               import Path
 from typing                import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union
 
-try:
-	from pyTooling.Decorators  import readonly, export
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.MetaClasses import ExtendedType, abstractmethod
-	from pyTooling.Common      import getFullyQualifiedName, zipdicts
-	from pyTooling.Stopwatch   import Stopwatch
-	from pyTooling.Tree        import Node
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Filesystem] Could not import from 'pyTooling.*'!")
-
-	try:
-		from pyTooling.Decorators  import readonly, export
-		from pyTooling.Exceptions  import ToolingException
-		from pyTooling.MetaClasses import ExtendedType, abstractmethod
-		from pyTooling.Common      import getFullyQualifiedName
-		from pyTooling.Stopwatch   import Stopwatch
-		from pyTooling.Tree        import Node
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Filesystem] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import readonly, export
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
+from pyTooling.Common      import getFullyQualifiedName, zipdicts
+from pyTooling.Stopwatch   import Stopwatch
+from pyTooling.Tree        import Node
 
 
 __all__ = ["_ParentType"]
