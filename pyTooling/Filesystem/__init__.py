@@ -44,7 +44,7 @@ from typing                import Optional as Nullable, Dict, Generic, Generator
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType, abstractmethod
+from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
 from pyTooling.Stopwatch   import Stopwatch
 from pyTooling.Tree        import Node

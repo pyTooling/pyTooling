@@ -40,7 +40,7 @@ from datetime  import datetime
 from enum      import IntEnum
 from functools import wraps, update_wrapper
 from threading import RLock
-from typing    import Optional as Nullable, List, Dict, Union, Iterable, Mapping, Callable, Iterator
+from typing    import Optional as Nullable, List, Dict, Union, Iterable, Mapping
 
 try:
 	from aiohttp import ClientSession
@@ -58,9 +58,9 @@ except ImportError as ex:  # pragma: no cover
 	raise Exception(f"Optional dependency 'requests' not installed. Either install pyTooling with extra dependencies 'pyTooling[pypi]' or install 'requests' directly.") from ex
 
 from pyTooling.Decorators      import export, readonly
-from pyTooling.MetaClasses     import ExtendedType, abstractmethod, mustoverride
+from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Exceptions      import ToolingException
-from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
+from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts

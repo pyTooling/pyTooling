@@ -45,7 +45,7 @@ The Licensing module implements mapping tables for various license names and ide
    See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses  import dataclass
-from typing       import Any, Dict, Optional as Nullable
+from typing       import Any, Dict
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType

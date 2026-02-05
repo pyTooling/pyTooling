@@ -30,11 +30,9 @@
 #
 """An implementation of 2D cartesian shapes for Python."""
 
-from typing import Generic, Tuple, Optional as Nullable
+from typing import Generic, Tuple
 
-from pyTooling.Decorators  import readonly, export
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Decorators  import export
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
 

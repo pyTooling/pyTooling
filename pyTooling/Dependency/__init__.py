@@ -39,7 +39,7 @@ from datetime import datetime
 from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self, Iterator
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
+from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName, firstKey
 from pyTooling.Versioning  import SemanticVersion

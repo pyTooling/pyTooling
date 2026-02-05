@@ -30,11 +30,7 @@
 #
 """An implementation of 3D cartesian volumes for Python."""
 
-from pyTooling.Decorators  import readonly, export
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian3D import Point3D, Offset3D
+from pyTooling.Decorators  import export
 
 
 @export

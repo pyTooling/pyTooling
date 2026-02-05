@@ -44,7 +44,6 @@ from typing   import List, Optional as Nullable, Iterator, Tuple, Type, Self
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Platform    import CurrentPlatform
 
 
 @export

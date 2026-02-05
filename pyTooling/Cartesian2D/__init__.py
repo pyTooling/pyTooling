@@ -34,7 +34,6 @@ from math   import sqrt, acos
 from typing import TypeVar, Union, Generic, Any, Tuple
 
 from pyTooling.Decorators  import readonly, export
-from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
 

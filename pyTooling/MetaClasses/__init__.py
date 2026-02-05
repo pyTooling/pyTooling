@@ -471,7 +471,7 @@ class ExtendedType(type):
 		:raises AttributeError: If slot already exists in base-class.
 		"""
 		from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
-		
+
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
