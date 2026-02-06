@@ -277,13 +277,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			"""GetWindowSize of file descriptor."""
 			try:
 				from fcntl    import ioctl      as fcntl_ioctl
-				from struct   import unpack     as struct_unpack
+				from struct   import unpack     as struct_unpack, pack 		as struct_pack
 				from termios  import TIOCGWINSZ
 			except ImportError:
 				return None
 
 			try:
-				struct = struct_unpack('hh', fcntl_ioctl(fd, TIOCGWINSZ, '1234'))
+				struct = struct_unpack('HHHH', fcntl_ioctl(fd, TIOCGWINSZ, struct_pack('HHHH', 0, 0, 0, 0)))
 			except OSError:
 				return None
 			try:
