@@ -58,24 +58,11 @@ from itertools   import chain
 from typing      import TypeVar, Generic, List, Tuple, Dict, Set, Deque, Union, Optional as Nullable
 from typing      import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import getFullyQualifiedName
-	from pyTooling.Tree        import Node
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Graph] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, mixin
-		from Exceptions          import ToolingException
-		from Common              import getFullyQualifiedName
-		from Tree                import Node
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Graph] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.Tree        import Node
 
 
 DictKeyType = TypeVar("DictKeyType", bound=Hashable)

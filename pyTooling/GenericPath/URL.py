@@ -40,22 +40,10 @@ from enum     import IntFlag
 from re       import compile as re_compile
 from typing   import Dict, Optional as Nullable, Mapping
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import getFullyQualifiedName
-	from pyTooling.GenericPath import RootMixIn, ElementMixIn, PathMixIn
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.GenericPath.URL] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators         import export, readonly
-		from Exceptions         import ToolingException
-		from Common             import getFullyQualifiedName
-		from GenericPath        import RootMixIn, ElementMixIn, PathMixIn
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.GenericPath.URL] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.GenericPath import RootMixIn, ElementMixIn, PathMixIn
 
 
 __all__ = ["URL_PATTERN", "URL_REGEXP"]

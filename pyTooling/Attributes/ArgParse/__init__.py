@@ -32,24 +32,11 @@
 from argparse import ArgumentParser, Namespace
 from typing   import Callable, Dict, Tuple, Any, TypeVar
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import firstElement, firstPair
-	from pyTooling.Attributes  import Attribute
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Attributes.ArgParse] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType
-		from Exceptions          import ToolingException
-		from Common              import firstElement, firstPair
-		from Attributes          import Attribute
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Attributes.ArgParse] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import firstElement, firstPair
+from pyTooling.Attributes  import Attribute
 
 
 M = TypeVar("M", bound=Callable)

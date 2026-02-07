@@ -45,18 +45,8 @@ from types  import MethodType, FunctionType, ModuleType
 from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
 from typing import Optional as Nullable
 
-try:
-	from pyTooling.Decorators import export, readonly
-	from pyTooling.Common     import getFullyQualifiedName
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Attributes] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators import export, readonly
-		from Common     import getFullyQualifiedName
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Attributes] Could not import directly!")
-		raise ex
+from pyTooling.Decorators import export, readonly
+from pyTooling.Common     import getFullyQualifiedName
 
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]

@@ -36,22 +36,10 @@ from types     import TracebackType
 from typing import Optional as Nullable, List, Iterator, Type, Self, Iterable, Dict, Any, Tuple
 
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import getFullyQualifiedName
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Tracing] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType
-		from Exceptions          import ToolingException
-		from Common              import getFullyQualifiedName
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Tracing] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import getFullyQualifiedName
 
 
 __all__ = ["_threadLocalData"]

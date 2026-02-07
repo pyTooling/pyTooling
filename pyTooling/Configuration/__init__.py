@@ -38,20 +38,9 @@ Abstract configuration reader.
 from pathlib       import Path
 from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType, mixin
-	from pyTooling.Exceptions  import ToolingException
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Configuration] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, mixin
-		from Exceptions          import ToolingException
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Configuration] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType, mixin
+from pyTooling.Exceptions  import ToolingException
 
 
 __all__ = ["KeyT", "NodeT", "ValueT"]

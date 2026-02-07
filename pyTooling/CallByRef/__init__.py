@@ -38,18 +38,8 @@ Auxiliary classes to implement call-by-reference.
 from decimal       import Decimal
 from typing        import Any, Generic, TypeVar, Optional as Nullable
 
-try:
-	from pyTooling.Decorators  import export
-	from pyTooling.MetaClasses import ExtendedType
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.CallByRef] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export
-		from MetaClasses         import ExtendedType
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.CallByRef] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export
+from pyTooling.MetaClasses import ExtendedType
 
 
 T = TypeVar("T")

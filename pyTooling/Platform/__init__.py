@@ -37,22 +37,10 @@ Common platform information gathered from various sources.
 """
 from enum                    import Flag, auto, Enum
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Versioning  import PythonVersion
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Platform] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from Exceptions          import ToolingException
-		from MetaClasses         import ExtendedType
-		from Versioning          import PythonVersion
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Platform] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Versioning  import PythonVersion
 
 
 __all__ = ["CurrentPlatform"]

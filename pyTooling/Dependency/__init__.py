@@ -38,24 +38,11 @@ Implementation of package dependencies.
 from datetime import datetime
 from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self, Iterator
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import getFullyQualifiedName, firstKey
-	from pyTooling.Versioning  import SemanticVersion
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Dependency] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, abstractmethod, mustoverride
-		from Exceptions          import ToolingException
-		from Common              import getFullyQualifiedName, firstKey
-		from Versioning          import SemanticVersion
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Dependency] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import getFullyQualifiedName, firstKey
+from pyTooling.Versioning  import SemanticVersion
 
 
 @export

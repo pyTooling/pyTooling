@@ -33,14 +33,14 @@ Package installer for 'pyTooling is a powerful collection of arbitrary useful cl
 exceptions.'.
 """
 # Add package itself to PYTHON_PATH, so it can be used to package itself.
-from os.path    import abspath
+from os.path    import dirname
 from sys        import path as sys_path
-sys_path.insert(0, abspath('./pyTooling'))
+sys_path.insert(0, dirname(__file__))
 
 from setuptools import setup
 
 from pathlib    import Path
-from Packaging  import DescribePythonPackageHostedOnGitHub
+from pyTooling.Packaging  import DescribePythonPackageHostedOnGitHub
 
 gitHubNamespace =        "pyTooling"
 packageName =            "pyTooling.*"

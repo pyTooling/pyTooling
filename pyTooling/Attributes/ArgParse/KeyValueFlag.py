@@ -31,18 +31,8 @@
 #
 from typing   import Optional as Nullable
 
-try:
-	from pyTooling.Decorators                   import export
-	from pyTooling.Attributes.ArgParse.Argument import NamedAndValuedArgument
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Attributes.ArgParse.KeyValueFlag] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators                           import export
-		from Attributes.ArgParse.Argument         import NamedAndValuedArgument
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Attributes.ArgParse.KeyValueFlag] Could not import directly!")
-		raise ex
+from pyTooling.Decorators                   import export
+from pyTooling.Attributes.ArgParse.Argument import NamedAndValuedArgument
 
 
 @export

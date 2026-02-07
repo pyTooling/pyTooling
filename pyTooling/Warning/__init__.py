@@ -39,20 +39,9 @@ from threading import local
 from types     import TracebackType
 from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self
 
-try:
-	from pyTooling.Decorators import export, readonly
-	from pyTooling.Common     import getFullyQualifiedName
-	from pyTooling.Exceptions import ExceptionBase
-except ModuleNotFoundError:  # pragma: no cover
-	print("[pyTooling.Warning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators         import export, readonly
-		from Common             import getFullyQualifiedName
-		from Exceptions         import ExceptionBase
-	except ModuleNotFoundError as ex:  # pragma: no cover
-		print("[pyTooling.Warning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators import export, readonly
+from pyTooling.Common     import getFullyQualifiedName
+from pyTooling.Exceptions import ExceptionBase
 
 
 __all__ = ["_threadLocalData"]

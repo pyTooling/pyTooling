@@ -48,18 +48,8 @@ While commands can or cannot have prefix characters, they shouldn't be confused 
 """
 from typing import Any, Self
 
-try:
-	from pyTooling.Decorators              import export
-	from pyTooling.CLIAbstraction.Argument import NamedArgument
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators                      import export
-		from CLIAbstraction.Argument         import NamedArgument
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Versioning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators              import export
+from pyTooling.CLIAbstraction.Argument import NamedArgument
 
 
 # TODO: make this class abstract

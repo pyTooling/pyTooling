@@ -43,24 +43,11 @@ from re              import split as re_split
 from sys             import version_info
 from typing          import List, Iterable, Dict, Sequence, Any, Optional as Nullable, Union, Tuple
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.MetaClasses import ExtendedType
-	from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
-	from pyTooling.Licensing   import License, Apache_2_0_License
-except (ImportError, ModuleNotFoundError):                                           # pragma: no cover
-	print("[pyTooling.Packaging] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from Exceptions          import ToolingException
-		from MetaClasses         import ExtendedType
-		from Common              import __version__, getFullyQualifiedName, firstElement
-		from Licensing           import License, Apache_2_0_License
-	except (ImportError, ModuleNotFoundError) as ex:                                   # pragma: no cover
-		print("[pyTooling.Packaging] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
+from pyTooling.Licensing   import License, Apache_2_0_License
 
 
 __all__ = [

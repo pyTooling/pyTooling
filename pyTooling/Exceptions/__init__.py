@@ -36,16 +36,7 @@ A common set of missing exceptions in Python.
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-try:
-	from pyTooling.Decorators import export
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Exceptions] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators         import export
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Exceptions] Could not import from 'Decorators' directly!")
-		raise ex
+from pyTooling.Decorators import export
 
 
 @export
