@@ -38,18 +38,8 @@ from abc     import abstractmethod
 from pathlib import Path
 from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable, Self
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.Common      import getFullyQualifiedName
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from Common              import getFullyQualifiedName
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Versioning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.Common      import getFullyQualifiedName
 
 
 __all__ = ["ValueT"]

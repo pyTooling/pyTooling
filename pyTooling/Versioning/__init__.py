@@ -40,22 +40,10 @@ from enum            import Flag, Enum
 from re              import compile as re_compile
 from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Iterable, Iterator, List
 
-try:
-	from pyTooling.Decorators  import export, readonly
-	from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
-	from pyTooling.Exceptions  import ToolingException
-	from pyTooling.Common      import getFullyQualifiedName
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Versioning] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators          import export, readonly
-		from MetaClasses         import ExtendedType, abstractmethod, mustoverride
-		from Exceptions          import ToolingException
-		from Common              import getFullyQualifiedName
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Versioning] Could not import directly!")
-		raise ex
+from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import getFullyQualifiedName
 
 
 @export

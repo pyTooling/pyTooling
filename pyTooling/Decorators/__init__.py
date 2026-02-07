@@ -37,7 +37,7 @@
 import sys
 from functools import wraps
 from types     import FunctionType
-from typing    import Union, Type, TypeVar, Callable, Any, Optional as Nullable
+from typing    import Union, Type, TypeVar, Callable
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 

@@ -117,10 +117,10 @@ extracts all specified dependencies. As a result, a list of requirement strings 
 
             -r ../requirements.txt
 
-            Sphinx ~= 8.2
-            docutils <= 0.21.0
+            Sphinx ~= 9.1
+            docutils >= 0.22.0
 
-            sphinx_rtd_theme ~= 3.0
+            sphinx_rtd_theme ~= 3.1
 
 
 .. _PACKAGING/Helper/extractVersionInformation:

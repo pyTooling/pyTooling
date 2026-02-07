@@ -39,28 +39,13 @@ from json          import load
 from pathlib       import Path
 from typing import Dict, List, Union, Iterator as typing_Iterator, Self
 
-try:
-	from pyTooling.Decorators      import export
-	from pyTooling.MetaClasses     import ExtendedType
-	from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
-	from pyTooling.Configuration   import Node as Abstract_Node
-	from pyTooling.Configuration   import Dictionary as Abstract_Dict
-	from pyTooling.Configuration   import Sequence as Abstract_Seq
-	from pyTooling.Configuration   import Configuration as Abstract_Configuration
-except (ImportError, ModuleNotFoundError):  # pragma: no cover
-	print("[pyTooling.Configuration.JSON] Could not import from 'pyTooling.*'!")
-
-	try:
-		from Decorators              import export
-		from MetaClasses             import ExtendedType
-		from pyTooling.Configuration import ConfigurationException, KeyT, NodeT, ValueT
-		from pyTooling.Configuration import Node as Abstract_Node
-		from pyTooling.Configuration import Dictionary as Abstract_Dict
-		from pyTooling.Configuration import Sequence as Abstract_Seq
-		from pyTooling.Configuration import Configuration as Abstract_Configuration
-	except (ImportError, ModuleNotFoundError) as ex:  # pragma: no cover
-		print("[pyTooling.Configuration.JSON] Could not import directly!")
-		raise ex
+from pyTooling.Decorators      import export
+from pyTooling.MetaClasses     import ExtendedType
+from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
+from pyTooling.Configuration   import Node as Abstract_Node
+from pyTooling.Configuration   import Dictionary as Abstract_Dict
+from pyTooling.Configuration   import Sequence as Abstract_Seq
+from pyTooling.Configuration   import Configuration as Abstract_Configuration
 
 
 @export
