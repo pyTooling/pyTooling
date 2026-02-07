@@ -217,7 +217,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		return size
 
 	@staticmethod
-	def __GetTerminalSizeOnWindows() -> Tuple[int, int]:
+	def __GetTerminalSizeOnWindows() -> Nullable[Tuple[int, int]]:
 		"""
 		Returns the current terminal window's size for Windows.
 
@@ -236,7 +236,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 				bufx, bufy, curx, cury, wattr, left, top, right, bottom, maxx, maxy = struct_unpack("hhhhHhhhhhh", stringBuffer.raw)
 				width =  right - left + 1
 				height = bottom - top + 1
-				return (width, height)
+				return width, height
 		except ImportError:
 			pass
 
@@ -262,6 +262,32 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	# 		pass
 
 	@staticmethod
+	def __GetTerminalSizeOfFileDescriptor(fd: int) -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
+		"""
+		Get window size of a file descriptor.
+
+		Call `ioctl` with ``TIOCGWINSZ`` (GetWindowsSize) for the given file descriptor.
+
+		:param fd: File descriptor
+		:return:
+		"""
+		try:
+			from array import array
+			from fcntl import ioctl
+			from termios import TIOCGWINSZ
+		except ImportError:
+			return None
+
+		# Allocate an array of 4x unsigned short (C struct)
+		# H = unsigned short (16-bit)
+		buffer = array('H', [0, 0, 0, 0])  # rows, columns, x-pixels, y-pixels
+		try:
+			ioctl(fd, TIOCGWINSZ, buffer, True)
+			return buffer[1], buffer[0]
+		except OSError:
+			return None
+
+	@staticmethod
 	def __GetTerminalSizeOnLinux() -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
 		"""
 		Returns the current terminal window's size for Linux.
@@ -271,44 +297,37 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		:returns: A tuple containing width and height of the terminal's size in characters.
 		"""
-		import os
-
-		def ioctl_GWINSZ(fd) -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
-			"""GetWindowSize of file descriptor."""
-			try:
-				from fcntl    import ioctl      as fcntl_ioctl
-				from struct   import unpack     as struct_unpack
-				from termios  import TIOCGWINSZ
-			except ImportError:
-				return None
-
-			try:
-				struct = struct_unpack('hh', fcntl_ioctl(fd, TIOCGWINSZ, '1234'))
-			except OSError:
-				return None
-			try:
-				return (int(struct[1]), int(struct[0]))
-			except TypeError:
-				return None
-
 		# STDIN, STDOUT, STDERR
 		for fd in range(3):
-			size = ioctl_GWINSZ(fd)
-			if size is not None:
+			if (size := TerminalBaseApplication.__GetTerminalSizeOfFileDescriptor(fd)) is not None:
 				return size
-		else:
-			try:
-				fd = os.open(os.ctermid(), os.O_RDONLY)
-				size = ioctl_GWINSZ(fd)
-				os.close(fd)
+
+		# Fallback
+		fd = None
+		try:
+			from os import open, close, ctermid, O_RDONLY
+
+			fd = open(ctermid(), O_RDONLY)
+			if (size := TerminalBaseApplication.__GetTerminalSizeOfFileDescriptor(fd)) is not None:
 				return size
-			except (OSError, AttributeError):
-				pass
+		except (ImportError, OSError):
+			# ImportError - If ctermid is not available (e.g. MSYS2)
+			# OSError     - If ctermid() or open() fails
+			pass
+		finally:
+			if fd is not None:
+				try:
+					close(fd)
+				except OSError:
+					pass
+
+		# Fall-fallback
+		from os import getenv
 
 		try:
-			columns = int(os.getenv("COLUMNS"))
-			lines = int(os.getenv("LINES"))
-			return (columns, lines)
+			columns = int(getenv("COLUMNS"))
+			lines =   int(getenv("LINES"))
+			return columns, lines
 		except TypeError:
 			pass
 
