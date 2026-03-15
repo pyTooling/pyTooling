@@ -255,7 +255,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 	_mainParser: ArgumentParser
 	_formatter:  Any   # TODO: Find type
 	_subParser:  Any   # TODO: Find type
-	_subParsers: Dict  # TODO: Find type
+	_subParsers: Dict[str, ArgumentParser]
 
 	def __init__(self, **kwargs: Any) -> None:
 		"""
@@ -353,7 +353,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		return self._mainParser
 
 	@readonly
-	def SubParsers(self) -> Dict:
+	def SubParsers(self) -> Dict[str, ArgumentParser]:
 		"""Returns the sub-parsers."""
 		return self._subParsers
 
