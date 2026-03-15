@@ -140,11 +140,11 @@
    :target: https://libraries.io/github/pyTooling/pyTooling
 
 .. # Documentation license
-.. |SHIELD:svg:pyTooling-doc-license| image:: https://img.shields.io/badge/doc-CC--BY%204.0-green?longCache=true&style=flat-square&logo=CreativeCommons&logoColor=fff
+.. |SHIELD:svg:pyTooling-doc-license| image:: https://img.shields.io/badge/doc-CC--BY\ 4.0-green?longCache=true&style=flat-square&logo=CreativeCommons&logoColor=fff
    :alt: Documentation License
    :height: 22
    :target: License.html
-.. |SHIELD:png:pyTooling-doc-license| image:: https://raster.shields.io/badge/doc-CC--BY%204.0-green?longCache=true&style=flat-square&logo=CreativeCommons&logoColor=fff
+.. |SHIELD:png:pyTooling-doc-license| image:: https://raster.shields.io/badge/doc-CC--BY\ 4.0-green?longCache=true&style=flat-square&logo=CreativeCommons&logoColor=fff
    :alt: Documentation License
    :height: 22
    :target: https://GitHub.com/pyTooling/pyTooling/blob/main/doc/License.rst
