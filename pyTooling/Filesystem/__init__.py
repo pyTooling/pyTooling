@@ -40,7 +40,7 @@ from os                    import scandir, readlink
 from enum                  import Enum
 from itertools             import chain
 from pathlib               import Path
-from typing                import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union
+from typing                import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union, Iterator
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
@@ -208,6 +208,10 @@ class Element(Base, Generic[_ParentType]):
 	def Path(self) -> Path:
 		raise NotImplemented(f"Property 'Path' is abstract.")
 
+	@readonly
+	def LinkSources(self) -> List[SymbolicLink]:
+		return self._linkSources
+
 	def AddLinkSources(self, source: "SymbolicLink") -> None:
 		"""
 		Add a link source of a symbolic link to the named element (reverse reference).
@@ -219,6 +223,9 @@ class Element(Base, Generic[_ParentType]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
 
+		source._isConnected =  True
+		source._isBroken =     False
+		source._isOutOfRange = False
 		self._linkSources.append(source)
 
 
@@ -331,6 +338,7 @@ class Directory(Element["Directory"]):
 
 		for link in self._symbolicLinks.values():
 			if link._target.is_absolute():
+				# todo: resolve path and check if target is in range, otherwise add to out-of-range list
 				pass
 			else:
 				target = self
@@ -338,7 +346,10 @@ class Directory(Element["Directory"]):
 					if elem == ".":
 						continue
 					elif elem == "..":
-						target = target._parent
+						if (target := target._parent) is None:
+							self._root.RegisterUnconnectedSymbolicLink(link)
+							break
+
 						continue
 
 					try:
@@ -357,9 +368,10 @@ class Directory(Element["Directory"]):
 						target = target._symbolicLinks[elem]
 						continue
 					except KeyError:
-						pass
-
-				target.AddLinkSources(link)
+						self._root.RegisterBrokenSymbolicLink(link)
+						break
+				else:
+					target.AddLinkSources(link)
 
 	def _aggregateSizes(self) -> None:
 		self._size = (
@@ -560,6 +572,12 @@ class Directory(Element["Directory"]):
 			raise FilesystemException(f"Directory properties were not aggregated, yet.")
 
 		return self._aggregateDuration
+
+	def IterateFiles(self) -> Iterator[Element]:
+		for directory in self._subdirectories.values():
+			yield from directory.IterateFiles()
+
+		yield from self._files.values()
 
 	def Copy(self, parent: Nullable["Directory"] = None) -> "Directory":
 		"""
@@ -765,6 +783,9 @@ class Filename(Element[Directory]):
 
 		return self._parent.Path / self._name
 
+	def __hash__(self) -> int:
+		return hash(id(self))
+
 	def Copy(self, parent: Directory) -> "Filename":
 		fileID = self._file._id
 
@@ -832,7 +853,10 @@ class Filename(Element[Directory]):
 
 @export
 class SymbolicLink(Element[Directory]):
-	_target: Path
+	_target:       Path
+	_isConnected:  bool
+	_isBroken:     Nullable[bool]
+	_isOutOfRange: Nullable[bool]
 
 	def __init__(
 		self,
@@ -842,7 +866,10 @@ class SymbolicLink(Element[Directory]):
 	) -> None:
 		super().__init__(name, None, parent)
 
-		self._target = target
+		self._target =       target
+		self._isConnected =  False
+		self._isBroken =     None
+		self._isOutOfRange = None
 
 		if parent is not None:
 			parent._symbolicLinks[name] = self
@@ -857,6 +884,18 @@ class SymbolicLink(Element[Directory]):
 	@readonly
 	def Target(self) -> Path:
 		return self._target
+
+	@readonly
+	def IsConnected(self) -> bool:
+		return self._isConnected
+
+	@readonly
+	def IsBroken(self) -> Nullable[bool]:
+		return self._isBroken
+
+	@readonly
+	def IsOutOfRange(self) -> Nullable[bool]:
+		return self._isOutOfRange
 
 	def Copy(self, parent: Directory) -> "SymbolicLink":
 		return SymbolicLink(self._name, self._target, parent=parent)
@@ -918,7 +957,9 @@ class Root(Directory):
 	"""
 	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 	"""
-	_ids:  Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_ids:                      Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_brokenSymbolicLinks:      List[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
+	_unconnectedSymbolicLinks: List[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
 
 	def __init__(
 		self,
@@ -932,7 +973,9 @@ class Root(Directory):
 		elif not rootDirectory.exists():
 			raise ToolingException(f"Path '{rootDirectory}' doesn't exist.") from FileNotFoundError(rootDirectory)
 
-		self._ids = {}
+		self._ids =                      {}
+		self._brokenSymbolicLinks =      []
+		self._unconnectedSymbolicLinks = []
 
 		super().__init__(rootDirectory.name)
 		self._root = self
@@ -941,6 +984,23 @@ class Root(Directory):
 		if collectSubdirectories:
 			self._collectSubdirectories()
 			self._connectSymbolicLinks()
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access the path of the filesystem statistics root.
+
+		:returns: Path to the root of the filesystem statistics root directory.
+		"""
+		return self._path
+
+	@readonly
+	def BrokenSymbolicLinks(self) -> List[SymbolicLink]:
+		return self._brokenSymbolicLinks
+
+	@readonly
+	def UnconnectedSymbolicLinks(self) -> List[SymbolicLink]:
+		return self._unconnectedSymbolicLinks
 
 	@readonly
 	def TotalHardLinkCount(self) -> int:
@@ -966,14 +1026,13 @@ class Root(Directory):
 	def TotalUniqueFileCount(self) -> int:
 		return len(self._ids)
 
-	@readonly
-	def Path(self) -> Path:
-		"""
-		Read-only property to access the path of the filesystem statistics root.
+	def RegisterBrokenSymbolicLink(self, symLink: SymbolicLink) -> None:
+		symLink._isBroken = True
+		self._brokenSymbolicLinks.append(symLink)
 
-		:returns: Path to the root of the filesystem statistics root directory.
-		"""
-		return self._path
+	def RegisterUnconnectedSymbolicLink(self, symLink: SymbolicLink) -> None:
+		symLink._isOutOfRange = True
+		self._unconnectedSymbolicLinks.append(symLink)
 
 	def Copy(self) -> "Root":
 		"""
