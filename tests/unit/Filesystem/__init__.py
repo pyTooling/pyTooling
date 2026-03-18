@@ -295,10 +295,13 @@ class Instantiation(TestCase):
 # 			layerSizeGradient=20 * 2**20   # -64 MiB
 # 		)
 #
-# 		print("Layers:")
-# 		for i, layer in enumerate(cake._layers):
-# 			print(f"{i:>2}: {layer._size / 2**20:5.1f} MiB  files={len(layer._elements)}")
+# 		print(f"Layers ({len(cake.Layers)} {cake.SlicingDuration:>7.1f} sec):")
+# 		for i, layer in enumerate(cake.Layers, start=1):
+# 			print(f"{i:>2}: {layer.Size / 2**20:7.1f} MiB  files={len(layer.Files):>6}")
 #
+# 		cake.WriteLayerFiles(Path.cwd() / "tests/output")
+#
+# 		self.assertEqual(cake.TotalFileCount, root.TotalFileCount)
 #
 # 		ramUsed = process.memory_info().rss
 # 		print(f"RAM: {ramUsed / 2 ** 20:3.1f} MiB")
