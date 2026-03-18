@@ -807,10 +807,10 @@ class Filename(Element[Directory]):
 
 	@Element.Root.setter
 	def Root(self, value: "Root") -> None:
-		self._root = value
+		Element.Root.fset(self, value)
 
 		if self._file is not None:
-			self._file._root = value
+			self._file.Root = value
 
 	@Element.Parent.setter
 	def Parent(self, value: _ParentType) -> None:
