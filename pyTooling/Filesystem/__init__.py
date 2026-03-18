@@ -330,22 +330,16 @@ class Directory(Element["Directory"]):
 				self._root = parent._root
 
 		if collectSubdirectories:
-			self._collectSubdirectories()
+			self.CollectSubdirectories()
 
-	def _collectSubdirectories(self) -> None:
+	def CollectSubdirectories(self) -> None:
 		"""
 		Helper method for scanning subdirectories and aggregating found element sizes therein.
 		"""
-		with Stopwatch() as sw1:
-			self._scanSubdirectories()
+		self.ScanSubdirectories()
+		self.AggregateSizes()
 
-		with Stopwatch() as sw2:
-			self._aggregateSizes()
-
-		self._scanDuration = sw1.Duration
-		self._aggregateDuration = sw2.Duration
-
-	def _scanSubdirectories(self) -> None:
+	def ScanSubdirectories(self) -> None:
 		"""
 		Helper method for scanning subdirectories (recursively) and building a
 		:class:`Directory`-:class:`Filename`-:class:`File` object tree.
@@ -353,35 +347,38 @@ class Directory(Element["Directory"]):
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
 		"""
-		try:
-			items = scandir(directoryPath := self.Path)
-		except PermissionError as ex:
-			return WarningCollector.Raise(PermissionWarning(self.Path), ex)
+		with Stopwatch() as sw1:
+			try:
+				items = scandir(directoryPath := self.Path)
+			except PermissionError as ex:
+				return WarningCollector.Raise(PermissionWarning(self.Path), ex)
 
-		for dirEntry in items:
-			if dirEntry.is_dir(follow_symlinks=False):
-				subdirectory = Directory(dirEntry.name, collectSubdirectories=True, parent=self)
-			elif dirEntry.is_file(follow_symlinks=False):
-				id = dirEntry.inode()
-				if id in self._root._ids:
-					file = self._root._ids[id]
+			for dirEntry in items:
+				if dirEntry.is_dir(follow_symlinks=False):
+					_ = Directory(dirEntry.name, collectSubdirectories=True, parent=self)
+				elif dirEntry.is_file(follow_symlinks=False):
+					id = dirEntry.inode()
+					if id in self._root._ids:
+						file = self._root._ids[id]
 
-					hardLink = Filename(dirEntry.name, file=file, parent=self)
+						_ = Filename(dirEntry.name, file=file, parent=self)
+					else:
+						s = dirEntry.stat(follow_symlinks=False)
+						filename = Filename(dirEntry.name, parent=self)
+						file = File(id, s.st_size, parent=filename)
+
+						self._root._ids[id] = file
+				elif dirEntry.is_symlink():
+					target = Path(readlink(directoryPath / dirEntry.name))
+					_ = SymbolicLink(dirEntry.name, target, parent=self)
 				else:
-					s = dirEntry.stat(follow_symlinks=False)
-					filename = Filename(dirEntry.name, parent=self)
-					file = File(id, s.st_size, parent=filename)
+					raise FilesystemException(f"Unknown directory element.")
 
-					self._root._ids[id] = file
-			elif dirEntry.is_symlink():
-				target = Path(readlink(directoryPath / dirEntry.name))
-				symlink = SymbolicLink(dirEntry.name, target, parent=self)
-			else:
-				raise FilesystemException(f"Unknown directory element.")
+		self._scanDuration = sw1.Duration
 
-	def _connectSymbolicLinks(self) -> None:
+	def ResolveSymbolicLinks(self) -> None:
 		for dir in self._subdirectories.values():
-			dir._connectSymbolicLinks()
+			dir.ResolveSymbolicLinks()
 
 		for link in self._symbolicLinks.values():
 			if link._target.is_absolute():
@@ -420,11 +417,14 @@ class Directory(Element["Directory"]):
 				else:
 					target.AddLinkSources(link)
 
-	def _aggregateSizes(self) -> None:
-		self._size = (
-			sum(dir._size for dir in self._subdirectories.values()) +
-			sum(file._file._size for file in self._files.values())
-		)
+	def AggregateSizes(self) -> None:
+		with Stopwatch() as sw2:
+			self._size = (
+				sum(dir._size for dir in self._subdirectories.values()) +
+				sum(file._file._size for file in self._files.values())
+			)
+
+		self._aggregateDuration = sw2.Duration
 
 	@Element.Root.setter
 	def Root(self, value: "Root") -> None:
@@ -1048,8 +1048,8 @@ class Root(Directory):
 		self._path = rootDirectory
 
 		if collectSubdirectories:
-			self._collectSubdirectories()
-			self._connectSymbolicLinks()
+			self.CollectSubdirectories()
+			self.ResolveSymbolicLinks()
 
 	@readonly
 	def Path(self) -> Path:
