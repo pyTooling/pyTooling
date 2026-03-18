@@ -28,23 +28,23 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from enum import Flag, IntFlag
-from pathlib import Path
+from pathlib               import Path
 from typing                import Optional as Nullable, List, Set
 
 from pyTooling.Decorators  import readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLink
+from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLink, FilesystemException
+from pyTooling.Stopwatch   import Stopwatch
 
 
 class Layer(metaclass=ExtendedType):
-	_parent:        "LayerCake"
-	_previousLayer: Nullable["Layer"]
-	_nextLayer:     Nullable["Layer"]
+	_parent:        "LayerCake"               #: Reference to the parent layer cake.
+	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
+	_nextLayer:     Nullable["Layer"]         #: Reference to the next layer
 
-	_files:         List[Element[Directory]]
-	_size:          int
+	_files:         List[Element[Directory]]  #: List of files in this layer.
+	_size:          int                       #: Aggregated size of all contained files for this layer.
 
 	def __init__(self, parent: "LayerCake", previousLayer: Nullable["Layer"] = None) -> None:
 		self._parent =        parent
@@ -71,6 +71,10 @@ class Layer(metaclass=ExtendedType):
 	@readonly
 	def Files(self) -> List[Element[Directory]]:
 		return self._files
+
+	@readonly
+	def FileCount(self) -> int:
+		return len(self._files)
 
 	@readonly
 	def Size(self) -> int:
@@ -110,8 +114,9 @@ class Layer(metaclass=ExtendedType):
 
 
 class LayerCake(metaclass=ExtendedType):
-	_root:   Nullable[Root]
-	_layers: List[Layer]
+	_root:            Nullable[Root]   #: Reference to the filesystem root.
+	_layers:          List[Layer]      #: List of Docker image layers.
+	_slicingDuration: Nullable[float]  #: Duration for sorting files by size and assigning them to Docker image layers.
 
 	def __init__(self, root: Root) -> None:
 		self._root =   root
@@ -125,6 +130,27 @@ class LayerCake(metaclass=ExtendedType):
 	def Layers(self) -> List[Layer]:
 		return self._layers
 
+	@readonly
+	def LayerCount(self) -> int:
+		return len(self._layers)
+
+	@readonly
+	def TotalFileCount(self) -> int:
+		return sum(layer.FileCount for layer in self._layers)
+
+	@readonly
+	def SlicingDuration(self) -> float:
+		"""
+		Read-only property to access the time needed to slice the filesystem structure into docker layers.
+
+		:returns:                    The slicing duration in seconds.
+		:raises FilesystemException: If the filesystem was not sliced into layers.
+		"""
+		if self._slicingDuration is None:
+			raise FilesystemException(f"Filesystem was not sliced, yet.")
+
+		return self._slicingDuration
+
 	def CreateDockerLayers(
 		self,
 		minLayerSize: int,
@@ -136,17 +162,25 @@ class LayerCake(metaclass=ExtendedType):
 		collectedFiles = set()
 		targetLayerSize = maxLayerSize
 
-		for file in sorted(self._root.IterateFiles(), key=lambda f: f.Size, reverse=True):
-			if file in collectedFiles:
-				continue
+		with Stopwatch() as sw:
+			iterator = iter(sorted(self._root.IterateFiles(), key=lambda f: f.Size, reverse=True))
+			firstFile = next(iterator)
+			collectedFiles |= layer.AddFile(firstFile)
 
-			if layer._size + file.Size <= targetLayerSize:
-				collectedFiles |= layer.AddFile(file)
-			else:
-				self._layers.append(layer := Layer(self, layer))
+			for file in iterator:
+				if file in collectedFiles:
+					continue
 
-				if (size := targetLayerSize - layerSizeGradient) >= minLayerSize:
-					targetLayerSize = size
+				if layer._size + file.Size <= targetLayerSize:
+					collectedFiles |= layer.AddFile(file)
+				else:
+					self._layers.append(layer := Layer(self, layer))
+					collectedFiles |= layer.AddFile(file)
+
+					if (size := targetLayerSize - layerSizeGradient) >= minLayerSize:
+						targetLayerSize = size
+
+		self._slicingDuration = sw.Duration
 
 	def WriteLayerFiles(self, directory: Path, relative: bool = True) -> None:
 		for i, layer in enumerate(self._layers, start=1):

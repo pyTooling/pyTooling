@@ -268,12 +268,12 @@ class Directory(Element["Directory"]):
 		"""
 		super().__init__(name, None, parent)
 
-		self._path = None
-		self._subdirectories = {}
-		self._files = {}
-		self._symbolicLinks = {}
-		self._collapsed = False
-		self._scanDuration = None
+		self._path =              None
+		self._subdirectories =    {}
+		self._files =             {}
+		self._symbolicLinks =     {}
+		self._collapsed =         False
+		self._scanDuration =      None
 		self._aggregateDuration = None
 
 		if parent is not None:
