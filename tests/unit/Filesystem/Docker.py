@@ -29,12 +29,12 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.Filesystem.Docker."""
-from pathlib import Path
+from pathlib  import Path
+from random   import randint
 
 from unittest import TestCase
 
-from pyTooling.Exceptions import ToolingException
-from pyTooling.Filesystem import Root, Directory, Filename, File, SymbolicLink
+from pyTooling.Filesystem        import Root, Directory, Filename, File
 from pyTooling.Filesystem.Docker import LayerCake, Layer
 
 
@@ -137,3 +137,40 @@ class Instantiation(TestCase):
 		self.assertIs(cake, thirdLayer.Parent)
 		self.assertIs(secondLayer, thirdLayer.PreviousLayer)
 		self.assertIsNone(thirdLayer.NextLayer)
+
+
+class Slicing(TestCase):
+	def test_LayerCake(self) -> None:
+		rootPath = Path("tests/data")
+		root = Root(rootPath, collectSubdirectories=False)
+		directory = Directory("directory", parent=root)
+
+		for i in range(200):
+			filename = Filename(f"filename_{i}", parent=directory)
+			_ = File(10 + i, randint(80, 4100), parent=filename)
+
+		# root._aggregateSizes()
+		root._connectSymbolicLinks()
+		cake = LayerCake(root)
+
+		self.assertIs(root, cake.Root)
+
+		cake.CreateDockerLayers(32768, 128456, 2048)
+
+		# self.assertEqual(200, cake.TotalFileCount)
+		print()
+		print(root.TotalFileCount)
+		print(root.Size2)
+		print(root.Size3)
+		print(cake.TotalFileCount)
+		print(cake.LayerCount)
+
+		count = 0
+		for i, layer in enumerate(cake.Layers):
+			count += layer.FileCount
+			print(f"{i:>2}: {layer.Size / 2**10:5.1f} MiB  files={layer.FileCount:>3}")
+			self.assertGreater(layer.Size, 0)
+			self.assertGreater(layer.FileCount, 0)
+
+		self.assertEqual(count, cake.TotalFileCount)
+		self.assertEqual(count, root.TotalFileCount)
