@@ -109,11 +109,14 @@ class Base(metaclass=ExtendedType, slots=True):
 		:param size: Optional size of the element.
 		:param root: Optional reference to the filesystem root element.
 		"""
-		if size is None:
-			pass
-		elif not isinstance(size, int):
+		if size is not None and not isinstance(size, int):
 			ex = TypeError("Parameter 'size' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(size)}'.")
+			raise ex
+
+		if root is not None and not isinstance(root, Root):
+			ex = TypeError("Parameter 'root' is not of type 'Root'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(root)}'.")
 			raise ex
 
 		self._size = size
@@ -130,6 +133,13 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	@Root.setter
 	def Root(self, value: "Root") -> None:
+		if value is None:
+			raise ValueError(f"Parameter 'value' is None.")
+		elif not isinstance(value, Root):
+			ex = TypeError("Parameter 'value' is not of type 'Root'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
 		self._root = value
 
 	@readonly
@@ -186,12 +196,27 @@ class Element(Base, Generic[_ParentType]):
 		:param size:   Optional size of the element.
 		:param parent: Optional parent reference.
 		"""
-		root = None # FIXME: if parent is None else parent._root
+		if name is None:
+			raise ValueError(f"Parameter 'name' is None.")
+		elif not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type string.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
 
-		super().__init__(size, root)
+		self._name =   name
 
-		self._parent = parent
-		self._name = name
+		if parent is None:
+			super().__init__(size, None)
+			self._parent = None
+		else:
+			if not isinstance(parent, Directory):
+				ex = TypeError("Parameter 'parent' is not of type 'Directory'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+				raise ex
+
+			super().__init__(size, parent._root)
+			self._parent = parent
+
 		self._linkSources = []
 
 	@property
@@ -205,6 +230,13 @@ class Element(Base, Generic[_ParentType]):
 
 	@Parent.setter
 	def Parent(self, value: _ParentType) -> None:
+		if value is None:
+			raise ValueError(f"Parameter 'value' is None.")
+		elif not isinstance(value, Directory):
+			ex = TypeError("Parameter 'value' is not of type 'Directory'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
 		self._parent = value
 
 		if value._root is not None:
@@ -743,8 +775,8 @@ class Filename(Element[Directory]):
 
 	def __init__(
 		self,
-		name: str,
-		file: Nullable["File"] = None,
+		name:   str,
+		file:   Nullable["File"] = None,
 		parent: Nullable[Directory] = None
 	) -> None:
 		"""
@@ -759,6 +791,11 @@ class Filename(Element[Directory]):
 		if file is None:
 			self._file = None
 		else:
+			if not isinstance(file, File):
+				ex = TypeError("Parameter 'file' is not of type 'File'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+				raise ex
+
 			self._file = file
 			file._parents.append(self)
 
@@ -842,7 +879,7 @@ class Filename(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`Filename`.
 		"""
 		if not isinstance(other, Filename):
-			ex = TypeError("Parameter 'other' is not of type Filename.")
+			ex = TypeError("Parameter 'other' is not of type 'Filename'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -857,7 +894,7 @@ class Filename(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`Filename`.
 		"""
 		if not isinstance(other, Filename):
-			ex = TypeError("Parameter 'other' is not of type Filename.")
+			ex = TypeError("Parameter 'other' is not of type 'Filename'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -884,6 +921,13 @@ class SymbolicLink(Element[Directory]):
 		parent: Nullable[Directory]
 	) -> None:
 		super().__init__(name, None, parent)
+
+		if target is None:
+			raise ValueError(f"Parameter 'target' is None.")
+		elif not isinstance(target, Path):
+			ex = TypeError("Parameter 'target' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(target)}'.")
+			raise ex
 
 		self._target =       target
 		self._isConnected =  False
@@ -946,7 +990,7 @@ class SymbolicLink(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(other, SymbolicLink):
-			ex = TypeError("Parameter 'other' is not of type SymbolicLink.")
+			ex = TypeError("Parameter 'other' is not of type 'SymbolicLink'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -961,7 +1005,7 @@ class SymbolicLink(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(other, SymbolicLink):
-			ex = TypeError("Parameter 'other' is not of type SymbolicLink.")
+			ex = TypeError("Parameter 'other' is not of type 'SymbolicLink'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 

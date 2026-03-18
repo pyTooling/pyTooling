@@ -31,13 +31,14 @@
 from pathlib               import Path
 from typing                import Optional as Nullable, List, Set
 
-from pyTooling.Decorators  import readonly
+from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLink, FilesystemException
 from pyTooling.Stopwatch   import Stopwatch
 
 
+@export
 class Layer(metaclass=ExtendedType):
 	_parent:        Nullable["LayerCake"]     #: Reference to the parent layer cake.
 	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
@@ -115,6 +116,7 @@ class Layer(metaclass=ExtendedType):
 				f.write(format(file.Path))
 
 
+@export
 class LayerCake(metaclass=ExtendedType):
 	_root:            Nullable[Root]   #: Reference to the filesystem root.
 	_layers:          List[Layer]      #: List of Docker image layers.
