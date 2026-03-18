@@ -199,7 +199,7 @@ class Element(Base, Generic[_ParentType]):
 		if name is None:
 			raise ValueError(f"Parameter 'name' is None.")
 		elif not isinstance(name, str):
-			ex = TypeError("Parameter 'name' is not of type string.")
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 			raise ex
 
@@ -1161,7 +1161,9 @@ class File(Base):
 		:param size:   Size of the file object.
 		:param parent: Optional parent reference.
 		"""
-		if not isinstance(id, int):
+		if id is None:
+			raise ValueError(f"Parameter 'id' is None.")
+		elif not isinstance(id, int):
 			ex = TypeError("Parameter 'id' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(id)}'.")
 			raise ex
@@ -1202,21 +1204,23 @@ class File(Base):
 		"""
 		return self._parents
 
-	def AddParent(self, file: Filename) -> None:
+	def AddParent(self, filename: Filename) -> None:
 		"""
 		Add another parent reference to a :class:`Filename`.
 
-		:param file: Reference to a filename object.
+		:param filename: Reference to a filename object.
 		"""
-		if not isinstance(file, Filename):
-			ex = TypeError("Parameter 'file' is not of type 'Filename'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+		if filename is None:
+			raise ValueError(f"Parameter 'filename' is None.")
+		elif not isinstance(filename, Filename):
+			ex = TypeError("Parameter 'filename' is not of type 'Filename'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(filename)}'.")
 			raise ex
-		elif file._file is not None:
-			raise ToolingException(f"Filename is already referencing an other file object ({file._file._id}).")
+		elif filename._file is not None:
+			raise ToolingException(f"Filename is already referencing an other file object ({filename._file._id}).")
 
-		self._parents.append(file)
-		file._file = self
+		self._parents.append(filename)
+		filename._file = self
 
-		if file._root is not None:
-			self._root = file._root
+		if filename._root is not None:
+			self._root = filename._root

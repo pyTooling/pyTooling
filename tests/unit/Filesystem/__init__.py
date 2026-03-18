@@ -110,6 +110,7 @@ class Instantiation(TestCase):
 		self.assertEqual("directory", directory.Name)
 		self.assertEqual(0, count(directory.Subdirectories))
 		self.assertEqual(1, count(directory.Files))
+		self.assertEqual(1, count(directory.IterateFiles()))
 		self.assertEqual(0, directory.TotalSubdirectoryCount)
 		self.assertEqual(1, directory.TotalFileCount)
 
@@ -154,6 +155,7 @@ class Instantiation(TestCase):
 		self.assertEqual("data", root.Name)
 		self.assertEqual(1, count(root.Subdirectories))
 		self.assertEqual(0, count(root.Files))
+		self.assertEqual(1, count(root.IterateFiles()))
 		self.assertEqual(1, root.TotalSubdirectoryCount)
 		self.assertEqual(1, root.TotalFileCount)
 
@@ -162,6 +164,7 @@ class Instantiation(TestCase):
 		self.assertEqual("directory", directory.Name)
 		self.assertEqual(0, count(directory.Subdirectories))
 		self.assertEqual(1, count(directory.Files))
+		self.assertEqual(1, count(directory.IterateFiles()))
 		self.assertEqual(0, directory.TotalSubdirectoryCount)
 		self.assertEqual(1, directory.TotalFileCount)
 
@@ -192,6 +195,7 @@ class Instantiation(TestCase):
 		self.assertEqual("data", root.Name)
 		self.assertEqual(1, count(root.Subdirectories))
 		self.assertEqual(0, count(root.Files))
+		self.assertEqual(1, count(root.IterateFiles()))
 		self.assertEqual(1, root.TotalSubdirectoryCount)
 		self.assertEqual(1, root.TotalFileCount)
 
@@ -200,6 +204,7 @@ class Instantiation(TestCase):
 		self.assertEqual("directory", directory.Name)
 		self.assertEqual(0, count(directory.Subdirectories))
 		self.assertEqual(1, count(directory.Files))
+		self.assertEqual(1, count(directory.IterateFiles()))
 		self.assertEqual(0, directory.TotalSubdirectoryCount)
 		self.assertEqual(1, directory.TotalFileCount)
 
@@ -230,6 +235,7 @@ class Instantiation(TestCase):
 		self.assertEqual("data", root.Name)
 		self.assertEqual(1, count(root.Subdirectories))
 		self.assertEqual(0, count(root.Files))
+		self.assertEqual(1, count(root.IterateFiles()))
 		self.assertEqual(1, root.TotalSubdirectoryCount)
 		self.assertEqual(1, root.TotalFileCount)
 
@@ -238,6 +244,7 @@ class Instantiation(TestCase):
 		self.assertEqual("directory", directory.Name)
 		self.assertEqual(0, count(directory.Subdirectories))
 		self.assertEqual(1, count(directory.Files))
+		self.assertEqual(1, count(directory.IterateFiles()))
 		self.assertEqual(0, directory.TotalSubdirectoryCount)
 		self.assertEqual(1, directory.TotalFileCount)
 
