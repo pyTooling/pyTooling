@@ -46,11 +46,13 @@ from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
+from pyTooling.Warning     import WarningCollector, Warning
 from pyTooling.Stopwatch   import Stopwatch
 from pyTooling.Tree        import Node
 
 
 __all__ = ["_ParentType"]
+
 
 _ParentType = TypeVar("_ParentType", bound="Element")
 """The type variable for a parent reference."""
@@ -59,6 +61,19 @@ _ParentType = TypeVar("_ParentType", bound="Element")
 @export
 class FilesystemException(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`."""
+
+
+@export
+class PermissionWarning(Warning):
+	_path: Path
+
+	def __init__(self, path: Path, *args) -> None:
+		super().__init__(*args)
+		self._path = path
+
+	@readonly
+	def Path(self) -> Path:
+		return self._path
 
 
 @export
@@ -309,7 +324,7 @@ class Directory(Element["Directory"]):
 		try:
 			items = scandir(directoryPath := self.Path)
 		except PermissionError as ex:
-			return
+			return WarningCollector.Raise(PermissionWarning(self.Path), ex)
 
 		for dirEntry in items:
 			if dirEntry.is_dir(follow_symlinks=False):
@@ -573,11 +588,15 @@ class Directory(Element["Directory"]):
 
 		return self._aggregateDuration
 
+	def __hash__(self) -> int:
+		return hash(id(self))
+
 	def IterateFiles(self) -> Iterator[Element]:
 		for directory in self._subdirectories.values():
 			yield from directory.IterateFiles()
 
 		yield from self._files.values()
+		yield from self._symbolicLinks.values()
 
 	def Copy(self, parent: Nullable["Directory"] = None) -> "Directory":
 		"""
@@ -896,6 +915,9 @@ class SymbolicLink(Element[Directory]):
 	@readonly
 	def IsOutOfRange(self) -> Nullable[bool]:
 		return self._isOutOfRange
+
+	def __hash__(self) -> int:
+		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "SymbolicLink":
 		return SymbolicLink(self._name, self._target, parent=parent)

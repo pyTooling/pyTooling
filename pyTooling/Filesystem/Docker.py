@@ -94,7 +94,7 @@ class Layer(metaclass=ExtendedType):
 			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
 			raise ex
 
-		self._size += element.Size
+		self._size += 0 if isinstance(element, SymbolicLink) else element.Size
 
 		return usedFiles
 
@@ -162,8 +162,11 @@ class LayerCake(metaclass=ExtendedType):
 		collectedFiles = set()
 		targetLayerSize = maxLayerSize
 
+		def sizeOf(file: Element[Directory]) -> int:
+			return 0 if isinstance(file, SymbolicLink) else file.Size
+
 		with Stopwatch() as sw:
-			iterator = iter(sorted(self._root.IterateFiles(), key=lambda f: f.Size, reverse=True))
+			iterator = iter(sorted(self._root.IterateFiles(), key=sizeOf, reverse=True))
 			firstFile = next(iterator)
 			collectedFiles |= layer.AddFile(firstFile)
 
@@ -171,7 +174,7 @@ class LayerCake(metaclass=ExtendedType):
 				if file in collectedFiles:
 					continue
 
-				if layer._size + file.Size <= targetLayerSize:
+				if layer._size + sizeOf(file) <= targetLayerSize:
 					collectedFiles |= layer.AddFile(file)
 				else:
 					self._layers.append(layer := Layer(self, layer))
