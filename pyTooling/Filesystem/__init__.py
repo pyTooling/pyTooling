@@ -209,7 +209,7 @@ class Element(Base, Generic[_ParentType]):
 		raise NotImplemented(f"Property 'Path' is abstract.")
 
 	@readonly
-	def LinkSources(self) -> List[SymbolicLink]:
+	def LinkSources(self) -> List["SymbolicLink"]:
 		return self._linkSources
 
 	def AddLinkSources(self, source: "SymbolicLink") -> None:
