@@ -39,14 +39,16 @@ from pyTooling.Stopwatch   import Stopwatch
 
 
 class Layer(metaclass=ExtendedType):
-	_parent:        "LayerCake"               #: Reference to the parent layer cake.
+	_parent:        Nullable["LayerCake"]     #: Reference to the parent layer cake.
 	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
 	_nextLayer:     Nullable["Layer"]         #: Reference to the next layer
 
 	_files:         List[Element[Directory]]  #: List of files in this layer.
 	_size:          int                       #: Aggregated size of all contained files for this layer.
 
-	def __init__(self, parent: "LayerCake", previousLayer: Nullable["Layer"] = None) -> None:
+	def __init__(self, parent: Nullable["LayerCake"] = None, previousLayer: Nullable["Layer"] = None) -> None:
+		if parent is not None:
+			parent._layers.append(self)
 		self._parent =        parent
 		self._previousLayer = previousLayer
 		self._nextLayer =     None
@@ -57,15 +59,15 @@ class Layer(metaclass=ExtendedType):
 		self._size =  0
 
 	@readonly
-	def Parent(self) -> "LayerCake":
+	def Parent(self) -> Nullable["LayerCake"]:
 		return self._parent
 
 	@readonly
-	def PreviousLayer(self) -> "Layer":
+	def PreviousLayer(self) -> Nullable["Layer"]:
 		return self._previousLayer
 
 	@readonly
-	def NextLayer(self) -> "Layer":
+	def NextLayer(self) -> Nullable["Layer"]:
 		return self._nextLayer
 
 	@readonly
