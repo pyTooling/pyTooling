@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Tree."""
+"""Unit tests for pyTooling.Filesystem."""
 from pathlib import Path
 # from textwrap import dedent
 
