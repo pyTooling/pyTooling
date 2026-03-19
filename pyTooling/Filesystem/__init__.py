@@ -40,17 +40,19 @@ from os                    import scandir, readlink
 from enum                  import Enum
 from itertools             import chain
 from pathlib               import Path
-from typing                import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union
+from typing import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union, Iterator, Set
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
+from pyTooling.Warning     import WarningCollector, Warning
 from pyTooling.Stopwatch   import Stopwatch
 from pyTooling.Tree        import Node
 
 
 __all__ = ["_ParentType"]
+
 
 _ParentType = TypeVar("_ParentType", bound="Element")
 """The type variable for a parent reference."""
@@ -59,6 +61,19 @@ _ParentType = TypeVar("_ParentType", bound="Element")
 @export
 class FilesystemException(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`."""
+
+
+@export
+class PermissionWarning(Warning):
+	_path: Path
+
+	def __init__(self, path: Path, *args) -> None:
+		super().__init__(*args)
+		self._path = path
+
+	@readonly
+	def Path(self) -> Path:
+		return self._path
 
 
 @export
@@ -94,11 +109,14 @@ class Base(metaclass=ExtendedType, slots=True):
 		:param size: Optional size of the element.
 		:param root: Optional reference to the filesystem root element.
 		"""
-		if size is None:
-			pass
-		elif not isinstance(size, int):
+		if size is not None and not isinstance(size, int):
 			ex = TypeError("Parameter 'size' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(size)}'.")
+			raise ex
+
+		if root is not None and not isinstance(root, Root):
+			ex = TypeError("Parameter 'root' is not of type 'Root'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(root)}'.")
 			raise ex
 
 		self._size = size
@@ -115,6 +133,13 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	@Root.setter
 	def Root(self, value: "Root") -> None:
+		if value is None:
+			raise ValueError(f"Parameter 'value' is None.")
+		elif not isinstance(value, Root):
+			ex = TypeError("Parameter 'value' is not of type 'Root'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
 		self._root = value
 
 	@readonly
@@ -171,12 +196,27 @@ class Element(Base, Generic[_ParentType]):
 		:param size:   Optional size of the element.
 		:param parent: Optional parent reference.
 		"""
-		root = None # FIXME: if parent is None else parent._root
+		if name is None:
+			raise ValueError(f"Parameter 'name' is None.")
+		elif not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
 
-		super().__init__(size, root)
+		self._name =   name
 
-		self._parent = parent
-		self._name = name
+		if parent is None:
+			super().__init__(size, None)
+			self._parent = None
+		else:
+			if not isinstance(parent, Directory):
+				ex = TypeError("Parameter 'parent' is not of type 'Directory'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+				raise ex
+
+			super().__init__(size, parent._root)
+			self._parent = parent
+
 		self._linkSources = []
 
 	@property
@@ -190,6 +230,13 @@ class Element(Base, Generic[_ParentType]):
 
 	@Parent.setter
 	def Parent(self, value: _ParentType) -> None:
+		if value is None:
+			raise ValueError(f"Parameter 'value' is None.")
+		elif not isinstance(value, Directory):
+			ex = TypeError("Parameter 'value' is not of type 'Directory'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
 		self._parent = value
 
 		if value._root is not None:
@@ -208,6 +255,10 @@ class Element(Base, Generic[_ParentType]):
 	def Path(self) -> Path:
 		raise NotImplemented(f"Property 'Path' is abstract.")
 
+	@readonly
+	def LinkSources(self) -> List["SymbolicLink"]:
+		return self._linkSources
+
 	def AddLinkSources(self, source: "SymbolicLink") -> None:
 		"""
 		Add a link source of a symbolic link to the named element (reverse reference).
@@ -219,6 +270,9 @@ class Element(Base, Generic[_ParentType]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
 
+		source._isConnected =  True
+		source._isBroken =     False
+		source._isOutOfRange = False
 		self._linkSources.append(source)
 
 
@@ -242,6 +296,7 @@ class Directory(Element["Directory"]):
 	_subdirectories:    Dict[str, "Directory"]     #: Dictionary containing name-:class:`Directory` pairs.
 	_files:             Dict[str, "Filename"]      #: Dictionary containing name-:class:`Filename` pairs.
 	_symbolicLinks:     Dict[str, "SymbolicLink"]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
+	_filesSize:         int                        #: Aggregated size of all direct files.
 	_collapsed:         bool                       #: True, if this directory was collapsed. It contains no subelements.
 	_scanDuration:      Nullable[float]            #: Duration for scanning the directory and all its subelements.
 	_aggregateDuration: Nullable[float]            #: Duration for aggregating all subelements.
@@ -261,12 +316,13 @@ class Directory(Element["Directory"]):
 		"""
 		super().__init__(name, None, parent)
 
-		self._path = None
-		self._subdirectories = {}
-		self._files = {}
-		self._symbolicLinks = {}
-		self._collapsed = False
-		self._scanDuration = None
+		self._path =              None
+		self._subdirectories =    {}
+		self._files =             {}
+		self._symbolicLinks =     {}
+		self._filesSize =         0
+		self._collapsed =         False
+		self._scanDuration =      None
 		self._aggregateDuration = None
 
 		if parent is not None:
@@ -276,22 +332,16 @@ class Directory(Element["Directory"]):
 				self._root = parent._root
 
 		if collectSubdirectories:
-			self._collectSubdirectories()
+			self.CollectSubdirectories()
 
-	def _collectSubdirectories(self) -> None:
+	def CollectSubdirectories(self) -> None:
 		"""
 		Helper method for scanning subdirectories and aggregating found element sizes therein.
 		"""
-		with Stopwatch() as sw1:
-			self._scanSubdirectories()
+		self.ScanSubdirectories()
+		self.AggregateSizes()
 
-		with Stopwatch() as sw2:
-			self._aggregateSizes()
-
-		self._scanDuration = sw1.Duration
-		self._aggregateDuration = sw2.Duration
-
-	def _scanSubdirectories(self) -> None:
+	def ScanSubdirectories(self) -> None:
 		"""
 		Helper method for scanning subdirectories (recursively) and building a
 		:class:`Directory`-:class:`Filename`-:class:`File` object tree.
@@ -299,38 +349,42 @@ class Directory(Element["Directory"]):
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
 		"""
-		try:
-			items = scandir(directoryPath := self.Path)
-		except PermissionError as ex:
-			return
+		with Stopwatch() as sw1:
+			try:
+				items = scandir(directoryPath := self.Path)
+			except PermissionError as ex:
+				return WarningCollector.Raise(PermissionWarning(self.Path), ex)
 
-		for dirEntry in items:
-			if dirEntry.is_dir(follow_symlinks=False):
-				subdirectory = Directory(dirEntry.name, collectSubdirectories=True, parent=self)
-			elif dirEntry.is_file(follow_symlinks=False):
-				id = dirEntry.inode()
-				if id in self._root._ids:
-					file = self._root._ids[id]
+			for dirEntry in items:
+				if dirEntry.is_dir(follow_symlinks=False):
+					_ = Directory(dirEntry.name, collectSubdirectories=True, parent=self)
+				elif dirEntry.is_file(follow_symlinks=False):
+					id = dirEntry.inode()
+					if id in self._root._ids:
+						file = self._root._ids[id]
 
-					hardLink = Filename(dirEntry.name, file=file, parent=self)
+						_ = Filename(dirEntry.name, file=file, parent=self)
+					else:
+						s = dirEntry.stat(follow_symlinks=False)
+						filename = Filename(dirEntry.name, parent=self)
+						file = File(id, s.st_size, parent=filename)
+
+						self._root._ids[id] = file
+				elif dirEntry.is_symlink():
+					target = Path(readlink(directoryPath / dirEntry.name))
+					_ = SymbolicLink(dirEntry.name, target, parent=self)
 				else:
-					s = dirEntry.stat(follow_symlinks=False)
-					filename = Filename(dirEntry.name, parent=self)
-					file = File(id, s.st_size, parent=filename)
+					raise FilesystemException(f"Unknown directory element.")
 
-					self._root._ids[id] = file
-			elif dirEntry.is_symlink():
-				target = Path(readlink(directoryPath / dirEntry.name))
-				symlink = SymbolicLink(dirEntry.name, target, parent=self)
-			else:
-				raise FilesystemException(f"Unknown directory element.")
+		self._scanDuration = sw1.Duration
 
-	def _connectSymbolicLinks(self) -> None:
+	def ResolveSymbolicLinks(self) -> None:
 		for dir in self._subdirectories.values():
-			dir._connectSymbolicLinks()
+			dir.ResolveSymbolicLinks()
 
 		for link in self._symbolicLinks.values():
 			if link._target.is_absolute():
+				# todo: resolve path and check if target is in range, otherwise add to out-of-range list
 				pass
 			else:
 				target = self
@@ -338,7 +392,10 @@ class Directory(Element["Directory"]):
 					if elem == ".":
 						continue
 					elif elem == "..":
-						target = target._parent
+						if (target := target._parent) is None:
+							self._root.RegisterUnconnectedSymbolicLink(link)
+							break
+
 						continue
 
 					try:
@@ -357,15 +414,31 @@ class Directory(Element["Directory"]):
 						target = target._symbolicLinks[elem]
 						continue
 					except KeyError:
-						pass
+						self._root.RegisterBrokenSymbolicLink(link)
+						break
+				else:
+					target.AddLinkSources(link)
 
-				target.AddLinkSources(link)
+	def AggregateSizes(self) -> Set["File"]:
+		with Stopwatch() as sw2:
+			aggregatedFiles = set()
 
-	def _aggregateSizes(self) -> None:
-		self._size = (
-			sum(dir._size for dir in self._subdirectories.values()) +
-			sum(file._file._size for file in self._files.values())
-		)
+			self._size = 0
+			self._filesSize = 0
+			for dir in self._subdirectories.values():
+				aggregatedFiles |= dir.AggregateSizes()
+				self._size += dir._size
+
+			for filename in self._files.values():
+				if (file := filename._file) not in aggregatedFiles:
+					self._filesSize += file._size
+					aggregatedFiles.add(file)
+
+			self._size += self._filesSize
+
+		self._aggregateDuration = sw2.Duration
+
+		return aggregatedFiles
 
 	@Element.Root.setter
 	def Root(self, value: "Root") -> None:
@@ -561,6 +634,16 @@ class Directory(Element["Directory"]):
 
 		return self._aggregateDuration
 
+	def __hash__(self) -> int:
+		return hash(id(self))
+
+	def IterateFiles(self) -> Iterator[Element]:
+		for directory in self._subdirectories.values():
+			yield from directory.IterateFiles()
+
+		yield from self._files.values()
+		yield from self._symbolicLinks.values()
+
 	def Copy(self, parent: Nullable["Directory"] = None) -> "Directory":
 		"""
 		Copy the directory structure including all subelements and link it to the given parent.
@@ -706,8 +789,8 @@ class Filename(Element[Directory]):
 
 	def __init__(
 		self,
-		name: str,
-		file: Nullable["File"] = None,
+		name:   str,
+		file:   Nullable["File"] = None,
 		parent: Nullable[Directory] = None
 	) -> None:
 		"""
@@ -722,6 +805,11 @@ class Filename(Element[Directory]):
 		if file is None:
 			self._file = None
 		else:
+			if not isinstance(file, File):
+				ex = TypeError("Parameter 'file' is not of type 'File'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+				raise ex
+
 			self._file = file
 			file._parents.append(self)
 
@@ -733,10 +821,10 @@ class Filename(Element[Directory]):
 
 	@Element.Root.setter
 	def Root(self, value: "Root") -> None:
-		self._root = value
+		Element.Root.fset(self, value)
 
 		if self._file is not None:
-			self._file._root = value
+			self._file.Root = value
 
 	@Element.Parent.setter
 	def Parent(self, value: _ParentType) -> None:
@@ -764,6 +852,9 @@ class Filename(Element[Directory]):
 			raise ToolingException(f"Filename has no parent object.")
 
 		return self._parent.Path / self._name
+
+	def __hash__(self) -> int:
+		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "Filename":
 		fileID = self._file._id
@@ -802,7 +893,7 @@ class Filename(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`Filename`.
 		"""
 		if not isinstance(other, Filename):
-			ex = TypeError("Parameter 'other' is not of type Filename.")
+			ex = TypeError("Parameter 'other' is not of type 'Filename'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -817,7 +908,7 @@ class Filename(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`Filename`.
 		"""
 		if not isinstance(other, Filename):
-			ex = TypeError("Parameter 'other' is not of type Filename.")
+			ex = TypeError("Parameter 'other' is not of type 'Filename'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -832,7 +923,10 @@ class Filename(Element[Directory]):
 
 @export
 class SymbolicLink(Element[Directory]):
-	_target: Path
+	_target:       Path
+	_isConnected:  bool
+	_isBroken:     Nullable[bool]
+	_isOutOfRange: Nullable[bool]
 
 	def __init__(
 		self,
@@ -842,7 +936,17 @@ class SymbolicLink(Element[Directory]):
 	) -> None:
 		super().__init__(name, None, parent)
 
-		self._target = target
+		if target is None:
+			raise ValueError(f"Parameter 'target' is None.")
+		elif not isinstance(target, Path):
+			ex = TypeError("Parameter 'target' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(target)}'.")
+			raise ex
+
+		self._target =       target
+		self._isConnected =  False
+		self._isBroken =     None
+		self._isOutOfRange = None
 
 		if parent is not None:
 			parent._symbolicLinks[name] = self
@@ -857,6 +961,21 @@ class SymbolicLink(Element[Directory]):
 	@readonly
 	def Target(self) -> Path:
 		return self._target
+
+	@readonly
+	def IsConnected(self) -> bool:
+		return self._isConnected
+
+	@readonly
+	def IsBroken(self) -> Nullable[bool]:
+		return self._isBroken
+
+	@readonly
+	def IsOutOfRange(self) -> Nullable[bool]:
+		return self._isOutOfRange
+
+	def __hash__(self) -> int:
+		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "SymbolicLink":
 		return SymbolicLink(self._name, self._target, parent=parent)
@@ -885,7 +1004,7 @@ class SymbolicLink(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(other, SymbolicLink):
-			ex = TypeError("Parameter 'other' is not of type SymbolicLink.")
+			ex = TypeError("Parameter 'other' is not of type 'SymbolicLink'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -900,7 +1019,7 @@ class SymbolicLink(Element[Directory]):
 		:raises TypeError: If parameter ``other`` is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(other, SymbolicLink):
-			ex = TypeError("Parameter 'other' is not of type SymbolicLink.")
+			ex = TypeError("Parameter 'other' is not of type 'SymbolicLink'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -918,7 +1037,9 @@ class Root(Directory):
 	"""
 	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 	"""
-	_ids:  Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_ids:                      Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_brokenSymbolicLinks:      List[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
+	_unconnectedSymbolicLinks: List[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
 
 	def __init__(
 		self,
@@ -932,15 +1053,34 @@ class Root(Directory):
 		elif not rootDirectory.exists():
 			raise ToolingException(f"Path '{rootDirectory}' doesn't exist.") from FileNotFoundError(rootDirectory)
 
-		self._ids = {}
+		self._ids =                      {}
+		self._brokenSymbolicLinks =      []
+		self._unconnectedSymbolicLinks = []
 
 		super().__init__(rootDirectory.name)
 		self._root = self
 		self._path = rootDirectory
 
 		if collectSubdirectories:
-			self._collectSubdirectories()
-			self._connectSymbolicLinks()
+			self.CollectSubdirectories()
+			self.ResolveSymbolicLinks()
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access the path of the filesystem statistics root.
+
+		:returns: Path to the root of the filesystem statistics root directory.
+		"""
+		return self._path
+
+	@readonly
+	def BrokenSymbolicLinks(self) -> List[SymbolicLink]:
+		return self._brokenSymbolicLinks
+
+	@readonly
+	def UnconnectedSymbolicLinks(self) -> List[SymbolicLink]:
+		return self._unconnectedSymbolicLinks
 
 	@readonly
 	def TotalHardLinkCount(self) -> int:
@@ -966,14 +1106,13 @@ class Root(Directory):
 	def TotalUniqueFileCount(self) -> int:
 		return len(self._ids)
 
-	@readonly
-	def Path(self) -> Path:
-		"""
-		Read-only property to access the path of the filesystem statistics root.
+	def RegisterBrokenSymbolicLink(self, symLink: SymbolicLink) -> None:
+		symLink._isBroken = True
+		self._brokenSymbolicLinks.append(symLink)
 
-		:returns: Path to the root of the filesystem statistics root directory.
-		"""
-		return self._path
+	def RegisterUnconnectedSymbolicLink(self, symLink: SymbolicLink) -> None:
+		symLink._isOutOfRange = True
+		self._unconnectedSymbolicLinks.append(symLink)
 
 	def Copy(self) -> "Root":
 		"""
@@ -1036,7 +1175,9 @@ class File(Base):
 		:param size:   Size of the file object.
 		:param parent: Optional parent reference.
 		"""
-		if not isinstance(id, int):
+		if id is None:
+			raise ValueError(f"Parameter 'id' is None.")
+		elif not isinstance(id, int):
 			ex = TypeError("Parameter 'id' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(id)}'.")
 			raise ex
@@ -1077,21 +1218,23 @@ class File(Base):
 		"""
 		return self._parents
 
-	def AddParent(self, file: Filename) -> None:
+	def AddParent(self, filename: Filename) -> None:
 		"""
 		Add another parent reference to a :class:`Filename`.
 
-		:param file: Reference to a filename object.
+		:param filename: Reference to a filename object.
 		"""
-		if not isinstance(file, Filename):
-			ex = TypeError("Parameter 'file' is not of type 'Filename'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+		if filename is None:
+			raise ValueError(f"Parameter 'filename' is None.")
+		elif not isinstance(filename, Filename):
+			ex = TypeError("Parameter 'filename' is not of type 'Filename'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(filename)}'.")
 			raise ex
-		elif file._file is not None:
-			raise ToolingException(f"Filename is already referencing an other file object ({file._file._id}).")
+		elif filename._file is not None:
+			raise ToolingException(f"Filename is already referencing an other file object ({filename._file._id}).")
 
-		self._parents.append(file)
-		file._file = self
+		self._parents.append(filename)
+		filename._file = self
 
-		if file._root is not None:
-			self._root = file._root
+		if filename._root is not None:
+			self._root = filename._root

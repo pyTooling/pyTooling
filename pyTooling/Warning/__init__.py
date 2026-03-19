@@ -233,7 +233,7 @@ class WarningCollector:
 		return False if self._handler is None else self._handler(warning)
 
 	@classmethod
-	def Raise(cls, warning: BaseException) -> None:
+	def Raise(cls, warning: BaseException, cause: Nullable[Exception] = None) -> None:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
@@ -242,6 +242,10 @@ class WarningCollector:
 		:raises Exception: If the call-stack walk couldn't find a warning collector.
 		"""
 		global _threadLocalData
+
+		if cause is not None:
+			warning.__cause__ = cause
+
 		try:
 			warningCollector = _threadLocalData.warningCollector
 			if warningCollector.AddWarning(warning):
