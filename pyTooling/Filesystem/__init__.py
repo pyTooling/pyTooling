@@ -40,7 +40,7 @@ from os                    import scandir, readlink
 from enum                  import Enum
 from itertools             import chain
 from pathlib               import Path
-from typing                import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union, Iterator
+from typing import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union, Iterator, Set
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
@@ -296,6 +296,7 @@ class Directory(Element["Directory"]):
 	_subdirectories:    Dict[str, "Directory"]     #: Dictionary containing name-:class:`Directory` pairs.
 	_files:             Dict[str, "Filename"]      #: Dictionary containing name-:class:`Filename` pairs.
 	_symbolicLinks:     Dict[str, "SymbolicLink"]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
+	_filesSize:         int                        #: Aggregated size of all direct files.
 	_collapsed:         bool                       #: True, if this directory was collapsed. It contains no subelements.
 	_scanDuration:      Nullable[float]            #: Duration for scanning the directory and all its subelements.
 	_aggregateDuration: Nullable[float]            #: Duration for aggregating all subelements.
@@ -319,6 +320,7 @@ class Directory(Element["Directory"]):
 		self._subdirectories =    {}
 		self._files =             {}
 		self._symbolicLinks =     {}
+		self._filesSize =         0
 		self._collapsed =         False
 		self._scanDuration =      None
 		self._aggregateDuration = None
@@ -417,14 +419,26 @@ class Directory(Element["Directory"]):
 				else:
 					target.AddLinkSources(link)
 
-	def AggregateSizes(self) -> None:
+	def AggregateSizes(self) -> Set["File"]:
 		with Stopwatch() as sw2:
-			self._size = (
-				sum(dir._size for dir in self._subdirectories.values()) +
-				sum(file._file._size for file in self._files.values())
-			)
+			aggregatedFiles = set()
+
+			self._size = 0
+			self._filesSize = 0
+			for dir in self._subdirectories.values():
+				aggregatedFiles |= dir.AggregateSizes()
+				self._size += dir._size
+
+			for filename in self._files.values():
+				if (file := filename._file) not in aggregatedFiles:
+					self._filesSize += file._size
+					aggregatedFiles.add(file)
+
+			self._size += self._filesSize
 
 		self._aggregateDuration = sw2.Duration
+
+		return aggregatedFiles
 
 	@Element.Root.setter
 	def Root(self, value: "Root") -> None:

@@ -161,7 +161,7 @@ class LayerCake(metaclass=ExtendedType):
 		maxLayerSize: int,
 		layerSizeGradient: int
 	) -> List[Layer]:
-		self._layers.append(layer := Layer(self))
+		layer = Layer(self)
 
 		collectedFiles = set()
 		targetLayerSize = maxLayerSize
@@ -181,7 +181,7 @@ class LayerCake(metaclass=ExtendedType):
 				if layer._size + sizeOf(file) <= targetLayerSize:
 					collectedFiles |= layer.AddFile(file)
 				else:
-					self._layers.append(layer := Layer(self, layer))
+					layer = Layer(self, layer)
 					collectedFiles |= layer.AddFile(file)
 
 					if (size := targetLayerSize - layerSizeGradient) >= minLayerSize:
