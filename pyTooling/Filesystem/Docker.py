@@ -118,13 +118,15 @@ class Layer(metaclass=ExtendedType):
 
 @export
 class LayerCake(metaclass=ExtendedType):
-	_root:            Nullable[Root]   #: Reference to the filesystem root.
-	_layers:          List[Layer]      #: List of Docker image layers.
-	_slicingDuration: Nullable[float]  #: Duration for sorting files by size and assigning them to Docker image layers.
+	_root:             Nullable[Root]   #: Reference to the filesystem root.
+	_layers:           List[Layer]      #: List of Docker image layers.
+	_emptyDirectories: List[Directory]  #: List of empty directories (not covered by layers).
+	_slicingDuration:  Nullable[float]  #: Duration for sorting files by size and assigning them to Docker image layers.
 
 	def __init__(self, root: Root) -> None:
-		self._root =   root
-		self._layers = []
+		self._root =             root
+		self._layers =           []
+		self._emptyDirectories = []
 
 	@readonly
 	def Root(self) -> Root:
@@ -143,6 +145,14 @@ class LayerCake(metaclass=ExtendedType):
 		return sum(layer.FileCount for layer in self._layers)
 
 	@readonly
+	def EmptyDirectories(self) -> List[Directory]:
+		return self._emptyDirectories
+
+	@readonly
+	def EmptyDirectoryCount(self) -> int:
+		return len(self._emptyDirectories)
+
+	@readonly
 	def SlicingDuration(self) -> float:
 		"""
 		Read-only property to access the time needed to slice the filesystem structure into docker layers.
@@ -155,40 +165,58 @@ class LayerCake(metaclass=ExtendedType):
 
 		return self._slicingDuration
 
-	def CreateDockerLayers(
-		self,
-		minLayerSize: int,
-		maxLayerSize: int,
-		layerSizeGradient: int
-	) -> List[Layer]:
-		layer = Layer(self)
+	def CreateDockerLayers(self, minLayerSize: int, maxLayerSize: int, layerSizeGradient: int) -> None:
+		with Stopwatch() as sw:
+			self._SliceFilesystemIntoLayers(minLayerSize, maxLayerSize, layerSizeGradient)
+			self._CollectEmptDirectories()
 
-		collectedFiles = set()
-		targetLayerSize = maxLayerSize
+		self._slicingDuration = sw.Duration
+
+	def _SliceFilesystemIntoLayers(self, minLayerSize: int, maxLayerSize: int, layerSizeGradient: int) -> None:
+		# greedy algorithm
+		layer = Layer(self)
 
 		def sizeOf(file: Element[Directory]) -> int:
 			return 0 if isinstance(file, SymbolicLink) else file.Size
 
-		with Stopwatch() as sw:
-			iterator = iter(sorted(self._root.IterateFiles(), key=sizeOf, reverse=True))
-			firstFile = next(iterator)
-			collectedFiles |= layer.AddFile(firstFile)
+		collectedFiles = set()
+		targetLayerSize = maxLayerSize
+		iterator = iter(sorted(self._root.IterateFiles(), key=sizeOf, reverse=True))
+		firstFile = next(iterator)
+		collectedFiles |= layer.AddFile(firstFile)
 
-			for file in iterator:
-				if file in collectedFiles:
-					continue
+		for file in iterator:
+			if file in collectedFiles:
+				continue
 
-				if layer._size + sizeOf(file) <= targetLayerSize:
-					collectedFiles |= layer.AddFile(file)
-				else:
-					layer = Layer(self, layer)
-					collectedFiles |= layer.AddFile(file)
+			if layer._size + sizeOf(file) <= targetLayerSize:
+				collectedFiles |= layer.AddFile(file)
+			else:
+				layer = Layer(self, layer)
+				collectedFiles |= layer.AddFile(file)
 
-					if (size := targetLayerSize - layerSizeGradient) >= minLayerSize:
-						targetLayerSize = size
+				if (size := targetLayerSize - layerSizeGradient) >= minLayerSize:
+					targetLayerSize = size
 
-		self._slicingDuration = sw.Duration
+	def _CollectEmptDirectories(self) -> None:
+		for directory in self._root.IterateDirectories():
+			if directory.SubdirectoryCount == 0 and directory.FileCount == 0:
+				self._emptyDirectories.append(directory)
 
-	def WriteLayerFiles(self, directory: Path, relative: bool = True) -> None:
+	def WriteLayerFiles(self, directory: Path, fileNamePattern: str = "layer_{layerID}.files", relative: bool = True) -> None:
 		for i, layer in enumerate(self._layers, start=1):
-			layer.WriteLayerFile(directory / f"layer_{i}.files", relative)
+			layer.WriteLayerFile(directory / fileNamePattern.format(layerID=i), relative)
+
+	def WriteEmptyDirectoryFile(self, directory: Path, fileNamePattern: str = "empty_directories.files", relative: bool = True) -> None:
+		rootDirectory = self._root._path
+
+		if relative:
+			def format(file: Path) -> str:
+				return f"{file.relative_to(rootDirectory).as_posix()}\n"
+		else:
+			def format(file: Path) -> str:
+				return f"{file.as_posix()}\n"
+
+		with (directory / fileNamePattern).open("w", encoding="utf-8") as f:
+			for directory in self._emptyDirectories:
+				f.write(format(directory.Path))
