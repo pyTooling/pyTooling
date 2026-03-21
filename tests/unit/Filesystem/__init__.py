@@ -30,14 +30,12 @@
 #
 """Unit tests for pyTooling.Filesystem."""
 from pathlib import Path
-# from textwrap import dedent
 
 from unittest import TestCase
 
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Common     import count
-from pyTooling.Filesystem import Root, Directory, Filename, File, SymbolicLink
-# from pyTooling.Filesystem.Docker import LayerCake
+from pyTooling.Filesystem import Root, Directory, Filename, File
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -257,58 +255,3 @@ class Instantiation(TestCase):
 		self.assertListEqual(file.Parents, [filename])
 		self.assertEqual(2, file.ID)
 		self.assertEqual(2048, file.Size)
-
-
-# class Xilinx(TestCase):
-# 	def test_Vivado2025_2(self) -> None:
-# 		print()
-#
-# 		import os
-# 		import psutil
-#
-# 		process = psutil.Process(os.getpid())
-# 		ramUsed = process.memory_info().rss
-# 		print(f"RAM: {ramUsed / 2**20:3.1f} MiB")
-#
-# 		rootPath = Path("C:/Xilinx/2025.2/Vivado")
-# 		rootPath = Path("C:/Xilinx/2025.2")
-# 		root = Root(rootPath, collectSubdirectories=True)
-#
-# 		if len(brokenLinks := root.BrokenSymbolicLinks) > 0:
-# 			print("Broken symbolic links:")
-# 			for symLink in brokenLinks:  # type: SymbolicLink
-# 				print(f"  {symLink!r}")
-# 		if len(unconnectedLinks := root.UnconnectedSymbolicLinks) > 0:
-# 			print("Unconnected symbolic links:")
-# 			for symLink in unconnectedLinks:
-# 				print(f"  {symLink!r}")
-#
-# 		print(dedent(f"""\
-# 			Scan duration:  {root.ScanDuration:>7.1f} sec
-# 			Agg. duration:  {root.AggregateDuration:>7.1f} sec
-# 			Subdirectories: {root.TotalSubdirectoryCount:>7}
-# 			Files:          {root.TotalFileCount:>7}
-# 			Unique files:   {root.TotalUniqueFileCount:>7}
-# 			Regular files:  {root.TotalRegularFileCount:>7}
-# 			Total size:     {root.Size / 2**30:>7.3f} GiB
-# 			???             {root.Size2 / 1:>7.3f} B
-# 			???             {root.Size3 / 1:>7.3f} B
-# 			"""))
-#
-# 		cake = LayerCake(root)
-# 		cake.CreateDockerLayers(
-# 			minLayerSize=      1 * 2**30,  #   1 GiB
-# 			maxLayerSize=      3 * 2**30,  #   3 GiB
-# 			layerSizeGradient=20 * 2**20   # -64 MiB
-# 		)
-#
-# 		print(f"Layers ({len(cake.Layers)} {cake.SlicingDuration:>7.1f} sec):")
-# 		for i, layer in enumerate(cake.Layers, start=1):
-# 			print(f"{i:>2}: {layer.Size / 2**20:7.1f} MiB  files={len(layer.Files):>6}")
-#
-# 		cake.WriteLayerFiles(Path.cwd() / "tests/output")
-#
-# 		self.assertEqual(cake.TotalFileCount, root.TotalFileCount)
-#
-# 		ramUsed = process.memory_info().rss
-# 		print(f"RAM: {ramUsed / 2 ** 20:3.1f} MiB")

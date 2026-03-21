@@ -637,7 +637,14 @@ class Directory(Element["Directory"]):
 	def __hash__(self) -> int:
 		return hash(id(self))
 
-	def IterateFiles(self) -> Iterator[Element]:
+	def IterateDirectories(self) -> Generator["Directory", None, None]:
+		# pre-order
+		for directory in self._subdirectories.values():
+			yield directory
+			yield from directory.IterateDirectories()
+
+	def IterateFiles(self) -> Generator[Element, None, None]:
+		# post-order
 		for directory in self._subdirectories.values():
 			yield from directory.IterateFiles()
 
