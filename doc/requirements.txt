@@ -2,7 +2,7 @@
 
 colorama >= 0.4.6
 ruamel.yaml ~= 0.19.1
-setuptools >= 80.0
+setuptools >= 82.0
 
 # Enforce latest version on ReadTheDocs
 sphinx ~= 9.1
@@ -17,5 +17,5 @@ sphinxcontrib-mermaid ~=2.0
 autoapi >= 2.0.1
 sphinx_design ~= 0.7.0
 sphinx-copybutton >= 0.5.2
-sphinx_autodoc_typehints ~= 3.9
-sphinx_reports ~= 0.10.0
+sphinx_autodoc_typehints ~= 3.10
+sphinx_reports ~= 0.11.0

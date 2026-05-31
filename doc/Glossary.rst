@@ -1,3 +1,5 @@
+.. _GLOSSARY:
+
 Glossary
 ########
 

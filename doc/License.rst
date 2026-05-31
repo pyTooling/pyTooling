@@ -1,4 +1,4 @@
-.. _SRCLICENSE:
+.. _CODELICENSE:
 
 .. note:: This is a local copy of the `Apache License Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`__.
 
