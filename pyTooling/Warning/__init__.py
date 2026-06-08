@@ -111,7 +111,7 @@ class WarningCollector:
 	def __init__(
 		self,
 		warnings: Nullable[List[BaseException]] = None,
-		handler: Nullable[Callable[[BaseException], bool]] = None
+		handler:  Nullable[Callable[[BaseException], bool]] = None
 	) -> None:
 		"""
 		Initializes a warning collector.
@@ -237,14 +237,15 @@ class WarningCollector:
 		cls,
 		warning: BaseException,
 		cause:   Nullable[Exception] = None,
-		notes:   Nullable[Iterable[str]] = None
+		*,
+		notes:   Nullable[str | Iterable[str]] = None
 	) -> None:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
 		:param warning:    Warning to send upwards in the call stack.
 		:param cause:      Optional, root cause to be added to the warning.
-		:param notes:      optional, list of notes to be added to the warning.
+		:param notes:      optional, a single note or a list of notes to be added to the warning.
 		:raises Exception: If warning should be converted to an exception.
 		:raises Exception: If the call-stack walk couldn't find a warning collector.
 		"""
@@ -254,8 +255,11 @@ class WarningCollector:
 			warning.__cause__ = cause
 
 		if notes is not None:
-			for note in notes:
-				warning.add_note(note)
+			if isinstance(notes, str):
+				warning.add_note(notes)
+			else:
+				for note in notes:
+					warning.add_note(note)
 
 		try:
 			warningCollector = _threadLocalData.warningCollector
