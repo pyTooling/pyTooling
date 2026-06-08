@@ -171,7 +171,7 @@ class ToStdOut(TestCase):
 		out.seek(0)
 		err.seek(0)
 
-		self.assertEqual(f"{self.PURPLE}[FATAL]    This is a fatal message.{self.NO_COLOR}\n", out.readline())
+		self.assertEqual(f"{self.PURPLE}[FATAL]     This is a fatal message.{self.NO_COLOR}\n", out.readline())
 		self.assertEqual(0, err.tell())
 
 	def test_WriteFatalNoExit(self) -> None:
@@ -187,7 +187,7 @@ class ToStdOut(TestCase):
 		out.seek(0)
 		err.seek(0)
 
-		self.assertEqual(f"{self.PURPLE}[FATAL]    This is a fatal message.{self.NO_COLOR}\n", out.readline())
+		self.assertEqual(f"{self.PURPLE}[FATAL]     This is a fatal message.{self.NO_COLOR}\n", out.readline())
 		self.assertEqual(0, err.tell())
 
 	def test_WriteError(self) -> None:
@@ -203,7 +203,7 @@ class ToStdOut(TestCase):
 		out.seek(0)
 		err.seek(0)
 
-		self.assertEqual(f"{self.RED}[ERROR]    This is a error message.{self.NO_COLOR}\n", out.readline())
+		self.assertEqual(f"{self.RED}[ERROR]     This is a error message.{self.NO_COLOR}\n", out.readline())
 		self.assertEqual(0, err.tell())
 
 	def test_WriteQuiet(self) -> None:
@@ -235,7 +235,7 @@ class ToStdOut(TestCase):
 		out.seek(0)
 		err.seek(0)
 
-		self.assertEqual(f"{self.YELLOW}[WARNING]  This is a warning message.{self.NO_COLOR}\n", out.readline())
+		self.assertEqual(f"{self.YELLOW}[WARNING]   This is a warning message.{self.NO_COLOR}\n", out.readline())
 		self.assertEqual(0, err.tell())
 
 	def test_WriteCriticalWarning(self) -> None:
@@ -251,7 +251,7 @@ class ToStdOut(TestCase):
 		out.seek(0)
 		err.seek(0)
 
-		self.assertEqual(f"{self.DARK_YELLOW}[CRITICAL] This is a critical warning message.{self.NO_COLOR}\n", out.readline())
+		self.assertEqual(f"{self.DARK_YELLOW}[CRITICAL]  This is a critical warning message.{self.NO_COLOR}\n", out.readline())
 		self.assertEqual(0, err.tell())
 
 	def test_WriteInfo(self) -> None:
@@ -360,7 +360,7 @@ class ToStdOut_ToStdErr(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.PURPLE}[FATAL]    This is a fatal message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.PURPLE}[FATAL]     This is a fatal message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteFatalNoExit(self) -> None:
 		class Application(TerminalApplication):
@@ -376,7 +376,7 @@ class ToStdOut_ToStdErr(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.PURPLE}[FATAL]    This is a fatal message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.PURPLE}[FATAL]     This is a fatal message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteError(self) -> None:
 		class Application(TerminalApplication):
@@ -392,7 +392,7 @@ class ToStdOut_ToStdErr(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.RED}[ERROR]    This is a error message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.RED}[ERROR]     This is a error message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteQuiet(self) -> None:
 		class Application(TerminalApplication):
@@ -424,7 +424,7 @@ class ToStdOut_ToStdErr(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.DARK_YELLOW}[CRITICAL] This is a critical warning message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.DARK_YELLOW}[CRITICAL]  This is a critical warning message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteWarning(self) -> None:
 		class Application(TerminalApplication):
@@ -440,7 +440,7 @@ class ToStdOut_ToStdErr(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.YELLOW}[WARNING]  This is a warning message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.YELLOW}[WARNING]   This is a warning message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteInfo(self) -> None:
 		class Application(TerminalApplication):
@@ -548,7 +548,7 @@ class DataToStdOut(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.PURPLE}[FATAL]    This is a fatal message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.PURPLE}[FATAL]     This is a fatal message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteFatalNoExit(self) -> None:
 		class Application(TerminalApplication):
@@ -564,7 +564,7 @@ class DataToStdOut(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.PURPLE}[FATAL]    This is a fatal message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.PURPLE}[FATAL]     This is a fatal message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteError(self) -> None:
 		class Application(TerminalApplication):
@@ -580,7 +580,7 @@ class DataToStdOut(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.RED}[ERROR]    This is a error message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.RED}[ERROR]     This is a error message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteQuiet(self) -> None:
 		class Application(TerminalApplication):
@@ -612,7 +612,7 @@ class DataToStdOut(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.DARK_YELLOW}[CRITICAL] This is a critical warning message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.DARK_YELLOW}[CRITICAL]  This is a critical warning message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteWarning(self) -> None:
 		class Application(TerminalApplication):
@@ -628,7 +628,7 @@ class DataToStdOut(TestCase):
 		err.seek(0)
 
 		self.assertEqual(0, out.tell())
-		self.assertEqual(f"{self.YELLOW}[WARNING]  This is a warning message.{self.NO_COLOR}\n", err.readline())
+		self.assertEqual(f"{self.YELLOW}[WARNING]   This is a warning message.{self.NO_COLOR}\n", err.readline())
 
 	def test_WriteInfo(self) -> None:
 		class Application(TerminalApplication):

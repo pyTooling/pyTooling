@@ -1160,7 +1160,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param immediateExit:   Optional, exit application immediately. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		ret = self.WriteLine(Line(message, Severity.Fatal, self._baseIndent + indent, appendLinebreak))
+		ret = self.WriteLine(Line(message, Severity.Fatal, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 		if immediateExit:
 			self.FatalExit(exitCode)
 		return ret
@@ -1183,7 +1183,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:returns:               True, if message was actually written.
 		"""
 		self._errorCount += 1
-		return self.WriteLine(Line(message, Severity.Error, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Error, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteQuiet(
 		self,
@@ -1204,7 +1204,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.Quiet, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Quiet, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteCritical(
 		self,
@@ -1224,7 +1224,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:returns:               True, if message was actually written.
 		"""
 		self._criticalWarningCount += 1
-		return self.WriteLine(Line(message, Severity.Critical, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Critical, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteCriticalNote(
 		self,
@@ -1243,7 +1243,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the note. Default: ``True``
 		:returns:               True, if note was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.CriticalNote, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.CriticalNote, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteWarning(
 		self,
@@ -1263,7 +1263,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:returns:               True, if message was actually written.
 		"""
 		self._warningCount += 1
-		return self.WriteLine(Line(message, Severity.Warning, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Warning, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteWarningNote(
 		self,
@@ -1282,7 +1282,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the note. Default: ``True``
 		:returns:               True, if note was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.WarningNote, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.WarningNote, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteInfo(
 		self,
@@ -1301,7 +1301,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.Info, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Info, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteNormal(
 		self,
@@ -1320,7 +1320,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.Normal, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Normal, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteVerbose(
 		self,
@@ -1339,7 +1339,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.Verbose, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Verbose, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteDebug(
 		self,
@@ -1358,7 +1358,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.Debug, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Debug, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 	def WriteDryRun(
 		self,
@@ -1377,4 +1377,4 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
 		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.DryRun, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.DryRun, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
