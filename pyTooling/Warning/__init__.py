@@ -37,7 +37,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from threading import local
 from types     import TracebackType
-from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self
+from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self, Iterable
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
@@ -233,11 +233,18 @@ class WarningCollector:
 		return False if self._handler is None else self._handler(warning)
 
 	@classmethod
-	def Raise(cls, warning: BaseException, cause: Nullable[Exception] = None) -> None:
+	def Raise(
+		cls,
+		warning: BaseException,
+		cause:   Nullable[Exception] = None,
+		notes:   Nullable[Iterable[str]] = None
+	) -> None:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
 		:param warning:    Warning to send upwards in the call stack.
+		:param cause:      Optional, root cause to be added to the warning.
+		:param notes:      optional, list of notes to be added to the warning.
 		:raises Exception: If warning should be converted to an exception.
 		:raises Exception: If the call-stack walk couldn't find a warning collector.
 		"""
@@ -245,6 +252,10 @@ class WarningCollector:
 
 		if cause is not None:
 			warning.__cause__ = cause
+
+		if notes is not None:
+			for note in notes:
+				warning.add_note(note)
 
 		try:
 			warningCollector = _threadLocalData.warningCollector
