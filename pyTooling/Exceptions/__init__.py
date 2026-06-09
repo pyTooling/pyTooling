@@ -36,7 +36,9 @@ A common set of missing exceptions in Python.
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-from pyTooling.Decorators import export
+from typing import Tuple
+
+from pyTooling.Decorators import export, readonly
 
 
 @export
@@ -49,6 +51,24 @@ class OverloadResolutionError(Exception):
 	   :func:`@overloadable <pyTooling.MetaClasses.overloadable>`
 	      |rarr| Mark a method as *overloadable*.
 	"""
+
+	@readonly
+	def HasNotes(self) -> bool:
+		"""
+		Read-only property to return if the warning has attached notes.
+
+		:returns: True, if the warning has attached notes.
+		"""
+		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+	@readonly
+	def Notes(self) -> Tuple[str, ...]:
+		"""
+		Read-only property to access warning's attached notes.
+
+		:returns: Attached notes.
+		"""
+		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
 
 
 @export
@@ -63,6 +83,24 @@ class ExceptionBase(Exception):
 		"""
 		super().__init__()
 		self.message = message
+
+	@readonly
+	def HasNotes(self) -> bool:
+		"""
+		Read-only property to return if the warning has attached notes.
+
+		:returns: True, if the warning has attached notes.
+		"""
+		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+	@readonly
+	def Notes(self) -> Tuple[str, ...]:
+		"""
+		Read-only property to access warning's attached notes.
+
+		:returns: Attached notes.
+		"""
+		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
 
 	def __str__(self) -> str:
 		"""Returns the exception's message text."""
@@ -91,3 +129,21 @@ class NotConfiguredException(ExceptionBase):
 @export
 class ToolingException(Exception):
 	"""The exception is raised by pyTooling internal features."""
+
+	@readonly
+	def HasNotes(self) -> bool:
+		"""
+		Read-only property to return if the warning has attached notes.
+
+		:returns: True, if the warning has attached notes.
+		"""
+		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+	@readonly
+	def Notes(self) -> Tuple[str, ...]:
+		"""
+		Read-only property to access warning's attached notes.
+
+		:returns: Attached notes.
+		"""
+		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()

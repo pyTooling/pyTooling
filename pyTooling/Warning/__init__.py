@@ -37,7 +37,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from threading import local
 from types     import TracebackType
-from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self, Iterable
+from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self, Iterable, Tuple
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
@@ -60,6 +60,24 @@ class Warning(BaseException):
 	   Warnings can be unhandled within a call hierarchy.
 	"""
 
+	@readonly
+	def HasNotes(self) -> bool:
+		"""
+		Read-only property to return if the warning has attached notes.
+
+		:returns: True, if the warning has attached notes.
+		"""
+		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+	@readonly
+	def Notes(self) -> Tuple[str, ...]:
+		"""
+		Read-only property to access warning's attached notes.
+
+		:returns: Attached notes.
+		"""
+		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
+
 
 @export
 class CriticalWarning(BaseException):
@@ -71,6 +89,24 @@ class CriticalWarning(BaseException):
 	   Critical warnings must be unhandled within a call hierarchy, otherwise a :exc:`UnhandledCriticalWarningException`
 	   will be raised.
 	"""
+
+	@readonly
+	def HasNotes(self) -> bool:
+		"""
+		Read-only property to return if the warning has attached notes.
+
+		:returns: True, if the warning has attached notes.
+		"""
+		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+	@readonly
+	def Notes(self) -> Tuple[str, ...]:
+		"""
+		Read-only property to access warning's attached notes.
+
+		:returns: Attached notes.
+		"""
+		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
 
 
 @export
@@ -127,7 +163,7 @@ class WarningCollector:
 		if warnings is None:
 			warnings = []
 		elif not isinstance(warnings, list):
-			ex = TypeError(f"Parameter 'warnings' is not list.")
+			ex = TypeError(f"Parameter 'warnings' is not a list.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(warnings)}'.")
 			raise ex
 
@@ -148,10 +184,21 @@ class WarningCollector:
 		"""
 		return len(self._warnings)
 
-	def __iter__(self) -> Iterator[BaseException]:
+	def __iter__(self) -> Iterator[Warning | CriticalWarning | Exception]:
+		"""
+		Return an iterator over all collected warnings.
+
+		:returns: Iterator over the collected warnings.
+		"""
 		return iter(self._warnings)
 
-	def __getitem__(self, index: int) -> BaseException:
+	def __getitem__(self, index: int) -> Warning | CriticalWarning | Exception:
+		"""
+		Access a collected warning by index.
+
+		:param index: Index of the warning.
+		:returns:     Collected warning.
+		"""
 		return self._warnings[index]
 
 	def __enter__(self) -> Self:
@@ -190,20 +237,20 @@ class WarningCollector:
 		_threadLocalData.warningCollector = self._parent
 
 	@property
-	def Parent(self) -> Nullable["WarningCollector"]:
+	def Parent(self) -> Nullable[Self]:
 		"""
-		Property to access the parent warning collected.
+		Property to access the parent warning collector.
 
 		:returns: The parent warning collector or ``None``.
 		"""
 		return self._parent
 
 	@Parent.setter
-	def Parent(self, value: "WarningCollector") -> None:
+	def Parent(self, value: Self) -> None:
 		self._parent = value
 
 	@readonly
-	def Warnings(self) -> List[BaseException]:
+	def Warnings(self) -> List[Warning | CriticalWarning | Exception]:
 		"""
 		Read-only property to access the list of collected warnings.
 
@@ -211,7 +258,7 @@ class WarningCollector:
 		"""
 		return self._warnings
 
-	def AddWarning(self, warning: BaseException) -> bool:
+	def AddWarning(self, warning: Warning | CriticalWarning | Exception) -> bool:
 		"""
 		Add a warning to the list of warnings managed by this warning collector.
 
@@ -235,7 +282,7 @@ class WarningCollector:
 	@classmethod
 	def Raise(
 		cls,
-		warning: BaseException,
+		warning: Warning | CriticalWarning | Exception,
 		cause:   Nullable[Exception] = None,
 		*,
 		notes:   Nullable[str | Iterable[str]] = None
@@ -243,11 +290,14 @@ class WarningCollector:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
-		:param warning:    Warning to send upwards in the call stack.
-		:param cause:      Optional, root cause to be added to the warning.
-		:param notes:      optional, a single note or a list of notes to be added to the warning.
-		:raises Exception: If warning should be converted to an exception.
-		:raises Exception: If the call-stack walk couldn't find a warning collector.
+		:param warning:                            Warning to send upwards in the call stack.
+		:param cause:                              Optional, root cause to be added to the warning.
+		:param notes:                              optional, a single note or a list of notes to be added to the warning.
+		:raises Exception:                         If warning should be converted to an exception.
+		:raises UnhandledExceptionException:       If no warning collector was found along the call-hierarchy to collect and
+		                                           handle an exception.
+		:raises UnhandledCriticalWarningException: If no warning collector was found along the call-hierarchy to collect and
+		                                           handle a critical warning.
 		"""
 		global _threadLocalData
 
