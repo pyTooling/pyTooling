@@ -1,9 +1,10 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-from sys import path as sys_path
-from os.path import abspath
-from pathlib import Path
+from sys      import path as sys_path
+from os.path  import abspath
+from pathlib  import Path
+from textwrap import dedent
 
 from pyTooling.Packaging import extractVersionInformation
 
