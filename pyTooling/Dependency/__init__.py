@@ -172,8 +172,8 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 	def AddDependencyTo(
 		self,
-		package: Union[str, Package],
-		version: Union[str, SemanticVersion, Iterable[Union[str, SemanticVersion]]]
+		package: "str | Package",
+		version: str | SemanticVersion | Iterable[str | SemanticVersion]
 	) -> None:
 		"""
 		Add a dependency from current package version to another package version.
@@ -408,7 +408,7 @@ class Package(metaclass=ExtendedType, slots=True):
 	def __iter__(self) -> Iterator[PackageVersion]:
 		return iter(self._versions.values())
 
-	def __getitem__(self, version: Union[str, SemanticVersion]) -> PackageVersion:
+	def __getitem__(self, version: str | SemanticVersion) -> PackageVersion:
 		"""
 		Access a package version in the package by version string or semantic version.
 

@@ -178,7 +178,7 @@ def readonly(func: Callable) -> property:
 
 
 @export
-def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Union[Func, type]], Union[Func, type]]:
+def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Func | type], Func | type]:
 	"""
 	Copy the doc-string from given base-class to the method this decorator is applied to.
 
@@ -200,7 +200,7 @@ def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Union[Fu
 	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
 	:returns:         Decorator function that copies the doc-string.
 	"""
-	def decorator(param: Union[Func, type]) -> Union[Func, type]:
+	def decorator(param: Func | type) -> Func | type:
 		"""
 		Decorator function, which copies the doc-string from base-class' method to method ``m``.
 

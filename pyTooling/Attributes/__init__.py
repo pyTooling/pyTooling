@@ -178,7 +178,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			raise NotImplementedError(f"Parameter 'scope' is a class isn't supported yet.")
 
 	@classmethod
-	def GetClasses(cls, scope: Union[Type, ModuleType, None] = None, subclassOf: Nullable[Type] = None) -> Generator[TAttr, None, None]:
+	def GetClasses(cls, scope: Nullable[Type | ModuleType] = None, subclassOf: Nullable[Type] = None) -> Generator[TAttr, None, None]:
 	# def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.
