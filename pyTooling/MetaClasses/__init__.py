@@ -731,7 +731,7 @@ class ExtendedType(type):
 			for fieldName, typeAnnotation in annotations.items():
 				if fieldName in inheritedSlottedFields:
 					cls = inheritedSlottedFields[fieldName]
-					raise AttributeError(f"Slot '{fieldName}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
+					raise AttributeError(f"Slot '{fieldName}' declared in class '{className}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
 
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary

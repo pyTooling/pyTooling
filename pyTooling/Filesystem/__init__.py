@@ -561,7 +561,7 @@ class Directory(Element["Directory"]):
 		return (d for d in self._subdirectories.values())
 
 	@readonly
-	def Files(self) -> Generator[Union["Filename", "SymbolicLink"], None, None]:
+	def Files(self) -> Generator["Filename | SymbolicLink", None, None]:
 		"""
 		Iterate all direct files of the directory.
 

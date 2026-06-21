@@ -30,6 +30,7 @@
 # ==================================================================================================================== #
 #
 """A set of helpers to implement a text user interface (TUI) in a terminal."""
+from datetime                import datetime
 from enum                    import Enum, unique
 from io                      import TextIOWrapper
 from sys                     import stdin, stdout, stderr
@@ -325,7 +326,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Low-level method for writing to ``STDOUT``.
 
 		:param message: Message to write to ``STDOUT``.
-		:return:        Number of written characters.
+		:returns:       Number of written characters.
 		"""
 		return self._stdout.write(message)
 
@@ -335,7 +336,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		:param message: Message to write to ``STDOUT``.
 		:param end:     Use newline character. Default: ``\\n``.
-		:return:        Number of written characters.
+		:returns:       Number of written characters.
 		"""
 		return self._stdout.write(message + end)
 
@@ -344,7 +345,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Low-level method for writing to ``STDERR``.
 
 		:param message: Message to write to ``STDERR``.
-		:return:        Number of written characters.
+		:returns:       Number of written characters.
 		"""
 		return self._stderr.write(message)
 
@@ -511,17 +512,25 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 class Severity(Enum):
 	"""Logging message severity levels."""
 
-	Fatal =    100    #: Fatal messages
-	Error =     80    #: Error messages
-	Quiet =     70    #: Always visible messages, even in quiet mode.
-	Critical =  60    #: Critical messages
-	Warning =   50    #: Warning messages
-	Info =      20    #: Informative messages
-	Normal =    10    #: Normal messages
-	DryRun =     8    #: Messages visible in a dry-run
-	Verbose =    5    #: Verbose messages
-	Debug =      2    #: Debug messages
-	All =        0    #: All messages
+	Exception =      120    #: Unhandled exception messages
+	ExceptionCause = 115    #: Exception cause
+	ExceptionNote =  110    #: Exception notes
+	Fatal =          100    #: Fatal messages
+	Error =           80    #: Error messages
+	Quiet =           70    #: Always visible messages, even in quiet mode.
+
+	Critical =        60    #: Critical messages
+	CriticalNote =    55    #: Critical notes
+	Warning =         50    #: Warning messages
+	WarningNote =     45    #: Warning notes
+	Silent =          40    #: Severity level for silenced messages.
+
+	Info =            20    #: Informative messages
+	Normal =          10    #: Normal messages
+	DryRun =           8    #: Messages visible in a dry-run
+	Verbose =          5    #: Verbose messages
+	Debug =            2    #: Debug messages
+	All =              0    #: All messages
 
 	def __hash__(self) -> int:
 		return hash(self.name)
@@ -621,33 +630,56 @@ class Severity(Enum):
 @unique
 class Mode(Enum):
 	TextToStdOut_ErrorsToStdErr = 0
-	AllLinearToStdOut = 1
-	DataToStdOut_OtherToStdErr = 2
+	AllLinearToStdOut =           1
+	DataToStdOut_OtherToStdErr =  2
 
 
 @export
 class Line(metaclass=ExtendedType, slots=True):
-	"""Represents a single message line with a severity and indentation level."""
+	"""
+	Represents a single message line with a severity and indentation level.
+	"""
 
 	_LOG_MESSAGE_FORMAT__ = {
-		Severity.Fatal:     "FATAL: {message}",
-		Severity.Error:     "ERROR: {message}",
-		Severity.Quiet:     "{message}",
-		Severity.Warning:   "WARNING: {message}",
-		Severity.Info:      "INFO: {message}",
-		Severity.Normal:    "{message}",
-		Severity.DryRun:    "DRYRUN: {message}",
-		Severity.Verbose:   "VERBOSE: {message}",
-		Severity.Debug:     "DEBUG: {message}",
-	}                     #: Message line formatting rules.
+		Severity.Exception:     "EXCEPTION: {message}",
+		Severity.ExceptionNote: "           > {message}",
+		Severity.Fatal:         "FATAL: {message}",
+		Severity.Error:         "ERROR: {message}",
+		Severity.Quiet:         "{message}",
+		Severity.Critical:      "CRITICAL: {message}",
+		Severity.CriticalNote:  "          > {message}",
+		Severity.Warning:       "WARNING: {message}",
+		Severity.WarningNote:   "         > {message}",
+		Severity.Info:          "INFO: {message}",
+		Severity.Normal:        "{message}",
+		Severity.DryRun:        "DRYRUN: {message}",
+		Severity.Verbose:       "VERBOSE: {message}",
+		Severity.Debug:         "DEBUG: {message}",
+	}                           #: Message line formatting rules.
 
+	_timestamp:       datetime  #: Timestamp when the line was created.
 	_message:         str       #: Text message (line content).
 	_severity:        Severity  #: Message severity
 	_indent:          int       #: Indentation
 	_appendLinebreak: bool      #: True, if a trailing linebreak should be added when printing this line object.
 
-	def __init__(self, message: str, severity: Severity = Severity.Normal, indent: int = 0, appendLinebreak: bool = True) -> None:
-		"""Constructor for a new ``Line`` object."""
+	def __init__(
+		self,
+		message:  str,
+		severity: Severity = Severity.Normal,
+		*,
+		indent:   int = 0,
+		appendLinebreak: bool = True
+	) -> None:
+		"""
+		Initialize a line object representing the single-line message.
+
+		:param message:         Message to display.
+		:param severity:        Optional, severity level of the message.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a line break at the end of the message.
+		"""
+		self._timestamp =       datetime.now()
 		self._severity =        severity
 		self._message =         message
 		self._indent =          indent
@@ -656,7 +688,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Message(self) -> str:
 		"""
-		Return the indented line.
+		Read-only property to access the line's raw message.
 
 		:returns: Raw message of the line.
 		"""
@@ -665,7 +697,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Severity(self) -> Severity:
 		"""
-		Return the line's severity level.
+		Read-only property to access the line's severity level.
 
 		:returns: Severity level of the message line.
 		"""
@@ -674,9 +706,9 @@ class Line(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Indent(self) -> int:
 		"""
-		Return the line's indentation level.
+		Read-only property to access the line's indentation level.
 
-		:returns: Indentation level.
+		:returns: Indentation level of the message line.
 		"""
 		return self._indent
 
@@ -686,22 +718,26 @@ class Line(metaclass=ExtendedType, slots=True):
 
 		:param indent: Indentation level added to the current indentation level.
 		"""
-		# TODO: used named expression starting from Python 3.8
-		indent += self._indent
-		self._indent = indent
-		return indent
+		self._indent = (newIndent := self._indent + indent)
+		return newIndent
 
 	@readonly
 	def AppendLinebreak(self) -> bool:
 		"""
-		Returns if a linebreak should be added at the end of the message.
+		Read-only property to return if a linebreak is added after the line's message.
 
 		:returns: True, if a linebreak should be added.
 		"""
 		return self._appendLinebreak
 
 	def __str__(self) -> str:
-		"""Returns a formatted version of a ``Line`` objects as a string."""
+		"""
+		Returns a formatted version of a ``Line`` objects as a string.
+
+		The formatting is defined in :attr:`_LOG_MESSAGE_FORMAT__`.
+
+		:returns: Formatted version of a ``Line`` object.
+		"""
 		return self._LOG_MESSAGE_FORMAT__[self._severity].format(message=self._message)
 
 
@@ -801,21 +837,26 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	A base-class for implementation of terminal applications emitting line-by-line messages.
 	"""
 	_LOG_MESSAGE_FORMAT__ = {
-		Severity.Fatal:    "{DARK_RED}[FATAL]    {message}{NOCOLOR}",
-		Severity.Error:    "{RED}[ERROR]    {message}{NOCOLOR}",
-		Severity.Quiet:    "{WHITE}{message}{NOCOLOR}",
-		Severity.Critical: "{DARK_YELLOW}[CRITICAL] {message}{NOCOLOR}",
-		Severity.Warning:  "{YELLOW}[WARNING]  {message}{NOCOLOR}",
-		Severity.Info:     "{WHITE}{message}{NOCOLOR}",
-		Severity.Normal:   "{WHITE}{message}{NOCOLOR}",
-		Severity.DryRun:   "{DARK_CYAN}[DRY] {message}{NOCOLOR}",
-		Severity.Verbose:  "{GRAY}{message}{NOCOLOR}",
-		Severity.Debug:    "{DARK_GRAY}{message}{NOCOLOR}"
-	}                    #: Message formatting rules.
+		Severity.Exception:            "{RED}[EXCEPTION] {message}{NOCOLOR}",
+		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",
+		Severity.Fatal:           "{DARK_RED}[FATAL]     {message}{NOCOLOR}",
+		Severity.Error:                "{RED}[ERROR]     {message}{NOCOLOR}",
+		Severity.Quiet:              "{WHITE}{message}{NOCOLOR}",
+		Severity.Critical:     "{DARK_YELLOW}[CRITICAL]  {message}{NOCOLOR}",
+		Severity.CriticalNote: "{DARK_YELLOW}            > {message}{NOCOLOR}",
+		Severity.Warning:           "{YELLOW}[WARNING]   {message}{NOCOLOR}",
+		Severity.WarningNote:  "{DARK_YELLOW}            > {message}{NOCOLOR}",
+		Severity.Info:               "{WHITE}{message}{NOCOLOR}",
+		Severity.Normal:             "{WHITE}{message}{NOCOLOR}",
+		Severity.DryRun:         "{DARK_CYAN}[DRY] {message}{NOCOLOR}",
+		Severity.Verbose:             "{GRAY}{message}{NOCOLOR}",
+		Severity.Debug:          "{DARK_GRAY}{message}{NOCOLOR}"
+	}                          #: Message formatting rules.
 
 	_LOG_LEVEL_ROUTING__: Dict[Severity, Tuple[Callable[[str, str], int]]]  #: Message routing rules.
 	_verbose:       bool
 	_debug:         bool
+	_silent:        bool
 	_quiet:         bool
 	_writeLevel:    Severity
 	_writeToStdOut: bool
@@ -843,6 +884,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 		self._verbose =        False
 		self._debug =          False
+		self._silent =         False
 		self._quiet =          False
 		self._writeLevel =     Severity.Normal
 		self._writeToStdOut =  True
@@ -854,10 +896,10 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._criticalWarningCount = 0
 		self._warningCount =         0
 
-	def __InitializeLogLevelRouting(self, mode: Mode) -> None:
+	def __InitializeLogLevelRouting(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
 			for severity in Severity:
-				if severity >= Severity.Warning and severity != Severity.Quiet:
+				if severity >= Severity.Silent and severity != Severity.Quiet:
 					self._LOG_LEVEL_ROUTING__[severity] = (self.WriteLineToStdErr,)
 				else:
 					self._LOG_LEVEL_ROUTING__[severity] = (self.WriteLineToStdOut,)
@@ -868,7 +910,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 			for severity in Severity:
 				self._LOG_LEVEL_ROUTING__[severity] =   (self.WriteLineToStdErr, )
 		else:  # pragma: no cover
-			raise ExceptionBase(f"Unsupported mode '{mode}'.")
+			ex = ExceptionBase(f"Unsupported mode '{mode}'.")
+			ex.add_note(f"Unsupported modes '{', '.join(m.name for m in Mode)}'.")
+			raise ex
 
 	def _PrintHeadline(self, width: int = 80) -> None:
 		"""
@@ -915,13 +959,24 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"License:   {license}")
 		self.WriteNormal(f"Version:   {version}")
 
-	def Configure(self, verbose: bool = False, debug: bool = False, quiet: bool = False, writeToStdOut: bool = True) -> None:
+	def Configure(
+		self,
+		*,
+		verbose: bool = False,
+		debug:   bool = False,
+		silent:  bool = False,
+		quiet:   bool = False,
+		writeToStdOut: bool = True
+	) -> None:
 		self._verbose =       True if debug else verbose
 		self._debug =         debug
+		self._silent =        silent
 		self._quiet =         quiet
 
 		if quiet:
 			self._writeLevel =  Severity.Quiet
+		elif silent:
+			self._writeLevel =  Severity.Silent
 		elif debug:
 			self._writeLevel =  Severity.Debug
 		elif verbose:
@@ -940,6 +995,11 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	def Debug(self) -> bool:
 		"""Returns true, if debug messages are enabled."""
 		return self._debug
+
+	@readonly
+	def Silent(self) -> bool:
+		"""Returns true, if silent mode is enabled."""
+		return self._silent
 
 	@readonly
 	def Quiet(self) -> bool:
@@ -966,27 +1026,56 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 	@readonly
 	def WarningCount(self) -> int:
+		"""
+		Read-only property to access the number of counted warnings.
+
+		:return: Number of warnings.
+		"""
 		return self._warningCount
 
 	@readonly
 	def CriticalWarningCount(self) -> int:
+		"""
+		Read-only property to access the number of counted critical warnings.
+
+		:return: Number of critical warnings.
+		"""
 		return self._criticalWarningCount
 
 	@readonly
 	def ErrorCount(self) -> int:
+		"""
+		Read-only property to access the number of counted errors.
+
+		:return: Number of errors.
+		"""
 		return self._errorCount
 
 	@readonly
 	def Lines(self) -> List[Line]:
+		"""
+		Read-only property to access the list of printed lines (messages).
+
+		:returns: List of lines.
+		"""
 		return self._lines
 
 	def ExitOnPreviousErrors(self) -> None:
-		"""Exit application if errors have been printed."""
+		"""
+		Exit application if errors have been printed.
+		"""
 		if self._errorCount > 0:
 			self.WriteFatal("Too many errors in previous steps.")
 
-	def ExitOnPreviousCriticalWarnings(self, includeErrors: bool = True) -> None:
-		"""Exit application if critical warnings have been printed."""
+	def ExitOnPreviousCriticalWarnings(
+		self,
+		includeErrors: bool = True
+	) -> None:
+		"""
+		Exit application if error or critical warnings have been printed.
+
+		:param includeErrors: Include critical warning counts.
+		"""
 		if includeErrors and (self._errorCount > 0):
 			if self._criticalWarningCount > 0:
 				self.WriteFatal("Too many errors and critical warnings in previous steps.")
@@ -995,8 +1084,17 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		elif self._criticalWarningCount > 0:
 			self.WriteFatal("Too many critical warnings in previous steps.")
 
-	def ExitOnPreviousWarnings(self, includeCriticalWarnings: bool = True, includeErrors: bool = True) -> None:
-		"""Exit application if warnings have been printed."""
+	def ExitOnPreviousWarnings(
+		self,
+		includeCriticalWarnings: bool = True,
+		includeErrors:           bool = True
+	) -> None:
+		"""
+		Exit application if error or (critical) warnings have been printed.
+
+		:param includeCriticalWarnings: Include critical warning counts.
+		:param includeErrors:           Include error counts.
+		"""
 		if includeErrors and (self._errorCount > 0):
 			if includeCriticalWarnings and (self._criticalWarningCount > 0):
 				if self._warningCount > 0:
@@ -1016,60 +1114,267 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 			self.WriteFatal("Too many warnings in previous steps.")
 
 	def WriteLine(self, line: Line) -> bool:
-		"""Print a formatted line to the underlying terminal/console offered by the operating system."""
-		if line.Severity >= self._writeLevel:
-			self._lines.append(line)
-			for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
-				method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=line.Message, **self.Foreground), end="\n" if line.AppendLinebreak else "")
-			return True
-		else:
+		"""
+		Print a formatted line to the underlying terminal/console offered by the operating system.
+
+		:param line: Line object to indent, format and print.
+		:returns:    True, if line was actually written.
+		"""
+		if line.Severity < self._writeLevel:
 			return False
 
+		self._lines.append(line)
+		for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
+			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=line.Message, **self.Foreground), end="\n" if line.AppendLinebreak else "")
+
+		return True
+
 	def TryWriteLine(self, line) -> bool:
+		"""
+		Check if a line object of a certain severity would be written.
+
+		:param line: Line object to check.
+		:returns:    True, if line would be written.
+		"""
 		return line.Severity >= self._writeLevel
 
-	def WriteFatal(self, message: str, indent: int = 0, appendLinebreak: bool = True, immediateExit: bool = True) -> bool:
-		ret = self.WriteLine(Line(message, Severity.Fatal, self._baseIndent + indent, appendLinebreak))
+	def WriteFatal(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True,
+		exitCode: int = 0,
+		immediateExit: bool = True
+	) -> bool:
+		"""
+		Write a fatal message and exit.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:param exitCode:        Optional, exit application with this exit code. Default: ``0`` |br|
+		                        If ``0``, use :attr:`FATAL_EXIT_CODE` as exit code.
+		:param immediateExit:   Optional, exit application immediately. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
+		ret = self.WriteLine(Line(message, Severity.Fatal, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 		if immediateExit:
-			self.FatalExit()
+			self.FatalExit(exitCode)
 		return ret
 
-	def WriteError(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
+	def WriteError(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write an error message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
 		self._errorCount += 1
-		return self.WriteLine(Line(message, Severity.Error, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Error, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
-	def WriteCritical(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
+	def WriteQuiet(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write an always visible message.
+
+		This message is even visible in quiet mode.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.Quiet, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteCritical(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a critical message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
 		self._criticalWarningCount += 1
-		return self.WriteLine(Line(message, Severity.Critical, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Critical, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
-	def WriteWarning(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
+	def WriteCriticalNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a critical note.
+
+		Depending on internal settings and rules, a note might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the note.
+		:param appendLinebreak: Optional, append a linebreak after the note. Default: ``True``
+		:returns:               True, if note was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.CriticalNote, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteWarning(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a warning message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
 		self._warningCount += 1
-		return self.WriteLine(Line(message, Severity.Warning, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Warning, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
-	def WriteInfo(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
-		return self.WriteLine(Line(message, Severity.Info, self._baseIndent + indent, appendLinebreak))
+	def WriteWarningNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a warning note.
 
-	def WriteQuiet(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
-		return self.WriteLine(Line(message, Severity.Quiet, self._baseIndent + indent, appendLinebreak))
+		Depending on internal settings and rules, a note might be skipped.
 
-	def WriteNormal(self, message: str, indent: int = 0, appendLinebreak: bool = True) -> bool:
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the note.
+		:param appendLinebreak: Optional, append a linebreak after the note. Default: ``True``
+		:returns:               True, if note was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.WarningNote, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteInfo(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write an info message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.Info, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteNormal(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
 		"""
 		Write a normal message.
 
 		Depending on internal settings and rules, a message might be skipped.
 
 		:param message:         Message to write.
-		:param indent:          Indentation level of the message.
-		:param appendLinebreak: Append a linebreak after the message. Default: ``True``
-		:return:                True, if message was actually written.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
 		"""
-		return self.WriteLine(Line(message, Severity.Normal, self._baseIndent + indent, appendLinebreak))
+		return self.WriteLine(Line(message, Severity.Normal, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
-	def WriteVerbose(self, message: str, indent: int = 1, appendLinebreak: bool = True) -> bool:
-		return self.WriteLine(Line(message, Severity.Verbose, self._baseIndent + indent, appendLinebreak))
+	def WriteVerbose(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a verbose message.
 
-	def WriteDebug(self, message: str, indent: int = 2, appendLinebreak: bool = True) -> bool:
-		return self.WriteLine(Line(message, Severity.Debug, self._baseIndent + indent, appendLinebreak))
+		Depending on internal settings and rules, a message might be skipped.
 
-	def WriteDryRun(self, message: str, indent: int = 2, appendLinebreak: bool = True) -> bool:
-		return self.WriteLine(Line(message, Severity.DryRun, self._baseIndent + indent, appendLinebreak))
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.Verbose, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteDebug(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a debug message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.Debug, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteDryRun(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a dry-run message message.
+
+		Depending on internal settings and rules, a message might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the message.
+		:param appendLinebreak: Optional, append a linebreak after the message. Default: ``True``
+		:returns:               True, if message was actually written.
+		"""
+		return self.WriteLine(Line(message, Severity.DryRun, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
