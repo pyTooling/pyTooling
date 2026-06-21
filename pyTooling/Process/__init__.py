@@ -38,7 +38,7 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Platform    import PlatformException, CurrentPlatform
 
-if CurrentPlatform.IsNativeWindows:
+if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 	from ctypes          import WinDLL
 	from ctypes.wintypes import HANDLE, BOOL, DWORD
 
@@ -82,14 +82,14 @@ class MemoryInfo(metaclass=ExtendedType, slots=True):
 
 @export
 class ProcessInformation(metaclass=ExtendedType, slots=True):
-	if CurrentPlatform.IsNativeWindows:
+	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		_psapi:         WinDLL
 		_kernel32:      WinDLL
 		_processHandle: Any
 	elif CurrentPlatform.IsNativeLinux:
 		_processStatusFile: ClassVar[Path] = Path(f"/proc/self/statm")
 
-	if CurrentPlatform.IsNativeWindows:
+	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
 			self._psapi =    WinDLL("psapi", use_last_error=True)
 			self._kernel32 = WinDLL("kernel32", use_last_error=True)
@@ -139,8 +139,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			except FileNotFoundError as ex:
 				raise PlatformException(f"Can't open '{self._processStatusFile}' to extract the process' physical memory usage.") from ex
 
-			vms =    fields[0] * self._pageSize  #: VmSize
-			rss =    fields[1] * self._pageSize  #: VmRSS
+			vms = int(fields[0]) * self._pageSize  #: VmSize
+			rss = int(fields[1]) * self._pageSize  #: VmRSS
 
 			return MemoryInfo(rss, vms)
 
@@ -206,7 +206,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 			return MemoryInfo(taskInfo.pti_resident_size, taskInfo.pti_virtual_size)
 
-	elif CurrentPlatform.IsNativeWindows:
+	elif CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		class _ProcessMemoryCounters(Structure):
 			from ctypes.wintypes import DWORD
 
