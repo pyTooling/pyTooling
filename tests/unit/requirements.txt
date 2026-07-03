@@ -1,10 +1,10 @@
 -r ../../requirements.txt
 
 # Coverage collection
-Coverage ~= 7.14
+Coverage ~= 7.15
 
 # Test Runner
-pytest ~= 9.0
+pytest ~= 9.1
 pytest-cov ~= 7.1
 
 # For pyTooling.Dependency.Python testing
@@ -15,7 +15,7 @@ requests >= 2.32
 ruamel.yaml ~= 0.19.1
 
 # For pyTooling.Packaging testing
-setuptools >= 80.0
+setuptools >= 82.0
 
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6

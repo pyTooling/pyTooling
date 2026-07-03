@@ -55,7 +55,7 @@ setup(
 		unittestRequirementsFile=Path("tests/requirements.txt"),
 		additionalRequirements={
 			"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
-			"packaging": ["setuptools >= 80.0"],
+			"packaging": ["setuptools >= 82.0"],
 			"terminal":  ["colorama ~= 0.4.6"],
 			"yaml":      ["ruamel.yaml ~= 0.19"],
 		},
