@@ -7,8 +7,28 @@ See `pyTooling Release Pages <https://github.com/pyTooling/pyTooling/releases>`_
 release.
 
 
-Version 8.x (2025)
-******************
+Version 8.x (2025/2026)
+***********************
+
+.. topic:: `v8.16.0 - 07.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.16.0>`__
+
+   tbd
+
+.. topic:: `v8.15.0 - 21.06.2026 <https://github.com/pyTooling/pyTooling/releases/v8.15.0>`__
+
+   tbd
+
+.. topic:: `v8.14.0 - 22.03.2026 <https://github.com/pyTooling/pyTooling/releases/v8.14.0>`__
+
+   tbd
+
+.. topic:: `v8.13.0 - 19.03.2026 <https://github.com/pyTooling/pyTooling/releases/v8.13.0>`__
+
+   tbd
+
+.. topic:: `v8.12.0 - 07.02.2026 <https://github.com/pyTooling/pyTooling/releases/v8.12.0>`__
+
+   tbd
 
 .. topic:: `v8.11.0 - 18.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.11.0>`__
 

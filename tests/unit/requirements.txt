@@ -15,7 +15,7 @@ requests >= 2.32
 ruamel.yaml ~= 0.19.1
 
 # For pyTooling.Packaging testing
-setuptools >= 82.0
+setuptools >= 83.0
 
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6

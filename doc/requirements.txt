@@ -2,7 +2,7 @@
 
 colorama >= 0.4.6
 ruamel.yaml ~= 0.19.1
-setuptools >= 82.0
+setuptools >= 83.0
 
 # Enforce latest version on ReadTheDocs
 sphinx ~= 9.1
