@@ -3,7 +3,7 @@
 # Static Type Checking
 mypy[reports] ~= 2.1
 typing_extensions ~= 4.16
-types-colorama >= 0.4.16
+types-colorama >= 0.4.15
 types-setuptools >= 80.9
 lxml >= 6.1, <7.0
 
