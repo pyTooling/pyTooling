@@ -35,7 +35,10 @@ from enum                    import Enum, unique
 from io                      import TextIOWrapper
 from sys                     import stdin, stdout, stderr
 from textwrap                import dedent
+from types                   import ModuleType
 from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
+
+from pyTooling.Versioning    import PythonVersion
 
 try:
 	from colorama import Fore as Foreground
@@ -935,29 +938,97 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
 
-	def _PrintVersion(self, author: str, email: str, copyright: str, license: str, version: str) -> None:
+	def _PrintHelp(self, command: Nullable[str] = None) -> None:
+		"""
+		Helper function to print the command line parsers help page(s).
+
+		:param command: The subcommand to print the help page(s) for.
+		"""
+		if command is None:
+			self.MainParser.print_help()
+		elif command == "help":
+			self.WriteWarning("This is a recursion ...")
+		else:
+			try:
+				self.SubParsers[command].print_help()
+			except KeyError:
+				self.WriteError(f"Command {command} is unknown.")
+
+	def _PrintVersion(
+		self,
+		dunderModule:        ModuleType,
+		packageName:         Nullable[str] = None,
+		versionCheckTimeout: int = 1
+	) -> None:
 		"""
 		Helper method to print the version information.
 
-		:param author:    Author of the application.
-		:param email:     The author's email address.
-		:param copyright: The copyright information.
-		:param license:   The license.
-		:param version:   The application's version.
+		:param dunderModule: The Python module containing the dunder variables for author(s), email, copyright, version, ...
 
 		.. admonition:: Example usage
 
 		   .. code-block:: Python
 
 		      def _PrintVersion(self):
-		        from MyModule import __author__, __email__, __copyright__, __license__, __version__
+		        import myPackage.MyModule as DunderModule
 
-		        super()._PrintVersion(__author__, __email__, __copyright__, __license__, __version__)
+		        super()._PrintVersion(
+		          DunderModule,
+		          "MyModule"
+		        )
 		"""
-		self.WriteNormal(f"Author:    {author} ({email})")
-		self.WriteNormal(f"Copyright: {copyright}")
-		self.WriteNormal(f"License:   {license}")
-		self.WriteNormal(f"Version:   {version}")
+		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=Foreground.RED)).split("\n", 1)
+		self.WriteNormal(f"Copyright:     {copyrights[0]}")
+		for copyright in copyrights[1:]:
+			self.WriteNormal(f"               {copyright}")
+
+		license = getattr(dunderModule, "__license__", "{RED}License not set!".format(RED=Foreground.RED))
+		self.WriteNormal(f"License:       {license}")
+
+		authors = getattr(dunderModule, "__author__", "{RED}Unknown author!".format(RED=Foreground.RED)).split(", ")
+		self.WriteNormal(f"Authors:       {authors[0]}")
+		for author in authors[1:]:
+			self.WriteNormal(f"               {author}")
+
+		if (email := getattr(dunderModule, "__email__", None)) is not None:
+			self.WriteNormal(f"Email:         {email}")
+
+		if (version := getattr(dunderModule, "__version__", None)) is None:
+			self.WriteNormal("Version:       {RED}Version not set!".format(RED=Foreground.RED))
+		else:
+			currentVersion = PythonVersion.Parse(version)
+			if packageName is None:
+				update = ""
+			elif (pypiVersion := self._GetLatestVersion(packageName, versionCheckTimeout)) is not None:
+				latestVersion = PythonVersion.Parse(pypiVersion)
+				update = f" (Update available: v{latestVersion})" if currentVersion < latestVersion else " (latest)"
+			else:
+				update = " (PyPI timeout)"
+			self.WriteNormal(f"Version:       v{version}{update}")
+
+		if (projectURL := getattr(dunderModule, "__project_url__", None)) is not None:
+			self.WriteNormal(f"Project:       {projectURL}")
+
+		if (documentationURL := getattr(dunderModule, "__documentation_url__", None)) is not None:
+			self.WriteNormal(f"Documentation: {documentationURL}")
+
+		if (issueTrackerURL := getattr(dunderModule, "__issue_tracker_url__", None)) is not None:
+			self.WriteNormal(f"Issue tracker: {issueTrackerURL}")
+
+	def _GetLatestVersion(self, packageName: str, timeout: int = 1) -> Nullable[str]:
+		from json import loads
+		from urllib.request import urlopen, Request
+
+		request = Request(
+			url=f"https://pypi.org/pypi/{packageName}/json",
+			headers={'User-Agent': f'{packageName}-Version-Check'}
+		)
+		try:
+			with urlopen(request, timeout=timeout) as response:
+				data = loads(response.read().decode())
+				return data["info"]["version"]
+		except Exception:
+			return None
 
 	def Configure(
 		self,
