@@ -36,9 +36,46 @@ A common set of missing exceptions in Python.
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-from typing import Tuple, Iterable, Any
+from typing               import Tuple, Iterable, Any
 
 from pyTooling.Decorators import export, readonly
+
+
+@export
+def addNoteWithItemList(
+	ex:        BaseException,
+	message:   str,
+	items:     Iterable[Any],
+	*,
+	indent:    str = "  ",
+	separator: str = ", ",
+	maxWidth:  int = 100
+) -> None:
+	"""
+	Add a message as a note to the exception. The iterables items are added as a coma separated list. If the list gets too
+	long, remaining items will be continued in addition notes.
+
+	:param ex:        Exception to attach the note to.
+	:param message:   The message of the note.
+	:param items:     An iterable of items to add to the note.
+	:param indent:    The indentation of the additional notes.
+	:param separator: Separator between items.
+	:param maxWidth:  The maximum width of the attached notes.
+	"""
+	note = message
+	sep = ""
+
+	for item in items:
+		if len(note) + len(newItem := f"{sep}{item}") <= maxWidth:
+			note += newItem
+			sep = separator
+		else:
+			ex.add_note(note)
+
+			note = f"{indent}{item}"
+			sep = separator
+
+	ex.add_note(note)
 
 
 @export
@@ -116,6 +153,9 @@ class EnvironmentException(ExceptionBase):
 	"""The exception is raised when an expected environment variable is missing."""
 
 
+# ConfigurationException
+#
+
 @export
 class PlatformNotSupportedException(ExceptionBase):
 	"""The exception is raise if the platform is not supported."""
@@ -126,6 +166,7 @@ class NotConfiguredException(ExceptionBase):
 	"""The exception is raise if the requested setting is not configured."""
 
 
+# FIXME: Why not derived from ExceptionBase?
 @export
 class ToolingException(Exception):
 	"""The exception is raised by pyTooling internal features."""
@@ -147,40 +188,3 @@ class ToolingException(Exception):
 		:returns: Attached notes.
 		"""
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
-
-
-@export
-def addNoteWithItemList(
-	ex:        BaseException,
-	message:   str,
-	items:     Iterable[Any],
-	*,
-	indent:    str = "  ",
-	separator: str = ", ",
-	maxWidth:  int = 100
-) -> None:
-	"""
-	Add a message as a note to the exception. The iterables items are added as a coma separated list. If the list gets too
-	long, remaining items will be continued in addition notes.
-
-	:param ex:        Exception to attach the note to.
-	:param message:   The message of the note.
-	:param items:     An iterable of items to add to the note.
-	:param indent:    The indentation of the additional notes.
-	:param separator: Separator between items.
-	:param maxWidth:  The maximum width of the attached notes.
-	"""
-	note = message
-	sep = ""
-
-	for item in items:
-		if len(note) + len(newItem := f"{sep}{item}") <= maxWidth:
-			note += newItem
-			sep = separator
-		else:
-			ex.add_note(note)
-
-			note = f"{indent}{item}"
-			sep = separator
-
-	ex.add_note(note)
