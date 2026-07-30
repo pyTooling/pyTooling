@@ -135,10 +135,10 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		Parses a string representation of a path and returns a path instance.
 
 		:param path:       Path to be parsed.
-		:param root:
+		:param root:       Root element the parsed path is relative to.
 		:param pathCls:    Type used to create the path.
 		:param elementCls: Type used to create the path elements.
-		:return:
+		:returns:          A path instance of type ``pathCls``.
 		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True

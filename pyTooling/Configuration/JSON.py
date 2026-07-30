@@ -74,7 +74,7 @@ class Node(Abstract_Node):
 
 		:param root:     Reference to the root node.
 		:param parent:   Reference to the parent node.
-		:param key:
+		:param key:      Key of the node within its parent.
 		:param jsonNode: Reference to the JSON node.
 		"""
 		Abstract_Node.__init__(self, root, parent)
@@ -288,7 +288,7 @@ class Dictionary(Node, Abstract_Dict):
 
 		:param root:     Reference to the root node.
 		:param parent:   Reference to the parent node.
-		:param key:
+		:param key:      Key of the node within its parent.
 		:param jsonNode: Reference to the JSON node.
 		"""
 		Node.__init__(self, root, parent, key, jsonNode)
@@ -362,7 +362,7 @@ class Sequence(Node, Abstract_Seq):
 
 		:param root:     Reference to the root node.
 		:param parent:   Reference to the parent node.
-		:param key:
+		:param key:      Key of the node within its parent.
 		:param jsonNode: Reference to the JSON node.
 		"""
 		Node.__init__(self, root, parent, key, jsonNode)

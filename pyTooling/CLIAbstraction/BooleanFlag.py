@@ -109,7 +109,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
 		on the internal name and value.
 
-		:return: Formatted argument.
+		:returns: Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:

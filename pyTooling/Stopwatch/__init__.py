@@ -290,7 +290,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the name of the stopwatch.
 
-		:return: Name of the stopwatch.
+		:returns: Name of the stopwatch.
 		"""
 		return self._name
 
@@ -299,7 +299,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the IsStarted state of the stopwatch.
 
-		:return: True, if stopwatch was started.
+		:returns: True, if stopwatch was started.
 		"""
 		return self._startTime is not None and self._stopTime is None
 
@@ -308,7 +308,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the IsRunning state of the stopwatch.
 
-		:return: True, if stopwatch was started and is currently not paused.
+		:returns: True, if stopwatch was started and is currently not paused.
 		"""
 		return self._startTime is not None and self._resumeTime is not None
 
@@ -317,7 +317,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the IsPaused state of the stopwatch.
 
-		:return: True, if stopwatch was started and is currently paused.
+		:returns: True, if stopwatch was started and is currently paused.
 		"""
 		return self._startTime is not None and self._pauseTime is not None
 
@@ -326,7 +326,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the IsStopped state of the stopwatch.
 
-		:return: True, if stopwatch was stopped.
+		:returns: True, if stopwatch was stopped.
 		"""
 		return self._stopTime is not None
 
@@ -335,7 +335,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the absolute time when the stopwatch was started.
 
-		:return: The time when the stopwatch was started, otherwise None.
+		:returns: The time when the stopwatch was started, otherwise None.
 		"""
 		return self._beginTime
 
@@ -344,7 +344,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the absolute time when the stopwatch was stopped.
 
-		:return: The time when the stopwatch was stopped, otherwise None.
+		:returns: The time when the stopwatch was stopped, otherwise None.
 		"""
 		return self._endTime
 
@@ -353,7 +353,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property checking if split times have been taken.
 
-		:return: True, if split times have been taken.
+		:returns: True, if split times have been taken.
 		"""
 		return len(self._splits) > 1
 
@@ -362,7 +362,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the number of split times.
 
-		:return: Number of split times.
+		:returns: Number of split times.
 		"""
 		return len(self._splits)
 
@@ -371,7 +371,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the number of active split times.
 
-		:return: Number of active split times.
+		:returns: Number of active split times.
 
 		.. warning::
 
@@ -387,7 +387,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the number of active split times.
 
-		:return: Number of active split times.
+		:returns: Number of active split times.
 
 		.. warning::
 
@@ -405,7 +405,7 @@ class Stopwatch(SlottedObject):
 
 		If the stopwatch is currently running, the duration since start or last resume operation will be included.
 
-		:return: Duration of all active split times in seconds. If the stopwatch was never started, the return value will
+		:returns: Duration of all active split times in seconds. If the stopwatch was never started, the return value will
 		         be 0.0.
 		"""
 		if self._startTime is None:
@@ -421,7 +421,7 @@ class Stopwatch(SlottedObject):
 
 		If the stopwatch is currently paused, the duration since last pause operation will be included.
 
-		:return: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
+		:returns: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
 		         be 0.0.
 		"""
 		if self._startTime is None:
@@ -437,7 +437,7 @@ class Stopwatch(SlottedObject):
 
 		If the stopwatch is not yet stopped, the duration from start to now is returned.
 
-		:return: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
+		:returns: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
 		         be 0.0.
 		"""
 		if self._startTime is None:
@@ -464,7 +464,7 @@ class Stopwatch(SlottedObject):
 
 		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
 
-		:return: The stopwatch itself.
+		:returns: The stopwatch itself.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -527,7 +527,7 @@ class Stopwatch(SlottedObject):
 		"""
 		Implementation of ``len(...)`` to return the number of split times.
 
-		:return: Number of split times.
+		:returns: Number of split times.
 		"""
 		return len(self._splits)
 
@@ -536,7 +536,7 @@ class Stopwatch(SlottedObject):
 		Implementation of ``split = object[i]`` to return the i-th split time.
 
 		:param index:     Index to access the i-th split time.
-		:return:          i-th split time as a tuple of: |br|
+		:returns:         i-th split time as a tuple of: |br|
 		                  (1) delta time to the previous stopwatch operation and |br|
 		                  (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		:raises KeyError: If index *i* doesn't exist.
@@ -549,7 +549,7 @@ class Stopwatch(SlottedObject):
 
 		If the stopwatch is not stopped yet, the last split won't be included.
 
-		:return: Iterator of split time tuples of: |br|
+		:returns: Iterator of split time tuples of: |br|
 		         (1) delta time to the previous stopwatch operation and |br|
 		         (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		"""

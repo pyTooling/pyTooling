@@ -140,7 +140,7 @@ class Host(RootMixIn):
 		"""
 		Create a copy of this object.
 
-		:return: A new :class:`Host` instance.
+		:returns: A new :class:`Host` instance.
 		"""
 		return self.__class__(
 			self._hostname,
