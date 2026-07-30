@@ -30,9 +30,7 @@
 #
 """Unit tests for package :mod:`pyTooling.Versioning`."""
 from unittest             import TestCase
-from pytest               import mark
-
-from pyTooling.Versioning import Flags, CalendarVersion, WordSizeValidator, MaxValueValidator
+from pyTooling.Versioning import Flags, Parts, CalendarVersion, WordSizeValidator, MaxValueValidator
 from pyTooling.Versioning import YearMonthVersion, YearWeekVersion, YearReleaseVersion, YearMonthDayVersion
 
 
@@ -102,26 +100,49 @@ class Parsing(TestCase):
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	@mark.xfail(reason="v2024.04 not yet support")
 	def test_vString(self) -> None:
 		version = CalendarVersion.Parse("v1.2")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	@mark.xfail(reason="i2024.04 not yet support")
 	def test_iString(self) -> None:
 		version = CalendarVersion.Parse("i1.2")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
 
-	@mark.xfail(reason="r2024.04 not yet support")
 	def test_rString(self) -> None:
 		version = CalendarVersion.Parse("r1.2")
 
 		self.assertEqual(1, version.Major)
 		self.assertEqual(2, version.Minor)
+
+	def test_PrefixIsPreserved(self) -> None:
+		version = CalendarVersion.Parse("v2024.04")
+
+		self.assertEqual("v", version.Prefix)
+		self.assertIn(Parts.Prefix, version.Parts)
+		self.assertEqual("v2024.4", str(version))
+
+	def test_NoPrefix(self) -> None:
+		version = CalendarVersion.Parse("2024.04")
+
+		self.assertEqual("", version.Prefix)
+		self.assertNotIn(Parts.Prefix, version.Parts)
+
+	def test_MultiCharacterPrefix(self) -> None:
+		version = CalendarVersion.Parse("rev2024.04")
+
+		self.assertEqual("rev", version.Prefix)
+		self.assertEqual(2024, version.Major)
+		self.assertEqual(4, version.Minor)
+
+	def test_TooManyParts(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			CalendarVersion.Parse("2024.04.1")
+
+		self.assertIn("Syntax error", str(context.exception))
 
 
 # class CompareVersions(TestCase):
@@ -454,7 +475,6 @@ class FormattingUsingRepr(TestCase):
 
 		self.assertEqual("1.0", repr(version))
 
-	@mark.xfail(reason="v2024.04 not yet support")
 	def test_MajorPrefix(self) -> None:
 		version = CalendarVersion(1, prefix="v")
 
@@ -472,7 +492,6 @@ class FormattingUsingStr(TestCase):
 
 		self.assertEqual("1", str(version))
 
-	@mark.xfail(reason="v2024.04 not yet support")
 	def test_MajorPrefix(self) -> None:
 		version = CalendarVersion(1, prefix="v")
 

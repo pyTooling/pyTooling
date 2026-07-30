@@ -1408,6 +1408,14 @@ class PythonVersion(SemanticVersion):
 class CalendarVersion(Version):
 	"""Representation of a calendar version number like ``2021.10``."""
 
+	_PATTERN = re_compile(
+		r"^"
+		r"(?P<prefix>[a-zA-Z]*)"
+		r"(?P<major>\d+)"
+		r"(?:\.(?P<minor>\d+))?"
+		r"$"
+	)
+
 	def __init__(
 		self,
 		major: int,
@@ -1446,36 +1454,46 @@ class CalendarVersion(Version):
 		"""
 		Parse a version string and return a :class:`CalendarVersion` instance.
 
-		:param versionString: The version string to parse.
-		:returns:             An object representing a calendar version.
-		:raises TypeError:    If parameter ``other`` is not a string.
-		:raises ValueError:   If parameter ``other`` is None.
-		:raises ValueError:   If parameter ``other`` is empty.
-		"""
-		parts = Parts.Unknown
+		Allowed prefix characters:
 
+		* ``v|V`` - version, public version, public release
+		* ``i|I`` - internal version, internal release
+		* ``r|R`` - release, revision
+		* ``rev|REV`` - revision
+
+		:param versionString: The version string to parse.
+		:param validator:     Optional, a validation function.
+		:returns:             An object representing a calendar version.
+		:raises TypeError:    If parameter ``versionString`` is not a string.
+		:raises ValueError:   If parameter ``versionString`` is None.
+		:raises ValueError:   If parameter ``versionString`` is empty.
+		:raises ValueError:   If parameter ``versionString`` isn't a calendar version number.
+		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
 		elif not isinstance(versionString, str):
 			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
-		elif versionString == "":
+		elif (versionString := versionString.strip()) == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 
-		split = versionString.split(".")
-		length = len(split)
-		major = int(split[0])
-		minor = 0
-		parts |= Parts.Major
+		if (match := cls._PATTERN.match(versionString)) is None:
+			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex.add_note(f"A calendar version number is made of a major and an optional minor part, e.g. '2024.04'.")
+			ex.add_note(f"It may carry an alphabetic prefix, e.g. 'v2024.04'.")
+			raise ex
 
-		if length >= 2:
-			minor = int(split[1])
-			parts |= Parts.Minor
+		prefix = match["prefix"]
+		minor = match["minor"]
 
-		flags = Flags.Clean
+		version = cls(
+			int(match["major"]),
+			0 if minor is None else int(minor),
+			flags=Flags.Clean,
+			prefix=prefix if prefix != "" else None
+		)
 
-		version = cls(major, minor, flags=flags)
 		if validator is not None and not validator(version):
 			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
@@ -1663,19 +1681,20 @@ class CalendarVersion(Version):
 
 	def __repr__(self) -> str:
 		"""
-		Return a string representation of this version number without prefix ``v``.
-
-		:returns: Raw version number representation without a prefix.
-		"""
-		return f"{self._major}.{self._minor}"
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this version number with prefix ``v``.
+		Return a string representation of this version number with all parts.
 
 		:returns: Version number representation including a prefix.
 		"""
-		result = f"{self._major}"
+		return f"{self._prefix if Parts.Prefix in self._parts else ''}{self._major}.{self._minor}"
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of this version number with only the present parts.
+
+		:returns: Version number representation including a prefix.
+		"""
+		result = self._prefix if Parts.Prefix in self._parts else ""
+		result += f"{self._major}"
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 
 		return result
