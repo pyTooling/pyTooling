@@ -69,7 +69,7 @@ def QueueReader(queue: ThreadSafeQueue[Nullable[QueueItem]]) -> Iterator[QueueIt
 	``None`` is used as the end-of-stream marker.
 
 	:param queue: The queue to read from.
-	:returns:      An iterator over the items from the queue.
+	:returns:     An iterator over the items from the queue.
 	"""
 	while True:
 		if (item := queue.get()) is None:

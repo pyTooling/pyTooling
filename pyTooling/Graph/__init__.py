@@ -486,7 +486,7 @@ class BaseWithVertices(
 	@readonly
 	def VertexCount(self) -> int:
 		"""
-		Read-only property to access the number of vertices referenced by this object.
+		Read-only property to return the number of vertices referenced by this object.
 
 		:returns: The number of vertices this object references.
 		"""
@@ -1754,7 +1754,7 @@ class Vertex(
 
 		The tree is traversed using depths-first-search.
 
-		:returns:
+		:returns: Root node of the resulting tree, representing this vertex.
 		"""
 		visited: Set[Vertex] = set()
 		stack: List[Tuple[Node, typing_Iterator[Edge]]] = list()
@@ -2113,21 +2113,21 @@ class BaseGraph(
 
 	@readonly
 	def VertexCount(self) -> int:
-		"""Read-only property to access the number of vertices in this graph.
+		"""Read-only property to return the number of vertices in this graph.
 
 		:returns: The number of vertices in this graph."""
 		return len(self._verticesWithoutID) + len(self._verticesWithID)
 
 	@readonly
 	def EdgeCount(self) -> int:
-		"""Read-only property to access the number of edges in this graph.
+		"""Read-only property to return the number of edges in this graph.
 
 		:returns: The number of edges in this graph."""
 		return len(self._edgesWithoutID) + len(self._edgesWithID)
 
 	@readonly
 	def LinkCount(self) -> int:
-		"""Read-only property to access the number of links in this graph.
+		"""Read-only property to return the number of links in this graph.
 
 		:returns: The number of links in this graph."""
 		return len(self._linksWithoutID) + len(self._linksWithID)
@@ -2810,21 +2810,21 @@ class Graph(
 
 	@readonly
 	def SubgraphCount(self) -> int:
-		"""Read-only property to access the number of subgraphs in this graph.
+		"""Read-only property to return the number of subgraphs in this graph.
 
 		:returns: The number of subgraphs in this graph."""
 		return len(self._subgraphs)
 
 	@readonly
 	def ViewCount(self) -> int:
-		"""Read-only property to access the number of views in this graph.
+		"""Read-only property to return the number of views in this graph.
 
 		:returns: The number of views in this graph."""
 		return len(self._views)
 
 	@readonly
 	def ComponentCount(self) -> int:
-		"""Read-only property to access the number of components in this graph.
+		"""Read-only property to return the number of components in this graph.
 
 		:returns: The number of components in this graph."""
 		return len(self._components)

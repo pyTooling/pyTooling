@@ -245,9 +245,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		"""
 		Returns attached attributes of this kind for a given method.
 
-		:param method:
-		:param includeSubClasses:
-		:returns:
+		:param method:            Method to search attributes for.
+		:param includeSubClasses: If ``True``, attributes of derived attribute classes are included too.
+		:returns:                 Tuple of attached attributes of this kind.
 		:raises TypeError:
 		"""
 		if hasattr(method, ATTRIBUTES_MEMBER_NAME):

@@ -480,7 +480,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def Count(self) -> int:
 		"""
-		Read-only property to access the number of elements in a directory.
+		Read-only property to return the number of elements in a directory.
 
 		:returns: Number of files plus subdirectories.
 		"""
@@ -489,7 +489,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def FileCount(self) -> int:
 		"""
-		Read-only property to access the number of files in a directory.
+		Read-only property to return the number of files in a directory.
 
 		.. hint::
 
@@ -502,7 +502,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def RegularFileCount(self) -> int:
 		"""
-		Read-only property to access the number of regular files in a directory.
+		Read-only property to return the number of regular files in a directory.
 
 		:returns: Number of regular files.
 		"""
@@ -511,7 +511,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def SymbolicLinkCount(self) -> int:
 		"""
-		Read-only property to access the number of symbolic links in a directory.
+		Read-only property to return the number of symbolic links in a directory.
 
 		:returns: Number of symbolic links.
 		"""
@@ -520,7 +520,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def SubdirectoryCount(self) -> int:
 		"""
-		Read-only property to access the number of subdirectories in a directory.
+		Read-only property to return the number of subdirectories in a directory.
 
 		:returns: Number of subdirectories.
 		"""
@@ -529,7 +529,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def TotalFileCount(self) -> int:
 		"""
-		Read-only property to access the total number of files in all child hierarchy levels (recursively).
+		Read-only property to return the total number of files in all child hierarchy levels (recursively).
 
 		.. hint::
 
@@ -542,7 +542,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def TotalRegularFileCount(self) -> int:
 		"""
-		Read-only property to access the total number of regular files in all child hierarchy levels (recursively).
+		Read-only property to return the total number of regular files in all child hierarchy levels (recursively).
 
 		:returns: Total number of regular files.
 		"""
@@ -551,7 +551,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def TotalSymbolicLinkCount(self) -> int:
 		"""
-		Read-only property to access the total number of symbolic links in all child hierarchy levels (recursively).
+		Read-only property to return the total number of symbolic links in all child hierarchy levels (recursively).
 
 		:returns: Total number of symbolic links.
 		"""
@@ -560,7 +560,7 @@ class Directory(Element["Directory"]):
 	@readonly
 	def TotalSubdirectoryCount(self) -> int:
 		"""
-		Read-only property to access the total number of subdirectories in all child hierarchy levels (recursively).
+		Read-only property to return the total number of subdirectories in all child hierarchy levels (recursively).
 
 		:returns: Total number of subdirectories.
 		"""
@@ -882,7 +882,7 @@ class Filename(Element[Directory]):
 	@readonly
 	def Path(self) -> Path:
 		"""
-		Read-only property to access the filename's absolute path.
+		Read-only property to return the filename's absolute path.
 
 		The path is computed from the parent directory's path and the filename.
 
@@ -998,7 +998,7 @@ class SymbolicLink(Element[Directory]):
 	@readonly
 	def Path(self) -> Path:
 		"""
-		Read-only property to access the symbolic link's path.
+		Read-only property to return the symbolic link's path.
 
 		The path is computed from the parent directory's path and the link's name.
 
@@ -1163,7 +1163,7 @@ class Root(Directory):
 	@readonly
 	def TotalHardLinkCount(self) -> int:
 		"""
-		Read-only property to access the accumulated number of hardlinks to multiply-linked files.
+		Read-only property to return the accumulated number of hardlinks to multiply-linked files.
 
 		Every file storage object referenced by more than one directory entry contributes its number of
 		directory entries.
@@ -1175,7 +1175,7 @@ class Root(Directory):
 	@readonly
 	def TotalHardLinkCount2(self) -> int:
 		"""
-		Read-only property to access the number of file storage objects that are hardlinked.
+		Read-only property to return the number of file storage objects that are hardlinked.
 
 		In contrast to :attr:`TotalHardLinkCount`, every hardlinked file contributes ``1``, regardless of how
 		many directory entries reference it.
@@ -1187,7 +1187,7 @@ class Root(Directory):
 	@readonly
 	def TotalHardLinkCount3(self) -> int:
 		"""
-		Read-only property to access the number of file storage objects that are **not** hardlinked.
+		Read-only property to return the number of file storage objects that are **not** hardlinked.
 
 		.. attention::
 
@@ -1200,7 +1200,7 @@ class Root(Directory):
 	@readonly
 	def Size2(self) -> int:
 		"""
-		Read-only property to access the accumulated size of all hardlinked files, counted once each.
+		Read-only property to return the accumulated size of all hardlinked files, counted once each.
 
 		:returns: Sum of sizes over all files referenced by more than one directory entry.
 		"""
@@ -1209,7 +1209,7 @@ class Root(Directory):
 	@readonly
 	def Size3(self) -> int:
 		"""
-		Read-only property to access the accumulated size of all hardlinked files, counted per directory entry.
+		Read-only property to return the accumulated size of all hardlinked files, counted per directory entry.
 
 		In contrast to :attr:`Size2`, a file's size is multiplied by the number of directory entries
 		referencing it, so it reflects the size a filesystem without hardlink support would need.
@@ -1221,7 +1221,7 @@ class Root(Directory):
 	@readonly
 	def TotalUniqueFileCount(self) -> int:
 		"""
-		Read-only property to access the number of distinct file storage objects, counting hardlinks to the same content once.
+		Read-only property to return the number of distinct file storage objects, counting hardlinks to the same content once.
 
 		:returns: Number of unique files.
 		"""

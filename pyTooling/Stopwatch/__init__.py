@@ -536,7 +536,7 @@ class Stopwatch(SlottedObject):
 		Implementation of ``split = object[i]`` to return the i-th split time.
 
 		:param index:     Index to access the i-th split time.
-		:returns:          i-th split time as a tuple of: |br|
+		:returns:         i-th split time as a tuple of: |br|
 		                  (1) delta time to the previous stopwatch operation and |br|
 		                  (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		:raises KeyError: If index *i* doesn't exist.

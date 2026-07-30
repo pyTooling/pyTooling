@@ -109,7 +109,7 @@ class CommandLineArgument:
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name and value.
 
-		:returns:                     Formatted argument.
+		:returns:                    Formatted argument.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
 		raise NotImplementedError(f"Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
@@ -119,7 +119,7 @@ class CommandLineArgument:
 		"""
 		Return a string representation of this argument instance.
 
-		:returns:                     Argument formatted and enclosed in double quotes.
+		:returns:                    Argument formatted and enclosed in double quotes.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
 		raise NotImplementedError(f"Method '__str__' is an abstract method and must be implemented by a subclass.")
@@ -131,7 +131,7 @@ class CommandLineArgument:
 
 		.. note:: By default, this method is identical to :meth:`__str__`.
 
-		:returns:                     Argument formatted and enclosed in double quotes.
+		:returns:                    Argument formatted and enclosed in double quotes.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
 		raise NotImplementedError(f"Method '__repr__' is an abstract method and must be implemented by a subclass.")
@@ -290,7 +290,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name.
 
-		:returns:            Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -413,7 +413,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name and value.
 
-		:returns:            Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -494,7 +494,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		Convert this argument instance to a sequence of string representations with proper escaping using the matching
 		pattern based on the internal name and value.
 
-		:returns:            Formatted argument as tuple of strings.
+		:returns:           Formatted argument as tuple of strings.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:

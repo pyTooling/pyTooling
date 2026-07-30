@@ -101,7 +101,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Adds a 3D-offset to this 3D-point and creates a new 3D-point.
 
 		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
-		:returns:           A new 3D-point shifted by the 3D-offset.
+		:returns:          A new 3D-point shifted by the 3D-offset.
 		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
@@ -126,7 +126,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Adds a 3D-offset to this 3D-point (inplace).
 
 		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
-		:returns:           This 3D-point.
+		:returns:          This 3D-point.
 		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
@@ -149,7 +149,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Subtract two 3D-Points from each other and create a new 3D-offset.
 
 		:param other:      A 3D-point as :class:`Point3D`.
-		:returns:           A new 3D-offset representing the distance between these two points.
+		:returns:          A new 3D-offset representing the distance between these two points.
 		:raises TypeError: If parameter 'other' is not a :class:`Point3D`.
 		"""
 		if isinstance(other, Point3D):
@@ -168,7 +168,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Subtracts a 3D-offset to this 3D-point (inplace).
 
 		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
-		:returns:           This 3D-point.
+		:returns:          This 3D-point.
 		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):

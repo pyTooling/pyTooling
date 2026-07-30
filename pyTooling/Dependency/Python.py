@@ -421,7 +421,7 @@ class Project(Package, LazyLoadableMixin):
 	@readonly
 	def ReleaseCount(self) -> int:
 		"""
-		Read-only property to access the number of known releases.
+		Read-only property to return the number of known releases.
 
 		:returns: Number of releases.
 		"""
@@ -431,7 +431,7 @@ class Project(Package, LazyLoadableMixin):
 	@readonly
 	def LatestRelease(self) -> Release:
 		"""
-		Read-only property to access the most recent release of this project.
+		Read-only property to return the most recent release of this project.
 
 		:returns: The latest release.
 		"""
@@ -593,7 +593,7 @@ class PythonPackageIndex(PackageStorage):
 	@readonly
 	def ProjectCount(self) -> int:
 		"""
-		Read-only property to access the number of known projects.
+		Read-only property to return the number of known projects.
 
 		:returns: Number of projects.
 		"""

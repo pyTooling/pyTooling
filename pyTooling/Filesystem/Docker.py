@@ -98,7 +98,7 @@ class Layer(metaclass=ExtendedType):
 	@readonly
 	def FileCount(self) -> int:
 		"""
-		Read-only property to access the number of files in this layer.
+		Read-only property to return the number of files in this layer.
 
 		:returns: Number of files.
 		"""
@@ -179,7 +179,7 @@ class LayerCake(metaclass=ExtendedType):
 	@readonly
 	def LayerCount(self) -> int:
 		"""
-		Read-only property to access the number of layers.
+		Read-only property to return the number of layers.
 
 		:returns: Number of layers.
 		"""
@@ -188,7 +188,7 @@ class LayerCake(metaclass=ExtendedType):
 	@readonly
 	def TotalFileCount(self) -> int:
 		"""
-		Read-only property to access the number of files across all layers.
+		Read-only property to return the number of files across all layers.
 
 		:returns: Sum of all layers' file counts.
 		"""
@@ -206,7 +206,7 @@ class LayerCake(metaclass=ExtendedType):
 	@readonly
 	def EmptyDirectoryCount(self) -> int:
 		"""
-		Read-only property to access the number of empty directories.
+		Read-only property to return the number of empty directories.
 
 		:returns: Number of empty directories.
 		"""

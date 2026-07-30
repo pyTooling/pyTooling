@@ -219,7 +219,6 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 		:param package: :class:`Package` object or name of the package.
 		:param version: :class:`~pyTooling.Versioning.SemanticVersion` object or version string or an iterable thereof.
-		:returns:
 		"""
 		if isinstance(package, str):
 			package = self._package._storage._packages[package]
@@ -429,7 +428,7 @@ class Package(metaclass=ExtendedType, slots=True):
 	@readonly
 	def VersionCount(self) -> int:
 		"""
-		Read-only property to access the number of versions this package has.
+		Read-only property to return the number of versions this package has.
 
 		:returns: Number of versions.
 		"""
@@ -543,7 +542,7 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 	@readonly
 	def PackageCount(self) -> int:
 		"""
-		Read-only property to access the number of packages in this storage.
+		Read-only property to return the number of packages in this storage.
 
 		:returns: Number of packages.
 		"""

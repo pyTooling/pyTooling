@@ -259,8 +259,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		Call `ioctl` with ``TIOCGWINSZ`` (GetWindowsSize) for the given file descriptor.
 
-		:param fd: File descriptor
-		:returns:
+		:param fd: File descriptor to query.
+		:returns:  A 2-tuple of terminal width and height, or ``None`` if the size couldn't be determined.
 		"""
 		try:
 			from array import array
@@ -727,7 +727,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	@readonly
 	def AppendLinebreak(self) -> bool:
 		"""
-		Read-only property to return if a linebreak is added after the line's message.
+		Read-only property to access if a linebreak is added after the line's message.
 
 		:returns: True, if a linebreak should be added.
 		"""

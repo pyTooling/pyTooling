@@ -238,7 +238,7 @@ def WordSizeValidator(
 	:param minorBits: Number of bits to encode a positive minor number in a version.
 	:param microBits: Number of bits to encode a positive micro number in a version.
 	:param buildBits: Number of bits to encode a positive build number in a version.
-	:returns:          A validation function for Version instances.
+	:returns:         A validation function for Version instances.
 	"""
 	majorMax = minorMax = microMax = buildMax = -1
 	if bits is not None:
@@ -287,7 +287,7 @@ def MaxValueValidator(
 	:param minorMax: The upper bound for the positive minor number.
 	:param microMax: The upper bound for the positive micro number.
 	:param buildMax: The upper bound for the positive build number.
-	:returns:         A validation function for Version instances.
+	:returns:        A validation function for Version instances.
 	"""
 	if max is not None:
 		majorMax = minorMax = microMax = buildMax = max
@@ -722,7 +722,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		   * ``%b`` - build number
 
 		:param formatSpec: The format specification.
-		:returns:           Formatted version number.
+		:returns:          Formatted version number.
 		"""
 		if formatSpec == "":
 			return self.__str__()
@@ -1689,7 +1689,7 @@ class CalendarVersion(Version):
 		   * ``%u`` - micro number (day)
 
 		:param formatSpec: The format specification.
-		:returns:           Formatted version number.
+		:returns:          Formatted version number.
 		"""
 		if formatSpec == "":
 			return self.__str__()

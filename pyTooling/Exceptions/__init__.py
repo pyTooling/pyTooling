@@ -101,7 +101,7 @@ class OverloadResolutionError(Exception):
 	@readonly
 	def Notes(self) -> Tuple[str, ...]:
 		"""
-		Read-only property to access warning's attached notes.
+		Read-only property to return warning's attached notes.
 
 		:returns: Attached notes.
 		"""
@@ -133,7 +133,7 @@ class ExceptionBase(Exception):
 	@readonly
 	def Notes(self) -> Tuple[str, ...]:
 		"""
-		Read-only property to access warning's attached notes.
+		Read-only property to return warning's attached notes.
 
 		:returns: Attached notes.
 		"""
@@ -183,7 +183,7 @@ class ToolingException(Exception):
 	@readonly
 	def Notes(self) -> Tuple[str, ...]:
 		"""
-		Read-only property to access warning's attached notes.
+		Read-only property to return warning's attached notes.
 
 		:returns: Attached notes.
 		"""

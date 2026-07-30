@@ -334,7 +334,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		Optionally, this node can be included into the generated sequence.
 
 		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at previous node.
-		:returns:            A sequence of nodes towards the list's first node.
+		:returns:           A sequence of nodes towards the list's first node.
 		"""
 		previousNode = self._previousNode
 
@@ -354,7 +354,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		Optionally, this node can be included into the generated sequence by setting.
 
 		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at next node.
-		:returns:            A sequence of nodes towards the list's last node.
+		:returns:           A sequence of nodes towards the list's last node.
 		"""
 		nextNode = self._nextNode
 
@@ -448,7 +448,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 	@readonly
 	def IsEmpty(self) -> int:
 		"""
-		Read-only property to access the number of .
+		Read-only property to return the number of .
 
 		This reference is ``None`` if the node is the last node in the doubly linked list.
 
@@ -559,7 +559,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Remove first node from linked list.
 
-		:returns:                     First node.
+		:returns:                    First node.
 		:raises LinkedListException: If linked list is empty.
 		"""
 		if self._firstNode is None:
@@ -582,7 +582,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Remove last node from linked list.
 
-		:returns:                     Last node.
+		:returns:                    Last node.
 		:raises LinkedListException: If linked list is empty.
 		"""
 		if self._lastNode is None:
@@ -607,7 +607,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		Access a node in the linked list by position.
 
 		:param index:       Node position to access.
-		:returns:            Node at the given position.
+		:returns:           Node at the given position.
 		:raises ValueError: If parameter 'position' is out of range.
 
 		.. note::
@@ -770,7 +770,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		Optionally, the resulting list can be constructed in reverse order.
 
 		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
-		:returns:        A list (array) of this linked list's values.
+		:returns:       A list (array) of this linked list's values.
 		"""
 		if self._count == 0:
 			return []
@@ -786,7 +786,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		Optionally, the resulting tuple can be constructed in reverse order.
 
 		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
-		:returns:        A tuple of this linked list's values.
+		:returns:       A tuple of this linked list's values.
 		"""
 		if self._count == 0:
 			return tuple()
@@ -837,7 +837,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		Access a node's value by its index.
 
 		:param index:       Node index to access.
-		:returns:            Node's value at the given index.
+		:returns:           Node's value at the given index.
 		:raises ValueError: If parameter 'index' is out of range.
 
 		.. note::
@@ -860,7 +860,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		Remove a node at the given index.
 
 		:param index: Index of the node to remove.
-		:returns:      Removed node.
+		:returns:     Removed node.
 		"""
 		node = self.GetNodeByIndex(index)
 		node.Remove()

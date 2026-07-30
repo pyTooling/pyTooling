@@ -354,7 +354,7 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		If the span is not yet stopped, the duration from start to now is returned.
 
-		:returns:                  Duration since span was started in seconds.
+		:returns:                 Duration since span was started in seconds.
 		:raises TracingException: When span was never started.
 		"""
 		if self._startTime is None:

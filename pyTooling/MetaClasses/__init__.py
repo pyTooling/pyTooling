@@ -544,10 +544,10 @@ class ExtendedType(type):
 		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
 			"""
 
-			:param predicate:
-			:returns:
-			:raises ValueError:
-			:raises ValueError:
+			:param predicate:   An attribute class, an iterable of attribute classes, or ``None`` to accept every attribute.
+			:returns:           Dictionary of methods and the matching attributes attached to them.
+			:raises ValueError: If an element of parameter 'predicate' is not a sub-class of :class:`~pyTooling.Attributes.Attribute`.
+			:raises ValueError: If parameter 'predicate' is neither an attribute class nor an iterable of those.
 			"""
 			from pyTooling.Attributes import Attribute
 
@@ -601,7 +601,7 @@ class ExtendedType(type):
 		:param newClass:    Newly created class instance.
 		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:     Members of the new class.
-		:returns:
+		:returns:           A 2-tuple of all methods and those methods carrying at least one attribute.
 		"""
 		from pyTooling.Attributes import Attribute
 

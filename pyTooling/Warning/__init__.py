@@ -74,7 +74,7 @@ class CriticalWarning(BaseException):
 	@readonly
 	def Notes(self) -> Tuple[str, ...]:
 		"""
-		Read-only property to access warning's attached notes.
+		Read-only property to return warning's attached notes.
 
 		:returns: Attached notes.
 		"""
@@ -103,7 +103,7 @@ class Warning(BaseException):
 	@readonly
 	def Notes(self) -> Tuple[str, ...]:
 		"""
-		Read-only property to access warning's attached notes.
+		Read-only property to return warning's attached notes.
 
 		:returns: Attached notes.
 		"""
@@ -545,7 +545,7 @@ class ThreadSupervisor:
 	@readonly
 	def Warnings(self) -> List[AnyWarning]:
 		"""
-		Read-only property to access all warnings collected from supervised threads (:attr:`_warnings`).
+		Read-only property to return all warnings collected from supervised threads (:attr:`_warnings`).
 
 		:returns: List of collected warnings, without their thread names.
 		"""

@@ -78,7 +78,7 @@ class Node(Abstract_Node):
 
 		:param root:     Reference to the root node.
 		:param parent:   Reference to the parent node.
-		:param key:
+		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
 		Abstract_Node.__init__(self, root, parent)
@@ -292,7 +292,7 @@ class Dictionary(Node, Abstract_Dict):
 
 		:param root:     Reference to the root node.
 		:param parent:   Reference to the parent node.
-		:param key:
+		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
 		Node.__init__(self, root, parent, key, yamlNode)
@@ -366,7 +366,7 @@ class Sequence(Node, Abstract_Seq):
 
 		:param root:     Reference to the root node.
 		:param parent:   Reference to the parent node.
-		:param key:
+		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
 		Node.__init__(self, root, parent, key, yamlNode)
