@@ -31,7 +31,7 @@
 """An implementation of 3D cartesian data structures for Python."""
 
 from math   import sqrt, acos
-from typing import Union, Generic, Any, Tuple
+from typing import Union, Generic, Any, Tuple, Self
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
@@ -73,7 +73,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self.y = y
 		self.z = z
 
-	def Copy(self) -> "Point3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		Create a new 3D-point as a copy of this 3D point.
 
@@ -121,7 +121,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __iadd__(self, other: Any) -> "Point3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __iadd__(self, other: Any) -> Self:
 		"""
 		Adds a 3D-offset to this 3D-point (inplace).
 
@@ -163,7 +163,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __isub__(self, other: Any) -> "Point3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __isub__(self, other: Any) -> Self:
 		"""
 		Subtracts a 3D-offset to this 3D-point (inplace).
 
@@ -213,7 +213,7 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 		"""
 		super().__init__(0, 0, 0)
 
-	def Copy(self) -> "Origin3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
@@ -262,7 +262,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self.yOffset = yOffset
 		self.zOffset = zOffset
 
-	def Copy(self) -> "Offset3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		Create a new 3D-offset as a copy of this 3D-offset.
 
@@ -349,7 +349,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __iadd__(self, other: Any) -> "Offset3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __iadd__(self, other: Any) -> Self:
 		"""
 		Adds a 3D-offset to this 3D-offset (inplace).
 
@@ -397,7 +397,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __isub__(self, other: Any) -> "Offset3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __isub__(self, other: Any) -> Self:
 		"""
 		Subtracts a 3D-offset from this 3D-offset (inplace).
 
@@ -471,7 +471,7 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self.height = height
 		self.depth =  depth
 
-	def Copy(self) -> "Size3D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		Create a new 3D-size as a copy of this 3D-size.
 

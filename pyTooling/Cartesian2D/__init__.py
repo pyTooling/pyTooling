@@ -31,7 +31,7 @@
 """An implementation of 2D cartesian data structures for Python."""
 
 from math   import sqrt, acos
-from typing import TypeVar, Union, Generic, Any, Tuple
+from typing import TypeVar, Union, Generic, Any, Tuple, Self
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
@@ -68,7 +68,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self.x = x
 		self.y = y
 
-	def Copy(self) -> "Point2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		Create a new 2D-point as a copy of this 2D point.
 
@@ -114,7 +114,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __iadd__(self, other: Any) -> "Point2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __iadd__(self, other: Any) -> Self:
 		"""
 		Adds a 2D-offset to this 2D-point (inplace).
 
@@ -153,7 +153,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __isub__(self, other: Any) -> "Point2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __isub__(self, other: Any) -> Self:
 		"""
 		Subtracts a 2D-offset to this 2D-point (inplace).
 
@@ -201,7 +201,7 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 		"""
 		super().__init__(0, 0)
 
-	def Copy(self) -> "Origin2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
@@ -243,7 +243,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self.xOffset = xOffset
 		self.yOffset = yOffset
 
-	def Copy(self) -> "Offset2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		Create a new 2D-offset as a copy of this 2D-offset.
 
@@ -327,7 +327,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __iadd__(self, other: Any) -> "Offset2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __iadd__(self, other: Any) -> Self:
 		"""
 		Adds a 2D-offset to this 2D-offset (inplace).
 
@@ -371,7 +371,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __isub__(self, other: Any) -> "Offset2D[Coordinate]":  # TODO: Python 3.11: -> Self:
+	def __isub__(self, other: Any) -> Self:
 		"""
 		Subtracts a 2D-offset from this 2D-offset (inplace).
 
@@ -436,7 +436,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self.width = width
 		self.height = height
 
-	def Copy(self) -> "Size2D":  # TODO: Python 3.11: -> Self:
+	def Copy(self) -> Self:
 		"""
 		Create a new 2D-size as a copy of this 2D-size.
 
