@@ -37,7 +37,7 @@ Configuration reader for JSON files.
 """
 from json          import load
 from pathlib       import Path
-from typing import Any, Dict, List, Union, Iterator as typing_Iterator, Self
+from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export

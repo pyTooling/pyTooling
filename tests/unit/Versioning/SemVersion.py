@@ -809,7 +809,8 @@ class FormattingUsingRepr(TestCase):
 		self.assertEqual("1.0.0", repr(version))
 
 	def test_MajorPrefix(self) -> None:
-		version = SemanticVersion(1)
+		"""A prefix doesn't contribute to the version's value, so repr - the normalized form - omits it."""
+		version = SemanticVersion(1, prefix="v")
 
 		self.assertEqual("1.0.0", repr(version))
 

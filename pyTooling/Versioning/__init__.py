@@ -37,7 +37,7 @@ Implementation of semantic and date versioning version-numbers.
 """
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
-from re              import compile as re_compile
+from re              import compile as re_compile, Pattern
 from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator, List
 
 from pyTooling.Decorators  import export, readonly
@@ -998,7 +998,7 @@ class Version(metaclass=ExtendedType, slots=True):
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
-	_PATTERN = re_compile(
+	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>[a-zA-Z]*)"
 		r"(?P<major>\d+)"
@@ -1310,11 +1310,13 @@ class SemanticVersion(Version):
 
 	def __repr__(self) -> str:
 		"""
-		Return a string representation of this version number without prefix ``v``.
+		Return a normalized string representation of this version number.
+
+		A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form.
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._prefix if Parts.Prefix in self._parts else ''}{self._major}.{self._minor}.{self._micro}"
+		return f"{self._major}.{self._minor}.{self._micro}"
 
 	def __str__(self) -> str:
 		"""
@@ -1410,9 +1412,9 @@ class CalendarVersion(Version):
 
 	_PARTCOUNT: ClassVar[int] = 3   #: Number of numeric parts a version number of this class can carry.
 
-	_PATTERN = re_compile(
+	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
-		r"(?P<prefix>[a-zA-Z]*)"
+		r"(?P<prefix>rev|REV|[vViIrR])?"
 		r"(?P<major>\d+)"
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
@@ -1489,7 +1491,7 @@ class CalendarVersion(Version):
 		if (match := cls._PATTERN.match(versionString)) is None:
 			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
 			ex.add_note(f"A calendar version number is made of up to {cls._PARTCOUNT} numeric parts, e.g. '2024.04'.")
-			ex.add_note(f"It may carry an alphabetic prefix, e.g. 'v2024.04'.")
+			ex.add_note(f"It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v2024.04'.")
 			raise ex
 
 		prefix = match["prefix"]
@@ -1696,12 +1698,13 @@ class CalendarVersion(Version):
 
 	def __repr__(self) -> str:
 		"""
-		Return a string representation of this version number.
+		Return a normalized string representation of this version number.
 
-		:returns: Version number representation including a prefix.
+		A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form.
+
+		:returns: Raw version number representation without a prefix.
 		"""
-		result = self._prefix if Parts.Prefix in self._parts else ""
-		result += f"{self._major}.{self._minor}"
+		result = f"{self._major}.{self._minor}"
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
 
 		return result

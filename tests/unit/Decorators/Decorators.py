@@ -33,7 +33,7 @@ from unittest import TestCase
 
 from pytest   import mark
 
-from pyTooling.Decorators import export, InheritDocString, readonly, ReadOnlyProperty
+from pyTooling.Decorators import export, InheritDocString, readonly
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -169,10 +169,12 @@ class ReadOnly(TestCase):
 
 			@readonly
 			def length(self) -> int:
+				"""Doc-string of the getter."""
 				return 2 ** self._data
 
-		self.assertIsInstance(Data.length, ReadOnlyProperty)
+		self.assertIsInstance(Data.length, readonly)
 		self.assertIsInstance(Data.length, property)
+		self.assertEqual("Doc-string of the getter.", Data.length.__doc__)
 
 
 class InheritDocStrings(TestCase):

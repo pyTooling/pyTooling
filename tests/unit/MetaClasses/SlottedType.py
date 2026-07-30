@@ -37,7 +37,9 @@ from unittest              import TestCase
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning
+from pyTooling.Decorators  import readonly
+from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
 from pyTooling.Platform    import CurrentPlatform
 
@@ -1181,6 +1183,90 @@ class SlotShadowedByClassMember(TestCase):
 
 		self.assertEqual(100, Base.LIMIT)
 		self.assertEqual(100, inst._data_0)
+
+
+class UnannotatedFields(TestCase):
+	"""
+	Every field should carry type information. A field assigned in the class body without a type annotation is reported
+	as a warning - it needs a :class:`WarningCollector` to be observed, so importing such a module doesn't fail.
+	"""
+
+	def _collect(self, construct) -> list:
+		warnings = []
+		with WarningCollector(handler=lambda warning: warnings.append(warning) or False):
+			construct()
+
+		return [warning for warning in warnings if isinstance(warning, UnannotatedFieldWarning)]
+
+	def test_UnannotatedClassConstant(self) -> None:
+		def construct() -> None:
+			class Base(metaclass=ExtendedType, slots=True):
+				LIMIT = 100
+				_data_0: int
+
+		warnings = self._collect(construct)
+
+		self.assertEqual(1, len(warnings))
+		self.assertIn("Class 'Base' declares 1 field(s) without a type annotation.", str(warnings[0]))
+		self.assertIn("'LIMIT'", warnings[0].__notes__[0])
+
+	def test_UnannotatedFieldWithoutSlots(self) -> None:
+		"""The check doesn't depend on slots - it's about type information, not about the slot machinery."""
+		def construct() -> None:
+			class Base(metaclass=ExtendedType):
+				LIMIT = 100
+
+		self.assertEqual(1, len(self._collect(construct)))
+
+	def test_ClassVarIsAnnotated(self) -> None:
+		def construct() -> None:
+			class Base(metaclass=ExtendedType, slots=True):
+				LIMIT: ClassVar[int] = 100
+				_data_0: int
+
+		self.assertEqual(0, len(self._collect(construct)))
+
+	def test_MethodsAndNestedClassesAreNoFields(self) -> None:
+		def construct() -> None:
+			class Base(metaclass=ExtendedType, slots=True):
+				_data_0: int
+
+				class Nested:
+					pass
+
+				def Method(self) -> None:
+					pass
+
+				@classmethod
+				def ClassMethod(cls) -> None:
+					pass
+
+				@staticmethod
+				def StaticMethod() -> None:
+					pass
+
+				@property
+				def Property(self) -> int:
+					return self._data_0
+
+				@readonly
+				def ReadOnly(self) -> int:
+					return self._data_0
+
+		self.assertEqual(0, len(self._collect(construct)))
+
+	def test_MultipleUnannotatedFields(self) -> None:
+		def construct() -> None:
+			class Base(metaclass=ExtendedType, slots=True):
+				LIMIT = 100
+				NAME = "base"
+				_data_0: int
+
+		warnings = self._collect(construct)
+
+		self.assertEqual(1, len(warnings))
+		self.assertIn("declares 2 field(s)", str(warnings[0]))
+		self.assertIn("'LIMIT', 'NAME'", warnings[0].__notes__[0])
 
 
 class Hierarchy(TestCase):

@@ -151,7 +151,7 @@ class Parsing(TestCase):
 
 		self.assertEqual("v", version.Prefix)
 		self.assertEqual("v2024.10.15", str(version))
-		self.assertEqual("v2024.10.15", repr(version))
+		self.assertEqual("2024.10.15", repr(version))
 
 	def test_TooManyParts(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -507,9 +507,10 @@ class FormattingUsingRepr(TestCase):
 		self.assertEqual("1.0", repr(version))
 
 	def test_MajorPrefix(self) -> None:
+		"""A prefix doesn't contribute to the version's value, so repr - the normalized form - omits it."""
 		version = CalendarVersion(1, prefix="v")
 
-		self.assertEqual("v1.0", repr(version))
+		self.assertEqual("1.0", repr(version))
 
 	def test_MajorMinor(self) -> None:
 		version = CalendarVersion(1, 2)

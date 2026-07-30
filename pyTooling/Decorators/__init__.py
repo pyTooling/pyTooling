@@ -156,18 +156,20 @@ def notimplemented(message: str) -> Callable:
 
 
 @export
-class ReadOnlyProperty(property):
+class readonly(property):
 	"""
-	A :class:`property` that rejects attaching a setter or a deleter.
+	Marks a property as *read-only*.
+
+	The doc-string is taken from the getter-method, like :class:`property` does.
 
 	A plain :class:`property` hands out ``<property>.setter`` and ``<property>.deleter``, so a property declared as
-	read-only could be made writable again further down the class body - and the declaration would silently become a
-	lie. Both methods therefore raise an :exc:`AttributeError` instead.
+	read-only could be made writable again further down the class body. Both methods therefore raise an
+	:exc:`AttributeError` instead.
 
 	.. seealso::
 
-	   :func:`~pyTooling.Decorators.readonly`
-	     The decorator creating a read-only property.
+	   :deco:`property`
+	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 
 	def setter(self, fset: Callable) -> NoReturn:
@@ -191,28 +193,6 @@ class ReadOnlyProperty(property):
 		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a deleter.")
 		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be deletable.")
 		raise ex
-
-
-@export
-def readonly(func: Callable) -> ReadOnlyProperty:
-	"""
-	Marks a property as *read-only*.
-
-	The doc-string will be taken from the getter-function.
-
-	Using ``<property>.setter`` or ``<property>.deleter`` on the result raises an :exc:`AttributeError`.
-
-	:param func: Function to convert to a read-only property.
-	:returns:    A property object with just a getter.
-
-	.. seealso::
-
-	   :class:`property`
-	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
-	   :class:`~pyTooling.Decorators.ReadOnlyProperty`
-	     The property type returned by this decorator.
-	"""
-	return ReadOnlyProperty(fget=func, fset=None, fdel=None, doc=func.__doc__)
 
 
 @export

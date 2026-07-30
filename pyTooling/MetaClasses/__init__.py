@@ -40,12 +40,13 @@ from functools  import wraps
 from itertools  import chain
 from sys        import version_info
 from threading  import Condition
-from types      import FunctionType, MethodType
+from types      import BuiltinFunctionType, FunctionType, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
+from pyTooling.Warning    import Warning, WarningCollector
 
 
 __all__ = ["M"]
@@ -101,9 +102,19 @@ class DuplicateFieldInSlotsError(ExtendedTypeError):
 
 
 @export
+class UnannotatedFieldWarning(Warning):
+	"""
+	A class declares a field that was assigned in the class body without a type annotation.
+
+	An object field is annotated with its type, a class variable with :class:`~typing.ClassVar`. Without an annotation,
+	:class:`ExtendedType` can't tell the two apart, and the field never becomes a slot.
+	"""
+
+
+@export
 class IncompatibleMetaClassError(ExtendedTypeError):
 	"""
-	This exception is raised when a class decorated with :func:`slotted`, :func:`mixin` or :func:`singleton` uses a
+	This exception is raised when a class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton` uses a
 	meta-class that is neither :class:`type` nor derived from :class:`~pyTooling.MetaClasses.ExtendedType`.
 	"""
 
@@ -659,9 +670,11 @@ class ExtendedType(type):
 		"""
 		Return the type annotations declared in a class body.
 
-		Python 3.14 (:pep:`649`) no longer fills ``__annotations__`` while the class body is executed, but installs an
-		``__annotate_func__`` instead. The :mod:`annotationlib` module needed to evaluate that function doesn't exist on
-		older Python versions, therefore both mechanisms are supported.
+		.. important::
+
+		   Python 3.14 (:pep:`649`) no longer fills ``__annotations__`` while the class body is executed, but installs an
+		   ``__annotate_func__`` instead. The :mod:`annotationlib` module needed to evaluate that function doesn't exist on
+		   older Python versions, therefore both mechanisms are supported.
 
 		:param members: Dictionary of class members.
 		:returns:       Dictionary of annotated field names and their type annotations. Empty, if the class body declared
@@ -687,6 +700,60 @@ class ExtendedType(type):
 		:returns:              ``True``, if the annotation is a :class:`~typing.ClassVar`.
 		"""
 		return isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar
+
+	@classmethod
+	def _isField(metacls, member: Any) -> bool:
+		"""
+		Check if a class member is a field, so a type annotation is expected for it.
+
+		Methods, nested classes, properties and any other descriptor carry their type information in their signature or
+		in their own declaration, therefore they aren't fields.
+
+		:param member: The class member to check.
+		:returns:      ``True``, if the member is a field.
+		"""
+		if isinstance(member, (FunctionType, MethodType, BuiltinFunctionType, classmethod, staticmethod, property, type)):
+			return False
+
+		# Any descriptor (e.g. a custom property implementation) declares its own type information.
+		return not (hasattr(member, "__get__") or hasattr(member, "__set__"))
+
+	@classmethod
+	def _checkForUnannotatedFields(metacls, className: str, members: Dict[str, Any], annotations: Dict[str, Any]) -> None:
+		"""
+		Report fields that were assigned in the class body without a type annotation.
+
+		Every field should carry type information: an object field is annotated with its type, a class variable with
+		``ClassVar[...]``. Without an annotation, :class:`ExtendedType` can't tell the two apart - an un-annotated
+		assignment never becomes a slot and silently stays a class attribute.
+
+		.. important::
+
+		   This is reported as a :class:`~pyTooling.Warning.Warning`, so it needs a
+		   :class:`~pyTooling.Warning.WarningCollector` somewhere up the call-hierarchy to be observed. Importing a module
+		   with un-annotated fields doesn't fail.
+
+		:param className:   The name of the class to construct.
+		:param members:     Dictionary of class members.
+		:param annotations: Dictionary of annotated field names and their type annotations.
+		"""
+		unannotatedFields = [
+			fieldName
+			for fieldName, member in members.items()
+			if not (fieldName.startswith("__") and fieldName.endswith("__"))
+				and fieldName not in annotations
+				and metacls._isField(member)
+		]
+
+		if len(unannotatedFields) > 0:
+			fieldNames = "', '".join(unannotatedFields)
+			WarningCollector.Raise(
+				UnannotatedFieldWarning(f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation."),
+				notes=(
+					f"Field(s) without a type annotation: '{fieldNames}'.",
+					f"Annotate a class variable as 'ClassVar[...]' and an object field with its type.",
+				)
+			)
 
 	@classmethod
 	def _computeSlots(
@@ -715,6 +782,7 @@ class ExtendedType(type):
 		slottedFields = []
 		classFields =   {}
 		objectFields =  {}
+		annotations: Dict[str, Any] = self._getAnnotations(members)
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -741,8 +809,6 @@ class ExtendedType(type):
 						inheritedSlottedFields[annotation] = base
 
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			annotations: Dict[str, Any] = self._getAnnotations(members)
-
 			for fieldName, typeAnnotation in annotations.items():
 				if fieldName in inheritedSlottedFields:
 					cls = inheritedSlottedFields[fieldName]
@@ -785,7 +851,6 @@ class ExtendedType(type):
 				raise ex
 		else:
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			annotations: Dict[str, Any] = self._getAnnotations(members)
 			for fieldName, typeAnnotation in annotations.items():
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary
@@ -793,6 +858,8 @@ class ExtendedType(type):
 				if self._isClassVariable(typeAnnotation) and fieldName in members:
 					classFields[fieldName] = members[fieldName]
 					del members[fieldName]
+
+		self._checkForUnannotatedFields(className, members, annotations)
 
 		if mixin:
 			mixinSlots.extend(slottedFields)
