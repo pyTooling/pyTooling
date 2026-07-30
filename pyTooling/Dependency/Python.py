@@ -59,9 +59,11 @@ except ImportError as ex:  # pragma: no cover
 
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
-from pyTooling.Exceptions      import ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
+from pyTooling.Dependency      import BrokenRequirementWarning, NoSessionAvailableException, ProjectNotFoundException
+from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundException
+from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 
@@ -245,16 +247,16 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 	def DownloadDetails(self) -> None:
 		if self._session is None:
-			# TODO: NoSessionAvailableException
-			raise ToolingException(f"No session available.")
+			ex = NoSessionAvailableException(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
+			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
+			raise ex
 
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
 		try:
 			response.raise_for_status()
 		except HTTPError as ex:
 			if ex.response.status_code == 404:
-				# TODO: ReleaseNotFoundException
-				raise ToolingException(f"Release '{self._version}' of package '{self._package._name}' not found.")
+				raise ReleaseNotFoundException(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
@@ -286,8 +288,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 				else:
 					brokenRequirements.append(req)
 
-			# TODO: raise a warning
 			if len(brokenRequirements) > 0:
+				WarningCollector.Raise(
+					BrokenRequirementWarning(f"Package '{self._package._name}' has {len(brokenRequirements)} requirement(s) whose marker matches no declared extra."),
+					notes=[f"Broken requirement: {req}" for req in brokenRequirements]
+				)
 				self._requirements[0] = brokenRequirements
 
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
@@ -382,16 +387,16 @@ class Project(Package, LazyLoadableMixin):
 
 	def DownloadDetails(self) -> None:
 		if self._session is None:
-			# TODO: NoSessionAvailableException
-			raise ToolingException(f"No session available.")
+			ex = NoSessionAvailableException(f"No session available to download details of package '{self._name}'.")
+			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
+			raise ex
 
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
 		try:
 			response.raise_for_status()
 		except HTTPError as ex:
 			if ex.response.status_code == 404:
-				# TODO: ReleaseNotFoundException
-				raise ToolingException(f"Package '{self._name}' not found.")
+				raise ProjectNotFoundException(f"Package '{self._name}' not found.") from ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
@@ -455,9 +460,11 @@ class Project(Package, LazyLoadableMixin):
 					if isinstance(result, Exception):
 						delList.append((release, result))
 
-				# TODO: raise a warning
 				for release, ex in delList:
-					print(f"  Removing {release.Project._name} {release.Version} - {ex}")
+					WarningCollector.Raise(
+						ReleaseDetailsWarning(f"Dropping release '{release.Version}' of package '{release.Project._name}': details couldn't be downloaded."),
+						ex
+					)
 					del self.Releases[release.Version]
 
 		asyncio_run(ParallelDownloadReleaseDetails())

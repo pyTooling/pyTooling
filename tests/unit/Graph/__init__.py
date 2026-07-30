@@ -35,6 +35,7 @@ from unittest import TestCase
 from pyTooling.Decorators import readonly
 from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError, CycleError
 from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
+from pyTooling.Graph      import NotInDifferentSubgraphs
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -1039,6 +1040,34 @@ class EdgesAndLinks(TestCase):
 		self.assertEqual(vertex3, edge34.Source)
 		self.assertEqual(vertex4, edge34.Destination)
 		self.assertEqual(2, edge34.Weight)
+
+	def test_EdgeAcrossSubgraphBoundary(self) -> None:
+		"""An edge can only connect vertices within the same graph or subgraph."""
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(vertexID=1, graph=graph)
+		vertex2 = Vertex(vertexID=2, subgraph=subgraph)
+
+		for methodName in ("EdgeToVertex", "EdgeFromVertex"):
+			with self.subTest(method=methodName):
+				with self.assertRaises(NotInSameGraph) as context:
+					_ = getattr(vertex1, methodName)(vertex2)
+
+				self.assertIn("are not in the same graph or subgraph", str(context.exception))
+
+	def test_LinkWithinSameSubgraph(self) -> None:
+		"""A link can only connect vertices across subgraph boundaries."""
+		graph = Graph()
+		subgraph = Subgraph(graph=graph)
+		vertex1 = Vertex(vertexID=1, subgraph=subgraph)
+		vertex2 = Vertex(vertexID=2, subgraph=subgraph)
+
+		for methodName in ("LinkToVertex", "LinkFromVertex"):
+			with self.subTest(method=methodName):
+				with self.assertRaises(NotInDifferentSubgraphs) as context:
+					_ = getattr(vertex1, methodName)(vertex2)
+
+				self.assertIn("are in the same subgraph", str(context.exception))
 
 
 class Iterate(TestCase):
