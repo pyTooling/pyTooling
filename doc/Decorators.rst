@@ -24,7 +24,7 @@ Abstract Methods
 
       .. todo::
 
-         DECO:: Refer to :func:`~pyTooling.MetaClasses.abstractmethod` and :func:`~pyTooling.MetaClasses.mustoverride`
+         DECO:: Refer to :deco:`~pyTooling.MetaClasses.abstractmethod` and :deco:`~pyTooling.MetaClasses.mustoverride`
          decorators from :ref:`meta classes <META>`.
 
       .. important::
@@ -45,7 +45,7 @@ Abstract Methods
    .. grid-item::
       :columns: 6
 
-      The :func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*.
+      The :deco:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*.
 
       The original method gets replaced by a method raising a :exc:`NotImplementedError`. This can happen, if an
       abstract method is overridden but called via :pycode:`super()...`.
@@ -88,7 +88,7 @@ Abstract Methods
    .. grid-item::
       :columns: 6
 
-      The :func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*.
+      The :deco:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*.
 
       When a class containing *must override* methods is instantiated, an :exc:`~pyTooling.Exceptions.MustOverrideClassError`
       is raised.
@@ -139,7 +139,7 @@ Data Access
    .. grid-item::
       :columns: 6
 
-      The :func:`~pyTooling.Decorators.readonly` decorator makes a property *read-only*. Thus the properties
+      The :deco:`~pyTooling.Decorators.readonly` decorator makes a property *read-only*. Thus the properties
       :pycode:`setter` and :pycode:`deleter` can't be used.
 
    .. grid-item::
@@ -186,7 +186,7 @@ Documentation
    .. grid-item::
       :columns: 6
 
-      The :func:`~pyTooling.Decorators.export` decorator makes module's entities (classes and functions) publicly
+      The :deco:`~pyTooling.Decorators.export` decorator makes module's entities (classes and functions) publicly
       visible. Therefore, these entities get registered in the module's variable ``__all__``.
 
       Besides making these entities accessible via ``from foo import *``, Sphinx extensions like autoapi are reading
@@ -233,7 +233,7 @@ Documentation
       :columns: 6
 
       When a method in a derived class shall have the same doc-string as the doc-string of the base-class, then the
-      decorator :func:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class'
+      decorator :deco:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class'
       method to the method in the derived class.
 
    .. grid-item::
@@ -452,7 +452,7 @@ Miscellaneous
    .. grid-item::
       :columns: 6
 
-      The :func:`~pyTooling.Decorators.notimplemented` decorator replaces a callable (function or method) with a
+      The :deco:`~pyTooling.Decorators.notimplemented` decorator replaces a callable (function or method) with a
       callable raising a :exc:`NotImplementedError` containing the decorators message parameter as an error message.
 
       The original callable might contain code, but it's made unreachable by the decorator. The callable's name and

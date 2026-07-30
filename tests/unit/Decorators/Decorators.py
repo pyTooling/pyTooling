@@ -125,10 +125,9 @@ class ReadOnly(TestCase):
 		with self.assertRaises(AttributeError):
 			del d.length
 
-	# FIXME: needs to be activated and tested
-	@mark.skip("EXPECTED ERROR IS NOT RAISED")
 	def test_Setter(self) -> None:
-		with self.assertRaises(AttributeError):
+		"""Attaching a setter to a read-only property is rejected while the class body is executed."""
+		with self.assertRaises(AttributeError) as context:
 			class Data:
 				_data: int
 
@@ -143,13 +142,11 @@ class ReadOnly(TestCase):
 				def length(self, value):
 					self._data = value
 
-			d = Data(6)
-			d.length = 16
+		self.assertIn("Property 'length' is read-only, so it can't have a setter.", str(context.exception))
 
-	# FIXME: needs to be activated and tested
-	@mark.skip("EXPECTED ERROR IS NOT RAISED")
 	def test_Deleter(self) -> None:
-		with self.assertRaises(AttributeError):
+		"""Attaching a deleter to a read-only property is rejected while the class body is executed."""
+		with self.assertRaises(AttributeError) as context:
 			class Data:
 				_data: int
 
@@ -161,11 +158,23 @@ class ReadOnly(TestCase):
 					return 2 ** self._data
 
 				@length.deleter
-				def length(self, value):
+				def length(self):
 					del self._data
 
-			d = Data(7)
-			del d.length
+		self.assertIn("Property 'length' is read-only, so it can't have a deleter.", str(context.exception))
+
+	def test_ReadOnlyPropertyType(self) -> None:
+		class Data:
+			_data: int
+
+			@readonly
+			def length(self) -> int:
+				"""Doc-string of the getter."""
+				return 2 ** self._data
+
+		self.assertIsInstance(Data.length, readonly)
+		self.assertIsInstance(Data.length, property)
+		self.assertEqual("Doc-string of the getter.", Data.length.__doc__)
 
 
 class InheritDocStrings(TestCase):

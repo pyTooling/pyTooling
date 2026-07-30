@@ -1,0 +1,16 @@
+{
+	"dictionary": {
+		"key_1": "value_1",
+		"key_2": "value_2"
+	},
+	"sequence": [
+		"item_0",
+		"item_1"
+	],
+	"emptyDictionary": {},
+	"emptySequence": [],
+	"nullValue": null,
+	"unclosedVariable": "${unclosed",
+	"danglingDollar": "prefix$",
+	"dictionaryReference": "${dictionary}"
+}

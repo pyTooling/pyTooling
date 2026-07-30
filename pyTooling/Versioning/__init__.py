@@ -37,8 +37,8 @@ Implementation of semantic and date versioning version-numbers.
 """
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
-from re              import compile as re_compile
-from typing          import Optional as Nullable, Union, Callable, Any, Generic, TypeVar, Iterable, Iterator, List
+from re              import compile as re_compile, Pattern
+from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator, List
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
@@ -998,9 +998,9 @@ class Version(metaclass=ExtendedType, slots=True):
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
-	_PATTERN = re_compile(
+	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
-		r"(?P<prefix>[a-zA-Z]*)"
+		r"(?P<prefix>rev|REV|[vViIrR])?"
 		r"(?P<major>\d+)"
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
@@ -1096,7 +1096,9 @@ class SemanticVersion(Version):
 			raise ValueError("Parameter 'versionString' is empty.")
 
 		if (match := cls._PATTERN.match(versionString)) is None:
-			raise ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex.add_note(f"It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v1.2.3'.")
+			raise ex
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
 			if value is None or value == "":
@@ -1106,6 +1108,8 @@ class SemanticVersion(Version):
 				return int(value)
 			except ValueError as ex:  # pragma: no cover
 				raise ValueError(f"Invalid part '{value}' in version number '{versionString}'.") from ex
+
+		prefix = match["prefix"]
 
 		release = match["release"]
 		if release is not None:
@@ -1142,7 +1146,7 @@ class SemanticVersion(Version):
 			dev=toInt(match["dev"]),
 			build=toInt(match["build"]),
 			postfix=match["postfix"],
-			prefix=match["prefix"],
+			prefix=prefix if prefix != "" else None,
 			# hash=match["hash"],
 			flags=Flags.Clean
 		)
@@ -1310,11 +1314,16 @@ class SemanticVersion(Version):
 
 	def __repr__(self) -> str:
 		"""
-		Return a string representation of this version number without prefix ``v``.
+		Return a normalized string representation of this version number.
+
+		.. note::
+
+		   A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form. Use
+		   :meth:`__str__` to render a version number including its prefix.
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._prefix if Parts.Prefix in self._parts else ''}{self._major}.{self._minor}.{self._micro}"
+		return f"{self._major}.{self._minor}.{self._micro}"
 
 	def __str__(self) -> str:
 		"""
@@ -1408,6 +1417,17 @@ class PythonVersion(SemanticVersion):
 class CalendarVersion(Version):
 	"""Representation of a calendar version number like ``2021.10``."""
 
+	_PARTCOUNT: ClassVar[int] = 3   #: Number of numeric parts a version number of this class can carry.
+
+	_PATTERN: ClassVar[Pattern] = re_compile(
+		r"^"
+		r"(?P<prefix>rev|REV|[vViIrR])?"
+		r"(?P<major>\d+)"
+		r"(?:\.(?P<minor>\d+))?"
+		r"(?:\.(?P<micro>\d+))?"
+		r"$"
+	)
+
 	def __init__(
 		self,
 		major: int,
@@ -1446,36 +1466,56 @@ class CalendarVersion(Version):
 		"""
 		Parse a version string and return a :class:`CalendarVersion` instance.
 
-		:param versionString: The version string to parse.
-		:returns:             An object representing a calendar version.
-		:raises TypeError:    If parameter ``other`` is not a string.
-		:raises ValueError:   If parameter ``other`` is None.
-		:raises ValueError:   If parameter ``other`` is empty.
-		"""
-		parts = Parts.Unknown
+		Allowed prefix characters:
 
+		* ``v|V`` - version, public version, public release
+		* ``i|I`` - internal version, internal release
+		* ``r|R`` - release, revision
+		* ``rev|REV`` - revision
+
+		A version number carries up to :attr:`_PARTCOUNT` numeric parts. :class:`YearMonthVersion`,
+		:class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so a third part is rejected for
+		them.
+
+		:param versionString: The version string to parse.
+		:param validator:     Optional, a validation function.
+		:returns:             An object representing a calendar version.
+		:raises TypeError:    If parameter ``versionString`` is not a string.
+		:raises ValueError:   If parameter ``versionString`` is None.
+		:raises ValueError:   If parameter ``versionString`` is empty.
+		:raises ValueError:   If parameter ``versionString`` isn't a calendar version number.
+		:raises ValueError:   If parameter ``versionString`` has more parts than the class describes.
+		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
 		elif not isinstance(versionString, str):
 			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
-		elif versionString == "":
+		elif (versionString := versionString.strip()) == "":
 			raise ValueError("Parameter 'versionString' is empty.")
 
-		split = versionString.split(".")
-		length = len(split)
-		major = int(split[0])
-		minor = 0
-		parts |= Parts.Major
+		if (match := cls._PATTERN.match(versionString)) is None:
+			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex.add_note(f"A calendar version number is made of up to {cls._PARTCOUNT} numeric parts, e.g. '2024.04'.")
+			ex.add_note(f"It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v2024.04'.")
+			raise ex
 
-		if length >= 2:
-			minor = int(split[1])
-			parts |= Parts.Minor
+		prefix = match["prefix"]
+		minor = match["minor"]
+		micro = match["micro"]
 
-		flags = Flags.Clean
+		if micro is not None and cls._PARTCOUNT < 3:
+			ex = ValueError(f"Version number '{versionString}' has 3 parts, but '{cls.__name__}' describes {cls._PARTCOUNT}.")
+			ex.add_note(f"Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
+			raise ex
 
-		version = cls(major, minor, flags=flags)
+		numbers = [int(match["major"]), 0 if minor is None else int(minor)]
+		if micro is not None:
+			numbers.append(int(micro))
+
+		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
+
 		if validator is not None and not validator(version):
 			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
 
@@ -1646,6 +1686,7 @@ class CalendarVersion(Version):
 
 		   * ``%M`` - major number (year)
 		   * ``%m`` - minor number (month/week)
+		   * ``%u`` - micro number (day)
 
 		:param formatSpec: The format specification.
 		:return:           Formatted version number.
@@ -1657,26 +1698,37 @@ class CalendarVersion(Version):
 		# result = result.replace("%P", str(self._prefix))
 		result = result.replace("%M", str(self._major))
 		result = result.replace("%m", str(self._minor))
+		result = result.replace("%u", str(self._micro))
 		# result = result.replace("%p", str(self._pre))
 
 		return result.replace("%%", "%")
 
 	def __repr__(self) -> str:
 		"""
-		Return a string representation of this version number without prefix ``v``.
+		Return a normalized string representation of this version number.
+
+		.. note::
+
+		   A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form. Use
+		   :meth:`__str__` to render a version number including its prefix.
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._major}.{self._minor}"
+		result = f"{self._major}.{self._minor}"
+		result += f".{self._micro}" if Parts.Micro in self._parts else ""
+
+		return result
 
 	def __str__(self) -> str:
 		"""
-		Return a string representation of this version number with prefix ``v``.
+		Return a string representation of this version number with only the present parts.
 
 		:returns: Version number representation including a prefix.
 		"""
-		result = f"{self._major}"
+		result = self._prefix if Parts.Prefix in self._parts else ""
+		result += f"{self._major}"
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
+		result += f".{self._micro}" if Parts.Micro in self._parts else ""
 
 		return result
 
@@ -1684,6 +1736,8 @@ class CalendarVersion(Version):
 @export
 class YearMonthVersion(CalendarVersion):
 	"""Representation of a calendar version number made of year and month like ``2021.10``."""
+
+	_PARTCOUNT: ClassVar[int] = 2   #: A version number of this class carries year and month.
 
 	def __init__(
 		self,
@@ -1733,6 +1787,8 @@ class YearMonthVersion(CalendarVersion):
 class YearWeekVersion(CalendarVersion):
 	"""Representation of a calendar version number made of year and week like ``2021.47``."""
 
+	_PARTCOUNT: ClassVar[int] = 2   #: A version number of this class carries year and week.
+
 	def __init__(
 		self,
 		year: int,
@@ -1780,6 +1836,8 @@ class YearWeekVersion(CalendarVersion):
 @export
 class YearReleaseVersion(CalendarVersion):
 	"""Representation of a calendar version number made of year and release per year like ``2021.2``."""
+
+	_PARTCOUNT: ClassVar[int] = 2   #: A version number of this class carries year and release.
 
 	def __init__(
 		self,
@@ -1966,7 +2024,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._lowerBound = value
 
-	@readonly
+	@property
 	def UpperBound(self) -> V:
 		"""
 		Property to access the range's upper bound.
@@ -1984,7 +2042,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._upperBound = value
 
-	@readonly
+	@property
 	def BoundHandling(self) -> RangeBoundHandling:
 		"""
 		Property to access the range's bound handling strategy.

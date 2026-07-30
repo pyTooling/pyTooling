@@ -37,11 +37,14 @@ Configuration reader for JSON files.
 """
 from json          import load
 from pathlib       import Path
-from typing import Dict, List, Union, Iterator as typing_Iterator, Self
+from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
 
+from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export
 from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
+from pyTooling.Configuration   import InterpolationException, KeyNotFoundException, PathExpressionException
+from pyTooling.Configuration   import UnsupportedValueTypeException
 from pyTooling.Configuration   import Node as Abstract_Node
 from pyTooling.Configuration   import Dictionary as Abstract_Dict
 from pyTooling.Configuration   import Sequence as Abstract_Seq
@@ -125,20 +128,57 @@ class Node(Abstract_Node):
 	def _ToPath(query: str) -> List[Union[str, int]]:
 		return query.split(":")
 
+	def _LookupKey(self, key: str) -> Any:
+		"""
+		Look up a key in the JSON node, trying it as string, integer and float.
+
+		:param key:                   Key or index to look up.
+		:returns:                     The raw value as returned by the JSON parser.
+		:raises KeyNotFoundException: If the key exists neither as string, nor as integer or float.
+		"""
+		try:
+			return self._jsonNode[key]
+		except (KeyError, TypeError):
+			pass
+
+		for conversion in (int, float):
+			try:
+				convertedKey = conversion(key)
+			except ValueError:
+				continue
+
+			try:
+				return self._jsonNode[convertedKey]
+			except (KeyError, IndexError, TypeError):
+				pass
+
+		ex = KeyNotFoundException(f"Key '{key}' not found in node '{self._key}'.")
+		ex.add_note(self._DescribeKeys())
+		raise ex
+
+	def _DescribeKeys(self) -> str:
+		"""
+		Describe the keys or indices offered by this node, so it can be used as an exception note.
+
+		:returns: A one-line description of the node's keys or index range.
+		"""
+		if isinstance(self._jsonNode, dict):
+			if self._length == 0:
+				return f"Node '{self._key}' is an empty dictionary."
+
+			keys = "', '".join(str(key) for key in self._jsonNode)
+			return f"Available keys: '{keys}'."
+		else:
+			if self._length == 0:
+				return f"Node '{self._key}' is an empty sequence."
+
+			return f"Node '{self._key}' is a sequence with indices 0..{self._length - 1}."
+
 	def _GetNodeOrValue(self, key: str) -> ValueT:
 		try:
 			value = self._cache[key]
 		except KeyError:
-			try:
-				value = self._jsonNode[key]
-			except (KeyError, TypeError):
-				try:
-					value = self._jsonNode[int(key)]
-				except KeyError:
-					try:
-						value = self._jsonNode[float(key)]
-					except KeyError as ex:
-						raise Exception(f"") from ex         # XXX: needs error message
+			value = self._LookupKey(key)
 
 			if isinstance(value, str):
 				value = self._ResolveVariables(value)
@@ -149,7 +189,10 @@ class Node(Abstract_Node):
 			elif isinstance(value, list):
 				value = self.SEQ_TYPE(self, self, key, value)
 			else:
-				raise Exception(f"") from TypeError(f"Unknown type '{value.__class__.__name__}' returned from json.") # XXX: error message
+				typeName = getFullyQualifiedName(value)
+				ex = UnsupportedValueTypeException(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
+				ex.add_note(f"The JSON parser returned a value that is neither a scalar (str, int, float), nor a dict or list.")
+				raise ex
 
 			self._cache[key] = value
 
@@ -172,14 +215,20 @@ class Node(Abstract_Node):
 				rawValue = ""
 			else:
 				result += rawValue[:beginPos]
-				if rawValue[beginPos + 1] == "$":
+				if beginPos + 1 >= len(rawValue):
+					ex = InterpolationException(f"Dangling '$' at the end of value '{value}'.")
+					ex.add_note(f"Use '$$' to escape a literal dollar sign.")
+					raise ex
+				elif rawValue[beginPos + 1] == "$":
 					result  += "$"
 					rawValue = rawValue[1:]
 				elif rawValue[beginPos + 1] == "{":
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
 					if endPos < 0:
-						raise Exception(f"")  # XXX: InterpolationSyntaxError(option, section, f"Bad interpolation variable reference {rest!r}")
+						ex = InterpolationException(f"Unclosed variable reference in value '{value}'.")
+						ex.add_note(f"Missing closing '}}' for the '${{' at position {beginPos}.")
+						raise ex
 					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
 #						print(f"_ResolveVariables: path='{path}'")
@@ -203,7 +252,10 @@ class Node(Abstract_Node):
 				node = node._GetNodeOrValue(p)
 
 		if isinstance(node, Dictionary):
-			raise Exception(f"Error when resolving path expression '{':'.join(path)}' at '{p}'.") from TypeError(f"")     # XXX: needs error messages
+			pathExpression = ":".join(str(element) for element in path)
+			ex = PathExpressionException(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
+			ex.add_note(f"Element '{p}' is a dictionary. Extend the path expression to address a scalar value.")
+			raise ex
 
 		return node
 
@@ -354,12 +406,12 @@ class Sequence(Node, Abstract_Seq):
 				:returns:              Next item.
 				:raises StopIteration: If end of sequence is reached.
 				"""
-				try:
-					result = self._obj[str(self._i)]
-					self._i += 1
-					return result
-				except IndexError:
+				if self._i >= len(self._obj):
 					raise StopIteration
+
+				result = self._obj[str(self._i)]
+				self._i += 1
+				return result
 
 		return Iterator(self)
 

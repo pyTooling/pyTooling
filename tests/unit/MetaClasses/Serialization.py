@@ -33,8 +33,8 @@ Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 
 This test suite tests decorators:
 
-* :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
-* :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+* :deco:`~pyTooling.MetaClasses.abstractmethod`
+* :deco:`~pyTooling.MetaClasses.mustoverride`
 """
 from pickle                import loads, dumps
 from typing                import Dict, Any

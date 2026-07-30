@@ -43,6 +43,45 @@ from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName, firstKey
 from pyTooling.Versioning  import SemanticVersion
+from pyTooling.Warning     import Warning
+
+
+@export
+class DependencyException(ToolingException):
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Dependency`."""
+
+
+@export
+class NoSessionAvailableException(DependencyException):
+	"""
+	The operation needs a session to the package index, but no session was opened.
+
+	A session is created by the package index and handed to the objects it creates.
+	"""
+
+
+@export
+class ProjectNotFoundException(DependencyException):
+	"""The package index doesn't know a project of that name."""
+
+
+@export
+class ReleaseNotFoundException(DependencyException):
+	"""The project exists in the package index, but not in the requested version."""
+
+
+@export
+class BrokenRequirementWarning(Warning):
+	"""
+	A requirement carries an environment marker that matches none of the extras declared by the project.
+
+	Such a requirement can't be assigned to an extra, so it's not reachable through :attr:`Requirements`.
+	"""
+
+
+@export
+class ReleaseDetailsWarning(Warning):
+	"""Downloading the details of a release failed, therefore the release was dropped from the project."""
 
 
 @export

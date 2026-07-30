@@ -175,6 +175,15 @@ class NotInSameGraph(GraphException):
 
 
 @export
+class NotInDifferentSubgraphs(GraphException):
+	"""
+	The exception is raised when creating a link between two vertices, but these are in the same subgraph.
+
+	A link crosses subgraph boundaries. Two vertices within one subgraph are connected by an edge.
+	"""
+
+
+@export
 class DuplicateVertexError(GraphException):
 	"""The exception is raised when the vertex already exists in the graph."""
 
@@ -834,8 +843,10 @@ class Vertex(
 				else:
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this subgraph.")
 		else:
-			# FIXME: needs an error message
-			raise GraphException()
+			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
+			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			raise ex
 
 		return edge
 
@@ -896,8 +907,10 @@ class Vertex(
 				else:
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			# FIXME: needs an error message
-			raise GraphException()
+			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
+			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			raise ex
 
 		return edge
 
@@ -966,8 +979,10 @@ class Vertex(
 				else:
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			# FIXME: needs an error message
-			raise GraphException()
+			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
+			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			raise ex
 
 		return edge
 
@@ -1036,8 +1051,10 @@ class Vertex(
 				else:
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
 		else:
-			# FIXME: needs an error message
-			raise GraphException()
+			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
+			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			raise ex
 
 		return edge
 
@@ -1075,8 +1092,10 @@ class Vertex(
 		.. todo:: GRAPH::Vertex::LinkToVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
-			# FIXME: needs an error message
-			raise GraphException()
+			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
+			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
+			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			raise ex
 		else:
 			link = Link(self, vertex, linkID, linkValue, linkWeight, keyValuePairs)
 
@@ -1139,8 +1158,10 @@ class Vertex(
 		.. todo:: GRAPH::Vertex::LinkFromVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
-			# FIXME: needs an error message
-			raise GraphException()
+			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
+			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
+			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			raise ex
 		else:
 			link = Link(vertex, self, linkID, linkValue, linkWeight, keyValuePairs)
 

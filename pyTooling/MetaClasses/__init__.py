@@ -40,12 +40,13 @@ from functools  import wraps
 from itertools  import chain
 from sys        import version_info
 from threading  import Condition
-from types      import FunctionType, MethodType
+from types      import BuiltinFunctionType, FunctionType, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
 from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
+from pyTooling.Warning    import Warning, WarningCollector
 
 
 __all__ = ["M"]
@@ -101,15 +102,33 @@ class DuplicateFieldInSlotsError(ExtendedTypeError):
 
 
 @export
+class UnannotatedFieldWarning(Warning):
+	"""
+	A class declares a field that was assigned in the class body without a type annotation.
+
+	An object field is annotated with its type, a class variable with :class:`~typing.ClassVar`. Without an annotation,
+	:class:`ExtendedType` can't tell the two apart, and the field never becomes a slot.
+	"""
+
+
+@export
+class IncompatibleMetaClassError(ExtendedTypeError):
+	"""
+	This exception is raised when a class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton` uses a
+	meta-class that is neither :class:`type` nor derived from :class:`~pyTooling.MetaClasses.ExtendedType`.
+	"""
+
+
+@export
 class AbstractClassError(ExtendedTypeError):
 	"""
 	This exception is raised, when a class contains methods marked with *abstractmethod* or *must-override*.
 
 	.. seealso::
 
-	   :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
 	      |rarr| Mark a method as *abstract*.
-	   :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
 	      |rarr| Mark a method as *must overrride*.
 	   :exc:`~MustOverrideClassError`
 	      |rarr| Exception raised, if a method is marked as *must-override*.
@@ -123,9 +142,9 @@ class MustOverrideClassError(AbstractClassError):
 
 	.. seealso::
 
-	   :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
 	      |rarr| Mark a method as *abstract*.
-	   :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
 	      |rarr| Mark a method as *must overrride*.
 	   :exc:`~AbstractClassError`
 	      |rarr| Exception raised, if a method is marked as *abstract*.
@@ -144,8 +163,17 @@ class MustOverrideClassError(AbstractClassError):
 M = TypeVar("M", bound=Callable)   #: A type variable for methods.
 
 
-@export
-def slotted(cls):
+def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
+	"""
+	Recreate a class with :class:`ExtendedType` (or the class' own compatible meta-class) applying the given options.
+
+	:param cls:                         Class to recreate.
+	:param decoratorName:               Name of the calling decorator. It's used in the error message.
+	:param options:                     Meta-class options like ``slots``, ``mixin`` or ``singleton``.
+	:returns:                           The recreated class.
+	:raises IncompatibleMetaClassError: If the class' meta-class is neither :class:`type`, nor derived from
+	                                    :class:`ExtendedType`.
+	"""
 	if cls.__class__ is type:
 		metacls = ExtendedType
 	elif issubclass(cls.__class__, ExtendedType):
@@ -153,7 +181,11 @@ def slotted(cls):
 		for method in cls.__methods__:
 			delattr(method, "__classobj__")
 	else:
-		raise ExtendedTypeError("Class uses an incompatible meta-class.")  # FIXME: create exception for it?
+		metaClass = cls.__class__
+		ex = IncompatibleMetaClassError(f"Class '{cls.__name__}' decorated with '@{decoratorName}' uses an incompatible meta-class.")
+		ex.add_note(f"Meta-class is '{metaClass.__module__}.{metaClass.__name__}'.")
+		ex.add_note(f"A decorated class must use 'type' or a meta-class derived from 'pyTooling.MetaClasses.ExtendedType'.")
+		raise ex
 
 	bases = tuple(base for base in cls.__bases__ if base is not object)
 	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
@@ -164,53 +196,22 @@ def slotted(cls):
 		if key not in slots:
 			members[key] = value
 
-	return metacls(cls.__name__, bases, members, slots=True)
+	return metacls(cls.__name__, bases, members, **options)
+
+
+@export
+def slotted(cls):
+	return _recreateClass(cls, "slotted", slots=True)
 
 
 @export
 def mixin(cls):
-	if cls.__class__ is type:
-		metacls = ExtendedType
-	elif issubclass(cls.__class__, ExtendedType):
-		metacls = cls.__class__
-		for method in cls.__methods__:
-			delattr(method, "__classobj__")
-	else:
-		raise ExtendedTypeError("Class uses an incompatible meta-class.")  # FIXME: create exception for it?
-
-	bases = tuple(base for base in cls.__bases__ if base is not object)
-	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
-	members = {
-		"__qualname__": cls.__qualname__
-	}
-	for key, value in cls.__dict__.items():
-		if key not in slots:
-			members[key] = value
-
-	return metacls(cls.__name__, bases, members, mixin=True)
+	return _recreateClass(cls, "mixin", mixin=True)
 
 
 @export
 def singleton(cls):
-	if cls.__class__ is type:
-		metacls = ExtendedType
-	elif issubclass(cls.__class__, ExtendedType):
-		metacls = cls.__class__
-		for method in cls.__methods__:
-			delattr(method, "__classobj__")
-	else:
-		raise ExtendedTypeError("Class uses an incompatible meta-class.")  # FIXME: create exception for it?
-
-	bases = tuple(base for base in cls.__bases__ if base is not object)
-	slots = cls.__dict__["__slots__"] if "__slots__" in cls.__dict__ else tuple()
-	members = {
-		"__qualname__": cls.__qualname__
-	}
-	for key, value in cls.__dict__.items():
-		if key not in slots:
-			members[key] = value
-
-	return metacls(cls.__name__, bases, members, singleton=True)
+	return _recreateClass(cls, "singleton", singleton=True)
 
 
 @export
@@ -242,8 +243,8 @@ def abstractmethod(method: M) -> M:
 	.. seealso::
 
 	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
-	   * :func:`~pyTooling.Metaclasses.mustoverride`
-	   * :func:`~pyTooling.Metaclasses.notimplemented`
+	   * :deco:`~pyTooling.MetaClasses.mustoverride`
+	   * :deco:`~pyTooling.Decorators.notimplemented`
 	"""
 	@wraps(method)
 	def func(self) -> NoReturn:
@@ -285,8 +286,8 @@ def mustoverride(method: M) -> M:
 	.. seealso::
 
 	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`
-	   * :func:`~pyTooling.Metaclasses.abstractmethod`
-	   * :func:`~pyTooling.Metaclasses.notimplemented`
+	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
+	   * :deco:`~pyTooling.Decorators.notimplemented`
 	"""
 	method.__mustOverride__ = True
 	return method
@@ -665,6 +666,96 @@ class ExtendedType(type):
 		return methods, methodsWithAttributes
 
 	@classmethod
+	def _getAnnotations(metacls, members: Dict[str, Any]) -> Dict[str, Any]:
+		"""
+		Return the type annotations declared in a class body.
+
+		.. important::
+
+		   Python 3.14 (:pep:`649`) no longer fills ``__annotations__`` while the class body is executed, but installs an
+		   ``__annotate_func__`` instead. The :mod:`annotationlib` module needed to evaluate that function doesn't exist on
+		   older Python versions, therefore both mechanisms are supported.
+
+		:param members: Dictionary of class members.
+		:returns:       Dictionary of annotated field names and their type annotations. Empty, if the class body declared
+		                no annotations.
+		"""
+		if "__annotations__" in members:
+			# WORKAROUND: LEGACY SUPPORT Python <= 3.13
+			#   Accessing annotations was changed in Python 3.14.
+			#   The necessary 'annotationlib' is not available for older Python versions.
+			return members["__annotations__"]
+		elif version_info >= (3, 14) and (annotate := members.get("__annotate_func__", None)) is not None:
+			from annotationlib import Format
+			return annotate(Format.VALUE)
+		else:
+			return {}
+
+	@classmethod
+	def _isClassVariable(metacls, typeAnnotation: Any) -> bool:
+		"""
+		Check if a type annotation declares a class variable.
+
+		:param typeAnnotation: The type annotation to check.
+		:returns:              ``True``, if the annotation is a :class:`~typing.ClassVar`.
+		"""
+		return isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar
+
+	@classmethod
+	def _isField(metacls, member: Any) -> bool:
+		"""
+		Check if a class member is a field, so a type annotation is expected for it.
+
+		Methods, nested classes, properties and any other descriptor carry their type information in their signature or
+		in their own declaration, therefore they aren't fields.
+
+		:param member: The class member to check.
+		:returns:      ``True``, if the member is a field.
+		"""
+		if isinstance(member, (FunctionType, MethodType, BuiltinFunctionType, classmethod, staticmethod, property, type)):
+			return False
+
+		# Any descriptor (e.g. a custom property implementation) declares its own type information.
+		return not (hasattr(member, "__get__") or hasattr(member, "__set__"))
+
+	@classmethod
+	def _checkForUnannotatedFields(metacls, className: str, members: Dict[str, Any], annotations: Dict[str, Any]) -> None:
+		"""
+		Report fields that were assigned in the class body without a type annotation.
+
+		Every field should carry type information: an object field is annotated with its type, a class variable with
+		``ClassVar[...]``. Without an annotation, :class:`ExtendedType` can't tell the two apart - an un-annotated
+		assignment never becomes a slot and silently stays a class attribute.
+
+		.. important::
+
+		   This is reported as a :class:`~pyTooling.Warning.Warning`, so it needs a
+		   :class:`~pyTooling.Warning.WarningCollector` somewhere up the call-hierarchy to be observed. Importing a module
+		   with un-annotated fields doesn't fail.
+
+		:param className:   The name of the class to construct.
+		:param members:     Dictionary of class members.
+		:param annotations: Dictionary of annotated field names and their type annotations.
+		"""
+		unannotatedFields = [
+			fieldName
+			for fieldName, member in members.items()
+			if not (fieldName.startswith("__") and fieldName.endswith("__"))
+				and fieldName not in annotations
+				and metacls._isField(member)
+		]
+
+		if len(unannotatedFields) > 0:
+			fieldNames = "', '".join(unannotatedFields)
+			WarningCollector.Raise(
+				UnannotatedFieldWarning(f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation."),
+				notes=(
+					f"Field(s) without a type annotation: '{fieldNames}'.",
+					f"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
+				)
+			)
+
+	@classmethod
 	def _computeSlots(
 		self,
 		className:   str,
@@ -691,6 +782,7 @@ class ExtendedType(type):
 		slottedFields = []
 		classFields =   {}
 		objectFields =  {}
+		annotations: Dict[str, Any] = self._getAnnotations(members)
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -703,7 +795,7 @@ class ExtendedType(type):
 					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
 					raise ex
 
-			# FIXME: should have a check for non-empty slots on secondary base-classes too
+			# Non-empty __slots__ on secondary base-classes are rejected by _aggregateMixinSlots below.
 
 			# Copy all field names from primary base-class' __slots__, which are later needed for error checking.
 			inheritedSlottedFields = {}
@@ -717,33 +809,25 @@ class ExtendedType(type):
 						inheritedSlottedFields[annotation] = base
 
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			if "__annotations__" in members:
-				# WORKAROUND: LEGACY SUPPORT Python <= 3.13
-				#   Accessing annotations was changed in Python 3.14.
-				#   The necessary 'annotationlib' is not available for older Python versions.
-				annotations: Dict[str, Any] = members.get("__annotations__", {})
-			elif version_info >= (3, 14) and (annotate := members.get("__annotate_func__", None)) is not None:
-				from annotationlib import Format
-				annotations: Dict[str, Any] = annotate(Format.VALUE)
-			else:
-				annotations = {}
-
 			for fieldName, typeAnnotation in annotations.items():
 				if fieldName in inheritedSlottedFields:
 					cls = inheritedSlottedFields[fieldName]
 					raise AttributeError(f"Slot '{fieldName}' declared in class '{className}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
 
-				# If annotated field is a ClassVar, and it has an initial value
-				# * copy field and initial value to classFields dictionary
-				# * remove field from members
-				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
-					classFields[fieldName] = members[fieldName]
-					del members[fieldName]
+				# A ClassVar is never a slot, with or without an initial value.
+				# * If it has an initial value, copy field and initial value to classFields dictionary and remove field from members.
+				# * Otherwise it's a forward declaration and derived classes assign the actual value.
+				isClassVariable = self._isClassVariable(typeAnnotation)
+				hasInitialValue = fieldName in members
+				if isClassVariable:
+					if hasInitialValue:
+						classFields[fieldName] = members[fieldName]
+						del members[fieldName]
 
 				# If an annotated field has an initial value
 				# * copy field and initial value to objectFields dictionary
 				# * remove field from members
-				elif fieldName in members:
+				elif hasInitialValue:
 					slottedFields.append(fieldName)
 					objectFields[fieldName] = members[fieldName]
 					del members[fieldName]
@@ -751,18 +835,32 @@ class ExtendedType(type):
 					slottedFields.append(fieldName)
 
 			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
+
+			# A member assigned in the class body without a type annotation stays a class attribute. If it carries the name
+			# of a slot, that class attribute shadows the slot's descriptor and the field becomes read-only on instances.
+			# Report it here instead of letting the first assignment fail with a bare AttributeError.
+			shadowedSlots = {**inheritedSlottedFields, **{fieldName: None for fieldName in mixinSlots}}
+			for fieldName in shadowedSlots.keys() & members.keys():
+				ex = DuplicateFieldInSlotsError(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.")
+				if (baseClass := shadowedSlots[fieldName]) is not None:
+					ex.add_note(f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.")
+				else:
+					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class.")
+				ex.add_note(f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
+				ex.add_note(f"Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
+				raise ex
 		else:
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			annotations: Dict[str, Any] = members.get("__annotations__", {})
 			for fieldName, typeAnnotation in annotations.items():
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary
 				# * remove field from members
-				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
+				if self._isClassVariable(typeAnnotation) and fieldName in members:
 					classFields[fieldName] = members[fieldName]
 					del members[fieldName]
 
-		# FIXME: search for fields without annotation
+		self._checkForUnannotatedFields(className, members, annotations)
+
 		if mixin:
 			mixinSlots.extend(slottedFields)
 			members["__slotted__"] = True

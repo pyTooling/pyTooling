@@ -37,7 +37,7 @@ A data model to write out GraphML XML files.
 """
 from enum    import Enum, auto
 from pathlib import Path
-from typing  import Any, List, Dict, Union, Optional as Nullable
+from typing  import Any, ClassVar, List, Dict, Union, Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -492,11 +492,11 @@ class Subgraph(Node, BaseGraph):
 
 @export
 class GraphMLDocument(Base):
-	xmlNS = {
+	xmlNS: ClassVar[Dict[Nullable[str], str]] = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"
 	}
-	xsi = {
+	xsi: ClassVar[Dict[str, str]] = {
 		"schemaLocation": "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
 	}
 

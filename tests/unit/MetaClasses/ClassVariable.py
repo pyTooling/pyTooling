@@ -77,6 +77,36 @@ class WithoutSlots(TestCase):
 
 
 class WithSlots(TestCase):
+	def test_NoInitValue_NoDunderInit_ClassCheck(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int]
+
+		self.assertNotIn("_data0", Base.__slots__, "Class field '_data0' shouldn't become a slot on class 'Base'.")
+
+		with self.assertRaises(AttributeError, msg="Class field '_data0' shouldn't be initialized on class 'Base'."):
+			_ = Base._data0
+
+	def test_NoInitValue_DerivedAssigned_ClassCheck(self) -> None:
+		"""A ``ClassVar`` without an initial value is a forward declaration: derived classes assign the
+		value. If the base turned it into a slot, the derived class' assignment would shadow the slot
+		descriptor and make the field read-only on instances."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: ClassVar[int]
+			_data1: ClassVar[int] = 1
+
+		class Derived(Base):
+			_data0: ClassVar[int] = 2
+			_data1: ClassVar[int] = 3
+
+		self.assertEqual(1, Base._data1)
+		self.assertEqual(2, Derived._data0)
+		self.assertEqual(3, Derived._data1)
+
+		derived = Derived()
+
+		self.assertEqual(2, derived._data0)
+		self.assertEqual(3, derived._data1)
+
 	def test_InitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1

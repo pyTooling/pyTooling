@@ -57,6 +57,35 @@ class ConfigurationException(ToolingException):
 
 
 @export
+class KeyNotFoundException(ConfigurationException):
+	"""
+	The requested key or index doesn't exist in the configuration node.
+
+	The key was neither found as a string, nor converted to an integer or float. A note lists the keys or the index
+	range offered by the node.
+	"""
+
+
+@export
+class UnsupportedValueTypeException(ConfigurationException):
+	"""
+	The configuration file parser returned a value of a type that isn't supported by :mod:`pyTooling.Configuration`.
+
+	Supported are scalars (:class:`str`, :class:`int`, :class:`float`) and the parser's dictionary and sequence types.
+	"""
+
+
+@export
+class InterpolationException(ConfigurationException):
+	"""A variable reference (``${...}``) in a configuration value is malformed or can't be resolved."""
+
+
+@export
+class PathExpressionException(ConfigurationException):
+	"""A path expression (``a:b:c``) doesn't describe a valid node or value in the configuration."""
+
+
+@export
 class Node(metaclass=ExtendedType, slots=True):
 	"""Abstract node in a configuration data structure."""
 
