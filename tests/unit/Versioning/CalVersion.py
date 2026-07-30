@@ -138,11 +138,42 @@ class Parsing(TestCase):
 		self.assertEqual(2024, version.Major)
 		self.assertEqual(4, version.Minor)
 
+	def test_String_MajorMinorMicro(self) -> None:
+		version = CalendarVersion.Parse("2024.10.15")
+
+		self.assertEqual(2024, version.Major)
+		self.assertEqual(10, version.Minor)
+		self.assertEqual(15, version.Micro)
+		self.assertEqual("2024.10.15", str(version))
+
+	def test_MicroWithPrefix(self) -> None:
+		version = CalendarVersion.Parse("v2024.10.15")
+
+		self.assertEqual("v", version.Prefix)
+		self.assertEqual("v2024.10.15", str(version))
+		self.assertEqual("v2024.10.15", repr(version))
+
 	def test_TooManyParts(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			CalendarVersion.Parse("2024.04.1")
+			CalendarVersion.Parse("2024.04.1.7")
 
 		self.assertIn("Syntax error", str(context.exception))
+
+	def test_ThirdPartOnTwoPartClass(self) -> None:
+		for cls in (YearMonthVersion, YearWeekVersion, YearReleaseVersion):
+			with self.subTest(versionClass=cls.__name__):
+				with self.assertRaises(ValueError) as context:
+					cls.Parse("2024.10.15")
+
+				self.assertIn(f"'{cls.__name__}' describes 2", str(context.exception))
+
+	def test_ThirdPartOnYearMonthDay(self) -> None:
+		version = YearMonthDayVersion.Parse("2024.10.15")
+
+		self.assertEqual(2024, version.Year)
+		self.assertEqual(10, version.Month)
+		self.assertEqual(15, version.Day)
+		self.assertEqual("2024.10.15", str(version))
 
 
 # class CompareVersions(TestCase):
