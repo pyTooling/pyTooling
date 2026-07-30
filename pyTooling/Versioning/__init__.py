@@ -1966,7 +1966,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._lowerBound = value
 
-	@readonly
+	@property
 	def UpperBound(self) -> V:
 		"""
 		Property to access the range's upper bound.
@@ -1984,7 +1984,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._upperBound = value
 
-	@readonly
+	@property
 	def BoundHandling(self) -> RangeBoundHandling:
 		"""
 		Property to access the range's bound handling strategy.

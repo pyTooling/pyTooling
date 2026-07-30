@@ -37,7 +37,7 @@
 import sys
 from functools import wraps
 from types     import FunctionType
-from typing    import Union, Type, TypeVar, Callable
+from typing    import Union, Type, TypeVar, Callable, NoReturn
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
@@ -156,13 +156,51 @@ def notimplemented(message: str) -> Callable:
 
 
 @export
-def readonly(func: Callable) -> property:
+class ReadOnlyProperty(property):
+	"""
+	A :class:`property` that rejects attaching a setter or a deleter.
+
+	A plain :class:`property` hands out ``<property>.setter`` and ``<property>.deleter``, so a property declared as
+	read-only could be made writable again further down the class body - and the declaration would silently become a
+	lie. Both methods therefore raise an :exc:`AttributeError` instead.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Decorators.readonly`
+	     The decorator creating a read-only property.
+	"""
+
+	def setter(self, fset: Callable) -> NoReturn:
+		"""
+		Reject attaching a setter to a read-only property.
+
+		:param fset:            The setter-method that was to be attached.
+		:raises AttributeError: Always, because a read-only property can't have a setter.
+		"""
+		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a setter.")
+		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be writable.")
+		raise ex
+
+	def deleter(self, fdel: Callable) -> NoReturn:
+		"""
+		Reject attaching a deleter to a read-only property.
+
+		:param fdel:            The deleter-method that was to be attached.
+		:raises AttributeError: Always, because a read-only property can't have a deleter.
+		"""
+		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a deleter.")
+		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be deletable.")
+		raise ex
+
+
+@export
+def readonly(func: Callable) -> ReadOnlyProperty:
 	"""
 	Marks a property as *read-only*.
 
 	The doc-string will be taken from the getter-function.
 
-	It will remove ``<property>.setter`` and ``<property>.deleter`` from the property descriptor.
+	Using ``<property>.setter`` or ``<property>.deleter`` on the result raises an :exc:`AttributeError`.
 
 	:param func: Function to convert to a read-only property.
 	:returns:    A property object with just a getter.
@@ -171,10 +209,10 @@ def readonly(func: Callable) -> property:
 
 	   :class:`property`
 	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
+	   :class:`~pyTooling.Decorators.ReadOnlyProperty`
+	     The property type returned by this decorator.
 	"""
-	prop = property(fget=func, fset=None, fdel=None, doc=func.__doc__)
-
-	return prop
+	return ReadOnlyProperty(fget=func, fset=None, fdel=None, doc=func.__doc__)
 
 
 @export
