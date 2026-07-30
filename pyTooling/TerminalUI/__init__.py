@@ -70,7 +70,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	try:
 		from colorama import Fore as Foreground
-		Foreground = {
+		Foreground: ClassVar[Dict[str, str]] = {
 			"RED":          Foreground.LIGHTRED_EX,
 			"DARK_RED":		  Foreground.RED,
 			"GREEN":        Foreground.LIGHTGREEN_EX,
@@ -92,7 +92,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			"WARNING":      Foreground.LIGHTYELLOW_EX
 		}                 #: Terminal colors
 	except ImportError:  # pragma: no cover
-		Foreground = {
+		Foreground: ClassVar[Dict[str, str]] = {
 			"RED":         "",
 			"DARK_RED":    "",
 			"GREEN":       "",
@@ -643,7 +643,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	Represents a single message line with a severity and indentation level.
 	"""
 
-	_LOG_MESSAGE_FORMAT__ = {
+	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
 		Severity.Exception:     "EXCEPTION: {message}",
 		Severity.ExceptionNote: "           > {message}",
 		Severity.Fatal:         "FATAL: {message}",
@@ -839,7 +839,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	"""
 	A base-class for implementation of terminal applications emitting line-by-line messages.
 	"""
-	_LOG_MESSAGE_FORMAT__ = {
+	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
 		Severity.Exception:            "{RED}[EXCEPTION] {message}{NOCOLOR}",
 		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",
 		Severity.Fatal:           "{DARK_RED}[FATAL]     {message}{NOCOLOR}",

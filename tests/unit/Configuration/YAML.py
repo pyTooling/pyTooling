@@ -32,6 +32,8 @@
 from pathlib  import Path
 from unittest import TestCase
 
+from pyTooling.Configuration      import InterpolationException, KeyNotFoundException, PathExpressionException
+from pyTooling.Configuration      import UnsupportedValueTypeException
 from pyTooling.Configuration.YAML import Configuration
 
 
@@ -107,3 +109,73 @@ class ReadingValues(TestCase):
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["Defaults"]["InstallDir"])
 		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["Defaults"]["BinaryDir"])
+
+
+class Errors(TestCase):
+	_configFile = Path("tests/unit/Configuration/errors.yml")
+
+	def test_UnknownKeyInDictionary(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(KeyNotFoundException) as context:
+			_ = config["dictionary"]["key_3"]
+
+		self.assertIn("Key 'key_3' not found in node 'dictionary'.", str(context.exception))
+		self.assertIn("Available keys: 'key_1', 'key_2'.", context.exception.__notes__)
+
+	def test_IndexOutOfRangeInSequence(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(KeyNotFoundException) as context:
+			_ = config["sequence"][2]
+
+		self.assertIn("Key '2' not found in node 'sequence'.", str(context.exception))
+		self.assertIn("Node 'sequence' is a sequence with indices 0..1.", context.exception.__notes__)
+
+	def test_UnknownKeyInEmptyDictionary(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(KeyNotFoundException) as context:
+			_ = config["emptyDictionary"]["key_1"]
+
+		self.assertIn("Node 'emptyDictionary' is an empty dictionary.", context.exception.__notes__)
+
+	def test_IndexInEmptySequence(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(KeyNotFoundException) as context:
+			_ = config["emptySequence"][0]
+
+		self.assertIn("Node 'emptySequence' is an empty sequence.", context.exception.__notes__)
+
+	def test_UnsupportedValueType(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(UnsupportedValueTypeException) as context:
+			_ = config["nullValue"]
+
+		self.assertIn("Unsupported type 'NoneType' for key 'nullValue'", str(context.exception))
+
+	def test_UnclosedVariableReference(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(InterpolationException) as context:
+			_ = config["unclosedVariable"]
+
+		self.assertIn("Unclosed variable reference in value '${unclosed'.", str(context.exception))
+
+	def test_DanglingDollarSign(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(InterpolationException) as context:
+			_ = config["danglingDollar"]
+
+		self.assertIn("Dangling '$' at the end of value 'prefix$'.", str(context.exception))
+
+	def test_PathExpressionResolvingToDictionary(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(PathExpressionException) as context:
+			_ = config["dictionaryReference"]
+
+		self.assertIn("resolves to a dictionary, not to a value", str(context.exception))

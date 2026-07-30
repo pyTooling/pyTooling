@@ -49,7 +49,7 @@ Mixin
 Abstract Method
 ***************
 
-The :func:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
+The :deco:`~pyTooling.MetaClasses.abstractmethod` decorator marks a method as *abstract*. The original method gets
 replaced by a method raising a :exc:`NotImplementedError`. When a class containing *abstract* methods is
 instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 
@@ -76,7 +76,7 @@ instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
 MustOverwrite Method
 ********************
 
-The :func:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
+The :deco:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
 *must override* methods is instantiated, an :exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
 
 In contrast to :ref:`@abstractmethod <META/Abstract>`, the method can still be called from a derived class

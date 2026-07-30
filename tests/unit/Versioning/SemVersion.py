@@ -31,7 +31,7 @@
 """Unit tests for package :mod:`pyTooling.Versioning`."""
 from unittest             import TestCase
 
-from pyTooling.Versioning import Flags, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
+from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -379,6 +379,28 @@ class Parsing(TestCase):
 		self.assertEqual(2, version.Minor)
 		self.assertEqual(3, version.Micro)
 		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+
+	def test_revString(self) -> None:
+		version = SemanticVersion.Parse("rev1.2.3")
+
+		self.assertEqual("rev", version.Prefix)
+		self.assertEqual(1, version.Major)
+
+	def test_UndocumentedPrefix(self) -> None:
+		"""Only the documented prefixes are accepted - 'deb1.2.3' used to parse with prefix 'deb'."""
+		for versionString in ("abc1.2.3", "deb1.2.3", "x1.2.3"):
+			with self.subTest(versionString=versionString):
+				with self.assertRaises(ValueError) as context:
+					SemanticVersion.Parse(versionString)
+
+				self.assertIn("Syntax error", str(context.exception))
+
+	def test_NoPrefix(self) -> None:
+		"""Without a prefix, Parts.Prefix must not be set - it used to be set with an empty string."""
+		version = SemanticVersion.Parse("1.2.3")
+
+		self.assertEqual("", version.Prefix)
+		self.assertNotIn(Parts.Prefix, version.Parts)
 
 	def test_MajorMinorDev(self) -> None:
 		version = SemanticVersion.Parse("0.6-dev")
@@ -809,7 +831,8 @@ class FormattingUsingRepr(TestCase):
 		self.assertEqual("1.0.0", repr(version))
 
 	def test_MajorPrefix(self) -> None:
-		version = SemanticVersion(1)
+		"""A prefix doesn't contribute to the version's value, so repr - the normalized form - omits it."""
+		version = SemanticVersion(1, prefix="v")
 
 		self.assertEqual("1.0.0", repr(version))
 

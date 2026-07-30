@@ -38,7 +38,7 @@ This package provides a representation for a Uniform Resource Locator (URL).
 
 from enum     import IntFlag
 from re       import compile as re_compile
-from typing   import Dict, Optional as Nullable, Mapping
+from typing   import ClassVar, Dict, Optional as Nullable, Mapping
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -157,8 +157,8 @@ class Element(ElementMixIn):
 class Path(PathMixIn):
 	"""Represents a path in a URL."""
 
-	ELEMENT_DELIMITER = "/"   #: Delimiter symbol in URLs between path elements.
-	ROOT_DELIMITER =    "/"   #: Delimiter symbol in URLs between root element and first path element.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"   #: Delimiter symbol in URLs between path elements.
+	ROOT_DELIMITER:    ClassVar[str] = "/"   #: Delimiter symbol in URLs between root element and first path element.
 
 	@classmethod
 	def Parse(cls, path: str, root: Nullable[Host] = None) -> "Path":

@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """A generic path to derive domain specific path libraries."""
-from typing import List, Optional as Nullable, Type
+from typing import ClassVar, List, Optional as Nullable, Type
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
@@ -39,7 +39,7 @@ from pyTooling.MetaClasses import ExtendedType
 class Base(metaclass=ExtendedType, mixin=True):
 	"""Base-mixin-class for all :mod:`pyTooling.GenericPath` path elements."""
 
-	DELIMITER = "/"            #: Path element delimiter sign.
+	DELIMITER: ClassVar[str] = "/"            #: Path element delimiter sign.
 
 	_parent: Nullable["Base"]  #: Reference to the parent object.
 
@@ -88,8 +88,8 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER = "/"          #: Path element delimiter sign.
-	ROOT_DELIMITER =    "/"          #: Root element delimiter sign.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"          #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"          #: Root element delimiter sign.
 
 	_isAbsolute: bool                #: True, if the path is absolute.
 	_elements:   List[ElementMixIn]  #: List of path elements.
