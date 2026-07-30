@@ -102,6 +102,22 @@ class DuplicateFieldInSlotsError(ExtendedTypeError):
 
 
 @export
+class ShadowedSlotWarning(Warning):
+	"""
+	A class member shadows a slot inherited from a base-class or contributed by a mixin-class.
+
+	An assignment without a type annotation stays a class attribute, which hides the slot's descriptor. Reading the field
+	still works, but assigning it on an instance raises an :exc:`AttributeError`.
+
+	.. important::
+
+	   This is a warning rather than an exception, because the pattern is harmless as long as the field is never assigned
+	   per instance - a base-class declaring the field and derived classes supplying a constant is a common idiom.
+	   Annotating it as :class:`~typing.ClassVar` expresses that intent and silences the warning.
+	"""
+
+
+@export
 class UnannotatedFieldWarning(Warning):
 	"""
 	A class declares a field that was assigned in the class body without a type annotation.
@@ -839,16 +855,30 @@ class ExtendedType(type):
 			# A member assigned in the class body without a type annotation stays a class attribute. If it carries the name
 			# of a slot, that class attribute shadows the slot's descriptor and the field becomes read-only on instances.
 			# Report it here instead of letting the first assignment fail with a bare AttributeError.
-			shadowedSlots = {**inheritedSlottedFields, **{fieldName: None for fieldName in mixinSlots}}
-			for fieldName in shadowedSlots.keys() & members.keys():
+			# A slot contributed by a mixin-class is materialized in this class' own __slots__, so Python itself rejects the
+			# class body with "ValueError: '<name>' in __slots__ conflicts with class variable". Report it first, with a
+			# message that names the cause.
+			for fieldName in set(mixinSlots) & members.keys():
 				ex = DuplicateFieldInSlotsError(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.")
-				if (baseClass := shadowedSlots[fieldName]) is not None:
-					ex.add_note(f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.")
-				else:
-					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class.")
-				ex.add_note(f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
+				ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class and materialized in this class' '__slots__'.")
+				ex.add_note(f"Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
 				ex.add_note(f"Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
 				raise ex
+
+			# A slot inherited from a base-class isn't in this class' __slots__, so Python accepts the class body. The class
+			# attribute merely hides the inherited descriptor: reading works, assigning on an instance doesn't. That's
+			# harmless as long as the field is never assigned per instance, so it's reported as a warning.
+			for fieldName in inheritedSlottedFields.keys() & members.keys():
+				baseClass = inheritedSlottedFields[fieldName]
+				WarningCollector.Raise(
+					ShadowedSlotWarning(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'."),
+					notes=(
+						f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.",
+						f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.",
+						f"Reading the field works, but assigning it on an instance raises an AttributeError.",
+						f"Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.",
+					)
+				)
 		else:
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
 			for fieldName, typeAnnotation in annotations.items():
