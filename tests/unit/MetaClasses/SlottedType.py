@@ -37,7 +37,7 @@ from unittest              import TestCase
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, ShadowedSlotWarning, UnannotatedFieldWarning
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
@@ -1133,37 +1133,20 @@ class SlotShadowedByClassMember(TestCase):
 	"""
 
 	def test_ShadowedInheritedSlot(self) -> None:
-		"""
-		An inherited slot isn't in the derived class' ``__slots__``, so Python accepts the class body and only an
-		assignment on an instance fails. That's harmless if the field is never assigned, so it's a warning.
-		"""
-		warnings = []
-		with WarningCollector(handler=lambda warning: warnings.append(warning) or False):
-			class Base(metaclass=ExtendedType, slots=True):
-				_data_0: int
+		class Base(metaclass=ExtendedType, slots=True):
+			_data_0: int
 
-				def __init__(self) -> None:
-					self._data_0 = 1
+			def __init__(self) -> None:
+				self._data_0 = 1
 
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
 			class Derived(Base):
 				_data_0 = 5
 
-		shadowed = [w for w in warnings if isinstance(w, ShadowedSlotWarning)]
-
-		self.assertEqual(1, len(shadowed))
-		self.assertIn("_data_0", str(shadowed[0]))
-		self.assertIn("Slot '_data_0' is declared in base-class", shadowed[0].__notes__[0])
-
-		# Reading works, assigning doesn't.
-		self.assertEqual(5, Derived._data_0)
-		with self.assertRaises(AttributeError):
-			Derived().__setattr__("_data_0", 6)
+		self.assertIn("_data_0", str(context.exception))
+		self.assertIn("Slot '_data_0' is declared in base-class", context.exception.__notes__[0])
 
 	def test_ShadowedMixinSlot(self) -> None:
-		"""
-		A mixin's slot is materialized in this class' own ``__slots__``, which Python rejects outright, so this stays an
-		exception.
-		"""
 		class Mixin(metaclass=ExtendedType, mixin=True):
 			_data_M1: int
 
@@ -1175,6 +1158,7 @@ class SlotShadowedByClassMember(TestCase):
 				_data_M1 = 5
 
 		self.assertIn("Slot '_data_M1' is contributed by a mixin-class", context.exception.__notes__[0])
+		self.assertIn("Python doesn't allow a name to be listed in '__slots__'", context.exception.__notes__[1])
 
 	def test_ClassVariableIsNotShadowing(self) -> None:
 		"""Annotating the assignment as a ClassVar is the documented way out."""
