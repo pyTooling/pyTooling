@@ -751,7 +751,7 @@ class ExtendedType(type):
 				UnannotatedFieldWarning(f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation."),
 				notes=(
 					f"Field(s) without a type annotation: '{fieldNames}'.",
-					f"Annotate a class variable as 'ClassVar[...]' and an object field with its type.",
+					f"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
 				)
 			)
 

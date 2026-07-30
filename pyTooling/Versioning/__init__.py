@@ -1316,7 +1316,10 @@ class SemanticVersion(Version):
 		"""
 		Return a normalized string representation of this version number.
 
-		A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form.
+		.. note::
+
+		   A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form. Use
+		   :meth:`__str__` to render a version number including its prefix.
 
 		:returns: Raw version number representation without a prefix.
 		"""
@@ -1704,7 +1707,10 @@ class CalendarVersion(Version):
 		"""
 		Return a normalized string representation of this version number.
 
-		A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form.
+		.. note::
+
+		   A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form. Use
+		   :meth:`__str__` to render a version number including its prefix.
 
 		:returns: Raw version number representation without a prefix.
 		"""
