@@ -31,12 +31,13 @@
 """
 Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
-from typing                import Optional as Nullable
+from typing                import ClassVar, Optional as Nullable
 from unittest              import TestCase
 
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError
 from pyTooling.Common      import getsizeof
 from pyTooling.Platform    import CurrentPlatform
 
@@ -1061,6 +1062,125 @@ class Inheritance(TestCase):
 			# self.assertEqual(16, inst._data_R1)
 			# self.assertEqual(17, inst._data_2)
 			# self.assertEqual(18, inst._data_3)
+
+
+class NonEmptySlotsOnSecondaryBaseClass(TestCase):
+	"""
+	Only the primary inheritance line may use non-empty ``__slots__``. Secondary base-classes must be mixin-classes,
+	otherwise Python reports an instance lay-out conflict.
+	"""
+
+	def test_PlainClassWithNonEmptySlots(self) -> None:
+		"""A secondary base-class not built by ExtendedType is checked as well."""
+		class Plain:
+			__slots__ = ("_data_R1", )
+
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		with self.assertRaises(BaseClassWithNonEmptySlotsError) as context:
+			class Final(Primary, Plain, metaclass=ExtendedType, slots=True):
+				_data_2: int
+
+		self.assertIn("Plain", str(context.exception))
+
+	def test_IndirectlyInheritedNonEmptySlots(self) -> None:
+		"""A mixin-class may not drag in a non-mixin base-class using non-empty slots."""
+		class Plain:
+			__slots__ = ("_data_R1", )
+
+		class Mixin(Plain, metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		with self.assertRaises(BaseClassWithNonEmptySlotsError) as context:
+			class Final(Primary, Mixin, metaclass=ExtendedType, slots=True):
+				_data_2: int
+
+		self.assertIn("Plain", str(context.exception))
+
+	def test_ProperMixinIsAccepted(self) -> None:
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Final(Primary, Mixin, metaclass=ExtendedType, slots=True):
+			_data_2: int
+
+			def __init__(self) -> None:
+				self._data_L1 = 1
+				self._data_M1 = 2
+				self._data_2 = 3
+
+		inst = Final()
+
+		self.assertEqual(1, inst._data_L1)
+		self.assertEqual(2, inst._data_M1)
+		self.assertEqual(3, inst._data_2)
+
+
+class SlotShadowedByClassMember(TestCase):
+	"""
+	A class member assigned without a type annotation stays a class attribute. If it carries the name of a slot, it
+	shadows the slot's descriptor and the field becomes read-only on instances - which used to surface much later as a
+	bare ``AttributeError: ... is read-only`` on the first assignment.
+	"""
+
+	def test_ShadowedInheritedSlot(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			_data_0: int
+
+			def __init__(self) -> None:
+				self._data_0 = 1
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Derived(Base):
+				_data_0 = 5
+
+		self.assertIn("_data_0", str(context.exception))
+		self.assertIn("Slot '_data_0' is declared in base-class", context.exception.__notes__[0])
+
+	def test_ShadowedMixinSlot(self) -> None:
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin, metaclass=ExtendedType, slots=True):
+				_data_M1 = 5
+
+		self.assertIn("Slot '_data_M1' is contributed by a mixin-class.", context.exception.__notes__[0])
+
+	def test_ClassVariableIsNotShadowing(self) -> None:
+		"""Annotating the assignment as a ClassVar is the documented way out."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data_0: ClassVar[int]
+
+		class Derived(Base):
+			_data_0: ClassVar[int] = 5
+
+		self.assertEqual(5, Derived._data_0)
+		self.assertEqual(5, Derived()._data_0)
+
+	def test_UnrelatedClassConstantIsAccepted(self) -> None:
+		"""An un-annotated assignment that doesn't collide with a slot stays a plain class attribute."""
+		class Base(metaclass=ExtendedType, slots=True):
+			LIMIT = 100
+			_data_0: int
+
+			def __init__(self) -> None:
+				self._data_0 = self.LIMIT
+
+		inst = Base()
+
+		self.assertEqual(100, Base.LIMIT)
+		self.assertEqual(100, inst._data_0)
 
 
 class Hierarchy(TestCase):
