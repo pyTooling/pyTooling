@@ -965,7 +965,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:param nodeMarker:     A string printed before every non-last tree node. Default: ``"├─"``.
 		:param lastNodeMarker: A string printed before every last tree node. Default: ``"└─"``.
 		:param bypassMarker:   A string printed when there are further nodes in the parent level. Default: ``"│ "``.
-		:return:               A rendered tree as multiline string.
+		:returns:               A rendered tree as multiline string.
 		"""
 		emptyMarker = " " * len(bypassMarker)
 

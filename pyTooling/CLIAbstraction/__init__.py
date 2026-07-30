@@ -585,17 +585,29 @@ class OutputFilteredExecutable(Executable):
 	@readonly
 	def HasWarnings(self) -> bool:
 		# TODO: update doc-string
-		"""True if warnings were found while processing the output stream."""
+		"""
+		Check if warnings were found while processing the output stream.
+
+		:returns: ``True``, if at least one warning was found.
+		"""
 		return self._hasWarnings
 
 	@readonly
 	def HasErrors(self) -> bool:
 		# TODO: update doc-string
-		"""True if errors were found while processing the output stream."""
+		"""
+		Check if errors were found while processing the output stream.
+
+		:returns: ``True``, if at least one error was found.
+		"""
 		return self._hasErrors
 
 	@readonly
 	def HasFatals(self) -> bool:
 		# TODO: update doc-string
-		"""True if fatals were found while processing the output stream."""
+		"""
+		Check if fatal errors were found while processing the output stream.
+
+		:returns: ``True``, if at least one fatal error was found.
+		"""
 		return self._hasErrors

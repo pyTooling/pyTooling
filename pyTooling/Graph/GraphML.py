@@ -118,6 +118,11 @@ class Base(metaclass=ExtendedType, slots=True):
 	"""
 	@readonly
 	def HasClosingTag(self) -> bool:
+		"""
+		Check if this XML element is written with a separate closing tag.
+
+		:returns: ``True``, if the element needs a closing tag.
+		"""
 		return True
 
 	def Tag(self, indent: int = 0) -> str:
@@ -143,6 +148,11 @@ class BaseWithID(Base):
 
 	@readonly
 	def ID(self) -> str:
+		"""
+		Read-only property to access the element's unique ID (:attr:`_id`).
+
+		:returns: Unique ID of the element.
+		"""
 		return self._id
 
 
@@ -157,6 +167,11 @@ class BaseWithData(BaseWithID):
 
 	@readonly
 	def Data(self) -> List['Data']:
+		"""
+		Read-only property to access the data elements attached to this element (:attr:`_data`).
+
+		:returns: List of data elements.
+		"""
 		return self._data
 
 	def AddData(self, data: Data) -> Data:
@@ -179,18 +194,40 @@ class Key(BaseWithID):
 
 	@readonly
 	def Context(self) -> AttributeContext:
+		"""
+		Read-only property to access the context this key applies to (:attr:`_context`).
+
+		:returns: The attribute's context (graph, node, edge, ...).
+		"""
 		return self._context
 
 	@readonly
 	def AttributeName(self) -> str:
+		"""
+		Read-only property to access the name of the described attribute (:attr:`_attributeName`).
+
+		:returns: Name of the attribute.
+		"""
 		return self._attributeName
 
 	@readonly
 	def AttributeType(self) -> AttributeTypes:
+		"""
+		Read-only property to access the type of the described attribute (:attr:`_attributeType`).
+
+		:returns: Type of the attribute.
+		"""
 		return self._attributeType
 
 	@readonly
 	def HasClosingTag(self) -> bool:
+		"""
+		Check if this XML element is written with a separate closing tag.
+
+		A key is always written as a self-closing tag.
+
+		:returns: ``False``, because a key never has a closing tag.
+		"""
 		return False
 
 	def Tag(self, indent: int = 2) -> str:
@@ -213,14 +250,29 @@ class Data(Base):
 
 	@readonly
 	def Key(self) -> Key:
+		"""
+		Read-only property to access the key describing this data element (:attr:`_key`).
+
+		:returns: The key this data element refers to.
+		"""
 		return self._key
 
 	@readonly
 	def Data(self) -> Any:
+		"""
+		Read-only property to access the data element's value (:attr:`_data`).
+
+		:returns: Value of the data element.
+		"""
 		return self._data
 
 	@readonly
 	def HasClosingTag(self) -> bool:
+		"""
+		Check if this XML element is written with a separate closing tag.
+
+		:returns: ``False``, because a data element is written inline.
+		"""
 		return False
 
 	def Tag(self, indent: int = 2) -> str:
@@ -242,6 +294,11 @@ class Node(BaseWithData):
 
 	@readonly
 	def HasClosingTag(self) -> bool:
+		"""
+		Check if this XML element is written with a separate closing tag.
+
+		:returns: ``True``, if the node carries data elements, otherwise ``False``.
+		"""
 		return len(self._data) > 0
 
 	def Tag(self, indent: int = 2) -> str:
@@ -278,14 +335,29 @@ class Edge(BaseWithData):
 
 	@readonly
 	def Source(self) -> Node:
+		"""
+		Read-only property to access the edge's source node (:attr:`_source`).
+
+		:returns: Source node of the edge.
+		"""
 		return self._source
 
 	@readonly
 	def Target(self) -> Node:
+		"""
+		Read-only property to access the edge's target node (:attr:`_target`).
+
+		:returns: Target node of the edge.
+		"""
 		return self._target
 
 	@readonly
 	def HasClosingTag(self) -> bool:
+		"""
+		Check if this XML element is written with a separate closing tag.
+
+		:returns: ``True``, if the edge carries data elements, otherwise ``False``.
+		"""
 		return len(self._data) > 0
 
 	def Tag(self, indent: int = 2) -> str:
@@ -332,14 +404,29 @@ class BaseGraph(BaseWithData, mixin=True):
 
 	@readonly
 	def Subgraphs(self) -> Dict[str, 'Subgraph']:
+		"""
+		Read-only property to access the graph's subgraphs (:attr:`_subgraphs`).
+
+		:returns: Dictionary of subgraph IDs and subgraphs.
+		"""
 		return self._subgraphs
 
 	@readonly
 	def Nodes(self) -> Dict[str, Node]:
+		"""
+		Read-only property to access the graph's nodes (:attr:`_nodes`).
+
+		:returns: Dictionary of node IDs and nodes.
+		"""
 		return self._nodes
 
 	@readonly
 	def Edges(self) -> Dict[str, Edge]:
+		"""
+		Read-only property to access the graph's edges (:attr:`_edges`).
+
+		:returns: Dictionary of edge IDs and edges.
+		"""
 		return self._edges
 
 	def AddSubgraph(self, subgraph: 'Subgraph') -> 'Subgraph':
@@ -435,14 +522,29 @@ class Subgraph(Node, BaseGraph):
 
 	@readonly
 	def RootGraph(self) -> Graph:
+		"""
+		Read-only property to access the graph this subgraph is embedded in (:attr:`_root`).
+
+		:returns: The root graph.
+		"""
 		return self._root
 
 	@readonly
 	def SubgraphID(self) -> str:
+		"""
+		Read-only property to access the subgraph's ID (:attr:`_subgraphID`).
+
+		:returns: ID of the subgraph.
+		"""
 		return self._subgraphID
 
 	@readonly
 	def HasClosingTag(self) -> bool:
+		"""
+		Check if this XML element is written with a separate closing tag.
+
+		:returns: ``True``, because a subgraph always has a closing tag.
+		"""
 		return True
 
 	def AddNode(self, node: Node) -> Node:
@@ -511,10 +613,20 @@ class GraphMLDocument(Base):
 
 	@readonly
 	def Graph(self) -> BaseGraph:
+		"""
+		Read-only property to access the document's graph (:attr:`_graph`).
+
+		:returns: The graph described by this document.
+		"""
 		return self._graph
 
 	@readonly
 	def Keys(self) -> Dict[str, Key]:
+		"""
+		Read-only property to access the attribute keys declared in this document (:attr:`_keys`).
+
+		:returns: Dictionary of key IDs and keys.
+		"""
 		return self._keys
 
 	def AddKey(self, key: Key) -> Key:

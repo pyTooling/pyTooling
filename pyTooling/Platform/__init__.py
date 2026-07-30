@@ -340,6 +340,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 	@readonly
 	def HostOperatingSystem(self) -> Platforms:
+		"""
+		Read-only property to access the host's operating system.
+
+		:returns: The operating system portion of the platform flags.
+		"""
 		return self._platform & Platforms.OperatingSystem
 
 	@readonly

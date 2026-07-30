@@ -545,7 +545,7 @@ class ExtendedType(type):
 			"""
 
 			:param predicate:
-			:return:
+			:returns:
 			:raises ValueError:
 			:raises ValueError:
 			"""
@@ -601,7 +601,7 @@ class ExtendedType(type):
 		:param newClass:    Newly created class instance.
 		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:     Members of the new class.
-		:return:
+		:returns:
 		"""
 		from pyTooling.Attributes import Attribute
 

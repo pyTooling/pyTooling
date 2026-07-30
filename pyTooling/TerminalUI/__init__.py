@@ -260,7 +260,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Call `ioctl` with ``TIOCGWINSZ`` (GetWindowsSize) for the given file descriptor.
 
 		:param fd: File descriptor
-		:return:
+		:returns:
 		"""
 		try:
 			from array import array
@@ -759,7 +759,11 @@ class ILineTerminal:
 
 	@readonly
 	def Terminal(self) -> TerminalBaseApplication:
-		"""Return the local terminal instance."""
+		"""
+		Read-only property to access the local terminal instance (:attr:`_terminal`).
+
+		:returns: The terminal instance, or ``None`` if no terminal is attached.
+		"""
 		return self._terminal
 
 	def WriteLine(self, line: Line, condition: bool = True) -> bool:
@@ -1059,27 +1063,47 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 	@readonly
 	def Verbose(self) -> bool:
-		"""Returns true, if verbose messages are enabled."""
+		"""
+		Check if verbose messages are enabled.
+
+		:returns: ``True``, if verbose messages are written.
+		"""
 		return self._verbose
 
 	@readonly
 	def Debug(self) -> bool:
-		"""Returns true, if debug messages are enabled."""
+		"""
+		Check if debug messages are enabled.
+
+		:returns: ``True``, if debug messages are written.
+		"""
 		return self._debug
 
 	@readonly
 	def Silent(self) -> bool:
-		"""Returns true, if silent mode is enabled."""
+		"""
+		Check if silent mode is enabled.
+
+		:returns: ``True``, if silent mode is enabled.
+		"""
 		return self._silent
 
 	@readonly
 	def Quiet(self) -> bool:
-		"""Returns true, if quiet mode is enabled."""
+		"""
+		Check if quiet mode is enabled.
+
+		:returns: ``True``, if quiet mode is enabled.
+		"""
 		return self._quiet
 
 	@property
 	def LogLevel(self) -> Severity:
-		"""Return the current minimal severity level for writing."""
+		"""
+		Read-only property to access the minimal severity level a message needs to be written (:attr:`_writeLevel`).
+
+		:returns: The current minimal severity level.
+		"""
 		return self._writeLevel
 
 	@LogLevel.setter
@@ -1089,6 +1113,11 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 	@property
 	def BaseIndent(self) -> int:
+		"""
+		Read-only property to access the base indentation level of written messages (:attr:`_baseIndent`).
+
+		:returns: Base indentation level.
+		"""
 		return self._baseIndent
 
 	@BaseIndent.setter
@@ -1100,7 +1129,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Read-only property to access the number of counted warnings.
 
-		:return: Number of warnings.
+		:returns: Number of warnings.
 		"""
 		return self._warningCount
 
@@ -1109,7 +1138,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Read-only property to access the number of counted critical warnings.
 
-		:return: Number of critical warnings.
+		:returns: Number of critical warnings.
 		"""
 		return self._criticalWarningCount
 
@@ -1118,7 +1147,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Read-only property to access the number of counted errors.
 
-		:return: Number of errors.
+		:returns: Number of errors.
 		"""
 		return self._errorCount
 

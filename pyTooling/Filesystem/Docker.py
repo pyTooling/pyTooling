@@ -61,26 +61,56 @@ class Layer(metaclass=ExtendedType):
 
 	@readonly
 	def Parent(self) -> Nullable["LayerCake"]:
+		"""
+		Read-only property to access the layer cake this layer belongs to (:attr:`_parent`).
+
+		:returns: The layer cake this layer belongs to, or ``None`` if the layer isn't part of one.
+		"""
 		return self._parent
 
 	@readonly
 	def PreviousLayer(self) -> Nullable["Layer"]:
+		"""
+		Read-only property to access the layer below this one (:attr:`_previousLayer`).
+
+		:returns: The previous layer, or ``None`` if this is the bottom layer.
+		"""
 		return self._previousLayer
 
 	@readonly
 	def NextLayer(self) -> Nullable["Layer"]:
+		"""
+		Read-only property to access the layer above this one (:attr:`_nextLayer`).
+
+		:returns: The next layer, or ``None`` if this is the top layer.
+		"""
 		return self._nextLayer
 
 	@readonly
 	def Files(self) -> List[Element[Directory]]:
+		"""
+		Read-only property to access the files contributed by this layer (:attr:`_files`).
+
+		:returns: List of files in this layer.
+		"""
 		return self._files
 
 	@readonly
 	def FileCount(self) -> int:
+		"""
+		Read-only property to access the number of files in this layer.
+
+		:returns: Number of files.
+		"""
 		return len(self._files)
 
 	@readonly
 	def Size(self) -> int:
+		"""
+		Read-only property to access the accumulated size of all files in this layer (:attr:`_size`).
+
+		:returns: Size of the layer in bytes.
+		"""
 		return self._size
 
 	def AddFile(self, element: Element) -> Set[Filename]:
@@ -130,26 +160,56 @@ class LayerCake(metaclass=ExtendedType):
 
 	@readonly
 	def Root(self) -> Root:
+		"""
+		Read-only property to access the root directory of the merged layers (:attr:`_root`).
+
+		:returns: Root directory of the layer cake.
+		"""
 		return self._root
 
 	@readonly
 	def Layers(self) -> List[Layer]:
+		"""
+		Read-only property to access all layers, bottom-most first (:attr:`_layers`).
+
+		:returns: List of layers.
+		"""
 		return self._layers
 
 	@readonly
 	def LayerCount(self) -> int:
+		"""
+		Read-only property to access the number of layers.
+
+		:returns: Number of layers.
+		"""
 		return len(self._layers)
 
 	@readonly
 	def TotalFileCount(self) -> int:
+		"""
+		Read-only property to access the number of files across all layers.
+
+		:returns: Sum of all layers' file counts.
+		"""
 		return sum(layer.FileCount for layer in self._layers)
 
 	@readonly
 	def EmptyDirectories(self) -> List[Directory]:
+		"""
+		Read-only property to access the directories that contain no files (:attr:`_emptyDirectories`).
+
+		:returns: List of empty directories.
+		"""
 		return self._emptyDirectories
 
 	@readonly
 	def EmptyDirectoryCount(self) -> int:
+		"""
+		Read-only property to access the number of empty directories.
+
+		:returns: Number of empty directories.
+		"""
 		return len(self._emptyDirectories)
 
 	@readonly

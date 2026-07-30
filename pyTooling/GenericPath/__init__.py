@@ -138,7 +138,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		:param root:
 		:param pathCls:    Type used to create the path.
 		:param elementCls: Type used to create the path elements.
-		:return:
+		:returns:
 		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True

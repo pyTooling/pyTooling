@@ -444,6 +444,11 @@ class SupervisedThreadException(ExceptionBase):
 
 	@readonly
 	def ThreadName(self) -> str:
+		"""
+		Read-only property to access the name of the thread that raised the exception (:attr:`_threadName`).
+
+		:returns: Name of the thread.
+		"""
 		return self._threadName
 
 
@@ -517,18 +522,33 @@ class ThreadSupervisor:
 		self._exceptions = []
 		self._warnings =   []
 
-	@property
+	@readonly
 	def HasWarning(self) -> bool:
+		"""
+		Check if at least one warning was collected from a supervised thread.
+
+		:returns: ``True``, if at least one warning was collected.
+		"""
 		with self._lock:
 			return len(self._warnings) > 0
 
-	@property
+	@readonly
 	def HasExceptions(self) -> bool:
+		"""
+		Check if at least one exception was collected from a supervised thread.
+
+		:returns: ``True``, if at least one exception was collected.
+		"""
 		with self._lock:
 			return len(self._exceptions) > 0
 
-	@property
+	@readonly
 	def Warnings(self) -> List[AnyWarning]:
+		"""
+		Read-only property to access all warnings collected from supervised threads (:attr:`_warnings`).
+
+		:returns: List of collected warnings, without their thread names.
+		"""
 		with self._lock:
 			return [warning for _, warning in self._warnings]
 

@@ -170,14 +170,29 @@ class Distribution(metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def Filename(self) -> str:
+		"""
+		Read-only property to access the distribution's filename (:attr:`_filename`).
+
+		:returns: Filename of the distribution.
+		"""
 		return self._filename
 
 	@readonly
 	def URL(self) -> URL:
+		"""
+		Read-only property to access the URL this distribution can be downloaded from (:attr:`_url`).
+
+		:returns: Download URL of the distribution.
+		"""
 		return self._url
 
 	@readonly
 	def UploadTime(self) -> datetime:
+		"""
+		Read-only property to access the time this distribution was uploaded (:attr:`_uploadTime`).
+
+		:returns: Upload time of the distribution.
+		"""
 		return self._uploadTime
 
 	def __repr__(self) -> str:
@@ -230,16 +245,31 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 	@readonly
 	def Project(self) -> "Project":
+		"""
+		Read-only property to access the project this release belongs to (:attr:`_package`).
+
+		:returns: The project this release belongs to.
+		"""
 		return self._package
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def Files(self) -> List[Distribution]:
+		"""
+		Read-only property to access the distributions published for this release (:attr:`_files`).
+
+		:returns: List of distributions.
+		"""
 		return self._files
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def Requirements(self) -> Dict[str, List[Requirement]]:
+		"""
+		Read-only property to access the release's requirements, grouped by extra (:attr:`_requirements`).
+
+		:returns: Dictionary of extras and their requirements. Requirements without an extra are stored under ``None``.
+		"""
 		return self._requirements
 
 	def _GetPyPIEndpoint(self) -> str:
@@ -360,26 +390,51 @@ class Project(Package, LazyLoadableMixin):
 
 	@readonly
 	def PackageIndex(self) -> "PythonPackageIndex":
+		"""
+		Read-only property to access the package index this project was read from (:attr:`_storage`).
+
+		:returns: The package index this project belongs to.
+		"""
 		return self._storage
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def URL(self) -> URL:
+		"""
+		Read-only property to access the project's URL in the package index (:attr:`_url`).
+
+		:returns: URL of the project.
+		"""
 		return self._url
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def Releases(self) -> Dict[PythonVersion, Release]:
+		"""
+		Read-only property to access all known releases of this project (:attr:`_versions`).
+
+		:returns: Dictionary of versions and their releases.
+		"""
 		return self._versions
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def ReleaseCount(self) -> int:
+		"""
+		Read-only property to access the number of known releases.
+
+		:returns: Number of releases.
+		"""
 		return len(self._versions)
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
 	def LatestRelease(self) -> Release:
+		"""
+		Read-only property to access the most recent release of this project.
+
+		:returns: The latest release.
+		"""
 		return firstValue(self._versions)
 
 	def _GetPyPIEndpoint(self) -> str:
@@ -510,18 +565,38 @@ class PythonPackageIndex(PackageStorage):
 
 	@readonly
 	def URL(self) -> URL:
+		"""
+		Read-only property to access the package index' base URL (:attr:`_url`).
+
+		:returns: Base URL of the package index.
+		"""
 		return self._url
 
 	@readonly
 	def API(self) -> URL:
+		"""
+		Read-only property to access the package index' API URL (:attr:`_api`).
+
+		:returns: API URL of the package index.
+		"""
 		return self._api
 
 	@readonly
 	def Projects(self) -> Dict[str, Project]:
+		"""
+		Read-only property to access all projects known to this package index (:attr:`_packages`).
+
+		:returns: Dictionary of project names and projects.
+		"""
 		return self._packages
 
 	@readonly
 	def ProjectCount(self) -> int:
+		"""
+		Read-only property to access the number of known projects.
+
+		:returns: Number of projects.
+		"""
 		return len(self._packages)
 
 	def _GetPyPIEndpoint(self, projectName: str) -> str:

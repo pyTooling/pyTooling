@@ -90,7 +90,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		"""
 		Get the internal value.
 
-		:return: Internal value.
+		:returns: Internal value.
 		"""
 		return self._value
 
@@ -108,7 +108,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name and optional value.
 
-		:return:            Formatted argument.
+		:returns:            Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:

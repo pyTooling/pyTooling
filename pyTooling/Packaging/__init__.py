@@ -238,37 +238,65 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 
 	@readonly
 	def Author(self) -> str:
-		"""Name(s) of the package author(s)."""
+		"""
+		Read-only property to access the name(s) of the package author(s) (:attr:`_author`).
+
+		:returns: Name(s) of the package author(s).
+		"""
 		return self._author
 
 	@readonly
 	def Copyright(self) -> str:
-		"""Copyright information."""
+		"""
+		Read-only property to access the package's copyright information (:attr:`_copyright`).
+
+		:returns: Copyright information.
+		"""
 		return self._copyright
 
 	@readonly
 	def Description(self) -> str:
-		"""Package description text."""
+		"""
+		Read-only property to access the package description (:attr:`_description`).
+
+		:returns: Package description text.
+		"""
 		return self._description
 
 	@readonly
 	def Email(self) -> str:
-		"""Email address of the author."""
+		"""
+		Read-only property to access the author's email address (:attr:`_email`).
+
+		:returns: Email address of the author.
+		"""
 		return self._email
 
 	@readonly
 	def Keywords(self) -> List[str]:
-		"""List of keywords."""
+		"""
+		Read-only property to access the package's keywords (:attr:`_keywords`).
+
+		:returns: List of keywords.
+		"""
 		return self._keywords
 
 	@readonly
 	def License(self) -> str:
-		"""License name."""
+		"""
+		Read-only property to access the package's license (:attr:`_license`).
+
+		:returns: License name.
+		"""
 		return self._license
 
 	@readonly
 	def Version(self) -> str:
-		"""Version number."""
+		"""
+		Read-only property to access the package's version number (:attr:`_version`).
+
+		:returns: Version number.
+		"""
 		return self._version
 
 	def __str__(self) -> str:

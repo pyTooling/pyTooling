@@ -73,6 +73,11 @@ class PermissionWarning(Warning):
 
 	@readonly
 	def Path(self) -> Path:
+		"""
+		Read-only property to access the path that couldn't be read (:attr:`_path`).
+
+		:returns: The path that raised a :exc:`PermissionError`.
+		"""
 		return self._path
 
 
@@ -253,10 +258,20 @@ class Element(Base, Generic[_ParentType]):
 
 	@readonly
 	def Path(self) -> Path:
-		raise NotImplemented(f"Property 'Path' is abstract.")
+		"""
+		Read-only property to access the element's path.
+
+		:returns: Path of the element.
+		"""
+		raise NotImplementedError(f"Property 'Path' is abstract.")
 
 	@readonly
 	def LinkSources(self) -> List["SymbolicLink"]:
+		"""
+		Read-only property to access the symbolic links pointing to this element (:attr:`_linkSources`).
+
+		:returns: List of symbolic links targeting this element.
+		"""
 		return self._linkSources
 
 	def AddLinkSources(self, source: "SymbolicLink") -> None:
@@ -844,10 +859,21 @@ class Filename(Element[Directory]):
 
 	@readonly
 	def File(self) -> Nullable["File"]:
+		"""
+		Read-only property to access the file this filename is linked to (:attr:`_file`).
+
+		:returns: The linked file, or ``None`` if the filename isn't linked yet.
+		"""
 		return self._file
 
 	@readonly
 	def Size(self) -> int:
+		"""
+		Read-only property to access the size of the linked file.
+
+		:returns:                 Size of the linked file in bytes.
+		:raises ToolingException: If the filename isn't linked to a file object.
+		"""
 		if self._file is None:
 			raise ToolingException(f"Filename isn't linked to a File object.")
 
@@ -855,6 +881,14 @@ class Filename(Element[Directory]):
 
 	@readonly
 	def Path(self) -> Path:
+		"""
+		Read-only property to access the filename's absolute path.
+
+		The path is computed from the parent directory's path and the filename.
+
+		:returns:                 Absolute path of the file.
+		:raises ToolingException: If the filename has no parent object.
+		"""
 		if self._parent is None:
 			raise ToolingException(f"Filename has no parent object.")
 
@@ -963,22 +997,49 @@ class SymbolicLink(Element[Directory]):
 
 	@readonly
 	def Path(self) -> Path:
+		"""
+		Read-only property to access the symbolic link's path.
+
+		The path is computed from the parent directory's path and the link's name.
+
+		:returns: Path of the symbolic link.
+		"""
 		return self._parent.Path / self._name
 
 	@readonly
 	def Target(self) -> Path:
+		"""
+		Read-only property to access the path this symbolic link points to (:attr:`_target`).
+
+		:returns: Target path of the symbolic link.
+		"""
 		return self._target
 
 	@readonly
 	def IsConnected(self) -> bool:
+		"""
+		Check if the symbolic link was resolved to an element within the scanned filesystem (:attr:`_isConnected`).
+
+		:returns: ``True``, if the link's target was found and connected.
+		"""
 		return self._isConnected
 
 	@readonly
 	def IsBroken(self) -> Nullable[bool]:
+		"""
+		Check if the symbolic link points to a non-existing target (:attr:`_isBroken`).
+
+		:returns: ``True``, if the target doesn't exist. ``None``, if the link wasn't resolved yet.
+		"""
 		return self._isBroken
 
 	@readonly
 	def IsOutOfRange(self) -> Nullable[bool]:
+		"""
+		Check if the symbolic link points outside the scanned filesystem (:attr:`_isOutOfRange`).
+
+		:returns: ``True``, if the target lies outside the scanned root. ``None``, if the link wasn't resolved yet.
+		"""
 		return self._isOutOfRange
 
 	def __hash__(self) -> int:
@@ -1083,34 +1144,87 @@ class Root(Directory):
 
 	@readonly
 	def BrokenSymbolicLinks(self) -> List[SymbolicLink]:
+		"""
+		Read-only property to access all symbolic links with a non-existing target (:attr:`_brokenSymbolicLinks`).
+
+		:returns: List of broken symbolic links.
+		"""
 		return self._brokenSymbolicLinks
 
 	@readonly
 	def UnconnectedSymbolicLinks(self) -> List[SymbolicLink]:
+		"""
+		Read-only property to access all symbolic links that couldn't be resolved within the scanned filesystem (:attr:`_unconnectedSymbolicLinks`).
+
+		:returns: List of unconnected symbolic links.
+		"""
 		return self._unconnectedSymbolicLinks
 
 	@readonly
 	def TotalHardLinkCount(self) -> int:
+		"""
+		Read-only property to access the accumulated number of hardlinks to multiply-linked files.
+
+		Every file storage object referenced by more than one directory entry contributes its number of
+		directory entries.
+
+		:returns: Sum of directory entries over all hardlinked files.
+		"""
 		return sum(l for f in self._ids.values() if (l := len(f._parents)) > 1)
 
 	@readonly
 	def TotalHardLinkCount2(self) -> int:
+		"""
+		Read-only property to access the number of file storage objects that are hardlinked.
+
+		In contrast to :attr:`TotalHardLinkCount`, every hardlinked file contributes ``1``, regardless of how
+		many directory entries reference it.
+
+		:returns: Number of files referenced by more than one directory entry.
+		"""
 		return sum(1 for f in self._ids.values() if len(f._parents) > 1)
 
 	@readonly
 	def TotalHardLinkCount3(self) -> int:
+		"""
+		Read-only property to access the number of file storage objects that are **not** hardlinked.
+
+		.. attention::
+
+		   Despite the name, this counts files referenced by exactly *one* directory entry.
+
+		:returns: Number of files referenced by exactly one directory entry.
+		"""
 		return sum(1 for f in self._ids.values() if len(f._parents) == 1)
 
 	@readonly
 	def Size2(self) -> int:
+		"""
+		Read-only property to access the accumulated size of all hardlinked files, counted once each.
+
+		:returns: Sum of sizes over all files referenced by more than one directory entry.
+		"""
 		return sum(f._size for f in self._ids.values() if len(f._parents) > 1)
 
 	@readonly
 	def Size3(self) -> int:
+		"""
+		Read-only property to access the accumulated size of all hardlinked files, counted per directory entry.
+
+		In contrast to :attr:`Size2`, a file's size is multiplied by the number of directory entries
+		referencing it, so it reflects the size a filesystem without hardlink support would need.
+
+		:returns: Sum of sizes over all hardlinked files, weighted by their number of directory entries.
+		"""
 		return sum(f._size * len(f._parents) for f in self._ids.values() if len(f._parents) > 1)
 
 	@readonly
 	def TotalUniqueFileCount(self) -> int:
+		"""
+		Read-only property to access the number of distinct file storage objects, counting hardlinks to the same content once.
+
+		:returns: Number of unique files.
+		"""
 		return len(self._ids)
 
 	def RegisterBrokenSymbolicLink(self, symLink: SymbolicLink) -> None:
