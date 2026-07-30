@@ -29,8 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for the class decorators :func:`~pyTooling.MetaClasses.slotted`,
-:func:`~pyTooling.MetaClasses.mixin` and :func:`~pyTooling.MetaClasses.singleton`.
+Unit tests for the class decorators :deco:`~pyTooling.MetaClasses.slotted`,
+:deco:`~pyTooling.MetaClasses.mixin` and :deco:`~pyTooling.MetaClasses.singleton`.
 """
 from unittest              import TestCase
 

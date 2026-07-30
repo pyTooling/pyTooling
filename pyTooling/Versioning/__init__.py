@@ -1000,7 +1000,7 @@ class SemanticVersion(Version):
 
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
-		r"(?P<prefix>[a-zA-Z]*)"
+		r"(?P<prefix>rev|REV|[vViIrR])?"
 		r"(?P<major>\d+)"
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
@@ -1096,7 +1096,9 @@ class SemanticVersion(Version):
 			raise ValueError("Parameter 'versionString' is empty.")
 
 		if (match := cls._PATTERN.match(versionString)) is None:
-			raise ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex.add_note(f"It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v1.2.3'.")
+			raise ex
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
 			if value is None or value == "":
@@ -1106,6 +1108,8 @@ class SemanticVersion(Version):
 				return int(value)
 			except ValueError as ex:  # pragma: no cover
 				raise ValueError(f"Invalid part '{value}' in version number '{versionString}'.") from ex
+
+		prefix = match["prefix"]
 
 		release = match["release"]
 		if release is not None:
@@ -1142,7 +1146,7 @@ class SemanticVersion(Version):
 			dev=toInt(match["dev"]),
 			build=toInt(match["build"]),
 			postfix=match["postfix"],
-			prefix=match["prefix"],
+			prefix=prefix if prefix != "" else None,
 			# hash=match["hash"],
 			flags=Flags.Clean
 		)

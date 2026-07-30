@@ -126,9 +126,9 @@ class AbstractClassError(ExtendedTypeError):
 
 	.. seealso::
 
-	   :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
 	      |rarr| Mark a method as *abstract*.
-	   :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
 	      |rarr| Mark a method as *must overrride*.
 	   :exc:`~MustOverrideClassError`
 	      |rarr| Exception raised, if a method is marked as *must-override*.
@@ -142,9 +142,9 @@ class MustOverrideClassError(AbstractClassError):
 
 	.. seealso::
 
-	   :func:`@abstractmethod <pyTooling.MetaClasses.abstractmethod>`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
 	      |rarr| Mark a method as *abstract*.
-	   :func:`@mustoverride <pyTooling.MetaClasses.mustoverride>`
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
 	      |rarr| Mark a method as *must overrride*.
 	   :exc:`~AbstractClassError`
 	      |rarr| Exception raised, if a method is marked as *abstract*.
@@ -243,8 +243,8 @@ def abstractmethod(method: M) -> M:
 	.. seealso::
 
 	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
-	   * :func:`~pyTooling.Metaclasses.mustoverride`
-	   * :func:`~pyTooling.Metaclasses.notimplemented`
+	   * :deco:`~pyTooling.MetaClasses.mustoverride`
+	   * :deco:`~pyTooling.Decorators.notimplemented`
 	"""
 	@wraps(method)
 	def func(self) -> NoReturn:
@@ -286,8 +286,8 @@ def mustoverride(method: M) -> M:
 	.. seealso::
 
 	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`
-	   * :func:`~pyTooling.Metaclasses.abstractmethod`
-	   * :func:`~pyTooling.Metaclasses.notimplemented`
+	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
+	   * :deco:`~pyTooling.Decorators.notimplemented`
 	"""
 	method.__mustOverride__ = True
 	return method

@@ -85,7 +85,7 @@ class OverloadResolutionError(Exception):
 
 	.. seealso::
 
-	   :func:`@overloadable <pyTooling.MetaClasses.overloadable>`
+	   :deco:`~pyTooling.MetaClasses.overloadable`
 	      |rarr| Mark a method as *overloadable*.
 	"""
 

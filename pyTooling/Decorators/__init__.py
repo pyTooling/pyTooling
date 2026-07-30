@@ -140,8 +140,8 @@ def notimplemented(message: str) -> Callable:
 
 	.. seealso::
 
-	   * :func:`~pyTooling.Metaclasses.abstractmethod`
-	   * :func:`~pyTooling.Metaclasses.mustoverride`
+	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
+	   * :deco:`~pyTooling.MetaClasses.mustoverride`
 	"""
 
 	def decorator(method: C) -> C:
@@ -168,7 +168,7 @@ class readonly(property):
 
 	.. seealso::
 
-	   :deco:`property`
+	   :class:`property`
 	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 
