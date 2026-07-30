@@ -733,12 +733,14 @@ class ExtendedType(type):
 					cls = inheritedSlottedFields[fieldName]
 					raise AttributeError(f"Slot '{fieldName}' declared in class '{className}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
 
-				# If annotated field is a ClassVar, and it has an initial value
-				# * copy field and initial value to classFields dictionary
-				# * remove field from members
-				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar and fieldName in members:
-					classFields[fieldName] = members[fieldName]
-					del members[fieldName]
+				# If annotated field is a ClassVar, it's never a slot - regardless of an initial value.
+				# * If it has an initial value, copy field and initial value to classFields dictionary
+				#   and remove field from members.
+				# * Otherwise, it's a forward declaration and derived classes assign the actual value.
+				if isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar:
+					if fieldName in members:
+						classFields[fieldName] = members[fieldName]
+						del members[fieldName]
 
 				# If an annotated field has an initial value
 				# * copy field and initial value to objectFields dictionary
