@@ -544,10 +544,10 @@ class ExtendedType(type):
 		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
 			"""
 
-			:param predicate:
-			:return:
-			:raises ValueError:
-			:raises ValueError:
+			:param predicate:   An attribute class, an iterable of attribute classes, or ``None`` to accept every attribute.
+			:returns:           Dictionary of methods and the matching attributes attached to them.
+			:raises ValueError: If an element of parameter 'predicate' is not a sub-class of :class:`~pyTooling.Attributes.Attribute`.
+			:raises ValueError: If parameter 'predicate' is neither an attribute class nor an iterable of those.
 			"""
 			from pyTooling.Attributes import Attribute
 
@@ -601,7 +601,7 @@ class ExtendedType(type):
 		:param newClass:    Newly created class instance.
 		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:     Members of the new class.
-		:return:
+		:returns:           A 2-tuple of all methods and those methods carrying at least one attribute.
 		"""
 		from pyTooling.Attributes import Attribute
 
@@ -844,9 +844,11 @@ class ExtendedType(type):
 				ex = DuplicateFieldInSlotsError(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.")
 				if (baseClass := shadowedSlots[fieldName]) is not None:
 					ex.add_note(f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.")
+					ex.add_note(f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
+					ex.add_note(f"Reading the field works, but assigning it on an instance raises an AttributeError.")
 				else:
-					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class.")
-				ex.add_note(f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
+					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class and materialized in this class' '__slots__'.")
+					ex.add_note(f"Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
 				ex.add_note(f"Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
 				raise ex
 		else:

@@ -64,7 +64,11 @@ class _HandlerMixin(metaclass=ExtendedType, mixin=True):
 
 	@readonly
 	def Handler(self) -> Callable:
-		"""Returns the handler method."""
+		"""
+		Read-only property to access the handler method (:attr:`_handler`).
+
+		:returns: The method called to handle the command.
+		"""
 		return self._handler
 
 
@@ -117,6 +121,8 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
+
+		:returns: Tuple of positional parameters.
 		"""
 		return self._args
 
@@ -125,6 +131,8 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
+
+		:returns: Dictionary of named parameters.
 		"""
 		return self._kwargs
 
@@ -145,7 +153,11 @@ class CommandGroupAttribute(ArgParseAttribute):
 
 	@readonly
 	def GroupName(self) -> str:
-		"""Returns the name of the command group."""
+		"""
+		Read-only property to access the name of the command group (:attr:`_groupName`).
+
+		:returns: Name of the command group.
+		"""
 		return self.__groupName
 
 
@@ -225,7 +237,11 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 
 	@readonly
 	def Command(self) -> str:
-		"""Returns the 'command' a sub-command parser adheres to."""
+		"""
+		Read-only property to access the command a sub-command parser adheres to (:attr:`_command`).
+
+		:returns: Name of the command.
+		"""
 		return self._command
 
 # FIXME: extract to mixin?
@@ -234,6 +250,8 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
+
+		:returns: Tuple of positional parameters.
 		"""
 		return self._args
 
@@ -243,6 +261,8 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
+
+		:returns: Dictionary of named parameters.
 		"""
 		return self._kwargs
 
@@ -349,12 +369,20 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 	@readonly
 	def MainParser(self) -> ArgumentParser:
-		"""Returns the main parser."""
+		"""
+		Read-only property to access the main argument parser (:attr:`_mainParser`).
+
+		:returns: The main argument parser.
+		"""
 		return self._mainParser
 
 	@readonly
 	def SubParsers(self) -> Dict[str, ArgumentParser]:
-		"""Returns the sub-parsers."""
+		"""
+		Read-only property to access the sub-parsers (:attr:`_subParser`).
+
+		:returns: Dictionary of command names and their sub-parsers.
+		"""
 		return self._subParsers
 
 

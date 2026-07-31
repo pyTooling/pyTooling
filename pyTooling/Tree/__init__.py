@@ -469,7 +469,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@readonly
 	def Level(self) -> int:
 		"""
-		Read-only property to return a node's level in the tree.
+		Read-only property to access a node's level in the tree.
 
 		The level is the distance to the root node.
 
@@ -965,7 +965,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:param nodeMarker:     A string printed before every non-last tree node. Default: ``"├─"``.
 		:param lastNodeMarker: A string printed before every last tree node. Default: ``"└─"``.
 		:param bypassMarker:   A string printed when there are further nodes in the parent level. Default: ``"│ "``.
-		:return:               A rendered tree as multiline string.
+		:returns:              A rendered tree as multiline string.
 		"""
 		emptyMarker = " " * len(bypassMarker)
 

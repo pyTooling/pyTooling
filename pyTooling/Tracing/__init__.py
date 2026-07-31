@@ -289,7 +289,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Return the number of sub-spans within this span.
 
-		:return: Number of nested spans.
+		:returns: Number of nested spans.
 		"""
 		return len(self._spans)
 
@@ -316,7 +316,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Return the number of events within this span.
 
-		:return: Number of events.
+		:returns: Number of events.
 		"""
 		return len(self._events)
 
@@ -334,7 +334,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property accessing the absolute time when the span was started.
 
-		:return: The time when the span was entered, otherwise None.
+		:returns: The time when the span was entered, otherwise None.
 		"""
 		return self._beginTime
 
@@ -343,7 +343,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property accessing the absolute time when the span was stopped.
 
-		:return: The time when the span was exited, otherwise None.
+		:returns: The time when the span was exited, otherwise None.
 		"""
 		return self._endTime
 
@@ -354,7 +354,7 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		If the span is not yet stopped, the duration from start to now is returned.
 
-		:return:                  Duration since span was started in seconds.
+		:returns:                 Duration since span was started in seconds.
 		:raises TracingException: When span was never started.
 		"""
 		if self._startTime is None:
@@ -384,7 +384,7 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		A span will be started.
 
-		:return: The span itself.
+		:returns: The span itself.
 		"""
 		global _threadLocalData
 

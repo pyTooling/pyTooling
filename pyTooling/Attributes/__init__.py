@@ -151,8 +151,13 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		else:
 			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [attribute, ])
 
-	@property
+	@readonly
 	def Scope(cls) -> AttributeScope:
+		"""
+		Read-only property to access the scope this attribute searches in (:attr:`_scope`).
+
+		:returns: The scope this attribute searches in.
+		"""
 		return cls._scope
 
 	@classmethod
@@ -240,9 +245,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		"""
 		Returns attached attributes of this kind for a given method.
 
-		:param method:
-		:param includeSubClasses:
-		:return:
+		:param method:            Method to search attributes for.
+		:param includeSubClasses: If ``True``, attributes of derived attribute classes are included too.
+		:returns:                 Tuple of attached attributes of this kind.
 		:raises TypeError:
 		"""
 		if hasattr(method, ATTRIBUTES_MEMBER_NAME):
@@ -265,8 +270,18 @@ class SimpleAttribute(Attribute):
 
 	@readonly
 	def Args(self) -> Tuple[Any, ...]:
+		"""
+		Read-only property to access the positional parameters this attribute was created with (:attr:`_args`).
+
+		:returns: Tuple of positional parameters.
+		"""
 		return self._args
 
 	@readonly
 	def KwArgs(self) -> Dict[str, Any]:
+		"""
+		Read-only property to access the named parameters this attribute was created with (:attr:`_kwargs`).
+
+		:returns: Dictionary of named parameters.
+		"""
 		return self._kwargs

@@ -1157,7 +1157,8 @@ class SlotShadowedByClassMember(TestCase):
 			class Final(Primary, Mixin, metaclass=ExtendedType, slots=True):
 				_data_M1 = 5
 
-		self.assertIn("Slot '_data_M1' is contributed by a mixin-class.", context.exception.__notes__[0])
+		self.assertIn("Slot '_data_M1' is contributed by a mixin-class", context.exception.__notes__[0])
+		self.assertIn("Python doesn't allow a name to be listed in '__slots__'", context.exception.__notes__[1])
 
 	def test_ClassVariableIsNotShadowing(self) -> None:
 		"""Annotating the assignment as a ClassVar is the documented way out."""

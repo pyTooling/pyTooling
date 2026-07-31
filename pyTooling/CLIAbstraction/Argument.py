@@ -109,7 +109,7 @@ class CommandLineArgument:
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name and value.
 
-		:return:                     Formatted argument.
+		:returns:                    Formatted argument.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
 		raise NotImplementedError(f"Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
@@ -119,7 +119,7 @@ class CommandLineArgument:
 		"""
 		Return a string representation of this argument instance.
 
-		:return:                     Argument formatted and enclosed in double quotes.
+		:returns:                    Argument formatted and enclosed in double quotes.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
 		raise NotImplementedError(f"Method '__str__' is an abstract method and must be implemented by a subclass.")
@@ -131,7 +131,7 @@ class CommandLineArgument:
 
 		.. note:: By default, this method is identical to :meth:`__str__`.
 
-		:return:                     Argument formatted and enclosed in double quotes.
+		:returns:                    Argument formatted and enclosed in double quotes.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
 		raise NotImplementedError(f"Method '__repr__' is an abstract method and must be implemented by a subclass.")
@@ -164,7 +164,7 @@ class ExecutableArgument(CommandLineArgument):
 		"""
 		Get the internal path to the wrapped executable.
 
-		:return: Internal path to the executable.
+		:returns: Internal path to the executable.
 		"""
 		return self._executable
 
@@ -188,7 +188,7 @@ class ExecutableArgument(CommandLineArgument):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal path to the wrapped executable.
 
-		:return: Formatted argument.
+		:returns: Formatted argument.
 		"""
 		return f"{self._executable}"
 
@@ -196,7 +196,7 @@ class ExecutableArgument(CommandLineArgument):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Argument formatted and enclosed in double quotes.
+		:returns: Argument formatted and enclosed in double quotes.
 		"""
 		return f"\"{self._executable}\""
 
@@ -225,7 +225,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 		"""
 		Convert this argument instance to a string representation with proper escaping using the matching pattern.
 
-		:return: Formatted argument.
+		:returns: Formatted argument.
 		"""
 		return self._pattern
 
@@ -233,7 +233,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Argument formatted and enclosed in double quotes.
+		:returns: Argument formatted and enclosed in double quotes.
 		"""
 		return f"\"{self._pattern}\""
 
@@ -281,7 +281,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		"""
 		Get the internal name.
 
-		:return: Internal name.
+		:returns: Internal name.
 		"""
 		return self._name
 
@@ -290,7 +290,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name.
 
-		:return:            Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -302,7 +302,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Argument formatted and enclosed in double quotes.
+		:returns: Argument formatted and enclosed in double quotes.
 		"""
 		return f"\"{self.AsArgument()}\""
 
@@ -346,7 +346,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		"""
 		Get the internal value.
 
-		:return: Internal value.
+		:returns: Internal value.
 		"""
 		return self._value
 
@@ -368,7 +368,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal value.
 
-		:return: Formatted argument.
+		:returns: Formatted argument.
 		"""
 		return self._pattern.format(self._value)
 
@@ -376,7 +376,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Argument formatted and enclosed in double quotes.
+		:returns: Argument formatted and enclosed in double quotes.
 		"""
 		return f"\"{self.AsArgument()}\""
 
@@ -413,7 +413,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal name and value.
 
-		:return:            Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -425,7 +425,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Argument formatted and enclosed in double quotes.
+		:returns: Argument formatted and enclosed in double quotes.
 		"""
 		return f"\"{self.AsArgument()}\""
 
@@ -494,7 +494,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		Convert this argument instance to a sequence of string representations with proper escaping using the matching
 		pattern based on the internal name and value.
 
-		:return:            Formatted argument as tuple of strings.
+		:returns:           Formatted argument as tuple of strings.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -509,7 +509,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return " ".join([f"\"{item}\"" for item in self.AsArgument()])
 
@@ -517,7 +517,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return ", ".join([f"\"{item}\"" for item in self.AsArgument()])
 
@@ -569,7 +569,7 @@ class StringListArgument(ValuedArgument):
 		"""
 		Get the internal list of str objects.
 
-		:return: Reference to the internal list of str objects.
+		:returns: Reference to the internal list of str objects.
 		"""
 		return self._values
 
@@ -596,7 +596,7 @@ class StringListArgument(ValuedArgument):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal value.
 
-		:return: Sequence of formatted arguments.
+		:returns: Sequence of formatted arguments.
 		"""
 		return [f"{value}" for value in self._values]
 
@@ -604,7 +604,7 @@ class StringListArgument(ValuedArgument):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
 
@@ -612,7 +612,7 @@ class StringListArgument(ValuedArgument):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])
 
@@ -646,7 +646,7 @@ class PathArgument(CommandLineArgument):
 		"""
 		Get the internal path object.
 
-		:return: Internal path object.
+		:returns: Internal path object.
 		"""
 		return self._path
 
@@ -670,7 +670,7 @@ class PathArgument(CommandLineArgument):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal value.
 
-		:return: Formatted argument.
+		:returns: Formatted argument.
 		"""
 		return f"{self._path}"
 
@@ -678,7 +678,7 @@ class PathArgument(CommandLineArgument):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Argument formatted and enclosed in double quotes.
+		:returns: Argument formatted and enclosed in double quotes.
 		"""
 		return f"\"{self._path}\""
 
@@ -714,7 +714,7 @@ class PathListArgument(CommandLineArgument):
 		"""
 		Get the internal list of path objects.
 
-		:return: Reference to the internal list of path objects.
+		:returns: Reference to the internal list of path objects.
 		"""
 		return self._paths
 
@@ -741,7 +741,7 @@ class PathListArgument(CommandLineArgument):
 		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
 		the internal value.
 
-		:return: Sequence of formatted arguments.
+		:returns: Sequence of formatted arguments.
 		"""
 		return [f"{path}" for path in self._paths]
 
@@ -749,7 +749,7 @@ class PathListArgument(CommandLineArgument):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
 
@@ -757,6 +757,6 @@ class PathListArgument(CommandLineArgument):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])

@@ -448,7 +448,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Convert this 2D-size to a simple 2-element tuple.
 
-		:return: ``(width, height)`` tuple.
+		:returns: ``(width, height)`` tuple.
 		"""
 		return self.width, self.height
 
@@ -506,7 +506,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the Euclidean distance between start and end point.
 
-		:return: Euclidean distance between start and end point
+		:returns: Euclidean distance between start and end point
 		"""
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)
 
@@ -521,7 +521,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Convert this 2D line segment to a 2D-offset.
 
-		:return: 2D-offset as :class:`Offset2D`
+		:returns: 2D-offset as :class:`Offset2D`
 		"""
 		return self.end - self.start
 
@@ -529,7 +529,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Convert this 2D line segment to a simple 2-element tuple of 2D-point tuples.
 
-		:return: ``((x1, y1), (x2, y2))`` tuple.
+		:returns: ``((x1, y1), (x2, y2))`` tuple.
 		"""
 		return self.start.ToTuple(), self.end.ToTuple()
 

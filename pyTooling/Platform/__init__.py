@@ -307,7 +307,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	@readonly
 	def PythonImplementation(self) -> PythonImplementation:
 		"""
-		Read-only property to return the :class:`PythonImplementation` of the current interpreter.
+		Read-only property to access the :class:`PythonImplementation` of the current interpreter.
 
 		:returns: Python implementation of the current interpreter.
 		"""
@@ -332,7 +332,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	@readonly
 	def PythonVersion(self) -> PythonVersion:
 		"""
-		Read-only property to return the :class:`pyTooling.Versioning.PythonVersion` of the current interpreter.
+		Read-only property to access the :class:`pyTooling.Versioning.PythonVersion` of the current interpreter.
 
 		:returns: Python version of the current interpreter.
 		"""
@@ -340,6 +340,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 	@readonly
 	def HostOperatingSystem(self) -> Platforms:
+		"""
+		Read-only property to return the host's operating system.
+
+		:returns: The operating system portion of the platform flags.
+		"""
 		return self._platform & Platforms.OperatingSystem
 
 	@readonly

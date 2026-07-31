@@ -98,7 +98,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		"""
 		Get the internal value.
 
-		:return: Internal value.
+		:returns: Internal value.
 		"""
 		return self._value
 
@@ -129,7 +129,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Space separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
 
@@ -137,7 +137,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		"""
 		Return a string representation of this argument instance.
 
-		:return: Comma separated sequence of arguments formatted and each enclosed in double quotes.
+		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
 		"""
 		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])
 

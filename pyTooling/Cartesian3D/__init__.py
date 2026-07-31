@@ -77,7 +77,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Create a new 3D-point as a copy of this 3D point.
 
-		:return: Copy of this 3D-point.
+		:returns: Copy of this 3D-point.
 
 		.. seealso::
 
@@ -92,7 +92,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Convert this 3D-Point to a simple 3-element tuple.
 
-		:return: ``(x, y, z)`` tuple.
+		:returns: ``(x, y, z)`` tuple.
 		"""
 		return self.x, self.y, self.z
 
@@ -101,7 +101,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Adds a 3D-offset to this 3D-point and creates a new 3D-point.
 
 		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
-		:return:           A new 3D-point shifted by the 3D-offset.
+		:returns:          A new 3D-point shifted by the 3D-offset.
 		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
@@ -126,7 +126,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Adds a 3D-offset to this 3D-point (inplace).
 
 		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
-		:return:           This 3D-point.
+		:returns:          This 3D-point.
 		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
@@ -149,7 +149,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Subtract two 3D-Points from each other and create a new 3D-offset.
 
 		:param other:      A 3D-point as :class:`Point3D`.
-		:return:           A new 3D-offset representing the distance between these two points.
+		:returns:          A new 3D-offset representing the distance between these two points.
 		:raises TypeError: If parameter 'other' is not a :class:`Point3D`.
 		"""
 		if isinstance(other, Point3D):
@@ -168,7 +168,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Subtracts a 3D-offset to this 3D-point (inplace).
 
 		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
-		:return:           This 3D-point.
+		:returns:          This 3D-point.
 		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
@@ -483,7 +483,7 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Convert this 3D-size to a simple 3-element tuple.
 
-		:return: ``(width, height, depth)`` tuple.
+		:returns: ``(width, height, depth)`` tuple.
 		"""
 		return self.width, self.height, self.depth
 
@@ -541,7 +541,7 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the Euclidean distance between start and end point.
 
-		:return: Euclidean distance between start and end point
+		:returns: Euclidean distance between start and end point
 		"""
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2 + (self.end.z - self.start.z) ** 2)
 
@@ -556,7 +556,7 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		Convert this 3D line segment to a 3D-offset.
 
-		:return: 3D-offset as :class:`Offset3D`
+		:returns: 3D-offset as :class:`Offset3D`
 		"""
 		return self.end - self.start
 
@@ -564,7 +564,7 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		Convert this 3D line segment to a simple 2-element tuple of 3D-point tuples.
 
-		:return: ``((x1, y1, z1), (x2, y2, z2))`` tuple.
+		:returns: ``((x1, y1, z1), (x2, y2, z2))`` tuple.
 		"""
 		return self.start.ToTuple(), self.end.ToTuple()
 

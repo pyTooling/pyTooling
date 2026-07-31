@@ -238,7 +238,7 @@ def WordSizeValidator(
 	:param minorBits: Number of bits to encode a positive minor number in a version.
 	:param microBits: Number of bits to encode a positive micro number in a version.
 	:param buildBits: Number of bits to encode a positive build number in a version.
-	:return:          A validation function for Version instances.
+	:returns:         A validation function for Version instances.
 	"""
 	majorMax = minorMax = microMax = buildMax = -1
 	if bits is not None:
@@ -287,7 +287,7 @@ def MaxValueValidator(
 	:param minorMax: The upper bound for the positive minor number.
 	:param microMax: The upper bound for the positive micro number.
 	:param buildMax: The upper bound for the positive build number.
-	:return:         A validation function for Version instances.
+	:returns:        A validation function for Version instances.
 	"""
 	if max is not None:
 		majorMax = minorMax = microMax = buildMax = max
@@ -506,7 +506,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the used parts of this version number.
 
-		:return: A flag enumeration of used version number parts.
+		:returns: A flag enumeration of used version number parts.
 		"""
 		return self._parts
 
@@ -515,7 +515,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the version number's prefix.
 
-		:return: The prefix of the version number.
+		:returns: The prefix of the version number.
 		"""
 		return self._prefix
 
@@ -524,7 +524,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the major number.
 
-		:return: The major number.
+		:returns: The major number.
 		"""
 		return self._major
 
@@ -533,7 +533,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the minor number.
 
-		:return: The minor number.
+		:returns: The minor number.
 		"""
 		return self._minor
 
@@ -542,7 +542,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the micro number.
 
-		:return: The micro number.
+		:returns: The micro number.
 		"""
 		return self._micro
 
@@ -551,7 +551,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the release level.
 
-		:return: The release level.
+		:returns: The release level.
 		"""
 		return self._releaseLevel
 
@@ -560,7 +560,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the release number.
 
-		:return: The release number.
+		:returns: The release number.
 		"""
 		return self._releaseNumber
 
@@ -569,7 +569,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the post number.
 
-		:return: The post number.
+		:returns: The post number.
 		"""
 		return self._post
 
@@ -578,7 +578,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the development number.
 
-		:return: The development number.
+		:returns: The development number.
 		"""
 		return self._dev
 
@@ -587,7 +587,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the build number.
 
-		:return: The build number.
+		:returns: The build number.
 		"""
 		return self._build
 
@@ -596,7 +596,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the version number's postfix.
 
-		:return: The postfix of the version number.
+		:returns: The postfix of the version number.
 		"""
 		return self._postfix
 
@@ -605,7 +605,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the version number's hash.
 
-		:return: The hash.
+		:returns: The hash.
 		"""
 		return self._hash
 
@@ -614,7 +614,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the version number's flags.
 
-		:return: The flags of the version number.
+		:returns: The flags of the version number.
 		"""
 		return self._flags
 
@@ -722,7 +722,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		   * ``%b`` - build number
 
 		:param formatSpec: The format specification.
-		:return:           Formatted version number.
+		:returns:          Formatted version number.
 		"""
 		if formatSpec == "":
 			return self.__str__()
@@ -1164,7 +1164,7 @@ class SemanticVersion(Version):
 
 		The patch number is identical to the micro number.
 
-		:return: The patch number.
+		:returns: The patch number.
 		"""
 		return self._micro
 
@@ -1521,12 +1521,12 @@ class CalendarVersion(Version):
 
 		return version
 
-	@property
+	@readonly
 	def Year(self) -> int:
 		"""
 		Read-only property to access the year part.
 
-		:return: The year part.
+		:returns: The year part.
 		"""
 		return self._major
 
@@ -1689,7 +1689,7 @@ class CalendarVersion(Version):
 		   * ``%u`` - micro number (day)
 
 		:param formatSpec: The format specification.
-		:return:           Formatted version number.
+		:returns:          Formatted version number.
 		"""
 		if formatSpec == "":
 			return self.__str__()
@@ -1770,12 +1770,12 @@ class YearMonthVersion(CalendarVersion):
 		"""
 		super().__init__(year, month, 0, build, flags, prefix, postfix)
 
-	@property
+	@readonly
 	def Month(self) -> int:
 		"""
 		Read-only property to access the month part.
 
-		:return: The month part.
+		:returns: The month part.
 		"""
 		return self._minor
 
@@ -1820,12 +1820,12 @@ class YearWeekVersion(CalendarVersion):
 		"""
 		super().__init__(year, week, 0, build, flags, prefix, postfix)
 
-	@property
+	@readonly
 	def Week(self) -> int:
 		"""
 		Read-only property to access the week part.
 
-		:return: The week part.
+		:returns: The week part.
 		"""
 		return self._minor
 
@@ -1870,12 +1870,12 @@ class YearReleaseVersion(CalendarVersion):
 		"""
 		super().__init__(year, release, 0, build, flags, prefix, postfix)
 
-	@property
+	@readonly
 	def Release(self) -> int:
 		"""
 		Read-only property to access the release number.
 
-		:return: The release number.
+		:returns: The release number.
 		"""
 		return self._minor
 
@@ -1920,21 +1920,21 @@ class YearMonthDayVersion(CalendarVersion):
 		"""
 		super().__init__(year, month, day, build, flags, prefix, postfix)
 
-	@property
+	@readonly
 	def Month(self) -> int:
 		"""
 		Read-only property to access the month part.
 
-		:return: The month part.
+		:returns: The month part.
 		"""
 		return self._minor
 
-	@property
+	@readonly
 	def Day(self) -> int:
 		"""
 		Read-only property to access the day part.
 
-		:return: The day part.
+		:returns: The day part.
 		"""
 		return self._micro
 
@@ -2011,7 +2011,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's lower bound.
 
-		:return: Lower bound of the version range.
+		:returns: Lower bound of the version range.
 		"""
 		return self._lowerBound
 
@@ -2029,7 +2029,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's upper bound.
 
-		:return: Upper bound of the version range.
+		:returns: Upper bound of the version range.
 		"""
 		return self._upperBound
 
@@ -2047,7 +2047,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's bound handling strategy.
 
-		:return: The range's bound handling strategy.
+		:returns: The range's bound handling strategy.
 		"""
 		return self._boundHandling
 

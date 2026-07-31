@@ -39,7 +39,7 @@ __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
 __copyright__ =         "2017-2026, Patrick Lehmann"
 __license__ =           "Apache License, Version 2.0"
-__version__ =           "8.18.0"
+__version__ =           "8.19.0"
 __keywords__ =          [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -224,10 +224,10 @@ def bind(instance, func, methodName: Nullable[str] = None):
 	or the existing name of *func*. The provided *func* should accept the
 	instance as the first argument, i.e. "self".
 
-	:param instance:
-	:param func:
-	:param methodName:
-	:return:
+	:param instance:   Object to bind the function to.
+	:param func:       Function to bind. Its first parameter is the instance (``self``).
+	:param methodName: Optional name to bind the function as. If ``None``, the function's own name is used.
+	:returns:          The bound method.
 	"""
 	if methodName is None:
 		methodName = func.__name__
@@ -246,7 +246,7 @@ def count(iterator: Iterable) -> int:
 	.. attention:: After counting the iterable's elements, the iterable is consumed.
 
 	:param iterator: Iterable to consume and count.
-	:return:         Number of elements in the iterable.
+	:returns:        Number of elements in the iterable.
 	"""
 	return len(list(iterator))
 
@@ -260,7 +260,7 @@ def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Ele
 	Returns the first element from an indexable.
 
 	:param indexable: Indexable to get the first element from.
-	:return:          First element.
+	:returns:         First element.
 	"""
 	return indexable[0]
 
@@ -271,7 +271,7 @@ def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Elem
 	Returns the last element from an indexable.
 
 	:param indexable: Indexable to get the last element from.
-	:return:          Last element.
+	:returns:         Last element.
 	"""
 	return indexable[-1]
 
@@ -282,7 +282,7 @@ def firstItem(iterable: Iterable[_Element]) -> _Element:
 	Returns the first item from an iterable.
 
 	:param iterable:    Iterable to get the first item from.
-	:return:            First item.
+	:returns:           First item.
 	:raises ValueError: If parameter 'iterable' contains no items.
 	"""
 	i = iter(iterable)
@@ -298,7 +298,7 @@ def lastItem(iterable: Iterable[_Element]) -> _Element:
 	Returns the last item from an iterable.
 
 	:param iterable:    Iterable to get the last item from.
-	:return:            Last item.
+	:returns:           Last item.
 	:raises ValueError: If parameter 'iterable' contains no items.
 	"""
 	i = iter(iterable)
