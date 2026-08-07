@@ -33,7 +33,7 @@ from unittest import TestCase
 
 from pytest   import mark
 
-from pyTooling.Decorators import export, InheritDocString, readonly
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeOrder, readonly
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -221,6 +221,72 @@ class InheritDocStrings(TestCase):
 		self.assertEqual("Class1", Class1.__doc__)
 		self.assertEqual("Class1\n\nClass2", Class2.__doc__)
 
+	def test_Class_MergeDerivedFirst(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True, order=DocStringMergeOrder.DerivedFirst)
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("Class2\n\nClass1", Class2.__doc__)
+
+	def test_Class_MergeAffixes(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("<Class1|Class2>", Class2.__doc__)
+
+	def test_Class_MergeAffixesWithoutBaseDocString(self) -> None:
+		class Class1:
+			pass
+
+		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("<Class2>", Class2.__doc__)
+
+	def test_Class_MergeAffixesWithoutDerivedDocString(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		class Class2(Class1):
+			pass
+
+		self.assertEqual("<Class1>", Class2.__doc__)
+
+	def test_Class_MergeWithoutAnyDocString(self) -> None:
+		class Class1:
+			pass
+
+		@InheritDocString(Class1, merge=True, prefix="<", postfix=">")
+		class Class2(Class1):
+			pass
+
+		self.assertIsNone(Class2.__doc__)
+
+	def test_Class_MergeDedentsBothDocStrings(self) -> None:
+		"""Both parts are dedented, even if they were indented differently (tabs vs. spaces)."""
+		class Class1:
+			pass
+
+		class Class2(Class1):
+			pass
+
+		# Python 3.13+ strips a doc-string's indentation at compile time, so assign the raw form explicitly.
+		Class1.__doc__ = "\n\tLine 1.\n\n\tLine 2.\n\t"
+		Class2.__doc__ = "\n    Line 3.\n\n    Line 4.\n    "
+
+		InheritDocString(Class1, merge=True)(Class2)
+
+		self.assertEqual("Line 1.\n\nLine 2.\n\nLine 3.\n\nLine 4.", Class2.__doc__)
+
 	def test_Method(self) -> None:
 		class Class1:
 			def method(self):
@@ -232,3 +298,15 @@ class InheritDocStrings(TestCase):
 				pass
 
 		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)
+
+	def test_Method_Merge(self) -> None:
+		class Class1:
+			def method(self):
+				"""Base method's doc-string."""
+
+		class Class2(Class1):
+			@InheritDocString(Class1, merge=True, order=DocStringMergeOrder.DerivedFirst)
+			def method(self):
+				"""Derived method's doc-string."""
+
+		self.assertEqual("Derived method's doc-string.\n\nBase method's doc-string.", Class2.method.__doc__)

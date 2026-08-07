@@ -236,6 +236,9 @@ Documentation
       decorator :deco:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class'
       method to the method in the derived class.
 
+      If the derived class or method has something of its own to say, ``merge=True`` combines both doc-strings instead
+      of replacing the derived one.
+
    .. grid-item::
       :columns: 6
 
@@ -250,7 +253,7 @@ Documentation
 
                @InheritDocString(BaseClass, merge=True)
                class DerivedClass(BaseClass):
-                 """Will ne written underneath"""
+                 """Will be written underneath"""
 
 
          .. tab-item:: Inherit method documentation
@@ -266,6 +269,65 @@ Documentation
                  @InheritDocString(BaseClass)
                  def method(self):
                    pass
+
+
+.. _DECO/InheritDocString/Merging:
+
+Merging doc-strings
+===================
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      When merging, the result is assembled as ``prefix + first + interfix + second + postfix``. Which doc-string comes
+      first is chosen with ``order``, using :class:`~pyTooling.Decorators.DocStringMergeOrder`. If either doc-string is
+      missing, that part and the ``interfix`` are omitted; if both are missing, the doc-string is left unchanged.
+
+      Both doc-strings are dedented with :func:`inspect.cleandoc` before they are combined.
+
+      .. hint::
+
+         The dedent matters for Python versions before 3.13, where the compiler does not strip a doc-string's
+         indentation. Combining a tab-indented base-class doc-string with a space-indented derived doc-string would
+         otherwise leave the first part indented relative to the second, which renders as a block quote.
+
+      .. attention::
+
+         Nothing is de-duplicated. If both doc-strings carry the same section — an ``.. admonition:: Example`` block,
+         for instance — the merged doc-string carries it twice.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: Python
+
+         class BaseClass:
+           """
+           Represents a signal.
+           """
+
+         @InheritDocString(
+           BaseClass,
+           merge=True,
+           order=DocStringMergeOrder.DerivedFirst,
+           interfix="\n\n**Inherited:**\n\n"
+         )
+         class DerivedClass(BaseClass):
+           """
+           What is specific to DerivedClass.
+           """
+
+      Resulting doc-string:
+
+      .. code-block:: text
+
+         What is specific to DerivedClass.
+
+         **Inherited:**
+
+         Represents a signal.
 
 
 .. _DECO/Performance:

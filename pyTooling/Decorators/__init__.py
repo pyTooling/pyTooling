@@ -35,7 +35,9 @@
    See :ref:`high-level help <DECO>` for explanations and usage examples.
 """
 import sys
+from enum      import Enum, unique
 from functools import wraps
+from inspect   import cleandoc
 from types     import FunctionType
 from typing    import Union, Type, TypeVar, Callable, NoReturn
 
@@ -196,15 +198,49 @@ class readonly(property):
 
 
 @export
-def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Func | type], Func | type]:
+@unique
+class DocStringMergeOrder(Enum):
 	"""
-	Copy the doc-string from given base-class to the method this decorator is applied to.
+	Order in which :func:`InheritDocString` arranges the base-class' and the derived entity's doc-strings.
+
+	.. seealso::
+
+	   * :func:`InheritDocString`
+	"""
+
+	BaseFirst =    0  #: The base-class' doc-string comes first, the derived entity's doc-string second.
+	DerivedFirst = 1  #: The derived entity's doc-string comes first, the base-class' doc-string second.
+
+
+@export
+def InheritDocString(
+	baseClass: type,
+	merge: bool = False,
+	order: DocStringMergeOrder = DocStringMergeOrder.BaseFirst,
+	prefix: str = "",
+	interfix: str = "\n\n",
+	postfix: str = ""
+) -> Callable[[Func | type], Func | type]:
+	"""
+	Copy the doc-string from given base-class to the class or method this decorator is applied to.
+
+	By default, the base-class' doc-string *replaces* the doc-string of the decorated class or method. If ``merge`` is
+	enabled, both doc-strings are combined instead, so a derived entity can add what is specific to it without repeating
+	the description it inherits.
+
+	When merging, both doc-strings are dedented with :func:`inspect.cleandoc` before they are combined. This matters for
+	Python versions before 3.13, where the compiler does not strip a doc-string's indentation: combining a tab-indented
+	base-class doc-string with a space-indented derived doc-string would otherwise leave the first part indented relative
+	to the second, which renders as a block quote.
+
+	The merged doc-string is assembled as ``prefix + first + interfix + second + postfix``. If either doc-string is
+	missing, that part and the ``interfix`` are omitted. If both are missing, the doc-string is left unchanged.
 
 	.. admonition:: ``example.py``
 
 	   .. code-block:: python
 
-	      from pyTooling.Decorators import InheritDocString
+	      from pyTooling.Decorators import InheritDocString, DocStringMergeOrder
 
 	      class Class1:
 	        def method(self):
@@ -215,15 +251,38 @@ def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Func | t
 	        def method(self):
 	          super().method()
 
-	:param baseClass: Base-class to copy the doc-string from to the new method being decorated.
-	:returns:         Decorator function that copies the doc-string.
+	.. admonition:: ``merging.py``
+
+	   .. code-block:: python
+
+	      @InheritDocString(
+	        Class1,
+	        merge=True,
+	        order=DocStringMergeOrder.DerivedFirst,
+	        interfix="\\n\\n**Inherited:**\\n\\n"
+	      )
+	      class Class2(Class1):
+	        '''What is specific to Class2.'''
+
+	:param baseClass: Base-class to copy the doc-string from to the class or method being decorated.
+	:param merge:     If ``True``, combine both doc-strings instead of replacing the derived one; defaults to ``False``.
+	:param order:     Order in which both doc-strings are arranged when merging; defaults to
+	                  :attr:`~DocStringMergeOrder.BaseFirst`.
+	:param prefix:    Text inserted in front of the merged doc-string; defaults to an empty string.
+	:param interfix:  Text inserted between both doc-strings; defaults to a blank line (``"\\n\\n"``).
+	:param postfix:   Text appended to the merged doc-string; defaults to an empty string.
+	:returns:         Decorator function that copies or merges the doc-string.
+
+	.. seealso::
+
+	   * :class:`DocStringMergeOrder`
 	"""
 	def decorator(param: Func | type) -> Func | type:
 		"""
-		Decorator function, which copies the doc-string from base-class' method to method ``m``.
+		Decorator function, which copies or merges the doc-string from base-class' method to method ``m``.
 
 		:param param: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
-		:returns: Same method, but with overwritten doc-string field (``__doc__``).
+		:returns:     Same method, but with overwritten doc-string field (``__doc__``).
 		"""
 		if isinstance(param, type):
 			baseDoc = baseClass.__doc__
@@ -233,10 +292,16 @@ def InheritDocString(baseClass: type, merge: bool = False) -> Callable[[Func | t
 			return param
 
 		if merge:
-			if param.__doc__ is None:
-				param.__doc__ = baseDoc
-			elif baseDoc is not None:
-				param.__doc__ = baseDoc + "\n\n" + param.__doc__
+			derivedDoc = param.__doc__
+			if baseDoc is None:
+				if derivedDoc is not None:
+					param.__doc__ = f"{prefix}{cleandoc(derivedDoc)}{postfix}"
+			elif derivedDoc is None:
+				param.__doc__ = f"{prefix}{cleandoc(baseDoc)}{postfix}"
+			elif order is DocStringMergeOrder.DerivedFirst:
+				param.__doc__ = f"{prefix}{cleandoc(derivedDoc)}{interfix}{cleandoc(baseDoc)}{postfix}"
+			else:
+				param.__doc__ = f"{prefix}{cleandoc(baseDoc)}{interfix}{cleandoc(derivedDoc)}{postfix}"
 		else:
 			param.__doc__ = baseDoc
 
