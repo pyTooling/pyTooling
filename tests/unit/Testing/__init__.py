@@ -34,7 +34,7 @@ from subprocess import TimeoutExpired
 from unittest   import TestCase
 
 from pyTooling.Platform import CurrentPlatform
-from pyTooling.Testing  import ApplicationTestcaseMixin, TestingException, stripANSIColorCodes
+from pyTooling.Testing  import ApplicationTestcaseMixin, AssertionMixin, TestingException, stripANSIColorCodes
 
 
 #: Names the Python interpreter may be installed under. Which of them exists is not decided by the platform alone:
@@ -135,3 +135,21 @@ class ATestcaseThatIsNotSetUp(TestCase):
 
 		self.assertIn("no-such-program-here", str(context.exception))
 		self.assertIsInstance(context.exception.__cause__, FileNotFoundError)
+
+
+class Assertions(AssertionMixin, TestCase):
+	"""The attribute assertions, whether they come from unittest or from the mixin."""
+
+	def test_AnExistingAttributeIsFound(self) -> None:
+		self.assertHasAttr(self, "assertHasAttr")
+
+	def test_AMissingAttributeFails(self) -> None:
+		with self.assertRaises(AssertionError):
+			self.assertHasAttr(object(), "noSuchAttribute")
+
+	def test_AMissingAttributeIsAccepted(self) -> None:
+		self.assertNotHasAttr(object(), "noSuchAttribute")
+
+	def test_AnExistingAttributeFailsTheNegation(self) -> None:
+		with self.assertRaises(AssertionError):
+			self.assertNotHasAttr(object(), "__class__")

@@ -60,6 +60,19 @@ Assertions
 reports the command line together with what the program printed. That output is what explains the failure, and it
 is gone once the test has finished, so it belongs in the assertion message rather than in the console.
 
+:class:`~pyTooling.Testing.AssertionMixin` provides assertions that :mod:`unittest` gained later than the oldest
+Python version pyTooling supports, so a test suite can use them whichever interpreter runs it:
+
+.. code-block:: python
+
+   class Slots(AssertionMixin, TestCase):
+     def test_SlotsAreDerived(self) -> None:
+       self.assertHasAttr(MyClass, "__slots__")
+
+:meth:`~pyTooling.Testing.AssertionMixin.assertHasAttr` and
+:meth:`~pyTooling.Testing.AssertionMixin.assertNotHasAttr` were added to :class:`unittest.TestCase` in Python 3.14.
+On 3.14 and newer the mixin defines nothing, so the standard library's implementations and messages are used.
+
 .. _TESTING/Helpers:
 
 Helpers

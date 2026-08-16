@@ -43,8 +43,8 @@ from pathlib    import Path
 from re         import compile as re_compile
 from shutil     import which
 from subprocess import CompletedProcess, run as subprocess_run
-from sys        import executable as PythonExecutable
-from typing     import ClassVar, Dict, Optional as Nullable
+from sys        import executable as PythonExecutable, version_info
+from typing     import Any, ClassVar, Dict, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Exceptions import ToolingException
@@ -71,6 +71,53 @@ def stripANSIColorCodes(text: str) -> str:
 	:returns:    The text without ANSI color codes.
 	"""
 	return _ANSI_COLOR_CODES.sub("", text)
+
+
+@export
+class AssertionMixin:
+	"""
+	A mixin for :class:`unittest.TestCase` classes providing assertions that Python's :mod:`unittest` gained later
+	than the oldest Python version pyTooling supports.
+
+	Derive from this mixin *and* :class:`~unittest.TestCase`, and the assertions are available regardless of the
+	interpreter running the tests:
+
+	.. code-block:: python
+
+	   class Slots(AssertionMixin, TestCase):
+	     def test_SlotsAreDerived(self) -> None:
+	       self.assertHasAttr(MyClass, "__slots__")
+
+	On Python 3.14 and newer, :class:`unittest.TestCase` implements them and this mixin defines nothing, so the
+	standard library's messages are used.
+	"""
+
+	if version_info < (3, 14):  # pragma: no cover
+		def assertHasAttr(self, obj: Any, name: str, msg: Nullable[str] = None) -> None:
+			"""
+			Assert an object has an attribute of the given name.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param obj:  The object to check.
+			:param name: Name of the attribute the object is expected to have.
+			:param msg:  An optional message replacing the generated one.
+			"""
+			if not hasattr(obj, name):
+				self.fail(msg or f"{type(obj).__name__!r} object has no attribute {name!r}")
+
+		def assertNotHasAttr(self, obj: Any, name: str, msg: Nullable[str] = None) -> None:
+			"""
+			Assert an object has no attribute of the given name.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param obj:  The object to check.
+			:param name: Name of the attribute the object is expected not to have.
+			:param msg:  An optional message replacing the generated one.
+			"""
+			if hasattr(obj, name):
+				self.fail(msg or f"{type(obj).__name__!r} object has unexpected attribute {name!r}")
 
 
 @export
