@@ -47,6 +47,38 @@ from pyTooling.Common      import getFullyQualifiedName
 
 
 @export
+class VersionValidatorException(ToolingException):
+	"""
+	Raised when a parsed version is rejected by the validator it was parsed with.
+
+	The version string itself was well-formed - it parsed - so this is not a :exc:`ValueError` about the input, but
+	a statement that the resulting version is not acceptable to the caller. The version that failed is carried in
+	:attr:`Version`, so a caller can report what was wrong with it.
+	"""
+
+	_version: "Version"
+
+	def __init__(self, version: "Version", message: str) -> None:
+		"""
+		Initializes the exception with the rejected version.
+
+		:param version: The version the validator rejected.
+		:param message: The exception's message.
+		"""
+		super().__init__(message)
+		self._version = version
+
+	@readonly
+	def Version(self) -> "Version":
+		"""
+		Read-only property to access the version the validator rejected (:attr:`_version`).
+
+		:returns: The rejected version.
+		"""
+		return self._version
+
+
+@export
 class Parts(Flag):
 	"""Enumeration describing parts of a version number that can be present."""
 	Unknown = 0     #: Undocumented
@@ -1085,6 +1117,7 @@ class SemanticVersion(Version):
 		:raises TypeError:    When parameter ``versionString`` is not a string.
 		:raises ValueError:   When parameter ``versionString`` is None.
 		:raises ValueError:   When parameter ``versionString`` is empty.
+		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1152,8 +1185,7 @@ class SemanticVersion(Version):
 		)
 
 		if validator is not None and not validator(version):
-			# TODO: VersionValidatorException
-			raise ValueError(f"Failed to validate version string '{versionString}'.")
+			raise VersionValidatorException(version, f"Failed to validate version string '{versionString}'.")
 
 		return version
 
@@ -1483,6 +1515,7 @@ class CalendarVersion(Version):
 		:raises TypeError:    If parameter ``versionString`` is not a string.
 		:raises ValueError:   If parameter ``versionString`` is None.
 		:raises ValueError:   If parameter ``versionString`` is empty.
+		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
 		:raises ValueError:   If parameter ``versionString`` isn't a calendar version number.
 		:raises ValueError:   If parameter ``versionString`` has more parts than the class describes.
 		"""
@@ -1517,7 +1550,7 @@ class CalendarVersion(Version):
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
 		if validator is not None and not validator(version):
-			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
+			raise VersionValidatorException(version, f"Failed to validate version string '{versionString}'.")
 
 		return version
 
