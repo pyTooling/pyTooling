@@ -43,6 +43,7 @@ from pathlib    import Path
 from re         import compile as re_compile
 from shutil     import which
 from subprocess import CompletedProcess, run as subprocess_run
+from unittest   import TestCase
 from sys        import executable as PythonExecutable, version_info
 from typing     import Any, ClassVar, Dict, Optional as Nullable
 
@@ -74,22 +75,21 @@ def stripANSIColorCodes(text: str) -> str:
 
 
 @export
-class AssertionMixin:
+class Testcase(TestCase):
 	"""
-	A mixin for :class:`unittest.TestCase` classes providing assertions that Python's :mod:`unittest` gained later
-	than the oldest Python version pyTooling supports.
+	The base class for pyTooling's testcases, deriving from :class:`unittest.TestCase`.
 
-	Derive from this mixin *and* :class:`~unittest.TestCase`, and the assertions are available regardless of the
-	interpreter running the tests:
+	It adds the assertions Python's :mod:`unittest` gained later than the oldest Python version pyTooling supports,
+	so a test suite can use them whichever interpreter runs it:
 
 	.. code-block:: python
 
-	   class Slots(AssertionMixin, TestCase):
+	   class Slots(Testcase):
 	     def test_SlotsAreDerived(self) -> None:
 	       self.assertHasAttr(MyClass, "__slots__")
 
-	On Python 3.14 and newer, :class:`unittest.TestCase` implements them and this mixin defines nothing, so the
-	standard library's messages are used.
+	On Python 3.14 and newer, :class:`unittest.TestCase` implements them and this class defines nothing, so the
+	standard library's implementations and messages are used.
 	"""
 
 	if version_info < (3, 14):  # pragma: no cover
@@ -121,19 +121,19 @@ class AssertionMixin:
 
 
 @export
-class ApplicationTestcaseMixin:
+class ApplicationTestcase(Testcase):
 	"""
-	A mixin for :class:`unittest.TestCase` classes testing an application through its command line.
+	The base class for testcases exercising an application through its command line.
 
 	It resolves the installed console script once per test class, offers two ways to run the program - through the
 	installed entry point and through ``python -m <module>`` - and an assertion that reports the exit code together
 	with what the program printed.
 
-	Derive from this mixin *and* :class:`~unittest.TestCase`, and name what is being tested:
+	Derive from it and name what is being tested:
 
 	.. code-block:: python
 
-	   class Commands(ApplicationTestcaseMixin, TestCase):
+	   class Commands(ApplicationTestcase):
 	     _consoleScript =  "myprogram"
 	     _runnableModule = "myPackage.CLI"
 

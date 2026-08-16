@@ -148,7 +148,7 @@
    :members:
    :private-members:
    :special-members:
-   :inherited-members:
+   :inherited-members: object, TestCase
    :exclude-members: __weakref__, __init_subclass__, __class_getitem__
 
    .. rubric:: Inheritance

@@ -34,7 +34,7 @@ from subprocess import TimeoutExpired
 from unittest   import TestCase
 
 from pyTooling.Platform import CurrentPlatform
-from pyTooling.Testing  import ApplicationTestcaseMixin, AssertionMixin, TestingException, stripANSIColorCodes
+from pyTooling.Testing  import ApplicationTestcase, Testcase, TestingException, stripANSIColorCodes
 
 
 #: Names the Python interpreter may be installed under. Which of them exists is not decided by the platform alone:
@@ -56,7 +56,7 @@ class StripANSIColorCodes(TestCase):
 		self.assertEqual("a[31mb", stripANSIColorCodes("a[31m\x1B[1;32mb"))
 
 
-class RunningAModule(ApplicationTestcaseMixin, TestCase):
+class RunningAModule(ApplicationTestcase):
 	"""The mixin runs a module and reports what it did. 'json.tool' is used because it ships with Python."""
 
 	_consoleScript =  PYTHON_CONSOLE_SCRIPT
@@ -88,7 +88,7 @@ class RunningAModule(ApplicationTestcaseMixin, TestCase):
 			self.RunModule(stdInput="", timeout=0.001)
 
 
-class RunningAConsoleScript(ApplicationTestcaseMixin, TestCase):
+class RunningAConsoleScript(ApplicationTestcase):
 	"""'python' itself is on PATH in every environment this runs in, so it stands in for an installed program."""
 
 	_consoleScript =  PYTHON_CONSOLE_SCRIPT
@@ -108,7 +108,7 @@ class ATestcaseThatIsNotSetUp(TestCase):
 	"""setUpClass refuses a test class that cannot run anything, rather than letting every testcase fail."""
 
 	def test_AMissingConsoleScriptIsReported(self) -> None:
-		class Missing(ApplicationTestcaseMixin, TestCase):
+		class Missing(ApplicationTestcase):
 			_runnableModule = "json.tool"
 
 		with self.assertRaises(TestingException) as context:
@@ -117,7 +117,7 @@ class ATestcaseThatIsNotSetUp(TestCase):
 		self.assertIn("_consoleScript", str(context.exception))
 
 	def test_AMissingRunnableModuleIsReported(self) -> None:
-		class Missing(ApplicationTestcaseMixin, TestCase):
+		class Missing(ApplicationTestcase):
 			_consoleScript = PYTHON_CONSOLE_SCRIPT
 
 		with self.assertRaises(TestingException) as context:
@@ -126,7 +126,7 @@ class ATestcaseThatIsNotSetUp(TestCase):
 		self.assertIn("_runnableModule", str(context.exception))
 
 	def test_AnUninstalledConsoleScriptIsReported(self) -> None:
-		class Missing(ApplicationTestcaseMixin, TestCase):
+		class Missing(ApplicationTestcase):
 			_consoleScript =  "no-such-program-here"
 			_runnableModule = "json.tool"
 
@@ -137,7 +137,7 @@ class ATestcaseThatIsNotSetUp(TestCase):
 		self.assertIsInstance(context.exception.__cause__, FileNotFoundError)
 
 
-class Assertions(AssertionMixin, TestCase):
+class Assertions(Testcase):
 	"""The attribute assertions, whether they come from unittest or from the mixin."""
 
 	def test_AnExistingAttributeIsFound(self) -> None:

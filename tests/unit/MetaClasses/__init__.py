@@ -31,10 +31,9 @@
 """
 Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
-from unittest              import TestCase
 
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Testing     import AssertionMixin
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class WithoutSlots(AssertionMixin, TestCase):
+class WithoutSlots(Testcase):
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType):
 			pass
@@ -488,7 +487,7 @@ class WithoutSlots(AssertionMixin, TestCase):
 		self.assertEqual(18, inst._data_3)
 
 
-class WithSlots(AssertionMixin, TestCase):
+class WithSlots(Testcase):
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			pass
@@ -533,7 +532,7 @@ class WithSlots(AssertionMixin, TestCase):
 		self.assertIsNotNone(inst)
 
 
-class Mixin(AssertionMixin, TestCase):
+class Mixin(Testcase):
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType, mixin=True):
 			pass
