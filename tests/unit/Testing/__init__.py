@@ -1,17 +1,17 @@
 # ==================================================================================================================== #
-#              _____           _ _               ____  _                           _       _                           #
-#   _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|| |_ ___  _ ____      ____ _| |_ ___| |__                        #
-#  | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | \___ \| __/ _ \| '_ \ \ /\ / / _` | __/ __| '_ \                       #
-#  | |_) | |_| || | (_) | (_) | | | | | | (_| |_ ___) | || (_) | |_) \ V  V / (_| | || (__| | | |                      #
-#  | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \__\___/| .__/ \_/\_/ \__,_|\__\___|_| |_|                      #
-#  |_|    |___/                          |___/                 |_|                                                     #
+#             _____           _ _             _____         _   _                                                      #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _|__  ___| |_(_)_ __   __ _                                          #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |/ _ \/ __| __| | '_ \ / _` |                                         #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  __/\__ \ |_| | | | | (_| |                                         #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|\___||___/\__|_|_| |_|\__, |                                         #
+# |_|    |___/                          |___/                           |___/                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,11 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for the application testing helpers."""
+"""Unit tests for :mod:`pyTooling.Testing`."""
 from subprocess import TimeoutExpired
 from unittest   import TestCase
 
-from pyTooling.Testing import ApplicationTestcaseMixin, stripANSIColorCodes
+from pyTooling.Testing import ApplicationTestcaseMixin, TestingException, stripANSIColorCodes
 
 
 class StripANSIColorCodes(TestCase):
@@ -49,6 +49,7 @@ class StripANSIColorCodes(TestCase):
 class RunningAModule(ApplicationTestcaseMixin, TestCase):
 	"""The mixin runs a module and reports what it did. 'json.tool' is used because it ships with Python."""
 
+	_consoleScript =  "python3"
 	_runnableModule = "json.tool"
 
 	def test_ExitCodeAndOutputAreCaptured(self) -> None:
@@ -76,17 +77,12 @@ class RunningAModule(ApplicationTestcaseMixin, TestCase):
 		with self.assertRaises(TimeoutExpired):
 			self.RunModule(stdInput="", timeout=0.001)
 
-	def test_WithoutAConsoleScriptTheEntrypointSaysSo(self) -> None:
-		with self.assertRaises(NotImplementedError) as context:
-			self.RunEntrypoint("--version")
-
-		self.assertIn("_consoleScript", str(context.exception))
-
 
 class RunningAConsoleScript(ApplicationTestcaseMixin, TestCase):
 	"""'python' itself is on PATH in every environment this runs in, so it stands in for an installed program."""
 
-	_consoleScript = "python3"
+	_consoleScript =  "python3"
+	_runnableModule = "json.tool"
 
 	def test_TheExecutableIsResolved(self) -> None:
 		self.assertIsNotNone(self._executable)
@@ -97,19 +93,35 @@ class RunningAConsoleScript(ApplicationTestcaseMixin, TestCase):
 		self.assertExitCode(result)
 		self.assertEqual("hello\n", result.stdout)
 
-	def test_WithoutARunnableModuleTheModuleRunnerSaysSo(self) -> None:
-		with self.assertRaises(NotImplementedError) as context:
-			self.RunModule("--version")
+
+class ATestcaseThatIsNotSetUp(TestCase):
+	"""setUpClass refuses a test class that cannot run anything, rather than letting every testcase fail."""
+
+	def test_AMissingConsoleScriptIsReported(self) -> None:
+		class Missing(ApplicationTestcaseMixin, TestCase):
+			_runnableModule = "json.tool"
+
+		with self.assertRaises(TestingException) as context:
+			Missing.setUpClass()
+
+		self.assertIn("_consoleScript", str(context.exception))
+
+	def test_AMissingRunnableModuleIsReported(self) -> None:
+		class Missing(ApplicationTestcaseMixin, TestCase):
+			_consoleScript = "python3"
+
+		with self.assertRaises(TestingException) as context:
+			Missing.setUpClass()
 
 		self.assertIn("_runnableModule", str(context.exception))
 
-
-class AMissingConsoleScript(TestCase):
-	def test_SetUpClassExplainsWhatIsMissing(self) -> None:
+	def test_AnUninstalledConsoleScriptIsReported(self) -> None:
 		class Missing(ApplicationTestcaseMixin, TestCase):
-			_consoleScript = "no-such-program-here"
+			_consoleScript =  "no-such-program-here"
+			_runnableModule = "json.tool"
 
-		with self.assertRaises(FileNotFoundError) as context:
+		with self.assertRaises(TestingException) as context:
 			Missing.setUpClass()
 
 		self.assertIn("no-such-program-here", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, FileNotFoundError)
