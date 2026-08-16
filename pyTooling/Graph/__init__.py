@@ -187,10 +187,52 @@ class NotInDifferentSubgraphs(GraphException):
 class DuplicateVertexError(GraphException):
 	"""The exception is raised when the vertex already exists in the graph."""
 
+	_vertexID: Nullable[VertexIDType]
+
+	def __init__(self, message: str, /, *, vertexID: Nullable[VertexIDType] = None) -> None:
+		"""
+		Initializes the exception with the identifier that is already taken.
+
+		:param message:  The exception's message.
+		:param vertexID: The vertex identifier that already exists.
+		"""
+		super().__init__(message)
+		self._vertexID = vertexID
+
+	@readonly
+	def VertexID(self) -> Nullable[VertexIDType]:
+		"""
+		Read-only property to access the identifier that already exists (:attr:`_vertexID`).
+
+		:returns: The duplicate vertex identifier, or ``None`` if it wasn't recorded.
+		"""
+		return self._vertexID
+
 
 @export
 class DuplicateEdgeError(GraphException):
 	"""The exception is raised when the edge already exists in the graph."""
+
+	_edgeID: Nullable[EdgeIDType]
+
+	def __init__(self, message: str, /, *, edgeID: Nullable[EdgeIDType] = None) -> None:
+		"""
+		Initializes the exception with the identifier that is already taken.
+
+		:param message: The exception's message.
+		:param edgeID:  The edge identifier that already exists.
+		"""
+		super().__init__(message)
+		self._edgeID = edgeID
+
+	@readonly
+	def EdgeID(self) -> Nullable[EdgeIDType]:
+		"""
+		Read-only property to access the identifier that already exists (:attr:`_edgeID`).
+
+		:returns: The duplicate edge identifier, or ``None`` if it wasn't recorded.
+		"""
+		return self._edgeID
 
 
 @export
@@ -552,7 +594,7 @@ class Vertex(
 			elif vertexID not in self._graph._verticesWithID:
 				self._graph._verticesWithID[vertexID] = self
 			else:
-				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.")
+				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this graph.", vertexID=vertexID)
 		else:
 			self._graph = subgraph._graph
 			self._subgraph = subgraph
@@ -563,7 +605,7 @@ class Vertex(
 			elif vertexID not in subgraph._verticesWithID:
 				subgraph._verticesWithID[vertexID] = self
 			else:
-				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this subgraph.")
+				raise DuplicateVertexError(f"Vertex ID '{vertexID}' already exists in this subgraph.", vertexID=vertexID)
 
 		self._views =         {}
 		self._inboundEdges =  []
@@ -833,7 +875,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._graph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 			else:
 				# TODO: keep _graph pointer in edge and then register edge on graph?
 				if edgeID is None:
@@ -841,7 +883,7 @@ class Vertex(
 				elif edgeID not in self._subgraph._edgesWithID:
 					self._subgraph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this subgraph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this subgraph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
 			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
@@ -897,7 +939,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._graph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 			else:
 				# TODO: keep _graph pointer in edge and then register edge on graph?
 				if edgeID is None:
@@ -905,7 +947,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._subgraph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
 			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
@@ -969,7 +1011,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._graph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 			else:
 				# TODO: keep _graph pointer in edge and then register edge on graph?
 				if edgeID is None:
@@ -977,7 +1019,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._subgraph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
 			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
@@ -1041,7 +1083,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._graph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 			else:
 				# TODO: keep _graph pointer in edge and then register edge on graph?
 				if edgeID is None:
@@ -1049,7 +1091,7 @@ class Vertex(
 				elif edgeID not in self._graph._edgesWithID:
 					self._subgraph._edgesWithID[edgeID] = edge
 				else:
-					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
 			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
@@ -1110,7 +1152,7 @@ class Vertex(
 				elif linkID not in self._graph._linksWithID:
 					self._graph._linksWithID[linkID] = link
 				else:
-					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.", edgeID=linkID)
 			else:
 				# TODO: keep _graph pointer in link and then register link on graph?
 				if linkID is None:
@@ -1120,7 +1162,7 @@ class Vertex(
 					self._subgraph._linksWithID[linkID] = link
 					vertex._subgraph._linksWithID[linkID] = link
 				else:
-					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.", edgeID=linkID)
 
 		return link
 
@@ -1176,7 +1218,7 @@ class Vertex(
 				elif linkID not in self._graph._linksWithID:
 					self._graph._linksWithID[linkID] = link
 				else:
-					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.", edgeID=linkID)
 			else:
 				# TODO: keep _graph pointer in link and then register link on graph?
 				if linkID is None:
@@ -1186,7 +1228,7 @@ class Vertex(
 					self._subgraph._linksWithID[linkID] = link
 					vertex._subgraph._linksWithID[linkID] = link
 				else:
-					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.")
+					raise DuplicateEdgeError(f"Link ID '{linkID}' already exists in this graph.", edgeID=linkID)
 
 		return link
 
