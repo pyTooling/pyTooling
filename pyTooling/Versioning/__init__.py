@@ -1111,12 +1111,12 @@ class SemanticVersion(Version):
 		* ``r|R`` - release, revision
 		* ``rev|REV`` - revision
 
-		:param versionString: The version string to parse.
-		:param validator:     Optional, a validation function.
-		:returns:             An object representing a semantic version.
-		:raises TypeError:    When parameter ``versionString`` is not a string.
-		:raises ValueError:   When parameter ``versionString`` is None.
-		:raises ValueError:   When parameter ``versionString`` is empty.
+		:param versionString:              The version string to parse.
+		:param validator:                  Optional, a validation function.
+		:returns:                          An object representing a semantic version.
+		:raises TypeError:                 When parameter ``versionString`` is not a string.
+		:raises ValueError:                When parameter ``versionString`` is None.
+		:raises ValueError:                When parameter ``versionString`` is empty.
 		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
@@ -1509,15 +1509,15 @@ class CalendarVersion(Version):
 		:class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so a third part is rejected for
 		them.
 
-		:param versionString: The version string to parse.
-		:param validator:     Optional, a validation function.
-		:returns:             An object representing a calendar version.
-		:raises TypeError:    If parameter ``versionString`` is not a string.
-		:raises ValueError:   If parameter ``versionString`` is None.
-		:raises ValueError:   If parameter ``versionString`` is empty.
+		:param versionString:              The version string to parse.
+		:param validator:                  Optional, a validation function.
+		:returns:                          An object representing a calendar version.
+		:raises TypeError:                 If parameter ``versionString`` is not a string.
+		:raises ValueError:                If parameter ``versionString`` is None.
+		:raises ValueError:                If parameter ``versionString`` is empty.
+		:raises ValueError:                If parameter ``versionString`` isn't a calendar version number.
+		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes.
 		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
-		:raises ValueError:   If parameter ``versionString`` isn't a calendar version number.
-		:raises ValueError:   If parameter ``versionString`` has more parts than the class describes.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")

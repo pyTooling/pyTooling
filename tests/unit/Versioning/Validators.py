@@ -28,7 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
 """Unit tests for version validators and the exception raised when one rejects a version."""
 from unittest              import TestCase
 
