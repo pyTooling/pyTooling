@@ -30,9 +30,11 @@
 #
 """Unit tests for version validators and the exception raised when one rejects a version."""
 """Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises."""
-from unittest         import TestCase
+from unittest             import TestCase
 
-from pyTooling.Warning import SupervisedThreadException, ThreadSupervisor
+from pyTooling.Exceptions import ExceptionBase
+from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
+from pyTooling.Warning    import UnhandledCriticalWarningException, UnhandledExceptionException
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -83,3 +85,17 @@ class ReRaising(TestCase):
 			self._supervisorWith("Alpha", "Beta").ReRaise(unwrapped=True)
 
 		self.assertTrue(all(isinstance(exception, ValueError) for exception in context.exception.exceptions))
+
+
+class RemovedExceptions(TestCase):
+	"""The deprecated base class is gone, and the two exceptions still exist in their own right."""
+
+	def test_TheDeprecatedBaseIsGone(self) -> None:
+		import pyTooling.Warning as warningModule
+
+		self.assertFalse(hasattr(warningModule, "UnhandledWarningException"))
+
+	def test_BothExceptionsAreToolingExceptions(self) -> None:
+		for exceptionType in (UnhandledCriticalWarningException, UnhandledExceptionException):
+			with self.subTest(exception=exceptionType.__name__):
+				self.assertTrue(issubclass(exceptionType, ExceptionBase))
