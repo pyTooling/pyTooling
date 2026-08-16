@@ -363,13 +363,19 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Initializes a warning collector.
 
-		:param warnings:   An optional reference to a list of warnings, which can be modified (appended) by this warning
-		                   collector. If ``None``, an internal list is created and can be referenced by the collector's
-		                   instance.
-		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
-		                   be reraised as an exception.
-		:raises TypeError: If optional parameter 'warnings' is not of type list.
-		:raises TypeError: If optional parameter 'handler' is not a callable.
+		:param warnings:         An optional reference to a list of warnings, which can be modified (appended) by this
+		                         warning collector. If ``None``, an internal list is created and can be referenced by the
+		                         collector's instance.
+		:param handler:          An optional handler function, which processes the current warning and decides if a warning
+		                         should be reraised as an exception.
+		:param supervisor:       An optional thread supervisor. On leaving the context, the collected warnings and an
+		                         exception leaving the block are handed to it, so the thread that started this one can
+		                         reraise them. Without a supervisor, an exception leaves the block unchanged.
+		:param exceptionHandler: An optional handler function, called with an exception leaving the block when a supervisor
+		                         is set. Its result decides whether the exception is suppressed.
+		:param finallyHandler:   An optional function called when the context is left, whether or not an exception left it.
+		:raises TypeError:       If optional parameter 'warnings' is not of type list.
+		:raises TypeError:       If optional parameter 'handler' is not a callable.
 		"""
 		super().__init__(warnings, handler)
 
@@ -435,19 +441,33 @@ class SupervisedThreadException(ExceptionBase):
 	The exception is raise if a supervised thread received an unhandled exception which got collected by
 	:class:`ExceptionCollector`.
 	"""
-	_threadName: str
+	_threadName: Nullable[str]
 
-	def __init__(self, threadName: str, message: str, /, cause: Nullable[BaseException] = None) -> None:
+	def __init__(
+		self,
+		message: str,
+		/,
+		*,
+		threadName: Nullable[str] = None,
+		cause: Nullable[BaseException] = None
+	) -> None:
+		"""
+		Initializes the exception with the name of the thread that failed.
+
+		:param message:    The exception's message.
+		:param threadName: Name of the thread that raised the collected exception.
+		:param cause:      The exception collected from that thread.
+		"""
 		super().__init__(message)
 		self._threadName = threadName
 		self.__cause__ = cause
 
 	@readonly
-	def ThreadName(self) -> str:
+	def ThreadName(self) -> Nullable[str]:
 		"""
 		Read-only property to access the name of the thread that raised the exception (:attr:`_threadName`).
 
-		:returns: Name of the thread.
+		:returns: Name of the thread, or ``None`` if it wasn't recorded.
 		"""
 		return self._threadName
 
@@ -576,7 +596,7 @@ class ThreadSupervisor:
 			if unwrapped:
 				raise ex
 			else:
-				raise SupervisedThreadException(threadName, f"Thread '{threadName}' failed.") from ex
+				raise SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName) from ex
 
 		elif unwrapped:
 			raise ExceptionGroup(
@@ -586,5 +606,8 @@ class ThreadSupervisor:
 		else:
 			raise ExceptionGroup(
 				"Multiple threads failed.",
-				[SupervisedThreadException(f"Thread '{threadName}' failed.", cause=ex) for threadName, ex in exceptions]
+				[
+					SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName, cause=ex)
+					for threadName, ex in exceptions
+				]
 			)
