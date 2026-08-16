@@ -1119,6 +1119,12 @@ License
 
    Terminal/index
 
+.. toctree::
+   :caption: Testing
+   :hidden:
+
+   Testing
+
 .. raw:: latex
 
    \part{References and Reports}
