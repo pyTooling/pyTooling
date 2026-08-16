@@ -363,13 +363,19 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Initializes a warning collector.
 
-		:param warnings:   An optional reference to a list of warnings, which can be modified (appended) by this warning
-		                   collector. If ``None``, an internal list is created and can be referenced by the collector's
-		                   instance.
-		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
-		                   be reraised as an exception.
-		:raises TypeError: If optional parameter 'warnings' is not of type list.
-		:raises TypeError: If optional parameter 'handler' is not a callable.
+		:param warnings:         An optional reference to a list of warnings, which can be modified (appended) by this
+		                         warning collector. If ``None``, an internal list is created and can be referenced by the
+		                         collector's instance.
+		:param handler:          An optional handler function, which processes the current warning and decides if a warning
+		                         should be reraised as an exception.
+		:param supervisor:       An optional thread supervisor. On leaving the context, the collected warnings and an
+		                         exception leaving the block are handed to it, so the thread that started this one can
+		                         reraise them. Without a supervisor, an exception leaves the block unchanged.
+		:param exceptionHandler: An optional handler function, called with an exception leaving the block when a supervisor
+		                         is set. Its result decides whether the exception is suppressed.
+		:param finallyHandler:   An optional function called when the context is left, whether or not an exception left it.
+		:raises TypeError:       If optional parameter 'warnings' is not of type list.
+		:raises TypeError:       If optional parameter 'handler' is not a callable.
 		"""
 		super().__init__(warnings, handler)
 
