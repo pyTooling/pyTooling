@@ -33,7 +33,8 @@ from typing   import Any, Optional as Nullable, List, Tuple, Callable
 from unittest import TestCase
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError, CycleError
+from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, CycleError
+from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
 
@@ -1501,3 +1502,27 @@ class GraphToTree(Iterate):
 
 		self.assertEqual(g.VertexCount, tree.Size)
 		self.assertSetEqual(set([v.Value for v in g.IterateLeafs()]), set([n.Value for n in tree.IterateLeafs()]))
+
+
+class DuplicateIdentifiers(TestCase):
+	"""A duplicate identifier is carried by the exception, not only formatted into its message."""
+
+	def test_ADuplicateVertexIDIsCarried(self) -> None:
+		graph = Graph()
+		Vertex(vertexID="v1", graph=graph)
+
+		with self.assertRaises(DuplicateVertexError) as context:
+			Vertex(vertexID="v1", graph=graph)
+
+		self.assertEqual("v1", context.exception.VertexID)
+
+	def test_ADuplicateEdgeIDIsCarried(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		first.EdgeToVertex(second, edgeID="e1")
+
+		with self.assertRaises(DuplicateEdgeError) as context:
+			first.EdgeToVertex(second, edgeID="e1")
+
+		self.assertEqual("e1", context.exception.EdgeID)
