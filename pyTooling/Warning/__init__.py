@@ -439,7 +439,7 @@ class SupervisedThreadException(ExceptionBase):
 
 	def __init__(
 		self,
-		message: str = "",
+		message: str,
 		/,
 		*,
 		threadName: Nullable[str] = None,
