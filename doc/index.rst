@@ -1120,6 +1120,12 @@ License
    Terminal/index
 
 .. toctree::
+   :caption: Package Dependencies
+   :hidden:
+
+   PackageDependencies
+
+.. toctree::
    :caption: Testing
    :hidden:
 
