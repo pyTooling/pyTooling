@@ -158,6 +158,7 @@ latex_documents = [
 extensions = [
 # Standard Sphinx extensions
 	"sphinx.ext.autodoc",
+	"sphinx.ext.napoleon",
 	"sphinx.ext.extlinks",
 	"sphinx.ext.intersphinx",
 	"sphinx.ext.inheritance_diagram",
