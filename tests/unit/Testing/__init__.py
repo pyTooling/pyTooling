@@ -29,6 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for :mod:`pyTooling.Testing`."""
+from shutil     import which
 from subprocess import TimeoutExpired
 from unittest   import TestCase
 
@@ -36,8 +37,12 @@ from pyTooling.Platform import CurrentPlatform
 from pyTooling.Testing  import ApplicationTestcaseMixin, TestingException, stripANSIColorCodes
 
 
-#: The Python interpreter is not called the same everywhere: 'py' on Windows, 'python3' elsewhere.
-PYTHON_CONSOLE_SCRIPT = "py" if CurrentPlatform.IsNativeWindows else "python3"
+#: Names the Python interpreter may be installed under. Which of them exists is not decided by the platform alone:
+#: Debian and Ubuntu ship 'python3' and only add 'python' with the 'python-is-python3' package, Arch ships
+#: 'python', a virtual environment provides whichever names it was created with, and Windows adds the 'py'
+#: launcher. So the platform picks the order and the first name actually installed wins.
+_INTERPRETER_NAMES = ("py", "python", "python3") if CurrentPlatform.IsNativeWindows else ("python3", "python", "py")
+PYTHON_CONSOLE_SCRIPT = next((name for name in _INTERPRETER_NAMES if which(name) is not None), _INTERPRETER_NAMES[0])
 
 
 class StripANSIColorCodes(TestCase):
