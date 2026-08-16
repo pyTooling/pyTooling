@@ -32,7 +32,12 @@
 from subprocess import TimeoutExpired
 from unittest   import TestCase
 
-from pyTooling.Testing import ApplicationTestcaseMixin, TestingException, stripANSIColorCodes
+from pyTooling.Platform import CurrentPlatform
+from pyTooling.Testing  import ApplicationTestcaseMixin, TestingException, stripANSIColorCodes
+
+
+#: The Python interpreter is not called the same everywhere: 'py' on Windows, 'python3' elsewhere.
+PYTHON_CONSOLE_SCRIPT = "py" if CurrentPlatform.IsNativeWindows else "python3"
 
 
 class StripANSIColorCodes(TestCase):
@@ -49,7 +54,7 @@ class StripANSIColorCodes(TestCase):
 class RunningAModule(ApplicationTestcaseMixin, TestCase):
 	"""The mixin runs a module and reports what it did. 'json.tool' is used because it ships with Python."""
 
-	_consoleScript =  "python3"
+	_consoleScript =  PYTHON_CONSOLE_SCRIPT
 	_runnableModule = "json.tool"
 
 	def test_ExitCodeAndOutputAreCaptured(self) -> None:
@@ -81,7 +86,7 @@ class RunningAModule(ApplicationTestcaseMixin, TestCase):
 class RunningAConsoleScript(ApplicationTestcaseMixin, TestCase):
 	"""'python' itself is on PATH in every environment this runs in, so it stands in for an installed program."""
 
-	_consoleScript =  "python3"
+	_consoleScript =  PYTHON_CONSOLE_SCRIPT
 	_runnableModule = "json.tool"
 
 	def test_TheExecutableIsResolved(self) -> None:
@@ -108,7 +113,7 @@ class ATestcaseThatIsNotSetUp(TestCase):
 
 	def test_AMissingRunnableModuleIsReported(self) -> None:
 		class Missing(ApplicationTestcaseMixin, TestCase):
-			_consoleScript = "python3"
+			_consoleScript = PYTHON_CONSOLE_SCRIPT
 
 		with self.assertRaises(TestingException) as context:
 			Missing.setUpClass()

@@ -50,16 +50,15 @@ from pyTooling.Decorators import export
 from pyTooling.Exceptions import ToolingException
 
 
-__all__ = ["stripANSIColorCodes"]
+_ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI escape sequence selecting a color.
 
 
 @export
 class TestingException(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Testing`."""
 
-_ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")
 
-
+@export
 def stripANSIColorCodes(text: str) -> str:
 	"""
 	Remove ANSI color codes from a text, so it can be compared to an expected output.
@@ -96,11 +95,6 @@ class ApplicationTestcaseMixin:
 
 	       self.assertExitCode(result, 0)
 	       self.assertIn("myprogram", result.stdout)
-
-	.. note::
-
-	   This is a classic mixin - no :class:`~pyTooling.MetaClasses.ExtendedType`. :class:`unittest.TestCase` is not
-	   created by that meta-class and has no ``__slots__``, so a mixin created by it cannot be combined with it.
 	"""
 
 	_consoleScript:  ClassVar[Nullable[str]] = None   #: Name of the installed console script, resolved on ``PATH``.
