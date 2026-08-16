@@ -56,24 +56,24 @@ class VersionValidatorException(ToolingException):
 	:attr:`Version`, so a caller can report what was wrong with it.
 	"""
 
-	_version: "Version"
+	_version: Nullable["Version"]
 
-	def __init__(self, version: "Version", message: str) -> None:
+	def __init__(self, message: str = "", *, version: Nullable["Version"] = None) -> None:
 		"""
 		Initializes the exception with the rejected version.
 
-		:param version: The version the validator rejected.
 		:param message: The exception's message.
+		:param version: The version the validator rejected.
 		"""
 		super().__init__(message)
 		self._version = version
 
 	@readonly
-	def Version(self) -> "Version":
+	def Version(self) -> Nullable["Version"]:
 		"""
 		Read-only property to access the version the validator rejected (:attr:`_version`).
 
-		:returns: The rejected version.
+		:returns: The rejected version, or ``None`` if it wasn't recorded.
 		"""
 		return self._version
 
@@ -1185,7 +1185,7 @@ class SemanticVersion(Version):
 		)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(version, f"Failed to validate version string '{versionString}'.")
+			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -1550,7 +1550,7 @@ class CalendarVersion(Version):
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(version, f"Failed to validate version string '{versionString}'.")
+			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 

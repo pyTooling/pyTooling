@@ -435,19 +435,32 @@ class SupervisedThreadException(ExceptionBase):
 	The exception is raise if a supervised thread received an unhandled exception which got collected by
 	:class:`ExceptionCollector`.
 	"""
-	_threadName: str
+	_threadName: Nullable[str]
 
-	def __init__(self, threadName: str, message: str, /, cause: Nullable[BaseException] = None) -> None:
+	def __init__(
+		self,
+		message: str = "",
+		*,
+		threadName: Nullable[str] = None,
+		cause: Nullable[BaseException] = None
+	) -> None:
+		"""
+		Initializes the exception with the name of the thread that failed.
+
+		:param message:    The exception's message.
+		:param threadName: Name of the thread that raised the collected exception.
+		:param cause:      The exception collected from that thread.
+		"""
 		super().__init__(message)
 		self._threadName = threadName
 		self.__cause__ = cause
 
 	@readonly
-	def ThreadName(self) -> str:
+	def ThreadName(self) -> Nullable[str]:
 		"""
 		Read-only property to access the name of the thread that raised the exception (:attr:`_threadName`).
 
-		:returns: Name of the thread.
+		:returns: Name of the thread, or ``None`` if it wasn't recorded.
 		"""
 		return self._threadName
 
@@ -576,7 +589,7 @@ class ThreadSupervisor:
 			if unwrapped:
 				raise ex
 			else:
-				raise SupervisedThreadException(threadName, f"Thread '{threadName}' failed.") from ex
+				raise SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName) from ex
 
 		elif unwrapped:
 			raise ExceptionGroup(
@@ -586,5 +599,8 @@ class ThreadSupervisor:
 		else:
 			raise ExceptionGroup(
 				"Multiple threads failed.",
-				[SupervisedThreadException(f"Thread '{threadName}' failed.", cause=ex) for threadName, ex in exceptions]
+				[
+					SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName, cause=ex)
+					for threadName, ex in exceptions
+				]
 			)

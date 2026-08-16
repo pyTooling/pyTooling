@@ -29,10 +29,10 @@
 # ==================================================================================================================== #
 #
 """Unit tests for version validators and the exception raised when one rejects a version."""
-from unittest              import TestCase
+"""Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises."""
+from unittest         import TestCase
 
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.Versioning  import CalendarVersion, SemanticVersion, VersionValidatorException
+from pyTooling.Warning import SupervisedThreadException, ThreadSupervisor
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,41 +41,45 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Validators(TestCase):
-	"""A validator rejecting a parsed version raises VersionValidatorException, not a generic ValueError."""
+class ReRaising(TestCase):
+	"""What ThreadSupervisor.ReRaise() raises for none, one and several collected exceptions."""
 
-	def test_AnAcceptedSemanticVersionIsReturned(self) -> None:
-		version = SemanticVersion.Parse("1.2.3", validator=lambda v: v.Major == 1)
+	@staticmethod
+	def _supervisorWith(*threadNames: str) -> ThreadSupervisor:
+		supervisor = ThreadSupervisor()
+		for threadName in threadNames:
+			supervisor.AddException(threadName, ValueError(f"{threadName} failed"))
 
-		self.assertEqual(1, version.Major)
+		return supervisor
 
-	def test_ARejectedSemanticVersionRaises(self) -> None:
-		with self.assertRaises(VersionValidatorException) as context:
-			SemanticVersion.Parse("2.0.0", validator=lambda v: v.Major == 1)
+	def test_NothingCollectedRaisesNothing(self) -> None:
+		self._supervisorWith().ReRaise()
 
-		self.assertIn("2.0.0", str(context.exception))
+	def test_OneExceptionIsWrapped(self) -> None:
+		with self.assertRaises(SupervisedThreadException) as context:
+			self._supervisorWith("Worker").ReRaise()
 
-	def test_TheVersionIsKeywordOnly(self) -> None:
-		"""The message is positional, the attached object is not - as AttributeError and NameError do it."""
-		exception = VersionValidatorException("rejected", version=SemanticVersion.Parse("1.2.3"))
+		self.assertEqual("Worker", context.exception.ThreadName)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
 
-		self.assertEqual("rejected", str(exception))
-		self.assertEqual(3, exception.Version.Patch)
+	def test_OneExceptionIsRaisedUnwrapped(self) -> None:
+		with self.assertRaises(ValueError):
+			self._supervisorWith("Worker").ReRaise(unwrapped=True)
 
-	def test_TheRejectedVersionIsCarried(self) -> None:
-		"""The caller gets the version object, not only the string it came from."""
-		with self.assertRaises(VersionValidatorException) as context:
-			SemanticVersion.Parse("2.0.0", validator=lambda v: False)
+	def test_SeveralExceptionsAreGrouped(self) -> None:
+		"""This raised 'TypeError: __init__() missing 1 required positional argument' before the signature change."""
+		with self.assertRaises(ExceptionGroup) as context:
+			self._supervisorWith("Alpha", "Beta").ReRaise()
 
-		self.assertEqual(2, context.exception.Version.Major)
+		wrapped = context.exception.exceptions
+		self.assertEqual(2, len(wrapped))
+		self.assertCountEqual(["Alpha", "Beta"], [exception.ThreadName for exception in wrapped])
+		for exception in wrapped:
+			self.assertIsInstance(exception, SupervisedThreadException)
+			self.assertIsInstance(exception.__cause__, ValueError)
 
-	def test_ARejectedCalendarVersionRaises(self) -> None:
-		with self.assertRaises(VersionValidatorException) as context:
-			CalendarVersion.Parse("2026.08", validator=lambda v: False)
+	def test_SeveralExceptionsAreGroupedUnwrapped(self) -> None:
+		with self.assertRaises(ExceptionGroup) as context:
+			self._supervisorWith("Alpha", "Beta").ReRaise(unwrapped=True)
 
-		self.assertIsInstance(context.exception.Version, CalendarVersion)
-
-	def test_ItIsAToolingException(self) -> None:
-		"""So a caller can catch every pyTooling error in one place."""
-		with self.assertRaises(ToolingException):
-			SemanticVersion.Parse("2.0.0", validator=lambda v: False)
+		self.assertTrue(all(isinstance(exception, ValueError) for exception in context.exception.exceptions))
