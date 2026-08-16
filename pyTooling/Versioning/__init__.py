@@ -58,7 +58,7 @@ class VersionValidatorException(ToolingException):
 
 	_version: Nullable["Version"]
 
-	def __init__(self, message: str = "", *, version: Nullable["Version"] = None) -> None:
+	def __init__(self, message: str = "", /, *, version: Nullable["Version"] = None) -> None:
 		"""
 		Initializes the exception with the rejected version.
 

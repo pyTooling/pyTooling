@@ -440,6 +440,7 @@ class SupervisedThreadException(ExceptionBase):
 	def __init__(
 		self,
 		message: str = "",
+		/,
 		*,
 		threadName: Nullable[str] = None,
 		cause: Nullable[BaseException] = None
