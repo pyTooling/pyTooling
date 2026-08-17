@@ -49,9 +49,12 @@ Mixin
 Abstract Class
 **************
 
-A class containing an :ref:`abstract method <META/Abstract>` cannot be instantiated. Some classes have nothing to
-mark abstract and still exist only to be derived from - a base-class collecting shared infrastructure, for
-instance. The :deco:`~pyTooling.MetaClasses.abstractclass` decorator says so directly:
+A class containing an :ref:`abstract method <META/AbstractMethod>` cannot be instantiated, but some classes have
+nothing to mark abstract and still exist only to be derived from - a base-class collecting shared infrastructure,
+for instance.
+
+The :deco:`~pyTooling.MetaClasses.abstractclass` decorator declares a class as abstract (inheritance tree inner
+node) without the need for abstract methods.
 
 .. rubric:: Example:
 .. code-block:: Python
@@ -60,8 +63,8 @@ instance. The :deco:`~pyTooling.MetaClasses.abstractclass` decorator says so dir
 
    @abstractclass
    class Base(metaclass=ExtendedType):
-     def Method(self) -> int:
-       return 1
+     def Method(self) -> None:
+       ...
 
    class Derived(Base):
      pass
@@ -82,7 +85,7 @@ method. The declaration therefore describes one class rather than a branch of th
       |rarr| Mark a *method* as abstract, which makes its class abstract as a consequence.
 
 
-.. _META/Abstract:
+.. _META/AbstractMethod:
 
 Abstract Method
 ***************
@@ -117,7 +120,7 @@ MustOverwrite Method
 The :deco:`~pyTooling.MetaClasses.mustoverride` decorator marks a method as *must override*. When a class containing
 *must override* methods is instantiated, an :exc:`~pyTooling.Exceptions.MustOverrideClassError` is raised.
 
-In contrast to :ref:`@abstractmethod <META/Abstract>`, the method can still be called from a derived class
+In contrast to :ref:`@abstractmethod <META/AbstractMethod>`, the method can still be called from a derived class
 implementing an overridden method.
 
 .. rubric:: Example:
@@ -137,7 +140,7 @@ implementing an overridden method.
 
 .. hint::
 
-   If the method contain no code and throw an exception when called, use the :ref:`@abstractmethod <META/Abstract>`
+   If the method contain no code and throw an exception when called, use the :ref:`@abstractmethod <META/AbstractMethod>`
    decorator.
 
 
