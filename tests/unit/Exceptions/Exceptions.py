@@ -32,9 +32,8 @@
 """
 Unit tests for :mod:`pyTooling.Exceptions`.
 """
-from unittest     import TestCase
-
 from pyTooling.Exceptions import EnvironmentException, PlatformNotSupportedException, NotConfiguredException
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -55,7 +54,7 @@ def raise_NotConfiguredException() -> None:
 	raise NotConfiguredException("Option 'WorkingDirectory' is not specified in the configuration file.")
 
 
-class Exceptions(TestCase):
+class Exceptions(Testcase):
 	def test_EnvironmentException(self) -> None:
 		with self.assertRaises(EnvironmentException):
 			raise_EnvironmentExecption()

@@ -31,12 +31,11 @@
 """
 Unit tests for :func:`isnestedclass`.
 """
-from unittest           import TestCase
-
 from pytest             import mark
 
 from pyTooling.Common   import getsizeof
 from pyTooling.Platform import CurrentPlatform
+from pyTooling.Testing  import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ObjectSizes(TestCase):
+class ObjectSizes(Testcase):
 	@mark.skipif(CurrentPlatform.IsPyPy, reason="getsizeof: not supported on PyPy")
 	def test_EmptyClass(self) -> None:
 		class C:

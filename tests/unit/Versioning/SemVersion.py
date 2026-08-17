@@ -29,9 +29,8 @@
 # ==================================================================================================================== #
 #
 """Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest             import TestCase
-
 from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -40,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Major(self) -> None:
 		version = SemanticVersion(1)
 
@@ -315,7 +314,7 @@ class Instantiation(TestCase):
 			_ = SemanticVersion(1, 2, 3, ReleaseLevel.Alpha, 4, 5, 6, build=7, postfix="p", prefix="v", hash="ab", flags="d")
 
 
-class Parsing(TestCase):
+class Parsing(Testcase):
 	def test_None(self) -> None:
 		with self.assertRaises(ValueError):
 			SemanticVersion.Parse(None)
@@ -457,14 +456,14 @@ class Parsing(TestCase):
 		self.assertEqual(2, version.ReleaseNumber)
 
 
-class HashVersions(TestCase):
+class HashVersions(Testcase):
 	def test_SemanticVersion(self) -> None:
 		version = SemanticVersion.Parse("v1.2.3")
 
 		self.assertIsNotNone(version.__hash__())
 
 
-class CompareVersions(TestCase):
+class CompareVersions(Testcase):
 	def test_Equal(self) -> None:
 		l = [
 			("0.0.0", "0.0.0"),
@@ -583,7 +582,7 @@ class CompareVersions(TestCase):
 				self.assertEqual(exp, version >> requirement, f"{version} ~= {requirement}")
 
 
-class CompareNone(TestCase):
+class CompareNone(Testcase):
 	def test_Equal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
@@ -627,7 +626,7 @@ class CompareNone(TestCase):
 			_ = version >> None
 
 
-class CompareString(TestCase):
+class CompareString(Testcase):
 	def test_Equal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
@@ -664,7 +663,7 @@ class CompareString(TestCase):
 		self.assertTrue(version >> "1.2.3")
 
 
-class CompareInteger(TestCase):
+class CompareInteger(Testcase):
 	def test_Equal(self) -> None:
 		version = SemanticVersion(1)
 
@@ -701,7 +700,7 @@ class CompareInteger(TestCase):
 		self.assertTrue(version >> 1)
 
 
-class CompareOtherType(TestCase):
+class CompareOtherType(Testcase):
 	def test_Equal(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
@@ -745,7 +744,7 @@ class CompareOtherType(TestCase):
 			_ = version >> 1.2
 
 
-class ValidatedWordSize(TestCase):
+class ValidatedWordSize(Testcase):
 	def test_All8Bit_AllInRange(self) -> None:
 		version = SemanticVersion.Parse("12.64.255", WordSizeValidator(8))
 
@@ -797,7 +796,7 @@ class ValidatedWordSize(TestCase):
 		self.assertIn("Version.Micro", str(ex.exception))
 
 
-class ValidatedMaxValue(TestCase):
+class ValidatedMaxValue(Testcase):
 	def test_All255_AllInRange(self) -> None:
 		version = SemanticVersion.Parse("12.64.255", MaxValueValidator(255))
 
@@ -824,7 +823,7 @@ class ValidatedMaxValue(TestCase):
 		self.assertIn("Version.Micro", str(ex.exception))
 
 
-class FormattingUsingRepr(TestCase):
+class FormattingUsingRepr(Testcase):
 	def test_Major(self) -> None:
 		version = SemanticVersion(1)
 
@@ -847,7 +846,7 @@ class FormattingUsingRepr(TestCase):
 		self.assertEqual("1.2.3", repr(version))
 
 
-class FormattingUsingStr(TestCase):
+class FormattingUsingStr(Testcase):
 	def test_Major(self) -> None:
 		version = SemanticVersion(1)
 
@@ -874,7 +873,7 @@ class FormattingUsingStr(TestCase):
 		self.assertEqual("v1.2.3", str(version))
 
 
-class FormattingUsingFormat(TestCase):
+class FormattingUsingFormat(Testcase):
 	def test_Empty(self) -> None:
 		version = SemanticVersion(1, 2, 3)
 
@@ -952,7 +951,7 @@ class FormattingUsingFormat(TestCase):
 		self.assertEqual("v1.2.3-rc3+deb25", f"{version:%p%M.%m.%u-%R%n+%P}")
 
 
-class RoundTrip(TestCase):
+class RoundTrip(Testcase):
 	def test_Parse2Str(self) -> None:
 		l = [
 			"1",

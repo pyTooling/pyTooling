@@ -32,7 +32,8 @@
 import timeit
 from statistics import median
 from typing import Callable, Iterable
-from unittest import TestCase
+
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class PerformanceTest(TestCase):
+class PerformanceTest(Testcase):
 	counts: Iterable[int] = (10, 100, 1000, 10000)
 
 	randomArray = [

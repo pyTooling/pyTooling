@@ -36,11 +36,10 @@ This test suite tests decorators:
 * :deco:`~pyTooling.MetaClasses.abstractmethod`
 * :deco:`~pyTooling.MetaClasses.mustoverride`
 """
-from unittest              import TestCase
 
 from pyTooling.Decorators  import notimplemented
-from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError
-
+from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod, mustoverride, AbstractClassError
+from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -48,7 +47,58 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class AbstractMethod(TestCase):
+class AbstractClasses(Testcase):
+	"""A class can be abstract by declaration, not only by containing an abstract method."""
+
+	def test_NoMetaclass(self) -> None:
+		"""Nothing would compute abstractness, so the decorator says so instead of silently doing nothing."""
+
+		with self.assertRaises(AttributeError):
+			@abstractclass
+			class Plain:
+				pass
+
+	def test_AbstractClass(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			pass
+
+		self.assertTrue(Base.__abstractClass__)
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
+			Base()
+
+		self.assertEqual("Class 'Base' is abstract and needs to be derived.", str(exceptionCapture.exception))
+
+	def test_AbstractClass_Derived(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			def Method(self) -> int:
+				return 1
+
+		class Derived(Base):
+			pass
+
+		self.assertFalse(Derived.__abstractClass__)
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertEqual(1, Derived().Method())
+
+	def test_AbstractClass_AbstractClass(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			pass
+
+		@abstractclass
+		class Derived(Base):
+			pass
+
+		self.assertTrue(Derived.__abstractClass__)
+		self.assertTrue(Derived.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Derived()
+
+
+class AbstractMethod(Testcase):
 	def test_AbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
@@ -60,11 +110,11 @@ class AbstractMethod(TestCase):
 			def AbstractMethod(self) -> bool:
 				return False
 
-		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
 			AbstractBase(1)
 
-		self.assertIn("AbstractBase", str(ExceptionCapture.exception))
-		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+		self.assertIn("AbstractBase", str(exceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(exceptionCapture.exception))
 
 	def test_AbstractClass(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
@@ -80,11 +130,11 @@ class AbstractMethod(TestCase):
 		class AbstractClass(AbstractBase):
 			pass
 
-		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
 			AbstractClass(2)
 
-		self.assertIn("AbstractClass", str(ExceptionCapture.exception))
-		self.assertIn("AbstractMethod", str(ExceptionCapture.exception))
+		self.assertIn("AbstractClass", str(exceptionCapture.exception))
+		self.assertIn("AbstractMethod", str(exceptionCapture.exception))
 
 	def test_DerivedAbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
@@ -103,10 +153,10 @@ class AbstractMethod(TestCase):
 
 		derived = DerivedAbstractBase(3)
 
-		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+		with self.assertRaises(NotImplementedError) as exceptionCapture:
 			derived.AbstractMethod()
 
-		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(exceptionCapture.exception))
 
 	def test_DoubleDerivedAbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
@@ -128,10 +178,10 @@ class AbstractMethod(TestCase):
 
 		derived = DoubleDerivedAbstractBase(4)
 
-		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+		with self.assertRaises(NotImplementedError) as exceptionCapture:
 			derived.AbstractMethod()
 
-		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(exceptionCapture.exception))
 
 	def test_DerivedAbstractClass(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
@@ -153,10 +203,10 @@ class AbstractMethod(TestCase):
 
 		derived = DerivedAbstractClass(5)
 
-		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+		with self.assertRaises(NotImplementedError) as exceptionCapture:
 			derived.AbstractMethod()
 
-		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(ExceptionCapture.exception))
+		self.assertEqual("Method 'AbstractMethod' is abstract and needs to be overridden in a derived class.", str(exceptionCapture.exception))
 
 	def test_MultipleInheritance(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
@@ -180,18 +230,18 @@ class AbstractMethod(TestCase):
 		derived.AbstractMethod()
 
 
-class MustOverride(TestCase):
+class MustOverride(Testcase):
 	def test_MustOverrideBase(self) -> None:
 		class MustOverrideBase(metaclass=ExtendedType):
 			@mustoverride
 			def MustOverrideMethod(self) -> bool:
 				return False
 
-		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
 			MustOverrideBase()
 
-		self.assertIn("MustOverrideBase", str(ExceptionCapture.exception))
-		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideBase", str(exceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(exceptionCapture.exception))
 
 	def test_MustOverrideClass(self) -> None:
 		class MustOverrideBase(metaclass=ExtendedType):
@@ -202,11 +252,11 @@ class MustOverride(TestCase):
 		class MustOverrideClass(MustOverrideBase):
 			pass
 
-		with self.assertRaises(AbstractClassError) as ExceptionCapture:
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
 			MustOverrideClass()
 
-		self.assertIn("MustOverrideClass", str(ExceptionCapture.exception))
-		self.assertIn("MustOverrideMethod", str(ExceptionCapture.exception))
+		self.assertIn("MustOverrideClass", str(exceptionCapture.exception))
+		self.assertIn("MustOverrideMethod", str(exceptionCapture.exception))
 
 	def test_DerivedMustOverride(self) -> None:
 		class MustOverrideBase(metaclass=ExtendedType):
@@ -221,7 +271,7 @@ class MustOverride(TestCase):
 		DerivedMustOverrideClass()
 
 
-class NotImplemented(TestCase):
+class NotImplemented(Testcase):
 	def test_NotImplementedBase(self) -> None:
 		class NotImplementedBase(metaclass=ExtendedType):
 			@notimplemented("It's not working.")
@@ -234,7 +284,7 @@ class NotImplemented(TestCase):
 		self.assertEqual("Documentation is unfinished.", c.NotYetFinished.__doc__)
 		self.assertEqual("NotYetFinished", c.NotYetFinished.__name__)
 
-		with self.assertRaises(NotImplementedError) as ExceptionCapture:
+		with self.assertRaises(NotImplementedError) as exceptionCapture:
 			c.NotYetFinished(4)
 
-		self.assertEqual("It's not working.", str(ExceptionCapture.exception))
+		self.assertEqual("It's not working.", str(exceptionCapture.exception))

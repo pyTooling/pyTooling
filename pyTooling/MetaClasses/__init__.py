@@ -161,6 +161,7 @@ class MustOverrideClassError(AbstractClassError):
 
 
 M = TypeVar("M", bound=Callable)   #: A type variable for methods.
+C = TypeVar("C", bound=type)       #: A type variable for classes.
 
 
 def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
@@ -215,6 +216,59 @@ def singleton(cls):
 
 
 @export
+def abstractclass(cls: C) -> C:
+	"""
+	Mark a class as *abstract*, so it cannot be instantiated, although it has no abstract method.
+
+	Some classes exist only to be derived from - a base-class collecting shared infrastructure, for instance - and
+	have nothing to mark with :deco:`abstractmethod`. This decorator says so directly: it sets ``__abstractClass__``
+	on the class and recomputes ``__isAbstract__``, which replaces ``__new__`` by a method raising an
+	:exc:`~pyTooling.Exceptions.AbstractClassError`.
+
+	The marker belongs to the decorated class alone. :class:`ExtendedType` clears it on every class it creates, so a
+	derived class is concrete again unless it is decorated itself or inherits an abstract method.
+
+	.. warning::
+
+	   This decorator needs meta-class :class:`~pyTooling.MetaClasses.ExtendedType`, which does the computation.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      @abstractclass
+	      class Base(metaclass=ExtendedType):
+	        '''This class needs to be inherited.'''
+
+	:param cls:             Class that is marked as *abstract*.
+	:returns:               The same class, marked and with its abstractness recomputed.
+	:raises AttributeError: If the class was not created by :class:`ExtendedType`, because nothing would compute it.
+
+	.. seealso::
+
+	   :exc:`~pyTooling.Exceptions.AbstractClassError`
+	      |rarr| The exception raised when a still abstract class gets instantiated.
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
+	   :deco:`~pyTooling.Decorators.notimplemented`
+	      |rarr| Mark a *method* as not implemented and raise a :exc:`NotImplementedError`.
+	"""
+	if not isinstance(cls, ExtendedType):
+		ex = AttributeError(f"Class '{cls.__name__}' is not created by meta-class 'ExtendedType'.")
+		ex.add_note(f"Add 'metaclass=ExtendedType' to the class definition, so abstractness is computed.")
+		raise ex
+
+	cls.__abstractClass__ = True
+
+	if not cls.__isAbstract__:
+		cls.__isAbstract__ = ExtendedType._wrapNewMethodIfAbstract(cls)
+
+	return cls
+
+
+@export
 def abstractmethod(method: M) -> M:
 	"""
 	Mark a method as *abstract* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
@@ -235,16 +289,21 @@ def abstractmethod(method: M) -> M:
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
 	        def method(self) -> bool:
-	          '''This method needs to be implemented'''
+	          '''This method needs to be implemented.'''
 
 	:param method: Method that is marked as *abstract*.
 	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
 
 	.. seealso::
 
-	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
-	   * :deco:`~pyTooling.MetaClasses.mustoverride`
-	   * :deco:`~pyTooling.Decorators.notimplemented`
+	   :exc:`~pyTooling.Exceptions.AbstractClassError`
+	      |rarr| The exception raised when a still abstract class gets instantiated.
+	   :deco:`~pyTooling.MetaClasses.abstractclass`
+	      |rarr| Mark a class as *abstract*.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
+	   :deco:`~pyTooling.Decorators.notimplemented`
+	      |rarr| Mark a *method* as not implemented and raise a :exc:`NotImplementedError`.
 	"""
 	@wraps(method)
 	def func(self) -> NoReturn:
@@ -278,16 +337,21 @@ def mustoverride(method: M) -> M:
 	      class Data(mataclass=ExtendedType):
 	        @mustoverride
 	        def method(self):
-	          '''This is a very basic implementation'''
+	          '''This is a very basic implementation.'''
 
 	:param method: Method that is marked as *must-override*.
 	:returns:      Same method, but with additional ``<method>.__mustOverride__`` field.
 
 	.. seealso::
 
-	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`
-	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
-	   * :deco:`~pyTooling.Decorators.notimplemented`
+	   :exc:`~pyTooling.Exceptions.MustOverrideClassError`
+	      |rarr| The exception raised when a class gets instantiated still containing *mustoverride* methods.
+	   :deco:`~pyTooling.MetaClasses.abstractclass`
+	      |rarr| Mark a class as *abstract*.
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.Decorators.notimplemented`
+	      |rarr| Mark a *method* as not implemented and raise a :exc:`NotImplementedError`.
 	"""
 	method.__mustOverride__ = True
 	return method
@@ -320,7 +384,7 @@ def mustoverride(method: M) -> M:
 # 		else:
 # 			raise TypeError(f"No matching method for types {types}.")
 #
-# 	def __get__(self, instance, cls):  # Starting with Python 3.11+, use typing.Self as return type
+# 	def __get__(self, instance, cls) -> Self:
 # 		"""Descriptor method needed to make calls work in a class."""
 # 		if instance is not None:
 # 			return MethodType(self, instance)
@@ -406,6 +470,7 @@ class ExtendedType(type):
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
+	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
 	:__singletonInstanceCond__:  Condition variable to protect the singleton creation.
@@ -494,8 +559,10 @@ class ExtendedType(type):
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
-		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
-		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		newClass.__abstractClass__ = False
+		newClass.__isAbstract__ =    self._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ =   self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
@@ -1118,21 +1185,25 @@ class ExtendedType(type):
 	@classmethod
 	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
 		"""
-		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
+		If the class is marked ``__abstractClass__`` or has abstract methods, replace the ``_new__`` method, so it
+		raises an exception.
 
 		:param newClass:            The newly constructed class for further modifications.
 		:returns:                   ``True``, if the class is abstract.
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
-		if len(newClass.__abstractMethods__) > 0:
+		if newClass.__abstractClass__ or len(newClass.__abstractMethods__) > 0:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
 				oldnew = oldnew.__wrapped__
 
 			@wraps(oldnew)
 			def abstract_new(cls, *_, **__):
-				raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
+				if len(newClass.__abstractMethods__) > 0:
+					raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
+				else:
+					raise AbstractClassError(f"Class '{cls.__name__}' is abstract and needs to be derived.")
 
 			abstract_new.__raises_abstract_class_error__ = True
 
@@ -1159,14 +1230,8 @@ class ExtendedType(type):
 				elif newClass.__new__.__isSingleton__:
 					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
 			except AttributeError as ex:
-				# WORKAROUND:
-				#   AttributeError.name was added in Python 3.10. For version <3.10 use a string contains operation.
-				try:
-					if ex.name != "__raises_abstract_class_error__":
-						raise ex
-				except AttributeError:
-					if "__raises_abstract_class_error__" not in str(ex):
-						raise ex
+				if ex.name != "__raises_abstract_class_error__":
+					raise ex
 
 			return False
 

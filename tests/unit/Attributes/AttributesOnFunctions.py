@@ -32,11 +32,10 @@
 """
 Unit tests for attributes attached to methods.
 """
-from unittest     import TestCase
-
-from pytest       import mark
+from pytest               import mark
 
 from pyTooling.Attributes import Attribute
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ApplyFunctionAttributes(TestCase):
+class ApplyFunctionAttributes(Testcase):
 	def test_SingleFunction(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -98,7 +97,7 @@ def ModuleFunction() -> None:
 moduleNestedFunction = ModuleFunction()
 
 
-class Filtering(TestCase):
+class Filtering(Testcase):
 	def test_Scope_Module(self) -> None:
 		from sys import modules
 

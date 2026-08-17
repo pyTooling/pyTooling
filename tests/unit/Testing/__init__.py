@@ -31,7 +31,6 @@
 """Unit tests for :mod:`pyTooling.Testing`."""
 from shutil     import which
 from subprocess import TimeoutExpired
-from unittest   import TestCase
 
 from pyTooling.Platform import CurrentPlatform
 from pyTooling.Testing  import ApplicationTestcase, Testcase, TestingException, stripANSIColorCodes
@@ -45,7 +44,7 @@ _INTERPRETER_NAMES = ("py", "python", "python3") if CurrentPlatform.IsNativeWind
 PYTHON_CONSOLE_SCRIPT = next((name for name in _INTERPRETER_NAMES if which(name) is not None), _INTERPRETER_NAMES[0])
 
 
-class StripANSIColorCodes(TestCase):
+class StripANSIColorCodes(Testcase):
 	def test_PlainTextIsUnchanged(self) -> None:
 		self.assertEqual("plain", stripANSIColorCodes("plain"))
 
@@ -104,7 +103,7 @@ class RunningAConsoleScript(ApplicationTestcase):
 		self.assertEqual("hello\n", result.stdout)
 
 
-class ATestcaseThatIsNotSetUp(TestCase):
+class ATestcaseThatIsNotSetUp(Testcase):
 	"""setUpClass refuses a test class that cannot run anything, rather than letting every testcase fail."""
 
 	def test_AMissingConsoleScriptIsReported(self) -> None:

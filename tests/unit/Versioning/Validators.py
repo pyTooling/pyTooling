@@ -29,10 +29,9 @@
 # ==================================================================================================================== #
 #
 """Unit tests for version validators and the exception raised when one rejects a version."""
-from unittest              import TestCase
-
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.Versioning  import CalendarVersion, SemanticVersion, VersionValidatorException
+from pyTooling.Exceptions import ToolingException
+from pyTooling.Versioning import CalendarVersion, SemanticVersion, VersionValidatorException
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +40,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Validators(TestCase):
+class Validators(Testcase):
 	"""A validator rejecting a parsed version raises VersionValidatorException, not a generic ValueError."""
 
 	def test_AnAcceptedSemanticVersionIsReturned(self) -> None:

@@ -32,12 +32,9 @@
 """
 Unit tests for attributes attached to methods.
 """
-from unittest              import TestCase
-
-from pytest                import mark
-
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Attributes  import Attribute
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -46,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ApplyMethodAttributes_NoMetaClass(TestCase):
+class ApplyMethodAttributes_NoMetaClass(Testcase):
 	def test_NoAttribute(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -480,7 +477,7 @@ class ApplyMethodAttributes_NoMetaClass(TestCase):
 			self.assertIsInstance(b, AttributeB)
 
 
-class ApplyMethodAttributes_WithMetaClass(TestCase):
+class ApplyMethodAttributes_WithMetaClass(Testcase):
 	def test_NoAttribute(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -912,7 +909,7 @@ class ApplyMethodAttributes_WithMetaClass(TestCase):
 		self.assertListEqual(foundAttributesBOnClass2Meth2, [AttributeB])
 
 
-class MetaTesting(TestCase):
+class MetaTesting(Testcase):
 	def test_Meta(self) -> None:
 		print()
 
@@ -956,7 +953,7 @@ class MetaTesting(TestCase):
 		self.assertListEqual(foundMethodsOnAttributeB, [Class1.meth2, Class1.meth3, Class1.meth4, Class1.meth4])
 
 
-class GetAttributesFiltering(TestCase):
+class GetAttributesFiltering(Testcase):
 	pass
 
 	# default filter
@@ -965,7 +962,7 @@ class GetAttributesFiltering(TestCase):
 	# tuple filter (or)
 
 
-class Filtering(TestCase):
+class Filtering(Testcase):
 	def test_Scope_Class(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -1012,7 +1009,7 @@ class Filtering(TestCase):
 		self.assertListEqual(foundMethodsOnAttributeAScopedToClass2, [Class2.meth1])
 
 
-class Attribute_GetAttributes_Filtering(TestCase):
+class Attribute_GetAttributes_Filtering(Testcase):
 	def test_1(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -1063,7 +1060,7 @@ class Attribute_GetAttributes_Filtering(TestCase):
 		self.assertListEqual(foundAttributesBOnClass1Meth3, [AttributeB])
 
 
-class MultipleInheritance(TestCase):
+class MultipleInheritance(Testcase):
 	def test_1(self) -> None:
 		class AttributeA(Attribute):
 			pass

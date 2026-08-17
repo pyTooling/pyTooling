@@ -31,11 +31,10 @@
 """
 Unit tests for class :class:`pyTooling.MetaClasses.Singleton`.
 """
-from unittest import TestCase
-
 from pytest   import mark
 
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -95,7 +94,7 @@ class DerivedApp3WithOuterParameters(App3WithParameters):
 		print("Instance of 'DerivedApp3WithOuterParameters' was created")
 
 
-class Singleton(TestCase):
+class Singleton(Testcase):
 	def test_CrossRelations(self) -> None:
 		self.assertEqual(10, App1WithoutParameters.X)
 		self.assertEqual(20, App2WithoutParameters.X)
@@ -125,10 +124,10 @@ class Singleton(TestCase):
 		# ensure at least one instance was created
 		App1WithoutParameters()
 
-		with self.assertRaises(ValueError) as ExceptionCapture:
+		with self.assertRaises(ValueError) as exceptionCapture:
 			App1WithoutParameters(x = 35)
 
-		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
+		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(exceptionCapture.exception))
 
 	def test_DerivedClassNoParameters(self) -> None:
 		self.assertEqual(120, DerivedApp2WithoutParameters.X)

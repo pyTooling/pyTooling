@@ -29,11 +29,8 @@
 # ==================================================================================================================== #
 #
 """Unit tests for Decorators."""
-from unittest import TestCase
-
-from pytest   import mark
-
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeOrder, readonly
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -74,7 +71,7 @@ def NotExportedFunction():
 L = lambda x: x
 
 
-class Export(TestCase):
+class Export(Testcase):
 	def test_ExportedClass(self) -> None:
 		self.assertIn(ExportedClass.__name__, __all__)
 		self.assertNotIn(NotExportedClass.__name__, __all__)
@@ -106,7 +103,7 @@ class Export(TestCase):
 				pass
 
 
-class ReadOnly(TestCase):
+class ReadOnly(Testcase):
 	def test_ReadOnly(self) -> None:
 		class Data:
 			_data: int
@@ -177,7 +174,7 @@ class ReadOnly(TestCase):
 		self.assertEqual("Doc-string of the getter.", Data.length.__doc__)
 
 
-class InheritDocStrings(TestCase):
+class InheritDocStrings(Testcase):
 	def test_Class_Copy(self) -> None:
 		class Class1:
 			"""Class1"""

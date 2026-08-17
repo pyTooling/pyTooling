@@ -253,7 +253,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	# 		pass
 
 	@staticmethod
-	def __GetTerminalSizeOfFileDescriptor(fd: int) -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
+	def __GetTerminalSizeOfFileDescriptor(fd: int) -> Nullable[Tuple[int, int]]:
 		"""
 		Get window size of a file descriptor.
 
@@ -279,7 +279,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			return None
 
 	@staticmethod
-	def __GetTerminalSizeOnLinux() -> Nullable[Tuple[int, int]]:  # Python 3.10: Use bitwise-or for union type: | None:
+	def __GetTerminalSizeOnLinux() -> Nullable[Tuple[int, int]]:
 		"""
 		Returns the current terminal window's size for Linux.
 

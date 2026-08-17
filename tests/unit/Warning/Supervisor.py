@@ -28,11 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for version validators and the exception raised when one rejects a version."""
 """Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises."""
-from unittest             import TestCase
-
 from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ReRaising(TestCase):
+class ReRaising(Testcase):
 	"""What ThreadSupervisor.ReRaise() raises for none, one and several collected exceptions."""
 
 	@staticmethod

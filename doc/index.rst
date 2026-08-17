@@ -829,7 +829,7 @@ applying a single meta-class. In comparison, Python's approach in to provide mul
 :mod:`abc`) that can't be combined e.g. to a singleton using slots.
 
 :ref:`ExtendedType <META/ExtendedType>` allows to implement :ref:`slotted types <META/Slotted>`,
-:ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/Abstract>` and :ref:`singletons <META/Singleton>`,
+:ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/AbstractMethod>` and :ref:`singletons <META/Singleton>`,
 and combinations thereof. Exception messages in case of errors have been improved too.
 
 Slotted types significantly reduce the memory footprint by 4x and decrease the class field access time by 10..25%. While
@@ -844,7 +844,7 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
       :pycode:`class MyClass(metaclass=ExtendedType):`
         A class definition using the :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. I can now implement
-        :ref:`abstract methods <META/Abstract>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
+        :ref:`abstract methods <META/AbstractMethod>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
 
       :pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
         A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
