@@ -32,9 +32,7 @@
 """Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises."""
 from unittest             import TestCase
 
-from pyTooling.Exceptions import ExceptionBase
 from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
-from pyTooling.Warning    import UnhandledCriticalWarningException, UnhandledExceptionException
 
 
 if __name__ == "__main__":  # pragma: no cover
