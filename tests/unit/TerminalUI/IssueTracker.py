@@ -30,11 +30,11 @@
 # ==================================================================================================================== #
 #
 """Unit tests for how a terminal application reports its issue tracker URL."""
-from io       import StringIO
-from unittest import TestCase
+from io                   import StringIO
 
 from pyTooling.Exceptions import ExceptionBase
 from pyTooling.TerminalUI import TerminalApplication
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class IssueTrackerURL(TestCase):
+class IssueTrackerURL(Testcase):
 	"""``ISSUE_TRACKER_URL`` is where an application connects its own dunder variable, so the exception printers can
 	invite the user to report a bug."""
 

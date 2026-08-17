@@ -30,7 +30,6 @@
 #
 """Unit tests for :mod:`pyTooling.Dependency`."""
 from datetime                    import datetime
-from unittest                    import TestCase
 
 from pytest                      import mark
 
@@ -38,6 +37,7 @@ from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPack
 from pyTooling.Dependency        import BrokenRequirementWarning
 from pyTooling.Versioning        import PythonVersion
 from pyTooling.Warning           import WarningCollector
+from pyTooling.Testing           import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -46,7 +46,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Graph(self) -> None:
 		graph = PythonPackageDependencyGraph("graph")
 
@@ -74,7 +74,7 @@ class Instantiation(TestCase):
 		self.assertEqual(now, release.ReleasedAt)
 
 
-class PyPI(TestCase):
+class PyPI(Testcase):
 	def test_pyTooling(self) -> None:
 		print()
 
@@ -125,7 +125,7 @@ class PyPI(TestCase):
 			self.assertEqual(0, len(release))
 
 
-class Requirements(TestCase):
+class Requirements(Testcase):
 	"""How UpdateDetailsFromPyPIJSON sorts requirements into the extras they belong to."""
 
 	@staticmethod
