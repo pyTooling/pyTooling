@@ -124,10 +124,10 @@ class Singleton(Testcase):
 		# ensure at least one instance was created
 		App1WithoutParameters()
 
-		with self.assertRaises(ValueError) as ExceptionCapture:
+		with self.assertRaises(ValueError) as exceptionCapture:
 			App1WithoutParameters(x = 35)
 
-		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(ExceptionCapture.exception))
+		self.assertEqual("A further instance of a singleton can't be reinitialized with parameters.", str(exceptionCapture.exception))
 
 	def test_DerivedClassNoParameters(self) -> None:
 		self.assertEqual(120, DerivedApp2WithoutParameters.X)
