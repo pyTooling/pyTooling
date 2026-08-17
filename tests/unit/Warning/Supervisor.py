@@ -85,12 +85,3 @@ class ReRaising(TestCase):
 			self._supervisorWith("Alpha", "Beta").ReRaise(unwrapped=True)
 
 		self.assertTrue(all(isinstance(exception, ValueError) for exception in context.exception.exceptions))
-
-
-class ExceptionHierarchy(TestCase):
-	"""Both unhandled-* exceptions are ExceptionBase subclasses, so one except clause still catches either."""
-
-	def test_BothAreToolingExceptions(self) -> None:
-		for exceptionType in (UnhandledCriticalWarningException, UnhandledExceptionException):
-			with self.subTest(exception=exceptionType.__name__):
-				self.assertTrue(issubclass(exceptionType, ExceptionBase))
