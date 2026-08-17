@@ -27,15 +27,19 @@ An application derives from :class:`~pyTooling.TerminalUI.TerminalApplication` a
      HeadLine = "My Application"
 
      def Run(self) -> None:
+       self._PrintHeadline()
        self.WriteNormal("Reading the input file...")
        self.WriteVerbose("  Line 1 of 4")
        self.WriteWarning("The input file is empty.")
 
 
+   def main() -> NoReturn:
+     program = Application()
+     program.Run()
+
+
    if __name__ == "__main__":
-     app = Application()
-     app.Run()
-     app.Exit()
+     main()
 
 Running it prints the normal message and the warning; the verbose message is dropped, because the default log level is
 ``Severity.Normal``. The warning is also *counted*, which :ref:`step 4 <TUTORIAL/TerminalApplication/Step4>` makes use
@@ -59,15 +63,14 @@ command line switches:
 
    from sys import argv
 
-   if __name__ == "__main__":
-     app = Application()
-     app.Configure(
+   def main() -> NoReturn:
+     program = Application()
+     program.Configure(
        verbose=("-v" in argv or "--verbose" in argv),
-       debug=("-d" in argv or "--debug" in argv),
-       quiet=("-q" in argv or "--quiet" in argv)
+       debug=(  "-d" in argv or "--debug"   in argv),
+       quiet=(  "-q" in argv or "--quiet"   in argv)
      )
-     app.Run()
-     app.Exit()
+     program.Run()
 
 Now ``--verbose`` shows the verbose line, ``--debug`` additionally shows every ``WriteDebug`` message (debug implies
 verbose), and ``--quiet`` reduces the output to errors and messages written with
@@ -143,20 +146,23 @@ formats the exception, its notes, its cause and its traceback, and then exits wi
 
 
    def main() -> NoReturn:
-     app = Application()
-     app.CheckPythonVersion((3, 11, 0))
-     app.Configure(verbose=("-v" in argv or "--verbose" in argv))
+     program = Application()
+     program.Configure(
+       verbose=("-v" in argv or "--verbose" in argv),
+       debug=(  "-d" in argv or "--debug"   in argv),
+       quiet=(  "-q" in argv or "--quiet"   in argv)
+     )
 
      try:
-       app.Run()
-     except NotImplementedError as ex:
-       app.PrintNotImplementedError(ex)     # exit code 240
+       program.Run()
+     except MyPackageException as ex:                      # the program's own exceptions, reported as messages
+       program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**Application.Foreground))
      except ExceptionBase as ex:
-       app.PrintExceptionBase(ex)           # exit code 241, a known exception
+       program.PrintExceptionBase(ex)                      # exit code 241, a known exception
+     except NotImplementedError as ex:
+       program.PrintNotImplementedError(ex)                # exit code 240
      except Exception as ex:
-       app.PrintException(ex)               # exit code 241
-
-     app.Exit()
+       program.PrintException(ex)                          # exit code 241
 
 Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL`, and each of these reports ends by inviting
 the user to file a bug, with the URL. The application connects the class variable to its own dunder variable, because
@@ -170,8 +176,9 @@ only the application knows which of its modules carries it:
    class Application(TerminalApplication):
      ISSUE_TRACKER_URL = __issue_tracker_url__
 
-:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.CheckPythonVersion` belongs at the very beginning: it prints a
-readable error and exits when the interpreter is too old, instead of failing later with a syntax or import error.
+The program's own exceptions come first and are reported as ordinary error messages - a user who passed a wrong option
+should read one line, not a traceback. Only what nobody expected reaches the printers, which is why they are the last
+three clauses.
 
 
 .. _TUTORIAL/TerminalApplication/Step6:

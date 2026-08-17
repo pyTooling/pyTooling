@@ -31,22 +31,25 @@ Terminal
            HeadLine = "My Application"
 
            def Run(self) -> None:
+             self._PrintHeadline()
              self.WriteQuiet("Always visible.")
              self.WriteNormal("A normal message.")
-             self.WriteInfo("An info message.")
              self.WriteVerbose("Only with --verbose.")
              self.WriteDebug("Only with --debug.")
              self.WriteWarning("A warning.")
-             self.WriteError("An error.")
+             self.ExitOnPreviousWarnings()
+
+         def main() -> NoReturn:
+           program = Application()
+           program.Configure(verbose=("-v" in argv or "--verbose" in argv))
+
+           try:
+             program.Run()
+           except Exception as ex:
+             program.PrintException(ex)
 
          if __name__ == "__main__":
-           app = Application()
-           app.CheckPythonVersion((3, 11, 0))
-           app.Configure(verbose=True)
-           app._PrintHeadline()
-           app.Run()
-           app.ExitOnPreviousErrors()
-           app.Exit()
+           main()
 
 
 .. _TERM/Classes:
@@ -161,9 +164,12 @@ exit codes are class variables, so an application can override them:
 | ``FATAL_EXIT_CODE``                       | 255       | A fatal message was written, or ``FatalExit()`` was called. |
 +-------------------------------------------+-----------+-------------------------------------------------------------+
 
-:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.CheckPythonVersion` compares :data:`sys.version_info` against a
-required version tuple and, if the interpreter is too old, prints a colored error and exits - it should be called before
-anything that could fail to import on that interpreter.
+.. deprecated:: 9.0
+
+   :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.CheckPythonVersion` compares :data:`sys.version_info` against a
+   required version tuple and exits with ``PYTHON_VERSION_CHECK_FAILED_EXIT_CODE`` if the interpreter is too old. The
+   ``python_requires`` metadata of a package makes the check unnecessary - the installer refuses the package before a
+   single line of it is imported. The method is scheduled for removal.
 
 
 .. _TERM/ExceptionPrinting:
@@ -182,15 +188,15 @@ exits:
 
 .. code-block:: Python
 
-   app = Application()
+   program = Application()
    try:
-     app.Run()
-   except NotImplementedError as ex:
-     app.PrintNotImplementedError(ex)
+     program.Run()
    except ExceptionBase as ex:
-     app.PrintExceptionBase(ex)
+     program.PrintExceptionBase(ex)
+   except NotImplementedError as ex:
+     program.PrintNotImplementedError(ex)
    except Exception as ex:
-     app.PrintException(ex)
+     program.PrintException(ex)
 
 
 .. _TERM/IssueTracker:
@@ -200,7 +206,8 @@ Reporting Bugs: ISSUE_TRACKER_URL
 
 If the class variable :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL` is set, every exception
 printed by the methods above ends with an invitation to report the bug, followed by that URL. It is ``None`` by default,
-in which case the invitation is omitted.
+in which case the invitation is omitted. It is independent of the ``Issue tracker:`` line of
+:ref:`the version information <TERM/ProgramInformation>`, which is read from the application's dunder module.
 
 An application connects the class variable to its own dunder variable. pyTooling can't find that variable on its own:
 which module carries ``__issue_tracker_url__`` is up to the application - ``<package>/__init__.py`` for a simple
@@ -248,7 +255,7 @@ written, or dropped because its severity is below the current log level.
 +-----------------------+---------------------------+----------------------------------------------------------+
 | ``WriteWarningNote``  | ``Severity.WarningNote``  | Follow-up line of a warning, rendered indented.          |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteInfo``         | ``Severity.Info``         |                                                          |
+| ``WriteInfo``         | ``Severity.Info``         | Visible at the default log level, like a normal message. |
 +-----------------------+---------------------------+----------------------------------------------------------+
 | ``WriteNormal``       | ``Severity.Normal``       | The default severity of a message.                       |
 +-----------------------+---------------------------+----------------------------------------------------------+
@@ -261,6 +268,15 @@ written, or dropped because its severity is below the current log level.
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication.TryWriteLine` answers whether a line *would* be written, without
 writing it - useful before assembling an expensive message.
+
+A *note* is a follow-up line belonging to the message above it, rendered with a leading ``>`` at the severity's
+indentation. Only warnings and critical warnings have one, although :class:`~pyTooling.TerminalUI.Severity` also
+defines ``ExceptionNote``:
+
+.. code-block:: Python
+
+   self.WriteWarning(f"File '{file}' was ignored.")
+   self.WriteWarningNote(f"Only '.vhdl' and '.vhd' are read.")
 
 
 .. _TERM/Verbosity:
@@ -275,11 +291,11 @@ It takes keyword arguments only, and ``debug`` implies ``verbose``:
 
    from sys import argv
 
-   app = Application()
-   app.Configure(
+   program = Application()
+   program.Configure(
      verbose=("-v" in argv or "--verbose" in argv),
-     debug=("-d" in argv or "--debug" in argv),
-     quiet=("-q" in argv or "--quiet" in argv)
+     debug=(  "-d" in argv or "--debug"   in argv),
+     quiet=(  "-q" in argv or "--quiet"   in argv)
    )
 
 The resulting log level - readable and writable as
@@ -328,8 +344,9 @@ counted:
 
 .. code-block:: Python
 
-   app.ParseInputFiles()
-   app.ExitOnPreviousErrors()    # don't start processing with unreadable inputs
+   def Run(self) -> None:
+     self.ParseInputFiles()
+     self.ExitOnPreviousErrors()    # don't start processing with unreadable inputs
 
 Every written line is also kept in :attr:`~pyTooling.TerminalUI.TerminalApplication.Lines` as a
 :ref:`Line <TERM/Line>` object, which is what makes a terminal application testable: the test configures the
