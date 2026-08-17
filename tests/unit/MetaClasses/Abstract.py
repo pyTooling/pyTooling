@@ -50,28 +50,28 @@ if __name__ == "__main__":  # pragma: no cover
 class AbstractClasses(Testcase):
 	"""A class can be abstract by declaration, not only by containing an abstract method."""
 
-	def test_ADecoratedClassCannotBeInstantiated(self) -> None:
+	def test_NoMetaclass(self) -> None:
+		"""Nothing would compute abstractness, so the decorator says so instead of silently doing nothing."""
+
+		with self.assertRaises(AttributeError):
+			@abstractclass
+			class Plain:
+				pass
+
+	def test_AbstractClass(self) -> None:
 		@abstractclass
 		class Base(metaclass=ExtendedType):
 			pass
 
 		self.assertTrue(Base.__abstractClass__)
 		self.assertTrue(Base.__isAbstract__)
-		with self.assertRaises(AbstractClassError):
-			Base()
-
-	def test_TheMessageNamesTheClass(self) -> None:
-		@abstractclass
-		class Base(metaclass=ExtendedType):
-			pass
-
 		with self.assertRaises(AbstractClassError) as context:
 			Base()
 
 		self.assertIn("Base", str(context.exception))
 		self.assertIn("abstract", str(context.exception))
 
-	def test_TheMarkerIsNotInherited(self) -> None:
+	def test_AbstractClass_Derived(self) -> None:
 		@abstractclass
 		class Base(metaclass=ExtendedType):
 			def Method(self) -> int:
@@ -84,7 +84,7 @@ class AbstractClasses(Testcase):
 		self.assertFalse(Derived.__isAbstract__)
 		self.assertEqual(1, Derived().Method())
 
-	def test_ADerivedClassCanBeDecoratedItself(self) -> None:
+	def test_AbstractClass_AbstractClass(self) -> None:
 		@abstractclass
 		class Base(metaclass=ExtendedType):
 			pass
@@ -94,9 +94,11 @@ class AbstractClasses(Testcase):
 			pass
 
 		self.assertTrue(Derived.__abstractClass__)
+		self.assertTrue(Derived.__isAbstract__)
 		with self.assertRaises(AbstractClassError):
 			Derived()
 
+	# TODO:c should be merged into abstract method testing; is this an overlap?
 	def test_AnAbstractMethodStillNamesTheMethods(self) -> None:
 		"""The decorated case has no methods to name, so the two messages differ."""
 		class Base(metaclass=ExtendedType):
@@ -108,14 +110,6 @@ class AbstractClasses(Testcase):
 			Base()
 
 		self.assertIn("Method", str(context.exception))
-
-	def test_AClassWithoutTheMetaClassIsRejected(self) -> None:
-		"""Nothing would compute abstractness, so the decorator says so instead of silently doing nothing."""
-		class Plain:
-			pass
-
-		with self.assertRaises(AttributeError):
-			abstractclass(Plain)
 
 
 class AbstractMethod(Testcase):
