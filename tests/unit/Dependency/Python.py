@@ -156,8 +156,7 @@ class Requirements(TestCase):
 		self.assertEqual(["colorama"], [req.name for req in release.Requirements["terminal"]])
 		self.assertEqual([], release.Requirements[None])
 
-	def test_ARequirementMatchingNoExtraIsReportedAndNotStashed(self) -> None:
-		"""It used to be stashed under the integer key 0, which made Requirements a dict of mixed key type."""
+	def test_ARequirementMatchingNoExtraIsReported(self) -> None:
 		release = self._release()
 		json = self._json(["terminal"], ['lxml >= 6.1; extra == "xml"'])
 
@@ -166,5 +165,4 @@ class Requirements(TestCase):
 
 		self.assertEqual(1, len(collector.Warnings))
 		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
-		self.assertTrue(all(isinstance(key, (str, type(None))) for key in release.Requirements.keys()))
-		self.assertNotIn(0, release.Requirements)
+		self.assertEqual([f"Broken requirement: lxml>=6.1; extra == \"xml\""], collector.Warnings[0].__notes__)

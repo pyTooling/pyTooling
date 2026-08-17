@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _             _____                                                                    #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ ___  ___                                                       #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | || '__/ _ \/ _ \                                                      #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | |  __/  __/                                                      #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \___|\___|                                                      #
+#             _____           _ _             _____                   _             _ _   _ ___                        #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _|__ _ __ _ __ ___ (_)_ __   __ _| | | | |_ _|                       #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | | | | || |                        #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  __/ |  | | | | | | | | | | (_| | | |_| || |                        #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_|\___/|___|                       #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -12,6 +12,7 @@
 # License:                                                                                                             #
 # ==================================================================================================================== #
 # Copyright 2017-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2007-2016 Patrick Lehmann - Dresden, Germany                                                               #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -28,13 +29,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Tree."""
-"""Unit tests for how a terminal application finds its issue tracker URL."""
-from sys      import modules
+"""Unit tests for how a terminal application reports its issue tracker URL."""
+from io       import StringIO
 from types    import ModuleType
 from unittest import TestCase
 
-from pyTooling.TerminalUI import TerminalBaseApplication
+from pyTooling.TerminalUI import TerminalApplication
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,48 +44,62 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class IssueTrackerURL(TestCase):
-	"""The URL comes from '__issue_tracker_url__', with the class variable as the older fallback."""
+	"""ISSUE_TRACKER_URL is the well-known member; an application assigns it from its own dunder variable."""
 
 	_DUNDER_URL = "https://GitHub.com/example/project/issues"
 
-	@classmethod
-	def setUpClass(cls) -> None:
-		# a package with the dunder variable, and a sub-module without it
-		package = ModuleType("exampleApplication")
-		package.__issue_tracker_url__ = cls._DUNDER_URL
-		modules["exampleApplication"] = package
-		modules["exampleApplication.CLI"] = ModuleType("exampleApplication.CLI")
+	@staticmethod
+	def _dunderModule(issueTrackerURL=None) -> ModuleType:
+		module = ModuleType("exampleApplication")
+		module.__version__ = "1.0.0"
+		if issueTrackerURL is not None:
+			module.__issue_tracker_url__ = issueTrackerURL
 
-	@classmethod
-	def tearDownClass(cls) -> None:
-		for name in ("exampleApplication.CLI", "exampleApplication"):
-			del modules[name]
+		return module
 
-	def test_TheDunderVariableIsUsed(self) -> None:
-		class Application(TerminalBaseApplication):
-			__module__ = "exampleApplication"
+	def _printVersion(self, application: TerminalApplication, dunderModule: ModuleType) -> str:
+		"""
+		Print the version information of an application and return what it wrote.
 
-		self.assertEqual(self._DUNDER_URL, Application().IssueTrackerURL)
+		:param application:  The application printing its version information.
+		:param dunderModule: The module carrying the application's dunder variables.
+		:returns:            Everything the application wrote to its standard output.
+		"""
+		application._stdout = StringIO()
+		application._PrintVersion(dunderModule)
 
-	def test_ItIsFoundInAParentPackage(self) -> None:
-		"""The class lives in a sub-module; the dunder variables live in the package."""
-		class Application(TerminalBaseApplication):
-			__module__ = "exampleApplication.CLI"
+		return application._stdout.getvalue()
 
-		self.assertEqual(self._DUNDER_URL, Application().IssueTrackerURL)
+	def test_TheClassVariableIsPrinted(self) -> None:
+		class Application(TerminalApplication):
+			ISSUE_TRACKER_URL = self._DUNDER_URL
 
-	def test_TheDunderVariableWins(self) -> None:
-		class Application(TerminalBaseApplication):
-			__module__ = "exampleApplication"
-			ISSUE_TRACKER_URL = "https://legacy/issues"
+		output = self._printVersion(Application(), self._dunderModule())
 
-		self.assertEqual(self._DUNDER_URL, Application().IssueTrackerURL)
+		self.assertIn(self._DUNDER_URL, output)
 
-	def test_TheClassVariableIsTheFallback(self) -> None:
-		class Application(TerminalBaseApplication):
-			ISSUE_TRACKER_URL = "https://legacy/issues"
+	def test_TheClassVariableWinsOverTheDunderVariable(self) -> None:
+		class Application(TerminalApplication):
+			ISSUE_TRACKER_URL = "https://GitHub.com/example/project/issues"
 
-		self.assertEqual("https://legacy/issues", Application().IssueTrackerURL)
+		output = self._printVersion(Application(), self._dunderModule("https://other/issues"))
+
+		self.assertIn("https://GitHub.com/example/project/issues", output)
+		self.assertNotIn("https://other/issues", output)
+
+	def test_TheDunderVariableIsStillRead(self) -> None:
+		"""An application that only declares the dunder variable keeps its issue tracker line."""
+		class Application(TerminalApplication):
+			pass
+
+		output = self._printVersion(Application(), self._dunderModule(self._DUNDER_URL))
+
+		self.assertIn(self._DUNDER_URL, output)
 
 	def test_NeitherIsDeclared(self) -> None:
-		self.assertIsNone(TerminalBaseApplication().IssueTrackerURL)
+		class Application(TerminalApplication):
+			pass
+
+		output = self._printVersion(Application(), self._dunderModule())
+
+		self.assertNotIn("Issue tracker:", output)
