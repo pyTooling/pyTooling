@@ -31,9 +31,9 @@
 #
 """Unit tests for how a terminal application reports its issue tracker URL."""
 from io       import StringIO
-from types    import ModuleType
 from unittest import TestCase
 
+from pyTooling.Exceptions import ExceptionBase
 from pyTooling.TerminalUI import TerminalApplication
 
 
@@ -44,62 +44,72 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class IssueTrackerURL(TestCase):
-	"""ISSUE_TRACKER_URL is the well-known member; an application assigns it from its own dunder variable."""
+	"""``ISSUE_TRACKER_URL`` is where an application connects its own dunder variable, so the exception printers can
+	invite the user to report a bug."""
 
-	_DUNDER_URL = "https://GitHub.com/example/project/issues"
+	_URL = "https://GitHub.com/example/project/issues"
+
+	def _printException(self, application: TerminalApplication, method: str, ex: Exception) -> str:
+		"""
+		Let an application print an exception and return what it wrote to ``STDERR``.
+
+		:param application: The application printing the exception.
+		:param method:      Name of the printing method to call.
+		:param ex:          The exception to print, raised beforehand so it carries a traceback.
+		:returns:           Everything the application wrote to ``STDERR``.
+		"""
+		application._stderr = StringIO()
+		with self.assertRaises(SystemExit):
+			getattr(application, method)(ex)
+
+		return application._stderr.getvalue()
 
 	@staticmethod
-	def _dunderModule(issueTrackerURL=None) -> ModuleType:
-		module = ModuleType("exampleApplication")
-		module.__version__ = "1.0.0"
-		if issueTrackerURL is not None:
-			module.__issue_tracker_url__ = issueTrackerURL
-
-		return module
-
-	def _printVersion(self, application: TerminalApplication, dunderModule: ModuleType) -> str:
+	def _raised(ex: Exception) -> Exception:
 		"""
-		Print the version information of an application and return what it wrote.
+		Raise and catch an exception, so it carries the traceback every printer walks.
 
-		:param application:  The application printing its version information.
-		:param dunderModule: The module carrying the application's dunder variables.
-		:returns:            Everything the application wrote to its standard output.
+		:param ex: The exception to raise.
+		:returns:  The same exception, with a traceback.
 		"""
-		application._stdout = StringIO()
-		application._PrintVersion(dunderModule)
+		try:
+			raise ex
+		except Exception as caught:
+			return caught
 
-		return application._stdout.getvalue()
-
-	def test_TheClassVariableIsPrinted(self) -> None:
+	def test_AnUnhandledExceptionPointsToTheIssueTracker(self) -> None:
 		class Application(TerminalApplication):
-			ISSUE_TRACKER_URL = self._DUNDER_URL
+			ISSUE_TRACKER_URL = self._URL
 
-		output = self._printVersion(Application(), self._dunderModule())
+		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
 
-		self.assertIn(self._DUNDER_URL, output)
+		self.assertIn("Something failed.", output)
+		self.assertIn(self._URL, output)
 
-	def test_TheClassVariableWinsOverTheDunderVariable(self) -> None:
+	def test_AKnownExceptionPointsToTheIssueTracker(self) -> None:
 		class Application(TerminalApplication):
-			ISSUE_TRACKER_URL = "https://GitHub.com/example/project/issues"
+			ISSUE_TRACKER_URL = self._URL
 
-		output = self._printVersion(Application(), self._dunderModule("https://other/issues"))
+		output = self._printException(Application(), "PrintExceptionBase", self._raised(ExceptionBase("Known.")))
 
-		self.assertIn("https://GitHub.com/example/project/issues", output)
-		self.assertNotIn("https://other/issues", output)
+		self.assertIn(self._URL, output)
 
-	def test_TheDunderVariableIsStillRead(self) -> None:
-		"""An application that only declares the dunder variable keeps its issue tracker line."""
+	def test_ANotImplementedErrorPointsToTheIssueTracker(self) -> None:
+		class Application(TerminalApplication):
+			ISSUE_TRACKER_URL = self._URL
+
+		output = self._printException(
+			Application(), "PrintNotImplementedError", self._raised(NotImplementedError("Not yet."))
+		)
+
+		self.assertIn(self._URL, output)
+
+	def test_WithoutTheClassVariableNoIssueTrackerIsMentioned(self) -> None:
+		"""The class variable is ``None`` by default, and then the invitation is omitted rather than printed empty."""
 		class Application(TerminalApplication):
 			pass
 
-		output = self._printVersion(Application(), self._dunderModule(self._DUNDER_URL))
+		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
 
-		self.assertIn(self._DUNDER_URL, output)
-
-	def test_NeitherIsDeclared(self) -> None:
-		class Application(TerminalApplication):
-			pass
-
-		output = self._printVersion(Application(), self._dunderModule())
-
-		self.assertNotIn("Issue tracker:", output)
+		self.assertIn("Something failed.", output)
+		self.assertNotIn("Please report this bug", output)

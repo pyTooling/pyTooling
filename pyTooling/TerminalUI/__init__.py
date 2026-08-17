@@ -1016,12 +1016,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		if (documentationURL := getattr(dunderModule, "__documentation_url__", None)) is not None:
 			self.WriteNormal(f"Documentation: {documentationURL}")
 
-		# The class variable is the well-known member: an application assigns it from its own dunder variable, whose
-		# module it alone knows. The dunder module is still read for applications that set only that.
-		if (issueTrackerURL := self.ISSUE_TRACKER_URL) is None:
-			issueTrackerURL = getattr(dunderModule, "__issue_tracker_url__", None)
-
-		if issueTrackerURL is not None:
+		if (issueTrackerURL := getattr(dunderModule, "__issue_tracker_url__", None)) is not None:
 			self.WriteNormal(f"Issue tracker: {issueTrackerURL}")
 
 	def _GetLatestVersion(self, packageName: str, timeout: int = 1) -> Nullable[str]:
