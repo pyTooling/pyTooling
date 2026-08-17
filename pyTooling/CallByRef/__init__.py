@@ -36,7 +36,7 @@ Auxiliary classes to implement call-by-reference.
    See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
 """
 from decimal       import Decimal
-from typing        import Any, Generic, TypeVar, Optional as Nullable
+from typing        import Any, Generic, Self, TypeVar, Optional as Nullable
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
@@ -67,7 +67,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 		"""
 		self.Value = value
 
-	def __ilshift__(self, other: T) -> 'CallByRefParam[T]':  # Starting with Python 3.11+, use typing.Self as return type
+	def __ilshift__(self, other: T) -> Self:
 		"""Assigns a value to the *call-by-reference* object.
 
 		:param other: The value to be assigned to this *call-by-reference* object.
@@ -222,7 +222,7 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	# Binary inplace operators
-	def __iand__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
+	def __iand__(self, other: Any) -> Self:
 		"""Inplace and: self &= other."""
 		if isinstance(other, int):
 			self.Value &= other
@@ -232,7 +232,7 @@ class CallByRefIntParam(CallByRefParam):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ior__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
+	def __ior__(self, other: Any) -> Self:
 		r"""Inplace or: self \|= other."""
 		if isinstance(other, int):
 			self.Value |= other
@@ -242,7 +242,7 @@ class CallByRefIntParam(CallByRefParam):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ixor__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
+	def __ixor__(self, other: Any) -> Self:
 		r"""Inplace or: self \|= other."""
 		if isinstance(other, int):
 			self.Value ^= other

@@ -39,22 +39,15 @@ from enum      import Enum, unique
 from functools import wraps
 from inspect   import cleandoc
 from types     import FunctionType
-from typing    import Union, Type, TypeVar, Callable, NoReturn
+from typing    import Union, Type, TypeVar, Callable, NoReturn, ParamSpec
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
-try:
-	# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
-	from typing import ParamSpec                     # WORKAROUND: exists since Python 3.10
-
-	Param = ParamSpec("Param")                       #: A parameter specification for function or method
-	RetType = TypeVar("RetType")                     #: Type variable for a return type
-	Func = Callable[Param, RetType]                  #: Type specification for a function
-except ImportError:  # pragma: no cover
-	Param = ...                                      #: A parameter specification for function or method
-	RetType = TypeVar("RetType")                     #: Type variable for a return type
-	Func = Callable[..., RetType]                    #: Type specification for a function
+# See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
+Param = ParamSpec("Param")                         #: A parameter specification for function or method
+RetType = TypeVar("RetType")                       #: Type variable for a return type
+Func = Callable[Param, RetType]                    #: Type specification for a function
 
 
 T = TypeVar("T", bound=Union[Type, FunctionType])  #: A type variable for a classes or functions.
