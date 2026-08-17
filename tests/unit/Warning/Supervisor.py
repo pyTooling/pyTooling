@@ -87,15 +87,10 @@ class ReRaising(TestCase):
 		self.assertTrue(all(isinstance(exception, ValueError) for exception in context.exception.exceptions))
 
 
-class RemovedExceptions(TestCase):
-	"""The deprecated base class is gone, and the two exceptions still exist in their own right."""
+class ExceptionHierarchy(TestCase):
+	"""Both unhandled-* exceptions are ExceptionBase subclasses, so one except clause still catches either."""
 
-	def test_TheDeprecatedBaseIsGone(self) -> None:
-		import pyTooling.Warning as warningModule
-
-		self.assertFalse(hasattr(warningModule, "UnhandledWarningException"))
-
-	def test_BothExceptionsAreToolingExceptions(self) -> None:
+	def test_BothAreToolingExceptions(self) -> None:
 		for exceptionType in (UnhandledCriticalWarningException, UnhandledExceptionException):
 			with self.subTest(exception=exceptionType.__name__):
 				self.assertTrue(issubclass(exceptionType, ExceptionBase))
