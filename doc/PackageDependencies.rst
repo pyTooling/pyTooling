@@ -6,7 +6,7 @@ Overview
 The module :mod:`pyTooling.Dependency` models the dependencies between packages: which package depends on which
 version of which other package, where those packages are published, and what the resulting graph looks like.
 
-.. note::
+.. seealso::
 
    This is about *modelling* dependencies. The dependencies of pyTooling itself are listed in :ref:`DEP`.
 
