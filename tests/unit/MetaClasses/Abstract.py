@@ -65,11 +65,10 @@ class AbstractClasses(Testcase):
 
 		self.assertTrue(Base.__abstractClass__)
 		self.assertTrue(Base.__isAbstract__)
-		with self.assertRaises(AbstractClassError) as context:
+		with self.assertRaises(AbstractClassError) as ExceptionCapture:
 			Base()
 
-		self.assertIn("Base", str(context.exception))
-		self.assertIn("abstract", str(context.exception))
+		self.assertEqual("Class 'Base' is abstract and needs to be derived.", str(ExceptionCapture.exception))
 
 	def test_AbstractClass_Derived(self) -> None:
 		@abstractclass
@@ -97,19 +96,6 @@ class AbstractClasses(Testcase):
 		self.assertTrue(Derived.__isAbstract__)
 		with self.assertRaises(AbstractClassError):
 			Derived()
-
-	# TODO:c should be merged into abstract method testing; is this an overlap?
-	def test_AnAbstractMethodStillNamesTheMethods(self) -> None:
-		"""The decorated case has no methods to name, so the two messages differ."""
-		class Base(metaclass=ExtendedType):
-			@abstractmethod
-			def Method(self) -> int:
-				pass
-
-		with self.assertRaises(AbstractClassError) as context:
-			Base()
-
-		self.assertIn("Method", str(context.exception))
 
 
 class AbstractMethod(Testcase):
