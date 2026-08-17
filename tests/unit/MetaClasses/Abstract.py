@@ -36,11 +36,10 @@ This test suite tests decorators:
 * :deco:`~pyTooling.MetaClasses.abstractmethod`
 * :deco:`~pyTooling.MetaClasses.mustoverride`
 """
-from unittest              import TestCase
 
 from pyTooling.Decorators  import notimplemented
-from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride, AbstractClassError
-
+from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod, mustoverride, AbstractClassError
+from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -48,7 +47,72 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class AbstractMethod(TestCase):
+class AbstractClasses(Testcase):
+	"""A class can be abstract by declaration, not only by containing an abstract method."""
+
+	def test_NoMetaclass(self) -> None:
+		"""Nothing would compute abstractness, so the decorator says so instead of silently doing nothing."""
+
+		with self.assertRaises(AttributeError):
+			@abstractclass
+			class Plain:
+				pass
+
+	def test_AbstractClass(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			pass
+
+		self.assertTrue(Base.__abstractClass__)
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError) as context:
+			Base()
+
+		self.assertIn("Base", str(context.exception))
+		self.assertIn("abstract", str(context.exception))
+
+	def test_AbstractClass_Derived(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			def Method(self) -> int:
+				return 1
+
+		class Derived(Base):
+			pass
+
+		self.assertFalse(Derived.__abstractClass__)
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertEqual(1, Derived().Method())
+
+	def test_AbstractClass_AbstractClass(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			pass
+
+		@abstractclass
+		class Derived(Base):
+			pass
+
+		self.assertTrue(Derived.__abstractClass__)
+		self.assertTrue(Derived.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Derived()
+
+	# TODO:c should be merged into abstract method testing; is this an overlap?
+	def test_AnAbstractMethodStillNamesTheMethods(self) -> None:
+		"""The decorated case has no methods to name, so the two messages differ."""
+		class Base(metaclass=ExtendedType):
+			@abstractmethod
+			def Method(self) -> int:
+				pass
+
+		with self.assertRaises(AbstractClassError) as context:
+			Base()
+
+		self.assertIn("Method", str(context.exception))
+
+
+class AbstractMethod(Testcase):
 	def test_AbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
 			_data: int
@@ -180,7 +244,7 @@ class AbstractMethod(TestCase):
 		derived.AbstractMethod()
 
 
-class MustOverride(TestCase):
+class MustOverride(Testcase):
 	def test_MustOverrideBase(self) -> None:
 		class MustOverrideBase(metaclass=ExtendedType):
 			@mustoverride
@@ -221,7 +285,7 @@ class MustOverride(TestCase):
 		DerivedMustOverrideClass()
 
 
-class NotImplemented(TestCase):
+class NotImplemented(Testcase):
 	def test_NotImplementedBase(self) -> None:
 		class NotImplementedBase(metaclass=ExtendedType):
 			@notimplemented("It's not working.")

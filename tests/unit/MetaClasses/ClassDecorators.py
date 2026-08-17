@@ -32,9 +32,8 @@
 Unit tests for the class decorators :deco:`~pyTooling.MetaClasses.slotted`,
 :deco:`~pyTooling.MetaClasses.mixin` and :deco:`~pyTooling.MetaClasses.singleton`.
 """
-from unittest              import TestCase
-
 from pyTooling.MetaClasses import ExtendedType, IncompatibleMetaClassError, mixin, singleton, slotted
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Slotted(TestCase):
+class Slotted(Testcase):
 	def test_PlainClass(self) -> None:
 		@slotted
 		class Data:
@@ -63,7 +62,7 @@ class Slotted(TestCase):
 			inst._data_1 = 6
 
 
-class Mixin(TestCase):
+class Mixin(Testcase):
 	def test_PlainClass(self) -> None:
 		@mixin
 		class Mixed:
@@ -92,7 +91,7 @@ class Mixin(TestCase):
 		self.assertEqual(2, inst._data_M1)
 
 
-class Singleton(TestCase):
+class Singleton(Testcase):
 	def test_PlainClass(self) -> None:
 		@singleton
 		class App:
@@ -104,7 +103,7 @@ class Singleton(TestCase):
 		self.assertIs(App(), App())
 
 
-class IncompatibleMetaClass(TestCase):
+class IncompatibleMetaClass(Testcase):
 	"""
 	A decorated class must use :class:`type` or a meta-class derived from
 	:class:`~pyTooling.MetaClasses.ExtendedType`.

@@ -30,9 +30,8 @@
 # ==================================================================================================================== #
 #
 """pyTooling.TerminalUI"""
-from unittest             import TestCase
-
 from pyTooling.TerminalUI import Line, Severity
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +40,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Default(self) -> None:
 		line = Line("Message")
 
@@ -61,7 +60,7 @@ class Instantiation(TestCase):
 		self.assertEqual(2, line.Indent)
 
 
-class Indentation(TestCase):
+class Indentation(Testcase):
 	def test_IndentationChange(self) -> None:
 		lines = [
 			Line("Line 1"),

@@ -31,9 +31,9 @@
 """
 Unit tests for :func:`firstItem` and :func:`lastItem`.
 """
-from unittest import TestCase
+from pyTooling.Common  import firstItem, lastItem, count
+from pyTooling.Testing import Testcase
 
-from pyTooling.Common import firstItem, lastItem, count
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -41,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Count(TestCase):
+class Count(Testcase):
 	def test_count_empty(self) -> None:
 		c = count(range(0))
 
@@ -66,7 +66,7 @@ class Count(TestCase):
 
 		self.assertEqual(length, c)
 
-class First(TestCase):
+class First(Testcase):
 	def test_FirstItem0(self) -> None:
 		d = []
 
@@ -86,7 +86,7 @@ class First(TestCase):
 		self.assertEqual(1, f)
 
 
-class Last(TestCase):
+class Last(Testcase):
 	def test_LastItem0(self) -> None:
 		d = []
 

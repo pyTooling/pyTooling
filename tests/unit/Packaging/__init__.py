@@ -32,10 +32,10 @@
 Unit tests for the packaging helper functions.
 """
 from pathlib  import Path
-from unittest import TestCase
 from pytest   import mark
 
 from pyTooling.Platform import CurrentPlatform
+from pyTooling.Testing  import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class HelperFunctions(TestCase):
+class HelperFunctions(Testcase):
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
@@ -114,7 +114,7 @@ class HelperFunctions(TestCase):
 		self.assertEqual(5, len(requirements))
 
 
-class VersionInformation(TestCase):
+class VersionInformation(Testcase):
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import VersionInformation
@@ -138,7 +138,7 @@ class VersionInformation(TestCase):
 		self.assertListEqual(["keyword1", "keyword2"], versionInfo.Keywords)
 
 
-class DescribePackage(TestCase):
+class DescribePackage(Testcase):
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackage(self) -> None:
 		print()

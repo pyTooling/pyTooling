@@ -31,10 +31,9 @@
 """
 Unit tests for ...
 """
-from unittest import TestCase
-
 from pyTooling.Cartesian3D         import Point3D
 from pyTooling.Cartesian3D.Volumes import Volume, Cuboid, Cube
+from pyTooling.Testing             import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,6 +42,6 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Cube(self) -> None:
 		origin = Cube()

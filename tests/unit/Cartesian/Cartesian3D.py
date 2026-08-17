@@ -32,9 +32,9 @@
 Unit tests for ...
 """
 from math                  import sqrt
-from unittest              import TestCase
 
 from pyTooling.Cartesian3D import Origin3D, Point3D, Offset3D, Size3D, LineSegment3D
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin3D()
 
@@ -177,7 +177,7 @@ class Instantiation(TestCase):
 		self.assertTupleEqual(((1, 2, 3), (2, 3, 4)), line.ToTuple())
 
 
-class Copy(TestCase):
+class Copy(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin3D()
 
@@ -269,7 +269,7 @@ class Copy(TestCase):
 		self.assertEqual("Size3D(1.0, 2.0, 3.0)", repr(newSize))
 
 
-class Comparison(TestCase):
+class Comparison(Testcase):
 	def test_Offset_Equal_Offset(self) -> None:
 		offset1 = Offset3D(1, 2, 3)
 		offset2 = Offset3D(1, 2, 3)
@@ -296,7 +296,7 @@ class Comparison(TestCase):
 		self.assertTrue(offset1 != offset2)
 
 
-class PointArithmetic(TestCase):
+class PointArithmetic(Testcase):
 	def test_Point_Plus_Point(self) -> None:
 		point1 = Point3D(1, 2, 3)
 		point2 = Point3D(2, 3, 4)
@@ -403,7 +403,7 @@ class PointArithmetic(TestCase):
 			point -= 2
 
 
-class OffsetArithmetic(TestCase):
+class OffsetArithmetic(Testcase):
 	def test_Offset_Plus_Offset(self) -> None:
 		offset1 = Offset3D(1, 2, 3)
 		offset2 = Offset3D(2, 3, 4)

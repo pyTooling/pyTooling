@@ -31,9 +31,9 @@
 #
 """pyTooling.TerminalUI"""
 from io                   import StringIO
-from unittest             import TestCase
 
 from pyTooling.TerminalUI import TerminalApplication, Severity, Mode
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -42,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_LineTerminal(self) -> None:
 		term = TerminalApplication()
 
@@ -81,7 +81,7 @@ class Instantiation(TestCase):
 		self.assertTrue(app.Quiet)
 
 
-class Properties(TestCase):
+class Properties(Testcase):
 	def test_BaseIndent(self) -> None:
 		term = TerminalApplication()
 		self.assertEqual(0, term.BaseIndent)
@@ -97,7 +97,7 @@ class Properties(TestCase):
 		self.assertEqual(Severity.Warning, term.LogLevel)
 
 
-class ExitOnCounters(TestCase):
+class ExitOnCounters(Testcase):
 	def test_Warnings(self) -> None:
 		print()
 
@@ -147,7 +147,7 @@ class ExitOnCounters(TestCase):
 			app.ExitOnPreviousErrors()
 
 
-class ToStdOut(TestCase):
+class ToStdOut(Testcase):
 	WHITE =       "\x1b[97m"
 	YELLOW =      "\x1b[93m"
 	DARK_YELLOW = "\x1b[33m"
@@ -335,7 +335,7 @@ class ToStdOut(TestCase):
 		self.assertEqual(0, err.tell())
 
 
-class ToStdOut_ToStdErr(TestCase):
+class ToStdOut_ToStdErr(Testcase):
 	WHITE =       "\x1b[97m"
 	YELLOW =      "\x1b[93m"
 	DARK_YELLOW = "\x1b[33m"
@@ -523,7 +523,7 @@ class ToStdOut_ToStdErr(TestCase):
 		self.assertEqual(0, err.tell())
 
 
-class DataToStdOut(TestCase):
+class DataToStdOut(Testcase):
 	WHITE =       "\x1b[97m"
 	YELLOW =      "\x1b[93m"
 	DARK_YELLOW = "\x1b[33m"

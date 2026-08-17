@@ -36,7 +36,6 @@ from argparse      import ArgumentError
 from io            import StringIO
 from pathlib       import Path
 from typing        import Callable, Any, Tuple, NoReturn
-from unittest      import TestCase
 from unittest.mock import patch
 
 from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
@@ -48,6 +47,7 @@ from pyTooling.Attributes.ArgParse.Flag       import FlagArgument, ShortFlag, Lo
 from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
 from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
 from pyTooling.TerminalUI                     import TerminalApplication
+from pyTooling.Testing                        import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -64,7 +64,7 @@ class ProgramBase(ArgParseHelperMixin, mixin=True):
 		super().__init__(prog="Program.py")
 
 
-class Common(TestCase):
+class Common(Testcase):
 	def test_NoArgs(self) -> None:
 		class Program(ProgramBase):
 			@DefaultHandler()
@@ -287,7 +287,7 @@ class Common(TestCase):
 		self.assertEqual(True, prog.args.verbose)
 
 
-class Commands(TestCase):
+class Commands(Testcase):
 	def test_TwoCommands(self) -> None:
 		print()
 
@@ -347,7 +347,7 @@ class Commands(TestCase):
 		self.assertEqual(0, len(nonProcessedArgs))
 
 
-class Values(TestCase):
+class Values(Testcase):
 	def test_Positional(self) -> None:
 		print()
 
@@ -465,7 +465,7 @@ class Values(TestCase):
 		self.assertEqual(path, prog.args.configFile)
 
 
-class ValueLists(TestCase):
+class ValueLists(Testcase):
 	def test_Lists(self) -> None:
 		print()
 
@@ -589,7 +589,7 @@ class ValueLists(TestCase):
 		self.assertListEqual(lst, prog.args.configFiles)
 
 
-class Flags(TestCase):
+class Flags(Testcase):
 	def test_DefaultHandler_ShortAndLong(self) -> None:
 		print()
 
@@ -862,7 +862,7 @@ class Flags(TestCase):
 		self.assertEqual(False, prog.args.verbose)
 
 
-class ValuedFlags(TestCase):
+class ValuedFlags(Testcase):
 	def test_DefaultHandler_ShortAndLong(self) -> None:
 		print()
 
@@ -1162,7 +1162,7 @@ class Program(ProgramBase, mixin=True):
 		self.args = args
 
 
-class UserManager(TestCase):
+class UserManager(Testcase):
 	def test_UserManager(self) -> None:
 		print()
 
@@ -1202,7 +1202,7 @@ class Application(TerminalApplication, Program):
 		self.Exit(returnCode)
 
 
-class MockedUserManager(TestCase):
+class MockedUserManager(Testcase):
 	@staticmethod
 	def _PrintToStdOutAndStdErr(out: StringIO, err: StringIO, stdoutEnd: str = "") -> Tuple[str, str]:
 		out.seek(0)

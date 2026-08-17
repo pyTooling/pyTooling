@@ -30,13 +30,13 @@
 #
 """Unit tests for pyTooling.Graph."""
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
-from unittest import TestCase
 
 from pyTooling.Decorators import readonly
 from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +45,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Construction(TestCase):
+class Construction(Testcase):
 	def test_Graph(self) -> None:
 		graph = Graph()
 
@@ -437,7 +437,7 @@ class Construction(TestCase):
 		self.assertEqual(7, next(iter(v1.Graph.Components)).VertexCount)
 
 
-class Subgraphs(TestCase):
+class Subgraphs(Testcase):
 	def test_OuterVertices(self) -> None:
 		graph = Graph()
 		subgraph1 = Subgraph(name="subgraph1", graph=graph)
@@ -538,7 +538,7 @@ class Subgraphs(TestCase):
 		self.assertTupleEqual((link12,), vertex2.InboundLinks)
 
 
-class Names(TestCase):
+class Names(Testcase):
 	def test_Graph_NoName(self) -> None:
 		graph = Graph()
 
@@ -564,7 +564,7 @@ class Names(TestCase):
 			graph.Name = 25
 
 
-class IDs(TestCase):
+class IDs(Testcase):
 	def test_VertexNoneID(self) -> None:
 		graph = Graph()
 		vertex = Vertex(graph=graph)
@@ -627,7 +627,7 @@ class IDs(TestCase):
 			_ = Vertex(vertexID=1, graph=graph)
 
 
-class Values(TestCase):
+class Values(Testcase):
 	def test_VertexNoneValue(self) -> None:
 		graph = Graph()
 		vertex = Vertex(graph=graph)
@@ -723,7 +723,7 @@ class Values(TestCase):
 		self.assertIsNone(edge12.Value)
 
 
-class Weights(TestCase):
+class Weights(Testcase):
 	def test_VertexNoneWeight(self) -> None:
 		graph = Graph()
 		vertex = Vertex(graph=graph)
@@ -769,7 +769,7 @@ class Weights(TestCase):
 		self.assertIsNone(edge12.Weight)
 
 
-class Dicts(TestCase):
+class Dicts(Testcase):
 	def test_GraphDict(self) -> None:
 		graph = Graph()
 
@@ -886,7 +886,7 @@ class Dicts(TestCase):
 			_ = edge12["key"]
 
 
-class EdgesAndLinks(TestCase):
+class EdgesAndLinks(Testcase):
 	def test_EdgeToVertex(self) -> None:
 		graph = Graph()
 		subgraph = Subgraph(graph=graph)
@@ -1071,7 +1071,7 @@ class EdgesAndLinks(TestCase):
 				self.assertIn("are in the same subgraph", str(context.exception))
 
 
-class Iterate(TestCase):
+class Iterate(Testcase):
 	class TestGraph:
 		_vertexCount: int
 		_edgeCount:   int
@@ -1504,7 +1504,7 @@ class GraphToTree(Iterate):
 		self.assertSetEqual(set([v.Value for v in g.IterateLeafs()]), set([n.Value for n in tree.IterateLeafs()]))
 
 
-class DuplicateIdentifiers(TestCase):
+class DuplicateIdentifiers(Testcase):
 	"""A duplicate identifier is carried by the exception, not only formatted into its message."""
 
 	def test_ADuplicateVertexIDIsCarried(self) -> None:

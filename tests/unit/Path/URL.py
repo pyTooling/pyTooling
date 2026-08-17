@@ -29,8 +29,8 @@
 # ==================================================================================================================== #
 #
 """Unit tests for :mod:`pyTooling.GenericPath.URL`."""
-from unittest import TestCase
 from pyTooling.GenericPath.URL import URL, Protocols
+from pyTooling.Testing         import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -39,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class GenericPath(TestCase):
+class GenericPath(Testcase):
 	url : URL = URL.Parse("https://pyTooling.GitHub.io:8080/path/to/endpoint?user=paebbels&token=1234567890")
 
 	def test_Protocol(self) -> None:
@@ -55,7 +55,7 @@ class GenericPath(TestCase):
 		self.assertEqual(str(self.url), "https://pyTooling.GitHub.io:8080/path/to/endpoint?user=paebbels&token=1234567890")
 
 
-class URLs(TestCase):
+class URLs(Testcase):
 	def test_Host(self) -> None:
 		resource = "github"
 		url = URL.Parse(resource)

@@ -30,9 +30,8 @@
 # ==================================================================================================================== #
 #
 """pyTooling.TerminalUI"""
-from unittest             import TestCase
-
 from pyTooling.TerminalUI import Severity
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +40,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Comparison(TestCase):
+class Comparison(Testcase):
 	def test_Normal(self) -> None:
 		normal = Severity.Normal
 
@@ -53,7 +52,7 @@ class Comparison(TestCase):
 		self.assertGreaterEqual(Severity.Warning, normal)
 
 
-class Exceptions(TestCase):
+class Exceptions(Testcase):
 	def test_Equal(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Severity.Normal == 0

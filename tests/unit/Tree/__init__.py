@@ -30,11 +30,11 @@
 #
 """Unit tests for pyTooling.Tree."""
 from typing   import Any, Optional as Nullable, List, Tuple, Dict
-from unittest import TestCase
 
 from pytest   import mark
 
-from pyTooling.Tree import Node, AlreadyInTreeError, NoSiblingsError
+from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Construction(TestCase):
+class Construction(Testcase):
 	def test_SingleNode(self) -> None:
 		root: Node[Nullable[Any], int, str, Any] = Node()
 
@@ -247,7 +247,7 @@ class Construction(TestCase):
 		self.assertIs(root, child.Parent)
 
 
-class MergeTree(TestCase):
+class MergeTree(Testcase):
 	def test_SetParent(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
@@ -297,7 +297,7 @@ class MergeTree(TestCase):
 		pass
 
 
-class SplitTree(TestCase):
+class SplitTree(Testcase):
 	def test_SplitTreeWithoutIDs(self) -> None:
 		root = Node()
 		children = [Node(parent=root), Node(parent=root)]
@@ -357,7 +357,7 @@ class SplitTree(TestCase):
 		pass
 
 
-class Loops(TestCase):
+class Loops(Testcase):
 	def test_SelfLoop(self) -> None:
 		root = Node(1)
 
@@ -406,7 +406,7 @@ class Loops(TestCase):
 			grandchild[0].Parent = grandchild[1]
 
 
-class Features(TestCase):
+class Features(Testcase):
 	def test_NodeWithID(self) -> None:
 		root = Node(nodeID=1)
 
@@ -547,7 +547,7 @@ class Features(TestCase):
 		_ = str(nodeIDValue)
 
 
-class Iteration(TestCase):
+class Iteration(Testcase):
 	_root: Node
 	_children: List[Node]
 
@@ -658,7 +658,7 @@ class Iteration(TestCase):
 		], [node.ID for node in self._root.IterateLeafs()])
 
 
-class Exceptions(TestCase):
+class Exceptions(Testcase):
 	def test_NewNodeWithWrongParent(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Node(parent=1)
@@ -755,7 +755,7 @@ class Exceptions(TestCase):
 				pass
 
 
-class Rendering(TestCase):
+class Rendering(Testcase):
 	# parentID, nodeID, dict
 	_tree: Tuple[Tuple[int, int, Dict[str, float]], ...] = (
 		(0, 1, {"time": 11.0}), (0, 2, {"time": 3.2}), (0, 3, {"time": 7.9}),

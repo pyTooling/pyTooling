@@ -31,9 +31,8 @@
 """
 Unit tests for :mod:`PyTooling.CallByRef`.
 """
-from unittest            import TestCase
-
 from pyTooling.CallByRef import CallByRefParam, CallByRefBoolParam, CallByRefIntParam
+from pyTooling.Testing   import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -54,7 +53,7 @@ def assign_42(param: CallByRefIntParam, value: int = 42) -> None:
 	param <<= value
 
 
-class Any(TestCase):
+class Any(Testcase):
 	ref: CallByRefParam = CallByRefParam()
 
 	def setUp(self) -> None:
@@ -70,7 +69,7 @@ class Any(TestCase):
 		self.assertTrue(self.ref != (4, 3))
 
 
-class Boolean(TestCase):
+class Boolean(Testcase):
 	ref: CallByRefBoolParam = CallByRefBoolParam()
 
 	def setUp(self) -> None:
@@ -98,7 +97,7 @@ class Boolean(TestCase):
 		self.assertEqual(1, int(self.ref))
 
 
-class Integer(TestCase):
+class Integer(Testcase):
 	ref: CallByRefIntParam = CallByRefIntParam()
 
 	def test_Value(self) -> None:
