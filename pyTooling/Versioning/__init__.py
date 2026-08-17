@@ -56,7 +56,7 @@ class VersionValidatorException(ToolingException):
 	:attr:`Version`, so a caller can report what was wrong with it.
 	"""
 
-	_version: Nullable["Version"]
+	_version: Nullable["Version"]  #: The version rejected by a validator.
 
 	def __init__(self, message: str, /, *, version: Nullable["Version"] = None) -> None:
 		"""
@@ -1030,6 +1030,7 @@ class Version(metaclass=ExtendedType, slots=True):
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
+	#: Regular expression to parse a semantic version from a string.
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>rev|REV|[vViIrR])?"
@@ -1451,6 +1452,7 @@ class CalendarVersion(Version):
 
 	_PARTCOUNT: ClassVar[int] = 3   #: Number of numeric parts a version number of this class can carry.
 
+	#: Regular expression to parse a calendar version from a string.
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>rev|REV|[vViIrR])?"
@@ -2000,9 +2002,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 	This version range works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
-	_lowerBound:    V
-	_upperBound:    V
-	_boundHandling: RangeBoundHandling
+	_lowerBound:    V                   #: Lower bound of the version range.
+	_upperBound:    V                   #: Upper bound of the version range.
+	_boundHandling: RangeBoundHandling  #: Strategy deciding whether the bounds are part of the range.
 
 	def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
 		"""

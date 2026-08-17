@@ -112,19 +112,19 @@ class Stopwatch(SlottedObject):
 	The stopwatch can also be used in a :ref:`with-statement <with>`, because it implements the :ref:`context manager protocol <context-managers>`.
 	"""
 
-	_name:         Nullable[str]
-	_preferPause:  bool
+	_name:         Nullable[str]  #: Optional name of the stopwatch.
+	_preferPause:  bool           #: If ``True``, the context manager pauses instead of stopping on exit.
 
-	_beginTime:    Nullable[datetime]
-	_endTime:      Nullable[datetime]
-	_startTime:    Nullable[int]
-	_resumeTime:   Nullable[int]
-	_pauseTime:    Nullable[int]
-	_stopTime:     Nullable[int]
-	_totalTime:    Nullable[int]
-	_splits:       List[Tuple[float, bool]]
+	_beginTime:    Nullable[datetime]        #: Absolute time when the stopwatch was started.
+	_endTime:      Nullable[datetime]        #: Absolute time when the stopwatch was stopped.
+	_startTime:    Nullable[int]             #: Performance counter in ns when the stopwatch was started.
+	_resumeTime:   Nullable[int]             #: Performance counter in ns of the latest resume operation.
+	_pauseTime:    Nullable[int]             #: Performance counter in ns of the latest pause operation.
+	_stopTime:     Nullable[int]             #: Performance counter in ns when the stopwatch was stopped.
+	_totalTime:    Nullable[int]             #: Duration in ns from starting to stopping, activity and inactivity.
+	_splits:       List[Tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
 
-	_excludeContextManager: ExcludeContextManager
+	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
 	def __init__(self, name: str = None, started: bool = False, preferPause: bool = False) -> None:
 		"""

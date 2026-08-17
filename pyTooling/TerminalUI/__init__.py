@@ -643,6 +643,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	Represents a single message line with a severity and indentation level.
 	"""
 
+	#: Message formatting rules per severity, without color codes.
 	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
 		Severity.Exception:     "EXCEPTION: {message}",
 		Severity.ExceptionNote: "           > {message}",
@@ -749,7 +750,7 @@ class Line(metaclass=ExtendedType, slots=True):
 class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
-	_terminal: TerminalBaseApplication
+	_terminal: TerminalBaseApplication  #: The terminal application the messages are written to.
 
 	def __init__(self, terminal: Nullable[TerminalBaseApplication] = None) -> None:
 		"""MixIn initializer."""
@@ -843,6 +844,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	"""
 	A base-class for implementation of terminal applications emitting line-by-line messages.
 	"""
+	#: Message formatting rules per severity, including color placeholders.
 	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
 		Severity.Exception:            "{RED}[EXCEPTION] {message}{NOCOLOR}",
 		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",
@@ -861,19 +863,19 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	}                          #: Message formatting rules.
 
 	_LOG_LEVEL_ROUTING__: Dict[Severity, Tuple[Callable[[str, str], int]]]  #: Message routing rules.
-	_verbose:       bool
-	_debug:         bool
-	_silent:        bool
-	_quiet:         bool
-	_writeLevel:    Severity
-	_writeToStdOut: bool
+	_verbose:       bool        #: ``True``, if verbose messages are written.
+	_debug:         bool        #: ``True``, if debug messages are written.
+	_silent:        bool        #: ``True``, if no messages are written at all.
+	_quiet:         bool        #: ``True``, if only errors and quiet messages are written.
+	_writeLevel:    Severity    #: Minimal severity a message needs to be written.
+	_writeToStdOut: bool        #: ``True``, if messages are written to ``STDOUT`` instead of ``STDERR``.
 
-	_lines:         List[Line]
-	_baseIndent:    int
+	_lines:         List[Line]  #: Every message written so far, in the order it was written.
+	_baseIndent:    int         #: Indentation level added to every message's own indentation.
 
-	_errorCount:    int
-	_criticalWarningCount: int
-	_warningCount:  int
+	_errorCount:           int  #: Number of errors written so far.
+	_criticalWarningCount: int  #: Number of critical warnings written so far.
+	_warningCount:         int  #: Number of warnings written so far.
 
 	HeadLine:       ClassVar[str]
 

@@ -51,6 +51,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 
 	Example: ``width=100``
 	"""
+	#: Format string used when the flag has a value; :attr:`_pattern` is used without one.
 	_patternWithValue: ClassVar[str]
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any) -> None:
