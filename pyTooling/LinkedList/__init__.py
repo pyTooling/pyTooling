@@ -368,6 +368,11 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			node = nextNode
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this node.
+
+		:returns: The node's value, prefixed by its kind.
+		"""
 		return f"Node: {self._value}"
 
 

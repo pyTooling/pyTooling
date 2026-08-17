@@ -175,6 +175,12 @@ class Dictionary(Node):
 		Node.__init__(self, root, parent)
 
 	def __contains__(self, key: KeyT) -> bool:  # type: ignore[empty-body]
+		"""
+		Check if a key exists in this dictionary node.
+
+		:param key: The key to check for.
+		:returns:   ``True``, if the key exists in this node.
+		"""
 		raise NotImplementedError()
 
 
@@ -193,9 +199,21 @@ class Sequence(Node):
 		Node.__init__(self, root, parent)
 
 	def __getitem__(self, index: int) -> ValueT:  # type: ignore[empty-body]
+		"""
+		Read an element of this sequence node by index.
+
+		:param index: Index of the element to read.
+		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
+		"""
 		raise NotImplementedError()
 
 	def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
+		"""
+		Write an element of this sequence node by index.
+
+		:param index: Index of the element to write.
+		:param value: The new value of that element.
+		"""
 		raise NotImplementedError()
 
 

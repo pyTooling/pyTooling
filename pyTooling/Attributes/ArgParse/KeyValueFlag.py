@@ -77,10 +77,24 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 @export
 class ShortKeyValueFlag(NamedKeyValuePairsArgument):
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a key-value argument in its short form.
+
+		:param short: Short form of the option, e.g. ``-v``.
+		:param dest:  Name of the parameter the parsed value is passed to the handler method as.
+		:param help:  Help text of the option, displayed in the help page.
+		"""
 		super().__init__(short=short, dest=dest, help=help)
 
 
 @export
 class LongKeyValueFlag(NamedKeyValuePairsArgument):
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a key-value argument in its long form.
+
+		:param long: Long form of the option, e.g. ``--verbose``.
+		:param dest: Name of the parameter the parsed value is passed to the handler method as.
+		:param help: Help text of the option, displayed in the help page.
+		"""
 		super().__init__(long=long, dest=dest, help=help)

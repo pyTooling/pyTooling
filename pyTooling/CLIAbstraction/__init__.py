@@ -293,6 +293,14 @@ class Program(metaclass=ExtendedType, slots=True):
 		return self.__cliParameters__[key]
 
 	def __setitem__(self, key: Type[CommandLineArgument], value: CommandLineArgument) -> None:
+		"""
+		Set a command line argument of this program by its argument class.
+
+		:param key:        Class of the command line argument to set.
+		:param value:      Value of that argument; ignored for arguments needing no value.
+		:raises TypeError: If the key is not a subclass of :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument`.
+		:raises KeyError:  If the argument isn't allowed on this program, or was set before.
+		"""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
@@ -575,6 +583,13 @@ class OutputFilteredExecutable(Executable):
 	_hasFatals:   bool
 
 	def __init__(self, platform: Platform, dryrun: bool, executablePath: Path) -> None: #, environment=None, logger=None) -> None:
+		"""
+		Initialize an executable whose output is filtered, with all filter results cleared.
+
+		:param platform:       Platform the executable is called on.
+		:param dryrun:         If ``True``, the executable is not started, only the command line is assembled.
+		:param executablePath: Path to the executable.
+		"""
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 
 		self._hasOutput =   False

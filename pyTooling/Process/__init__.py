@@ -77,6 +77,11 @@ class MemoryInfo(metaclass=ExtendedType, slots=True):
 		return self._VirtualMemory
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this memory snapshot.
+
+		:returns: Resident and virtual memory usage in MiB.
+		"""
 		return f"Physical Memory (VmRSS): {self.ResidentMemory / 2**20:.3f} MiB / Virtual Memory (VmS): {self.VirtualMemory / 2**20:.3f}  MiB"
 
 
@@ -91,6 +96,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
+			"""Open the Windows libraries and the handle of the current process."""
 			self._psapi =    WinDLL("psapi", use_last_error=True)
 			self._kernel32 = WinDLL("kernel32", use_last_error=True)
 
@@ -100,6 +106,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			self._processHandle = self._kernel32.GetCurrentProcess()
 	else:
 		def __init__(self) -> None:
+			"""Initialize the process information; no handle is needed outside Windows."""
 			pass
 
 	if CurrentPlatform.IsNativeLinux:

@@ -492,6 +492,11 @@ class Span(metaclass=ExtendedType, slots=True):
 		return result
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this timespan.
+
+		:returns: The timespan's name, followed by its parents up to the trace.
+		"""
 		return f"{self._name} -> {self._parent!r}"
 
 	def __str__(self) -> str:
@@ -526,6 +531,11 @@ class Trace(Span):
 		super().__init__(name)
 
 	def __enter__(self) -> Self:
+		"""
+		Start the trace and register it as the current trace and current span of this thread.
+
+		:returns: The trace itself, so it can be named in an ``as`` clause.
+		"""
 		global _threadLocalData
 
 		# TODO: check if a trace is already setup

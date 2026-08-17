@@ -81,6 +81,11 @@ class ElementMixIn(Base, mixin=True):
 		self._elementName = elementName
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this path element.
+
+		:returns: The element's name.
+		"""
 		return self._elementName
 
 
@@ -113,6 +118,11 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return len(self._elements)
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this path.
+
+		:returns: The path's elements, joined by the delimiter, prefixed by the root delimiter if the path is absolute.
+		"""
 		result = self.ROOT_DELIMITER if self._isAbsolute else ""
 
 		if len(self._elements) > 0:

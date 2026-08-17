@@ -568,6 +568,12 @@ class ExtendedType(type):
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
 			if "__getstate__" not in members:
 				def __getstate__(self) -> Dict[str, Any]:
+					"""
+					Return the object's state for pickling, collecting every slot of the class hierarchy.
+
+					:returns:                  Dictionary of slot names and their values.
+					:raises ExtendedTypeError: If a slot was never assigned, so it has no value to serialize.
+					"""
 					try:
 						return {slotName: getattr(self, slotName) for slotName in self.__allSlots__}
 					except AttributeError as ex:
@@ -577,6 +583,12 @@ class ExtendedType(type):
 
 			if "__setstate__" not in members:
 				def __setstate__(self, state: Dict[str, Any]) -> None:
+					"""
+					Restore the object's state from unpickling, requiring exactly the slots of the class hierarchy.
+
+					:param state:              Dictionary of slot names and their values.
+					:raises ExtendedTypeError: If the given state misses a slot or carries an unexpected one.
+					"""
 					if self.__allSlots__ !=  (slots := set(state.keys())):
 						if len(diff := self.__allSlots__.difference(slots)) > 0:
 							raise ExtendedTypeError(f"""Missing fields in parameter 'state': '{"', '".join(diff)}'""")     # WORKAROUND: Python <3.12

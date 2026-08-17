@@ -59,6 +59,11 @@ class AttributeContext(Enum):
 	Port = auto()
 
 	def __str__(self) -> str:
+		"""
+		Return the enumeration value's name as it is written in a GraphML document.
+
+		:returns: Name of the enumeration value in lower case.
+		"""
 		return f"{self.name.lower()}"
 
 
@@ -77,6 +82,11 @@ class AttributeTypes(Enum):
 	String = auto()
 
 	def __str__(self) -> str:
+		"""
+		Return the enumeration value's name as it is written in a GraphML document.
+
+		:returns: Name of the enumeration value in lower case.
+		"""
 		return f"{self.name.lower()}"
 
 
@@ -87,6 +97,11 @@ class EdgeDefault(Enum):
 	Directed = auto()
 
 	def __str__(self) -> str:
+		"""
+		Return the enumeration value's name as it is written in a GraphML document.
+
+		:returns: Name of the enumeration value in lower case.
+		"""
 		return f"{self.name.lower()}"
 
 
@@ -98,6 +113,11 @@ class ParsingOrder(Enum):
 	Free = auto()
 
 	def __str__(self) -> str:
+		"""
+		Return the enumeration value's name as it is written in a GraphML document.
+
+		:returns: Name of the enumeration value in lower case.
+		"""
 		return f"{self.name.lower()}"
 
 
@@ -108,6 +128,11 @@ class IDStyle(Enum):
 	Free = auto()
 
 	def __str__(self) -> str:
+		"""
+		Return the enumeration value's name as it is written in a GraphML document.
+
+		:returns: Name of the enumeration value in lower case.
+		"""
 		return f"{self.name.lower()}"
 
 
@@ -143,6 +168,11 @@ class BaseWithID(Base):
 	_id: str
 
 	def __init__(self, identifier: str) -> None:
+		"""
+		Initialize a GraphML element with its unique ID.
+
+		:param identifier: Unique ID of the element within the GraphML document.
+		"""
 		super().__init__()
 		self._id = identifier
 
@@ -161,6 +191,11 @@ class BaseWithData(BaseWithID):
 	_data: List['Data']
 
 	def __init__(self, identifier: str) -> None:
+		"""
+		Initialize a GraphML element with its unique ID and an empty list of data items.
+
+		:param identifier: Unique ID of the element within the GraphML document.
+		"""
 		super().__init__(identifier)
 
 		self._data = []
@@ -186,6 +221,14 @@ class Key(BaseWithID):
 	_attributeType: AttributeTypes
 
 	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes) -> None:
+		"""
+		Initialize a key declaring an attribute.
+
+		:param identifier: Unique ID of the key within the GraphML document.
+		:param context:    GraphML element kind this key can be used on.
+		:param name:       Name of the declared attribute.
+		:param type:       Data type of the declared attribute.
+		"""
 		super().__init__(identifier)
 
 		self._context = context
@@ -243,6 +286,12 @@ class Data(Base):
 	_data: Any
 
 	def __init__(self, key: Key, data: Any) -> None:
+		"""
+		Initialize a data item with the key describing it and its value.
+
+		:param key:  Key declaring name and type of this attribute.
+		:param data: Value of this attribute.
+		"""
 		super().__init__()
 
 		self._key = key
@@ -290,6 +339,11 @@ class Data(Base):
 @export
 class Node(BaseWithData):
 	def __init__(self, identifier: str) -> None:
+		"""
+		Initialize a node.
+
+		:param identifier: Unique ID of the node within the GraphML document.
+		"""
 		super().__init__(identifier)
 
 	@readonly
@@ -328,6 +382,13 @@ class Edge(BaseWithData):
 	_target: Node
 
 	def __init__(self, identifier: str, source: Node, target: Node) -> None:
+		"""
+		Initialize an edge between two nodes.
+
+		:param identifier: Unique ID of the edge within the GraphML document.
+		:param source:     Node the edge starts at.
+		:param target:     Node the edge ends at.
+		"""
 		super().__init__(identifier)
 
 		self._source = source
@@ -392,6 +453,13 @@ class BaseGraph(BaseWithData, mixin=True):
 	_edgeIDStyle: IDStyle
 
 	def __init__(self, identifier: Nullable[str] = None) -> None:
+		"""
+		Initialize an empty graph with the default document settings.
+
+		Edges are directed, nodes are written before edges, and both ID styles are free-form until they are changed.
+
+		:param identifier: Unique ID of the graph within the GraphML document.
+		"""
 		super().__init__(identifier)
 
 		self._subgraphs = {}
@@ -484,6 +552,12 @@ class Graph(BaseGraph):
 	_ids: Dict[str, Union[Node, Edge, 'Subgraph']]
 
 	def __init__(self, document: 'GraphMLDocument', identifier: str) -> None:
+		"""
+		Initialize the root graph of a GraphML document.
+
+		:param document:   The GraphML document this graph belongs to.
+		:param identifier: Unique ID of the graph within the GraphML document.
+		"""
 		super().__init__(identifier)
 		self._document = document
 		self._ids = {}
@@ -514,6 +588,12 @@ class Subgraph(Node, BaseGraph):
 	_root:       Nullable[Graph]
 
 	def __init__(self, nodeIdentifier: str, graphIdentifier: str) -> None:
+		"""
+		Initialize a subgraph, which is a node in its parent graph and a graph of its own.
+
+		:param nodeIdentifier:  Unique ID of the node representing the subgraph.
+		:param graphIdentifier: Unique ID of the graph contained in that node.
+		"""
 		super().__init__(nodeIdentifier)
 		BaseGraph.__init__(self, nodeIdentifier)
 
@@ -606,6 +686,11 @@ class GraphMLDocument(Base):
 	_keys: Dict[str, Key]
 
 	def __init__(self, identifier: str = "G") -> None:
+		"""
+		Initialize a GraphML document with an empty root graph.
+
+		:param identifier: Unique ID of the root graph.
+		"""
 		super().__init__()
 
 		self._graph = Graph(self, identifier)

@@ -203,6 +203,12 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 	"""
 
 	def __call__(self, func: Callable) -> Callable:
+		"""
+		Apply the attribute to a method and remember it as the default handler.
+
+		:param func: The method handling the case that no sub-command was given.
+		:returns:    The same method, now carrying this attribute.
+		"""
 		self._handler = func
 		return super().__call__(func)
 
@@ -232,6 +238,12 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		self._kwargs["help"] = help
 
 	def __call__(self, func: M) -> M:
+		"""
+		Apply the attribute to a method and remember it as the handler of this sub-command.
+
+		:param func: The method handling the sub-command.
+		:returns:    The same method, now carrying this attribute.
+		"""
 		self._handler = func
 		return super().__call__(func)
 

@@ -77,10 +77,28 @@ class ValuedFlag(NamedAndValuedArgument):
 @export
 class ShortValuedFlag(ValuedFlag):
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a switch argument with a value in its short form.
+
+		:param short:    Short form of the option, e.g. ``-v``.
+		:param dest:     Name of the parameter the parsed value is passed to the handler method as.
+		:param metaName: Name of the value in the help page.
+		:param optional: If ``True``, the option may be omitted.
+		:param help:     Help text of the option, displayed in the help page.
+		"""
 		super().__init__(short, None, dest, metaName, optional, help)
 
 
 @export
 class LongValuedFlag(ValuedFlag):
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a switch argument with a value in its long form.
+
+		:param long:     Long form of the option, e.g. ``--verbose``.
+		:param dest:     Name of the parameter the parsed value is passed to the handler method as.
+		:param metaName: Name of the value in the help page.
+		:param optional: If ``True``, the option may be omitted.
+		:param help:     Help text of the option, displayed in the help page.
+		"""
 		super().__init__(None, long, dest, metaName, optional, help)

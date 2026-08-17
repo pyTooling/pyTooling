@@ -99,6 +99,14 @@ class License(metaclass=ExtendedType, slots=True):
 	_fsfApproved: bool    #: FSF approval status
 
 	def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False) -> None:
+		"""
+		Initialize a license with its SPDX identifier, its name and its approval flags.
+
+		:param spdxIdentifier: SPDX identifier of the license.
+		:param name:           Name of the license.
+		:param osiApproved:    ``True``, if the license is approved by the Open Source Initiative.
+		:param fsfApproved:    ``True``, if the license is approved by the Free Software Foundation.
+		"""
 		self._spdxIdentifier = spdxIdentifier
 		self._name = name
 		self._osiApproved = osiApproved

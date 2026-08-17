@@ -83,6 +83,11 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		return super().__new__(cls, *args, **kwargs)
 
 	def __init__(self, value: Nullable[str] = None) -> None:
+		"""
+		Initialize the flag, optionally with a value.
+
+		:param value: Value of the flag, or ``None`` to render the flag without a value.
+		"""
 		self._value = value
 
 	@property
@@ -118,6 +123,11 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		return pattern.format(self._name, self._value)
 
 	def __str__(self) -> str:
+		"""
+		Return the argument as a quoted string, ready to be pasted into a shell.
+
+		:returns: The rendered argument, in double quotes.
+		"""
 		return f"\"{self.AsArgument()}\""
 
 	__repr__ = __str__

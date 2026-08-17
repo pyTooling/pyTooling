@@ -406,6 +406,11 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		ValuedArgument.__init_subclass__(*args, **kwargs)
 
 	def __init__(self, value: ValueT) -> None:
+		"""
+		Initialize the argument with the value rendered into its pattern.
+
+		:param value: Value of the argument.
+		"""
 		ValuedArgument.__init__(self, value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
@@ -478,6 +483,11 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		return super().__new__(cls, *args, **kwargs)
 
 	def __init__(self, value: ValueT) -> None:
+		"""
+		Initialize the argument with the value rendered into its pattern.
+
+		:param value: Value of the argument.
+		"""
 		ValuedArgument.__init__(self, value)
 
 	# TODO: Add property to read value pattern
