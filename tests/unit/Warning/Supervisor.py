@@ -30,9 +30,9 @@
 #
 """Unit tests for version validators and the exception raised when one rejects a version."""
 """Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises."""
-from unittest         import TestCase
+from unittest             import TestCase
 
-from pyTooling.Warning import SupervisedThreadException, ThreadSupervisor
+from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
 
 
 if __name__ == "__main__":  # pragma: no cover

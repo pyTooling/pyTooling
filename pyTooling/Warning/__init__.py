@@ -114,18 +114,7 @@ AnyWarning = Union[CriticalWarning, Warning]
 
 
 @export
-class UnhandledWarningException(ExceptionBase):   # FIXME: to be removed in v9.0.0
-	"""
-	Deprecated.
-
-	.. deprecated:: v9.0.0
-
-	   Please use :exc:`UnhandledCriticalWarningException`.
-	"""
-
-
-@export
-class UnhandledCriticalWarningException(UnhandledWarningException):
+class UnhandledCriticalWarningException(ExceptionBase):
 	"""
 	This exception is raised when a critical warning isn't handled by a :class:`WarningCollector` within the
 	call-hierarchy.
@@ -133,7 +122,7 @@ class UnhandledCriticalWarningException(UnhandledWarningException):
 
 
 @export
-class UnhandledExceptionException(UnhandledWarningException):
+class UnhandledExceptionException(ExceptionBase):
 	"""
 	This exception is raised when an exception isn't handled by a :class:`WarningCollector` within the call-hierarchy.
 	"""
