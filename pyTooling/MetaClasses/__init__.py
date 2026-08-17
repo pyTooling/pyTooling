@@ -320,7 +320,7 @@ def mustoverride(method: M) -> M:
 # 		else:
 # 			raise TypeError(f"No matching method for types {types}.")
 #
-# 	def __get__(self, instance, cls):  # Starting with Python 3.11+, use typing.Self as return type
+# 	def __get__(self, instance, cls) -> Self:
 # 		"""Descriptor method needed to make calls work in a class."""
 # 		if instance is not None:
 # 			return MethodType(self, instance)
@@ -1159,14 +1159,8 @@ class ExtendedType(type):
 				elif newClass.__new__.__isSingleton__:
 					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
 			except AttributeError as ex:
-				# WORKAROUND:
-				#   AttributeError.name was added in Python 3.10. For version <3.10 use a string contains operation.
-				try:
-					if ex.name != "__raises_abstract_class_error__":
-						raise ex
-				except AttributeError:
-					if "__raises_abstract_class_error__" not in str(ex):
-						raise ex
+				if ex.name != "__raises_abstract_class_error__":
+					raise ex
 
 			return False
 
