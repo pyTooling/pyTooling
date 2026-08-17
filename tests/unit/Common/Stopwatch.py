@@ -30,12 +30,12 @@
 #
 """Unit tests for TBD."""
 from time                 import sleep
-from unittest             import TestCase
 
 from pyTooling.Exceptions import ToolingException
 
 from pyTooling.Platform   import CurrentPlatform
-from pyTooling.Stopwatch import Stopwatch, StopwatchException
+from pyTooling.Stopwatch  import Stopwatch, StopwatchException
+from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Operations(TestCase):
+class Operations(Testcase):
 	DELAY = 0.5
 	PAUSE = 0.9
 	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25
@@ -162,7 +162,7 @@ class Operations(TestCase):
 		self.assertTupleEqual(seq, tuple(t for t in sw))
 
 
-class Formatting(TestCase):
+class Formatting(Testcase):
 	def test_NoName(self) -> None:
 		print()
 		sw = Stopwatch()
@@ -232,7 +232,7 @@ class Formatting(TestCase):
 		self.assertRegex(result, r"Stopwatch foo \(stopped\): ")
 
 
-class ContextManagerProtocol(TestCase):
+class ContextManagerProtocol(Testcase):
 	DELAY = 0.5
 	PAUSE = 0.9
 	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25

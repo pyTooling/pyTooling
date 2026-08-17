@@ -30,7 +30,6 @@
 #
 """Testcases for arguments without a prefix."""
 from pathlib import Path
-from unittest import TestCase
 
 from pyTooling.CLIAbstraction.Argument import StringArgument, DelimiterArgument, CommandLineArgument, NamedArgument, \
 	ValuedArgument, NamedAndValuedArgument, PathArgument, StringListArgument, PathListArgument, ExecutableArgument, \
@@ -46,6 +45,7 @@ from pyTooling.CLIAbstraction.ValuedFlag import ShortValuedFlag, WindowsValuedFl
 from pyTooling.CLIAbstraction.ValuedFlagList import ShortValuedFlagList, ValuedFlagList, WindowsValuedFlagList, \
 	LongValuedFlagList
 from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag, WindowsTupleFlag, LongTupleFlag
+from pyTooling.Testing                        import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -54,7 +54,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class WithoutPrefix(TestCase):
+class WithoutPrefix(Testcase):
 	def test_CommandLineArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = CommandLineArgument()
@@ -241,7 +241,7 @@ class WithoutPrefix(TestCase):
 		self.assertEqual(f"\"{values2[0]}\", \"{values2[1]}\"", repr(argument))
 
 
-class Commands(TestCase):
+class Commands(Testcase):
 	def test_ShortCommand(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ShortCommand()
@@ -303,7 +303,7 @@ class Commands(TestCase):
 			argument.Name = "command2"
 
 
-class Flags(TestCase):
+class Flags(Testcase):
 	def test_FlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = FlagArgument()
@@ -385,7 +385,7 @@ class Flags(TestCase):
 			argument.Name = "flag2"
 
 
-class BooleanFlags(TestCase):
+class BooleanFlags(Testcase):
 	def test_BooleanFlagArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = BooleanFlag()
@@ -495,7 +495,7 @@ class BooleanFlags(TestCase):
 			argument.Name = "flag2"
 
 
-class OptionalValuedFlags(TestCase):
+class OptionalValuedFlags(Testcase):
 	def test_OptionalValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = OptionalValuedFlag()
@@ -617,7 +617,7 @@ class OptionalValuedFlags(TestCase):
 			argument.Name = "flag2"
 
 
-class ValuedFlags(TestCase):
+class ValuedFlags(Testcase):
 	def test_ValuedFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ValuedFlag()
@@ -739,7 +739,7 @@ class ValuedFlags(TestCase):
 			argument.Name = "flag2"
 
 
-class ValuedFlagLists(TestCase):
+class ValuedFlagLists(Testcase):
 	def test_ValuedFlagList(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = ValuedFlagList()
@@ -886,7 +886,7 @@ class ValuedFlagLists(TestCase):
 			argument.Name = "flag2"
 
 
-class ValuedTupleFlags(TestCase):
+class ValuedTupleFlags(Testcase):
 	def test_ValuedTupleArgument(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = NamedTupledArgument()
@@ -1021,7 +1021,7 @@ class ValuedTupleFlags(TestCase):
 			argument.Name = "flag2"
 
 
-class KeyValueFlags(TestCase):
+class KeyValueFlags(Testcase):
 	def test_KeyValueFlag(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = NamedKeyValuePairsArgument()

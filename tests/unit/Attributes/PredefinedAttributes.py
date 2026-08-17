@@ -32,11 +32,10 @@
 """
 Unit tests for attributes attached to methods.
 """
-from unittest              import TestCase
-
 from pyTooling.Common      import firstItem
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Attributes  import SimpleAttribute, Attribute, Entity
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Simple(TestCase):
+class Simple(Testcase):
 	def test_ClassAttribute(self) -> None:
 		@SimpleAttribute(1, 2, id="my", name="Class1")
 		class MyClass1(metaclass=ExtendedType):
@@ -123,7 +122,7 @@ class GroupAttribute(Attribute):
 		return entity
 
 
-class Grouped(TestCase):
+class Grouped(Testcase):
 	def test_Group_Simple(self) -> None:
 		@MySimpleAttribute(1, 2, id="my", name="Class1")
 		@GroupAttribute("grp")

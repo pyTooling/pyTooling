@@ -38,11 +38,11 @@ This test suite tests decorators:
 """
 from pickle                import loads, dumps
 from typing                import Dict, Any
-from unittest              import TestCase
 
 from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
 from pyTooling.Graph       import Graph, Vertex, Edge
 from pyTooling.Tree        import Node
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -94,7 +94,7 @@ class MoreFields(SimpleClass):
 		super().__setstate__(state)
 
 
-class Pickleing(TestCase):
+class Pickleing(Testcase):
 	def test_SimpleClass(self) -> None:
 		rootInstance = SimpleClass(10)
 
@@ -146,7 +146,7 @@ def format(value: Node) -> str:
 	return ""
 
 
-class PickledTree(TestCase):
+class PickledTree(Testcase):
 	def test_SimpleTree(self) -> None:
 		root = Node(value="Root")
 
@@ -169,7 +169,7 @@ class PickledTree(TestCase):
 		self.assertDictEqual(kvp3, recreated.GetNodeByID(3)._dict)
 
 
-class PickledGraph(TestCase):
+class PickledGraph(Testcase):
 	def test_SimpleGraph(self) -> None:
 		graph = Graph("Graph")
 		v1 = Vertex(vertexID=1, value="v1", weight=120, keyValuePairs=(kvp1 := {"a": 1, "b": 2}), graph=graph)

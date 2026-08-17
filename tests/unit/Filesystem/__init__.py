@@ -31,11 +31,10 @@
 """Unit tests for pyTooling.Filesystem."""
 from pathlib import Path
 
-from unittest import TestCase
-
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Common     import count
 from pyTooling.Filesystem import Root, Directory, Filename, File
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Root(self) -> None:
 		rootPath = Path("tests/data")
 		root = Root(rootPath, collectSubdirectories=False)

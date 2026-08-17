@@ -31,10 +31,9 @@
 """
 Unit tests for ...
 """
-from unittest import TestCase
-
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
 from pyTooling.Cartesian2D.Shapes import Trapezium, Rectangle, Square
+from pyTooling.Testing            import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
 		point01 = Point2D(3, 1)

@@ -31,12 +31,8 @@
 """
 Unit tests for :class:`MemoryUsage`.
 """
-from unittest           import TestCase
-
-# from pytest             import mark
-
 from pyTooling.Process  import MemoryInfo, ProcessInformation
-# from pyTooling.Platform import CurrentPlatform
+from pyTooling.Testing  import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_MemoryInfo(self) -> None:
 		rss = 32*1024
 		vms = 64*1024
@@ -55,8 +51,7 @@ class Instantiation(TestCase):
 		self.assertEqual(vms, memoryInfo.VirtualMemory)
 
 
-class ProcessInfo(TestCase):
-	# @mark.skipif(not CurrentPlatform.IsNativeWindows, reason="This test only runs on Windows.")
+class ProcessInfo(Testcase):
 	def test_MemoryUsage(self) -> None:
 		print()
 		processInfo = ProcessInformation()

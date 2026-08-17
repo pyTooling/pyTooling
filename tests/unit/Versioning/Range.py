@@ -29,9 +29,8 @@
 # ==================================================================================================================== #
 #
 """Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest             import TestCase
-
 from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionRange, RangeBoundHandling
+from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -39,7 +38,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_SemVer_SemVer(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(2, 0, 0)
@@ -106,7 +105,7 @@ class Instantiation(TestCase):
 		self.assertEqual(RangeBoundHandling.UpperBoundExclusive, vr.BoundHandling)
 
 
-class Comparison(TestCase):
+class Comparison(Testcase):
 	def test_LessThan(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(2, 0, 0)
@@ -210,7 +209,7 @@ class Comparison(TestCase):
 		self.assertTrue(SemanticVersion(2, 5, 0) not in vr)
 
 
-class Intersection(TestCase):
+class Intersection(Testcase):
 	def test_AInsideB(self) -> None:
 		vA1 = SemanticVersion(2, 0, 0)
 		vA2 = SemanticVersion(3, 0, 0)
