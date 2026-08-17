@@ -29,6 +29,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing options carrying key-value-pairs, like ``-Dkey=value``.
+
+The pairs are collected into a dictionary and passed to the handler method as one parameter.
+"""
 from typing   import Optional as Nullable
 
 from pyTooling.Decorators                   import export

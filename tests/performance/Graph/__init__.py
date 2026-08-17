@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.Graph."""
+"""
+Common infrastructure of the graph performance tests: the edge lists read from :file:`tests/data`, and the
+base-class measuring one operation over graphs of growing size.
+"""
 import timeit
 from dataclasses import dataclass
 from pathlib import Path

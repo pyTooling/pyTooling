@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.Graph."""
+"""
+The same graph measurements implemented with `networkx <https://networkx.org/>`__, as a reference.
+"""
 from pathlib import Path
 
 import networkx.exception

@@ -29,6 +29,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing options whose value may be omitted, like ``--repeat[=1]``.
+
+Without a value, the option is still recognized; the handler method sees the default instead.
+"""
 from typing import Optional as Nullable
 
 from pyTooling.Decorators                   import export

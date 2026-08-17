@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Dependency`."""
+"""
+Unit tests for :mod:`pyTooling.Dependency`: building a dependency graph and solving it to the latest
+matching versions.
+"""
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Versioning import SemanticVersion
 from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion

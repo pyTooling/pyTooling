@@ -28,4 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling."""
+"""
+Unit tests for pyTooling - one sub-directory per module of the package.
+"""

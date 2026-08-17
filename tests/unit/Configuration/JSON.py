@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for JSON based configurations."""
+"""
+Unit tests for :mod:`pyTooling.Configuration.JSON`: reading values through the node API and the errors
+raised for a missing key or a wrong type.
+"""
 from pathlib  import Path
 
 from pyTooling.Configuration      import InterpolationException, KeyNotFoundException, PathExpressionException

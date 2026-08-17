@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
+"""
+Unit tests for :class:`pyTooling.Versioning.SemanticVersion`: parsing, comparing, validating, formatting and
+the round-trip from a version string back to itself.
+"""
 from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
 from pyTooling.Testing    import Testcase
 

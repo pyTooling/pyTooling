@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.Tree."""
+"""
+Common infrastructure of the tree performance tests: the base-class measuring one operation over trees of
+growing size.
+"""
 import timeit
 from statistics import median, mean
 from typing import Callable, Iterable

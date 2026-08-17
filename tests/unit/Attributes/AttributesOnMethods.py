@@ -30,7 +30,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for attributes attached to methods.
+Unit tests for attributes attached to methods - with and without :class:`~pyTooling.MetaClasses.ExtendedType`
+as meta-class, and through multiple inheritance.
 """
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Attributes  import Attribute

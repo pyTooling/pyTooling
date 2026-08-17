@@ -29,6 +29,13 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing positional command line arguments.
+
+A positional argument has no option name: it is recognized by its position, and its value is converted to the declared
+type - :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`,
+:class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`, ... - before the handler method is called.
+"""
 from pathlib import Path
 from typing import Type
 

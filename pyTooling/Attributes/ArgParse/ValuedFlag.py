@@ -29,6 +29,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing options carrying a value, like ``--count=25``.
+"""
 from typing import Optional as Nullable
 
 from pyTooling.Decorators                   import export

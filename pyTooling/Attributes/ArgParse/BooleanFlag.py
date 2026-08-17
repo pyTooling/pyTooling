@@ -29,6 +29,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing a pair of options that enable or disable the same feature.
+
+A boolean flag has two spellings - ``--with-checks`` and ``--without-checks`` - which set the same destination
+parameter to ``True`` or ``False``.
+"""
 from pyTooling.Decorators                   import export
 from pyTooling.Attributes.ArgParse.Argument import NamedArgument, ValuedArgument
 

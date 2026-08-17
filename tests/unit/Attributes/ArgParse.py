@@ -30,7 +30,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for argparse attributes.
+Unit tests for :mod:`pyTooling.Attributes.ArgParse`: an application declaring its commands and options as
+decorated methods, and the command line it accepts as a result.
 """
 from argparse      import ArgumentError
 from io            import StringIO

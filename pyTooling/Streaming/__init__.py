@@ -28,6 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Helpers to stream items through a thread-safe queue.
+
+A producer thread hands items to a queue and a consumer iterates them, which turns a queue into an iterator without
+either side polling: :func:`~pyTooling.Streaming.BlockingPut` waits for space while watching a stop event,
+:func:`~pyTooling.Streaming.QueueReader` iterates until the producer signals the end, and
+:func:`~pyTooling.Streaming.Delay` postpones items by a given number of steps.
+"""
 from collections import deque
 from queue       import Queue as ThreadSafeQueue, Full
 from threading   import Event
