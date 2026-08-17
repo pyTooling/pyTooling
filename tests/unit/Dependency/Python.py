@@ -140,7 +140,8 @@ class Requirements(Testcase):
 	def _json(extras, requirements) -> dict:
 		return {"info": {"provides_extra": extras, "requires_dist": requirements}}
 
-	def test_ARequirementWithoutAMarkerIsUnconditional(self) -> None:
+	def test_Requirement(self) -> None:
+		"""A requirement without a marker is unconditional, so it lands under ``None``."""
 		release = self._release()
 
 		release.UpdateDetailsFromPyPIJSON(self._json(["terminal"], ["pyTooling >= 8.0"]))
@@ -148,7 +149,8 @@ class Requirements(Testcase):
 		self.assertEqual(["pyTooling"], [req.name for req in release.Requirements[None]])
 		self.assertEqual([], release.Requirements["terminal"])
 
-	def test_ARequirementIsSortedIntoItsExtra(self) -> None:
+	def test_Requirement_Extra(self) -> None:
+		"""A requirement carrying an ``extra`` marker lands under that extra."""
 		release = self._release()
 
 		release.UpdateDetailsFromPyPIJSON(self._json(["terminal"], ['colorama >= 0.4; extra == "terminal"']))
@@ -156,7 +158,8 @@ class Requirements(Testcase):
 		self.assertEqual(["colorama"], [req.name for req in release.Requirements["terminal"]])
 		self.assertEqual([], release.Requirements[None])
 
-	def test_ARequirementMatchingNoExtraIsReported(self) -> None:
+	def test_Requirement_UnknownExtra(self) -> None:
+		"""A requirement naming an extra the release doesn't provide is reported as a warning."""
 		release = self._release()
 		json = self._json(["terminal"], ['lxml >= 6.1; extra == "xml"'])
 

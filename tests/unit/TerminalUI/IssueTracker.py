@@ -77,7 +77,8 @@ class IssueTrackerURL(Testcase):
 		except Exception as caught:
 			return caught
 
-	def test_AnUnhandledExceptionPointsToTheIssueTracker(self) -> None:
+	def test_PrintException(self) -> None:
+		"""An unhandled exception ends with the invitation to report it."""
 		class Application(TerminalApplication):
 			ISSUE_TRACKER_URL = self._URL
 
@@ -86,7 +87,8 @@ class IssueTrackerURL(Testcase):
 		self.assertIn("Something failed.", output)
 		self.assertIn(self._URL, output)
 
-	def test_AKnownExceptionPointsToTheIssueTracker(self) -> None:
+	def test_PrintExceptionBase(self) -> None:
+		"""A known exception ends with the invitation, too."""
 		class Application(TerminalApplication):
 			ISSUE_TRACKER_URL = self._URL
 
@@ -94,7 +96,8 @@ class IssueTrackerURL(Testcase):
 
 		self.assertIn(self._URL, output)
 
-	def test_ANotImplementedErrorPointsToTheIssueTracker(self) -> None:
+	def test_PrintNotImplementedError(self) -> None:
+		"""An unimplemented method ends with the invitation, too."""
 		class Application(TerminalApplication):
 			ISSUE_TRACKER_URL = self._URL
 
@@ -104,7 +107,7 @@ class IssueTrackerURL(Testcase):
 
 		self.assertIn(self._URL, output)
 
-	def test_WithoutTheClassVariableNoIssueTrackerIsMentioned(self) -> None:
+	def test_PrintException_NoIssueTrackerURL(self) -> None:
 		"""The class variable is ``None`` by default, and then the invitation is omitted rather than printed empty."""
 		class Application(TerminalApplication):
 			pass
