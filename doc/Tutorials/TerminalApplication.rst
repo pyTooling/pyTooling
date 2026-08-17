@@ -251,22 +251,24 @@ capturing the terminal:
 
 .. code-block:: Python
 
-   from unittest import TestCase
-
    from pyTooling.TerminalUI import Severity
+   from pyTooling.Testing    import Testcase
 
 
-   class ApplicationTests(TestCase):
+   class ApplicationTests(Testcase):
      def test_AnEmptyInputFileIsReported(self) -> None:
        class TestApplication(Application):    # own class: the base class is a singleton
          pass
 
-       app = TestApplication()
-       app.Run()
+       program = TestApplication()
+       program.Run()
 
-       self.assertEqual(1, app.WarningCount)
-       self.assertIn(Severity.Warning, [line.Severity for line in app.Lines])
+       self.assertEqual(1, program.WarningCount)
+       self.assertIn(Severity.Warning, [line.Severity for line in program.Lines])
 
 Two details make this work: a derived class per testcase, because
 :class:`~pyTooling.TerminalUI.TerminalApplication` is a singleton and would otherwise carry messages from one testcase
 into the next, and the counters, which are incremented even when the log level suppresses the message itself.
+
+The testcase derives from :class:`~pyTooling.Testing.Testcase` - see :ref:`TESTING/Testcase` - which is
+:class:`unittest.TestCase` plus the assertions newer Python versions added.
