@@ -76,11 +76,15 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 
 @export
 class ShortKeyValueFlag(NamedKeyValuePairsArgument):
+	"""Defines a key-value argument in short form like ``-Dkey=value``."""
+
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		super().__init__(short=short, dest=dest, help=help)
 
 
 @export
 class LongKeyValueFlag(NamedKeyValuePairsArgument):
+	"""Defines a key-value argument in long form like ``--define key=value``."""
+
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		super().__init__(long=long, dest=dest, help=help)

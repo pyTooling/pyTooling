@@ -70,6 +70,12 @@ from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 
 @export
 class LazyLoaderState(IntEnum):
+	"""
+	Loading states of a lazy-loadable object, in the order they are reached.
+
+	The states are ordered, so a loader can be asked for *at least* a given state and does nothing when the object is
+	already loaded that far.
+	"""
 	Uninitialized =   0  #: No data or minimal data like ID or name.
 	Initialized =     1  #: Initialized by some __init__ parameters.
 	PartiallyLoaded = 2  #: Some additional data was loaded.
@@ -122,6 +128,14 @@ class lazy:
 
 @export
 class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
+	"""
+	Mixin-class for objects whose details are fetched on first use.
+
+	An index, a project or a release is created from little more than a name, and everything else is requested from the
+	package index when it is needed. The mixin records how far the object is loaded (:attr:`__lazy_state__`) and
+	serializes concurrent loading (:attr:`__lazy_lock__`); a derived class implements ``__lazy_loader__``.
+	"""
+
 	__lazy_state__: LazyLoaderState
 	__lazy_lock__:  RLock
 
@@ -140,6 +154,9 @@ class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
 
 @export
 class Distribution(metaclass=ExtendedType, slots=True):
+	"""
+	A single downloadable file of a release - a wheel or a source archive.
+	"""
 	_filename:   str
 	_url:        URL
 	_uploadTime: datetime
@@ -204,6 +221,12 @@ class Distribution(metaclass=ExtendedType, slots=True):
 
 @export
 class Release(PackageVersion, LazyLoadableMixin):
+	"""
+	One released version of a project on a Python package index.
+
+	A release knows its distributions (the files that can be downloaded) and its requirements, sorted into the extras
+	they belong to. Both are fetched from the index on first use.
+	"""
 	_files:        List[Distribution]
 	_requirements: Dict[Union[str, None], List[Requirement]]
 
@@ -349,6 +372,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 @export
 class Project(Package, LazyLoadableMixin):
+	"""
+	A project (package) on a Python package index, with its releases.
+
+	The list of releases and the project's details are fetched from the index on first use.
+	"""
 	_url:         Nullable[URL]
 
 	_api:         Nullable[URL]
@@ -534,6 +562,12 @@ class Project(Package, LazyLoadableMixin):
 
 @export
 class PythonPackageIndex(PackageStorage):
+	"""
+	A Python package index like PyPI, addressed through its JSON API.
+
+	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
+	the same HTTP session.
+	"""
 	_url:     URL
 
 	_api:     URL
@@ -616,5 +650,9 @@ class PythonPackageIndex(PackageStorage):
 
 @export
 class PythonPackageDependencyGraph(PackageDependencyGraph):
+	"""
+	A dependency graph of Python packages, whose vertices are projects and whose edges are requirements.
+	"""
+
 	def __init__(self, name: str) -> None:
 		super().__init__(name)

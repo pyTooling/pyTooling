@@ -261,6 +261,13 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 @export
 class SimpleAttribute(Attribute):
+	"""
+	A generic attribute preserving the parameters it was applied with.
+
+	It needs no derived class per use case: whatever is passed to it is available from :attr:`Args` and :attr:`KwArgs`,
+	which makes it the quickest way to mark a class, method or function and read the marking back.
+	"""
+
 	_args: Tuple[Any, ...]
 	_kwargs: Dict[str, Any]
 

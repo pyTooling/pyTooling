@@ -40,6 +40,11 @@ from pyTooling.Stopwatch   import Stopwatch
 
 @export
 class Layer(metaclass=ExtendedType):
+	"""
+	One layer of a Docker image: the files assigned to it, and its neighbors in the cake.
+
+	A layer knows its aggregated size, so the slicing algorithm can stop filling it when the target size is reached.
+	"""
 	_parent:        Nullable["LayerCake"]     #: Reference to the parent layer cake.
 	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
 	_nextLayer:     Nullable["Layer"]         #: Reference to the next layer
@@ -148,6 +153,13 @@ class Layer(metaclass=ExtendedType):
 
 @export
 class LayerCake(metaclass=ExtendedType):
+	"""
+	A stack of Docker image layers computed from a filesystem tree.
+
+	:meth:`CreateDockerLayers` distributes the files of a :class:`~pyTooling.Filesystem.Root` over layers - largest file
+	first, each layer filled up to a target size that shrinks by a gradient from layer to layer - and collects the
+	directories no layer covers.
+	"""
 	_root:             Nullable[Root]   #: Reference to the filesystem root.
 	_layers:           List[Layer]      #: List of Docker image layers.
 	_emptyDirectories: List[Directory]  #: List of empty directories (not covered by layers).
