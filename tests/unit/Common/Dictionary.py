@@ -31,12 +31,11 @@
 """
 Unit tests for :func:`firstKey`, :func:`firstValue`, :func:`firstPair`, :func:`mergedicts` and :func:`zipdicts`.
 """
-from unittest           import TestCase
-
 from pytest             import mark
 
 from pyTooling.Common   import firstKey, firstValue, firstPair, mergedicts, zipdicts
 from pyTooling.Platform import CurrentPlatform
+from pyTooling.Testing  import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class First(TestCase):
+class First(Testcase):
 	def test_FirstKey0(self) -> None:
 		d = {}
 
@@ -101,7 +100,7 @@ class First(TestCase):
 		self.assertTupleEqual(("1", 1), f)
 
 
-class Merge(TestCase):
+class Merge(Testcase):
 	def test_NoDicts(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = mergedicts()
@@ -164,7 +163,7 @@ class Merge(TestCase):
 		self.assertTupleEqual(expected, tuple(m.items()))
 
 
-class Zip(TestCase):
+class Zip(Testcase):
 	def test_NoDicts(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = zipdicts()

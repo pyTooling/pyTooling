@@ -60,7 +60,7 @@ class EdgeFile:
 	file: Path
 
 
-class PerformanceTest(TestCase):
+class PerformanceTest(Testcase):
 	counts: Iterable[int] = (10, 100, 1000, 10000)
 	edgeFiles:  Iterable[EdgeFile] = (
 		EdgeFile(   100,    150, BiggestNetwork(  92,    72), Path("graph_n100_m150_dir_w0_100.edgelist")),

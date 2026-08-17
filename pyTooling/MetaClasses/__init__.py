@@ -218,7 +218,7 @@ def singleton(cls):
 @export
 def abstractclass(cls: C) -> C:
 	"""
-	Mark a class as *abstract*, so it cannot be instantiated although it has no abstract method.
+	Mark a class as *abstract*, so it cannot be instantiated, although it has no abstract method.
 
 	Some classes exist only to be derived from - a base-class collecting shared infrastructure, for instance - and
 	have nothing to mark with :deco:`abstractmethod`. This decorator says so directly: it sets ``__abstractClass__``
@@ -238,13 +238,7 @@ def abstractclass(cls: C) -> C:
 
 	      @abstractclass
 	      class Base(metaclass=ExtendedType):
-	        def Method(self) -> None:
-	          ...
-
-	      class Derived(Base):
-	        pass
-
-	      Derived()   # fine
+	        '''This class needs to be inherited.'''
 
 	:param cls:             Class that is marked as *abstract*.
 	:returns:               The same class, marked and with its abstractness recomputed.
@@ -252,8 +246,14 @@ def abstractclass(cls: C) -> C:
 
 	.. seealso::
 
+	   :exc:`~pyTooling.Exceptions.AbstractClassError`
+	      |rarr| The exception raised when a still abstract class gets instantiated.
 	   :deco:`~pyTooling.MetaClasses.abstractmethod`
-	      |rarr| Mark a *method* as abstract, which makes its class abstract as a consequence.
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
+	   :deco:`~pyTooling.Decorators.notimplemented`
+	      |rarr| Mark a *method* as not implemented and raise a :exc:`NotImplementedError`.
 	"""
 	if not isinstance(cls, ExtendedType):
 		ex = AttributeError(f"Class '{cls.__name__}' is not created by meta-class 'ExtendedType'.")
@@ -289,16 +289,21 @@ def abstractmethod(method: M) -> M:
 	      class Data(mataclass=ExtendedType):
 	        @abstractmethod
 	        def method(self) -> bool:
-	          '''This method needs to be implemented'''
+	          '''This method needs to be implemented.'''
 
 	:param method: Method that is marked as *abstract*.
 	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
 
 	.. seealso::
 
-	   * :exc:`~pyTooling.Exceptions.AbstractClassError`
-	   * :deco:`~pyTooling.MetaClasses.mustoverride`
-	   * :deco:`~pyTooling.Decorators.notimplemented`
+	   :exc:`~pyTooling.Exceptions.AbstractClassError`
+	      |rarr| The exception raised when a still abstract class gets instantiated.
+	   :deco:`~pyTooling.MetaClasses.abstractclass`
+	      |rarr| Mark a class as *abstract*.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
+	   :deco:`~pyTooling.Decorators.notimplemented`
+	      |rarr| Mark a *method* as not implemented and raise a :exc:`NotImplementedError`.
 	"""
 	@wraps(method)
 	def func(self) -> NoReturn:
@@ -332,16 +337,21 @@ def mustoverride(method: M) -> M:
 	      class Data(mataclass=ExtendedType):
 	        @mustoverride
 	        def method(self):
-	          '''This is a very basic implementation'''
+	          '''This is a very basic implementation.'''
 
 	:param method: Method that is marked as *must-override*.
 	:returns:      Same method, but with additional ``<method>.__mustOverride__`` field.
 
 	.. seealso::
 
-	   * :exc:`~pyTooling.Exceptions.MustOverrideClassError`
-	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
-	   * :deco:`~pyTooling.Decorators.notimplemented`
+	   :exc:`~pyTooling.Exceptions.MustOverrideClassError`
+	      |rarr| The exception raised when a class gets instantiated still containing *mustoverride* methods.
+	   :deco:`~pyTooling.MetaClasses.abstractclass`
+	      |rarr| Mark a class as *abstract*.
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.Decorators.notimplemented`
+	      |rarr| Mark a *method* as not implemented and raise a :exc:`NotImplementedError`.
 	"""
 	method.__mustOverride__ = True
 	return method
@@ -551,8 +561,8 @@ class ExtendedType(type):
 		newClass.__abstractMethods__ = abstractMethods
 
 		newClass.__abstractClass__ = False
-		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
-		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
+		newClass.__isAbstract__ =    self._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ =   self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.

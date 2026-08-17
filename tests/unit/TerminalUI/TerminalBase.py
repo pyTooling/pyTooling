@@ -31,11 +31,10 @@
 #
 """pyTooling.TerminalUI"""
 from io                   import StringIO
-from unittest             import TestCase
 
 from pyTooling.Exceptions import ExceptionBase
-
 from pyTooling.TerminalUI import TerminalBaseApplication
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiate(TestCase):
+class Instantiate(Testcase):
 	def test_NoConfigure(self) -> None:
 		term = TerminalBaseApplication()
 
@@ -70,7 +69,7 @@ class Instantiate(TestCase):
 		app = Application()
 
 
-class WriteMessages(TestCase):
+class WriteMessages(Testcase):
 	def test_WriteToStdOut(self) -> None:
 		term = TerminalBaseApplication()
 		term._stdout, term._stderr = out, err = StringIO(), StringIO()
@@ -120,7 +119,7 @@ class WriteMessages(TestCase):
 		self.assertEqual("Message\n", err.readline())
 
 
-class Exiting(TestCase):
+class Exiting(Testcase):
 	def test_Exit(self) -> None:
 		term = TerminalBaseApplication()
 
@@ -181,7 +180,7 @@ class Exiting(TestCase):
 		self.assertEqual(254, exitEx.exception.code)
 
 
-class ExceptionHandling(TestCase):
+class ExceptionHandling(Testcase):
 	def test_NotImplemented(self) -> None:
 		print()
 

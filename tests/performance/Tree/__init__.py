@@ -41,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class PerformanceTest(TestCase):
+class PerformanceTest(Testcase):
 	counts: Iterable[int] = (10, 100, 1000, 10000)
 
 	@staticmethod

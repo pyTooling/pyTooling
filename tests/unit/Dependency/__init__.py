@@ -29,12 +29,10 @@
 # ==================================================================================================================== #
 #
 """Unit tests for :mod:`pyTooling.Dependency`."""
-from unittest             import TestCase
-
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Versioning import SemanticVersion
-
 from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Graph(self) -> None:
 		graph = PackageDependencyGraph("graph")
 
@@ -164,7 +162,7 @@ class Instantiation(TestCase):
 		self.assertEqual("pack (latest: v1.2)", str(package))
 
 
-class Construct(TestCase):
+class Construct(Testcase):
 	def test_Package(self) -> None:
 		graph = PackageDependencyGraph("graph")
 		storage = PackageStorage("storage", graph=graph)
@@ -177,7 +175,7 @@ class Construct(TestCase):
 		self.assertEqual("pack (empty)", str(package))
 
 
-class DependsOn(TestCase):
+class DependsOn(Testcase):
 	def test_ByObject(self) -> None:
 		graph = PackageDependencyGraph("graph")
 		storage = PackageStorage("storage", graph=graph)
@@ -222,7 +220,7 @@ class DependsOn(TestCase):
 		self.assertEqual(1, len(pAv11))
 
 
-class SolveLatest(TestCase):
+class SolveLatest(Testcase):
 	def test_Simple(self) -> None:
 		graph = PackageDependencyGraph("graph")
 		storage = PackageStorage("storage", graph=graph)

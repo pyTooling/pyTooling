@@ -29,10 +29,8 @@
 # ==================================================================================================================== #
 #
 """Unit tests for pyTooling.LinkedList."""
-
-from unittest import TestCase
-
 from pyTooling.LinkedList import Node, LinkedList, LinkedListException
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Node(self) -> None:
 		node = Node(5)
 
@@ -154,7 +152,7 @@ class Instantiation(TestCase):
 		self.assertEqual(3, linkedList.Count)
 
 
-class Properties(TestCase):
+class Properties(Testcase):
 	def test_Count(self) -> None:
 		ll = LinkedList()
 
@@ -175,7 +173,7 @@ class Properties(TestCase):
 		self.assertEqual("5", node.Value)
 
 
-class Insert(TestCase):
+class Insert(Testcase):
 	def test_InsertFirst(self) -> None:
 		ll = LinkedList()
 
@@ -411,7 +409,7 @@ class Insert(TestCase):
 			node1.InsertNodeAfter(node0)
 
 
-class Remove(TestCase):
+class Remove(Testcase):
 	def test_RemoveFirst_EmptyList(self) -> None:
 		ll = LinkedList()
 
@@ -594,7 +592,7 @@ class Remove(TestCase):
 		self.assertIsNone(node2.NextNode)
 
 
-class MiscOperations(TestCase):
+class MiscOperations(Testcase):
 	def test_Clear_EmptyList(self) -> None:
 		ll = LinkedList()
 
@@ -733,7 +731,7 @@ class MiscOperations(TestCase):
 		self.assertListEqual([i for i in range(1, len(sequence) + 1)], [n._value for n in ll.ToList()])
 
 
-class GetNode(TestCase):
+class GetNode(Testcase):
 	def test_GetFirst(self) -> None:
 		ll = LinkedList()
 
@@ -795,7 +793,7 @@ class GetNode(TestCase):
 			_ = ll.GetNodeByIndex(2)
 
 
-class Search(TestCase):
+class Search(Testcase):
 	def test_Search_Empty(self) -> None:
 		ll = LinkedList()
 
@@ -841,7 +839,7 @@ class Search(TestCase):
 		self.assertEqual(4, node.Value)
 
 
-class Iterate(TestCase):
+class Iterate(Testcase):
 	def test_IterateFromFirst_Empty(self) -> None:
 		ll = LinkedList()
 
@@ -1040,7 +1038,7 @@ class Iterate(TestCase):
 		self.assertEqual(0, ll.Count)
 
 
-class Conversion(TestCase):
+class Conversion(Testcase):
 	def test_ToTuple_Empty(self) -> None:
 		ll = LinkedList()
 
@@ -1124,7 +1122,7 @@ class Conversion(TestCase):
 		self.assertListEqual(sequence, l)
 
 
-class Usecases(TestCase):
+class Usecases(Testcase):
 	def test_FillBuckets(self) -> None:
 		print()
 

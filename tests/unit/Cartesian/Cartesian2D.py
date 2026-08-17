@@ -32,9 +32,9 @@
 Unit tests for ...
 """
 from math                  import sqrt
-from unittest              import TestCase
 
 from pyTooling.Cartesian2D import Origin2D, Point2D, Offset2D, Size2D, LineSegment2D
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin2D()
 
@@ -151,7 +151,7 @@ class Instantiation(TestCase):
 		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
 
 
-class Copy(TestCase):
+class Copy(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin2D()
 
@@ -231,7 +231,7 @@ class Copy(TestCase):
 		self.assertEqual("Size2D(1.0, 2.0)", repr(newSize))
 
 
-class Comparison(TestCase):
+class Comparison(Testcase):
 	def test_Offset_Equal_Offset(self) -> None:
 		offset1 = Offset2D(1, 2)
 		offset2 = Offset2D(1, 2)
@@ -258,7 +258,7 @@ class Comparison(TestCase):
 		self.assertTrue(offset1 != offset2)
 
 
-class PointArithmetic(TestCase):
+class PointArithmetic(Testcase):
 	def test_Point_Plus_Point(self) -> None:
 		point1 = Point2D(1, 2)
 		point2 = Point2D(2, 3)
@@ -357,7 +357,7 @@ class PointArithmetic(TestCase):
 			point -= 2
 
 
-class OffsetArithmetic(TestCase):
+class OffsetArithmetic(Testcase):
 	def test_Offset_Plus_Offset(self) -> None:
 		offset1 = Offset2D(1, 2)
 		offset2 = Offset2D(2, 3)
