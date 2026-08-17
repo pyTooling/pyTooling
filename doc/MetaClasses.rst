@@ -44,6 +44,39 @@ Mixin
 *****
 
 
+.. _META/AbstractClass:
+
+Abstract Class
+**************
+
+A class containing an :ref:`abstract method <META/Abstract>` cannot be instantiated. Some classes have nothing to
+mark abstract and still exist only to be derived from - a base class collecting shared infrastructure, for
+instance. ``abstract=True`` says so:
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.MetaClasses import ExtendedType
+
+   class Base(metaclass=ExtendedType, abstract=True):
+     def Method(self) -> int:
+       return 1
+
+   class Derived(Base):
+     pass
+
+   Derived()   # fine
+   Base()      # raises AbstractClassError
+
+A derived class is concrete again unless it declares itself abstract too or inherits an abstract method, so the
+declaration describes one class rather than a whole branch of the hierarchy.
+
+.. seealso::
+
+   :ref:`@abstractmethod <META/Abstract>`
+      |rarr| Mark a *method* as abstract, which makes its class abstract as a consequence.
+
+
 .. _META/Abstract:
 
 Abstract Method

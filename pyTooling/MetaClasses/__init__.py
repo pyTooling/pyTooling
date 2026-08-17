@@ -454,7 +454,8 @@ class ExtendedType(type):
 		members: Dict[str, Any],
 		slots: bool = False,
 		mixin: bool = False,
-		singleton: bool = False
+		singleton: bool = False,
+		abstract: bool = False
 	) -> Self:
 		"""
 		Construct a new class using this :term:`meta-class`.
@@ -467,6 +468,9 @@ class ExtendedType(type):
 		                        If false, create slots if ``slots`` is true.
 		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
+		:param abstract:        If true, make the class abstract even though it has no abstract methods, so it cannot be
+		                        instantiated. A derived class is concrete again unless it declares itself abstract too or
+		                        inherits an abstract method.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
@@ -494,7 +498,7 @@ class ExtendedType(type):
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
-		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
+		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass, abstract)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		if slots:
@@ -1116,23 +1120,29 @@ class ExtendedType(type):
 		return False
 
 	@classmethod
-	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
+	def _wrapNewMethodIfAbstract(metacls, newClass, declaredAbstract: bool = False) -> bool:
 		"""
-		If the class has abstract methods, replace the ``_new__`` method, so it raises an exception.
+		If the class was declared abstract or has abstract methods, replace the ``_new__`` method, so it raises an
+		exception.
 
 		:param newClass:            The newly constructed class for further modifications.
+		:param declaredAbstract:    If true, the class was declared abstract, so it cannot be instantiated even though it
+		                            has no abstract method to override.
 		:returns:                   ``True``, if the class is abstract.
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
-		if len(newClass.__abstractMethods__) > 0:
+		if declaredAbstract or len(newClass.__abstractMethods__) > 0:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
 				oldnew = oldnew.__wrapped__
 
 			@wraps(oldnew)
 			def abstract_new(cls, *_, **__):
-				raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
+				if len(newClass.__abstractMethods__) > 0:
+					raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
+
+				raise AbstractClassError(f"Class '{cls.__name__}' is abstract and cannot be instantiated. Derive from it and instantiate the derived class.")
 
 			abstract_new.__raises_abstract_class_error__ = True
 

@@ -32,7 +32,7 @@
 Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
 """
 
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, AbstractClassError, abstractmethod
 from pyTooling.Testing     import Testcase
 
 
@@ -575,3 +575,59 @@ class Mixin(Testcase):
 
 		inst = Base()
 		self.assertIsNotNone(inst)
+
+
+class AbstractClasses(Testcase):
+	"""A class can be abstract by declaration, not only by containing an abstract method."""
+
+	def test_ADeclaredAbstractClassCannotBeInstantiated(self) -> None:
+		class Base(metaclass=ExtendedType, abstract=True):
+			pass
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Base()
+
+	def test_TheMessageNamesTheClass(self) -> None:
+		class Base(metaclass=ExtendedType, abstract=True):
+			pass
+
+		with self.assertRaises(AbstractClassError) as context:
+			Base()
+
+		self.assertIn("Base", str(context.exception))
+		self.assertIn("abstract", str(context.exception))
+
+	def test_ADerivedClassIsConcreteAgain(self) -> None:
+		class Base(metaclass=ExtendedType, abstract=True):
+			def Method(self) -> int:
+				return 1
+
+		class Derived(Base):
+			pass
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertEqual(1, Derived().Method())
+
+	def test_ADerivedClassCanBeAbstractItself(self) -> None:
+		class Base(metaclass=ExtendedType, abstract=True):
+			pass
+
+		class Derived(Base, abstract=True):
+			pass
+
+		self.assertTrue(Derived.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Derived()
+
+	def test_AnAbstractMethodStillNamesTheMethods(self) -> None:
+		"""The declared case has no methods to name, so the two messages differ."""
+		class Base(metaclass=ExtendedType):
+			@abstractmethod
+			def Method(self) -> int:
+				pass
+
+		with self.assertRaises(AbstractClassError) as context:
+			Base()
+
+		self.assertIn("Method", str(context.exception))
