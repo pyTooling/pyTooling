@@ -32,7 +32,8 @@
 import timeit
 from statistics import median, mean
 from typing import Callable, Iterable
-from unittest import TestCase
+
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover

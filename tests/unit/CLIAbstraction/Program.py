@@ -39,10 +39,10 @@ from typing       import Any, Self
 
 from pytest       import mark
 from sys          import platform as sys_platform
-from unittest     import TestCase
 
 from pyTooling.CLIAbstraction import Program, CLIAbstractionException, CLIArgument
 from pyTooling.CLIAbstraction.Flag import LongFlag
+from pyTooling.Testing        import Testcase
 from .                        import Helper
 from .Examples                import GitArgumentsMixin
 
@@ -84,7 +84,7 @@ class GitUnknownOS(Program):
 
 
 @mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
-class ExplicitPathsOnFreeBSD(TestCase, Helper):
+class ExplicitPathsOnFreeBSD(Testcase, Helper):
 	_binaryDirectoryPath = Path("/usr/local/bin")
 
 	def test_BinaryDirectory(self) -> None:
@@ -123,7 +123,7 @@ class ExplicitPathsOnFreeBSD(TestCase, Helper):
 
 
 @mark.skipif(sys_platform in ("freebsd", "win32"), reason="Don't run these tests on FreeBSD and Windows.")
-class ExplicitPathsOnLinux(TestCase, Helper):
+class ExplicitPathsOnLinux(Testcase, Helper):
 	_binaryDirectoryPath = Path("/usr/bin")
 
 	def test_BinaryDirectory(self) -> None:
@@ -162,7 +162,7 @@ class ExplicitPathsOnLinux(TestCase, Helper):
 
 
 @mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
-class ExplicitPathsOnWindows(TestCase, Helper):
+class ExplicitPathsOnWindows(Testcase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 
 	def test_BinaryDirectory(self) -> None:
@@ -200,7 +200,7 @@ class ExplicitPathsOnWindows(TestCase, Helper):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt.exe")
 
 
-class CommonOptions(TestCase, Helper):
+class CommonOptions(Testcase, Helper):
 	def test_UnknownOS(self) -> None:
 		with self.assertRaises(CLIAbstractionException):
 			_ = GitUnknownOS()
@@ -259,7 +259,7 @@ class CommonOptions(TestCase, Helper):
 		self.assertEqual(f"[\"{executable}\", \"help\"]", repr(tool))
 
 
-class Commit(TestCase, Helper):
+class Commit(Testcase, Helper):
 	def test_CommitWithMessage(self) -> None:
 		tool = Git()
 		tool[tool.CommandCommit] = True

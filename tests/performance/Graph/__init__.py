@@ -35,9 +35,9 @@ from pathlib import Path
 from statistics import median
 from time import perf_counter_ns
 from typing import Callable, Iterable
-from unittest import TestCase
 
-from pyTooling.Graph import Graph as pt_Graph
+from pyTooling.Graph   import Graph as pt_Graph
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
