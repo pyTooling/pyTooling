@@ -245,7 +245,6 @@ def abstractclass(cls: C) -> C:
 	        pass
 
 	      Derived()   # fine
-	      Base()      # raises AbstractClassError
 
 	:param cls:             Class that is marked as *abstract*.
 	:returns:               The same class, marked and with its abstractness recomputed.
@@ -263,8 +262,6 @@ def abstractclass(cls: C) -> C:
 
 	cls.__abstractClass__ = True
 
-	# A class that is abstract already - because it has abstract methods - needs no recomputation: its '__new__' was
-	# replaced when the class was created.
 	if not cls.__isAbstract__:
 		cls.__isAbstract__ = ExtendedType._wrapNewMethodIfAbstract(cls)
 
@@ -463,8 +460,7 @@ class ExtendedType(type):
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
-	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`. It is set per class:
-	                             a derived class starts with ``False`` and is abstract only if decorated itself.
+	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
 	:__singletonInstanceCond__:  Condition variable to protect the singleton creation.
@@ -1197,7 +1193,7 @@ class ExtendedType(type):
 				if len(newClass.__abstractMethods__) > 0:
 					raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
 				else:
-					raise AbstractClassError(f"Class '{cls.__name__}' is abstract and cannot be instantiated.")
+					raise AbstractClassError(f"Class '{cls.__name__}' is abstract and needs to be derived.")
 
 			abstract_new.__raises_abstract_class_error__ = True
 

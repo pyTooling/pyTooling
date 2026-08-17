@@ -70,7 +70,6 @@ node) without the need for abstract methods.
      pass
 
    Derived()   # fine
-   Base()      # raises AbstractClassError
 
 The decorator sets ``__abstractClass__`` on the class and recomputes ``__isAbstract__``, which is the same
 computation :class:`~pyTooling.MetaClasses.ExtendedType` runs for abstract methods.
