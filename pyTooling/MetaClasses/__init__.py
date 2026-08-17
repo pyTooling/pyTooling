@@ -161,6 +161,7 @@ class MustOverrideClassError(AbstractClassError):
 
 
 M = TypeVar("M", bound=Callable)   #: A type variable for methods.
+C = TypeVar("C", bound=type)        #: A type variable for classes.
 
 
 def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
@@ -212,6 +213,59 @@ def mixin(cls):
 @export
 def singleton(cls):
 	return _recreateClass(cls, "singleton", singleton=True)
+
+
+@export
+def abstractclass(cls: C) -> C:
+	"""
+	Mark a class as *abstract*, so it cannot be instantiated although it has no abstract method.
+
+	Some classes exist only to be derived from - a base-class collecting shared infrastructure, for instance - and
+	have nothing to mark with :deco:`abstractmethod`. This decorator says so directly: it sets ``__abstractClass__``
+	on the class and recomputes ``__isAbstract__``, which replaces ``__new__`` by a method raising an
+	:exc:`~pyTooling.Exceptions.AbstractClassError`.
+
+	The marker belongs to the decorated class alone. :class:`ExtendedType` clears it on every class it creates, so a
+	derived class is concrete again unless it is decorated itself or inherits an abstract method.
+
+	.. warning::
+
+	   This decorator needs meta-class :class:`~pyTooling.MetaClasses.ExtendedType`, which does the computation.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      @abstractclass
+	      class Base(metaclass=ExtendedType):
+	        def Method(self) -> int:
+	          return 1
+
+	      class Derived(Base):
+	        pass
+
+	      Derived()   # fine
+	      Base()      # raises AbstractClassError
+
+	:param cls:             Class that is marked as *abstract*.
+	:returns:               The same class, marked and with its abstractness recomputed.
+	:raises AttributeError: If the class was not created by :class:`ExtendedType`, because nothing would compute it.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a *method* as abstract, which makes its class abstract as a consequence.
+	"""
+	if not isinstance(cls, ExtendedType):
+		ex = AttributeError(f"Class '{cls.__name__}' is not created by meta-class 'ExtendedType'.")
+		if version_info >= (3, 11):  # pragma: no cover
+			ex.add_note(f"Add 'metaclass=ExtendedType' to the class definition, so abstractness is computed.")
+		raise ex
+
+	cls.__abstractClass__ = True
+	cls.__isAbstract__ = ExtendedType._wrapNewMethodIfAbstract(cls)
+
+	return cls
 
 
 @export
@@ -406,6 +460,7 @@ class ExtendedType(type):
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
+	:__abstractClass__:          True, if the class itself was decorated with :deco:`abstractclass`. Not inherited.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
 	:__singletonInstanceCond__:  Condition variable to protect the singleton creation.
@@ -454,8 +509,7 @@ class ExtendedType(type):
 		members: Dict[str, Any],
 		slots: bool = False,
 		mixin: bool = False,
-		singleton: bool = False,
-		abstract: bool = False
+		singleton: bool = False
 	) -> Self:
 		"""
 		Construct a new class using this :term:`meta-class`.
@@ -468,9 +522,6 @@ class ExtendedType(type):
 		                        If false, create slots if ``slots`` is true.
 		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
-		:param abstract:        If true, make the class abstract even though it has no abstract methods, so it cannot be
-		                        instantiated. A derived class is concrete again unless it declares itself abstract too or
-		                        inherits an abstract method.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
@@ -498,7 +549,11 @@ class ExtendedType(type):
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
-		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass, abstract)
+
+		# Abstractness by declaration belongs to the decorated class alone, so the marker is reset here and a derived
+		# class does not inherit it. @abstractclass sets it again and recomputes.
+		newClass.__abstractClass__ = False
+		newClass.__isAbstract__ = self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ = self._wrapNewMethodIfSingleton(newClass, singleton)
 
 		if slots:
@@ -1120,19 +1175,17 @@ class ExtendedType(type):
 		return False
 
 	@classmethod
-	def _wrapNewMethodIfAbstract(metacls, newClass, declaredAbstract: bool = False) -> bool:
+	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
 		"""
-		If the class was declared abstract or has abstract methods, replace the ``_new__`` method, so it raises an
-		exception.
+		If the class is marked ``__abstractClass__`` or has abstract methods, replace the ``_new__`` method, so it
+		raises an exception.
 
 		:param newClass:            The newly constructed class for further modifications.
-		:param declaredAbstract:    If true, the class was declared abstract, so it cannot be instantiated even though it
-		                            has no abstract method to override.
 		:returns:                   ``True``, if the class is abstract.
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
-		if declaredAbstract or len(newClass.__abstractMethods__) > 0:
+		if newClass.__abstractClass__ or len(newClass.__abstractMethods__) > 0:
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_abstract_class_error__"):
 				oldnew = oldnew.__wrapped__

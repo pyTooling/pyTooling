@@ -50,15 +50,16 @@ Abstract Class
 **************
 
 A class containing an :ref:`abstract method <META/Abstract>` cannot be instantiated. Some classes have nothing to
-mark abstract and still exist only to be derived from - a base class collecting shared infrastructure, for
-instance. ``abstract=True`` says so:
+mark abstract and still exist only to be derived from - a base-class collecting shared infrastructure, for
+instance. The :deco:`~pyTooling.MetaClasses.abstractclass` decorator says so directly:
 
 .. rubric:: Example:
 .. code-block:: Python
 
-   from pyTooling.MetaClasses import ExtendedType
+   from pyTooling.MetaClasses import ExtendedType, abstractclass
 
-   class Base(metaclass=ExtendedType, abstract=True):
+   @abstractclass
+   class Base(metaclass=ExtendedType):
      def Method(self) -> int:
        return 1
 
@@ -68,12 +69,16 @@ instance. ``abstract=True`` says so:
    Derived()   # fine
    Base()      # raises AbstractClassError
 
-A derived class is concrete again unless it declares itself abstract too or inherits an abstract method, so the
-declaration describes one class rather than a whole branch of the hierarchy.
+The decorator sets ``__abstractClass__`` on the class and recomputes ``__isAbstract__``, which is the same
+computation :class:`~pyTooling.MetaClasses.ExtendedType` runs for abstract methods.
+
+The marker belongs to the decorated class alone: :class:`~pyTooling.MetaClasses.ExtendedType` clears it on every
+class it creates, so a derived class is concrete again unless it is decorated itself or inherits an abstract
+method. The declaration therefore describes one class rather than a branch of the hierarchy.
 
 .. seealso::
 
-   :ref:`@abstractmethod <META/Abstract>`
+   :deco:`~pyTooling.MetaClasses.abstractmethod`
       |rarr| Mark a *method* as abstract, which makes its class abstract as a consequence.
 
 
