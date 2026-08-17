@@ -292,9 +292,38 @@ class MergeTree(TestCase):
 			self.assertFalse(node.IsRoot)
 			self.assertIs(root, node.Root)
 
-	@mark.skip(reason="Not yet implemented!")
 	def test_AddChildren(self) -> None:
-		pass
+		root1 = Node(1)
+		children1 = [Node(11, parent=root1), Node(12, parent=root1)]
+		root2 = Node(2)
+		children2 = [Node(21, parent=root2), Node(22, parent=root2)]
+		root3 = Node(3)
+
+		root1.AddChildren((root2, root3))
+
+		self.assertEqual(2 + len(children1), len(tuple(root1.GetDescendants())) - len(children2))
+		for node in (root2, root3):
+			self.assertIs(root1, node.Parent)
+			self.assertIs(root1, node.Root)
+			self.assertEqual(1, node.Level)
+
+		# the merged tree carries the grandchildren with it
+		for node in children2:
+			self.assertIs(root1, node.Root)
+			self.assertEqual(2, node.Level)
+
+	def test_AddChildrenRejectsANodeOfTheSameTree(self) -> None:
+		root = Node(1)
+		child = Node(11, parent=root)
+
+		with self.assertRaises(AlreadyInTreeError):
+			root.AddChildren((Node(2), child))
+
+	def test_AddChildrenRejectsSomethingThatIsNotANode(self) -> None:
+		root = Node(1)
+
+		with self.assertRaises(TypeError):
+			root.AddChildren((Node(2), "not a node"))
 
 
 class SplitTree(TestCase):
@@ -352,7 +381,7 @@ class SplitTree(TestCase):
 
 		# check if subtree's IDs are not in main tree anymore
 
-	@mark.skip(reason="Not yet implemented!")
+	@mark.skip(reason="Node has no DeleteChild method yet - the tree offers no way to remove a node.")
 	def test_DeleteChild(self) -> None:
 		pass
 

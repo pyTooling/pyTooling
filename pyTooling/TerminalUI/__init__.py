@@ -33,7 +33,7 @@
 from datetime                import datetime
 from enum                    import Enum, unique
 from io                      import TextIOWrapper
-from sys                     import stdin, stdout, stderr
+from sys                     import stdin, stdout, stderr, modules
 from textwrap                import dedent
 from types                   import ModuleType
 from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
@@ -65,7 +65,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
 	PYTHON_VERSION_CHECK_FAILED_EXIT_CODE: ClassVar[int] = 254   #: Return code, if version check was not successful.
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
-	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
+	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: Legacy URL to the issue tracker. Prefer ``__issue_tracker_url__``.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
 
 	try:
@@ -395,13 +395,37 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 			self.Exit(self.PYTHON_VERSION_CHECK_FAILED_EXIT_CODE)
 
+	@readonly
+	def IssueTrackerURL(self) -> Nullable[str]:
+		"""
+		Read-only property to return the URL of the application's issue tracker.
+
+		The URL is taken from the ``__issue_tracker_url__`` dunder variable, searched from the module the application
+		class is defined in outwards to its root package - which is where a package usually declares its dunder
+		variables, and the same variable :meth:`_PrintVersion` prints.
+
+		:attr:`ISSUE_TRACKER_URL` is the older mechanism and is used when no dunder variable was found, so an
+		application declaring only the class variable keeps working.
+
+		:returns: The issue tracker's URL, or ``None`` if the application declares neither.
+		"""
+		moduleName = type(self).__module__
+		while moduleName:
+			module = modules.get(moduleName, None)
+			if module is not None and (url := getattr(module, "__issue_tracker_url__", None)) is not None:
+				return url
+
+			moduleName = moduleName.rpartition(".")[0]
+
+		return self.ISSUE_TRACKER_URL
+
 	def PrintException(self, ex: Exception) -> NoReturn:
 		"""
 		Prints an exception of type :exc:`Exception` and its traceback.
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If an issue tracker URL is configured - see :attr:`IssueTrackerURL` - it is added.
 		"""
 		from traceback import format_tb, walk_tb
 
@@ -436,8 +460,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"{line.replace('{', '{{').replace('}', '}}')}"
 		message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		if self.ISSUE_TRACKER_URL is not None:
-			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+		if (issueTrackerURL := self.IssueTrackerURL) is not None:
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
@@ -463,8 +487,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
 
-		if self.ISSUE_TRACKER_URL is not None:
-			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+		if (issueTrackerURL := self.IssueTrackerURL) is not None:
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
@@ -476,7 +500,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If an issue tracker URL is configured - see :attr:`IssueTrackerURL` - it is added.
 		"""
 		from traceback import print_tb, walk_tb
 
@@ -501,9 +525,9 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		print_tb(ex.__traceback__, file=self._stderr)
 		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
 
-		if self.ISSUE_TRACKER_URL is not None:
+		if (issueTrackerURL := self.IssueTrackerURL) is not None:
 			self.WriteLineToStdErr(dedent(f"""\
-				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
+				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}
 				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
 				""").format(indent=self.INDENT, **self.Foreground))
 
