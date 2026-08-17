@@ -9,6 +9,39 @@ framework, which is also what pytest runs.
 .. #contents:: Table of Contents
    :depth: 2
 
+.. _TESTING/Testcase:
+
+Testcase
+########
+
+:class:`~pyTooling.Testing.Testcase` is the class to derive a testcase from. It *is* a
+:class:`unittest.TestCase` - everything that class offers is available unchanged - and adds what pyTooling's test
+suites otherwise write themselves.
+
+.. code-block:: python
+
+   from pyTooling.Testing import Testcase
+
+
+   class Slots(Testcase):
+     def test_SlotsAreDerived(self) -> None:
+       self.assertHasAttr(MyClass, "__slots__")
+
+Deriving from it rather than from :class:`unittest.TestCase` costs nothing and means a test suite picks up what is
+added later without changing every class again.
+
+.. _TESTING/Testcase/Assertions:
+
+Assertions
+==========
+
+:meth:`~pyTooling.Testing.Testcase.assertHasAttr` and :meth:`~pyTooling.Testing.Testcase.assertNotHasAttr` check
+whether an object has an attribute. They were added to :class:`unittest.TestCase` in **Python 3.14**, so a test
+suite running on 3.11 to 3.13 cannot use them - :class:`~pyTooling.Testing.Testcase` provides them there.
+
+On Python 3.14 and newer the class defines nothing of its own, so the standard library's implementations and
+messages are used and the two behave identically on every supported interpreter.
+
 .. _TESTING/Application:
 
 Application Testing
@@ -49,28 +82,14 @@ Both class variables are mandatory: a test class naming neither cannot run anyth
 :exc:`~pyTooling.Testing.TestingException` instead of letting every testcase in the class fail with a less obvious
 error. A console script that is not installed is reported the same way.
 
-.. _TESTING/Assertions:
+.. _TESTING/Application/Assertions:
 
 Assertions
-##########
+==========
 
 :meth:`~pyTooling.Testing.ApplicationTestcase.assertExitCode` compares the exit code and, when they differ,
 reports the command line together with what the program printed. That output is what explains the failure, and it
 is gone once the test has finished, so it belongs in the assertion message rather than in the console.
-
-:class:`~pyTooling.Testing.Testcase` is the base class to derive a testcase from. Besides everything
-:class:`unittest.TestCase` offers, it adds the assertions :mod:`unittest` gained later than the oldest Python
-version pyTooling supports, so a test suite can use them whichever interpreter runs it:
-
-.. code-block:: python
-
-   class Slots(Testcase):
-     def test_SlotsAreDerived(self) -> None:
-       self.assertHasAttr(MyClass, "__slots__")
-
-:meth:`~pyTooling.Testing.Testcase.assertHasAttr` and :meth:`~pyTooling.Testing.Testcase.assertNotHasAttr` were
-added to :class:`unittest.TestCase` in Python 3.14. On 3.14 and newer this class defines nothing, so the standard
-library's implementations and messages are used.
 
 .. _TESTING/Helpers:
 
