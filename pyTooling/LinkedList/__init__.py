@@ -652,6 +652,14 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 				raise LinkedListException(f"Node position not found.")
 
 	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
+		"""
+		Search the list for the first node matching a predicate.
+
+		:param predicate:            Filter function accepting a node and returning a boolean.
+		:param reverse:              If ``True``, search from the last node towards the first.
+		:returns:                    The first matching node.
+		:raises LinkedListException: If the list is empty, or no node matches.
+		"""
 		if self._firstNode is None:
 			raise LinkedListException(f"Linked list is empty.")
 

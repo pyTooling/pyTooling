@@ -118,6 +118,12 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 			innerList.append(value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
+		"""
+		Render this argument as a list of command line elements, one per value.
+
+		:returns:           The rendered command line elements.
+		:raises ValueError: If the argument has no name.
+		"""
 		if self._name is None:
 			raise ValueError(f"")  # XXX: add message
 

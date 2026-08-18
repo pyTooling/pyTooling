@@ -207,16 +207,63 @@ def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
 
 @export
 def slotted(cls):
+	"""
+	Class decorator recreating a class with slots derived from its annotated fields.
+
+	It is the decorator form of ``metaclass=ExtendedType, slots=True``, for a class that shouldn't name the
+	meta-class explicitly.
+
+	:param cls:  The class to recreate.
+	:returns:    The recreated class, using ``__slots__``.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.mixin`
+	      |rarr| Recreate a class as a mixin-class.
+	   :deco:`~pyTooling.MetaClasses.singleton`
+	      |rarr| Recreate a class as a singleton.
+	"""
 	return _recreateClass(cls, "slotted", slots=True)
 
 
 @export
 def mixin(cls):
+	"""
+	Class decorator recreating a class as a mixin-class.
+
+	A mixin-class collects its slots instead of materializing them; they are merged when the mixin joins a primary
+	inheritance line.
+
+	:param cls:  The class to recreate.
+	:returns:    The recreated class, marked as a mixin.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.slotted`
+	      |rarr| Recreate a class with slots.
+	   :deco:`~pyTooling.MetaClasses.singleton`
+	      |rarr| Recreate a class as a singleton.
+	"""
 	return _recreateClass(cls, "mixin", mixin=True)
 
 
 @export
 def singleton(cls):
+	"""
+	Class decorator recreating a class as a singleton.
+
+	Every instantiation of the decorated class returns the same object, including its state.
+
+	:param cls:  The class to recreate.
+	:returns:    The recreated class, marked as a singleton.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.slotted`
+	      |rarr| Recreate a class with slots.
+	   :deco:`~pyTooling.MetaClasses.mixin`
+	      |rarr| Recreate a class as a mixin-class.
+	"""
 	return _recreateClass(cls, "singleton", singleton=True)
 
 

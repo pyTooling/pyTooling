@@ -280,6 +280,12 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	@staticmethod
 	def _NeedsParameterInitialization(key) -> bool:
+		"""
+		Check if an argument class needs a value when it is set.
+
+		:param key: Class of the command line argument.
+		:returns:   ``True``, if the argument carries a value.
+		"""
 		return issubclass(key, (ValuedFlag, ValuedArgument, NamedAndValuedArgument, NamedTupledArgument, PathArgument, PathListArgument))
 
 	def __getitem__(self, key: Type[CommandLineArgument]) -> CommandLineArgument:

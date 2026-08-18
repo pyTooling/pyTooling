@@ -723,6 +723,16 @@ class Version(metaclass=ExtendedType, slots=True):
 		return None
 
 	def _minimum(self, actual: "Version", expected: "Version") -> Nullable[bool]:
+		"""
+		Check if a version fulfills a minimum requirement.
+
+		How exact the comparison is depends on how detailed the expected version is: a minor number in the expectation
+		requires an exact major number, and a micro number requires an exact minor number.
+
+		:param actual:   The version to check.
+		:param expected: The minimum version, whose parts decide how exact the comparison is.
+		:returns:        ``True``, if the actual version fulfills the expectation.
+		"""
 		exactMajor = Parts.Minor in expected._parts
 		exactMinor = Parts.Micro in expected._parts
 

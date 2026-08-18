@@ -162,6 +162,13 @@ class Path(PathMixIn):
 
 	@classmethod
 	def Parse(cls, path: str, root: Nullable[Host] = None) -> "Path":
+		"""
+		Parse a string into a URL path.
+
+		:param path: The path portion of a URL.
+		:param root: Optional host the path is relative to.
+		:returns:    The parsed path.
+		"""
 		return super().Parse(path, root, cls, Element)
 
 

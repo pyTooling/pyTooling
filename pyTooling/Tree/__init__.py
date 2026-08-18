@@ -517,6 +517,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return len(self._children) > 0
 
 	def _SetNewRoot(self, nodesWithIDs: Dict['Node', 'Node'], nodesWithoutIDs: List['Node']) -> None:
+		"""
+		Move the given nodes into this node's tree.
+
+		:param nodesWithIDs:    Nodes with an ID, which have to stay unique within the tree.
+		:param nodesWithoutIDs: Nodes without an ID.
+		:raises ValueError:     If one of the IDs already exists in this tree.
+		"""
 		for nodeID, node in nodesWithIDs.items():
 			if nodeID in self._root._nodesWithID:
 				raise ValueError(f"ID '{nodeID}' already exists in this tree.")
@@ -899,6 +906,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return self._root._nodesWithID[nodeID]
 
 	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
+		"""
+		Search the tree for nodes matching a predicate.
+
+		:param predicate:            Filter function accepting a node and returning a boolean.
+		:returns:                    A generator yielding the matching nodes.
+		:raises NotImplementedError: Searching a tree is not implemented yet.
+		"""
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
 	def __iter__(self) -> Iterator['Node']:
