@@ -34,10 +34,10 @@ Valued tuple-flag arguments represent a name and a value as a 2-tuple.
 
 .. seealso::
 
-   * For flags with a value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For flags that have an optional value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For flags with a value.
+   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+      |rarr| For flags that have an optional value.
 """
 from typing import Any, Self
 

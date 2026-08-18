@@ -135,8 +135,10 @@ def notimplemented(message: str) -> Callable:
 
 	.. seealso::
 
-	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
-	   * :deco:`~pyTooling.MetaClasses.mustoverride`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
 	"""
 
 	def decorator(method: C) -> C:
@@ -198,7 +200,8 @@ class DocStringMergeOrder(Enum):
 
 	.. seealso::
 
-	   * :func:`InheritDocString`
+	   :deco:`InheritDocString`
+	      |rarr| Copy or merge a base-class' doc-string into the derived entity.
 	"""
 
 	BaseFirst =    0  #: The base-class' doc-string comes first, the derived entity's doc-string second.
@@ -268,7 +271,8 @@ def InheritDocString(
 
 	.. seealso::
 
-	   * :class:`DocStringMergeOrder`
+	   :class:`DocStringMergeOrder`
+	      |rarr| Selects which doc-string comes first when both are merged.
 	"""
 	def decorator(param: Func | type) -> Func | type:
 		"""

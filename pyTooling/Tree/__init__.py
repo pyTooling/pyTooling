@@ -541,9 +541,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :attr:`Parent` |br|
+		   :attr:`Parent`
 		      |rarr| Set the parent of a node.
-		   :meth:`AddChildren` |br|
+		   :meth:`AddChildren`
 		      |rarr| Add multiple children at once.
 		"""
 		if not isinstance(child, Node):
@@ -573,9 +573,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :attr:`Parent` |br|
+		   :attr:`Parent`
 		      |rarr| Set the parent of a node.
-		   :meth:`AddChild` |br|
+		   :meth:`AddChild`
 		      |rarr| Add a child node to the tree.
 		"""
 		for child in children:
@@ -648,13 +648,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		for child in self._children:
@@ -729,13 +729,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		for child in self._children:
@@ -793,13 +793,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		queue = deque([self])
@@ -818,13 +818,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		yield self
@@ -840,13 +840,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		"""
 		for child in self._children:

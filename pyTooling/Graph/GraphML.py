@@ -33,7 +33,8 @@ A data model to write out GraphML XML files.
 
 .. seealso::
 
-   * http://graphml.graphdrawing.org/primer/graphml-primer.html
+   `GraphML Primer <http://graphml.graphdrawing.org/primer/graphml-primer.html>`__
+      |rarr| The format's own introduction, describing the elements this module writes.
 """
 from enum    import Enum, auto
 from pathlib import Path

@@ -797,11 +797,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsLeaf` |br|
+		   :meth:`IsLeaf`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._inboundEdges) == 0
@@ -817,11 +817,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsRoot` |br|
+		   :meth:`IsRoot`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._outboundEdges) == 0
@@ -864,15 +864,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		.. todo:: GRAPH::Vertex::EdgeToVertex Needs possible exceptions to be documented.
@@ -928,15 +928,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		.. todo:: GRAPH::Vertex::EdgeFromVertex Needs possible exceptions to be documented.
@@ -998,15 +998,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		.. todo:: GRAPH::Vertex::EdgeToNewVertex Needs possible exceptions to be documented.
@@ -1070,15 +1070,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		.. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs possible exceptions to be documented.
@@ -1136,15 +1136,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		.. todo:: GRAPH::Vertex::LinkToVertex Needs possible exceptions to be documented.
@@ -1202,15 +1202,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 
 		.. todo:: GRAPH::Vertex::LinkFromVertex Needs possible exceptions to be documented.
@@ -1257,11 +1257,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._outboundEdges:
@@ -1279,11 +1279,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._inboundEdges:
@@ -1301,11 +1301,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for link in self._outboundLinks:
@@ -1323,11 +1323,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
 		"""
 		for link in self._inboundLinks:
@@ -1510,7 +1510,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IterateVerticesDFS` |br|
+		   :meth:`IterateVerticesDFS`
 		      |rarr| Iterate all reachable vertices **depth-first search** order.
 		"""
 		visited: Set[Vertex] = set()
@@ -1541,7 +1541,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IterateVerticesBFS` |br|
+		   :meth:`IterateVerticesBFS`
 		      |rarr| Iterate all reachable vertices **breadth-first search** order.
 
 		   Wikipedia - https://en.wikipedia.org/wiki/Depth-first_search
@@ -2225,11 +2225,11 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateLeafs` |br|
+		   :meth:`IterateLeafs`
 		      |rarr| Iterate leafs of a graph.
-		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
@@ -2260,11 +2260,11 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateRoots` |br|
+		   :meth:`IterateRoots`
 		      |rarr| Iterate roots of a graph.
-		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:

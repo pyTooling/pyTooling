@@ -41,10 +41,10 @@ While commands can or cannot have prefix characters, they shouldn't be confused 
 
 .. seealso::
 
-   * For simple flags (various formats). |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Flag`
-   * For string arguments. |br|
-     |rarr| :class:`~pyTooling.CLIAbstraction.Argument.StringArgument`
+   :mod:`~pyTooling.CLIAbstraction.Flag`
+      |rarr| For simple flags (various formats).
+   :class:`~pyTooling.CLIAbstraction.Argument.StringArgument`
+      |rarr| For string arguments.
 """
 from typing import Any, Self
 

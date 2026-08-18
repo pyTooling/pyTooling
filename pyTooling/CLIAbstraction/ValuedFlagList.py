@@ -37,12 +37,12 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
 
 .. seealso::
 
-   * For single valued flags. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For list of strings. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
-   * For list of paths. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For single valued flags.
+   :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
+      |rarr| For a list of strings.
+   :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+      |rarr| For a list of paths.
 """
 from typing import List, Union, Iterable, cast, Any, Self
 

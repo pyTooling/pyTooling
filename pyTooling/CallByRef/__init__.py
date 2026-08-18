@@ -52,10 +52,10 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 	.. seealso::
 
-	   * :class:`CallByRefBoolParam` |br|
-	     |rarr| A special *call-by-reference* implementation for boolean reference types.
-	   * :class:`CallByRefIntParam` |br|
-	     |rarr| A special *call-by-reference* implementation for integer reference types.
+	   :class:`CallByRefBoolParam`
+	      |rarr| A special *call-by-reference* implementation for boolean reference types.
+	   :class:`CallByRefIntParam`
+	      |rarr| A special *call-by-reference* implementation for integer reference types.
 	"""
 
 	Value: T    #: internal value
