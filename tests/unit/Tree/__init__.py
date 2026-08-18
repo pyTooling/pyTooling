@@ -312,14 +312,14 @@ class MergeTree(Testcase):
 			self.assertIs(root1, node.Root)
 			self.assertEqual(2, node.Level)
 
-	def test_AddChildrenRejectsANodeOfTheSameTree(self) -> None:
+	def test_AddChildren_AlreadyInTree(self) -> None:
 		root = Node(1)
 		child = Node(11, parent=root)
 
 		with self.assertRaises(AlreadyInTreeError):
 			root.AddChildren((Node(2), child))
 
-	def test_AddChildrenRejectsSomethingThatIsNotANode(self) -> None:
+	def test_AddChildren_TypeError(self) -> None:
 		root = Node(1)
 
 		with self.assertRaises(TypeError):
