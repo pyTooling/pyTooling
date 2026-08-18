@@ -48,7 +48,7 @@ except ImportError as ex:  # pragma: no cover
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, mixin
 from pyTooling.Exceptions  import PlatformNotSupportedException, ExceptionBase
-from pyTooling.Common      import lastItem
+from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
 
 
@@ -394,8 +394,10 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		filename = frame.f_code.co_filename
 		funcName = frame.f_code.co_name
 
+		exceptionType = getFullyQualifiedName(ex)
+
 		message  = f"{{RED}}[FATAL] An unknown or unhandled exception reached the topmost exception handler!{{NOCOLOR}}\n"
-		message += f"{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{ex.__class__.__name__}{{NOCOLOR}}\n"
+		message += f"{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{exceptionType}{{NOCOLOR}}\n"
 		message += f"{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}\n"
 
 		if hasattr(ex, "__notes__") and len(ex.__notes__) > 0:
@@ -407,7 +409,9 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
 
 		if (ex2 := ex.__cause__) is not None:
-			message += f"{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{ex2.__class__.__name__}{{NOCOLOR}}\n"
+			causeType = getFullyQualifiedName(ex2)
+
+			message += f"{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{causeType}{{NOCOLOR}}\n"
 			message += f"{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {ex2!s}{{NOCOLOR}}\n"
 
 			if hasattr(ex2, "__notes__") and len(ex2.__notes__) > 0:
@@ -477,16 +481,20 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		filename = frame.f_code.co_filename
 		funcName = frame.f_code.co_name
 
+		exceptionType = getFullyQualifiedName(ex)
+
 		self.WriteLineToStdErr(dedent(f"""\
 			{{RED}}[FATAL] A known but unhandled exception reached the topmost exception handler!{{NOCOLOR}}
-			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{ex.__class__.__name__}{{NOCOLOR}}
+			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{exceptionType}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
 			""").format(indent=self.INDENT, **self.Foreground))
 
 		if ex.__cause__ is not None:
+			causeType = getFullyQualifiedName(ex.__cause__)
+
 			self.WriteLineToStdErr(dedent(f"""\
-				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{ex.__cause__.__class__.__name__}{{NOCOLOR}}
+				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{causeType}{{NOCOLOR}}
 				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {{RED}}{ex.__cause__!s}{{NOCOLOR}}\
 				""").format(indent2=self.INDENT * 2, **self.Foreground))
 
@@ -547,7 +555,8 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value == other.value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
@@ -562,7 +571,8 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value != other.value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
@@ -577,7 +587,8 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value < other.value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
@@ -592,7 +603,8 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value <= other.value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
@@ -607,7 +619,8 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >	other.value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 
@@ -622,7 +635,8 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >= other.value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: Severity")
 			raise ex
 

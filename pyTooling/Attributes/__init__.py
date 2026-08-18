@@ -257,7 +257,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			if isinstance(attributes, list):
 				return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
 			else:
-				raise TypeError(f"Method '{method.__class__.__name__}{method.__name__}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's not a list of Attributes.")
+				methodName = getFullyQualifiedName(method)
+				ex = TypeError(f"Method '{methodName}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's no list.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(attributes)}'.")
+				raise ex
 		return tuple()
 
 
