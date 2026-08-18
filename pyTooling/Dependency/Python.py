@@ -205,8 +205,7 @@ class Distribution(metaclass=ExtendedType, slots=True):
 @export
 class Release(PackageVersion, LazyLoadableMixin):
 	_files:        List[Distribution]                         #: Distributions (wheels, source archives) of this release.
-	#: Requirements per extra; ``None`` collects the unconditional ones.
-	_requirements: Dict[Union[str, None], List[Requirement]]
+	_requirements: Dict[Union[str, None], List[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
 
 	_api:          Nullable[URL]      #: URL of the package index's API, used to load the release's details.
 	_session:      Nullable[Session]  #: HTTP session reused for the API requests.
