@@ -293,8 +293,11 @@ class Base(
 		"""
 		Delete this element's attached attributes.
 
-		The dictionary is dropped rather than cleared, so any further access raises instead of silently returning
-		nothing.
+		.. attention::
+
+		   The dictionary is dropped, not cleared, so every further access to the element's attributes raises a
+		   :exc:`TypeError` - including :meth:`__len__` and ``in``. Anything still holding a reference to the element
+		   sees that, and a reference to the dictionary itself keeps the old content alive.
 		"""
 		self._dict = None
 
