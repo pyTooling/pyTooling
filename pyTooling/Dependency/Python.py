@@ -319,7 +319,9 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download this release's details from the package index and load the projects it requires.
 
-		:raises NoSessionAvailableException: If the release wasn't created by a package index, so it has no session.
+		:raises NoSessionAvailableException: If the release wasn't created by a package index, so it has no session. |br|
+		                                     A session is opened by the package index and handed to the objects it
+		                                     creates.
 		:raises ReleaseNotFoundException:    If the index doesn't know this release.
 		"""
 		if self._session is None:
@@ -516,7 +518,9 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download this project's details and its list of releases from the package index.
 
-		:raises NoSessionAvailableException: If the project wasn't created by a package index, so it has no session.
+		:raises NoSessionAvailableException: If the project wasn't created by a package index, so it has no session. |br|
+		                                     A session is opened by the package index and handed to the objects it
+		                                     creates.
 		:raises ProjectNotFoundException:    If the index doesn't know this project.
 		"""
 		if self._session is None:
