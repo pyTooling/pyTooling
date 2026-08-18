@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.LinkedList."""
+"""
+Performance tests for :mod:`pyTooling.LinkedList` - insertion at both ends and removal.
+"""
 
 from pyTooling.LinkedList import LinkedList as pt_LinkedList, Node as pt_Node
 from . import PerformanceTest

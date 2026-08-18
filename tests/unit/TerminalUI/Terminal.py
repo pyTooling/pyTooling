@@ -29,7 +29,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
+"""
+Unit tests for :class:`pyTooling.TerminalUI.TerminalApplication`: the verbosity properties, the counters
+and the exit-on-counter methods, and which messages reach ``STDOUT`` and ``STDERR`` in each mode.
+"""
 from io                   import StringIO
 
 from pyTooling.TerminalUI import TerminalApplication, Severity, Mode

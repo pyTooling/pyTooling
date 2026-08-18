@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Graph."""
+"""
+Unit tests for :mod:`pyTooling.Graph`: construction, subgraphs, the element attributes (name, ID, value,
+weight, key-value-pairs), the iteration methods, and the conversion of a graph into a tree.
+"""
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 
 from pyTooling.Decorators import readonly

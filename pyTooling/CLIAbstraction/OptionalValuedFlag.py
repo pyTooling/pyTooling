@@ -31,7 +31,10 @@
 #
 """
 
-.. TODO:: Write module documentation.
+Command line arguments with an optional value, like ``--width`` or ``--width=100``.
+
+The argument renders one of two patterns: the one with a value when a value was assigned, and the one without a value
+otherwise - which is why an optional-valued flag carries two format strings instead of one.
 
 """
 from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
@@ -76,6 +79,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is OptionalValuedFlag:
@@ -148,6 +152,7 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortOptionalValuedFlag:
@@ -185,6 +190,7 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongOptionalValuedFlag:
@@ -222,6 +228,7 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is WindowsOptionalValuedFlag:

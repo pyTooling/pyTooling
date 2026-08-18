@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
+"""
+Unit tests for :class:`pyTooling.Versioning.VersionRange`: comparison and intersection of ranges.
+"""
 from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionRange, RangeBoundHandling
 from pyTooling.Testing    import Testcase
 

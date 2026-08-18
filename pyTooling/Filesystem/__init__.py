@@ -116,8 +116,10 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize the base-class with filesystem element size and root reference.
 
-		:param size: Optional size of the element.
-		:param root: Optional reference to the filesystem root element.
+		:param size:       Optional size of the element.
+		:param root:       Optional reference to the filesystem root element.
+		:raises TypeError: If parameter 'size' is not of type :class:`int`.
+		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
 		if size is not None and not isinstance(size, int):
 			ex = TypeError("Parameter 'size' is not of type 'int'.")
@@ -137,7 +139,9 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the root of the filesystem statistics scope.
 
-		:returns: Root of the filesystem statistics scope.
+		:returns:           Root of the filesystem statistics scope.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Root`.
 		"""
 		return self._root
 
@@ -173,7 +177,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
 		will be stored in the node's key-value store.
 
-		:returns: A tree's node referencing this filesystem element.
+		:returns:                    A tree's node referencing this filesystem element.
 		"""
 		raise NotImplementedError()
 
@@ -202,9 +206,11 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Initialize the element base-class with name, size and parent reference.
 
-		:param name:   Name of the element.
-		:param size:   Optional size of the element.
-		:param parent: Optional parent reference.
+		:param name:        Name of the element.
+		:param size:        Optional size of the element.
+		:param parent:      Optional parent reference.
+		:raises ValueError: If parameter 'name' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Directory`.
 		"""
 		if name is None:
 			raise ValueError(f"Parameter 'name' is None.")
@@ -234,7 +240,9 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Property to access the element's parent.
 
-		:returns: Parent element.
+		:returns:           Parent element.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Directory`.
 		"""
 		return self._parent
 
@@ -266,7 +274,7 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Read-only property to access the element's path.
 
-		:returns: Path of the element.
+		:returns:                    Path of the element.
 		"""
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 
@@ -283,7 +291,8 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Add a link source of a symbolic link to the named element (reverse reference).
 
-		:param source: The referenced symbolic link.
+		:param source:     The referenced symbolic link.
+		:raises TypeError: If parameter 'source' is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(source, SymbolicLink):
 			ex = TypeError("Parameter 'source' is not of type 'SymbolicLink'.")
@@ -368,6 +377,12 @@ class Directory(Element["Directory"]):
 
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
+
+		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
+		the collected statistics are incomplete by exactly that path.
+
+		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
+		                             symbolic link.
 		"""
 		with Stopwatch() as sw1:
 			try:
@@ -829,9 +844,10 @@ class Filename(Element[Directory]):
 		"""
 		Initialize the filename with name, file (storage) object and parent reference.
 
-		:param name:   Name of the file.
-		:param size:   Optional file (storage) object.
-		:param parent: Optional parent reference.
+		:param name:       Name of the file.
+		:param file:       Optional file (storage) object.
+		:param parent:     Optional parent reference.
+		:raises TypeError: If parameter 'file' is not of type :class:`File`.
 		"""
 		super().__init__(name, None, parent)
 
@@ -1321,9 +1337,11 @@ class File(Base):
 		"""
 		Initialize the File storage object with an ID, size and parent reference.
 
-		:param id:     Unique ID of the file object.
-		:param size:   Size of the file object.
-		:param parent: Optional parent reference.
+		:param id:          Unique ID of the file object.
+		:param size:        Size of the file object.
+		:param parent:      Optional parent reference.
+		:raises ValueError: If parameter 'id' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.
 		"""
 		if id is None:
 			raise ValueError(f"Parameter 'id' is None.")
@@ -1372,7 +1390,10 @@ class File(Base):
 		"""
 		Add another parent reference to a :class:`Filename`.
 
-		:param filename: Reference to a filename object.
+		:param filename:          Reference to a filename object.
+		:raises ValueError:       If parameter 'filename' is None.
+		:raises TypeError:        If parameter 'filename' is not of type :class:`Filename`.
+		:raises ToolingException: If the filename already references another file object.
 		"""
 		if filename is None:
 			raise ValueError(f"Parameter 'filename' is None.")

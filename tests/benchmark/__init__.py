@@ -28,4 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmarks using pytest-benchmark."""
+"""
+Benchmarks using pytest-benchmark, comparing implementations that solve the same problem.
+"""

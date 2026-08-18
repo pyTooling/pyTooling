@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`isnestedclass`.
+Unit tests for :func:`pyTooling.Common.isnestedclass`.
 """
 from pyTooling.Common  import isnestedclass
 from pyTooling.Testing import Testcase

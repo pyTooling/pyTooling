@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for ...
+Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - trapezium, rectangle and square.
 """
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
 from pyTooling.Cartesian2D.Shapes import Trapezium, Rectangle, Square

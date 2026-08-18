@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for list."""
+"""
+The same measurements implemented with Python's :class:`list`, as a reference.
+"""
 from . import PerformanceTest
 
 
