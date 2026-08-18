@@ -175,7 +175,8 @@ class readonly(property):
 		Reject attaching a setter to a read-only property.
 
 		:param fset:            The setter-method that was to be attached.
-		:raises AttributeError: Always, because a read-only property can't have a setter.
+		:raises AttributeError: Always, because a read-only property can't have a setter. Use :deco:`property` instead
+		                        of :deco:`readonly`, if the property should be writable.
 		"""
 		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a setter.")
 		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be writable.")
@@ -186,7 +187,8 @@ class readonly(property):
 		Reject attaching a deleter to a read-only property.
 
 		:param fdel:            The deleter-method that was to be attached.
-		:raises AttributeError: Always, because a read-only property can't have a deleter.
+		:raises AttributeError: Always, because a read-only property can't have a deleter. Use :deco:`property` instead
+		                        of :deco:`readonly`, if the property should be deletable.
 		"""
 		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a deleter.")
 		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be deletable.")
