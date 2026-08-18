@@ -91,19 +91,14 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 	@property
 	def Value(self) -> Nullable[str]:
 		"""
-		Get the internal value.
+		Property to access the internal value (:attr:`_value`).
 
-		:returns: Internal value.
+		:returns: Internal value, or ``None`` if the flag is used without a value.
 		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, value: Nullable[str]) -> None:
-		"""
-		Set the internal value.
-
-		:param value: Value to set.
-		"""
 		self._value = value
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:

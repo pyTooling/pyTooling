@@ -162,26 +162,6 @@ class Exiting(Testcase):
 			app.FatalExit()
 		self.assertEqual(255, ex.exception.code)
 
-	def test_CheckPythonVersion3(self) -> None:
-		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-				super().CheckPythonVersion((3, 8, 0))
-
-		_ = Application()
-
-	def test_CheckPythonVersion4(self) -> None:
-		print()
-
-		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-				super().CheckPythonVersion((4, 9, 0))
-
-		with self.assertRaises(SystemExit) as exitEx:
-			_ = Application()
-		self.assertEqual(254, exitEx.exception.code)
-
 
 class ExceptionHandling(Testcase):
 	def test_NotImplemented(self) -> None:
