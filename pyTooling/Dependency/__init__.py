@@ -95,7 +95,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 	_package:    "Package"                                                #: Reference to the corresponding package
 	_version:    SemanticVersion                                          #: :class:`SemanticVersion` of this package version.
-	_releasedAt: Nullable[datetime]
+	_releasedAt: Nullable[datetime]                                       #: Time when this package version was released.
 
 	_dependsOn: Dict["Package", Dict[SemanticVersion, "PackageVersion"]]  #: Versioned dependencies to other packages.
 

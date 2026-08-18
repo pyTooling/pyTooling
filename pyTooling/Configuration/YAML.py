@@ -62,7 +62,7 @@ class Node(Abstract_Node):
 	"""
 
 	_yamlNode: Union[CommentedMap, CommentedSeq]  #: Reference to the associated YAML node.
-	_cache:    Dict[str, ValueT]
+	_cache:    Dict[str, ValueT]                  #: Cache of already converted sub-nodes and values, by key.
 	_key:      KeyT                               #: Key of this node.
 	_length:   int                                #: Number of sub-elements.
 
@@ -318,8 +318,8 @@ class Dictionary(Node, Abstract_Dict):
 		class Iterator(metaclass=ExtendedType, slots=True):
 			"""Iterator to iterate dictionary items."""
 
-			_iter: typing_Iterator[ValueT]
-			_obj:  Dictionary
+			_iter: typing_Iterator[ValueT]  #: Iterator over the underlying dictionary's keys.
+			_obj:  Dictionary               #: The dictionary being iterated.
 
 			def __init__(self, obj: Dictionary) -> None:
 				"""
@@ -427,7 +427,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 class Configuration(Dictionary, Abstract_Configuration):
 	"""A configuration read from a YAML file."""
 
-	_yamlConfig: YAML
+	_yamlConfig: YAML  #: The parsed YAML document this configuration is based on.
 
 	def __init__(self, configFile: Path) -> None:
 		"""

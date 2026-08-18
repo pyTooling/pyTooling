@@ -206,8 +206,8 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
 	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.
-	_startTime: Nullable[int]
-	_stopTime:  Nullable[int]
+	_startTime: Nullable[int]       #: Performance counter in ns when the timespan was started.
+	_stopTime:  Nullable[int]       #: Performance counter in ns when the timespan was stopped.
 	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
 
 	_spans:     List["Span"]        #: Sub-timespans

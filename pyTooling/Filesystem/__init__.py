@@ -65,7 +65,7 @@ class FilesystemException(ToolingException):
 
 @export
 class PermissionWarning(Warning):
-	_path: Path
+	_path: Path  #: Path that couldn't be read.
 
 	def __init__(self, path: Path, *args) -> None:
 		"""
@@ -831,7 +831,7 @@ class Filename(Element[Directory]):
 	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
 	   object.
 	"""
-	_file: Nullable["File"]
+	_file: Nullable["File"]  #: The file this filename refers to; ``None`` until the filename is linked.
 
 	def __init__(
 		self,
@@ -1006,10 +1006,10 @@ class Filename(Element[Directory]):
 
 @export
 class SymbolicLink(Element[Directory]):
-	_target:       Path
-	_isConnected:  bool
-	_isBroken:     Nullable[bool]
-	_isOutOfRange: Nullable[bool]
+	_target:       Path            #: Path the symbolic link points to.
+	_isConnected:  bool            #: ``True``, if the link target was resolved to an element of the scanned tree.
+	_isBroken:     Nullable[bool]  #: ``True``, if the link target doesn't exist; ``None`` until resolved.
+	_isOutOfRange: Nullable[bool]  #: ``True``, if the link target lies outside the scanned tree; ``None`` until resolved.
 
 	def __init__(
 		self,

@@ -180,13 +180,13 @@ class URL:
 	   [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 	"""
 
-	_scheme:    Protocols
-	_user:      Nullable[str]
-	_password:  Nullable[str]
-	_host:      Nullable[Host]
-	_path:      Path
-	_query:     Nullable[Dict[str, str]]
-	_fragment:  Nullable[str]
+	_scheme:    Protocols                 #: Protocol (scheme) of the URL.
+	_user:      Nullable[str]             #: User name of the URL's authority part.
+	_password:  Nullable[str]             #: Password of the URL's authority part.
+	_host:      Nullable[Host]            #: Host name and port of the URL's authority part.
+	_path:      Path                      #: Path part of the URL.
+	_query:     Nullable[Dict[str, str]]  #: Query parameters of the URL, by parameter name.
+	_fragment:  Nullable[str]             #: Fragment (anchor) of the URL.
 
 	def __init__(
 		self,

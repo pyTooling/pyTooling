@@ -261,8 +261,8 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 @export
 class SimpleAttribute(Attribute):
-	_args: Tuple[Any, ...]
-	_kwargs: Dict[str, Any]
+	_args:   Tuple[Any, ...]  #: Positional parameters the attribute was applied with.
+	_kwargs: Dict[str, Any]   #: Named parameters the attribute was applied with.
 
 	def __init__(self, *args, **kwargs) -> None:
 		"""

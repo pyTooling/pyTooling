@@ -140,8 +140,8 @@ class lazy:
 
 @export
 class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
-	__lazy_state__: LazyLoaderState
-	__lazy_lock__:  RLock
+	__lazy_state__: LazyLoaderState  #: State of the lazy loading process for this object.
+	__lazy_lock__:  RLock            #: Lock serializing concurrent lazy loading of this object.
 
 	def __init__(self, targetLevel: LazyLoaderState = LazyLoaderState.Initialized) -> None:
 		"""
@@ -168,9 +168,9 @@ class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
 
 @export
 class Distribution(metaclass=ExtendedType, slots=True):
-	_filename:   str
-	_url:        URL
-	_uploadTime: datetime
+	_filename:   str       #: Filename of the distribution's file.
+	_url:        URL       #: URL to download the distribution's file from.
+	_uploadTime: datetime  #: Time when the distribution was uploaded to the package index.
 
 	def __init__(self, filename: str, url: Union[str, URL], uploadTime: datetime) -> None:
 		"""
@@ -250,11 +250,11 @@ class Distribution(metaclass=ExtendedType, slots=True):
 
 @export
 class Release(PackageVersion, LazyLoadableMixin):
-	_files:        List[Distribution]
-	_requirements: Dict[Union[str, None], List[Requirement]]
+	_files:        List[Distribution]                         #: Distributions (wheels, source archives) of this release.
+	_requirements: Dict[Union[str, None], List[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
 
-	_api:          Nullable[URL]
-	_session:      Nullable[Session]
+	_api:          Nullable[URL]      #: URL of the package index's API, used to load the release's details.
+	_session:      Nullable[Session]  #: HTTP session reused for the API requests.
 
 	def __init__(
 		self,
@@ -423,10 +423,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 @export
 class Project(Package, LazyLoadableMixin):
-	_url:         Nullable[URL]
+	_url:         Nullable[URL]      #: URL of the project's page on the package index.
 
-	_api:         Nullable[URL]
-	_session:     Nullable[Session]
+	_api:         Nullable[URL]      #: URL of the package index's API, used to load the project's details.
+	_session:     Nullable[Session]  #: HTTP session reused for the API requests.
 
 	def __init__(
 		self,
@@ -634,10 +634,9 @@ class Project(Package, LazyLoadableMixin):
 
 @export
 class PythonPackageIndex(PackageStorage):
-	_url:     URL
-
-	_api:     URL
-	_session: Session
+	_url:     URL      #: URL of the package index's website.
+	_api:     URL      #: URL of the package index's API.
+	_session: Session  #: HTTP session reused for every request to this index.
 
 	def __init__(self, name: str, url: Union[str, URL], api: Union[str, URL], graph: "PackageDependencyGraph") -> None:
 		"""
