@@ -688,9 +688,11 @@ class Directory(Element["Directory"]):
 
 	def IterateDirectories(self) -> Generator["Directory", None, None]:
 		"""
-		Iterate all subdirectories below this directory in pre-order.
+		A generator to iterate all subdirectories below this directory in pre-order.
 
-		:returns: A generator yielding every directory below this one, a parent before its children.
+		A parent directory is yielded before its children.
+
+		:returns: A generator to iterate all subdirectories below this directory.
 		"""
 		# pre-order
 		for directory in self._subdirectories.values():
@@ -699,9 +701,11 @@ class Directory(Element["Directory"]):
 
 	def IterateFiles(self) -> Generator[Element, None, None]:
 		"""
-		Iterate all files and symbolic links below this directory in post-order.
+		A generator to iterate all files and symbolic links below this directory in post-order.
 
-		:returns: A generator yielding the elements of the subdirectories first, then this directory's own.
+		The elements of the subdirectories are yielded before this directory's own.
+
+		:returns: A generator to iterate all files and symbolic links below this directory.
 		"""
 		# post-order
 		for directory in self._subdirectories.values():
