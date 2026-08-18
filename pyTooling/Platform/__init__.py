@@ -174,9 +174,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	   StackOverflow question: `Python: What OS am I running on? <https://stackoverflow.com/a/54837707/3719459>`__
 	"""
 
-	_platform:             Platforms
-	_pythonImplementation: PythonImplementation
-	_pythonVersion:        PythonVersion
+	_platform:             Platforms             #: Operating system, processor architecture and environment, as flags.
+	_pythonImplementation: PythonImplementation  #: The Python implementation running this program (CPython, PyPy).
+	_pythonVersion:        PythonVersion         #: Version of the Python interpreter running this program.
 
 	def __init__(self) -> None:
 		"""

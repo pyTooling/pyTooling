@@ -41,7 +41,7 @@ from pyTooling.Stopwatch   import Stopwatch
 @export
 class Layer(metaclass=ExtendedType):
 	"""
-	One layer of a Docker image: the files assigned to it, and its neighbors in the cake.
+	One layer of a Docker image: the files assigned to it, and its neighboring layers in the layer cake.
 
 	A layer knows its aggregated size, so the slicing algorithm can stop filling it when the target size is reached.
 	"""

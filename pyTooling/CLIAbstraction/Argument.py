@@ -71,7 +71,7 @@ class CommandLineArgument:
 	  |rarr| :mod:`~pyTooling.CLIAbstraction.NamedKeyValuePair`
 	"""
 
-	_pattern: ClassVar[str]
+	_pattern: ClassVar[str]  #: Format string to render the argument on the command line.
 
 	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any) -> None:
 		"""
@@ -143,7 +143,7 @@ class ExecutableArgument(CommandLineArgument):
 	Represents the executable.
 	"""
 
-	_executable: Path
+	_executable: Path  #: Path to the executable this argument represents.
 
 	def __init__(self, executable: Path) -> None:
 		"""
@@ -241,7 +241,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 	Base-class for all command line arguments with a name.
 	"""
 
-	_name: ClassVar[str]
+	_name: ClassVar[str]  #: Name of the argument, inserted into :attr:`_pattern`.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
@@ -310,7 +310,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	Base-class for all command line arguments with a value.
 	"""
 
-	_value: ValueT
+	_value: ValueT  #: Value of the argument, inserted into :attr:`_pattern`.
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
@@ -434,7 +434,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 	* `width 100``
 	"""
 
-	_valuePattern: ClassVar[str]
+	_valuePattern: ClassVar[str]  #: Format string to render the argument's value as a second command line element.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any) -> None:
 		"""
@@ -612,7 +612,7 @@ class PathArgument(CommandLineArgument):
 	A list of paths is available as :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`.
 	"""
 	# The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.
-	_path: Path
+	_path: Path  #: Path this argument represents.
 
 	def __init__(self, path: Path) -> None:
 		"""
@@ -672,7 +672,7 @@ class PathListArgument(CommandLineArgument):
 	Represents a list of path arguments  (:class:`~pyTooling.CLIAbstraction.Argument.PathArgument`).
 	"""
 	# The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.
-	_paths: List[Path]
+	_paths: List[Path]  #: Paths this argument represents.
 
 	def __init__(self, paths: Iterable[Path]) -> None:
 		"""

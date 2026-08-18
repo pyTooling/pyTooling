@@ -141,8 +141,7 @@ class Base(metaclass=ExtendedType, slots=True):
 @export
 class BaseWithID(Base):
 	"""Base-class for all GraphML elements carrying a document-wide unique ID."""
-
-	_id: str
+	_id: str  #: Unique identifier of this GraphML element.
 
 	def __init__(self, identifier: str) -> None:
 		super().__init__()
@@ -161,8 +160,7 @@ class BaseWithID(Base):
 @export
 class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
-
-	_data: List['Data']
+	_data: List['Data']  #: Data items (key-value-pairs) attached to this GraphML element.
 
 	def __init__(self, identifier: str) -> None:
 		super().__init__(identifier)
@@ -191,10 +189,9 @@ class Key(BaseWithID):
 	A GraphML document declares its attributes once - name, data type, and the element kind they apply to - and every
 	:class:`Data` item then references such a key by ID.
 	"""
-
-	_context: AttributeContext
-	_attributeName: str
-	_attributeType: AttributeTypes
+	_context:       AttributeContext  #: GraphML element kind this key can be used on.
+	_attributeName: str               #: Name of the attribute described by this key.
+	_attributeType: AttributeTypes    #: Data type of the attribute described by this key.
 
 	def __init__(self, identifier: str, context: AttributeContext, name: str, type: AttributeTypes) -> None:
 		super().__init__(identifier)
@@ -251,9 +248,8 @@ class Key(BaseWithID):
 @export
 class Data(Base):
 	"""A single attached attribute: a value and the :class:`Key` describing it."""
-
-	_key: Key
-	_data: Any
+	_key:  Key  #: Key describing name and type of this data item.
+	_data: Any  #: Value of this data item.
 
 	def __init__(self, key: Key, data: Any) -> None:
 		super().__init__()
@@ -340,9 +336,8 @@ class Node(BaseWithData):
 @export
 class Edge(BaseWithData):
 	"""An edge of a GraphML graph, connecting a source node to a target node."""
-
-	_source: Node
-	_target: Node
+	_source: Node  #: Node the edge starts at.
+	_target: Node  #: Node the edge ends at.
 
 	def __init__(self, identifier: str, source: Node, target: Node) -> None:
 		super().__init__(identifier)
@@ -406,14 +401,13 @@ class BaseGraph(BaseWithData, mixin=True):
 	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
 	direction, the parsing order, and the ID styles for nodes and edges.
 	"""
-
-	_subgraphs: Dict[str, 'Subgraph']
-	_nodes: Dict[str, Node]
-	_edges: Dict[str, Edge]
-	_edgeDefault: EdgeDefault
-	_parseOrder: ParsingOrder
-	_nodeIDStyle: IDStyle
-	_edgeIDStyle: IDStyle
+	_subgraphs:   Dict[str, 'Subgraph']  #: Subgraphs of this graph, by ID.
+	_nodes:       Dict[str, Node]        #: Nodes of this graph, by ID.
+	_edges:       Dict[str, Edge]        #: Edges of this graph, by ID.
+	_edgeDefault: EdgeDefault            #: Direction applied to edges that don't specify one.
+	_parseOrder:  ParsingOrder           #: Order in which nodes and edges may appear in the XML document.
+	_nodeIDStyle: IDStyle                #: Whether node IDs are free-form or canonical.
+	_edgeIDStyle: IDStyle                #: Whether edge IDs are free-form or canonical.
 
 	def __init__(self, identifier: Nullable[str] = None) -> None:
 		super().__init__(identifier)
@@ -509,9 +503,8 @@ class Graph(BaseGraph):
 
 	It owns the ID space: every node, edge and subgraph registers itself here, so an ID is used only once per document.
 	"""
-
-	_document: 'GraphMLDocument'
-	_ids: Dict[str, Union[Node, Edge, 'Subgraph']]
+	_document: 'GraphMLDocument'                         #: The GraphML document this graph belongs to.
+	_ids:      Dict[str, Union[Node, Edge, 'Subgraph']]  #: Every element of this graph by ID, used to keep IDs unique.
 
 	def __init__(self, document: 'GraphMLDocument', identifier: str) -> None:
 		super().__init__(identifier)
@@ -546,9 +539,8 @@ class Subgraph(Node, BaseGraph):
 	It therefore carries two identifiers: the node's ID it is referenced by, and :attr:`_subgraphID` for the graph it
 	contains.
 	"""
-
-	_subgraphID: str
-	_root:       Nullable[Graph]
+	_subgraphID: str              #: ID of the subgraph, which is distinct from the node's own ID.
+	_root:       Nullable[Graph]  #: The graph this subgraph is nested in.
 
 	def __init__(self, nodeIdentifier: str, graphIdentifier: str) -> None:
 		super().__init__(nodeIdentifier)
@@ -638,13 +630,13 @@ class GraphMLDocument(Base):
 	xmlNS: ClassVar[Dict[Nullable[str], str]] = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"
-	}
+	}  #: XML namespaces of a GraphML document.
 	xsi: ClassVar[Dict[str, str]] = {
 		"schemaLocation": "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
-	}
+	}  #: XML schema instance attributes of a GraphML document.
 
-	_graph: Graph
-	_keys: Dict[str, Key]
+	_graph: Graph           #: The document's root graph.
+	_keys:  Dict[str, Key]  #: Keys declared by this document, by ID.
 
 	def __init__(self, identifier: str = "G") -> None:
 		super().__init__()

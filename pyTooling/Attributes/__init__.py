@@ -267,9 +267,8 @@ class SimpleAttribute(Attribute):
 	It needs no derived class per use case: whatever is passed to it is available from :attr:`Args` and :attr:`KwArgs`,
 	which makes it the quickest way to mark a class, method or function and read the marking back.
 	"""
-
-	_args: Tuple[Any, ...]
-	_kwargs: Dict[str, Any]
+	_args:   Tuple[Any, ...]  #: Positional parameters the attribute was applied with.
+	_kwargs: Dict[str, Any]   #: Named parameters the attribute was applied with.
 
 	def __init__(self, *args, **kwargs) -> None:
 		self._args = args

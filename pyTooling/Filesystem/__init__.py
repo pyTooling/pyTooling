@@ -70,7 +70,7 @@ class PermissionWarning(Warning):
 
 	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
 	"""
-	_path: Path
+	_path: Path  #: Path that couldn't be read.
 
 	def __init__(self, path: Path, *args) -> None:
 		super().__init__(*args)
@@ -812,7 +812,7 @@ class Filename(Element[Directory]):
 	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
 	   object.
 	"""
-	_file: Nullable["File"]
+	_file: Nullable["File"]  #: The file this filename refers to; ``None`` until the filename is linked.
 
 	def __init__(
 		self,
@@ -975,10 +975,10 @@ class SymbolicLink(Element[Directory]):
 	After the scan, the link is resolved: it is either connected to an element of the scanned tree, broken (the target
 	doesn't exist), or out of range (the target lies outside the scanned tree).
 	"""
-	_target:       Path
-	_isConnected:  bool
-	_isBroken:     Nullable[bool]
-	_isOutOfRange: Nullable[bool]
+	_target:       Path            #: Path the symbolic link points to.
+	_isConnected:  bool            #: ``True``, if the link target was resolved to an element of the scanned tree.
+	_isBroken:     Nullable[bool]  #: ``True``, if the link target doesn't exist; ``None`` until resolved.
+	_isOutOfRange: Nullable[bool]  #: ``True``, if the link target lies outside the scanned tree; ``None`` until resolved.
 
 	def __init__(
 		self,
