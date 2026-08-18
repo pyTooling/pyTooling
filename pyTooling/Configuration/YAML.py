@@ -130,6 +130,12 @@ class Node(Abstract_Node):
 
 	@staticmethod
 	def _ToPath(query: str) -> List[Union[str, int]]:
+		"""
+		Split a path expression into its elements.
+
+		:param query: Path expression, with its elements separated by ``:``.
+		:returns:     List of keys and indices.
+		"""
 		return query.split(":")
 
 	def _LookupKey(self, key: str) -> Any:
@@ -179,6 +185,16 @@ class Node(Abstract_Node):
 			return f"Node '{self._key}' is a sequence with indices 0..{self._length - 1}."
 
 	def _GetNodeOrValue(self, key: str) -> ValueT:
+		"""
+		Return a sub-node or a value by key, converting it on first access.
+
+		The converted object is cached, so a second access returns the same node object rather than a new one.
+
+		:param key:                   Key or index to look up.
+		:returns:                     A dictionary node, a sequence node, or a scalar value with its variables
+		                              resolved.
+		:raises KeyNotFoundException: If the key doesn't exist in this node.
+		"""
 		try:
 			value = self._cache[key]
 		except KeyError:
@@ -203,6 +219,17 @@ class Node(Abstract_Node):
 		return value
 
 	def _ResolveVariables(self, value: str) -> str:
+		"""
+		Resolve the ``${...}`` variables inside a value.
+
+		A variable references another node by a path expression, so a value can be composed from other values of the
+		same configuration.
+
+		:param value:                 The raw value, possibly containing variables.
+		:returns:                     The value with every variable replaced by what it references.
+		:raises Exception:            If a variable is malformed.
+		:raises KeyNotFoundException: If a referenced key doesn't exist.
+		"""
 		if value == "":
 			return ""
 		elif "$" not in value:
@@ -248,6 +275,13 @@ class Node(Abstract_Node):
 		return result
 
 	def _GetValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+		"""
+		Return the value the given path refers to.
+
+		:param path:                  Path elements, where ``..`` selects the parent node.
+		:returns:                     The scalar value at that path.
+		:raises KeyNotFoundException: If a path element doesn't exist.
+		"""
 		node = self
 		for p in path:
 			if p == "..":
@@ -264,6 +298,13 @@ class Node(Abstract_Node):
 		return node
 
 	def _GetNodeOrValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+		"""
+		Return the node or value the given path refers to.
+
+		:param path:                  Path elements, where ``..`` selects the parent node.
+		:returns:                     A node or a scalar value at that path.
+		:raises KeyNotFoundException: If a path element doesn't exist.
+		"""
 		node = self
 		for p in path:
 			if p == "..":
