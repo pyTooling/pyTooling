@@ -152,7 +152,7 @@ class Layer(metaclass=ExtendedType):
 				Nested function rendering a file's path relative to the filesystem root.
 
 				:param file: The path to render.
-				:returns:   The relative path in POSIX notation, terminated by a newline.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
 				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
@@ -161,7 +161,7 @@ class Layer(metaclass=ExtendedType):
 				Nested function rendering a file's path as it is.
 
 				:param file: The path to render.
-				:returns:   The absolute path in POSIX notation, terminated by a newline.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
 				"""
 				return f"{file.as_posix()}\n"
 
@@ -315,7 +315,7 @@ class LayerCake(metaclass=ExtendedType):
 				Nested function rendering a directory's path relative to the filesystem root.
 
 				:param file: The path to render.
-				:returns:   The relative path in POSIX notation, terminated by a newline.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
 				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
@@ -324,7 +324,7 @@ class LayerCake(metaclass=ExtendedType):
 				Nested function rendering a directory's path as it is.
 
 				:param file: The path to render.
-				:returns:   The absolute path in POSIX notation, terminated by a newline.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
 				"""
 				return f"{file.as_posix()}\n"
 

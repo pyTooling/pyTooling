@@ -1142,6 +1142,7 @@ class ExtendedType(type):
 								"""
 								Wrapper forwarding to the inherited abstract method.
 
+								:param cls:    The class the method is called on.
 								:param args:   Positional parameters passed to the method.
 								:param kwargs: Named parameters passed to the method.
 								:returns:      Whatever the wrapped method returns.
@@ -1196,9 +1197,9 @@ class ExtendedType(type):
 				Replacement ``__new__`` method, which returns the singleton's one instance.
 
 				The first call creates the object and caches it; every further call returns the cached object. The
-			condition
-				variable makes that safe when several threads instantiate the class at once.
+				condition variable makes that safe when several threads instantiate the class at once.
 
+				:param cls:    The class being instantiated.
 				:param args:   Positional parameters passed to the original ``__new__``.
 				:param kwargs: Named parameters passed to the original ``__new__``.
 				:returns:      The singleton's instance.
@@ -1302,7 +1303,7 @@ class ExtendedType(type):
 							Replacement ``__new__`` method for a class that isn't abstract anymore.
 
 							It calls :meth:`object.__new__` with the class only, because that implementation rejects further
-						parameters.
+							parameters.
 
 							:param inst: The class being instantiated.
 							:returns:    The new instance.

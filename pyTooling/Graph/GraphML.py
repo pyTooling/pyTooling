@@ -737,8 +737,8 @@ class GraphMLDocument(Base):
 
 			It translates one pyTooling subgraph into a GraphML subgraph.
 
-			:param graphMLSubgraph: The GraphML subgraph the elements are added to.
-			:param pyTSubgraph:     The pyTooling subgraph to translate.
+			:param nodeGraph:   The GraphML subgraph the elements are added to.
+			:param pyTSubgraph: The pyTooling subgraph to translate.
 			"""
 			rootGraph = nodeGraph.RootGraph
 

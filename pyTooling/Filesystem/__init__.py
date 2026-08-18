@@ -764,7 +764,7 @@ class Directory(Element["Directory"]):
 				Nested function rendering a tree node as one line.
 
 				:param node: The tree node to render.
-				:returns:   The node's size in MiB, followed by its name.
+				:returns:    The node's size in MiB, followed by its name.
 				"""
 				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
@@ -943,7 +943,7 @@ class Filename(Element[Directory]):
 			Nested function rendering a tree node as one line.
 
 			:param node: The tree node to render.
-			:returns:   The node's size in MiB, followed by its name.
+			:returns:    The node's size in MiB, followed by its name.
 			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
@@ -1093,7 +1093,7 @@ class SymbolicLink(Element[Directory]):
 			Nested function rendering a tree node as one line.
 
 			:param node: The tree node to render.
-			:returns:   The node's size in MiB, followed by its name.
+			:returns:    The node's size in MiB, followed by its name.
 			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
