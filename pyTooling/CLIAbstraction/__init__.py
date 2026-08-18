@@ -366,7 +366,7 @@ class Program(metaclass=ExtendedType, slots=True):
 class Executable(Program):  # (ILogable):
 	"""Represent a CLI executable derived from :class:`Program`, that adds an abstraction of :class:`subprocess.Popen`."""
 
-	_BOUNDARY:         ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"
+	_BOUNDARY:         ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"  #: Marker line printed between the program's own output and the executable's output.
 
 	_workingDirectory: Nullable[Path]              #: Path to the working directory
 	_environment:      Nullable[Environment]       #: Environment to use when executing.
@@ -569,10 +569,10 @@ class Executable(Program):  # (ILogable):
 @export
 class OutputFilteredExecutable(Executable):
 	"""Represent a CLI executable derived from :class:`Executable`, whose outputs are filtered."""
-	_hasOutput:   bool
-	_hasWarnings: bool
-	_hasErrors:   bool
-	_hasFatals:   bool
+	_hasOutput:   bool  #: ``True``, if the executable wrote any output.
+	_hasWarnings: bool  #: ``True``, if the output filter classified a line as a warning.
+	_hasErrors:   bool  #: ``True``, if the output filter classified a line as an error.
+	_hasFatals:   bool  #: ``True``, if the output filter classified a line as a fatal error.
 
 	def __init__(self, platform: Platform, dryrun: bool, executablePath: Path) -> None: #, environment=None, logger=None) -> None:
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)

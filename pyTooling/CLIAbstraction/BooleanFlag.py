@@ -62,7 +62,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 	* False: ``without-checks``
 	"""
 
-	_falsePattern: ClassVar[str]
+	_falsePattern: ClassVar[str]  #: Format string used when the flag's value is ``False``; :attr:`_pattern` is used for ``True``.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any) -> None:
 		"""
