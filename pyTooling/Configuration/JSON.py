@@ -188,10 +188,12 @@ class Node(Abstract_Node):
 
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
-		:param key:                   Key or index to look up.
-		:returns:                     A dictionary node, a sequence node, or a scalar value with its variables
-		                              resolved.
-		:raises KeyNotFoundException: If the key doesn't exist in this node.
+		:param key:                            Key or index to look up.
+		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
+		                                       resolved.
+		:raises KeyNotFoundException:          If the key doesn't exist in this node.
+		:raises UnsupportedValueTypeException: If the JSON parser returned a value that is neither a scalar, nor a
+		                                       node.
 		"""
 		try:
 			value = self._cache[key]
@@ -223,10 +225,12 @@ class Node(Abstract_Node):
 		A variable references another node by a path expression, so a value can be composed from other values of the
 		same configuration.
 
-		:param value:                 The raw value, possibly containing variables.
-		:returns:                     The value with every variable replaced by what it references.
-		:raises Exception:            If a variable is malformed.
-		:raises KeyNotFoundException: If a referenced key doesn't exist.
+		:param value:                   The raw value, possibly containing variables.
+		:returns:                       The value with every variable replaced by what it references.
+		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
+		                                variable reference without its closing ``}``. Use ``$$`` to escape a literal
+		                                dollar sign.
+		:raises KeyNotFoundException:   If a referenced key doesn't exist.
 		"""
 		if value == "":
 			return ""
@@ -276,9 +280,11 @@ class Node(Abstract_Node):
 		"""
 		Return the value the given path refers to.
 
-		:param path:                  Path elements, where ``..`` selects the parent node.
-		:returns:                     The scalar value at that path.
-		:raises KeyNotFoundException: If a path element doesn't exist.
+		:param path:                     Path elements, where ``..`` selects the parent node.
+		:returns:                        The scalar value at that path.
+		:raises KeyNotFoundException:    If a path element doesn't exist.
+		:raises PathExpressionException: If the path resolves to a node instead of a value. Extend the path expression
+		                                 to address a scalar value.
 		"""
 		node = self
 		for p in path:
