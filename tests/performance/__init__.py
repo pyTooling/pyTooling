@@ -28,4 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests."""
+"""
+Performance tests comparing pyTooling's data structures with equivalent packages from PyPI.
+"""

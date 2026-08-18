@@ -28,4 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for configurations."""
+"""
+Unit tests for :mod:`pyTooling.Configuration` - one module per configuration file format.
+"""

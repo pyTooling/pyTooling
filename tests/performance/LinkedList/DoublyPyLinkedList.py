@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.LinkedList."""
+"""
+The same measurements implemented with `doubly-py-linked-list <https://pypi.org/project/doubly-py-linked-list/>`__,
+as a reference.
+"""
 from typing import List
 
 from doubly_py_linked_list import DoublyLinkedList

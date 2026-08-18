@@ -83,6 +83,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:param nextNode:     Optional reference to the next node.
 		:raises TypeError:   If parameter 'previous' is not of type :class:`Node`.
 		:raises TypeError:   If parameter 'next' is not of type :class:`Node`.
+		:raises ValueError:  If parameter 'value' is None.
 		"""
 		self._previousNode = previousNode
 		self._nextNode = nextNode
@@ -292,6 +293,8 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	def Remove(self) -> _NodeValue:
 		"""
 		Remove this node from the linked list.
+
+		:returns: The value of the removed node.
 		"""
 		if self._previousNode is None:
 			if self._linkedList is not None:
@@ -606,9 +609,10 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Access a node in the linked list by position.
 
-		:param index:       Node position to access.
-		:returns:           Node at the given position.
-		:raises ValueError: If parameter 'position' is out of range.
+		:param index:                Node position to access.
+		:returns:                    Node at the given position.
+		:raises ValueError:          If parameter 'position' is out of range.
+		:raises LinkedListException: If the list is empty, or the index is out of range.
 
 		.. note::
 
@@ -652,6 +656,14 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 				raise LinkedListException(f"Node position not found.")
 
 	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
+		"""
+		Search the list for the first node matching a predicate.
+
+		:param predicate:            Filter function accepting a node and returning a boolean.
+		:param reverse:              If ``True``, search from the last node towards the first.
+		:returns:                    The first matching node.
+		:raises LinkedListException: If the list is empty, or no node matches.
+		"""
 		if self._firstNode is None:
 			raise LinkedListException(f"Linked list is empty.")
 

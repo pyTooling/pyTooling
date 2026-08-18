@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Helper classes for unit tests."""
+"""
+Helper classes shared by the CLI abstraction tests.
+"""
 from pathlib  import Path
 from platform import system
 from typing   import Optional as Nullable

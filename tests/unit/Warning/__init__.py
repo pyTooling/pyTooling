@@ -28,6 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Unit tests for :mod:`pyTooling.Warning`: collecting warnings within a call hierarchy, the handler protocol,
+and what happens when no collector is installed.
+"""
 from typing   import List
 
 from pyTooling.Warning import WarningCollector, Warning, CriticalWarning

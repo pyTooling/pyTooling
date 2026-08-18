@@ -285,8 +285,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def __contains__(self, key: DictKeyType) -> bool:
 		"""
-		.. todo:: TREE::Node::__contains__ Needs documentation.
+		Check if a key exists in the node's attached attributes.
 
+		:param key: The key to look for.
+		:returns:   ``True``, if the key exists.
 		"""
 		return key in self._dict
 
@@ -401,6 +403,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A tuple of all siblings left of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its parent's
+		                         children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -427,6 +431,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A tuple of all siblings right of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its parent's
+		                         children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -517,6 +523,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return len(self._children) > 0
 
 	def _SetNewRoot(self, nodesWithIDs: Dict['Node', 'Node'], nodesWithoutIDs: List['Node']) -> None:
+		"""
+		Move the given nodes into this node's tree.
+
+		:param nodesWithIDs:    Nodes with an ID, which have to stay unique within the tree.
+		:param nodesWithoutIDs: Nodes without an ID.
+		:raises ValueError:     If one of the IDs already exists in this tree.
+		"""
 		for nodeID, node in nodesWithIDs.items():
 			if nodeID in self._root._nodesWithID:
 				raise ValueError(f"ID '{nodeID}' already exists in this tree.")
@@ -541,9 +554,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :attr:`Parent` |br|
+		   :attr:`Parent`
 		      |rarr| Set the parent of a node.
-		   :meth:`AddChildren` |br|
+		   :meth:`AddChildren`
 		      |rarr| Add multiple children at once.
 		"""
 		if not isinstance(child, Node):
@@ -573,9 +586,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :attr:`Parent` |br|
+		   :attr:`Parent`
 		      |rarr| Set the parent of a node.
-		   :meth:`AddChild` |br|
+		   :meth:`AddChild`
 		      |rarr| Add a child node to the tree.
 		"""
 		for child in children:
@@ -599,16 +612,18 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def GetPath(self) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetPAth Needs documentation.
+		Compute the path from the root node to this node.
 
+		:returns: A generator yielding the nodes from the root down to this node.
 		"""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetAncestors Needs documentation.
+		Iterate the ancestors of this node.
 
+		:returns: A generator yielding the parent, its parent, and so on up to the root node.
 		"""
 		node = self._parent
 		while node is not None:
@@ -617,8 +632,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetCommonAncestors Needs documentation.
+		Compute the common ancestors of this node and one or more other nodes.
 
+		The nodes' paths from the root are walked in parallel and yielded as long as they are identical, so the last
+		yielded node is the nearest common ancestor.
+
+		:param others:               Another node, or an iterable of nodes, to compute the common ancestors with.
+		:returns:                    A generator yielding the common ancestors, starting at the root node.
+		:raises NotInSameTreeError:  If one of the given nodes is not in the same tree.
+		:raises NotImplementedError: If more than one other node is given; the common ancestors of a set of nodes are
+		                             not computed yet.
 		"""
 		if isinstance(others, Node):
 			# Check for trivial case
@@ -648,13 +671,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		for child in self._children:
@@ -686,6 +709,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A generator to iterate all siblings left of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its
+		                         parent's children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -706,6 +731,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A generator to iterate all siblings right of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its
+		                         parent's children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -729,13 +756,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		for child in self._children:
@@ -793,13 +820,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		queue = deque([self])
@@ -818,13 +845,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePostOrder` |br|
+		   :meth:`IteratePostOrder`
 		      |rarr| Iterate items in post-order, which includes the node itself as a last returned node.
 		"""
 		yield self
@@ -840,13 +867,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		.. seealso::
 
-		   :meth:`GetChildren` |br|
+		   :meth:`GetChildren`
 		      |rarr| Iterate all children, but no grand-children.
-		   :meth:`GetDescendants` |br|
+		   :meth:`GetDescendants`
 		      |rarr| Iterate all descendants.
-		   :meth:`IterateLevelOrder` |br|
+		   :meth:`IterateLevelOrder`
 		      |rarr| Iterate items level-by-level, which includes the node itself as a first returned node.
-		   :meth:`IteratePreOrder` |br|
+		   :meth:`IteratePreOrder`
 		      |rarr| Iterate items in pre-order, which includes the node itself as a first returned node.
 		"""
 		for child in self._children:
@@ -899,6 +926,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return self._root._nodesWithID[nodeID]
 
 	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
+		"""
+		Search the tree for nodes matching a predicate.
+
+		:param predicate:            Filter function accepting a node and returning a boolean.
+		:returns:                    A generator yielding the matching nodes.
+		:raises NotImplementedError: Searching a tree is not implemented yet.
+		"""
 		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
 
 	def __iter__(self) -> Iterator['Node']:
@@ -973,6 +1007,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		emptyMarker = " " * len(bypassMarker)
 
 		def _render(node: Node, markers: str):
+			"""
+			Nested function for recursion.
+
+			:param node:    The node whose children are rendered.
+			:param markers: The prefix of the current level, assembled from the join and bypass markers.
+			:returns:       The rendered lines of that subtree.
+			"""
 			result = []
 
 			if node.HasChildren:

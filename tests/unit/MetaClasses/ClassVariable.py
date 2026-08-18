@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for class variables handled by :class:`pyTooling.MetaClasses.ExtendedType`, with and without
+slots, and through inheritance.
 """
 from typing                import ClassVar
 

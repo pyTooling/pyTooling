@@ -106,7 +106,9 @@ class Node(Abstract_Node):
 		"""
 		Property to access the node's key.
 
-		:returns: Key of the node.
+		:returns:                    Key of the node.
+		:raises NotImplementedError: If a new key is assigned; renaming a key is not supported by this configuration
+		                             implementation.
 		"""
 		return self._key
 
@@ -126,6 +128,12 @@ class Node(Abstract_Node):
 
 	@staticmethod
 	def _ToPath(query: str) -> List[Union[str, int]]:
+		"""
+		Split a path expression into its elements.
+
+		:param query: Path expression, with its elements separated by ``:``.
+		:returns:     List of keys and indices.
+		"""
 		return query.split(":")
 
 	def _LookupKey(self, key: str) -> Any:
@@ -175,6 +183,18 @@ class Node(Abstract_Node):
 			return f"Node '{self._key}' is a sequence with indices 0..{self._length - 1}."
 
 	def _GetNodeOrValue(self, key: str) -> ValueT:
+		"""
+		Return a sub-node or a value by key, converting it on first access.
+
+		The converted object is cached, so a second access returns the same node object rather than a new one.
+
+		:param key:                            Key or index to look up.
+		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
+		                                       resolved.
+		:raises KeyNotFoundException:          If the key doesn't exist in this node.
+		:raises UnsupportedValueTypeException: If the JSON parser returned a value that is neither a scalar, nor a
+		                                       node.
+		"""
 		try:
 			value = self._cache[key]
 		except KeyError:
@@ -199,6 +219,19 @@ class Node(Abstract_Node):
 		return value
 
 	def _ResolveVariables(self, value: str) -> str:
+		"""
+		Resolve the ``${...}`` variables inside a value.
+
+		A variable references another node by a path expression, so a value can be composed from other values of the
+		same configuration.
+
+		:param value:                   The raw value, possibly containing variables.
+		:returns:                       The value with every variable replaced by what it references.
+		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
+		                                variable reference without its closing ``}``. Use ``$$`` to escape a literal
+		                                dollar sign.
+		:raises KeyNotFoundException:   If a referenced key doesn't exist.
+		"""
 		if value == "":
 			return ""
 		elif "$" not in value:
@@ -244,6 +277,15 @@ class Node(Abstract_Node):
 		return result
 
 	def _GetValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+		"""
+		Return the value the given path refers to.
+
+		:param path:                     Path elements, where ``..`` selects the parent node.
+		:returns:                        The scalar value at that path.
+		:raises KeyNotFoundException:    If a path element doesn't exist.
+		:raises PathExpressionException: If the path resolves to a node instead of a value. Extend the path expression
+		                                 to address a scalar value.
+		"""
 		node = self
 		for p in path:
 			if p == "..":
@@ -260,6 +302,13 @@ class Node(Abstract_Node):
 		return node
 
 	def _GetNodeOrValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+		"""
+		Return the node or value the given path refers to.
+
+		:param path:                  Path elements, where ``..`` selects the parent node.
+		:returns:                     A node or a scalar value at that path.
+		:raises KeyNotFoundException: If a path element doesn't exist.
+		"""
 		node = self
 		for p in path:
 			if p == "..":
@@ -432,7 +481,8 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the JSON file are accessible via Python's dictionary syntax.
 
-		:param configFile: Configuration file to read and parse.
+		:param configFile:              Configuration file to read and parse.
+		:raises ConfigurationException: If the JSON file doesn't exist or can't be parsed.
 		"""
 		if not configFile.exists():
 			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)

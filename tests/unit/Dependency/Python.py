@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Dependency`."""
+"""
+Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
+need network access.
+"""
 from datetime                    import datetime
 
 from pytest                      import mark

@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :class:`~pyTooling.Common.ChangeDirectory`.
+Unit tests for :class:`pyTooling.Common.ChangeDirectory`, the context manager restoring the working
+directory.
 """
 from pathlib  import Path
 

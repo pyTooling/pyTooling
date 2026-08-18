@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for TBD."""
+"""
+Unit tests for :mod:`pyTooling.Platform`: the flags describing the current platform. Most testcases are
+gated on the environment variable ``ENVIRONMENT_NAME``, so they run on the matching CI platform only.
+"""
 from os       import getenv as os_getenv, environ as os_environ
 from pytest   import mark
 

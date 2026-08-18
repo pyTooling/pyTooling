@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`isnestedclass`.
+Unit tests for :func:`pyTooling.Common.getsizeof`, which sums up an object's own size and everything it
+references. Skipped on PyPy, which doesn't implement the underlying measurement.
 """
 from pytest             import mark
 

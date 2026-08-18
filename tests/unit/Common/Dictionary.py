@@ -29,7 +29,9 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`firstKey`, :func:`firstValue`, :func:`firstPair`, :func:`mergedicts` and :func:`zipdicts`.
+Unit tests for the dictionary helpers of :mod:`pyTooling.Common`: :func:`~pyTooling.Common.firstKey`,
+:func:`~pyTooling.Common.firstValue`, :func:`~pyTooling.Common.firstPair`,
+:func:`~pyTooling.Common.mergedicts` and :func:`~pyTooling.Common.zipdicts`.
 """
 from pytest             import mark
 
