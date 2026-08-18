@@ -680,6 +680,15 @@ class GraphMLDocument(Base):
 		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
 
 		def translateGraph(rootGraph: Graph, pyTGraph: pyToolingGraph):
+			"""
+			Nested function for recursion.
+
+			It translates the vertices and edges of one pyTooling graph into GraphML nodes and edges, and recurses into the
+			subgraphs it finds.
+
+			:param rootGraph: The GraphML graph the elements are added to.
+			:param pyTGraph:  The pyTooling graph to translate.
+			"""
 			for vertex in pyTGraph.IterateVertices():
 				newNode = Node(vertex._id)
 				newNode.AddData(Data(nodeValue, vertex._value))
@@ -723,6 +732,14 @@ class GraphMLDocument(Base):
 				rootGraph.AddEdge(newEdge)
 
 		def translateSubgraph(nodeGraph: Subgraph, pyTSubgraph: pyToolingSubgraph):
+			"""
+			Nested function for recursion.
+
+			It translates one pyTooling subgraph into a GraphML subgraph.
+
+			:param graphMLSubgraph: The GraphML subgraph the elements are added to.
+			:param pyTSubgraph:     The pyTooling subgraph to translate.
+			"""
 			rootGraph = nodeGraph.RootGraph
 
 			for vertex in pyTSubgraph.IterateVertices():

@@ -973,6 +973,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		emptyMarker = " " * len(bypassMarker)
 
 		def _render(node: Node, markers: str):
+			"""
+			Nested function for recursion.
+
+			:param node:    The node whose children are rendered.
+			:param markers: The prefix of the current level, assembled from the join and bypass markers.
+			:returns:       The rendered lines of that subtree.
+			"""
 			result = []
 
 			if node.HasChildren:
