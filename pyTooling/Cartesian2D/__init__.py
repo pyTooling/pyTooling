@@ -514,6 +514,12 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)
 
 	def AngleTo(self, other: "LineSegment2D[Coordinate]") -> float:
+		"""
+		Compute the angle between this line segment and another one.
+
+		:param other: The second line segment.
+		:returns:     The angle in radians.
+		"""
 		vectorA = self.ToOffset()
 		vectorB = other.ToOffset()
 		scalarProductAB = vectorA.xOffset * vectorB.xOffset + vectorA.yOffset * vectorB.yOffset

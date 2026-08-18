@@ -126,6 +126,16 @@ class Layer(metaclass=ExtendedType):
 		return self._size
 
 	def AddFile(self, element: Element) -> Set[Filename]:
+		"""
+		Add a filename or symbolic link to this layer.
+
+		For a filename, every other filename of the same file object is added too, because hardlinks have to end up in
+		the same image layer.
+
+		:param element:    The filename or symbolic link to add.
+		:returns:          The set of elements that were added, so the caller can skip them.
+		:raises TypeError: If parameter 'element' is neither a filename nor a symbolic link.
+		"""
 		usedFiles = set()
 		if isinstance(element, Filename):
 			for filename in element.File.Parents:
@@ -144,13 +154,31 @@ class Layer(metaclass=ExtendedType):
 		return usedFiles
 
 	def WriteLayerFile(self, path: Path, relative: bool = True) -> None:
+		"""
+		Write the layer's files as one file list.
+
+		:param path:     Path of the file list to write.
+		:param relative: If ``True``, the paths are written relative to the filesystem root.
+		"""
 		rootDirectory = self._parent._root._path
 
 		if relative:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a file's path relative to the filesystem root.
+
+				:param file: The path to render.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a file's path as it is.
+
+				:param file: The path to render.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.as_posix()}\n"
 
 		with path.open("w", encoding="utf-8") as f:
@@ -245,6 +273,16 @@ class LayerCake(metaclass=ExtendedType):
 		return self._slicingDuration
 
 	def CreateDockerLayers(self, minLayerSize: int, maxLayerSize: int, layerSizeGradient: int) -> None:
+		"""
+		Distribute the filesystem's files over image layers and collect the directories no layer covers.
+
+		The layers are filled largest file first. Each layer is filled up to a target size, which shrinks by
+		``layerSizeGradient`` from layer to layer until ``minLayerSize`` is reached.
+
+		:param minLayerSize:      Smallest target size a layer is filled to.
+		:param maxLayerSize:      Target size of the first layer.
+		:param layerSizeGradient: Amount the target size shrinks by from layer to layer.
+		"""
 		with Stopwatch() as sw:
 			self._SliceFilesystemIntoLayers(minLayerSize, maxLayerSize, layerSizeGradient)
 			self._CollectEmptDirectories()
@@ -252,10 +290,25 @@ class LayerCake(metaclass=ExtendedType):
 		self._slicingDuration = sw.Duration
 
 	def _SliceFilesystemIntoLayers(self, minLayerSize: int, maxLayerSize: int, layerSizeGradient: int) -> None:
+		"""
+		Distribute the filesystem's files over image layers, largest file first.
+
+		:param minLayerSize:      Smallest target size a layer is filled to.
+		:param maxLayerSize:      Target size of the first layer.
+		:param layerSizeGradient: Amount the target size shrinks by from layer to layer.
+		"""
 		# greedy algorithm
 		layer = Layer(self)
 
 		def sizeOf(file: Element[Directory]) -> int:
+			"""
+			Nested function used as sort key.
+
+			A symbolic link occupies no space of its own, so it is counted as zero and ends up last.
+
+			:param file: The filesystem element to measure.
+			:returns:    Size of the element in bytes.
+			"""
 			return 0 if isinstance(file, SymbolicLink) else file.Size
 
 		collectedFiles = set()
@@ -278,22 +331,51 @@ class LayerCake(metaclass=ExtendedType):
 					targetLayerSize = size
 
 	def _CollectEmptDirectories(self) -> None:
+		"""
+		Collect the directories that contain neither files nor subdirectories, so no layer covers them.
+		"""
 		for directory in self._root.IterateDirectories():
 			if directory.SubdirectoryCount == 0 and directory.FileCount == 0:
 				self._emptyDirectories.append(directory)
 
 	def WriteLayerFiles(self, directory: Path, fileNamePattern: str = "layer_{layerID}.files", relative: bool = True) -> None:
+		"""
+		Write one file list per layer.
+
+		:param directory:       Directory the file lists are written to.
+		:param fileNamePattern: Pattern of the file names, with ``{layerID}`` replaced by the layer's number.
+		:param relative:        If ``True``, the paths are written relative to the filesystem root.
+		"""
 		for i, layer in enumerate(self._layers, start=1):
 			layer.WriteLayerFile(directory / fileNamePattern.format(layerID=i), relative)
 
 	def WriteEmptyDirectoryFile(self, directory: Path, fileNamePattern: str = "empty_directories.files", relative: bool = True) -> None:
+		"""
+		Write the empty directories as one file list, so an image build can recreate them.
+
+		:param directory:       Directory the file list is written to.
+		:param fileNamePattern: Name of the file list to write.
+		:param relative:        If ``True``, the paths are written relative to the filesystem root.
+		"""
 		rootDirectory = self._root._path
 
 		if relative:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a directory's path relative to the filesystem root.
+
+				:param file: The path to render.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a directory's path as it is.
+
+				:param file: The path to render.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.as_posix()}\n"
 
 		with (directory / fileNamePattern).open("w", encoding="utf-8") as f:

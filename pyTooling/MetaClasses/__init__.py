@@ -71,8 +71,10 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 
 	.. seealso::
 
-	   * :ref:`Python data model for slots <slots>`
-	   * :term:`Glossary entry __slots__ <__slots__>`
+	   :ref:`Python data model for slots <slots>`
+	      |rarr| What ``__slots__`` does and which rules Python imposes on it.
+	   :term:`Glossary entry __slots__ <__slots__>`
+	      |rarr| The glossary's short definition.
 	"""
 
 
@@ -207,16 +209,63 @@ def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
 
 @export
 def slotted(cls):
+	"""
+	Class decorator recreating a class with slots derived from its annotated fields.
+
+	It is the decorator form of ``metaclass=ExtendedType, slots=True``, for a class that shouldn't name the
+	meta-class explicitly.
+
+	:param cls:  The class to recreate.
+	:returns:    The recreated class, using ``__slots__``.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.mixin`
+	      |rarr| Recreate a class as a mixin-class.
+	   :deco:`~pyTooling.MetaClasses.singleton`
+	      |rarr| Recreate a class as a singleton.
+	"""
 	return _recreateClass(cls, "slotted", slots=True)
 
 
 @export
 def mixin(cls):
+	"""
+	Class decorator recreating a class as a mixin-class.
+
+	A mixin-class collects its slots instead of materializing them; they are merged when the mixin joins a primary
+	inheritance line.
+
+	:param cls:  The class to recreate.
+	:returns:    The recreated class, marked as a mixin.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.slotted`
+	      |rarr| Recreate a class with slots.
+	   :deco:`~pyTooling.MetaClasses.singleton`
+	      |rarr| Recreate a class as a singleton.
+	"""
 	return _recreateClass(cls, "mixin", mixin=True)
 
 
 @export
 def singleton(cls):
+	"""
+	Class decorator recreating a class as a singleton.
+
+	Every instantiation of the decorated class returns the same object, including its state.
+
+	:param cls:  The class to recreate.
+	:returns:    The recreated class, marked as a singleton.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.MetaClasses.slotted`
+	      |rarr| Recreate a class with slots.
+	   :deco:`~pyTooling.MetaClasses.mixin`
+	      |rarr| Recreate a class as a mixin-class.
+	"""
 	return _recreateClass(cls, "singleton", singleton=True)
 
 
@@ -313,6 +362,11 @@ def abstractmethod(method: M) -> M:
 	"""
 	@wraps(method)
 	def func(self) -> NoReturn:
+		"""
+		Replacement method, which raises a :exc:`NotImplementedError` when called.
+
+		:raises NotImplementedError: Always, because an abstract method has no implementation.
+		"""
 		raise NotImplementedError(f"Method '{method.__name__}' is abstract and needs to be overridden in a derived class.")
 
 	func.__abstract__ = True
@@ -682,6 +736,16 @@ class ExtendedType(type):
 
 		# Embedded bind function due to circular dependencies.
 		def bind(instance: object, func: FunctionType, methodName: Nullable[str] = None):
+			"""
+			Nested function binding a function to an object as a method.
+
+			It exists here rather than in :mod:`pyTooling.Common`, because importing that module would be circular.
+
+			:param instance:   The object the function is bound to.
+			:param func:       The function to bind.
+			:param methodName: Optional name of the method; by default the function's own name.
+			:returns:          The bound method.
+			"""
 			if methodName is None:
 				methodName = func.__name__
 
@@ -707,6 +771,13 @@ class ExtendedType(type):
 					setattr(method, "__classobj__", newClass)
 
 				def GetAttributes(inst: Any, predicate: Nullable[Type[Attribute]] = None) -> Tuple[Attribute, ...]:
+					"""
+					Nested function attached to the class, returning the attributes of one of its methods.
+
+					:param inst:      The method to read the attributes from.
+					:param predicate: An attribute class, or ``None`` to accept every attribute.
+					:returns:         Tuple of the matching attributes.
+					"""
 					results = []
 					try:
 						for attribute in inst.__pyattr__:  # type: Attribute
@@ -1111,8 +1182,22 @@ class ExtendedType(type):
 					if (memberName in abstractMethods and isinstance(member, FunctionType) and
 						not (hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"))):
 						def outer(method):
+							"""
+							Nested function creating a wrapper, so the abstract method of the base-class isn't modified itself.
+
+							:param method: The inherited abstract method.
+							:returns:      A wrapper forwarding to that method.
+							"""
 							@wraps(method)
 							def inner(cls, *args: Any, **kwargs: Any):
+								"""
+								Wrapper forwarding to the inherited abstract method.
+
+								:param cls:    The class the method is called on.
+								:param args:   Positional parameters passed to the method.
+								:param kwargs: Named parameters passed to the method.
+								:returns:      Whatever the wrapped method returns.
+								"""
 								return method(cls, *args, **kwargs)
 
 							return inner
@@ -1159,6 +1244,17 @@ class ExtendedType(type):
 
 			@wraps(oldnew)
 			def singleton_new(cls, *args: Any, **kwargs: Any):
+				"""
+				Replacement ``__new__`` method, which returns the singleton's one instance.
+
+				The first call creates the object and caches it; every further call returns the cached object. The
+				condition variable makes that safe when several threads instantiate the class at once.
+
+				:param cls:    The class being instantiated.
+				:param args:   Positional parameters passed to the original ``__new__``.
+				:param kwargs: Named parameters passed to the original ``__new__``.
+				:returns:      The singleton's instance.
+				"""
 				with cls.__singletonInstanceCond__:
 					if cls.__singletonInstanceCache__ is None:
 						obj = oldnew(cls, *args, **kwargs)
@@ -1170,6 +1266,15 @@ class ExtendedType(type):
 
 			@wraps(oldinit)
 			def singleton_init(self, *args: Any, **kwargs: Any):
+				"""
+				Replacement ``__init__`` method, which initializes the singleton's instance exactly once.
+
+				A further instantiation waits until the first one finished initializing, so it never sees a half-built object.
+
+				:param args:        Positional parameters passed to the original ``__init__``.
+				:param kwargs:      Named parameters passed to the original ``__init__``.
+				:raises ValueError: If a further instantiation passes parameters, which would be silently ignored.
+				"""
 				cls = self.__class__
 				cv = cls.__singletonInstanceCond__
 				with cv:
@@ -1215,6 +1320,14 @@ class ExtendedType(type):
 
 			@wraps(oldnew)
 			def abstract_new(cls, *_, **__):
+				"""
+				Replacement ``__new__`` method, which rejects the instantiation of an abstract class.
+
+				The message names the methods to override, or says that the class needs to be derived when it was declared
+				abstract without having abstract methods.
+
+				:raises AbstractClassError: Always, because an abstract class can't be instantiated.
+				"""
 				if len(newClass.__abstractMethods__) > 0:
 					raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
 				else:
@@ -1237,6 +1350,15 @@ class ExtendedType(type):
 					if origNew is object.__new__:
 						@wraps(object.__new__)
 						def wrapped_new(inst, *_, **__):
+							"""
+							Replacement ``__new__`` method for a class that isn't abstract anymore.
+
+							It calls :meth:`object.__new__` with the class only, because that implementation rejects further
+							parameters.
+
+							:param inst: The class being instantiated.
+							:returns:    The new instance.
+							"""
 							return object.__new__(inst)
 
 						newClass.__new__ = wrapped_new

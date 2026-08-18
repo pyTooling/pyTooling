@@ -143,8 +143,19 @@ def notimplemented(message: str) -> Callable:
 	"""
 
 	def decorator(method: C) -> C:
+		"""
+		Decorator function, which replaces the decorated method by one raising a :exc:`NotImplementedError`.
+
+		:param method: Method to be replaced.
+		:returns:      Replacement method, carrying the field ``__notImplemented__``.
+		"""
 		@wraps(method)
 		def func(*_, **__):
+			"""
+			Replacement method, which raises a :exc:`NotImplementedError` when called.
+
+			:raises NotImplementedError: Always, with the message given to :deco:`notimplemented`.
+			"""
 			raise NotImplementedError(message)
 
 		func.__notImplemented__ = True
@@ -203,7 +214,8 @@ class DocStringMergeOrder(Enum):
 
 	.. seealso::
 
-	   * :func:`InheritDocString`
+	   :deco:`InheritDocString`
+	      |rarr| Copy or merge a base-class' doc-string into the derived entity.
 	"""
 
 	BaseFirst =    0  #: The base-class' doc-string comes first, the derived entity's doc-string second.
@@ -273,7 +285,8 @@ def InheritDocString(
 
 	.. seealso::
 
-	   * :class:`DocStringMergeOrder`
+	   :class:`DocStringMergeOrder`
+	      |rarr| Selects which doc-string comes first when both are merged.
 	"""
 	def decorator(param: Func | type) -> Func | type:
 		"""

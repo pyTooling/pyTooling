@@ -34,12 +34,12 @@ Flag arguments represent simple boolean values by being present or absent.
 
 .. seealso::
 
-   * For flags with different pattern based on the boolean value itself. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
-   * For flags with a value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For flags that have an optional value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
+      |rarr| For flags with a different pattern based on the boolean value itself.
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For flags with a value.
+   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+      |rarr| For flags that have an optional value.
 """
 from typing import Any, Self
 
