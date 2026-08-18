@@ -122,7 +122,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -140,7 +141,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -158,7 +160,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -176,7 +179,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <=>= operator.")
+			ex = TypeError(f"Second operand is not supported by <=>= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -194,7 +198,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -212,7 +217,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -799,7 +805,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -831,7 +838,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -868,7 +876,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -907,7 +916,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -945,7 +955,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -984,7 +995,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -1001,7 +1013,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >> operator.")
+			ex = TypeError(f"Second operand is not supported by >> operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
