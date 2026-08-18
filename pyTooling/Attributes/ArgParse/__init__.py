@@ -44,7 +44,7 @@ M = TypeVar("M", bound=Callable)
 
 @export
 class ArgParseException(ToolingException):
-	pass
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Attributes.ArgParse`."""
 
 
 #@abstract
