@@ -293,10 +293,10 @@ class WarningCollector:
 		:raises Exception:                         If warning should be converted to an exception.
 		:raises UnhandledExceptionException:       If no warning collector was found along the call-hierarchy to collect and
 		                                           handle an exception.
-		:raises UnhandledCriticalWarningException: If no warning collector was found along the call-hierarchy to collect and
-		                                           handle a critical warning. Add a with-statement using
-		                                           :class:`WarningCollector` somewhere up the call-hierarchy to receive
-		                                           and collect warnings.
+		:raises UnhandledCriticalWarningException:  If no warning collector was found along the call-hierarchy to collect
+		                                           and handle a critical warning. |br|
+		                                           Add a with-statement using :class:`WarningCollector` somewhere up the
+		                                           call-hierarchy to receive and collect warnings.
 		"""
 		global _threadLocalData
 

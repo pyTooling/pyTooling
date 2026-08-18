@@ -1003,7 +1003,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		Expand a routing mode into a routing table containing one writing method per severity level.
 
 		:param mode:           Routing mode to expand.
-		:raises ExceptionBase: If the routing mode is not supported. The note lists the modes that are.
+		:raises ExceptionBase: If the routing mode is not supported. |br|
+		                       The note lists the modes that are.
 		"""
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
 			for severity in Severity:

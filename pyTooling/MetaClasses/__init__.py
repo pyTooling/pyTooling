@@ -296,7 +296,7 @@ def abstractclass(cls: C) -> C:
 
 	:param cls:             Class that is marked as *abstract*.
 	:returns:               The same class, marked and with its abstractness recomputed.
-	:raises AttributeError: If the class was not created by :class:`ExtendedType`, because nothing would compute it.
+	:raises AttributeError: If the class was not created by :class:`ExtendedType`, because nothing would compute it. |br|
 	                        Add ``metaclass=ExtendedType`` to the class definition, so abstractness is computed.
 
 	.. seealso::
@@ -924,8 +924,9 @@ class ExtendedType(type):
 		:param mixin:                       True, if the class should behave as a mixin-class.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
 		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved.
-		:raises BaseClassWithoutSlotsError: If a base-class doesn't use slots. All base-classes of a class using
-		                                    ``__slots__`` must use ``__slots__`` themselves.
+		:raises BaseClassWithoutSlotsError: If a base-class doesn't use slots. |br|
+		                                    All base-classes of a class using ``__slots__`` must use ``__slots__``
+		                                    themselves.
 		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
@@ -1046,8 +1047,8 @@ class ExtendedType(type):
 		:param className:                        The name of the class to construct.
 		:param baseClasses:                      The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:returns:                                A list of slot names.
-		:raises BaseClassWithNonEmptySlotsError: If a mixin-class uses non-empty slots. In Python, only one inheritance
-		                                         branch can use non-empty ``__slots__``.
+		:raises BaseClassWithNonEmptySlotsError: If a mixin-class uses non-empty slots. |br|
+		                                         In Python, only one inheritance branch can use non-empty ``__slots__``.
 		"""
 		mixinSlots = []
 		if len(baseClasses) > 0:
