@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`firstItem` and :func:`lastItem`.
+Unit tests for :func:`pyTooling.Common.count`, :func:`~pyTooling.Common.firstItem` and
+:func:`~pyTooling.Common.lastItem`.
 """
 from pyTooling.Common  import firstItem, lastItem, count
 from pyTooling.Testing import Testcase

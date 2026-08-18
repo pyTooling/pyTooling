@@ -28,6 +28,13 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Slice a filesystem tree into Docker image layers.
+
+A :class:`~pyTooling.Filesystem.Docker.LayerCake` distributes the files of a
+:class:`~pyTooling.Filesystem.Root` over layers - largest file first, each layer filled up to a target size that
+shrinks from layer to layer - and writes one file list per layer, ready to be turned into image layers.
+"""
 from pathlib               import Path
 from typing                import Optional as Nullable, List, Set
 

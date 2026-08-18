@@ -29,7 +29,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
+"""
+Unit tests for :class:`pyTooling.TerminalUI.Line`: a message with its severity and its indentation.
+"""
 from pyTooling.TerminalUI import Line, Severity
 from pyTooling.Testing    import Testcase
 

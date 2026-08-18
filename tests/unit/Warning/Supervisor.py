@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises."""
+"""
+Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises when supervised
+threads failed.
+"""
 from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
 from pyTooling.Testing    import Testcase
 

@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :class:`MemoryUsage`.
+Unit tests for :mod:`pyTooling.Process`: the memory information reported for the current process.
 """
 from pyTooling.Process  import MemoryInfo, ProcessInformation
 from pyTooling.Testing  import Testcase
