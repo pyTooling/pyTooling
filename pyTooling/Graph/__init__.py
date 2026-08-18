@@ -259,6 +259,12 @@ class Base(
 	Generic[DictKeyType, DictValueType],
 	metaclass=ExtendedType, slots=True
 ):
+	"""
+	Base-class for all graph elements, adding a dictionary of arbitrary key-value-pairs to them.
+
+	Every vertex, edge, link, component, view, subgraph and graph can carry meta information this way.
+	"""
+
 	_dict: Dict[DictKeyType, DictValueType]  #: A dictionary to store arbitrary key-value-pairs.
 
 	def __init__(
@@ -338,6 +344,12 @@ class BaseWithIDValueAndWeight(
 	Base[DictKeyType, DictValueType],
 	Generic[IDType, ValueType, WeightType, DictKeyType, DictValueType]
 ):
+	"""
+	Base-class for graph elements identified by an ID and carrying a value and a weight - vertices, edges and links.
+
+	All three are optional: an element without an ID is still part of the graph, it just can't be looked up by ID.
+	"""
+
 	_id:        Nullable[IDType]      #: Field storing the object's Identifier.
 	_value:     Nullable[ValueType]   #: Field storing the object's value of any type.
 	_weight:    Nullable[WeightType]  #: Field storing the object's weight.
@@ -407,6 +419,8 @@ class BaseWithName(
 	Base[DictKeyType, DictValueType],
 	Generic[DictKeyType, DictValueType]
 ):
+	"""Base-class for named graph elements like a graph, a subgraph, a view or a component."""
+
 	_name: Nullable[str]  #: Field storing the object's name.
 
 	def __init__(
@@ -462,6 +476,8 @@ class BaseWithVertices(
 		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
 	]
 ):
+	"""Base-class for named graph elements owning a set of vertices - a subgraph, a view or a component."""
+
 	_graph:    'Graph[GraphDictKeyType, GraphDictValueType,' \
 								'VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,' \
 								'EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,' \
@@ -1634,6 +1650,7 @@ class Vertex(
 		# (actually a tree). Each node holds a reference to the vertex it represents.
 		# Hint: slotted classes are faster than '@dataclasses.dataclass'.
 		class Node(metaclass=ExtendedType, slots=True):
+			"""A node of the search tree: the vertex it represents and its predecessor on the path."""
 			parent: 'Node'  #: Predecessor on the path back to the starting point.
 			ref:    Vertex  #: The vertex this node represents.
 
@@ -1728,6 +1745,7 @@ class Vertex(
 		# represents.
 		# Hint: slotted classes are faster than '@dataclasses.dataclass'.
 		class Node(metaclass=ExtendedType, slots=True):
+			"""A node of the search tree: the vertex, its predecessor, and the accumulated weight to reach it."""
 			parent:   'Node'          #: Predecessor on the path back to the starting point.
 			distance: EdgeWeightType  #: Accumulated edge weight from the starting point to this node.
 			ref:      Vertex          #: The vertex this node represents.

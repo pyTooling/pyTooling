@@ -35,19 +35,24 @@ from pyTooling.Attributes.ArgParse.Argument import NamedArgument, ValuedArgument
 
 @export
 class BooleanFlag(NamedArgument, ValuedArgument):
-	pass
+	"""
+	Defines a pair of switch arguments like ``--with-checks`` and ``--without-checks``.
+
+	The flag's name is rendered into one of two patterns: the *true* pattern when the option enables the feature and the
+	*false* pattern when it disables it, so both spellings describe the same destination parameter.
+	"""
 
 
 @export
 class ShortBooleanFlag(BooleanFlag):  #, pattern="-with-{0}", falsePattern="-without-{0}"):
-	pass
+	"""Defines a boolean flag in short form like ``-with-checks`` / ``-without-checks``."""
 
 
 @export
 class LongBooleanFlag(BooleanFlag):  #, pattern="--with-{0}", falsePattern="--without-{0}"):
-	pass
+	"""Defines a boolean flag in long form like ``--with-checks`` / ``--without-checks``."""
 
 
 @export
 class WindowsBooleanFlag(BooleanFlag):  #, pattern="/with-{0}", falsePattern="/without-{0}"):
-	pass
+	"""Defines a boolean flag in Windows form like ``/with-checks`` / ``/without-checks``."""

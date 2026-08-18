@@ -43,7 +43,7 @@ from pyTooling.MetaClasses import ExtendedType
 
 @export
 class Base(metaclass=ExtendedType, slots=True):
-	pass
+	"""Base-class for all elements of a statemachine diagram."""
 
 
 @export
