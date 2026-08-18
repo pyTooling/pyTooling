@@ -118,8 +118,8 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		:param size:       Optional size of the element.
 		:param root:       Optional reference to the filesystem root element.
-		:raises TypeError: If parameter 'size' is not of type :class:`int`, or parameter 'root' is not of type
-		                   :class:`Root`.
+		:raises TypeError: If parameter 'size' is not of type :class:`int`.
+		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
 		if size is not None and not isinstance(size, int):
 			ex = TypeError("Parameter 'size' is not of type 'int'.")
@@ -178,7 +178,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		will be stored in the node's key-value store.
 
 		:returns:                    A tree's node referencing this filesystem element.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		raise NotImplementedError()
 
@@ -276,7 +275,6 @@ class Element(Base, Generic[_ParentType]):
 		Read-only property to access the element's path.
 
 		:returns:                    Path of the element.
-		:raises NotImplementedError: If this abstract property is not overridden by a derived class.
 		"""
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 

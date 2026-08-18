@@ -117,7 +117,6 @@ class Node(metaclass=ExtendedType, slots=True):
 
 		:param key:                  Index or key of the element.
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		raise NotImplementedError()
 
@@ -127,7 +126,6 @@ class Node(metaclass=ExtendedType, slots=True):
 
 		:param key:                  Index or key of the element.
 		:param value:                Value to set
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		raise NotImplementedError()
 
@@ -136,7 +134,6 @@ class Node(metaclass=ExtendedType, slots=True):
 		Returns an iterator to iterate a node.
 
 		:returns:                    Node iterator.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		raise NotImplementedError()
 
@@ -146,7 +143,6 @@ class Node(metaclass=ExtendedType, slots=True):
 		Property to access the node's key.
 
 		:returns:                    Key of the node.
-		:raises NotImplementedError: If this abstract property is not overridden by a derived class.
 		"""
 		raise NotImplementedError()
 
@@ -160,7 +156,6 @@ class Node(metaclass=ExtendedType, slots=True):
 
 		:param query:                String describing the path to the node or value.
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		raise NotImplementedError()
 

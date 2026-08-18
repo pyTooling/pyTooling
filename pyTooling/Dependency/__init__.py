@@ -106,9 +106,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:param version:           Semantic version of this package.
 		:param package:           Package this version is associated to.
 		:param releasedAt:        Optional release date and time.
-		:raises TypeError:        When parameter 'version' is not of type 'SemanticVersion'.
-		:raises TypeError:        When parameter 'package' is not of type 'Package'.
-		:raises TypeError:        When parameter 'releasedAt' is not of type 'datetime'.
+		:raises TypeError:        When parameter 'version' is not of type :class:`SemanticVersion`.
+		:raises TypeError:        When parameter 'package' is not of type :class:`Package`.
+		:raises TypeError:        When parameter 'releasedAt' is not of type :class:`~datetime.datetime`.
 		:raises ToolingException: When version already exists for the associated package.
 		"""
 		if not isinstance(version, SemanticVersion):

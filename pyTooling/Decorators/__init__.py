@@ -131,13 +131,15 @@ def notimplemented(message: str) -> Callable:
 	          '''This method needs to be implemented'''
 	          return True
 
-	:param message: Method that is marked as *not implemented*.
-	:returns:       Replacement method, which raises a :exc:`NotImplementedError`.
+	:param message: Text of the :exc:`NotImplementedError` raised by the replacement method.
+	:returns:       Decorator function that replaces the decorated method.
 
 	.. seealso::
 
-	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
-	   * :deco:`~pyTooling.MetaClasses.mustoverride`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
 	"""
 
 	def decorator(method: C) -> C:

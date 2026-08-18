@@ -106,7 +106,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 
 	:param readmeFile:         Path to the `README` file as an instance of :class:`Path`.
 	:returns:                  A tuple containing the file content and the MIME type.
-	:raises TypeError:         If parameter 'readmeFile' is not of type 'Path'.
+	:raises TypeError:         If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises ValueError:        If README file has an unsupported format.
 	:raises FileNotFoundError: If README file does not exist.
 	"""
@@ -153,7 +153,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	:param indent:             Indentation level used for the debug output of nested requirements files.
 	:param debug:              If ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
-	:raises TypeError:         If parameter 'requirementsFile' is not of type 'Path'.
+	:raises TypeError:         If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError: If requirements file does not exist.
 	"""
 	if not isinstance(requirementsFile, Path):

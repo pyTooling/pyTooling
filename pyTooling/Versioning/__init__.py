@@ -394,16 +394,16 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param prefix:      The version number's prefix.
 		:param hash:        Postfix string.
 		:param flags:       The version number's flags.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		self.__hash = None
 
@@ -1089,20 +1089,20 @@ class SemanticVersion(Version):
 		:param prefix:      The version number's prefix.
 		:param hash:        Hash of the version control system's commit this version was built from.
 		:param flags:       The version number's flags.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type int.
+		:raises TypeError:  If parameter 'post' is not of type :class:`int`.
 		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type int.
+		:raises TypeError:  If parameter 'dev' is not of type :class:`int`.
 		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		super().__init__(major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
 
@@ -1488,16 +1488,16 @@ class CalendarVersion(Version):
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
 
@@ -1798,16 +1798,16 @@ class YearMonthVersion(CalendarVersion):
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		super().__init__(year, month, 0, build, flags, prefix, postfix)
 
@@ -1848,16 +1848,16 @@ class YearWeekVersion(CalendarVersion):
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		super().__init__(year, week, 0, build, flags, prefix, postfix)
 
@@ -1898,16 +1898,16 @@ class YearReleaseVersion(CalendarVersion):
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		super().__init__(year, release, 0, build, flags, prefix, postfix)
 
@@ -1948,16 +1948,16 @@ class YearMonthDayVersion(CalendarVersion):
 		:param flags:       The version number's flags.
 		:param prefix:      The version number's prefix.
 		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
 		super().__init__(year, month, day, build, flags, prefix, postfix)
 

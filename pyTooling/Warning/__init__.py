@@ -152,7 +152,7 @@ class WarningCollector:
 		                   instance.
 		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
 		                   be reraised as an exception.
-		:raises TypeError: If optional parameter 'warnings' is not of type list.
+		:raises TypeError: If optional parameter 'warnings' is not of type :class:`list`.
 		:raises TypeError: If optional parameter 'handler' is not a callable.
 		"""
 		if warnings is None:
@@ -368,7 +368,7 @@ class SupervisedWarningCollector(WarningCollector):
 		:param exceptionHandler: An optional handler function, called with an exception leaving the block when a supervisor
 		                         is set. Its result decides whether the exception is suppressed.
 		:param finallyHandler:   An optional function called when the context is left, whether or not an exception left it.
-		:raises TypeError:       If optional parameter 'warnings' is not of type list.
+		:raises TypeError:       If optional parameter 'warnings' is not of type :class:`list`.
 		:raises TypeError:       If optional parameter 'handler' is not a callable.
 		"""
 		super().__init__(warnings, handler)
