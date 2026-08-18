@@ -334,9 +334,9 @@ class SupervisedWarningCollector(WarningCollector):
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
-	_supervisor:       Nullable["ThreadSupervisor"]
-	_exceptionHandler: Nullable[Callable[[BaseException], bool]]
-	_finallyHandler:   Nullable[Callable[[], None]]
+	_supervisor:       Nullable["ThreadSupervisor"]               #: Supervisor collecting warnings and exceptions of all threads.
+	_exceptionHandler: Nullable[Callable[[BaseException], bool]]  #: Handler called for an exception escaping the thread.
+	_finallyHandler:   Nullable[Callable[[], None]]               #: Handler called when the thread ends, in either case.
 
 	__slots__ = ("_supervisor", "_exceptionHandler", "_finallyHandler")
 
@@ -430,7 +430,7 @@ class SupervisedThreadException(ExceptionBase):
 	The exception is raise if a supervised thread received an unhandled exception which got collected by
 	:class:`ExceptionCollector`.
 	"""
-	_threadName: Nullable[str]
+	_threadName: Nullable[str]  #: Name of the thread the exception was raised in.
 
 	def __init__(
 		self,
@@ -520,9 +520,9 @@ class ThreadSupervisor:
 	     return threadSupervisor.Warnings
 	"""
 
-	_lock:       Lock
-	_exceptions: List[Tuple[str, BaseException]]
-	_warnings:   List[Tuple[str, AnyWarning]]
+	_lock:       Lock                             #: Lock serializing the collection from multiple threads.
+	_exceptions: List[Tuple[str, BaseException]]  #: Exceptions of all supervised threads, as (thread name, exception).
+	_warnings:   List[Tuple[str, AnyWarning]]     #: Warnings of all supervised threads, as (thread name, warning).
 
 	__slots__ = ("_lock", "_exceptions", "_warnings")
 

@@ -87,8 +87,8 @@ class StateMachine(Base):
 	"""
 	Represents a statemachine (graph) in a statemachine diagram (directed graph).
 	"""
-	_states:       List[State]
-	_initialState: State
+	_states:       List[State]  #: List of all states in this statemachine.
+	_initialState: State        #: The state the statemachine starts in.
 
 	def __init__(self, initialState: State) -> None:
 		"""

@@ -118,8 +118,8 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	#
 	# 	super().__init__(*args, **kwargs)
 
-	_args:   Tuple
-	_kwargs: Dict
+	_args:   Tuple  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
+	_kwargs: Dict   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
@@ -156,7 +156,7 @@ class CommandGroupAttribute(ArgParseAttribute):
 	"""
 	*Experimental* attribute to group sub-commands in groups for better readability in a ``prog.py --help`` call.
 	"""
-	__groupName: str = None
+	__groupName: str = None  #: Name of the group the sub-commands are collected in.
 
 	def __init__(self, groupName: str) -> None:
 		"""
@@ -227,11 +227,11 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	a sub-command parser using :meth:`~ArgumentParser.add_subparsers`.
 	"""
 
-	_command: str
-	_help: str
+	_command: str    #: Name of the sub-command this handler is responsible for.
+	_help:    str    #: Help text of the sub-command, displayed in the help page.
 	# FIXME: extract to mixin?
-	_args:   Tuple
-	_kwargs: Dict
+	_args:    Tuple  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
+	_kwargs:  Dict   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 
 	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
 		"""The constructor expects a 'command' and an optional list of named parameters
@@ -286,10 +286,12 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class to implement an :mod:`argparse`-base command line argument processor.
 	"""
-	_mainParser: ArgumentParser
-	_formatter:  Any   # TODO: Find type
-	_subParser:  Any   # TODO: Find type
-	_subParsers: Dict[str, ArgumentParser]
+	_mainParser: ArgumentParser             #: The main argument parser of the application.
+	# TODO: Find type
+	_formatter:  Any                        #: Help page formatter class used by every parser.
+	# TODO: Find type
+	_subParser:  Any                        #: The sub-parser action the sub-commands are registered at.
+	_subParsers: Dict[str, ArgumentParser]  #: Sub-command name to its argument parser.
 
 	def __init__(self, **kwargs: Any) -> None:
 		"""
