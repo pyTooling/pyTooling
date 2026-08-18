@@ -32,9 +32,18 @@
 """
 Attributes describing positional command line arguments.
 
-A positional argument has no option name: it is recognized by its position, and its value is converted to the declared
-type - :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`,
-:class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`, ... - before the handler method is called.
+A positional argument has no option name: it is recognized by its position, and its value is converted to the type the
+attribute declares before the handler method is called:
+
+* :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` and its typed variants
+  (:class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`,
+  :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerListArgument`,
+  :class:`~pyTooling.Attributes.ArgParse.Argument.FloatListArgument`,
+  :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`)
 """
 from pathlib import Path
 from typing import Type
