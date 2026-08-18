@@ -37,7 +37,9 @@ from datetime                    import datetime
 from pytest                      import mark
 
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
+from pyTooling.Dependency        import BrokenRequirementWarning
 from pyTooling.Versioning        import PythonVersion
+from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
 
 
@@ -124,3 +126,49 @@ class PyPI(Testcase):
 			print(f"{release!r}")
 			self.assertEqual(project, release.Package)
 			self.assertEqual(0, len(release))
+
+
+class Requirements(Testcase):
+	"""How UpdateDetailsFromPyPIJSON sorts requirements into the extras they belong to."""
+
+	@staticmethod
+	def _release() -> Release:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		project = Project("project", "https://index.org/project/", index=index)
+
+		return Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
+
+	@staticmethod
+	def _json(extras, requirements) -> dict:
+		return {"info": {"provides_extra": extras, "requires_dist": requirements}}
+
+	def test_Requirement(self) -> None:
+		"""A requirement without a marker is unconditional, so it lands under ``None``."""
+		release = self._release()
+
+		release.UpdateDetailsFromPyPIJSON(self._json(["terminal"], ["pyTooling >= 8.0"]))
+
+		self.assertEqual(["pyTooling"], [req.name for req in release.Requirements[None]])
+		self.assertEqual([], release.Requirements["terminal"])
+
+	def test_Requirement_Extra(self) -> None:
+		"""A requirement carrying an ``extra`` marker lands under that extra."""
+		release = self._release()
+
+		release.UpdateDetailsFromPyPIJSON(self._json(["terminal"], ['colorama >= 0.4; extra == "terminal"']))
+
+		self.assertEqual(["colorama"], [req.name for req in release.Requirements["terminal"]])
+		self.assertEqual([], release.Requirements[None])
+
+	def test_Requirement_UnknownExtra(self) -> None:
+		"""A requirement naming an extra the release doesn't provide is reported as a warning."""
+		release = self._release()
+		json = self._json(["terminal"], ['lxml >= 6.1; extra == "xml"'])
+
+		with WarningCollector(handler=lambda warning: False) as collector:
+			release.UpdateDetailsFromPyPIJSON(json)
+
+		self.assertEqual(1, len(collector.Warnings))
+		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
+		self.assertEqual([f"Broken requirement: lxml>=6.1; extra == \"xml\""], collector.Warnings[0].__notes__)
