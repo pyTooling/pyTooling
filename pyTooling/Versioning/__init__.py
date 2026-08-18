@@ -1159,8 +1159,9 @@ class SemanticVersion(Version):
 		:param validator:                  Optional, a validation function.
 		:returns:                          An object representing a semantic version.
 		:raises TypeError:                 When parameter ``versionString`` is not a string.
-		:raises ValueError:                When parameter ``versionString`` is None.
-		:raises ValueError:                When parameter ``versionString`` is empty.
+		:raises ValueError:                When parameter ``versionString`` is None or empty.
+		:raises ValueError:                When parameter ``versionString`` isn't a semantic version number. |br|
+		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
 		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
@@ -1565,10 +1566,13 @@ class CalendarVersion(Version):
 		:param validator:                  Optional, a validation function.
 		:returns:                          An object representing a calendar version.
 		:raises TypeError:                 If parameter ``versionString`` is not a string.
-		:raises ValueError:                If parameter ``versionString`` is None.
-		:raises ValueError:                If parameter ``versionString`` is empty.
-		:raises ValueError:                If parameter ``versionString`` isn't a calendar version number.
-		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes.
+		:raises ValueError:                If parameter ``versionString`` is None or empty.
+		:raises ValueError:                If parameter ``versionString`` isn't a calendar version number. |br|
+		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
+		                                   ``v2024.04``.
+		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes. |br|
+		                                   Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
+		                                   three-part calendar version number.
 		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
