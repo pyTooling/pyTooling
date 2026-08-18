@@ -401,6 +401,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A tuple of all siblings left of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its parent's
+		                         children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -427,6 +429,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A tuple of all siblings right of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its parent's
+		                         children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -617,8 +621,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetCommonAncestors Needs documentation.
+		Compute the common ancestors of this node and one or more other nodes.
 
+		The nodes' paths from the root are walked in parallel and yielded as long as they are identical, so the last
+		yielded node is the nearest common ancestor.
+
+		:param others:               Another node, or an iterable of nodes, to compute the common ancestors with.
+		:returns:                    A generator yielding the common ancestors, starting at the root node.
+		:raises NotInSameTreeError:  If one of the given nodes is not in the same tree.
+		:raises NotImplementedError: If more than one other node is given; the common ancestors of a set of nodes are
+		                             not computed yet.
 		"""
 		if isinstance(others, Node):
 			# Check for trivial case
@@ -686,6 +698,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A generator to iterate all siblings left of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its
+		                         parent's children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -706,6 +720,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A generator to iterate all siblings right of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its
+		                         parent's children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")

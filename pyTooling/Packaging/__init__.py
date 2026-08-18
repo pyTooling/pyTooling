@@ -161,7 +161,14 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		raise ex
 
 	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> List[str]:
-		"""Recursive variant of :func:`loadRequirementsFile`."""
+		"""
+		Recursive variant of :func:`loadRequirementsFile`.
+
+		:param requirementsFile:   Path to the requirements file to read.
+		:param indent:             Indentation level used for the debug output of nested requirements files.
+		:returns:                  List of requirements read from that file and every file it includes.
+		:raises FileNotFoundError: If the requirements file doesn't exist.
+		"""
 		requirements = []
 		try:
 			with requirementsFile.open("r", encoding="utf-8") as file:
@@ -317,9 +324,12 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	* ``__license__``
 	* ``__version__``
 
-	:param sourceFile: Path to a Python source file as an instance of :class:`Path`.
-	:returns:          An instance of :class:`VersionInformation` with gathered variable contents.
-	:raises TypeError: If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
+	:param sourceFile:         Path to a Python source file as an instance of :class:`Path`.
+	:returns:                  An instance of :class:`VersionInformation` with gathered variable contents.
+	:raises TypeError:         If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError: If the given file doesn't exist.
+	:raises AssertionError:    If a dunder variable is missing in the given file.
+	:raises ToolingException:  If a dunder variable has an unexpected format.
 
 	"""
 	if not isinstance(sourceFile, Path):
@@ -625,6 +635,8 @@ def DescribePythonPackage(
 	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises Exception:                    If the package's directory doesn't exist, or if a requirements file is
+	                                      malformed.
 	"""
 	try:
 		from setuptools import find_packages, find_namespace_packages
