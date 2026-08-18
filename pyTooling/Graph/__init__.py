@@ -290,6 +290,15 @@ class Base(
 			pass
 
 	def Delete(self) -> None:
+		"""
+		Delete this element's attached attributes.
+
+		.. attention::
+
+		   The dictionary is dropped, not cleared, so every further access to the element's attributes raises a
+		   :exc:`TypeError` - including :meth:`__len__` and ``in``. Anything still holding a reference to the element
+		   sees that, and a reference to the dictionary itself keeps the old content alive.
+		"""
 		self._dict = None
 
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
@@ -655,6 +664,12 @@ class Vertex(
 		super().__del__()
 
 	def Delete(self) -> None:
+		"""
+		Delete this vertex and every edge and link connected to it.
+
+		The vertex is removed from its graph or subgraph, and from its component and views; the connected edges and
+		links are deleted from both of their vertices.
+		"""
 		for edge in self._outboundEdges:
 			edge._destination._inboundEdges.remove(edge)
 			edge._Delete()
@@ -806,11 +821,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsLeaf` |br|
+		   :meth:`IsLeaf`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._inboundEdges) == 0
@@ -826,11 +841,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsRoot` |br|
+		   :meth:`IsRoot`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>` |br|
+		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>` |br|
+		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._outboundEdges) == 0
@@ -875,15 +890,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		"""
@@ -940,15 +955,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		"""
@@ -1011,15 +1026,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		"""
@@ -1084,15 +1099,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		"""
@@ -1151,15 +1166,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkFromVertex` |br|
+		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
 		"""
@@ -1218,15 +1233,15 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`EdgeToVertex` |br|
+		   :meth:`EdgeToVertex`
 		      |rarr| Create an outbound edge from this vertex to the referenced vertex.
-		   :meth:`EdgeFromVertex` |br|
+		   :meth:`EdgeFromVertex`
 		      |rarr| Create an inbound edge from the referenced vertex to this vertex.
-		   :meth:`EdgeToNewVertex` |br|
+		   :meth:`EdgeToNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an outbound edge from this vertex.
-		   :meth:`EdgeFromNewVertex` |br|
+		   :meth:`EdgeFromNewVertex`
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
-		   :meth:`LinkToVertex` |br|
+		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 
 		"""
@@ -1272,11 +1287,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._outboundEdges:
@@ -1294,11 +1309,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
-		   :meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for edge in self._inboundEdges:
@@ -1316,11 +1331,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :meth:`HasLinkFromSource` |br|
+		   :meth:`HasLinkFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound link.
 		"""
 		for link in self._outboundLinks:
@@ -1338,11 +1353,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`HasEdgeToDestination` |br|
+		   :meth:`HasEdgeToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound edge.
-		   :meth:`HasEdgeFromSource` |br|
+		   :meth:`HasEdgeFromSource`
 		      |rarr| Check if this vertex is linked to another vertex by any inbound edge.
-		   :meth:`HasLinkToDestination` |br|
+		   :meth:`HasLinkToDestination`
 		      |rarr| Check if this vertex is linked to another vertex by any outbound link.
 		"""
 		for link in self._inboundLinks:
@@ -1352,6 +1367,12 @@ class Vertex(
 		return False
 
 	def DeleteEdgeTo(self, destination: 'Vertex') -> None:
+		"""
+		Delete the outbound edge to the given vertex.
+
+		:param destination:     The vertex the edge points to.
+		:raises GraphException: If no outbound edge to that vertex exists.
+		"""
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
@@ -1361,6 +1382,12 @@ class Vertex(
 		edge.Delete()
 
 	def DeleteEdgeFrom(self, source: 'Vertex') -> None:
+		"""
+		Delete the inbound edge from the given vertex.
+
+		:param source:          The vertex the edge comes from.
+		:raises GraphException: If no inbound edge from that vertex exists.
+		"""
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
@@ -1370,6 +1397,12 @@ class Vertex(
 		edge.Delete()
 
 	def DeleteLinkTo(self, destination: 'Vertex') -> None:
+		"""
+		Delete the outbound link to the given vertex.
+
+		:param destination:     The vertex the link points to.
+		:raises GraphException: If no outbound link to that vertex exists.
+		"""
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
@@ -1379,6 +1412,12 @@ class Vertex(
 		link.Delete()
 
 	def DeleteLinkFrom(self, source: 'Vertex') -> None:
+		"""
+		Delete the inbound link from the given vertex.
+
+		:param source:          The vertex the link comes from.
+		:raises GraphException: If no inbound link from that vertex exists.
+		"""
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
@@ -1525,7 +1564,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IterateVerticesDFS` |br|
+		   :meth:`IterateVerticesDFS`
 		      |rarr| Iterate all reachable vertices **depth-first search** order.
 		"""
 		visited: Set[Vertex] = set()
@@ -1556,7 +1595,7 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IterateVerticesBFS` |br|
+		   :meth:`IterateVerticesBFS`
 		      |rarr| Iterate all reachable vertices **breadth-first search** order.
 
 		   Wikipedia - https://en.wikipedia.org/wiki/Depth-first_search
@@ -1584,6 +1623,15 @@ class Vertex(
 					return
 
 	def IterateAllOutboundPathsAsVertexList(self) -> Generator[Tuple['Vertex', ...], None, None]:
+		"""
+		Iterate all paths starting at this vertex, each as a tuple of vertices.
+
+		The traversal is depth-first and keeps the vertices of the current path in a set, so a cycle is detected
+		instead of iterated endlessly. A vertex without outbound edges yields the path containing only itself.
+
+		:returns:           A generator yielding one tuple of vertices per path.
+		:raises CycleError: If a cycle is detected while walking a path.
+		"""
 		if len(self._outboundEdges) == 0:
 			yield (self, )
 			return
@@ -2028,6 +2076,9 @@ class Edge(
 		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
+		"""
+		Delete this edge from both of its vertices and from the graph or subgraph it belongs to.
+		"""
 		# Remove from Source and Destination
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
@@ -2045,6 +2096,9 @@ class Edge(
 		self._Delete()
 
 	def _Delete(self) -> None:
+		"""
+		Delete the edge's attached attributes, after it was disconnected.
+		"""
 		super().Delete()
 
 	def Reverse(self) -> None:
@@ -2112,6 +2166,9 @@ class Link(
 		super().__init__(source, destination, linkID, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
+		"""
+		Delete this link from both of its vertices and from the graph it belongs to.
+		"""
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
 
@@ -2124,6 +2181,9 @@ class Link(
 		assert getrefcount(self) == 1
 
 	def _Delete(self) -> None:
+		"""
+		Delete the link's attached attributes, after it was disconnected.
+		"""
 		super().Delete()
 
 	def Reverse(self) -> None:
@@ -2250,11 +2310,11 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateLeafs` |br|
+		   :meth:`IterateLeafs`
 		      |rarr| Iterate leafs of a graph.
-		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
@@ -2285,11 +2345,11 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateRoots` |br|
+		   :meth:`IterateRoots`
 		      |rarr| Iterate roots of a graph.
-		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>` |br|
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>` |br|
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
 		"""
 		if predicate is None:
@@ -2348,6 +2408,11 @@ class BaseGraph(
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
 		def removeVertex(vertex: Vertex):
+			"""
+			Nested function removing a vertex from the counting, and queuing the vertices that became leafs.
+
+			:param vertex: The vertex that was just yielded.
+			"""
 			nonlocal overallCount
 			overallCount -= 1
 			for inboundEdge in vertex._inboundEdges:
@@ -2933,6 +2998,11 @@ class Graph(
 		:returns: An iterator over the vertices without an ID, followed by those with one.
 		"""
 		def gen():
+			"""
+			Nested generator function chaining the vertices without an ID and those with one.
+
+			:returns: A generator yielding every vertex of the graph.
+			"""
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID
 		return iter(gen())
@@ -2996,6 +3066,12 @@ class Graph(
 			raise KeyError(f"Found multiple vertices with Value == `{value}`.")
 
 	def CopyGraph(self) -> 'Graph':
+		"""
+		Create a copy of this graph.
+
+		:returns:                    A new graph with copies of this graph's vertices and edges.
+		:raises NotImplementedError: Copying a whole graph is not implemented yet.
+		"""
 		raise NotImplementedError()
 
 	def CopyVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':

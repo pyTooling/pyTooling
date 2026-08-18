@@ -276,6 +276,15 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		solution: Dict["Package", "PackageVersion"] = {self._package: self}
 
 		def _recursion(currentSolution: Dict["Package", "PackageVersion"]) -> bool:
+			"""
+			Nested function for recursion.
+
+			It adds the latest matching version of every package the current solution requires, and recurses until no
+			package is missing.
+
+			:param currentSolution: The packages selected so far, by package.
+			:returns:               ``True``, if the solution is complete and consistent.
+			"""
 			# 1. Identify all required packages based on current selection
 			requiredPackages: Set["Package"] = set()
 			for packageVersion in currentSolution.values():

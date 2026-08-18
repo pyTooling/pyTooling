@@ -47,6 +47,7 @@ The Licensing module implements mapping tables for various license names and ide
 from dataclasses  import dataclass
 from typing       import Any, Dict
 
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 
@@ -185,7 +186,8 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			ex = TypeError(f"Second operand is not supported by equal operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
@@ -199,7 +201,8 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			ex = TypeError(f"Second operand is not supported by unequal operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
