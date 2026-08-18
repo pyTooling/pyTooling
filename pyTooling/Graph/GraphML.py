@@ -39,7 +39,7 @@ from enum    import Enum, auto
 from pathlib import Path
 from typing  import Any, ClassVar, List, Dict, Union, Optional as Nullable
 
-from pyTooling.Decorators  import export, readonly
+from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
 from pyTooling.Tree        import Node as pyToolingNode
@@ -683,15 +683,13 @@ class Subgraph(Node, BaseGraph):
 		self._root._ids[edge._id] = edge
 		return result
 
+	@notimplemented("A subgraph is always written with an opening and a closing tag.")
 	def Tag(self, indent: int = 2) -> str:
 		"""
 		A subgraph always contains a graph, so it is never written as a self-closing tag.
 
-		:param indent:               Indentation level of the XML element.
-		:returns:                    Never returns.
-		:raises NotImplementedError: Because a subgraph is always written with an opening and a closing tag.
+		:param indent: Indentation level of the XML element.
 		"""
-		raise NotImplementedError()
 
 	def OpeningTag(self, indent: int = 1) -> str:
 		"""
