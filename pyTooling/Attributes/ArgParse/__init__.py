@@ -297,6 +297,9 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.
+
+		:param kwargs:             Named parameters forwarded to the :class:`~argparse.ArgumentParser` constructor.
+		:raises ArgParseException: If more than one method is marked as the default handler.
 		"""
 		from .Argument import CommandLineArgument
 

@@ -79,6 +79,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is OptionalValuedFlag:
@@ -151,6 +152,7 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortOptionalValuedFlag:
@@ -188,6 +190,7 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongOptionalValuedFlag:
@@ -225,6 +228,7 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is WindowsOptionalValuedFlag:

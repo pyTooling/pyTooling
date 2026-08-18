@@ -285,8 +285,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def __contains__(self, key: DictKeyType) -> bool:
 		"""
-		.. todo:: TREE::Node::__contains__ Needs documentation.
+		Check if a key exists in the node's attached attributes.
 
+		:param key: The key to look for.
+		:returns:   ``True``, if the key exists.
 		"""
 		return key in self._dict
 
@@ -401,6 +403,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A tuple of all siblings left of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its parent's
+		                         children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -427,6 +431,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A tuple of all siblings right of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its parent's
+		                         children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -599,16 +605,18 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def GetPath(self) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetPAth Needs documentation.
+		Compute the path from the root node to this node.
 
+		:returns: A generator yielding the nodes from the root down to this node.
 		"""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetAncestors Needs documentation.
+		Iterate the ancestors of this node.
 
+		:returns: A generator yielding the parent, its parent, and so on up to the root node.
 		"""
 		node = self._parent
 		while node is not None:
@@ -617,8 +625,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def GetCommonAncestors(self, others: Union['Node', Iterable['Node']]) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetCommonAncestors Needs documentation.
+		Compute the common ancestors of this node and one or more other nodes.
 
+		The nodes' paths from the root are walked in parallel and yielded as long as they are identical, so the last
+		yielded node is the nearest common ancestor.
+
+		:param others:               Another node, or an iterable of nodes, to compute the common ancestors with.
+		:returns:                    A generator yielding the common ancestors, starting at the root node.
+		:raises NotInSameTreeError:  If one of the given nodes is not in the same tree.
+		:raises NotImplementedError: If more than one other node is given; the common ancestors of a set of nodes are
+		                             not computed yet.
 		"""
 		if isinstance(others, Node):
 			# Check for trivial case
@@ -686,6 +702,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A generator to iterate all siblings left of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its
+		                         parent's children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
@@ -706,6 +724,8 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		:returns:                A generator to iterate all siblings right of the current node.
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
+		:raises InternalError:   If the tree's data structure is corrupted, because this node is not one of its
+		                         parent's children.
 		"""
 		if self._parent is None:
 			raise NoSiblingsError(f"Root node has no siblings.")
