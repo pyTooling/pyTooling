@@ -34,6 +34,13 @@ Common platform information gathered from various sources.
 .. hint::
 
    See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Process`
+      |rarr| Information about the running process, independent of the platform.
+   :mod:`pyTooling.Filesystem`
+      |rarr| Filesystem statistics, whose path style depends on the platform.
 """
 from enum                    import Flag, auto, Enum
 

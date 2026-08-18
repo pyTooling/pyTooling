@@ -34,6 +34,13 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 .. hint::
 
    See :ref:`high-level help <WARNING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Exceptions`
+      |rarr| Exceptions, which are raised instead of collected.
+   :mod:`pyTooling.TerminalUI`
+      |rarr| Writing the collected warnings to the terminal.
 """
 from threading import local, Lock
 from types     import TracebackType

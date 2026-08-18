@@ -35,6 +35,13 @@ A common set of missing exceptions in Python.
 .. hint::
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Warning`
+      |rarr| Warnings, which are collected instead of raised.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The exceptions raised for a class that violates the meta-class' rules.
 """
 from typing               import Tuple, Iterable, Any
 

@@ -28,7 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An implementation of 2D cartesian data structures for Python."""
+"""
+An implementation of 2D cartesian data structures for Python.
+
+.. seealso::
+
+   :mod:`pyTooling.Cartesian3D`
+      |rarr| The same data structures in three dimensions.
+   :mod:`pyTooling.Cartesian2D.Shapes`
+      |rarr| Shapes built from these points and offsets.
+"""
 
 from math   import sqrt, acos
 from typing import TypeVar, Union, Generic, Any, Tuple, Self

@@ -38,6 +38,13 @@ argument parsing or the exit codes.
 .. hint::
 
    See :ref:`high-level help <TESTING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Packaging`
+      |rarr| The console scripts an installed package provides.
+   :mod:`pyTooling.CLIAbstraction`
+      |rarr| Abstracting a program's command line instead of running it as text.
 """
 from pathlib    import Path
 from re         import compile as re_compile

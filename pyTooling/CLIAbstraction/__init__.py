@@ -29,7 +29,18 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Basic abstraction layer for executables."""
+"""
+Basic abstraction layer for executables.
+
+.. seealso::
+
+   :mod:`pyTooling.Attributes.ArgParse`
+      |rarr| The other direction: describing the command line this program accepts.
+   :mod:`pyTooling.TerminalUI`
+      |rarr| Writing the program's own messages to the terminal.
+   :mod:`pyTooling.Platform`
+      |rarr| Deciding which executable name and path style the current platform uses.
+"""
 
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
 
