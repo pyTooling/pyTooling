@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for anytree."""
+"""
+The same tree measurements implemented with `anytree <https://pypi.org/project/anytree/>`__, as a reference.
+"""
 from anytree import Node
 
 from . import PerformanceTest

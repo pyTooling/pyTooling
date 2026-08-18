@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Tree."""
+"""
+Unit tests for :mod:`pyTooling.Tree`: construction, merging and splitting of trees, the loop detection, the
+iteration methods, and the rendering of a tree.
+"""
 from typing   import Any, Optional as Nullable, List, Tuple, Dict
 
 from pytest   import mark

@@ -275,6 +275,7 @@ class Base(
 		.. todo:: GRAPH::Base::init Needs documentation.
 
 		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
 		"""
 		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
 
@@ -312,7 +313,7 @@ class Base(
 
 		If a key doesn't exist yet, a new key-value-pair is created.
 
-		:param key: The key to create or update.
+		:param key:   The key to create or update.
 		:param value: The value to associate to the given key.
 		"""
 		self._dict[key] = value
@@ -367,12 +368,13 @@ class BaseWithIDValueAndWeight(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Vertex::init Needs documentation.
+		Initialize a graph element with an optional ID, value and weight.
 
 		:param identifier:    The optional unique ID.
 		:param value:         The optional value.
 		:param weight:        The optional weight.
 		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
 		"""
 		super().__init__(keyValuePairs)
 
@@ -433,10 +435,12 @@ class BaseWithName(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
 	) -> None:
 		"""
-		.. todo:: GRAPH::BaseWithName::init Needs documentation.
+		Initialize a named graph element with an optional name and optional key-value-pairs.
 
 		:param name:          The optional name.
 		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:raises ValueError:   If parameter 'graph' is None.
+		:raises TypeError:    If parameter 'graph' is not of type :class:`Graph`.
 		"""
 		if name is not None and not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -450,9 +454,10 @@ class BaseWithName(
 	@property
 	def Name(self) -> Nullable[str]:
 		"""
-		Property to get and set the name (:attr:`_name`).
+		Property to access the name (:attr:`_name`).
 
-		:returns: The value of a component.
+		:returns:          The object's name, or ``None`` if it has none.
+		:raises TypeError: If an assigned value is not of type :class:`str`.
 		"""
 		return self._name
 
@@ -498,12 +503,14 @@ class BaseWithVertices(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Component::init Needs documentation.
+		Initialize a named graph element owning a set of vertices, and register it at its graph.
 
 		:param graph:         The reference to the graph.
 		:param name:          The optional name.
 		:param vertices:      The optional list of vertices.
 		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:raises ValueError:   If parameter 'graph' is None.
+		:raises TypeError:    If parameter 'graph' is not of type :class:`Graph`.
 		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
@@ -590,14 +597,16 @@ class Vertex(
 		subgraph: Nullable['Subgraph'] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Vertex::init Needs documentation.
+		Initialize a vertex and register it at its graph or subgraph.
 
-		:param vertexID:      The optional ID for the new vertex.
-		:param value:         The optional value for the new vertex.
-		:param weight:        The optional weight for the new vertex.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
-		:param graph:         The optional reference to the graph.
-		:param subgraph:      undocumented
+		:param vertexID:              The optional ID for the new vertex.
+		:param value:                 The optional value for the new vertex.
+		:param weight:                The optional weight for the new vertex.
+		:param keyValuePairs:         The optional mapping (dictionary) of key-value-pairs.
+		:param graph:                 The optional reference to the graph.
+		:param subgraph:              undocumented
+		:raises TypeError:            If parameter 'vertexID' is not of the graph's vertex ID type.
+		:raises DuplicateVertexError: If the given vertex ID already exists in this graph or subgraph.
 		"""
 		if vertexID is not None and not isinstance(vertexID, Hashable):
 			ex = TypeError("Parameter 'vertexID' is not of type 'VertexIDType'.")
@@ -867,12 +876,14 @@ class Vertex(
 		"""
 		Create an outbound edge from this vertex to the referenced vertex.
 
-		:param vertex:        The vertex to be linked to.
-		:param edgeID:        The edge's optional ID for the new edge object.
-		:param edgeWeight:    The edge's optional weight for the new edge object.
-		:param edgeValue:     The edge's optional value for the new edge object.
-		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new edge object.
-		:returns:             The edge object linking this vertex and the referenced vertex.
+		:param vertex:              The vertex to be linked to.
+		:param edgeID:              The edge's optional ID for the new edge object.
+		:param edgeWeight:          The edge's optional weight for the new edge object.
+		:param edgeValue:           The edge's optional value for the new edge object.
+		:param keyValuePairs:       An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:returns:                   The edge object linking this vertex and the referenced vertex.
+		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
 
 		.. seealso::
 
@@ -887,7 +898,6 @@ class Vertex(
 		   :meth:`LinkFromVertex` |br|
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
-		.. todo:: GRAPH::Vertex::EdgeToVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, keyValuePairs)
@@ -931,12 +941,14 @@ class Vertex(
 		"""
 		Create an inbound edge from the referenced vertex to this vertex.
 
-		:param vertex:        The vertex to be linked from.
-		:param edgeID:        The edge's optional ID for the new edge object.
-		:param edgeWeight:    The edge's optional weight for the new edge object.
-		:param edgeValue:     The edge's optional value for the new edge object.
-		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new edge object.
-		:returns:             The edge object linking the referenced vertex and this vertex.
+		:param vertex:              The vertex to be linked from.
+		:param edgeID:              The edge's optional ID for the new edge object.
+		:param edgeWeight:          The edge's optional weight for the new edge object.
+		:param edgeValue:           The edge's optional value for the new edge object.
+		:param keyValuePairs:       An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:returns:                   The edge object linking the referenced vertex and this vertex.
+		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
 
 		.. seealso::
 
@@ -951,7 +963,6 @@ class Vertex(
 		   :meth:`LinkFromVertex` |br|
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
-		.. todo:: GRAPH::Vertex::EdgeFromVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, keyValuePairs)
@@ -1007,6 +1018,8 @@ class Vertex(
 		:param edgeValue:           The edge's optional value for the new edge object.
 		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
+		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
 
 		.. seealso::
 
@@ -1021,7 +1034,6 @@ class Vertex(
 		   :meth:`LinkFromVertex` |br|
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
-		.. todo:: GRAPH::Vertex::EdgeToNewVertex Needs possible exceptions to be documented.
 		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
@@ -1079,6 +1091,8 @@ class Vertex(
 		:param edgeValue:           The edge's optional value for the new edge object.
 		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
+		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
 
 		.. seealso::
 
@@ -1093,7 +1107,6 @@ class Vertex(
 		   :meth:`LinkFromVertex` |br|
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
-		.. todo:: GRAPH::Vertex::EdgeFromNewVertex Needs possible exceptions to be documented.
 		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
@@ -1139,12 +1152,14 @@ class Vertex(
 		"""
 		Create an outbound link from this vertex to the referenced vertex.
 
-		:param vertex:        The vertex to be linked to.
-		:param edgeID:        The edge's optional ID for the new link object.
-		:param edgeWeight:    The edge's optional weight for the new link object.
-		:param edgeValue:     The edge's optional value for the new link object.
-		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new link object.
-		:returns:             The link object linking this vertex and the referenced vertex.
+		:param vertex:                   The vertex to be linked to.
+		:param linkID:                   The link's optional ID for the new link object.
+		:param linkWeight:               The link's optional weight for the new link object.
+		:param linkValue:                The link's optional value for the new link object.
+		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
+		:returns:                        The link object linking this vertex and the referenced vertex.
+		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
+		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph.
 
 		.. seealso::
 
@@ -1159,7 +1174,6 @@ class Vertex(
 		   :meth:`LinkFromVertex` |br|
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 
-		.. todo:: GRAPH::Vertex::LinkToVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
@@ -1205,12 +1219,14 @@ class Vertex(
 		"""
 		Create an inbound link from the referenced vertex to this vertex.
 
-		:param vertex:        The vertex to be linked from.
-		:param edgeID:        The edge's optional ID for the new link object.
-		:param edgeWeight:    The edge's optional weight for the new link object.
-		:param edgeValue:     The edge's optional value for the new link object.
-		:param keyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new link object.
-		:returns:             The link object linking the referenced vertex and this vertex.
+		:param vertex:                   The vertex to be linked from.
+		:param linkID:                   The link's optional ID for the new link object.
+		:param linkWeight:               The link's optional weight for the new link object.
+		:param linkValue:                The link's optional value for the new link object.
+		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
+		:returns:                        The link object linking the referenced vertex and this vertex.
+		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
+		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph.
 
 		.. seealso::
 
@@ -1225,7 +1241,6 @@ class Vertex(
 		   :meth:`LinkToVertex` |br|
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 
-		.. todo:: GRAPH::Vertex::LinkFromVertex Needs possible exceptions to be documented.
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
@@ -1660,8 +1675,10 @@ class Vertex(
 		The search algorithm is breadth-first search (BFS) based. The found solution, if any, is not unique but deterministic
 		as long as the graph was not modified (e.g. ordering of edges on vertices).
 
-		:param destination: The destination vertex to reach.
-		:returns:           A generator to iterate all vertices on the path found between this vertex and the destination vertex.
+		:param destination:              The destination vertex to reach.
+		:returns:                        A generator to iterate all vertices on the path found between this vertex and the
+		                                 destination vertex.
+		:raises DestinationNotReachable: If the destination vertex cannot be reached from this vertex.
 		"""
 		# Trivial case if start is destination
 		if self is destination:
@@ -1750,8 +1767,10 @@ class Vertex(
 		The search algorithm is based on Dijkstra algorithm and using :mod:`heapq`. The found solution, if any, is not
 		unique but deterministic as long as the graph was not modified (e.g. ordering of edges on vertices).
 
-		:param destination: The destination vertex to reach.
-		:returns:           A generator to iterate all vertices on the path found between this vertex and the destination vertex.
+		:param destination:              The destination vertex to reach.
+		:returns:                        A generator to iterate all vertices on the path found between this vertex and the
+		                                 destination vertex.
+		:raises DestinationNotReachable: If the destination vertex cannot be reached from this vertex.
 		"""
 		# Improvements: both-sided Dijkstra (search from start and destination to reduce discovered area.
 
@@ -1859,7 +1878,9 @@ class Vertex(
 
 		The tree is traversed using depths-first-search.
 
-		:returns: Root node of the resulting tree, representing this vertex.
+		:returns:               Root node of the resulting tree, representing this vertex.
+		:raises NotATreeError:  If the graph reachable from this vertex is not a tree, because a vertex has more than one
+		                        parent.
 		"""
 		visited: Set[Vertex] = set()
 		stack: List[Tuple[Node, typing_Iterator[Edge]]] = list()
@@ -1948,7 +1969,7 @@ class BaseEdge(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::BaseEdge::init Needs documentation.
+		Initialize an edge between a source and a destination vertex.
 
 		:param source:        The source of the new edge.
 		:param destination:   The destination of the new edge.
@@ -2017,14 +2038,16 @@ class Edge(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Edge::init Needs documentation.
+		Initialize an edge between two vertices of the same graph or subgraph.
 
-		:param source:        The source of the new edge.
-		:param destination:   The destination of the new edge.
-		:param edgeID:        The optional unique ID for the new edge.
-		:param value:         The optional value for the new edge.
-		:param weight:        The optional weight for the new edge.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param source:          The source of the new edge.
+		:param destination:     The destination of the new edge.
+		:param edgeID:          The optional unique ID for the new edge.
+		:param value:           The optional value for the new edge.
+		:param weight:          The optional weight for the new edge.
+		:param keyValuePairs:   The optional mapping (dictionary) of key-value-pairs.
+		:raises TypeError:      If parameter 'weight' is not of the graph's edge weight type.
+		:raises NotInSameGraph: If source and destination vertex are not in the same graph or subgraph.
 		"""
 		if not isinstance(source, Vertex):
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
@@ -2105,14 +2128,16 @@ class Link(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Edge::init Needs documentation.
+		Initialize a link between two vertices of different subgraphs.
 
-		:param source:        The source of the new link.
-		:param destination:   The destination of the new link.
-		:param linkID:        The optional unique ID for the new link.
-		:param value:         The optional value for the new v.
-		:param weight:        The optional weight for the new link.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param source:          The source of the new link.
+		:param destination:     The destination of the new link.
+		:param linkID:          The optional unique ID for the new link.
+		:param value:           The optional value for the new v.
+		:param weight:          The optional weight for the new link.
+		:param keyValuePairs:   The optional mapping (dictionary) of key-value-pairs.
+		:raises TypeError:      If parameter 'weight' is not of the graph's link weight type.
+		:raises NotInSameGraph: If source and destination vertex are in the same subgraph, where an edge is to be used.
 		"""
 		if not isinstance(source, Vertex):
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
@@ -2353,8 +2378,10 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
-		:param predicate:   Filter function accepting any vertex and returning a boolean.
-		:returns:           A generator to iterate all vertices in topological order.
+		:param predicate:      Filter function accepting any vertex and returning a boolean.
+		:returns:              A generator to iterate all vertices in topological order.
+		:raises CycleError:    If the graph contains a cycle, so no topological order exists.
+		:raises InternalError: If the algorithm's internal state became inconsistent.
 		:except CycleError: Raised if graph is cyclic, thus topological sorting isn't possible.
 		"""
 		outboundEdgeCounts = {}
@@ -2612,8 +2639,13 @@ class BaseGraph(
 
 	def HasCycle(self) -> bool:
 		"""
-		.. todo:: GRAPH::BaseGraph::HasCycle Needs documentation.
+		Check if the graph contains at least one cycle.
 
+		The graph is traversed depth-first from every unvisited vertex; a vertex reached again while it is still on the
+		current path closes a cycle.
+
+		:returns:              ``True``, if the graph contains a cycle.
+		:raises InternalError: If the graph's data structure is corrupted.
 		"""
 		# IsAcyclic ?
 
@@ -2691,11 +2723,13 @@ class Subgraph(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Subgraph::init Needs documentation.
+		Initialize a subgraph and register it at its graph.
 
 		:param graph:         The reference to the graph.
 		:param name:          The optional name of the new sub-graph.
 		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:raises ValueError:   If parameter 'graph' is None.
+		:raises TypeError:    If parameter 'graph' is not of type :class:`Graph`.
 		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
@@ -2728,8 +2762,9 @@ class Subgraph(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::Subgraph::str Needs documentation.
+		Return a string representation of this subgraph.
 
+		:returns: The subgraph's name, or ``"Unnamed subgraph"`` if it has none.
 		"""
 		return self._name if self._name is not None else "Unnamed subgraph"
 
@@ -2784,8 +2819,9 @@ class View(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::View::str Needs documentation.
+		Return a string representation of this view.
 
+		:returns: The view's name, or ``"Unnamed view"`` if it has none.
 		"""
 		return self._name if self._name is not None else "Unnamed view"
 
@@ -2820,7 +2856,7 @@ class Component(
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
-		.. todo:: GRAPH::Component::init Needs documentation.
+		Initialize a component of a graph and register it at that graph.
 
 		:param graph:         The reference to the graph.
 		:param name:          The optional name of the new component.
@@ -2840,8 +2876,9 @@ class Component(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::Component::str Needs documentation.
+		Return a string representation of this component.
 
+		:returns: The component's name, or ``"Unnamed component"`` if it has none.
 		"""
 		return self._name if self._name is not None else "Unnamed component"
 
@@ -2948,8 +2985,9 @@ class Graph(
 
 	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]:
 		"""
-		.. todo:: GRAPH::Graph::iter Needs documentation.
+		Iterate all vertices of this graph.
 
+		:returns: An iterator over the vertices without an ID, followed by those with one.
 		"""
 		def gen():
 			yield from self._verticesWithoutID
@@ -2958,8 +2996,10 @@ class Graph(
 
 	def HasVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
 		"""
-		.. todo:: GRAPH::Graph::HasVertexByID Needs documentation.
+		Check if a vertex with the given ID exists in this graph.
 
+		:param vertexID: ID to look for, or ``None`` for a vertex without an ID.
+		:returns:        ``True``, if such a vertex exists.
 		"""
 		if vertexID is None:
 			return len(self._verticesWithoutID) >= 1
@@ -2968,15 +3008,22 @@ class Graph(
 
 	def HasVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
 		"""
-		.. todo:: GRAPH::Graph::HasVertexByValue Needs documentation.
+		Check if a vertex carrying the given value exists in this graph.
 
+		:param value: Value to look for.
+		:returns:     ``True``, if such a vertex exists.
 		"""
 		return any(vertex._value == value for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()))
 
 	def GetVertexByID(self, vertexID: Nullable[VertexIDType]) -> Vertex:
 		"""
-		.. todo:: GRAPH::Graph::GetVertexByID Needs documentation.
+		Return the vertex with the given ID.
 
+		A vertex created without an ID can be looked up with ``None``, provided it is the only such vertex.
+
+		:param vertexID:  ID of the vertex to return, or ``None`` for the vertex without an ID.
+		:returns:         The vertex with that ID.
+		:raises KeyError: If no vertex has that ID, or if more than one vertex matches ``None``.
 		"""
 		if vertexID is None:
 			if (l := len(self._verticesWithoutID)) == 1:
@@ -2990,8 +3037,11 @@ class Graph(
 
 	def GetVertexByValue(self, value: Nullable[VertexValueType]) -> Vertex:
 		"""
-		.. todo:: GRAPH::Graph::GetVertexByValue Needs documentation.
+		Return the vertex carrying the given value.
 
+		:param value:     Value of the vertex to return.
+		:returns:         The vertex with that value.
+		:raises KeyError: If no vertex carries that value, or if more than one vertex does.
 		"""
 		# FIXME: optimize: iterate only until first item is found and check for a second to produce error
 		vertices = [vertex for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()) if vertex._value == value]
@@ -3020,6 +3070,7 @@ class Graph(
 		:param predicate:      Filter function accepting any vertex and returning a boolean.
 		:param copyGraphDict:  If ``True``, copy all graph attached attributes into the new graph.
 		:param copyVertexDict: If ``True``, copy all vertex attached attributes into the new vertices.
+		:returns:              A new graph with copies of the selected vertices.
 		"""
 		graph = Graph(self._name)
 		if copyGraphDict:
@@ -3084,8 +3135,9 @@ class Graph(
 
 	def __repr__(self) -> str:
 		"""
-		.. todo:: GRAPH::Graph::repr Needs documentation.
+		Return a detailed string representation of this graph.
 
+		:returns: The graph's name and its vertex and edge counts.
 		"""
 		statistics = f", vertices: {self.VertexCount}, edges: {self.EdgeCount}"
 		if self._name is None:
@@ -3095,8 +3147,9 @@ class Graph(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::Graph::str Needs documentation.
+		Return a string representation of this graph.
 
+		:returns: The graph's name, or ``"Unnamed graph"`` if it has none.
 		"""
 		if self._name is None:
 			return f"Graph: unnamed graph"

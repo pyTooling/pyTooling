@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Testcases for arguments without a prefix."""
+"""
+Unit tests for the command line argument classes: how each argument kind renders itself on a command line.
+"""
 from pathlib import Path
 
 from pyTooling.CLIAbstraction.Argument import StringArgument, DelimiterArgument, CommandLineArgument, NamedArgument, \

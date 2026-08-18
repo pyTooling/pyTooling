@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for Decorators."""
+"""
+Unit tests for :mod:`pyTooling.Decorators`: :deco:`~pyTooling.Decorators.export`,
+:deco:`~pyTooling.Decorators.readonly` and :deco:`~pyTooling.Decorators.InheritDocString`.
+"""
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeOrder, readonly
 from pyTooling.Testing    import Testcase
 

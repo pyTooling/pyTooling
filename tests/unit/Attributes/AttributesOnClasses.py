@@ -30,7 +30,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for attributes attached to methods.
+Unit tests for attributes attached to classes, including the ones defined at module level and the filtering
+of attributes by type.
 """
 from pyTooling.MetaClasses import ExtendedType
 from pytest                import mark

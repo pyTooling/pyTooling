@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Filesystem.Docker."""
+"""
+Unit tests for :mod:`pyTooling.Filesystem.Docker`: slicing a filesystem tree into image layers.
+"""
 from pathlib  import Path
 
 from pyTooling.Filesystem        import Root, Directory, Filename, File

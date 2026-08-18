@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Tracing`."""
+"""
+Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attached to them.
+"""
 from time              import sleep
 
 from pyTooling.Tracing import TracingException, Trace, Span, Event
