@@ -990,15 +990,44 @@ Terminal
       a terminal. It's designed on the idea that command line programs emit one line of text per message. Each message
       can be categorized as normal text, warnings, errors, and many more.
 
-      Therefore, this package offers a :ref:`LineTerminal <TERM/LineTerminal>` implementation, derived from a basic
-      :ref:`Terminal <TERM/Terminal>` class. Of cause, it also includes colored outputs based on `colorama`.
+      Therefore, this package offers a :ref:`TerminalApplication <TERM/TerminalApplication>` implementation, derived
+      from a basic :ref:`TerminalBaseApplication <TERM/TerminalBaseApplication>` class. The message's
+      :ref:`severity <TERM/Severity>` decides whether it's visible at the configured verbosity, how it's formatted, and
+      to which stream it's written. Of cause, it also includes colored outputs based on `colorama`.
 
-      .. todo:: Terminal helpers.
+      See the :ref:`Terminal Application tutorial <TUTORIAL/TerminalApplication>`, which builds such a program step by
+      step.
 
    .. grid-item::
       :columns: 6
 
-      .. todo:: Needs example code
+      .. code-block:: Python
+
+         from sys import argv
+
+         from pyTooling.TerminalUI import TerminalApplication
+
+         class Application(TerminalApplication):
+           HeadLine = "My Application"
+
+           def Run(self) -> None:
+             self._PrintHeadline()
+             self.WriteNormal("A normal message.")
+             self.WriteVerbose("Only with --verbose.")
+             self.WriteWarning("A warning.")
+             self.ExitOnPreviousErrors()
+
+         def main() -> NoReturn:
+           program = Application()
+           program.Configure(verbose=("-v" in argv or "--verbose" in argv))
+
+           try:
+             program.Run()
+           except Exception as ex:
+             program.PrintException(ex)
+
+         if __name__ == "__main__":
+           main()
 
 
 .. _CONTRIBUTORS:
