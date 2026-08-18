@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for object fields handled by :class:`pyTooling.MetaClasses.ExtendedType`, with and without slots.
 """
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Testing     import Testcase

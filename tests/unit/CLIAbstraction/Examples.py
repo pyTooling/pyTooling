@@ -29,10 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Abstracted CLI programs as examples for unit tests.
-
-:copyright: Copyright 2007-2026 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
+Abstracted CLI programs used as examples by the CLI abstraction tests.
 """
 from pyTooling.MetaClasses                    import ExtendedType
 from pyTooling.CLIAbstraction                 import CLIArgument

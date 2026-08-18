@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.LinkedList."""
+"""
+The same insertion measurements implemented with :class:`collections.deque`, as a reference.
+"""
 from collections import deque
 
 from . import PerformanceTest

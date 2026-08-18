@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for the slots handling of :class:`pyTooling.MetaClasses.ExtendedType`: object sizes, the errors
+raised for unannotated or shadowed fields, and inheritance including mixin-classes.
 """
 from typing                import ClassVar, Optional as Nullable
 

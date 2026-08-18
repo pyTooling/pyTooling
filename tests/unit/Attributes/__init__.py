@@ -30,7 +30,7 @@
 # ==================================================================================================================== #
 #
 """
-Helper functions for unittests.
+Helper functions shared by the attribute tests.
 """
 from contextlib import contextmanager
 from io         import StringIO

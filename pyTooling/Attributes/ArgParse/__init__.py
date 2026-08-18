@@ -29,6 +29,20 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes to describe a command line interface as decorated methods.
+
+An application deriving from :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` declares its commands and
+options as attributes on its handler methods. The mixin translates them into an :mod:`argparse` parser hierarchy, so
+the command line's structure is written down once - next to the code implementing it - instead of twice.
+
+.. seealso::
+
+   :class:`~pyTooling.Attributes.ArgParse.DefaultHandler`
+      |rarr| Marks the method called when no sub-command was given.
+   :class:`~pyTooling.Attributes.ArgParse.CommandHandler`
+      |rarr| Marks the method implementing a sub-command.
+"""
 from argparse import ArgumentParser, Namespace
 from typing   import Callable, Dict, Tuple, Any, TypeVar
 

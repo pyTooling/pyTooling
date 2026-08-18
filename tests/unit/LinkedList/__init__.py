@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.LinkedList."""
+"""
+Unit tests for :mod:`pyTooling.LinkedList`: insertion, removal, searching, iteration and the conversions
+from and to Python's own sequence types.
+"""
 from pyTooling.LinkedList import Node, LinkedList, LinkedListException
 from pyTooling.Testing    import Testcase
 

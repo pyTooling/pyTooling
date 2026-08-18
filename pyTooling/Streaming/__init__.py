@@ -28,6 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Helpers to stream items from a producer thread to a consumer through a thread-safe queue.
+
+A queue becomes an iterator, so neither side polls: the producer hands items over and the consumer iterates them until
+the producer signals the end.
+"""
 from collections import deque
 from queue       import Queue as ThreadSafeQueue, Full
 from threading   import Event

@@ -31,7 +31,10 @@
 #
 """
 
-.. TODO:: Write module documentation.
+Command line arguments with an optional value, like ``--width`` or ``--width=100``.
+
+The argument renders one of two patterns: the one with a value when a value was assigned, and the one without a value
+otherwise - which is why an optional-valued flag carries two format strings instead of one.
 
 """
 from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self

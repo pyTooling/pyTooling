@@ -28,7 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+An operating system independent abstraction of the currently running process.
 
+The process' properties are queried through one API, whichever operating system provides them, so a program reading
+its own memory usage needs no platform handling of its own.
+"""
 from ctypes              import Structure, c_void_p, c_size_t, c_int, c_int32, c_uint64
 from os                  import getpid, strerror
 from pathlib             import Path
