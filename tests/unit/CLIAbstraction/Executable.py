@@ -30,10 +30,8 @@
 # ==================================================================================================================== #
 #
 """
-Testcase for operating system program ``mkdir``.
-
-:copyright: Copyright 2007-2026 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
+Unit tests for :class:`pyTooling.CLIAbstraction.Executable`, using ``git`` as the abstracted program: where
+the executable is looked up per platform, and how its options are assembled.
 """
 from pathlib      import Path
 from typing       import Any, Self

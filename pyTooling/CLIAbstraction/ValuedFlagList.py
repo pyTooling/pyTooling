@@ -84,6 +84,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ValuedFlagList:
@@ -170,6 +171,7 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortValuedFlagList:
@@ -207,6 +209,7 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongValuedFlagList:
@@ -245,6 +248,7 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is WindowsValuedFlagList:

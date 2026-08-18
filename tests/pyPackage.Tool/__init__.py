@@ -1,3 +1,6 @@
+"""
+An example package with a console script, used to test the packaging helpers for an installed tool.
+"""
 __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
 __copyright__ =         "2017-2026, Patrick Lehmann"

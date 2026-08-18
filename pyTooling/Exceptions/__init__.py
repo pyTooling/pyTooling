@@ -140,7 +140,11 @@ class ExceptionBase(Exception):
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
 
 	def __str__(self) -> str:
-		"""Returns the exception's message text."""
+		"""
+		Returns the exception's message text.
+
+		:returns: The exception's message text.
+		"""
 		return self.message
 
 	# @DocumentMemberAttribute(False)

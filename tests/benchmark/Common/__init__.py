@@ -28,4 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmark tests for pyTooling.Common."""
+"""
+Benchmarks for the dictionary helpers in :mod:`pyTooling.Common`.
+"""

@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Graph.GraphML."""
+"""
+Unit tests for :mod:`pyTooling.Graph.GraphML`: constructing a GraphML document, and converting a
+:mod:`pyTooling.Graph` graph or a :mod:`pyTooling.Tree` tree into one.
+"""
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
 from pyTooling.Tree          import Node as pyToolingNode

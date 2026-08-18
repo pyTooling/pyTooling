@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
+"""
+Unit tests for :class:`pyTooling.Versioning.CalendarVersion` and its year-based variants: parsing,
+comparing, validating and formatting.
+"""
 from pyTooling.Versioning import Flags, Parts, CalendarVersion, WordSizeValidator, MaxValueValidator
 from pyTooling.Versioning import YearMonthVersion, YearWeekVersion, YearReleaseVersion, YearMonthDayVersion
 from pyTooling.Testing    import Testcase
