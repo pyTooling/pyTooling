@@ -65,6 +65,11 @@ class FilesystemException(ToolingException):
 
 @export
 class PermissionWarning(Warning):
+	"""
+	Warning emitted when a directory or file couldn't be read while scanning a filesystem.
+
+	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
+	"""
 	_path: Path  #: Path that couldn't be read.
 
 	def __init__(self, path: Path, *args) -> None:
@@ -1006,6 +1011,12 @@ class Filename(Element[Directory]):
 
 @export
 class SymbolicLink(Element[Directory]):
+	"""
+	A symbolic link in the filesystem statistics scope.
+
+	After the scan, the link is resolved: it is either connected to an element of the scanned tree, broken (the target
+	doesn't exist), or out of range (the target lies outside the scanned tree).
+	"""
 	_target:       Path            #: Path the symbolic link points to.
 	_isConnected:  bool            #: ``True``, if the link target was resolved to an element of the scanned tree.
 	_isBroken:     Nullable[bool]  #: ``True``, if the link target doesn't exist; ``None`` until resolved.

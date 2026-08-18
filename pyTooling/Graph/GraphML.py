@@ -165,6 +165,7 @@ class Base(metaclass=ExtendedType, slots=True):
 
 @export
 class BaseWithID(Base):
+	"""Base-class for all GraphML elements carrying a document-wide unique ID."""
 	_id: str  #: Unique identifier of this GraphML element.
 
 	def __init__(self, identifier: str) -> None:
@@ -188,6 +189,7 @@ class BaseWithID(Base):
 
 @export
 class BaseWithData(BaseWithID):
+	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
 	_data: List['Data']  #: Data items (key-value-pairs) attached to this GraphML element.
 
 	def __init__(self, identifier: str) -> None:
@@ -216,6 +218,12 @@ class BaseWithData(BaseWithID):
 
 @export
 class Key(BaseWithID):
+	"""
+	Declares an attribute that data items can refer to.
+
+	A GraphML document declares its attributes once - name, data type, and the element kind they apply to - and every
+	:class:`Data` item then references such a key by ID.
+	"""
 	_context:       AttributeContext  #: GraphML element kind this key can be used on.
 	_attributeName: str               #: Name of the attribute described by this key.
 	_attributeType: AttributeTypes    #: Data type of the attribute described by this key.
@@ -282,6 +290,7 @@ class Key(BaseWithID):
 
 @export
 class Data(Base):
+	"""A single attached attribute: a value and the :class:`Key` describing it."""
 	_key:  Key  #: Key describing name and type of this data item.
 	_data: Any  #: Value of this data item.
 
@@ -338,6 +347,8 @@ class Data(Base):
 
 @export
 class Node(BaseWithData):
+	"""A node (vertex) of a GraphML graph."""
+
 	def __init__(self, identifier: str) -> None:
 		"""
 		Initialize a node.
@@ -378,6 +389,7 @@ class Node(BaseWithData):
 
 @export
 class Edge(BaseWithData):
+	"""An edge of a GraphML graph, connecting a source node to a target node."""
 	_source: Node  #: Node the edge starts at.
 	_target: Node  #: Node the edge ends at.
 
@@ -444,6 +456,12 @@ class Edge(BaseWithData):
 
 @export
 class BaseGraph(BaseWithData, mixin=True):
+	"""
+	Mixin-class for everything that contains nodes, edges and subgraphs - a graph as well as a subgraph.
+
+	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
+	direction, the parsing order, and the ID styles for nodes and edges.
+	"""
 	_subgraphs:   Dict[str, 'Subgraph']  #: Subgraphs of this graph, by ID.
 	_nodes:       Dict[str, Node]        #: Nodes of this graph, by ID.
 	_edges:       Dict[str, Edge]        #: Edges of this graph, by ID.
@@ -548,6 +566,11 @@ class BaseGraph(BaseWithData, mixin=True):
 
 @export
 class Graph(BaseGraph):
+	"""
+	The root graph of a GraphML document.
+
+	It owns the ID space: every node, edge and subgraph registers itself here, so an ID is used only once per document.
+	"""
 	_document: 'GraphMLDocument'                         #: The GraphML document this graph belongs to.
 	_ids:      Dict[str, Union[Node, Edge, 'Subgraph']]  #: Every element of this graph by ID, used to keep IDs unique.
 
@@ -584,6 +607,12 @@ class Graph(BaseGraph):
 
 @export
 class Subgraph(Node, BaseGraph):
+	"""
+	A nested graph, which is a node of its parent graph and a graph of its own.
+
+	It therefore carries two identifiers: the node's ID it is referenced by, and :attr:`_subgraphID` for the graph it
+	contains.
+	"""
 	_subgraphID: str              #: ID of the subgraph, which is distinct from the node's own ID.
 	_root:       Nullable[Graph]  #: The graph this subgraph is nested in.
 
@@ -674,6 +703,10 @@ class Subgraph(Node, BaseGraph):
 
 @export
 class GraphMLDocument(Base):
+	"""
+	A GraphML document: the root graph, the keys it declares, and the XML boilerplate to write it out.
+	"""
+
 	xmlNS: ClassVar[Dict[Nullable[str], str]] = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"

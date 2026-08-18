@@ -45,6 +45,8 @@ if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 
 @export
 class MemoryInfo(metaclass=ExtendedType, slots=True):
+	"""A snapshot of a process' memory usage: physically mapped pages and total virtual address space."""
+
 	_ResidentMemory: int  #: Resident Set Size (VmRSS)  – physical pages currently mapped. Memory usage in bytes.
 	_VirtualMemory:  int  #: Virtual Memory Size (VmS) – total virtual address space used. Memory usage in bytes.
 
@@ -87,6 +89,13 @@ class MemoryInfo(metaclass=ExtendedType, slots=True):
 
 @export
 class ProcessInformation(metaclass=ExtendedType, slots=True):
+	"""
+	Access to the current process' information, implemented per platform.
+
+	Windows reads it through ``psapi``, Linux through :file:`/proc/self/statm` and macOS through ``proc_pidinfo``, so
+	the class body itself differs by platform while :attr:`MemoryInfo` is the same everywhere.
+	"""
+
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		_psapi:         WinDLL
 		_kernel32:      WinDLL
@@ -215,6 +224,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	elif CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		class _ProcessMemoryCounters(Structure):
+			"""The Windows ``PROCESS_MEMORY_COUNTERS`` structure, as filled in by ``GetProcessMemoryInfo``."""
+
 			from ctypes.wintypes import DWORD
 
 			_fields_ = [

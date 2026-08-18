@@ -76,6 +76,8 @@ class ValuedFlag(NamedAndValuedArgument):
 
 @export
 class ShortValuedFlag(ValuedFlag):
+	"""Defines a switch argument with a value in short form like ``-c=25``."""
+
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
 		"""
 		Initialize a switch argument with a value in its short form.
@@ -91,6 +93,8 @@ class ShortValuedFlag(ValuedFlag):
 
 @export
 class LongValuedFlag(ValuedFlag):
+	"""Defines a switch argument with a value in long form like ``--count=25``."""
+
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
 		"""
 		Initialize a switch argument with a value in its long form.

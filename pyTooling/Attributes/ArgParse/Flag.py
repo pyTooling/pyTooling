@@ -76,6 +76,8 @@ class FlagArgument(NamedArgument):
 
 @export
 class ShortFlag(FlagArgument):
+	"""Defines a switch argument in short form like ``-v``."""
+
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		"""
 		Initialize a switch argument in its short form.
@@ -89,6 +91,8 @@ class ShortFlag(FlagArgument):
 
 @export
 class LongFlag(FlagArgument):
+	"""Defines a switch argument in long form like ``--verbose``."""
+
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		"""
 		Initialize a switch argument in its long form.

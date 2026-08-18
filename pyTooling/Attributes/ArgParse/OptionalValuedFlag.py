@@ -76,6 +76,8 @@ class OptionalValuedFlag(NamedAndValuedArgument):
 
 @export
 class ShortOptionalValuedFlag(OptionalValuedFlag):
+	"""Defines a switch argument with an optional value in short form like ``-r[=1]``."""
+
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		"""
 		Initialize a switch argument with an optional value in its short form.
@@ -89,6 +91,8 @@ class ShortOptionalValuedFlag(OptionalValuedFlag):
 
 @export
 class LongOptionalValuedFlag(OptionalValuedFlag):
+	"""Defines a switch argument with an optional value in long form like ``--repeat[=1]``."""
+
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		"""
 		Initialize a switch argument with an optional value in its long form.
