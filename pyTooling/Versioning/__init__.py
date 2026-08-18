@@ -225,7 +225,8 @@ class ReleaseLevel(Enum):
 		"""
 		Returns the release level's string equivalent.
 
-		:returns: The string equivalent of the release level.
+		:returns:                 The string equivalent of the release level.
+		:raises ToolingException: If the release level is unknown, so it has no string equivalent.
 		"""
 		if self is ReleaseLevel.Final:
 			return "final"
@@ -1396,7 +1397,8 @@ class PythonVersion(SemanticVersion):
 		"""
 		Create a Python version from :data:`sys.version_info`.
 
-		:returns: A PythonVersion instance of the current Python interpreter's version.
+		:returns:                 A PythonVersion instance of the current Python interpreter's version.
+		:raises ToolingException: If the interpreter reports a release level this class doesn't know.
 		"""
 		from sys import version_info
 
@@ -2044,7 +2046,8 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's lower bound.
 
-		:returns: Lower bound of the version range.
+		:returns:          Lower bound of the version range.
+		:raises TypeError: If an assigned value is not of type :class:`Version`.
 		"""
 		return self._lowerBound
 
@@ -2062,7 +2065,8 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's upper bound.
 
-		:returns: Upper bound of the version range.
+		:returns:          Upper bound of the version range.
+		:raises TypeError: If an assigned value is not of type :class:`Version`.
 		"""
 		return self._upperBound
 
@@ -2080,7 +2084,8 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's bound handling strategy.
 
-		:returns: The range's bound handling strategy.
+		:returns:          The range's bound handling strategy.
+		:raises TypeError: If an assigned value is not of type :class:`RangeBoundHandling`.
 		"""
 		return self._boundHandling
 

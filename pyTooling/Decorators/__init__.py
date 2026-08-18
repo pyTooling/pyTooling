@@ -82,6 +82,7 @@ def export(entity: T) -> T:
 	:raises AttributeError: If parameter ``entity`` has no ``__module__`` member.
 	:raises TypeError:      If parameter ``entity`` is not a top-level entity in a module.
 	:raises TypeError:      If parameter ``entity`` has no ``__name__``.
+	:raises ValueError:     If the decorated entity has no ``__module__`` attribute, so it can't be added to ``__all__``.
 	"""
 	# * Based on an idea by Duncan Booth:
 	#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a

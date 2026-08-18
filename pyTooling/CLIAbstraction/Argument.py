@@ -328,8 +328,9 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		"""
 		Initializes a ValuedArgument instance.
 
-		:param value:      Value to be stored internally.
-		:raises TypeError: If parameter 'value' is None.
+		:param value:       Value to be stored internally.
+		:raises TypeError:  If parameter 'value' is None.
+		:raises ValueError: If parameter 'value' is None.
 		"""
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")

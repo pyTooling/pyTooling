@@ -83,6 +83,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:param nextNode:     Optional reference to the next node.
 		:raises TypeError:   If parameter 'previous' is not of type :class:`Node`.
 		:raises TypeError:   If parameter 'next' is not of type :class:`Node`.
+		:raises ValueError:  If parameter 'value' is None.
 		"""
 		self._previousNode = previousNode
 		self._nextNode = nextNode
@@ -606,9 +607,10 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Access a node in the linked list by position.
 
-		:param index:       Node position to access.
-		:returns:           Node at the given position.
-		:raises ValueError: If parameter 'position' is out of range.
+		:param index:                Node position to access.
+		:returns:                    Node at the given position.
+		:raises ValueError:          If parameter 'position' is out of range.
+		:raises LinkedListException: If the list is empty, or the index is out of range.
 
 		.. note::
 

@@ -204,11 +204,23 @@ class License(metaclass=ExtendedType, slots=True):
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are compatible."""
+		"""
+		Returns true, if both licenses are compatible.
+
+		:param other:                Second operand, the license to compare with.
+		:returns:                    ``True``, if both licenses are compatible.
+		:raises NotImplementedError: License compatibility is not implemented yet.
+		"""
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __ge__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are compatible."""
+		"""
+		Returns true, if both licenses are compatible.
+
+		:param other:                Second operand, the license to compare with.
+		:returns:                    ``True``, if both licenses are compatible.
+		:raises NotImplementedError: License compatibility is not implemented yet.
+		"""
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:

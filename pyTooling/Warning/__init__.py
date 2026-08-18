@@ -381,7 +381,8 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Enter the warning collector context.
 
-		:returns: The warning collector instance.
+		:returns:                                    The warning collector instance.
+		:raises SupervisedWarningCollectorException: If this collector is not the top-most warning collector of its thread.
 		"""
 		global _threadLocalData
 

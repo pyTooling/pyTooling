@@ -168,8 +168,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Undocumented.
-		:returns:         A sequence of functions where this attribute is attached to.
+		:param scope:                Undocumented.
+		:returns:                    A sequence of functions where this attribute is attached to.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		if scope is None:
 			for c in cls._functions:
