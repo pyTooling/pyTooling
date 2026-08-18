@@ -101,20 +101,18 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 	@property
 	def Value(self) -> List[str]:
 		"""
-		Get the internal value.
+		Property to access the internal list of values (:attr:`_value`).
 
-		:returns: Internal value.
+		.. note:: On assignment, the list object is not replaced, but cleared and then reused by adding the given elements
+		   of the iterable.
+
+		:returns:          Internal list of values.
+		:raises TypeError: If an assigned iterable contains elements which are not of type :class:`str`.
 		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, values: Iterable[str]) -> None:
-		"""
-		Set the internal value.
-
-		:param values:       List of values to set.
-		:raises ValueError:  If a list element is not o type :class:`str`.
-		"""
 		innerList = cast(list, self._value)
 		innerList.clear()
 		for value in values:

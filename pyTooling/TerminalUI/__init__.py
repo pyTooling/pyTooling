@@ -63,7 +63,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
-	PYTHON_VERSION_CHECK_FAILED_EXIT_CODE: ClassVar[int] = 254   #: Return code, if version check was not successful.
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
@@ -190,7 +189,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
 
-		:returns: A tuple containing width and height of the terminal's size in characters.
+		:returns:                              A tuple containing width and height of the terminal's size in characters.
 		:raises PlatformNotSupportedException: When a platform is not yet supported.
 		"""
 		platform = Platform()
@@ -379,22 +378,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		self.UninitializeColors()
 		exit(returnCode)
 
-	def CheckPythonVersion(self, version: Tuple[int, ...]) -> None:
-		"""
-		Check if the used Python interpreter fulfills the minimum version requirements.
-		"""
-		from sys import version_info as info
-
-		if info < version:
-			self.InitializeColors()
-
-			self.WriteLineToStdErr(dedent(f"""\
-				{{RED}}[ERROR]{{NOCOLOR}} Used Python interpreter ({info.major}.{info.minor}.{info.micro}-{info.releaselevel}) is to old.
-				{{indent}}{{YELLOW}}Minimal required Python version is {version[0]}.{version[1]}.{version[2]}{{NOCOLOR}}\
-				""").format(indent=self.INDENT, **self.Foreground))
-
-			self.Exit(self.PYTHON_VERSION_CHECK_FAILED_EXIT_CODE)
-
 	def PrintException(self, ex: Exception) -> NoReturn:
 		"""
 		Prints an exception of type :exc:`Exception` and its traceback.
@@ -402,6 +385,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		If the exception as a nested action, the cause is printed as well.
 
 		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+
+		:param ex: The exception to print.
 		"""
 		from traceback import format_tb, walk_tb
 
@@ -444,7 +429,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
 	def PrintNotImplementedError(self, ex: NotImplementedError) -> NoReturn:
-		"""Prints a not-implemented exception of type :exc:`NotImplementedError`."""
+		"""
+		Prints a not-implemented exception of type :exc:`NotImplementedError`.
+
+		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+
+		:param ex: The exception to print.
+		"""
 		from traceback import walk_tb
 
 		frame, sourceLine = lastItem(walk_tb(ex.__traceback__))
@@ -472,11 +463,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	def PrintExceptionBase(self, ex: Exception) -> NoReturn:
 		"""
-		Prints an exception of type :exc:`ExceptionBase` and its traceback.
+		Prints an exception of type :exc:`~pyTooling.Exceptions.ExceptionBase` and its traceback.
 
 		If the exception as a nested action, the cause is printed as well.
 
 		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+
+		:param ex: The exception to print.
 		"""
 		from traceback import print_tb, walk_tb
 
@@ -536,6 +529,11 @@ class Severity(Enum):
 	All =              0    #: All messages
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash of the severity level, so it can be used as a key in a dictionary.
+
+		:returns: Hash of the severity level's name.
+		"""
 		return hash(self.name)
 
 	def __eq__(self, other: Any) -> bool:
@@ -632,9 +630,11 @@ class Severity(Enum):
 @export
 @unique
 class Mode(Enum):
-	TextToStdOut_ErrorsToStdErr = 0
-	AllLinearToStdOut =           1
-	DataToStdOut_OtherToStdErr =  2
+	"""Routing modes deciding to which stream (``STDOUT``/``STDERR``) a message of a certain severity is written."""
+
+	TextToStdOut_ErrorsToStdErr = 0  #: Warnings and higher severities to ``STDERR``, except :attr:`Severity.Quiet`.
+	AllLinearToStdOut =           1  #: All messages to ``STDOUT``, so the message order is preserved in a log file.
+	DataToStdOut_OtherToStdErr =  2  #: All messages to ``STDERR``, leaving ``STDOUT`` for the program's data.
 
 
 @export
@@ -720,6 +720,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		Increase a line's indentation level.
 
 		:param indent: Indentation level added to the current indentation level.
+		:returns:      The new indentation level.
 		"""
 		self._indent = (newIndent := self._indent + indent)
 		return newIndent
@@ -752,7 +753,11 @@ class ILineTerminal:
 	_terminal: TerminalBaseApplication
 
 	def __init__(self, terminal: Nullable[TerminalBaseApplication] = None) -> None:
-		"""MixIn initializer."""
+		"""
+		MixIn initializer.
+
+		:param terminal: Optional, the terminal to write to. If ``None``, every writing method does nothing.
+		"""
 		self._terminal = terminal
 
 		# FIXME: Alter methods if a terminal is present or set dummy methods
@@ -767,7 +772,13 @@ class ILineTerminal:
 		return self._terminal
 
 	def WriteLine(self, line: Line, condition: bool = True) -> bool:
-		"""Write an entry to the local terminal."""
+		"""
+		Write a line to the local terminal if ``condition`` is true.
+
+		:param line:      Line object to write.
+		:param condition: Optional, write the line only if this condition is true. Default: ``True``.
+		:returns:         True, if the line was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteLine(line)
 		return False
@@ -778,61 +789,131 @@ class ILineTerminal:
 	# 	return False
 
 	def WriteFatal(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a fatal message if ``condition`` is true."""
+		"""
+		Write a fatal message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteFatal(*args, **kwargs)
 		return False
 
 	def WriteError(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write an error message if ``condition`` is true."""
+		"""
+		Write an error message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteError(*args, **kwargs)
 		return False
 
 	def WriteCritical(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a warning message if ``condition`` is true."""
+		"""
+		Write a critical warning message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteCritical(*args, **kwargs)
 		return False
 
 	def WriteWarning(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a warning message if ``condition`` is true."""
+		"""
+		Write a warning message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteWarning(*args, **kwargs)
 		return False
 
 	def WriteInfo(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write an info message if ``condition`` is true."""
+		"""
+		Write an info message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteInfo(*args, **kwargs)
 		return False
 
 	def WriteQuiet(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a message even in quiet mode if ``condition`` is true."""
+		"""
+		Write an always visible message, even in quiet mode, to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteQuiet(*args, **kwargs)
 		return False
 
 	def WriteNormal(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a *normal* message if ``condition`` is true."""
+		"""
+		Write a *normal* message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteNormal(*args, **kwargs)
 		return False
 
 	def WriteVerbose(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a verbose message if ``condition`` is true."""
+		"""
+		Write a verbose message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteVerbose(*args, **kwargs)
 		return False
 
 	def WriteDebug(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a debug message if ``condition`` is true."""
+		"""
+		Write a debug message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteDebug(*args, **kwargs)
 		return False
 
 	def WriteDryRun(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
-		"""Write a dry-run message if ``condition`` is true."""
+		"""
+		Write a dry-run message to the local terminal if ``condition`` is true.
+
+		:param args:      Positional parameters forwarded to the terminal's writing method.
+		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
+		:returns:         True, if the message was actually written.
+		"""
 		if (self._terminal is not None) and condition:
 			return self._terminal.WriteDryRun(*args, **kwargs)
 		return False
@@ -875,7 +956,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_criticalWarningCount: int
 	_warningCount:  int
 
-	HeadLine:       ClassVar[str]
+	HeadLine:       ClassVar[str]  #: Headline of the application, printed by :meth:`_PrintHeadline`.
 
 	def __init__(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
 		"""
@@ -904,6 +985,12 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._warningCount =         0
 
 	def __InitializeLogLevelRouting(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
+		"""
+		Expand a routing mode into a routing table containing one writing method per severity level.
+
+		:param mode:           Routing mode to expand.
+		:raises ExceptionBase: If the routing mode is not supported.
+		"""
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
 			for severity in Severity:
 				if severity >= Severity.Silent and severity != Severity.Quiet:
@@ -967,7 +1054,11 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Helper method to print the version information.
 
-		:param dunderModule: The Python module containing the dunder variables for author(s), email, copyright, version, ...
+		:param dunderModule:        The Python module containing the dunder variables for author(s), email, copyright,
+		                            version, ...
+		:param packageName:         Optional, name of the package on PyPI. If given, the latest released version is
+		                            queried and reported as an available update. Default: ``None``.
+		:param versionCheckTimeout: Optional, timeout in seconds for the PyPI request. Default: ``1``.
 
 		.. admonition:: Example usage
 
@@ -1020,6 +1111,16 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 			self.WriteNormal(f"Issue tracker: {issueTrackerURL}")
 
 	def _GetLatestVersion(self, packageName: str, timeout: int = 1) -> Nullable[str]:
+		"""
+		Query PyPI for the latest released version of a package.
+
+		Every error - an unreachable index, a timeout, an unknown package - is answered with ``None``, because a version
+		check must not fail the application it is printing the version of.
+
+		:param packageName: Name of the package on PyPI.
+		:param timeout:     Optional, timeout in seconds for the request. Default: ``1``.
+		:returns:           The latest version as a string, or ``None``, if it couldn't be determined.
+		"""
 		from json import loads
 		from urllib.request import urlopen, Request
 
@@ -1043,6 +1144,19 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		quiet:   bool = False,
 		writeToStdOut: bool = True
 	) -> None:
+		"""
+		Configure the verbosity of the application, usually from the command line switches.
+
+		The resulting :attr:`LogLevel` is the minimum severity a message needs to be written: ``Severity.Debug`` in debug
+		mode, ``Severity.Verbose`` in verbose mode, ``Severity.Silent`` in silent mode, ``Severity.Quiet`` in quiet mode,
+		otherwise ``Severity.Normal``. Debug mode implies verbose mode.
+
+		:param verbose:       Optional, write verbose messages. Default: ``False``.
+		:param debug:         Optional, write debug messages, implying verbose messages. Default: ``False``.
+		:param silent:        Optional, reduce the messages to warnings and higher severities. Default: ``False``.
+		:param quiet:         Optional, reduce the messages to errors and always visible messages. Default: ``False``.
+		:param writeToStdOut: Optional, write to ``STDOUT``. Default: ``True``.
+		"""
 		self._verbose =       True if debug else verbose
 		self._debug =         debug
 		self._silent =        silent
@@ -1100,7 +1214,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	@property
 	def LogLevel(self) -> Severity:
 		"""
-		Read-only property to access the minimal severity level a message needs to be written (:attr:`_writeLevel`).
+		Property to access the minimal severity level a message needs to be written (:attr:`_writeLevel`).
+
+		Assigning a level replaces what :meth:`Configure` computed from the verbosity switches.
 
 		:returns: The current minimal severity level.
 		"""
@@ -1108,13 +1224,14 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 	@LogLevel.setter
 	def LogLevel(self, value: Severity) -> None:
-		"""Set the minimal severity level for writing."""
 		self._writeLevel = value
 
 	@property
 	def BaseIndent(self) -> int:
 		"""
-		Read-only property to access the base indentation level of written messages (:attr:`_baseIndent`).
+		Property to access the base indentation level of written messages (:attr:`_baseIndent`).
+
+		The assigned level is added to every message's own indentation.
 
 		:returns: Base indentation level.
 		"""

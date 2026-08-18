@@ -162,20 +162,15 @@ class ExecutableArgument(CommandLineArgument):
 	@property
 	def Executable(self) -> Path:
 		"""
-		Get the internal path to the wrapped executable.
+		Property to access the path to the wrapped executable (:attr:`_executable`).
 
-		:returns: Internal path to the executable.
+		:returns:          Internal path to the executable.
+		:raises TypeError: If an assigned value is not of type :class:`~pathlib.Path`.
 		"""
 		return self._executable
 
 	@Executable.setter
 	def Executable(self, value: Path) -> None:
-		"""
-		Set the internal path to the wrapped executable.
-
-		:param value:      Value to path to the executable.
-		:raises TypeError: If value is not of type :class:`~pathlib.Path`.
-		"""
 		if not isinstance(value, Path):
 			ex = TypeError("Parameter 'value' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -344,20 +339,15 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	@property
 	def Value(self) -> ValueT:
 		"""
-		Get the internal value.
+		Property to access the internal value (:attr:`_value`).
 
-		:returns: Internal value.
+		:returns:           Internal value.
+		:raises ValueError: If ``None`` is assigned.
 		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, value: ValueT) -> None:
-		"""
-		Set the internal value.
-
-		:param value:       Value to set.
-		:raises ValueError: If value to set is None.
-		"""
 		if value is None:
 			raise ValueError(f"Value to set is None.")
 
@@ -577,22 +567,18 @@ class StringListArgument(ValuedArgument):
 	@property
 	def Value(self) -> List[str]:
 		"""
-		Get the internal list of str objects.
+		Property to access the internal list of str objects (:attr:`_values`).
 
-		:returns: Reference to the internal list of str objects.
+		.. note:: On assignment, the list object is not replaced, but cleared and then reused by adding the given elements
+		   of the iterable.
+
+		:returns:          Reference to the internal list of str objects.
+		:raises TypeError: If an assigned iterable contains elements which are not of type :class:`str`.
 		"""
 		return self._values
 
 	@Value.setter
 	def Value(self, value: Iterable[str]) -> None:
-		"""
-		Overwrite all elements in the internal list of str objects.
-
-		.. note:: The list object is not replaced, but cleared and then reused by adding the given elements in the iterable.
-
-		:param value:      List of str objects to set.
-		:raises TypeError: If value contains elements, which are not of type :class:`str`.
-		"""
 		self._values.clear()
 		for value in value:
 			if not isinstance(value, str):
@@ -654,20 +640,15 @@ class PathArgument(CommandLineArgument):
 	@property
 	def Value(self) -> Path:
 		"""
-		Get the internal path object.
+		Property to access the internal path object (:attr:`_path`).
 
-		:returns: Internal path object.
+		:returns:          Internal path object.
+		:raises TypeError: If an assigned value is not of type :class:`~pathlib.Path`.
 		"""
 		return self._path
 
 	@Value.setter
 	def Value(self, value: Path) -> None:
-		"""
-		Set the internal path object.
-
-		:param value:      Value to set.
-		:raises TypeError: If value is not of type :class:`~pathlib.Path`.
-		"""
 		if not isinstance(value, Path):
 			ex = TypeError("Value is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -722,22 +703,18 @@ class PathListArgument(CommandLineArgument):
 	@property
 	def Value(self) -> List[Path]:
 		"""
-		Get the internal list of path objects.
+		Property to access the internal list of path objects (:attr:`_paths`).
 
-		:returns: Reference to the internal list of path objects.
+		.. note:: On assignment, the list object is not replaced, but cleared and then reused by adding the given elements
+		   of the iterable.
+
+		:returns:          Reference to the internal list of path objects.
+		:raises TypeError: If an assigned iterable contains elements which are not of type :class:`~pathlib.Path`.
 		"""
 		return self._paths
 
 	@Value.setter
 	def Value(self, value: Iterable[Path]) -> None:
-		"""
-		Overwrite all elements in the internal list of path objects.
-
-		.. note:: The list object is not replaced, but cleared and then reused by adding the given elements in the iterable.
-
-		:param value:      List of path objects to set.
-		:raises TypeError: If value contains elements, which are not of type :class:`~pathlib.Path`.
-		"""
 		self._paths.clear()
 		for path in value:
 			if not isinstance(path, Path):

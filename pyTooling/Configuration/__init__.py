@@ -140,7 +140,7 @@ class Node(metaclass=ExtendedType, slots=True):
 	@property
 	def Key(self) -> KeyT:
 		"""
-		Read-only property to access the node's key.
+		Property to access the node's key.
 
 		:returns: Key of the node.
 		"""
