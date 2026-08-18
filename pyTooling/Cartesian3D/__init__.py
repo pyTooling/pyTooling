@@ -215,6 +215,9 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 
 	def Copy(self) -> Self:
 		"""
+		An origin is a singular point, so it can't be copied.
+
+		:returns:             Never returns; an origin can't be copied.
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
 		raise RuntimeError(f"An origin can't be copied.")

@@ -191,8 +191,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
 			(errno is set).  PROC_PIDTASKINFO = 4.
-			
-			:returns:  Memory usage of the current process.
+
+			:returns:                  Memory usage of the current process.
 			:raises PlatformException: If ``proc_pidinfo`` reported an error.
 			"""
 			from ctypes import CDLL, byref, sizeof, get_errno
@@ -251,8 +251,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			GetCurrentProcess() returns a pseudo-handle (-1) requiring no CloseHandle.
 			use_last_error=True routes SetLastError / GetLastError through ctypes so
 			WinError() picks up the correct code without a race.
-			
-			:returns:  Memory usage of the current process.
+
+			:returns:         Memory usage of the current process.
 			:raises WinError: If ``GetProcessMemoryInfo`` reported an error.
 			"""
 

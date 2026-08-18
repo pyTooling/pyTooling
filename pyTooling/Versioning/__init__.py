@@ -532,7 +532,13 @@ class Version(metaclass=ExtendedType, slots=True):
 	@classmethod
 	@abstractmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "Version":
-		"""Parse a version string and return a Version instance."""
+		"""
+		Parse a version string and return a Version instance.
+
+		:param versionString: The version string to parse.
+		:param validator:     Optional validator rejecting a parsed version, e.g. by word size or maximum value.
+		:returns:             The parsed version number.
+		"""
 
 	@readonly
 	def Parts(self) -> Parts:

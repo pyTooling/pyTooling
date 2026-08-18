@@ -2711,8 +2711,9 @@ class Subgraph(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::Subgraph::str Needs documentation.
+		Return a string representation of this subgraph.
 
+		:returns: The subgraph's name, or ``"Unnamed subgraph"`` if it has none.
 		"""
 		return self._name if self._name is not None else "Unnamed subgraph"
 
@@ -2767,8 +2768,9 @@ class View(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::View::str Needs documentation.
+		Return a string representation of this view.
 
+		:returns: The view's name, or ``"Unnamed view"`` if it has none.
 		"""
 		return self._name if self._name is not None else "Unnamed view"
 
@@ -2823,8 +2825,9 @@ class Component(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::Component::str Needs documentation.
+		Return a string representation of this component.
 
+		:returns: The component's name, or ``"Unnamed component"`` if it has none.
 		"""
 		return self._name if self._name is not None else "Unnamed component"
 
@@ -2931,8 +2934,9 @@ class Graph(
 
 	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]:
 		"""
-		.. todo:: GRAPH::Graph::iter Needs documentation.
+		Iterate all vertices of this graph.
 
+		:returns: An iterator over the vertices without an ID, followed by those with one.
 		"""
 		def gen():
 			yield from self._verticesWithoutID
@@ -2941,8 +2945,10 @@ class Graph(
 
 	def HasVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
 		"""
-		.. todo:: GRAPH::Graph::HasVertexByID Needs documentation.
+		Check if a vertex with the given ID exists in this graph.
 
+		:param vertexID: ID to look for, or ``None`` for a vertex without an ID.
+		:returns:        ``True``, if such a vertex exists.
 		"""
 		if vertexID is None:
 			return len(self._verticesWithoutID) >= 1
@@ -2951,8 +2957,10 @@ class Graph(
 
 	def HasVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
 		"""
-		.. todo:: GRAPH::Graph::HasVertexByValue Needs documentation.
+		Check if a vertex carrying the given value exists in this graph.
 
+		:param value: Value to look for.
+		:returns:     ``True``, if such a vertex exists.
 		"""
 		return any(vertex._value == value for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()))
 
@@ -3005,6 +3013,7 @@ class Graph(
 		:param predicate:      Filter function accepting any vertex and returning a boolean.
 		:param copyGraphDict:  If ``True``, copy all graph attached attributes into the new graph.
 		:param copyVertexDict: If ``True``, copy all vertex attached attributes into the new vertices.
+		:returns:              A new graph with copies of the selected vertices.
 		"""
 		graph = Graph(self._name)
 		if copyGraphDict:
@@ -3069,8 +3078,9 @@ class Graph(
 
 	def __repr__(self) -> str:
 		"""
-		.. todo:: GRAPH::Graph::repr Needs documentation.
+		Return a detailed string representation of this graph.
 
+		:returns: The graph's name and its vertex and edge counts.
 		"""
 		statistics = f", vertices: {self.VertexCount}, edges: {self.EdgeCount}"
 		if self._name is None:
@@ -3080,8 +3090,9 @@ class Graph(
 
 	def __str__(self) -> str:
 		"""
-		.. todo:: GRAPH::Graph::str Needs documentation.
+		Return a string representation of this graph.
 
+		:returns: The graph's name, or ``"Unnamed graph"`` if it has none.
 		"""
 		if self._name is None:
 			return f"Graph: unnamed graph"

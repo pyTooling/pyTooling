@@ -49,6 +49,12 @@ def BlockingPut(queue: ThreadSafeQueue[QueueItem], item: QueueItem, stopEvent: E
 	Puts an item into a bounded queue, but re-checks ``stopEvent`` on every timeout instead of blocking forever.
 
 	This is what prevents a dead/failed consumer from deadlocking its producer when the queue is full.
+
+	:param queue:        The queue to put the item into.
+	:param item:         The item to hand over to the consumer.
+	:param stopEvent:    Event signaling that the producer should stop waiting.
+	:param retryTimeout: Time in seconds between two attempts to put the item.
+	:returns:            ``True``, if the item was put into the queue; ``False``, if the stop event was set.
 	"""
 	while not stopEvent.is_set():
 		try:
@@ -82,6 +88,10 @@ def QueueReader(queue: ThreadSafeQueue[Nullable[QueueItem]]) -> Iterator[QueueIt
 def Delay(stream: Iterator[QueueItem], delay: int = 1) -> Iterator[QueueItem]:
 	"""
 	Holds each item back for ``delay`` further items before releasing it.
+
+	:param stream: The iterator to read the items from.
+	:param delay:  Number of items an item is held back for.
+	:returns:      An iterator yielding the delayed items, followed by the buffered rest when the stream ends.
 	"""
 	buffer: deque[QueueItem] = deque()
 

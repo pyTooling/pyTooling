@@ -760,16 +760,29 @@ def DescribePythonPackage(
 	classifiers.append(license.PythonClassifier)
 
 	def _naturalSorting(array: Iterable[str]) -> List[str]:
-		"""A simple natural sorting implementation."""
+		"""
+		A simple natural sorting implementation.
+
+		:param array: The strings to sort.
+		:returns:     The strings, sorted with embedded numbers compared numerically.
+		"""
 		# See http://nedbatchelder.com/blog/200712/human_sorting.html
 		def _toInt(text: str) -> Union[str, int]:
-			"""Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string."""
+			"""
+			Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string.
+
+			:param text: The text to convert.
+			:returns:    The converted integer, or the unchanged string.
+			"""
 			return int(text) if text.isdigit() else text
 
 		def _createKey(text: str) -> Tuple[Union[str, float], ...]:
 			"""
 			Split the text into a tuple of multiple :class:`str` and :class:`int` fields, so embedded numbers can be sorted by
 			their value.
+
+			:param text: The text to split.
+			:returns:    Tuple of string and integer fields, usable as a sort key.
 			"""
 			return tuple(_toInt(part) for part in re_split(r"(\d+)", text))
 

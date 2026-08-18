@@ -285,8 +285,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def __contains__(self, key: DictKeyType) -> bool:
 		"""
-		.. todo:: TREE::Node::__contains__ Needs documentation.
+		Check if a key exists in the node's attached attributes.
 
+		:param key: The key to look for.
+		:returns:   ``True``, if the key exists.
 		"""
 		return key in self._dict
 
@@ -603,16 +605,18 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def GetPath(self) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetPAth Needs documentation.
+		Compute the path from the root node to this node.
 
+		:returns: A generator yielding the nodes from the root down to this node.
 		"""
 		for node in self._GetPathAsLinkedList():
 			yield node
 
 	def GetAncestors(self) -> Generator['Node', None, None]:
 		"""
-		.. todo:: TREE::Node::GetAncestors Needs documentation.
+		Iterate the ancestors of this node.
 
+		:returns: A generator yielding the parent, its parent, and so on up to the root node.
 		"""
 		node = self._parent
 		while node is not None:

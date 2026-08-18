@@ -293,6 +293,8 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	def Remove(self) -> _NodeValue:
 		"""
 		Remove this node from the linked list.
+
+		:returns: The value of the removed node.
 		"""
 		if self._previousNode is None:
 			if self._linkedList is not None:
