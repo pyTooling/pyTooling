@@ -1238,17 +1238,14 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Property to access the minimal severity level a message needs to be written (:attr:`_writeLevel`).
 
+		Assigning a level replaces what :meth:`Configure` computed from the verbosity switches.
+
 		:returns: The current minimal severity level.
 		"""
 		return self._writeLevel
 
 	@LogLevel.setter
 	def LogLevel(self, value: Severity) -> None:
-		"""
-		Set the minimal severity level a message needs to be written.
-
-		:param value: The new minimal severity level.
-		"""
 		self._writeLevel = value
 
 	@property
@@ -1256,17 +1253,14 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Property to access the base indentation level of written messages (:attr:`_baseIndent`).
 
+		The assigned level is added to every message's own indentation.
+
 		:returns: Base indentation level.
 		"""
 		return self._baseIndent
 
 	@BaseIndent.setter
 	def BaseIndent(self, value: int) -> None:
-		"""
-		Set the base indentation level added to every written message.
-
-		:param value: The new base indentation level.
-		"""
 		self._baseIndent = value
 
 	@readonly
