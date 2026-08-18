@@ -212,7 +212,8 @@ class DocStringMergeOrder(Enum):
 
 	.. seealso::
 
-	   * :func:`InheritDocString`
+	   :deco:`InheritDocString`
+	      |rarr| Copy or merge a base-class' doc-string into the derived entity.
 	"""
 
 	BaseFirst =    0  #: The base-class' doc-string comes first, the derived entity's doc-string second.
@@ -282,7 +283,8 @@ def InheritDocString(
 
 	.. seealso::
 
-	   * :class:`DocStringMergeOrder`
+	   :class:`DocStringMergeOrder`
+	      |rarr| Selects which doc-string comes first when both are merged.
 	"""
 	def decorator(param: Func | type) -> Func | type:
 		"""

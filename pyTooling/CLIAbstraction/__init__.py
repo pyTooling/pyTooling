@@ -569,8 +569,10 @@ class Executable(Program):  # (ILogable):
 
 		.. seealso::
 
-		   * :meth:`Wait` - Wait on the child-process with an optional timeout.
-		   * :meth:`Terminate` - Terminate the child-process.
+		   :meth:`Wait`
+		      |rarr| Wait on the child-process with an optional timeout.
+		   :meth:`Terminate`
+		      |rarr| Terminate the child-process.
 		"""
 		return self._exitCode
 

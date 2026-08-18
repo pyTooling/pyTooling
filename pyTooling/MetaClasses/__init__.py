@@ -71,8 +71,10 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 
 	.. seealso::
 
-	   * :ref:`Python data model for slots <slots>`
-	   * :term:`Glossary entry __slots__ <__slots__>`
+	   :ref:`Python data model for slots <slots>`
+	      |rarr| What ``__slots__`` does and which rules Python imposes on it.
+	   :term:`Glossary entry __slots__ <__slots__>`
+	      |rarr| The glossary's short definition.
 	"""
 
 
