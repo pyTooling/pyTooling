@@ -290,6 +290,15 @@ class Base(
 			pass
 
 	def Delete(self) -> None:
+		"""
+		Delete this element's attached attributes.
+
+		.. attention::
+
+		   The dictionary is dropped, not cleared, so every further access to the element's attributes raises a
+		   :exc:`TypeError` - including :meth:`__len__` and ``in``. Anything still holding a reference to the element
+		   sees that, and a reference to the dictionary itself keeps the old content alive.
+		"""
 		self._dict = None
 
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
@@ -655,6 +664,12 @@ class Vertex(
 		super().__del__()
 
 	def Delete(self) -> None:
+		"""
+		Delete this vertex and every edge and link connected to it.
+
+		The vertex is removed from its graph or subgraph, and from its component and views; the connected edges and
+		links are deleted from both of their vertices.
+		"""
 		for edge in self._outboundEdges:
 			edge._destination._inboundEdges.remove(edge)
 			edge._Delete()
@@ -1352,6 +1367,12 @@ class Vertex(
 		return False
 
 	def DeleteEdgeTo(self, destination: 'Vertex') -> None:
+		"""
+		Delete the outbound edge to the given vertex.
+
+		:param destination:     The vertex the edge points to.
+		:raises GraphException: If no outbound edge to that vertex exists.
+		"""
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
@@ -1361,6 +1382,12 @@ class Vertex(
 		edge.Delete()
 
 	def DeleteEdgeFrom(self, source: 'Vertex') -> None:
+		"""
+		Delete the inbound edge from the given vertex.
+
+		:param source:          The vertex the edge comes from.
+		:raises GraphException: If no inbound edge from that vertex exists.
+		"""
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
@@ -1370,6 +1397,12 @@ class Vertex(
 		edge.Delete()
 
 	def DeleteLinkTo(self, destination: 'Vertex') -> None:
+		"""
+		Delete the outbound link to the given vertex.
+
+		:param destination:     The vertex the link points to.
+		:raises GraphException: If no outbound link to that vertex exists.
+		"""
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
@@ -1379,6 +1412,12 @@ class Vertex(
 		link.Delete()
 
 	def DeleteLinkFrom(self, source: 'Vertex') -> None:
+		"""
+		Delete the inbound link from the given vertex.
+
+		:param source:          The vertex the link comes from.
+		:raises GraphException: If no inbound link from that vertex exists.
+		"""
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
@@ -1584,6 +1623,15 @@ class Vertex(
 					return
 
 	def IterateAllOutboundPathsAsVertexList(self) -> Generator[Tuple['Vertex', ...], None, None]:
+		"""
+		Iterate all paths starting at this vertex, each as a tuple of vertices.
+
+		The traversal is depth-first and keeps the vertices of the current path in a set, so a cycle is detected
+		instead of iterated endlessly. A vertex without outbound edges yields the path containing only itself.
+
+		:returns:           A generator yielding one tuple of vertices per path.
+		:raises CycleError: If a cycle is detected while walking a path.
+		"""
 		if len(self._outboundEdges) == 0:
 			yield (self, )
 			return
@@ -2028,6 +2076,9 @@ class Edge(
 		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
+		"""
+		Delete this edge from both of its vertices and from the graph or subgraph it belongs to.
+		"""
 		# Remove from Source and Destination
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
@@ -2045,6 +2096,9 @@ class Edge(
 		self._Delete()
 
 	def _Delete(self) -> None:
+		"""
+		Delete the edge's attached attributes, after it was disconnected.
+		"""
 		super().Delete()
 
 	def Reverse(self) -> None:
@@ -2112,6 +2166,9 @@ class Link(
 		super().__init__(source, destination, linkID, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
+		"""
+		Delete this link from both of its vertices and from the graph it belongs to.
+		"""
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
 
@@ -2124,6 +2181,9 @@ class Link(
 		assert getrefcount(self) == 1
 
 	def _Delete(self) -> None:
+		"""
+		Delete the link's attached attributes, after it was disconnected.
+		"""
 		super().Delete()
 
 	def Reverse(self) -> None:
@@ -2996,6 +3056,12 @@ class Graph(
 			raise KeyError(f"Found multiple vertices with Value == `{value}`.")
 
 	def CopyGraph(self) -> 'Graph':
+		"""
+		Create a copy of this graph.
+
+		:returns:                    A new graph with copies of this graph's vertices and edges.
+		:raises NotImplementedError: Copying a whole graph is not implemented yet.
+		"""
 		raise NotImplementedError()
 
 	def CopyVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> 'Graph':
