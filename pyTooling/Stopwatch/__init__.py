@@ -133,8 +133,8 @@ class Stopwatch(SlottedObject):
 		If parameter ``started`` is set to true, the stopwatch will immediately start.
 
 		:param name:        Optional name of the stopwatch.
-		:param preferPause: Optional setting, if __exit__(...) in a contex should prefer pause or stop behavior.
 		:param started:     Optional flag, if the stopwatch should be started immediately.
+		:param preferPause: Optional setting, if __exit__(...) in a contex should prefer pause or stop behavior.
 		"""
 		self._name =         name
 		self._preferPause =  preferPause

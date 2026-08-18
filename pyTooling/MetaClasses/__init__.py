@@ -615,6 +615,7 @@ class ExtendedType(type):
 		# Additional methods on a class
 		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
 			"""
+			Return the class' methods that carry at least one matching attribute.
 
 			:param predicate:   An attribute class, an iterable of attribute classes, or ``None`` to accept every attribute.
 			:returns:           Dictionary of methods and the matching attributes attached to them.

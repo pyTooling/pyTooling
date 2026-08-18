@@ -51,9 +51,9 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 3-dimensional point.
 
-		:param x: X-coordinate.
-		:param y: Y-coordinate.
-		:param z: Z-coordinate.
+		:param x:          X-coordinate.
+		:param y:          Y-coordinate.
+		:param z:          Z-coordinate.
 		:raises TypeError: If x/y/z-coordinate is not of type integer or float.
 		"""
 		if not isinstance(x, (int, float)):
@@ -520,6 +520,7 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
+		:param copyPoints: If ``True``, the given points are copied instead of referenced.
 		:raises TypeError: If start/end is not of type Point3D.
 		"""
 		if not isinstance(start, Point3D):

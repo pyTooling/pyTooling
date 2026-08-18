@@ -52,8 +52,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional point.
 
-		:param x: X-coordinate.
-		:param y: Y-coordinate.
+		:param x:          X-coordinate.
+		:param y:          Y-coordinate.
 		:raises TypeError: If x/y-coordinate is not of type integer or float.
 		"""
 		if not isinstance(x, (int, float)):
@@ -485,6 +485,7 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
+		:param copyPoints: If ``True``, the given points are copied instead of referenced.
 		:raises TypeError: If start/end is not of type Point2D.
 		"""
 		if not isinstance(start, Point2D):

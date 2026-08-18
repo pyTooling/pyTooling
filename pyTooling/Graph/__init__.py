@@ -307,7 +307,7 @@ class Base(
 
 		If a key doesn't exist yet, a new key-value-pair is created.
 
-		:param key: The key to create or update.
+		:param key:   The key to create or update.
 		:param value: The value to associate to the given key.
 		"""
 		self._dict[key] = value
@@ -1145,9 +1145,9 @@ class Vertex(
 		Create an outbound link from this vertex to the referenced vertex.
 
 		:param vertex:                   The vertex to be linked to.
-		:param edgeID:                   The edge's optional ID for the new link object.
-		:param edgeWeight:               The edge's optional weight for the new link object.
-		:param edgeValue:                The edge's optional value for the new link object.
+		:param linkID:                   The link's optional ID for the new link object.
+		:param linkWeight:               The link's optional weight for the new link object.
+		:param linkValue:                The link's optional value for the new link object.
 		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
@@ -1213,9 +1213,9 @@ class Vertex(
 		Create an inbound link from the referenced vertex to this vertex.
 
 		:param vertex:                   The vertex to be linked from.
-		:param edgeID:                   The edge's optional ID for the new link object.
-		:param edgeWeight:               The edge's optional weight for the new link object.
-		:param edgeValue:                The edge's optional value for the new link object.
+		:param linkID:                   The link's optional ID for the new link object.
+		:param linkWeight:               The link's optional weight for the new link object.
+		:param linkValue:                The link's optional value for the new link object.
 		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.

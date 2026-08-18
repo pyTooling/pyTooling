@@ -841,7 +841,7 @@ class Filename(Element[Directory]):
 		Initialize the filename with name, file (storage) object and parent reference.
 
 		:param name:       Name of the file.
-		:param size:       Optional file (storage) object.
+		:param file:       Optional file (storage) object.
 		:param parent:     Optional parent reference.
 		:raises TypeError: If parameter 'file' is not of type :class:`File`.
 		"""

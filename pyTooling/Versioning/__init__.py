@@ -1080,15 +1080,15 @@ class SemanticVersion(Version):
 		:param major:       Major number part of the version number.
 		:param minor:       Minor number part of the version number.
 		:param micro:       Micro (patch) number part of the version number.
-		:param build:       Build number part of the version number.
-		:param level:       tbd
-		:param number:      tbd
+		:param level:       Release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Number within the release level, e.g. ``2`` in ``rc2``.
 		:param post:        Post number part of the version number.
 		:param dev:         Development number part of the version number.
-		:param prefix:      The version number's prefix.
+		:param build:       Build number part of the version number.
 		:param postfix:     The version number's postfix.
+		:param prefix:      The version number's prefix.
+		:param hash:        Hash of the version control system's commit this version was built from.
 		:param flags:       The version number's flags.
-		:param hash:        tbd
 		:raises TypeError:  If parameter 'major' is not of type int.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type int.
@@ -2016,12 +2016,13 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a version range described by a lower and upper bound.
 
-		:param lowerBound:  lowest version (inclusive).
-		:param upperBound:  hightest version (inclusive).
-		:raises TypeError:  If parameter ``lowerBound`` is not of type :class:`Version`.
-		:raises TypeError:  If parameter ``upperBound`` is not of type :class:`Version`.
-		:raises TypeError:  If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
-		:raises ValueError: If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
+		:param lowerBound:    lowest version (inclusive).
+		:param upperBound:    hightest version (inclusive).
+		:param boundHandling: Strategy deciding whether the bounds are part of the range.
+		:raises TypeError:    If parameter ``lowerBound`` is not of type :class:`Version`.
+		:raises TypeError:    If parameter ``upperBound`` is not of type :class:`Version`.
+		:raises TypeError:    If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
+		:raises ValueError:   If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
 		"""
 		if not isinstance(lowerBound, Version):
 			ex = TypeError(f"Parameter 'lowerBound' is not of type 'Version'.")

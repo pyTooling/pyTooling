@@ -132,8 +132,8 @@ class Environment(metaclass=ExtendedType, slots=True):
 		"""
 		Checks if the variable is set in the environment.
 
-		:param key: The variable name to check.
-		:returns:   ``True``, if the variable is set in the environment.
+		:param name: The variable name to check.
+		:returns:    ``True``, if the variable is set in the environment.
 		"""
 		return name in self._variables
 

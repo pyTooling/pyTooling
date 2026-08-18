@@ -150,6 +150,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	      requirements = list(set(loadRequirementsFile(requirementsFile)))
 
 	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.
+	:param indent:             Indentation level used for the debug output of nested requirements files.
 	:param debug:              If ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
 	:raises TypeError:         If parameter 'requirementsFile' is not of type 'Path'.

@@ -131,8 +131,8 @@ def notimplemented(message: str) -> Callable:
 	          '''This method needs to be implemented'''
 	          return True
 
-	:param method: Method that is marked as *not implemented*.
-	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+	:param message: Method that is marked as *not implemented*.
+	:returns:       Replacement method, which raises a :exc:`NotImplementedError`.
 
 	.. seealso::
 

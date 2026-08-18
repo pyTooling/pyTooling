@@ -69,6 +69,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -110,7 +111,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
 		on the internal name and value.
 
-		:returns: Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -135,6 +136,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"-with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -177,6 +179,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"--with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -219,6 +222,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"/with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
