@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for :class:`pyTooling.MetaClasses.Overloading`, which dispatches a method by its signature.
 """
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Testing     import Testcase

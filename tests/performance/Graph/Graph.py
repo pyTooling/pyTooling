@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.Graph."""
+"""
+Performance tests for :mod:`pyTooling.Graph` - edge insertion and random graph construction.
+"""
 from pathlib import Path
 
 from pyTooling.Graph import Graph as pt_Graph, Vertex as pt_Vertex, DestinationNotReachable

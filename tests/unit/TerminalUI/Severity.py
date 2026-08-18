@@ -29,7 +29,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
+"""
+Unit tests for :class:`pyTooling.TerminalUI.Severity`: the ordering of the severity levels and the
+exceptions raised when a comparison makes no sense.
+"""
 from pyTooling.TerminalUI import Severity
 from pyTooling.Testing    import Testcase
 

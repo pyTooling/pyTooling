@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Testing`."""
+"""
+Unit tests for :mod:`pyTooling.Testing`: the assertions of :class:`~pyTooling.Testing.Testcase`, the ANSI
+helper, and running an application as a module or as a console script.
+"""
 from shutil     import which
 from subprocess import TimeoutExpired
 

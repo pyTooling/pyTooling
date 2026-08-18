@@ -28,4 +28,6 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Test code for pyTooling."""
+"""
+Test code for pyTooling: unit tests, benchmarks, performance comparisons and two example packages.
+"""

@@ -28,6 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
+"""
 from pyTooling.Licensing import PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Testing   import Testcase
 

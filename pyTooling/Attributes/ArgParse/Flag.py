@@ -29,6 +29,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing switch arguments - options without a value, like ``--verbose``.
+
+A switch is ``True`` when it appears on the command line and ``False`` otherwise.
+"""
 from typing   import Optional as Nullable
 
 from pyTooling.Decorators                   import export

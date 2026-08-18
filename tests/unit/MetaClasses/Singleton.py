@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.Singleton`.
+Unit tests for singletons created by :class:`pyTooling.MetaClasses.ExtendedType`, with and without
+constructor parameters.
 """
 from pytest   import mark
 
