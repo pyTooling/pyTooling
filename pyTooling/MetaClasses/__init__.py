@@ -91,7 +91,12 @@ class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
 
 @export
 class BaseClassIsNotAMixinError(ExtendedTypeError):
-	pass
+	"""
+	This exception is raised when a class inherits from a secondary base-class that is not declared as a mixin.
+
+	Only the primary inheritance line may carry a normal class; every further base-class needs ``mixin=True`` (or the
+	:deco:`~pyTooling.MetaClasses.mixin` decorator), because that is what allows their slots to be merged.
+	"""
 
 
 @export

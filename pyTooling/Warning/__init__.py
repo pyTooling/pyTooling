@@ -326,7 +326,12 @@ class WarningCollector:
 
 @export
 class SupervisedWarningCollectorException(ExceptionBase):
-	pass
+	"""
+	This exception is raised when a supervised warning collector is not the top-most collector in its thread.
+
+	A supervised collector hands its warnings to the thread supervisor, which only works if nothing else collects them
+	first.
+	"""
 
 
 @export
