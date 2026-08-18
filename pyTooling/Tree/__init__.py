@@ -310,16 +310,19 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@property
 	def Parent(self) -> Nullable['Node']:
 		"""
-		Property to get and set the parent (:attr:`_parent`) of a node.
+		Property to access the parent (:attr:`_parent`) of a node.
+
+		Assigning ``None`` detaches the node from its tree, which makes it the root node of the subtree it carries.
+		Assigning a node appends this node - and everything below it - to that node's tree.
 
 		.. note::
 
 		   As the current node might be a tree itself, appending this node to a tree can lead to a merge of trees and
 		   especially to a merge of IDs. As IDs are unique, it might raise an :exc:`Exception`.
 
-		:returns:                   The parent of a node.
-		:raises TypeError:          If parameter ``parent`` is not a :class:`Node`
-		:raises AlreadyInTreeError: Parent is already a child node in this tree.
+		:returns:                   The parent of a node, or ``None`` if the node is a root node.
+		:raises TypeError:          If a node that is not a :class:`Node` is assigned.
+		:raises AlreadyInTreeError: If the assigned parent is already a child node in this tree.
 		"""
 		return self._parent
 

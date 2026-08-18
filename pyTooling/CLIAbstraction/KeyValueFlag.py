@@ -109,20 +109,18 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	@property
 	def Value(self) -> Dict[str, str]:
 		"""
-		Get the internal value.
+		Property to access the internal key-value-pairs (:attr:`_value`).
 
-		:returns: Internal value.
+		.. note:: On assignment, the dictionary object is not replaced, but cleared and then reused by adding the given
+		   pairs.
+
+		:returns:          Internal dictionary of key-value-pairs.
+		:raises TypeError: If an assigned pair has a key or a value which is not of type :class:`str`.
 		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, keyValuePairs: Dict[str, str]) -> None:
-		"""
-		Set the internal value.
-
-		:param keyValuePairs: Value to set.
-		:raises ValueError:   If value to set is None.
-		"""
 		innerDict = cast(Dict[str, str], self._value)
 		innerDict.clear()
 		for key, value in keyValuePairs.items():
