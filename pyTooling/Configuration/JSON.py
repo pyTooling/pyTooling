@@ -40,7 +40,7 @@ from pathlib       import Path
 from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Common          import getFullyQualifiedName
-from pyTooling.Decorators      import export
+from pyTooling.Decorators      import export, InheritDocString
 from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
 from pyTooling.Configuration   import InterpolationException, KeyNotFoundException, PathExpressionException
@@ -84,43 +84,25 @@ class Node(Abstract_Node):
 		self._key =      key
 		self._length =   len(jsonNode)
 
+	@InheritDocString(Abstract_Node)
 	def __len__(self) -> int:
-		"""
-		Returns the number of sub-elements.
-
-		:returns: Number of sub-elements.
-		"""
 		return self._length
 
+	@InheritDocString(Abstract_Node)
 	def __getitem__(self, key: KeyT) -> ValueT:
-		"""
-		Access an element in the node by index or key.
-
-		:param key: Index or key of the element.
-		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
-		"""
 		return self._GetNodeOrValue(str(key))
 
 	@property
+	@InheritDocString(Abstract_Node)
 	def Key(self) -> KeyT:
-		"""
-		Property to access the node's key.
-
-		:returns: Key of the node.
-		"""
 		return self._key
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError()
 
+	@InheritDocString(Abstract_Node)
 	def QueryPath(self, query: str) -> ValueT:
-		"""
-		Return a node or value based on a path description to that node or value.
-
-		:param query: String describing the path to the node or value.
-		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
-		"""
 		path = self._ToPath(query)
 		return self._GetNodeOrValueByPathExpression(path)
 
