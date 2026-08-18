@@ -2408,6 +2408,11 @@ class BaseGraph(
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
 		def removeVertex(vertex: Vertex):
+			"""
+			Nested function removing a vertex from the counting, and queuing the vertices that became leafs.
+
+			:param vertex: The vertex that was just yielded.
+			"""
 			nonlocal overallCount
 			overallCount -= 1
 			for inboundEdge in vertex._inboundEdges:
@@ -2993,6 +2998,11 @@ class Graph(
 		:returns: An iterator over the vertices without an ID, followed by those with one.
 		"""
 		def gen():
+			"""
+			Nested generator function chaining the vertices without an ID and those with one.
+
+			:returns: A generator yielding every vertex of the graph.
+			"""
 			yield from self._verticesWithoutID
 			yield from self._verticesWithID
 		return iter(gen())

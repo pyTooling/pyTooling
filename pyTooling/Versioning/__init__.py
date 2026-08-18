@@ -287,6 +287,13 @@ def WordSizeValidator(
 		buildMax = 2**buildBits - 1
 
 	def validator(version: SemanticVersion) -> bool:
+		"""
+		Validator function, which checks each version part against the maximum its word size allows.
+
+		:param version:     The version to validate.
+		:returns:           ``True``, if every part fits into its word size.
+		:raises ValueError: If a part exceeds the maximum value of its word size.
+		"""
 		if Parts.Major in version._parts and version._major > majorMax:
 			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
@@ -326,6 +333,13 @@ def MaxValueValidator(
 		majorMax = minorMax = microMax = buildMax = max
 
 	def validator(version: SemanticVersion) -> bool:
+		"""
+		Validator function, which checks each version part against its maximum value.
+
+		:param version:     The version to validate.
+		:returns:           ``True``, if every part is within its maximum.
+		:raises ValueError: If a part exceeds its maximum value.
+		"""
 		if Parts.Major in version._parts and version._major > majorMax:
 			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
@@ -1151,6 +1165,13 @@ class SemanticVersion(Version):
 			raise ex
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
+			"""
+			Nested function converting an optional part of a version string to an integer.
+
+			:param value:       The matched part, or ``None`` if the pattern didn't match it.
+			:returns:           The part as an integer, or ``None`` if it wasn't present.
+			:raises ValueError: If the part isn't a number.
+			"""
 			if value is None or value == "":
 				return None
 

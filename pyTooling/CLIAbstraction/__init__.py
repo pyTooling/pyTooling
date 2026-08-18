@@ -342,6 +342,12 @@ class Program(metaclass=ExtendedType, slots=True):
 		result.append(str(self._executablePath))
 
 		def predicate(item: Tuple[Type[CommandLineArgument], int]) -> int:
+			"""
+			Nested function used as sort key.
+
+			:param item: Pair of an argument class and its argument object.
+			:returns:    The position the argument class was registered at, so the command line keeps the declared order.
+			"""
 			return self.__cliOptions__[item[0]]
 
 		for key, value in sorted(self.__cliParameters__.items(), key=predicate):

@@ -143,8 +143,19 @@ def notimplemented(message: str) -> Callable:
 	"""
 
 	def decorator(method: C) -> C:
+		"""
+		Decorator function, which replaces the decorated method by one raising a :exc:`NotImplementedError`.
+
+		:param method: Method to be replaced.
+		:returns:      Replacement method, carrying the field ``__notImplemented__``.
+		"""
 		@wraps(method)
 		def func(*_, **__):
+			"""
+			Replacement method, which raises a :exc:`NotImplementedError` when called.
+
+			:raises NotImplementedError: Always, with the message given to :deco:`notimplemented`.
+			"""
 			raise NotImplementedError(message)
 
 		func.__notImplemented__ = True

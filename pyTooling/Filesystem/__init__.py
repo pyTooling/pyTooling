@@ -797,6 +797,12 @@ class Directory(Element["Directory"]):
 		"""
 		if format is None:
 			def format(node: Node) -> str:
+				"""
+				Nested function rendering a tree node as one line.
+
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
 				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		directoryNode = Node(
@@ -984,6 +990,12 @@ class Filename(Element[Directory]):
 		:returns: A tree node carrying this filename, its kind and its size.
 		"""
 		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by its name.
+			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		fileNode = Node(
@@ -1139,6 +1151,12 @@ class SymbolicLink(Element[Directory]):
 		:returns: A tree node carrying this symbolic link, its kind and its size.
 		"""
 		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by its name.
+			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		symbolicLinkNode = Node(

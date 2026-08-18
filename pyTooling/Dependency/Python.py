@@ -121,6 +121,13 @@ class lazy:
 		# 3. Otherwise, treat as a method and return a bound wrapper
 		@wraps(self._wrapped)
 		def wrapper(*args, **kwargs):
+			"""
+			Nested function binding the decorated method to the object it was accessed on.
+
+			:param args:   Positional parameters passed to the decorated method.
+			:param kwargs: Named parameters passed to the decorated method.
+			:returns:      Whatever the decorated method returns.
+			"""
 			return self._wrapped(obj, *args, **kwargs)
 
 		return wrapper
@@ -577,7 +584,16 @@ class Project(Package, LazyLoadableMixin):
 		hundreds of releases.
 		"""
 		async def ParallelDownloadReleaseDetails():
+			"""
+			Nested coroutine downloading the details of every release over one shared session.
+			"""
 			async def routine(session, release: Release):
+				"""
+				Nested coroutine downloading the details of a single release.
+
+				:param session: The HTTP session shared by all requests of this download.
+				:param release: The release to download the details for.
+				"""
 				if Parts.Postfix in release._version._parts:
 					pass
 

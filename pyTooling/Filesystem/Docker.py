@@ -164,9 +164,21 @@ class Layer(metaclass=ExtendedType):
 
 		if relative:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a file's path relative to the filesystem root.
+
+				:param file: The path to render.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a file's path as it is.
+
+				:param file: The path to render.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.as_posix()}\n"
 
 		with path.open("w", encoding="utf-8") as f:
@@ -289,6 +301,14 @@ class LayerCake(metaclass=ExtendedType):
 		layer = Layer(self)
 
 		def sizeOf(file: Element[Directory]) -> int:
+			"""
+			Nested function used as sort key.
+
+			A symbolic link occupies no space of its own, so it is counted as zero and ends up last.
+
+			:param file: The filesystem element to measure.
+			:returns:    Size of the element in bytes.
+			"""
 			return 0 if isinstance(file, SymbolicLink) else file.Size
 
 		collectedFiles = set()
@@ -341,9 +361,21 @@ class LayerCake(metaclass=ExtendedType):
 
 		if relative:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a directory's path relative to the filesystem root.
+
+				:param file: The path to render.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a directory's path as it is.
+
+				:param file: The path to render.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.as_posix()}\n"
 
 		with (directory / fileNamePattern).open("w", encoding="utf-8") as f:
