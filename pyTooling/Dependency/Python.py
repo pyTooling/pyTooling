@@ -133,7 +133,7 @@ class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
 
 	The object is created from what its creator knows - often little more than a name - and everything else is loaded
 	when it is needed. The mixin records how far the object is loaded (:attr:`__lazy_state__`) and serializes
-	concurrent loading (:attr:`__lazy_lock__`); the deriving class implements ``__lazy_loader__`` and decides what
+	concurrent loading (:attr:`__lazy_lock__`); the deriving class implements a ``__lazy_loader__`` method and decides what
 	loading means.
 	"""
 	__lazy_state__: LazyLoaderState  #: State of the lazy loading process for this object.
