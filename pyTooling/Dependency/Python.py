@@ -441,7 +441,9 @@ class Release(PackageVersion, LazyLoadableMixin):
 					BrokenRequirementWarning(f"Package '{self._package._name}' has {len(brokenRequirements)} requirement(s) whose marker matches no declared extra."),
 					notes=[f"Broken requirement: {req}" for req in brokenRequirements]
 				)
-				self._requirements[0] = brokenRequirements
+				# Preserving the broken requirements under the special index 0 makes 'Requirements' a dictionary of mixed
+				# key types (str, None and int), which no consumer expects.
+				# self._requirements[0] = brokenRequirements
 
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
 
