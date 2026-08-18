@@ -115,8 +115,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Access an element in the node by index or key.
 
-		:param key: Index or key of the element.
-		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
+		:param key:                  Index or key of the element.
+		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 		raise NotImplementedError()
 
@@ -124,8 +124,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Set an element in the node by index or key.
 
-		:param key:   Index or key of the element.
-		:param value: Value to set
+		:param key:                  Index or key of the element.
+		:param value:                Value to set
 		"""
 		raise NotImplementedError()
 
@@ -133,7 +133,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Returns an iterator to iterate a node.
 
-		:returns: Node iterator.
+		:returns:                    Node iterator.
 		"""
 		raise NotImplementedError()
 
@@ -142,7 +142,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the node's key.
 
-		:returns: Key of the node.
+		:returns:                    Key of the node.
 		"""
 		raise NotImplementedError()
 
@@ -154,8 +154,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Return a node or value based on a path description to that node or value.
 
-		:param query: String describing the path to the node or value.
-		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
+		:param query:                String describing the path to the node or value.
+		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 		raise NotImplementedError()
 

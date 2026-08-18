@@ -47,6 +47,7 @@ The Licensing module implements mapping tables for various license names and ide
 from dataclasses  import dataclass
 from typing       import Any, Dict
 
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 
@@ -153,7 +154,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		Returns the Python license name for this license if it's defined.
 
-		:returns: The Python license name.
+		:returns:           The Python license name.
 		:raises ValueError: If there is no license name defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
@@ -168,7 +169,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		Returns the Python package classifier for this license if it's defined.
 
-		:returns: The Python package classifier.
+		:returns:           The Python package classifier.
 		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 
 		.. seealso::
@@ -193,7 +194,8 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			ex = TypeError(f"Second operand is not supported by equal operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
@@ -207,16 +209,29 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			ex = TypeError(f"Second operand is not supported by unequal operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are compatible."""
+		"""
+		Returns true, if both licenses are compatible.
+
+		:param other:                Second operand, the license to compare with.
+		:returns:                    ``True``, if both licenses are compatible.
+		:raises NotImplementedError: License compatibility is not implemented yet.
+		"""
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __ge__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are compatible."""
+		"""
+		Returns true, if both licenses are compatible.
+
+		:param other:                Second operand, the license to compare with.
+		:returns:                    ``True``, if both licenses are compatible.
+		:raises NotImplementedError: License compatibility is not implemented yet.
+		"""
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:

@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmark tests for :func:`pyTooling.Common.mergedicts`."""
+"""
+Benchmarks for :func:`pyTooling.Common.mergedicts`, compared with the merge operators of :class:`dict`.
+"""
 from pytest import mark
 
 from pyTooling.Common import mergedicts

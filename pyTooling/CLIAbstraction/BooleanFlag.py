@@ -34,12 +34,12 @@ Boolean flags are arguments with a name and different pattern for a positive (``
 
 .. seealso::
 
-   * For simple flags. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Flag`
-   * For flags with a value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For flags that have an optional value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :mod:`~pyTooling.CLIAbstraction.Flag`
+      |rarr| For simple flags.
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For flags with a value.
+   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+      |rarr| For flags that have an optional value.
 """
 from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
 
@@ -69,6 +69,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -92,6 +93,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is BooleanFlag:
@@ -109,7 +111,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
 		on the internal name and value.
 
-		:returns: Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -134,6 +136,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"-with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -153,6 +156,7 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortBooleanFlag:
@@ -175,6 +179,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"--with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -194,6 +199,7 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongBooleanFlag:
@@ -216,6 +222,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
+		:param name:         Name of the flag, inserted into the patterns.
 		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"/with-{0}"``.
 		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
@@ -235,6 +242,7 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is WindowsBooleanFlag:

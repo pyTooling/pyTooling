@@ -52,9 +52,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional point.
 
-		:param x: X-coordinate.
-		:param y: Y-coordinate.
-		:raises TypeError: If x/y-coordinate is not of type integer or float.
+		:param x:          X-coordinate.
+		:param y:          Y-coordinate.
+		:raises TypeError: If x/y-coordinate is not of type :class:`int` or :class:`float`.
 		"""
 		if not isinstance(x, (int, float)):
 			ex = TypeError(f"Parameter 'x' is not of type integer or float.")
@@ -203,6 +203,8 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 
 	def Copy(self) -> Self:
 		"""
+		An origin is a singular point, so it can't be copied.
+
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
 		raise RuntimeError(f"An origin can't be copied.")
@@ -229,7 +231,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param xOffset:    x-direction offset.
 		:param yOffset:    y-direction offset.
-		:raises TypeError: If x/y-offset is not of type integer or float.
+		:raises TypeError: If x/y-offset is not of type :class:`int` or :class:`float`.
 		"""
 		if not isinstance(xOffset, (int, float)):
 			ex = TypeError(f"Parameter 'xOffset' is not of type integer or float.")
@@ -422,7 +424,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param width:      width in x-direction.
 		:param height:     height in y-direction.
-		:raises TypeError: If width/height is not of type integer or float.
+		:raises TypeError: If width/height is not of type :class:`int` or :class:`float`.
 		"""
 		if not isinstance(width, (int, float)):
 			ex = TypeError(f"Parameter 'width' is not of type integer or float.")
@@ -482,7 +484,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
-		:raises TypeError: If start/end is not of type Point2D.
+		:param copyPoints: If ``True``, the given points are copied instead of referenced.
+		:raises TypeError: If start/end is not of type :class:`Point2D`.
 		"""
 		if not isinstance(start, Point2D):
 			ex = TypeError(f"Parameter 'start' is not of type Point2D.")
@@ -511,6 +514,12 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)
 
 	def AngleTo(self, other: "LineSegment2D[Coordinate]") -> float:
+		"""
+		Compute the angle between this line segment and another one.
+
+		:param other: The second line segment.
+		:returns:     The angle in radians.
+		"""
 		vectorA = self.ToOffset()
 		vectorB = other.ToOffset()
 		scalarProductAB = vectorA.xOffset * vectorB.xOffset + vectorA.yOffset * vectorB.yOffset

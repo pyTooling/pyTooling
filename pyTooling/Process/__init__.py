@@ -28,7 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+An operating system independent abstraction of the currently running process.
 
+The process' properties are queried through one API, whichever operating system provides them, so a program reading
+its own memory usage needs no platform handling of its own.
+"""
 from ctypes              import Structure, c_void_p, c_size_t, c_int, c_int32, c_uint64
 from os                  import getpid, strerror
 from pathlib             import Path
@@ -146,7 +151,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			``SC_PAGESIZE`` is typically 4096 bytes, but can be 16kiB (ARM64) or 64kiB (PowerPC/RHEL9+). :func:`os.sysconf`
 			reads it from the aux vector — no syscall overhead.
 
-			:returns: Physical memory usage (VmRSS) in bytes.
+			:returns:                  Physical memory usage (VmRSS) in bytes.
+			:raises PlatformException: If the process' memory usage couldn't be read.
 			"""
 
 			try:
@@ -197,6 +203,9 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
 			(errno is set).  PROC_PIDTASKINFO = 4.
+
+			:returns:                  Memory usage of the current process.
+			:raises PlatformException: If ``proc_pidinfo`` reported an error.
 			"""
 			from ctypes import CDLL, byref, sizeof, get_errno
 			from ctypes.util import find_library
@@ -254,6 +263,9 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			GetCurrentProcess() returns a pseudo-handle (-1) requiring no CloseHandle.
 			use_last_error=True routes SetLastError / GetLastError through ctypes so
 			WinError() picks up the correct code without a race.
+
+			:returns:         Memory usage of the current process.
+			:raises WinError: If ``GetProcessMemoryInfo`` reported an error.
 			"""
 
 			from ctypes import WinDLL, WinError, POINTER, sizeof, byref, get_last_error

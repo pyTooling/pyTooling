@@ -69,9 +69,11 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a named event.
 
-		:param name:   The name of the event.
-		:param time:   The optional time when the event happened.
-		:param parent: Reference to the parent span.
+		:param name:        The name of the event.
+		:param time:        The optional time when the event happened.
+		:param parent:      Reference to the parent span.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
 		if isinstance(name, str):
 			if name == "":
@@ -218,8 +220,10 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a timespan as part of a software execution trace.
 
-		:param name:   Name of the timespan.
-		:param parent: Reference to a parent span or trace.
+		:param name:        Name of the timespan.
+		:param parent:      Reference to a parent span or trace.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
 		if isinstance(name, str):
 			if name == "":
@@ -270,6 +274,12 @@ class Span(metaclass=ExtendedType, slots=True):
 		return self._parent
 
 	def _AddSpan(self, span: "Span") -> Self:
+		"""
+		Append a sub-span to this timespan and set this timespan as its parent.
+
+		:param span: The sub-span to append.
+		:returns:    The appended sub-span.
+		"""
 		self._spans.append(span)
 		span._parent = self
 
@@ -384,7 +394,8 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		A span will be started.
 
-		:returns: The span itself.
+		:returns:                 The span itself.
+		:raises TracingException: If no trace is active, so the span has nothing to attach to.
 		"""
 		global _threadLocalData
 
@@ -484,6 +495,13 @@ class Span(metaclass=ExtendedType, slots=True):
 		return len(self._dict)
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render this timespan and its sub-spans as indented lines.
+
+		:param indent:     Indentation level of this timespan.
+		:param columnSize: Column the durations are aligned at.
+		:returns:          One line per timespan, deepest last.
+		"""
 		result = []
 		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self._totalTime/1e6:8.3f} ms")
 		for span in self._spans:
@@ -592,6 +610,13 @@ class Trace(Span):
 		return currentTrace
 
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render this trace and its spans as indented lines.
+
+		:param indent:     Indentation level of the trace.
+		:param columnSize: Column the durations are aligned at.
+		:returns:          A headline, followed by one line per timespan.
+		"""
 		result = []
 		result.append(f"{'  ' * indent}Software Execution Trace: {self._totalTime/1e6:8.3f} ms")
 		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self._totalTime/1e6:8.3f} ms")

@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.LinkedList."""
+"""
+Common infrastructure of the linked-list performance tests: the base-class measuring one operation over
+lists of growing size.
+"""
 import timeit
 from statistics import median
 from typing import Callable, Iterable

@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for the packaging helper functions.
+Unit tests for :mod:`pyTooling.Packaging`: the helper functions, the version information read from a
+package, and the description assembled for setuptools.
 """
 from pathlib  import Path
 from pytest   import mark

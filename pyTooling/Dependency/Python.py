@@ -139,6 +139,13 @@ class lazy:
 		# 3. Otherwise, treat as a method and return a bound wrapper
 		@wraps(self._wrapped)
 		def wrapper(*args, **kwargs):
+			"""
+			Nested function binding the decorated method to the object it was accessed on.
+
+			:param args:   Positional parameters passed to the decorated method.
+			:param kwargs: Named parameters passed to the decorated method.
+			:returns:      Whatever the decorated method returns.
+			"""
 			return self._wrapped(obj, *args, **kwargs)
 
 		return wrapper
@@ -328,6 +335,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 	@lazy(LazyLoaderState.PostProcessed)
 	@PackageVersion.DependsOn.getter
 	def DependsOn(self) -> Dict["Package", Dict[SemanticVersion, "PackageVersion"]]:
+		"""
+		Read-only property to access the packages this release depends on.
+
+		:returns: Dictionary of packages and their versions this release depends on.
+		"""
 		return super().DependsOn
 
 	@readonly
@@ -360,9 +372,20 @@ class Release(PackageVersion, LazyLoadableMixin):
 		return self._requirements
 
 	def _GetPyPIEndpoint(self) -> str:
+		"""
+		Return the API endpoint describing this release.
+
+		:returns: The endpoint's path, relative to the index's API URL.
+		"""
 		return f"{self._package._name.lower()}/{self._version}/json"
 
 	def DownloadDetails(self) -> None:
+		"""
+		Download this release's details from the package index and load the projects it requires.
+
+		:raises NoSessionAvailableException: If the release wasn't created by a package index, so it has no session.
+		:raises ReleaseNotFoundException:    If the index doesn't know this release.
+		"""
 		if self._session is None:
 			ex = NoSessionAvailableException(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
 			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
@@ -383,6 +406,14 @@ class Release(PackageVersion, LazyLoadableMixin):
 			index.DownloadProject(packageName, True)
 
 	def UpdateDetailsFromPyPIJSON(self, json) -> None:
+		"""
+		Fill this release from the JSON document the package index returned.
+
+		The requirements are sorted into the extras they belong to; requirements without a marker are collected under
+		``None``. A requirement naming an unknown extra is reported as a :class:`BrokenRequirementWarning`.
+
+		:param json: The parsed JSON document describing this release.
+		"""
 		infoNode = json["info"]
 		if (extras := infoNode["provides_extra"]) is not None:
 			self._requirements = {extra: [] for extra in extras}
@@ -415,6 +446,12 @@ class Release(PackageVersion, LazyLoadableMixin):
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
 
 	def PostProcess(self) -> None:
+		"""
+		Resolve this release's requirements into dependencies on concrete releases.
+
+		Every required project is downloaded and the releases matching the requirement's specifier are attached as
+		dependencies of this release.
+		"""
 		index: PythonPackageIndex = self._package._storage
 		for requirement in self._requirements[None]:
 			package = index.DownloadProject(requirement.name)
@@ -556,9 +593,20 @@ class Project(Package, LazyLoadableMixin):
 		return firstValue(self._versions)
 
 	def _GetPyPIEndpoint(self) -> str:
+		"""
+		Return the API endpoint describing this project.
+
+		:returns: The endpoint's path, relative to the index's API URL.
+		"""
 		return f"{self._name.lower()}/json"
 
 	def DownloadDetails(self) -> None:
+		"""
+		Download this project's details and its list of releases from the package index.
+
+		:raises NoSessionAvailableException: If the project wasn't created by a package index, so it has no session.
+		:raises ProjectNotFoundException:    If the index doesn't know this project.
+		"""
 		if self._session is None:
 			ex = NoSessionAvailableException(f"No session available to download details of package '{self._name}'.")
 			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
@@ -574,6 +622,14 @@ class Project(Package, LazyLoadableMixin):
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
 	def UpdateDetailsFromPyPIJSON(self, json) -> None:
+		"""
+		Fill this project from the JSON document the package index returned.
+
+		Releases without a distribution are skipped, and a version the parser doesn't understand is reported as a
+		warning rather than failing the whole project.
+
+		:param json: The parsed JSON document describing this project.
+		"""
 		infoNode = json["info"]
 		releasesNode = json["releases"]
 
@@ -611,8 +667,23 @@ class Project(Package, LazyLoadableMixin):
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
 
 	def DownloadReleaseDetails(self) -> None:
+		"""
+		Download the details of every release of this project, in parallel.
+
+		The requests run in one :mod:`asyncio` event loop over a shared session, because a project can easily have
+		hundreds of releases.
+		"""
 		async def ParallelDownloadReleaseDetails():
+			"""
+			Nested coroutine downloading the details of every release over one shared session.
+			"""
 			async def routine(session, release: Release):
+				"""
+				Nested coroutine downloading the details of a single release.
+
+				:param session: The HTTP session shared by all requests of this download.
+				:param release: The release to download the details for.
+				"""
 				if Parts.Postfix in release._version._parts:
 					pass
 
@@ -742,9 +813,22 @@ class PythonPackageIndex(PackageStorage):
 		return len(self._packages)
 
 	def _GetPyPIEndpoint(self, projectName: str) -> str:
+		"""
+		Return the API endpoint describing a project.
+
+		:param projectName: Name of the project on the package index.
+		:returns:           The endpoint's URL.
+		"""
 		return f"{self._api}{projectName.lower()}/json"
 
 	def DownloadProject(self, projectName: str, lazy: LazyLoaderState = LazyLoaderState.PartiallyLoaded) -> Project:
+		"""
+		Look up a project on this package index.
+
+		:param projectName: Name of the project on the package index.
+		:param lazy:        State the project should be loaded to immediately.
+		:returns:           The project, loaded as far as ``lazy`` demands.
+		"""
 		project = Project(projectName, "", index=self, lazy=lazy)
 
 		return project

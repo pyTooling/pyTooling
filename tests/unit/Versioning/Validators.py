@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for version validators and the exception raised when one rejects a version."""
+"""
+Unit tests for the version validators and :exc:`~pyTooling.Versioning.VersionValidatorException`, which
+carries the rejected version.
+"""
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Versioning import CalendarVersion, SemanticVersion, VersionValidatorException
 from pyTooling.Testing    import Testcase

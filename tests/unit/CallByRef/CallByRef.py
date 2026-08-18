@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`PyTooling.CallByRef`.
+Unit tests for :mod:`pyTooling.CallByRef` - the generic parameter and its boolean and integer variants.
 """
 from pyTooling.CallByRef import CallByRefParam, CallByRefBoolParam, CallByRefIntParam
 from pyTooling.Testing   import Testcase

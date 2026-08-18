@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for TBD."""
+"""
+Unit tests for :class:`pyTooling.Stopwatch.Stopwatch`: starting, pausing, resuming, splitting and stopping,
+the formatting of the results, and its use as a context manager.
+"""
 from time                 import sleep
 
 from pyTooling.Exceptions import ToolingException

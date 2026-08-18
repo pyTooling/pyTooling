@@ -37,12 +37,12 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
 
 .. seealso::
 
-   * For single valued flags. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For list of strings. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
-   * For list of paths. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For single valued flags.
+   :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
+      |rarr| For a list of strings.
+   :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+      |rarr| For a list of paths.
 """
 from typing import List, Union, Iterable, cast, Any, Self
 
@@ -84,6 +84,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ValuedFlagList:
@@ -123,6 +124,12 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 			innerList.append(value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
+		"""
+		Render this argument as a list of command line elements, one per value.
+
+		:returns:           The rendered command line elements.
+		:raises ValueError: If the argument has no name.
+		"""
 		if self._name is None:
 			raise ValueError(f"")  # XXX: add message
 
@@ -175,6 +182,7 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortValuedFlagList:
@@ -212,6 +220,7 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongValuedFlagList:
@@ -250,6 +259,7 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is WindowsValuedFlagList:

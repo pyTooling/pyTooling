@@ -122,8 +122,10 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize the base-class with filesystem element size and root reference.
 
-		:param size: Optional size of the element.
-		:param root: Optional reference to the filesystem root element.
+		:param size:       Optional size of the element.
+		:param root:       Optional reference to the filesystem root element.
+		:raises TypeError: If parameter 'size' is not of type :class:`int`.
+		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
 		if size is not None and not isinstance(size, int):
 			ex = TypeError("Parameter 'size' is not of type 'int'.")
@@ -143,7 +145,9 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the root of the filesystem statistics scope.
 
-		:returns: Root of the filesystem statistics scope.
+		:returns:           Root of the filesystem statistics scope.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Root`.
 		"""
 		return self._root
 
@@ -179,7 +183,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
 		will be stored in the node's key-value store.
 
-		:returns: A tree's node referencing this filesystem element.
+		:returns:                    A tree's node referencing this filesystem element.
 		"""
 		raise NotImplementedError()
 
@@ -208,9 +212,11 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Initialize the element base-class with name, size and parent reference.
 
-		:param name:   Name of the element.
-		:param size:   Optional size of the element.
-		:param parent: Optional parent reference.
+		:param name:        Name of the element.
+		:param size:        Optional size of the element.
+		:param parent:      Optional parent reference.
+		:raises ValueError: If parameter 'name' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Directory`.
 		"""
 		if name is None:
 			raise ValueError(f"Parameter 'name' is None.")
@@ -240,7 +246,9 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Property to access the element's parent.
 
-		:returns: Parent element.
+		:returns:           Parent element.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Directory`.
 		"""
 		return self._parent
 
@@ -272,7 +280,7 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Read-only property to access the element's path.
 
-		:returns: Path of the element.
+		:returns:                    Path of the element.
 		"""
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 
@@ -289,7 +297,8 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Add a link source of a symbolic link to the named element (reverse reference).
 
-		:param source: The referenced symbolic link.
+		:param source:     The referenced symbolic link.
+		:raises TypeError: If parameter 'source' is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(source, SymbolicLink):
 			ex = TypeError("Parameter 'source' is not of type 'SymbolicLink'.")
@@ -374,6 +383,12 @@ class Directory(Element["Directory"]):
 
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
+
+		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
+		the collected statistics are incomplete by exactly that path.
+
+		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
+		                             symbolic link.
 		"""
 		with Stopwatch() as sw1:
 			try:
@@ -405,6 +420,12 @@ class Directory(Element["Directory"]):
 		self._scanDuration = sw1.Duration
 
 	def ResolveSymbolicLinks(self) -> None:
+		"""
+		Resolve the symbolic links of this directory and of every directory below it.
+
+		A link whose target lies inside the scanned tree is connected to that element; a target that doesn't exist
+		registers the link as broken, and a target outside the scanned tree registers it as unconnected.
+		"""
 		for dir in self._subdirectories.values():
 			dir.ResolveSymbolicLinks()
 
@@ -446,6 +467,14 @@ class Directory(Element["Directory"]):
 					target.AddLinkSources(link)
 
 	def AggregateSizes(self) -> Set["File"]:
+		"""
+		Compute the aggregated size of this directory and of every directory below it.
+
+		A file is counted once, even when several filenames (hardlinks) refer to it, which is why the already counted
+		files are returned and handed up the recursion.
+
+		:returns: The set of file objects counted in this subtree.
+		"""
 		with Stopwatch() as sw2:
 			aggregatedFiles = set()
 
@@ -672,12 +701,26 @@ class Directory(Element["Directory"]):
 		return hash(id(self))
 
 	def IterateDirectories(self) -> Generator["Directory", None, None]:
+		"""
+		A generator to iterate all subdirectories below this directory in pre-order.
+
+		A parent directory is yielded before its children.
+
+		:returns: A generator to iterate all subdirectories below this directory.
+		"""
 		# pre-order
 		for directory in self._subdirectories.values():
 			yield directory
 			yield from directory.IterateDirectories()
 
 	def IterateFiles(self) -> Generator[Element, None, None]:
+		"""
+		A generator to iterate all files and symbolic links below this directory in post-order.
+
+		The elements of the subdirectories are yielded before this directory's own.
+
+		:returns: A generator to iterate all files and symbolic links below this directory.
+		"""
 		# post-order
 		for directory in self._subdirectories.values():
 			yield from directory.IterateFiles()
@@ -712,6 +755,15 @@ class Directory(Element["Directory"]):
 		return dir
 
 	def Collapse(self, func: Callable[["Directory"], bool]) -> bool:
+		"""
+		Collapse this directory's subtree where the given predicate accepts it.
+
+		A directory is collapsed when it has no subdirectories left - or all of them collapsed - and the predicate
+		accepts it. Collapsing discards the directory's elements, so only its aggregated numbers remain.
+
+		:param func: Predicate deciding whether a directory may be collapsed.
+		:returns:    ``True``, if this directory was collapsed.
+		"""
 		# if len(self._subdirectories) == 0 or all(subdir.Collapse(func) for subdir in self._subdirectories.values()):
 		if len(self._subdirectories) == 0:
 			if func(self):
@@ -759,6 +811,12 @@ class Directory(Element["Directory"]):
 		"""
 		if format is None:
 			def format(node: Node) -> str:
+				"""
+				Nested function rendering a tree node as one line.
+
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
 				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		directoryNode = Node(
@@ -847,9 +905,10 @@ class Filename(Element[Directory]):
 		"""
 		Initialize the filename with name, file (storage) object and parent reference.
 
-		:param name:   Name of the file.
-		:param size:   Optional file (storage) object.
-		:param parent: Optional parent reference.
+		:param name:       Name of the file.
+		:param file:       Optional file (storage) object.
+		:param parent:     Optional parent reference.
+		:raises TypeError: If parameter 'file' is not of type :class:`File`.
 		"""
 		super().__init__(name, None, parent)
 
@@ -935,6 +994,15 @@ class Filename(Element[Directory]):
 		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "Filename":
+		"""
+		Copy this filename into another filesystem statistics scope.
+
+		The file object behind the filename is copied only once per scope: a filename referring to a file that was
+		already copied - a hardlink - is connected to the existing copy.
+
+		:param parent: The directory in the target scope the copy is registered at.
+		:returns:      The copied filename.
+		"""
 		fileID = self._file._id
 
 		if fileID in parent._root._ids:
@@ -948,7 +1016,18 @@ class Filename(Element[Directory]):
 		return Filename(self._name, file, parent=parent)
 
 	def ToTree(self) -> Node:
+		"""
+		Convert this filename to a node of a :mod:`pyTooling.Tree`.
+
+		:returns: A tree node carrying this filename, its kind and its size.
+		"""
 		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by its name.
+			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		fileNode = Node(
@@ -1119,10 +1198,27 @@ class SymbolicLink(Element[Directory]):
 		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "SymbolicLink":
+		"""
+		Copy this symbolic link into another filesystem statistics scope.
+
+		:param parent: The directory in the target scope the copy is registered at.
+		:returns:      The copied symbolic link, unresolved.
+		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
 
 	def ToTree(self) -> Node:
+		"""
+		Convert this symbolic link to a node of a :mod:`pyTooling.Tree`.
+
+		:returns: A tree node carrying this symbolic link, its kind and its size.
+		"""
 		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by its name.
+			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		symbolicLinkNode = Node(
@@ -1323,10 +1419,20 @@ class Root(Directory):
 		return len(self._ids)
 
 	def RegisterBrokenSymbolicLink(self, symLink: SymbolicLink) -> None:
+		"""
+		Mark a symbolic link as broken and collect it at the root.
+
+		:param symLink: The symbolic link whose target doesn't exist.
+		"""
 		symLink._isBroken = True
 		self._brokenSymbolicLinks.append(symLink)
 
 	def RegisterUnconnectedSymbolicLink(self, symLink: SymbolicLink) -> None:
+		"""
+		Mark a symbolic link as out of range and collect it at the root.
+
+		:param symLink: The symbolic link whose target lies outside the scanned tree.
+		"""
 		symLink._isOutOfRange = True
 		self._unconnectedSymbolicLinks.append(symLink)
 
@@ -1397,9 +1503,11 @@ class File(Base):
 		"""
 		Initialize the File storage object with an ID, size and parent reference.
 
-		:param id:     Unique ID of the file object.
-		:param size:   Size of the file object.
-		:param parent: Optional parent reference.
+		:param id:          Unique ID of the file object.
+		:param size:        Size of the file object.
+		:param parent:      Optional parent reference.
+		:raises ValueError: If parameter 'id' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.
 		"""
 		if id is None:
 			raise ValueError(f"Parameter 'id' is None.")
@@ -1448,7 +1556,10 @@ class File(Base):
 		"""
 		Add another parent reference to a :class:`Filename`.
 
-		:param filename: Reference to a filename object.
+		:param filename:          Reference to a filename object.
+		:raises ValueError:       If parameter 'filename' is None.
+		:raises TypeError:        If parameter 'filename' is not of type :class:`Filename`.
+		:raises ToolingException: If the filename already references another file object.
 		"""
 		if filename is None:
 			raise ValueError(f"Parameter 'filename' is None.")

@@ -29,7 +29,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
+"""
+Unit tests for :class:`pyTooling.TerminalUI.TerminalBaseApplication`: low-level writing, the exit codes, and
+the exception printers.
+"""
 from io                   import StringIO
 
 from pyTooling.Exceptions import ExceptionBase

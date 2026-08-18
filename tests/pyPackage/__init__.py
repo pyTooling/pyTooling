@@ -1,3 +1,7 @@
+"""
+An example package used by the packaging tests: it carries the dunder variables
+:func:`~pyTooling.Packaging.DescribePythonPackage` reads.
+"""
 __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
 __copyright__ =         "2017-2026, Patrick Lehmann"
