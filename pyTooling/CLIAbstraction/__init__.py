@@ -132,8 +132,8 @@ class Environment(metaclass=ExtendedType, slots=True):
 		"""
 		Checks if the variable is set in the environment.
 
-		:param key: The variable name to check.
-		:returns:   ``True``, if the variable is set in the environment.
+		:param name: The variable name to check.
+		:returns:    ``True``, if the variable is set in the environment.
 		"""
 		return name in self._variables
 
@@ -205,9 +205,11 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		.. todo:: Document algorithm
 
-		:param executablePath:      Path to the executable.
-		:param binaryDirectoryPath: Path to the executable's directory.
-		:param dryRun:              True, when the program should run in dryrun mode.
+		:param executablePath:           Path to the executable.
+		:param binaryDirectoryPath:      Path to the executable's directory.
+		:param dryRun:                   True, when the program should run in dryrun mode.
+		:raises TypeError:               If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
+		:raises CLIAbstractionException: If the executable doesn't exist at the given path.
 		"""
 		self._platform =    system()
 		self._dryRun =      dryRun
@@ -289,7 +291,13 @@ class Program(metaclass=ExtendedType, slots=True):
 		return issubclass(key, (ValuedFlag, ValuedArgument, NamedAndValuedArgument, NamedTupledArgument, PathArgument, PathListArgument))
 
 	def __getitem__(self, key: Type[CommandLineArgument]) -> CommandLineArgument:
-		"""Access to a CLI parameter by CLI option (key must be of type :class:`CommandLineArgument`), which is already used."""
+		"""
+		Access to a CLI parameter by CLI option, which is already used.
+
+		:param key:        Class of the command line argument to read.
+		:returns:          The command line argument object registered for that class.
+		:raises TypeError: If the key is not a subclass of :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument`.
+		"""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
@@ -326,7 +334,8 @@ class Program(metaclass=ExtendedType, slots=True):
 		"""
 		Convert a program and used CLI options to a list of CLI argument strings in correct order and with escaping.
 
-		:returns: List of CLI arguments
+		:returns:          List of CLI arguments
+		:raises TypeError: If an argument is neither a string nor a sequence of strings.
 		"""
 		result: List[str] = []
 

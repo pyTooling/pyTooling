@@ -106,9 +106,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:param version:           Semantic version of this package.
 		:param package:           Package this version is associated to.
 		:param releasedAt:        Optional release date and time.
-		:raises TypeError:        When parameter 'version' is not of type 'SemanticVersion'.
-		:raises TypeError:        When parameter 'package' is not of type 'Package'.
-		:raises TypeError:        When parameter 'releasedAt' is not of type 'datetime'.
+		:raises TypeError:        When parameter 'version' is not of type :class:`SemanticVersion`.
+		:raises TypeError:        When parameter 'package' is not of type :class:`Package`.
+		:raises TypeError:        When parameter 'releasedAt' is not of type :class:`~datetime.datetime`.
 		:raises ToolingException: When version already exists for the associated package.
 		"""
 		if not isinstance(version, SemanticVersion):
@@ -217,8 +217,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		"""
 		Add a dependency from current package version to another package version.
 
-		:param package: :class:`Package` object or name of the package.
-		:param version: :class:`~pyTooling.Versioning.SemanticVersion` object or version string or an iterable thereof.
+		:param package:    :class:`Package` object or name of the package.
+		:param version:    :class:`~pyTooling.Versioning.SemanticVersion` object or version string or an iterable thereof.
+		:raises TypeError: If parameter 'package' is not of type :class:`Package`.
 		"""
 		if isinstance(package, str):
 			package = self._package._storage._packages[package]
@@ -378,8 +379,9 @@ class Package(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a package.
 
-		:param name:    Name of the package.
-		:param storage: The package's storage.
+		:param name:       Name of the package.
+		:param storage:    The package's storage.
+		:raises TypeError: If a parameter is not of the expected type.
 		"""
 		if not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -455,9 +457,10 @@ class Package(metaclass=ExtendedType, slots=True):
 		"""
 		Access a package version in the package by version string or semantic version.
 
-		:param version:   Version as string or instance.
-		:returns:         The package version.
-		:raises KeyError: If version is not available for the package.
+		:param version:    Version as string or instance.
+		:returns:          The package version.
+		:raises KeyError:  If version is not available for the package.
+		:raises TypeError: If the given key is not of the expected type.
 		"""
 		if isinstance(version, str):
 			version = SemanticVersion.Parse(version)
@@ -492,8 +495,9 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes the package storage.
 
-		:param name:  Name of the package storage.
-		:param graph: PackageDependencyGraph instance (parent).
+		:param name:       Name of the package storage.
+		:param graph:      PackageDependencyGraph instance (parent).
+		:raises TypeError: If a parameter is not of the expected type.
 		"""
 		if not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -640,7 +644,8 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes the package dependency graph.
 
-		:param name: Name of the dependency graph.
+		:param name:       Name of the dependency graph.
+		:raises TypeError: If a parameter is not of the expected type.
 		"""
 		if not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")

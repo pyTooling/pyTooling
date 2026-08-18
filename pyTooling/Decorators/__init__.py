@@ -82,6 +82,7 @@ def export(entity: T) -> T:
 	:raises AttributeError: If parameter ``entity`` has no ``__module__`` member.
 	:raises TypeError:      If parameter ``entity`` is not a top-level entity in a module.
 	:raises TypeError:      If parameter ``entity`` has no ``__name__``.
+	:raises ValueError:     If the decorated entity has no ``__module__`` attribute, so it can't be added to ``__all__``.
 	"""
 	# * Based on an idea by Duncan Booth:
 	#	  http://groups.google.com/group/comp.lang.python/msg/11cbb03e09611b8a
@@ -130,13 +131,15 @@ def notimplemented(message: str) -> Callable:
 	          '''This method needs to be implemented'''
 	          return True
 
-	:param method: Method that is marked as *not implemented*.
-	:returns:      Replacement method, which raises a :exc:`NotImplementedError`.
+	:param message: Text of the :exc:`NotImplementedError` raised by the replacement method.
+	:returns:       Decorator function that replaces the decorated method.
 
 	.. seealso::
 
-	   * :deco:`~pyTooling.MetaClasses.abstractmethod`
-	   * :deco:`~pyTooling.MetaClasses.mustoverride`
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
+	   :deco:`~pyTooling.MetaClasses.mustoverride`
+	      |rarr| Mark a method as *mustoverride* (minimal implementation, but can be called).
 	"""
 
 	def decorator(method: C) -> C:

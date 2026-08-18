@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Filesystem."""
+"""
+Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the statistics collected for it.
+"""
 from pathlib import Path
 
 from pyTooling.Exceptions import ToolingException

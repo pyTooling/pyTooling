@@ -181,6 +181,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	def __init__(self) -> None:
 		"""
 		Initializes a platform by accessing multiple APIs of Python to gather all necessary information.
+
+		:raises UnknownPlatformException: If the operating system or the Python implementation isn't known to pyTooling.
 		"""
 		import sys
 		import os

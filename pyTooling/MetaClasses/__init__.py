@@ -662,6 +662,7 @@ class ExtendedType(type):
 		# Additional methods on a class
 		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
 			"""
+			Return the class' methods that carry at least one matching attribute.
 
 			:param predicate:   An attribute class, an iterable of attribute classes, or ``None`` to accept every attribute.
 			:returns:           Dictionary of methods and the matching attributes attached to them.
@@ -721,6 +722,7 @@ class ExtendedType(type):
 		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:     Members of the new class.
 		:returns:           A 2-tuple of all methods and those methods carrying at least one attribute.
+		:raises TypeError:  If a member is neither a method nor a class, so it can't be searched for methods.
 		"""
 		from pyTooling.Attributes import Attribute
 
@@ -890,12 +892,14 @@ class ExtendedType(type):
 
 		   Describe algorithm.
 
-		:param className:   The name of the class to construct.
-		:param baseClasses: Tuple of base-classes.
-		:param members:     Dictionary of class members.
-		:param slots:       True, if the class should setup ``__slots__``.
-		:param mixin:       True, if the class should behave as a mixin-class.
-		:returns:           A 2-tuple with a dictionary of class members and object members.
+		:param className:                   The name of the class to construct.
+		:param baseClasses:                 Tuple of base-classes.
+		:param members:                     Dictionary of class members.
+		:param slots:                       True, if the class should setup ``__slots__``.
+		:param mixin:                       True, if the class should behave as a mixin-class.
+		:returns:                           A 2-tuple with a dictionary of class members and object members.
+		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved.
+		:raises BaseClassWithoutSlotsError: If a base-class doesn't use slots, which Python requires for a slotted class.
 		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
@@ -1013,9 +1017,11 @@ class ExtendedType(type):
 
 		   Describe algorithm.
 
-		:param className:   The name of the class to construct.
-		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:returns:           A list of slot names.
+		:param className:                        The name of the class to construct.
+		:param baseClasses:                      The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:returns:                                A list of slot names.
+		:raises BaseClassWithNonEmptySlotsError: If a mixin-class uses non-empty slots, which Python doesn't allow on a
+		                                         secondary inheritance line.
 		"""
 		mixinSlots = []
 		if len(baseClasses) > 0:
@@ -1243,6 +1249,8 @@ class ExtendedType(type):
 		:param newClass:            The newly constructed class for further modifications.
 		:returns:                   ``True``, if the class is abstract.
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
+		:raises Exception:          If a singleton wrapper was found around a method raising
+		                            :exc:`AbstractClassError`, which is not handled yet.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
 		if newClass.__abstractClass__ or len(newClass.__abstractMethods__) > 0:

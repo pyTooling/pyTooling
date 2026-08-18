@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for ...
+Unit tests for :mod:`pyTooling.Cartesian2D`: points, offsets and sizes, their copies, comparisons and
+arithmetic.
 """
 from math                  import sqrt
 

@@ -133,8 +133,8 @@ class Stopwatch(SlottedObject):
 		If parameter ``started`` is set to true, the stopwatch will immediately start.
 
 		:param name:        Optional name of the stopwatch.
-		:param preferPause: Optional setting, if __exit__(...) in a contex should prefer pause or stop behavior.
 		:param started:     Optional flag, if the stopwatch should be started immediately.
+		:param preferPause: Optional setting, if __exit__(...) in a contex should prefer pause or stop behavior.
 		"""
 		self._name =         name
 		self._preferPause =  preferPause
@@ -464,7 +464,8 @@ class Stopwatch(SlottedObject):
 
 		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
 
-		:returns: The stopwatch itself.
+		:returns:                   The stopwatch itself.
+		:raises StopwatchException: If the stopwatch was already started.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -495,10 +496,11 @@ class Stopwatch(SlottedObject):
 
 		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.
 
-		:param exc_type: Exception type, otherwise None.
-		:param exc_val:  Exception object, otherwise None.
-		:param exc_tb:   Exception's traceback, otherwise None.
-		:returns:        True, if exceptions should be suppressed.
+		:param exc_type:            Exception type, otherwise None.
+		:param exc_val:             Exception object, otherwise None.
+		:param exc_tb:              Exception's traceback, otherwise None.
+		:returns:                   True, if exceptions should be suppressed.
+		:raises StopwatchException: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # never started?
 			raise StopwatchException("Stopwatch was never started.")
