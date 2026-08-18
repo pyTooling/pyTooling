@@ -33,7 +33,8 @@ A data model to write out GraphML XML files.
 
 .. seealso::
 
-   * http://graphml.graphdrawing.org/primer/graphml-primer.html
+   `GraphML Primer <http://graphml.graphdrawing.org/primer/graphml-primer.html>`__
+      |rarr| The format's own introduction, describing the elements this module writes.
 """
 from enum    import Enum, auto
 from pathlib import Path
@@ -126,15 +127,43 @@ class Base(metaclass=ExtendedType, slots=True):
 		return True
 
 	def Tag(self, indent: int = 0) -> str:
+		"""
+		Return this element as a self-closing XML tag.
+
+		:param indent:               Indentation level of the XML element.
+		:returns:                    The XML tag, indented and terminated by a newline.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
+		"""
 		raise NotImplementedError()
 
 	def OpeningTag(self, indent: int = 0) -> str:
+		"""
+		Return the opening XML tag of this element.
+
+		:param indent:               Indentation level of the XML element.
+		:returns:                    The opening XML tag, indented and terminated by a newline.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
+		"""
 		raise NotImplementedError()
 
 	def ClosingTag(self, indent: int = 0) -> str:
+		"""
+		Return the closing XML tag of this element.
+
+		:param indent:               Indentation level of the XML element.
+		:returns:                    The closing XML tag, indented and terminated by a newline.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
+		"""
 		raise NotImplementedError()
 
 	def ToStringLines(self, indent: int = 0) -> List[str]:
+		"""
+		Render this element as a list of XML lines.
+
+		:param indent:               Indentation level of the XML element.
+		:returns:                    List of XML lines describing this element.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
+		"""
 		raise NotImplementedError()
 
 
@@ -177,6 +206,12 @@ class BaseWithData(BaseWithID):
 		return self._data
 
 	def AddData(self, data: Data) -> Data:
+		"""
+		Attach a data item (key-value-pair) to this element.
+
+		:param data: The data item to attach.
+		:returns:    The attached data item, so it can be used in the calling expression.
+		"""
 		self._data.append(data)
 		return data
 
@@ -239,9 +274,21 @@ class Key(BaseWithID):
 		return False
 
 	def Tag(self, indent: int = 2) -> str:
+		"""
+		Return this key as a self-closing XML tag.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
 
 	def ToStringLines(self, indent: int = 2) -> List[str]:
+		"""
+		Render this key as a list of XML lines.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      List of XML lines describing this key and everything attached to it.
+		"""
 		return [self.Tag(indent)]
 
 
@@ -285,6 +332,12 @@ class Data(Base):
 		return False
 
 	def Tag(self, indent: int = 2) -> str:
+		"""
+		Return this data item as a self-closing XML tag.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The XML tag, indented and terminated by a newline.
+		"""
 		data = str(self._data)
 		data = data.replace("&", "&amp;")
 		data = data.replace("<", "&lt;")
@@ -293,6 +346,12 @@ class Data(Base):
 		return f"""{'  '*indent}<data key="{self._key._id}">{data}</data>\n"""
 
 	def ToStringLines(self, indent: int = 2) -> List[str]:
+		"""
+		Render this data item as a list of XML lines.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      List of XML lines describing this data item and everything attached to it.
+		"""
 		return [self.Tag(indent)]
 
 
@@ -313,15 +372,39 @@ class Node(BaseWithData):
 		return len(self._data) > 0
 
 	def Tag(self, indent: int = 2) -> str:
+		"""
+		Return this node as a self-closing XML tag.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  '*indent}<node id="{self._id}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
+		"""
+		Return the opening XML tag of this node.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The opening XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  '*indent}<node id="{self._id}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
+		"""
+		Return the closing XML tag of this node.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The closing XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  ' * indent}</node>\n"""
 
 	def ToStringLines(self, indent: int = 2) -> List[str]:
+		"""
+		Render this node as a list of XML lines.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      List of XML lines describing this node and everything attached to it.
+		"""
 		if not self.HasClosingTag:
 			return [self.Tag(indent)]
 
@@ -373,15 +456,39 @@ class Edge(BaseWithData):
 		return len(self._data) > 0
 
 	def Tag(self, indent: int = 2) -> str:
+		"""
+		Return this edge as a self-closing XML tag.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
+		"""
+		Return the opening XML tag of this edge.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The opening XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  '*indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
+		"""
+		Return the closing XML tag of this edge.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      The closing XML tag, indented and terminated by a newline.
+		"""
 		return f"""{'  ' * indent}</edge>\n"""
 
 	def ToStringLines(self, indent: int = 2) -> List[str]:
+		"""
+		Render this edge as a list of XML lines.
+
+		:param indent: Indentation level of the XML element.
+		:returns:      List of XML lines describing this edge and everything attached to it.
+		"""
 		if not self.HasClosingTag:
 			return [self.Tag(indent)]
 
@@ -590,7 +697,7 @@ class Subgraph(Node, BaseGraph):
 		raise NotImplementedError()
 
 	def OpeningTag(self, indent: int = 1) -> str:
-			return f"""\
+		return f"""\
 {'  ' * indent}<graph id="{self._subgraphID}"
 {'  ' * indent}  edgedefault="{self._edgeDefault!s}"
 {'  ' * indent}  parse.nodes="{len(self._nodes)}"
@@ -680,6 +787,15 @@ class GraphMLDocument(Base):
 		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
 
 		def translateGraph(rootGraph: Graph, pyTGraph: pyToolingGraph):
+			"""
+			Nested function for recursion.
+
+			It translates the vertices and edges of one pyTooling graph into GraphML nodes and edges, and recurses into the
+			subgraphs it finds.
+
+			:param rootGraph: The GraphML graph the elements are added to.
+			:param pyTGraph:  The pyTooling graph to translate.
+			"""
 			for vertex in pyTGraph.IterateVertices():
 				newNode = Node(vertex._id)
 				newNode.AddData(Data(nodeValue, vertex._value))
@@ -723,6 +839,14 @@ class GraphMLDocument(Base):
 				rootGraph.AddEdge(newEdge)
 
 		def translateSubgraph(nodeGraph: Subgraph, pyTSubgraph: pyToolingSubgraph):
+			"""
+			Nested function for recursion.
+
+			It translates one pyTooling subgraph into a GraphML subgraph.
+
+			:param nodeGraph:   The GraphML subgraph the elements are added to.
+			:param pyTSubgraph: The pyTooling subgraph to translate.
+			"""
 			rootGraph = nodeGraph.RootGraph
 
 			for vertex in pyTSubgraph.IterateVertices():

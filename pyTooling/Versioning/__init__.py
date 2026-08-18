@@ -129,7 +129,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -147,7 +148,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -165,7 +167,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -183,7 +186,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <=>= operator.")
+			ex = TypeError(f"Second operand is not supported by <=>= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -201,7 +205,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -219,7 +224,8 @@ class ReleaseLevel(Enum):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -294,6 +300,13 @@ def WordSizeValidator(
 		buildMax = 2**buildBits - 1
 
 	def validator(version: SemanticVersion) -> bool:
+		"""
+		Validator function, which checks each version part against the maximum its word size allows.
+
+		:param version:     The version to validate.
+		:returns:           ``True``, if every part fits into its word size.
+		:raises ValueError: If a part exceeds the maximum value of its word size.
+		"""
 		if Parts.Major in version._parts and version._major > majorMax:
 			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
@@ -333,6 +346,13 @@ def MaxValueValidator(
 		majorMax = minorMax = microMax = buildMax = max
 
 	def validator(version: SemanticVersion) -> bool:
+		"""
+		Validator function, which checks each version part against its maximum value.
+
+		:param version:     The version to validate.
+		:returns:           ``True``, if every part is within its maximum.
+		:raises ValueError: If a part exceeds its maximum value.
+		"""
 		if Parts.Major in version._parts and version._major > majorMax:
 			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
@@ -737,6 +757,16 @@ class Version(metaclass=ExtendedType, slots=True):
 		return None
 
 	def _minimum(self, actual: "Version", expected: "Version") -> Nullable[bool]:
+		"""
+		Check if a version fulfills a minimum requirement.
+
+		How exact the comparison is depends on how detailed the expected version is: a minor number in the expectation
+		requires an exact major number, and a micro number requires an exact minor number.
+
+		:param actual:   The version to check.
+		:param expected: The minimum version, whose parts decide how exact the comparison is.
+		:returns:        ``True``, if the actual version fulfills the expectation.
+		"""
 		exactMajor = Parts.Minor in expected._parts
 		exactMinor = Parts.Micro in expected._parts
 
@@ -813,7 +843,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -845,7 +876,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -882,7 +914,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -921,7 +954,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -959,7 +993,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -998,7 +1033,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -1015,7 +1051,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >> operator.")
+			ex = TypeError(f"Second operand is not supported by >> operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
@@ -1148,6 +1185,13 @@ class SemanticVersion(Version):
 			raise ex
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
+			"""
+			Nested function converting an optional part of a version string to an integer.
+
+			:param value:       The matched part, or ``None`` if the pattern didn't match it.
+			:returns:           The part as an integer, or ``None`` if it wasn't present.
+			:raises ValueError: If the part isn't a number.
+			"""
 			if value is None or value == "":
 				return None
 

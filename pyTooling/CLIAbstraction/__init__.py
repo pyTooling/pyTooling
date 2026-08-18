@@ -293,6 +293,12 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	@staticmethod
 	def _NeedsParameterInitialization(key) -> bool:
+		"""
+		Check if an argument class needs a value when it is set.
+
+		:param key: Class of the command line argument.
+		:returns:   ``True``, if the argument carries a value.
+		"""
 		return issubclass(key, (ValuedFlag, ValuedArgument, NamedAndValuedArgument, NamedTupledArgument, PathArgument, PathListArgument))
 
 	def __getitem__(self, key: Type[CommandLineArgument]) -> CommandLineArgument:
@@ -347,6 +353,12 @@ class Program(metaclass=ExtendedType, slots=True):
 		result.append(str(self._executablePath))
 
 		def predicate(item: Tuple[Type[CommandLineArgument], int]) -> int:
+			"""
+			Nested function used as sort key.
+
+			:param item: Pair of an argument class and its argument object.
+			:returns:    The position the argument class was registered at, so the command line keeps the declared order.
+			"""
 			return self.__cliOptions__[item[0]]
 
 		for key, value in sorted(self.__cliParameters__.items(), key=predicate):
@@ -568,8 +580,10 @@ class Executable(Program):  # (ILogable):
 
 		.. seealso::
 
-		   * :meth:`Wait` - Wait on the child-process with an optional timeout.
-		   * :meth:`Terminate` - Terminate the child-process.
+		   :meth:`Wait`
+		      |rarr| Wait on the child-process with an optional timeout.
+		   :meth:`Terminate`
+		      |rarr| Terminate the child-process.
 		"""
 		return self._exitCode
 

@@ -423,6 +423,12 @@ def zipdicts(*dicts: Dict) -> Generator[Tuple, None, None]:
 		raise ValueError(f"All given dictionaries must have the same length.")
 
 	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+		"""
+		Nested generator function, so the length check runs when :func:`zipdicts` is called, not on first iteration.
+
+		:param ds: The dictionaries to zip.
+		:returns:  A generator yielding a tuple of the key and one value per dictionary.
+		"""
 		for key, item0 in ds[0].items():
 			yield key, item0, *(d[key] for d in ds[1:])
 

@@ -283,6 +283,12 @@ class Span(metaclass=ExtendedType, slots=True):
 		return self._parent
 
 	def _AddSpan(self, span: "Span") -> Self:
+		"""
+		Append a sub-span to this timespan and set this timespan as its parent.
+
+		:param span: The sub-span to append.
+		:returns:    The appended sub-span.
+		"""
 		self._spans.append(span)
 		span._parent = self
 
@@ -498,6 +504,13 @@ class Span(metaclass=ExtendedType, slots=True):
 		return len(self._dict)
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render this timespan and its sub-spans as indented lines.
+
+		:param indent:     Indentation level of this timespan.
+		:param columnSize: Column the durations are aligned at.
+		:returns:          One line per timespan, deepest last.
+		"""
 		result = []
 		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self._totalTime/1e6:8.3f} ms")
 		for span in self._spans:
@@ -596,6 +609,13 @@ class Trace(Span):
 		return currentTrace
 
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render this trace and its spans as indented lines.
+
+		:param indent:     Indentation level of the trace.
+		:param columnSize: Column the durations are aligned at.
+		:returns:          A headline, followed by one line per timespan.
+		"""
 		result = []
 		result.append(f"{'  ' * indent}Software Execution Trace: {self._totalTime/1e6:8.3f} ms")
 		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self._totalTime/1e6:8.3f} ms")
