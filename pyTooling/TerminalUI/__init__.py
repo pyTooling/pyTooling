@@ -1004,7 +1004,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 		:param mode:           Routing mode to expand.
 		:raises ExceptionBase: If the routing mode is not supported. |br|
-		                       The note lists the modes that are.
+		                       The note lists the modes that are supported.
 		"""
 		if mode is Mode.TextToStdOut_ErrorsToStdErr:
 			for severity in Severity:
