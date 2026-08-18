@@ -1030,7 +1030,6 @@ class Version(metaclass=ExtendedType, slots=True):
 class SemanticVersion(Version):
 	"""Representation of a semantic version number like ``3.7.12``."""
 
-	#: Regular expression to parse a semantic version from a string.
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>rev|REV|[vViIrR])?"
@@ -1048,7 +1047,7 @@ class SemanticVersion(Version):
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
 		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+))?"
 		r"$"
-	)
+	)  #: Regular expression to parse a semantic version from a string.
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead:    int = 0
 
@@ -1452,7 +1451,6 @@ class CalendarVersion(Version):
 
 	_PARTCOUNT: ClassVar[int] = 3   #: Number of numeric parts a version number of this class can carry.
 
-	#: Regular expression to parse a calendar version from a string.
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>rev|REV|[vViIrR])?"
@@ -1460,7 +1458,7 @@ class CalendarVersion(Version):
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
 		r"$"
-	)
+	)  #: Regular expression to parse a calendar version from a string.
 
 	def __init__(
 		self,

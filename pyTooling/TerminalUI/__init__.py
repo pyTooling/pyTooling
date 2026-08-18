@@ -643,7 +643,6 @@ class Line(metaclass=ExtendedType, slots=True):
 	Represents a single message line with a severity and indentation level.
 	"""
 
-	#: Message formatting rules per severity, without color codes.
 	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
 		Severity.Exception:     "EXCEPTION: {message}",
 		Severity.ExceptionNote: "           > {message}",
@@ -844,7 +843,6 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	"""
 	A base-class for implementation of terminal applications emitting line-by-line messages.
 	"""
-	#: Message formatting rules per severity, including color placeholders.
 	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
 		Severity.Exception:            "{RED}[EXCEPTION] {message}{NOCOLOR}",
 		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",

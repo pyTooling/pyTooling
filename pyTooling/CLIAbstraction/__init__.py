@@ -366,8 +366,7 @@ class Program(metaclass=ExtendedType, slots=True):
 class Executable(Program):  # (ILogable):
 	"""Represent a CLI executable derived from :class:`Program`, that adds an abstraction of :class:`subprocess.Popen`."""
 
-	#: Marker line printed between the program's own output and the executable's output.
-	_BOUNDARY:         ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"
+	_BOUNDARY:         ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"  #: Marker line printed between the program's own output and the executable's output.
 
 	_workingDirectory: Nullable[Path]              #: Path to the working directory
 	_environment:      Nullable[Environment]       #: Environment to use when executing.

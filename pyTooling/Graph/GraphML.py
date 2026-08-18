@@ -594,15 +594,13 @@ class Subgraph(Node, BaseGraph):
 
 @export
 class GraphMLDocument(Base):
-	#: XML namespaces of a GraphML document.
 	xmlNS: ClassVar[Dict[Nullable[str], str]] = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"
-	}
-	#: XML schema instance attributes of a GraphML document.
+	}  #: XML namespaces of a GraphML document.
 	xsi: ClassVar[Dict[str, str]] = {
 		"schemaLocation": "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
-	}
+	}  #: XML schema instance attributes of a GraphML document.
 
 	_graph: Graph           #: The document's root graph.
 	_keys:  Dict[str, Key]  #: Keys declared by this document, by ID.

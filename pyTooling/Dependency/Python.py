@@ -349,7 +349,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 @export
 class Project(Package, LazyLoadableMixin):
-	_url:         Nullable[URL]  #: URL of the project's page on the package index.
+	_url:         Nullable[URL]      #: URL of the project's page on the package index.
 
 	_api:         Nullable[URL]      #: URL of the package index's API, used to load the project's details.
 	_session:     Nullable[Session]  #: HTTP session reused for the API requests.
@@ -534,8 +534,7 @@ class Project(Package, LazyLoadableMixin):
 
 @export
 class PythonPackageIndex(PackageStorage):
-	_url:     URL  #: URL of the package index's website.
-
+	_url:     URL      #: URL of the package index's website.
 	_api:     URL      #: URL of the package index's API.
 	_session: Session  #: HTTP session reused for every request to this index.
 
