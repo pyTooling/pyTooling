@@ -414,6 +414,12 @@ class Directory(Element["Directory"]):
 		self._scanDuration = sw1.Duration
 
 	def ResolveSymbolicLinks(self) -> None:
+		"""
+		Resolve the symbolic links of this directory and of every directory below it.
+
+		A link whose target lies inside the scanned tree is connected to that element; a target that doesn't exist
+		registers the link as broken, and a target outside the scanned tree registers it as unconnected.
+		"""
 		for dir in self._subdirectories.values():
 			dir.ResolveSymbolicLinks()
 
@@ -455,6 +461,14 @@ class Directory(Element["Directory"]):
 					target.AddLinkSources(link)
 
 	def AggregateSizes(self) -> Set["File"]:
+		"""
+		Compute the aggregated size of this directory and of every directory below it.
+
+		A file is counted once, even when several filenames (hardlinks) refer to it, which is why the already counted
+		files are returned and handed up the recursion.
+
+		:returns: The set of file objects counted in this subtree.
+		"""
 		with Stopwatch() as sw2:
 			aggregatedFiles = set()
 
@@ -673,12 +687,26 @@ class Directory(Element["Directory"]):
 		return hash(id(self))
 
 	def IterateDirectories(self) -> Generator["Directory", None, None]:
+		"""
+		A generator to iterate all subdirectories below this directory in pre-order.
+
+		A parent directory is yielded before its children.
+
+		:returns: A generator to iterate all subdirectories below this directory.
+		"""
 		# pre-order
 		for directory in self._subdirectories.values():
 			yield directory
 			yield from directory.IterateDirectories()
 
 	def IterateFiles(self) -> Generator[Element, None, None]:
+		"""
+		A generator to iterate all files and symbolic links below this directory in post-order.
+
+		The elements of the subdirectories are yielded before this directory's own.
+
+		:returns: A generator to iterate all files and symbolic links below this directory.
+		"""
 		# post-order
 		for directory in self._subdirectories.values():
 			yield from directory.IterateFiles()
@@ -713,6 +741,15 @@ class Directory(Element["Directory"]):
 		return dir
 
 	def Collapse(self, func: Callable[["Directory"], bool]) -> bool:
+		"""
+		Collapse this directory's subtree where the given predicate accepts it.
+
+		A directory is collapsed when it has no subdirectories left - or all of them collapsed - and the predicate
+		accepts it. Collapsing discards the directory's elements, so only its aggregated numbers remain.
+
+		:param func: Predicate deciding whether a directory may be collapsed.
+		:returns:    ``True``, if this directory was collapsed.
+		"""
 		# if len(self._subdirectories) == 0 or all(subdir.Collapse(func) for subdir in self._subdirectories.values()):
 		if len(self._subdirectories) == 0:
 			if func(self):
@@ -919,6 +956,15 @@ class Filename(Element[Directory]):
 		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "Filename":
+		"""
+		Copy this filename into another filesystem statistics scope.
+
+		The file object behind the filename is copied only once per scope: a filename referring to a file that was
+		already copied - a hardlink - is connected to the existing copy.
+
+		:param parent: The directory in the target scope the copy is registered at.
+		:returns:      The copied filename.
+		"""
 		fileID = self._file._id
 
 		if fileID in parent._root._ids:
@@ -932,6 +978,11 @@ class Filename(Element[Directory]):
 		return Filename(self._name, file, parent=parent)
 
 	def ToTree(self) -> Node:
+		"""
+		Convert this filename to a node of a :mod:`pyTooling.Tree`.
+
+		:returns: A tree node carrying this filename, its kind and its size.
+		"""
 		def format(node: Node) -> str:
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
@@ -1073,9 +1124,20 @@ class SymbolicLink(Element[Directory]):
 		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "SymbolicLink":
+		"""
+		Copy this symbolic link into another filesystem statistics scope.
+
+		:param parent: The directory in the target scope the copy is registered at.
+		:returns:      The copied symbolic link, unresolved.
+		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
 
 	def ToTree(self) -> Node:
+		"""
+		Convert this symbolic link to a node of a :mod:`pyTooling.Tree`.
+
+		:returns: A tree node carrying this symbolic link, its kind and its size.
+		"""
 		def format(node: Node) -> str:
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
@@ -1255,10 +1317,20 @@ class Root(Directory):
 		return len(self._ids)
 
 	def RegisterBrokenSymbolicLink(self, symLink: SymbolicLink) -> None:
+		"""
+		Mark a symbolic link as broken and collect it at the root.
+
+		:param symLink: The symbolic link whose target doesn't exist.
+		"""
 		symLink._isBroken = True
 		self._brokenSymbolicLinks.append(symLink)
 
 	def RegisterUnconnectedSymbolicLink(self, symLink: SymbolicLink) -> None:
+		"""
+		Mark a symbolic link as out of range and collect it at the root.
+
+		:param symLink: The symbolic link whose target lies outside the scanned tree.
+		"""
 		symLink._isOutOfRange = True
 		self._unconnectedSymbolicLinks.append(symLink)
 
