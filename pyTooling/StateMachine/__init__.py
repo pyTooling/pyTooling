@@ -103,7 +103,8 @@ class StateMachine(Base):
 		"""
 		Add a state to the state machine.
 
-		:param state: State to add.
+		:param state:       State to add.
+		:raises ValueError: If the given state is already part of this statemachine.
 		"""
 		if state not in self._states:    # TODO: use a set to check for double added states?
 			self._states.append(state)

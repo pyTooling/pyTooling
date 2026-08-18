@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmark tests for pyTooling.MetaClasses.ExtendedType."""
+"""
+Benchmarks comparing a normal class with a slotted class - creation time and attribute access, for a flat
+class and for a hierarchy of ten.
+"""
 from pytest import mark
 
 from pyTooling.MetaClasses import ExtendedType

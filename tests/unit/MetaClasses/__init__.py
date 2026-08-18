@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for :class:`pyTooling.MetaClasses.ExtendedType` - one module per feature of the meta-class.
 """
 
 from pyTooling.MetaClasses import ExtendedType

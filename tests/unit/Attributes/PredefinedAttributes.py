@@ -30,7 +30,7 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for attributes attached to methods.
+Unit tests for :class:`~pyTooling.Attributes.SimpleAttribute` and for grouping attributes.
 """
 from pyTooling.Common      import firstItem
 from pyTooling.MetaClasses import ExtendedType

@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
+"""
+Unit tests for :class:`pyTooling.Versioning.VersionSet`: ordering, intersection and union of version sets.
+"""
 from pytest               import mark
 
 from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionSet

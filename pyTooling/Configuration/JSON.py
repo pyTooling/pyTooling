@@ -106,7 +106,9 @@ class Node(Abstract_Node):
 		"""
 		Property to access the node's key.
 
-		:returns: Key of the node.
+		:returns:                    Key of the node.
+		:raises NotImplementedError: If a new key is assigned; renaming a key is not supported by this configuration
+		                             implementation.
 		"""
 		return self._key
 
@@ -473,7 +475,8 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the JSON file are accessible via Python's dictionary syntax.
 
-		:param configFile: Configuration file to read and parse.
+		:param configFile:              Configuration file to read and parse.
+		:raises ConfigurationException: If the JSON file doesn't exist or can't be parsed.
 		"""
 		if not configFile.exists():
 			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)

@@ -106,7 +106,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 
 	:param readmeFile:         Path to the `README` file as an instance of :class:`Path`.
 	:returns:                  A tuple containing the file content and the MIME type.
-	:raises TypeError:         If parameter 'readmeFile' is not of type 'Path'.
+	:raises TypeError:         If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises ValueError:        If README file has an unsupported format.
 	:raises FileNotFoundError: If README file does not exist.
 	"""
@@ -150,9 +150,10 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 	      requirements = list(set(loadRequirementsFile(requirementsFile)))
 
 	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.
+	:param indent:             Indentation level used for the debug output of nested requirements files.
 	:param debug:              If ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
-	:raises TypeError:         If parameter 'requirementsFile' is not of type 'Path'.
+	:raises TypeError:         If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError: If requirements file does not exist.
 	"""
 	if not isinstance(requirementsFile, Path):
@@ -161,7 +162,14 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		raise ex
 
 	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> List[str]:
-		"""Recursive variant of :func:`loadRequirementsFile`."""
+		"""
+		Recursive variant of :func:`loadRequirementsFile`.
+
+		:param requirementsFile:   Path to the requirements file to read.
+		:param indent:             Indentation level used for the debug output of nested requirements files.
+		:returns:                  List of requirements read from that file and every file it includes.
+		:raises FileNotFoundError: If the requirements file doesn't exist.
+		"""
 		requirements = []
 		try:
 			with requirementsFile.open("r", encoding="utf-8") as file:
@@ -317,9 +325,12 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	* ``__license__``
 	* ``__version__``
 
-	:param sourceFile: Path to a Python source file as an instance of :class:`Path`.
-	:returns:          An instance of :class:`VersionInformation` with gathered variable contents.
-	:raises TypeError: If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
+	:param sourceFile:         Path to a Python source file as an instance of :class:`Path`.
+	:returns:                  An instance of :class:`VersionInformation` with gathered variable contents.
+	:raises TypeError:         If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError: If the given file doesn't exist.
+	:raises AssertionError:    If a dunder variable is missing in the given file.
+	:raises ToolingException:  If a dunder variable has an unexpected format.
 
 	"""
 	if not isinstance(sourceFile, Path):
@@ -625,6 +636,8 @@ def DescribePythonPackage(
 	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises Exception:                    If the package's directory doesn't exist, or if a requirements file is
+	                                      malformed.
 	"""
 	try:
 		from setuptools import find_packages, find_namespace_packages
@@ -748,16 +761,29 @@ def DescribePythonPackage(
 	classifiers.append(license.PythonClassifier)
 
 	def _naturalSorting(array: Iterable[str]) -> List[str]:
-		"""A simple natural sorting implementation."""
+		"""
+		A simple natural sorting implementation.
+
+		:param array: The strings to sort.
+		:returns:     The strings, sorted with embedded numbers compared numerically.
+		"""
 		# See http://nedbatchelder.com/blog/200712/human_sorting.html
 		def _toInt(text: str) -> Union[str, int]:
-			"""Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string."""
+			"""
+			Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string.
+
+			:param text: The text to convert.
+			:returns:    The converted integer, or the unchanged string.
+			"""
 			return int(text) if text.isdigit() else text
 
 		def _createKey(text: str) -> Tuple[Union[str, float], ...]:
 			"""
 			Split the text into a tuple of multiple :class:`str` and :class:`int` fields, so embedded numbers can be sorted by
 			their value.
+
+			:param text: The text to split.
+			:returns:    Tuple of string and integer fields, usable as a sort key.
 			"""
 			return tuple(_toInt(part) for part in re_split(r"(\d+)", text))
 

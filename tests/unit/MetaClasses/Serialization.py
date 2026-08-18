@@ -29,12 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
-
-This test suite tests decorators:
-
-* :deco:`~pyTooling.MetaClasses.abstractmethod`
-* :deco:`~pyTooling.MetaClasses.mustoverride`
+Unit tests for pickling classes created by :class:`pyTooling.MetaClasses.ExtendedType` - including the
+generated ``__getstate__``/``__setstate__`` pair and what happens when the state doesn't match the slots.
 """
 from pickle                import loads, dumps
 from typing                import Dict, Any

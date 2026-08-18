@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for iterTree."""
+"""
+The same tree measurements implemented with `itertree <https://pypi.org/project/itertree/>`__, as a reference.
+"""
 from itertree import iTree
 
 from . import PerformanceTest

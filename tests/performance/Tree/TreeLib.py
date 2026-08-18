@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for treelib."""
+"""
+The same tree measurements implemented with `treelib <https://pypi.org/project/treelib/>`__, as a reference.
+"""
 from treelib import Tree as treelib_Tree
 
 from . import PerformanceTest
