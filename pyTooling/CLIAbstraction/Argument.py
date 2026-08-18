@@ -93,6 +93,7 @@ class CommandLineArgument:
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is CommandLineArgument:
@@ -265,6 +266,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is NamedArgument:
@@ -328,8 +330,9 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		"""
 		Initializes a ValuedArgument instance.
 
-		:param value:      Value to be stored internally.
-		:raises TypeError: If parameter 'value' is None.
+		:param value:       Value to be stored internally.
+		:raises ValueError: If parameter 'value' is None.
+		:raises ValueError: If parameter 'value' is None.
 		"""
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")
@@ -461,6 +464,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is NamedTupledArgument:

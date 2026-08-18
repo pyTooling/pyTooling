@@ -152,7 +152,7 @@ class WarningCollector:
 		                   instance.
 		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
 		                   be reraised as an exception.
-		:raises TypeError: If optional parameter 'warnings' is not of type list.
+		:raises TypeError: If optional parameter 'warnings' is not of type :class:`list`.
 		:raises TypeError: If optional parameter 'handler' is not a callable.
 		"""
 		if warnings is None:
@@ -368,7 +368,7 @@ class SupervisedWarningCollector(WarningCollector):
 		:param exceptionHandler: An optional handler function, called with an exception leaving the block when a supervisor
 		                         is set. Its result decides whether the exception is suppressed.
 		:param finallyHandler:   An optional function called when the context is left, whether or not an exception left it.
-		:raises TypeError:       If optional parameter 'warnings' is not of type list.
+		:raises TypeError:       If optional parameter 'warnings' is not of type :class:`list`.
 		:raises TypeError:       If optional parameter 'handler' is not a callable.
 		"""
 		super().__init__(warnings, handler)
@@ -381,7 +381,8 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Enter the warning collector context.
 
-		:returns: The warning collector instance.
+		:returns:                                    The warning collector instance.
+		:raises SupervisedWarningCollectorException: If this collector is not the top-most warning collector of its thread.
 		"""
 		global _threadLocalData
 
@@ -567,18 +568,47 @@ class ThreadSupervisor:
 			return [warning for _, warning in self._warnings]
 
 	def AddWarning(self, threadName: str, warning: AnyWarning) -> None:
+		"""
+		Collect a warning raised in a supervised thread.
+
+		:param threadName: Name of the thread the warning was raised in.
+		:param warning:    The warning to collect.
+		"""
 		with self._lock:
 			self._warnings.append((threadName, warning))
 
 	def AddWarnings(self, threadName: str, warnings: List[AnyWarning]) -> None:
+		"""
+		Collect several warnings raised in a supervised thread.
+
+		:param threadName: Name of the thread the warnings were raised in.
+		:param warnings:   The warnings to collect.
+		"""
 		with self._lock:
 			self._warnings.extend((threadName, warning) for warning in warnings)
 
 	def AddException(self, threadName: str, ex: BaseException) -> None:
+		"""
+		Collect an exception that escaped a supervised thread.
+
+		:param threadName: Name of the thread the exception was raised in.
+		:param ex:         The exception to collect.
+		"""
 		with self._lock:
 			self._exceptions.append((threadName, ex))
 
 	def ReRaise(self, unwrapped: bool = False) -> None:
+		"""
+		Re-raise the exceptions collected from the supervised threads in the supervising thread.
+
+		A single exception is re-raised as itself - wrapped in a :exc:`SupervisedThreadException` naming its thread,
+		unless ``unwrapped`` is set. Several exceptions are raised as an :exc:`ExceptionGroup`, so none of them is lost.
+
+		:param unwrapped:                  If ``True``, a single exception is raised as it was, without naming its
+		                                   thread.
+		:raises SupervisedThreadException: If exactly one thread failed.
+		:raises ExceptionGroup:            If more than one thread failed.
+		"""
 		with self._lock:
 			if len(self._exceptions) == 0:
 				return

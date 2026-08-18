@@ -86,8 +86,9 @@ class Host(RootMixIn):
 		"""
 		Initialize a host instance described by host name and port number.
 
-		:param hostname: Name of the host (either IP address or DNS).
-		:param port:     Port number.
+		:param hostname:    Name of the host (either IP address or DNS).
+		:param port:        Port number.
+		:raises ValueError: If parameter 'hostname' is None or empty.
 		"""
 		super().__init__()
 
@@ -162,6 +163,13 @@ class Path(PathMixIn):
 
 	@classmethod
 	def Parse(cls, path: str, root: Nullable[Host] = None) -> "Path":
+		"""
+		Parse a string into a URL path.
+
+		:param path: The path portion of a URL.
+		:param root: Optional host the path is relative to.
+		:returns:    The parsed path.
+		"""
 		return super().Parse(path, root, cls, Element)
 
 
@@ -196,13 +204,14 @@ class URL:
 		"""
 		Initializes a Uniform Resource Locator (URL).
 
-		:param scheme:   Transport scheme to be used for a specified resource.
-		:param path:     Path to the resource.
-		:param host:     Hostname where the resource is located.
-		:param user:     Username for basic authentication.
-		:param password: Password for basic authentication.
-		:param query:    An optional query string.
-		:param fragment: An optional fragment.
+		:param scheme:     Transport scheme to be used for a specified resource.
+		:param path:       Path to the resource.
+		:param host:       Hostname where the resource is located.
+		:param user:       Username for basic authentication.
+		:param password:   Password for basic authentication.
+		:param query:      An optional query string.
+		:param fragment:   An optional fragment.
+		:raises TypeError: If parameter 'host' is not of type :class:`Host`.
 		"""
 		if scheme is not None and not isinstance(scheme, Protocols):
 			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")

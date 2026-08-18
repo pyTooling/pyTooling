@@ -297,6 +297,9 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.
+
+		:param kwargs:             Named parameters forwarded to the :class:`~argparse.ArgumentParser` constructor.
+		:raises ArgParseException: If more than one method is marked as the default handler.
 		"""
 		from .Argument import CommandLineArgument
 
@@ -362,12 +365,22 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			self._subParsers[attribute.Command] = subParser
 
 	def Run(self, enableAutoComplete: bool = True) -> None:
+		"""
+		Parse the command line arguments and call the handler method the command selects.
+
+		:param enableAutoComplete: If ``True``, register the parser with ``argcomplete``, if that package is installed.
+		"""
 		if enableAutoComplete:
 			self._EnabledAutoComplete()
 
 		self._ParseArguments()
 
 	def _EnabledAutoComplete(self) -> None:
+		"""
+		Register the main parser with ``argcomplete`` for shell completion.
+
+		The package is optional: when it isn't installed, completion is silently unavailable.
+		"""
 		try:
 			from argcomplete  import autocomplete
 			autocomplete(self._mainParser)
@@ -375,11 +388,21 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			pass
 
 	def _ParseArguments(self) -> None:
+		"""
+		Parse the command line arguments and route them to the selected handler method.
+		"""
 		# parse command line options and process split arguments in callback functions
 		parsed, args = self._mainParser.parse_known_args()
 		self._RouteToHandler(parsed)
 
 	def _RouteToHandler(self, args: Namespace) -> None:
+		"""
+		Call the handler method the parsed arguments select.
+
+		The handler is stored as an unbound function, so it is called with the application object as first parameter.
+
+		:param args: The parsed command line arguments.
+		"""
 		# because func is a function (unbound to an object), it MUST be called with self as a first parameter
 		args.func(self, args)
 

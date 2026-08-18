@@ -34,12 +34,12 @@ Flag arguments represent simple boolean values by being present or absent.
 
 .. seealso::
 
-   * For flags with different pattern based on the boolean value itself. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
-   * For flags with a value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For flags that have an optional value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
+      |rarr| For flags with a different pattern based on the boolean value itself.
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For flags with a value.
+   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+      |rarr| For flags that have an optional value.
 """
 from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable, Self
 
@@ -85,6 +85,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is NamedKeyValuePairsArgument:
@@ -181,6 +182,7 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortKeyValueFlag:
@@ -220,6 +222,7 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongKeyValueFlag:
@@ -259,6 +262,7 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongKeyValueFlag:

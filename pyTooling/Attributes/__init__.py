@@ -168,8 +168,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Undocumented.
-		:returns:         A sequence of functions where this attribute is attached to.
+		:param scope:                Module the functions have to be defined in; ``None`` accepts every function.
+		:returns:                    A sequence of functions where this attribute is attached to.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		if scope is None:
 			for c in cls._functions:
@@ -192,7 +193,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 		 * ``subclassOf`` - when the item is a subclass of ``subclassOf``.
 
-		:param scope:      Undocumented.
+		:param scope:      Class or module the classes have to be nested in or defined in; ``None`` accepts every class.
 		:param subclassOf: An attribute class or tuple thereof, to filter for that attribute type or subtype.
 		:returns:          A sequence of classes where this attribute is attached to.
 		"""
@@ -229,7 +230,8 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Undocumented.
+		:param scope:     Class or module the methods' classes have to be nested in or defined in; ``None`` accepts every
+		                  method.
 		:returns:         A sequence of methods where this attribute is attached to.
 		"""
 		if scope is None:
@@ -255,7 +257,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			if isinstance(attributes, list):
 				return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
 			else:
-				raise TypeError(f"Method '{method.__class__.__name__}{method.__name__}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's not a list of Attributes.")
+				methodName = getFullyQualifiedName(method)
+				ex = TypeError(f"Method '{methodName}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's no list.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(attributes)}'.")
+				raise ex
 		return tuple()
 
 

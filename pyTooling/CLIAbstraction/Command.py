@@ -41,10 +41,10 @@ While commands can or cannot have prefix characters, they shouldn't be confused 
 
 .. seealso::
 
-   * For simple flags (various formats). |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Flag`
-   * For string arguments. |br|
-     |rarr| :class:`~pyTooling.CLIAbstraction.Argument.StringArgument`
+   :mod:`~pyTooling.CLIAbstraction.Flag`
+      |rarr| For simple flags (various formats).
+   :class:`~pyTooling.CLIAbstraction.Argument.StringArgument`
+      |rarr| For string arguments.
 """
 from typing import Any, Self
 
@@ -74,6 +74,7 @@ class CommandArgument(NamedArgument):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is CommandArgument:
@@ -111,6 +112,7 @@ class ShortCommand(CommandArgument, pattern="-{0}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is ShortCommand:
@@ -148,6 +150,7 @@ class LongCommand(CommandArgument, pattern="--{0}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is LongCommand:
@@ -185,6 +188,7 @@ class WindowsCommand(CommandArgument, pattern="/{0}"):
 
 		:param args:       Any positional arguments.
 		:param kwargs:     Any keyword arguments.
+		:returns:          A new instance of the derived class.
 		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
 		"""
 		if cls is WindowsCommand:

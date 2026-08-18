@@ -54,10 +54,11 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		Initializes a trapezium with 4 corners.
 
-		:param p00: First corner.
-		:param p01: Second corner.
-		:param p11: Third corner.
-		:param p10: Forth corner
+		:param p00:        First corner.
+		:param p01:        Second corner.
+		:param p11:        Third corner.
+		:param p10:        Forth corner
+		:raises TypeError: If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
 		if not isinstance(p00, Point2D):
 			ex = TypeError(f"Parameter 'p00' is not of type Point2D.")
@@ -101,10 +102,11 @@ class Rectangle(Trapezium[Coordinate]):
 		"""
 		Initializes a rectangle with 4 corners.
 
-		:param p00: First corner.
-		:param p01: Second corner.
-		:param p11: Third corner.
-		:param p10: Forth corner
+		:param p00:         First corner.
+		:param p01:         Second corner.
+		:param p11:         Third corner.
+		:param p10:         Forth corner
+		:raises ValueError: If the given points don't describe a rectangle.
 		"""
 		super().__init__(p00, p01, p11, p10)
 
@@ -126,10 +128,11 @@ class Square(Rectangle[Coordinate]):
 		"""
 		Initializes a square with 4 corners.
 
-		:param p00: First corner.
-		:param p01: Second corner.
-		:param p11: Third corner.
-		:param p10: Forth corner
+		:param p00:         First corner.
+		:param p01:         Second corner.
+		:param p11:         Third corner.
+		:param p10:         Forth corner
+		:raises ValueError: If the given points don't describe a square.
 		"""
 		super().__init__(p00, p01, p11, p10)
 
