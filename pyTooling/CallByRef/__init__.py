@@ -182,20 +182,38 @@ class CallByRefIntParam(CallByRefParam):
 
 	# Unary operators
 	def __neg__(self) -> int:
-		"""Negate: -self."""
+		"""
+		Negate: -self.
+
+		:returns: The negated value.
+		"""
 		return -self.Value
 
 	def __pos__(self) -> int:
-		"""Positive: +self."""
+		"""
+		Positive: +self.
+
+		:returns: The value with a positive sign.
+		"""
 		return +self.Value
 
 	def __invert__(self) -> int:
-		"""Invert: ~self."""
+		"""
+		Invert: ~self.
+
+		:returns: The bitwise inverted value.
+		"""
 		return ~self.Value
 
 	# Binary operators - logical
 	def __and__(self, other: Any) -> int:
-		"""And: self & other."""
+		"""
+		And: self & other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Result of the bitwise *and* operation.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value & other
 		else:
@@ -204,7 +222,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __or__(self, other: Any) -> int:
-		"""Or: self | other."""
+		"""
+		Or: self | other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Result of the bitwise *or* operation.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value | other
 		else:
@@ -213,7 +237,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __xor__(self, other: Any) -> int:
-		"""Xor: self ^ other."""
+		"""
+		Xor: self ^ other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Result of the bitwise *exclusive or* operation.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value ^ other
 		else:
@@ -223,7 +253,13 @@ class CallByRefIntParam(CallByRefParam):
 
 	# Binary inplace operators
 	def __iand__(self, other: Any) -> Self:
-		"""Inplace and: self &= other."""
+		"""
+		Inplace and: self &= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value &= other
 			return self
@@ -233,7 +269,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __ior__(self, other: Any) -> Self:
-		r"""Inplace or: self \|= other."""
+		r"""
+		Inplace or: self \|= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value |= other
 			return self
@@ -243,7 +285,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __ixor__(self, other: Any) -> Self:
-		r"""Inplace or: self \|= other."""
+		r"""
+		Inplace or: self \|= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value ^= other
 			return self
@@ -254,7 +302,13 @@ class CallByRefIntParam(CallByRefParam):
 
 	# Binary operators - arithmetic
 	def __add__(self, other: Any) -> int:
-		"""Addition: self + other."""
+		"""
+		Addition: self + other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Sum of both operands.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value + other
 		else:
@@ -263,7 +317,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __sub__(self, other: Any) -> int:
-		"""Subtraction: self - other."""
+		"""
+		Subtraction: self - other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Difference of both operands.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value - other
 		else:
@@ -272,7 +332,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __truediv__(self, other: Any) -> int:
-		"""Division: self / other."""
+		"""
+		Division: self / other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Quotient of both operands.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value / other
 		else:
@@ -281,7 +347,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __floordiv__(self, other: Any) -> int:
-		"""Floor division: self // other."""
+		"""
+		Floor division: self // other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Floor of the quotient of both operands.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value // other
 		else:
@@ -290,7 +362,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __mul__(self, other: Any) -> int:
-		"""Multiplication: self * other."""
+		"""
+		Multiplication: self * other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Product of both operands.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value * other
 		else:
@@ -299,7 +377,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __mod__(self, other: Any) -> int:
-		"""Modulo: self % other."""
+		"""
+		Modulo: self % other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          Remainder of the division.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value % other
 		else:
@@ -308,7 +392,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __pow__(self, other: Any) -> int:
-		"""Power: self ** other."""
+		"""
+		Power: self ** other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The value raised to the power of the second operand.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			return self.Value ** other
 		else:
@@ -318,7 +408,13 @@ class CallByRefIntParam(CallByRefParam):
 
 	# Binary inplace operators - arithmetic
 	def __iadd__(self, other: Any) -> 'CallByRefIntParam':
-		"""Addition: self += other."""
+		"""
+		Addition: self += other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value += other
 			return self
@@ -328,7 +424,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __isub__(self, other: Any) -> 'CallByRefIntParam':
-		"""Subtraction: self -= other."""
+		"""
+		Subtraction: self -= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value -= other
 			return self
@@ -338,7 +440,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __idiv__(self, other: Any) -> 'CallByRefIntParam':
-		"""Division: self /= other."""
+		"""
+		Division: self /= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value /= other
 			return self
@@ -348,7 +456,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __ifloordiv__(self, other: Any) -> 'CallByRefIntParam':
-		"""Floor division: self // other."""
+		"""
+		Floor division: self // other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value //= other
 			return self
@@ -358,7 +472,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __imul__(self, other: Any) -> 'CallByRefIntParam':
-		r"""Multiplication: self \*= other."""
+		r"""
+		Multiplication: self \*= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value *= other
 			return self
@@ -368,7 +488,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __imod__(self, other: Any) -> 'CallByRefIntParam':
-		"""Modulo: self %= other."""
+		"""
+		Modulo: self %= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value %= other
 			return self
@@ -378,7 +504,13 @@ class CallByRefIntParam(CallByRefParam):
 			raise ex
 
 	def __ipow__(self, other: Any) -> 'CallByRefIntParam':
-		r"""Power: self \*\*= other."""
+		r"""
+		Power: self \*\*= other.
+
+		:param other:      Second operand, which has to be of type :class:`int`.
+		:returns:          The modified *call-by-reference* object.
+		:raises TypeError: If the second operand is not of type :class:`int`.
+		"""
 		if isinstance(other, int):
 			self.Value **= other
 			return self
