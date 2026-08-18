@@ -1003,23 +1003,31 @@ Terminal
 
       .. code-block:: Python
 
+         from sys import argv
+
          from pyTooling.TerminalUI import TerminalApplication
 
          class Application(TerminalApplication):
            HeadLine = "My Application"
 
            def Run(self) -> None:
+             self._PrintHeadline()
              self.WriteNormal("A normal message.")
              self.WriteVerbose("Only with --verbose.")
              self.WriteWarning("A warning.")
+             self.ExitOnPreviousErrors()
+
+         def main() -> NoReturn:
+           program = Application()
+           program.Configure(verbose=("-v" in argv or "--verbose" in argv))
+
+           try:
+             program.Run()
+           except Exception as ex:
+             program.PrintException(ex)
 
          if __name__ == "__main__":
-           app = Application()
-           app.Configure(verbose=True)
-           app._PrintHeadline()
-           app.Run()
-           app.ExitOnPreviousErrors()
-           app.Exit()
+           main()
 
 
 .. _CONTRIBUTORS:

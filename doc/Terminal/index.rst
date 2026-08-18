@@ -12,8 +12,7 @@ Terminal
 
       The package is built on the idea that a command line program emits **one line of text per message**, and that
       every message has a :ref:`severity <TERM/Severity>`: a normal message, a warning, an error, a debug message, ...
-      The
-      severity decides three things at once: whether the message is visible at the configured verbosity, how it is
+      The severity decides three things at once: whether the message is visible at the configured verbosity, how it is
       formatted and colored, and whether it is written to ``STDOUT`` or ``STDERR``.
 
       An application derives from :ref:`TerminalApplication <TERM/TerminalApplication>` and writes its messages with the
@@ -159,17 +158,8 @@ exit codes are class variables, so an application can override them:
 +-------------------------------------------+-----------+-------------------------------------------------------------+
 | ``UNHANDLED_EXCEPTION_EXIT_CODE``         | 241       | An exception reached the topmost exception handler.         |
 +-------------------------------------------+-----------+-------------------------------------------------------------+
-| ``PYTHON_VERSION_CHECK_FAILED_EXIT_CODE`` | 254       | ``CheckPythonVersion()`` failed.                            |
-+-------------------------------------------+-----------+-------------------------------------------------------------+
 | ``FATAL_EXIT_CODE``                       | 255       | A fatal message was written, or ``FatalExit()`` was called. |
 +-------------------------------------------+-----------+-------------------------------------------------------------+
-
-.. deprecated:: 9.0
-
-   :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.CheckPythonVersion` compares :data:`sys.version_info` against a
-   required version tuple and exits with ``PYTHON_VERSION_CHECK_FAILED_EXIT_CODE`` if the interpreter is too old. The
-   ``python_requires`` metadata of a package makes the check unnecessary - the installer refuses the package before a
-   single line of it is imported. The method is scheduled for removal.
 
 
 .. _TERM/ExceptionPrinting:

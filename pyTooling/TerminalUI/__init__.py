@@ -63,7 +63,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
-	PYTHON_VERSION_CHECK_FAILED_EXIT_CODE: ClassVar[int] = 254   #: Return code, if version check was not successful.
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
@@ -378,27 +377,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		self.UninitializeColors()
 		exit(returnCode)
-
-	def CheckPythonVersion(self, version: Tuple[int, ...]) -> None:
-		"""
-		Check if the used Python interpreter fulfills the minimum version requirements.
-
-		If the interpreter is too old, a colored error message is printed and the application exits with
-		:attr:`PYTHON_VERSION_CHECK_FAILED_EXIT_CODE`.
-
-		:param version: Minimum required Python version as a tuple of major, minor and micro version number.
-		"""
-		from sys import version_info as info
-
-		if info < version:
-			self.InitializeColors()
-
-			self.WriteLineToStdErr(dedent(f"""\
-				{{RED}}[ERROR]{{NOCOLOR}} Used Python interpreter ({info.major}.{info.minor}.{info.micro}-{info.releaselevel}) is to old.
-				{{indent}}{{YELLOW}}Minimal required Python version is {version[0]}.{version[1]}.{version[2]}{{NOCOLOR}}\
-				""").format(indent=self.INDENT, **self.Foreground))
-
-			self.Exit(self.PYTHON_VERSION_CHECK_FAILED_EXIT_CODE)
 
 	def PrintException(self, ex: Exception) -> NoReturn:
 		"""
