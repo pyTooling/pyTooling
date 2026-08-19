@@ -673,9 +673,6 @@ class Vertex(
 		The vertex is removed from its graph or subgraph, and from its views; every connected edge and link is removed
 		from its other vertex and unregistered from the graph or subgraph it was registered on.
 		"""
-		# The edges and links are unlinked here, directly on the embedded data structures: Edge.Delete() would remove
-		# the edge from *this* vertex' list as well, and that list is iterated. A self-loop is removed from the
-		# inbound list by the outbound pass, so the second loop doesn't see it a second time.
 		for edge in self._outboundEdges:
 			edge._destination._inboundEdges.remove(edge)
 			edge._Unregister()
