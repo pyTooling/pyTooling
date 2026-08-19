@@ -291,8 +291,7 @@ class Base(
 
 	def Delete(self) -> None:
 		"""
-		Delete this element's attached attributes.
-
+		Remove this element's attached attributes from internal dictionary.
 		"""
 		self._dict.clear()
 
@@ -662,15 +661,28 @@ class Vertex(
 		"""
 		Delete this vertex and every edge and link connected to it.
 
-		The vertex is removed from its graph or subgraph, and from its views; the connected edges and links delete
-		themselves from both of their vertices and from the graph or subgraph they were registered on.
+		The vertex is removed from its graph or subgraph, and from its views; every connected edge and link is removed
+		from its other vertex and unregistered from the graph or subgraph it was registered on.
 		"""
-		# Each edge and link deletes itself from both of its vertices, so the lists are copied first. A self-loop is
-		# registered on this vertex as inbound *and* as outbound, hence the deduplication by identity.
-		for edge in tuple({id(e): e for e in (*self._outboundEdges, *self._inboundEdges)}.values()):
-			edge.Delete()
-		for link in tuple({id(l): l for l in (*self._outboundLinks, *self._inboundLinks)}.values()):
-			link.Delete()
+		# The edges and links are unlinked here, directly on the embedded data structures: Edge.Delete() would remove
+		# the edge from *this* vertex' list as well, and that list is iterated. A self-loop is removed from the
+		# inbound list by the outbound pass, so the second loop doesn't see it a second time.
+		for edge in self._outboundEdges:
+			edge._destination._inboundEdges.remove(edge)
+			edge._Unregister()
+			edge._Delete()
+		for edge in self._inboundEdges:
+			edge._source._outboundEdges.remove(edge)
+			edge._Unregister()
+			edge._Delete()
+		for link in self._outboundLinks:
+			link._destination._inboundLinks.remove(link)
+			link._Unregister()
+			link._Delete()
+		for link in self._inboundLinks:
+			link._source._outboundLinks.remove(link)
+			link._Unregister()
+			link._Delete()
 
 		# Remove from Graph or Subgraph - a vertex is registered on the subgraph it lives in, otherwise on the graph.
 		container = self._graph if self._subgraph is None else self._subgraph
@@ -2085,14 +2097,21 @@ class Edge(
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
 
-		# Remove from Graph or Subgraph - an edge is registered on the subgraph it lives in, otherwise on the graph.
+		self._Unregister()
+		self._Delete()
+
+	def _Unregister(self) -> None:
+		"""
+		Remove this edge from the graph or subgraph it was registered on.
+
+		An edge is registered on the subgraph it lives in, otherwise on the graph. Called by :meth:`Delete` and by
+		:meth:`Vertex.Delete`, which unlinks the vertices itself.
+		"""
 		container = self._source._graph if self._source._subgraph is None else self._source._subgraph
 		if self._id is None:
 			container._edgesWithoutID.remove(self)
 		else:
 			del container._edgesWithID[self._id]
-
-		self._Delete()
 
 	def _Delete(self) -> None:
 		"""
@@ -2171,8 +2190,16 @@ class Link(
 		self._source._outboundLinks.remove(self)
 		self._destination._inboundLinks.remove(self)
 
-		# Remove from Graph or Subgraphs - a link crossing a subgraph boundary is registered on both subgraphs,
-		# a link between two top-level vertices on the graph.
+		self._Unregister()
+		self._Delete()
+
+	def _Unregister(self) -> None:
+		"""
+		Remove this link from the graph or the subgraphs it was registered on.
+
+		A link crossing a subgraph boundary is registered on both subgraphs, a link between two top-level vertices on
+		the graph. Called by :meth:`Delete` and by :meth:`Vertex.Delete`, which unlinks the vertices itself.
+		"""
 		if self._source._subgraph is None:
 			containers = (self._source._graph, )
 		else:
@@ -2183,8 +2210,6 @@ class Link(
 				container._linksWithoutID.remove(self)
 			else:
 				del container._linksWithID[self._id]
-
-		self._Delete()
 
 	def _Delete(self) -> None:
 		"""
