@@ -69,7 +69,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 	def __init__(self, value: Nullable[T] = None) -> None:
 		"""Constructs a *call-by-reference* object for any type.
 
-		:param value: The value to be set as an initial value.
+		:param value: Optional, the value to be set as an initial value.
 		"""
 		self.Value = value
 

@@ -349,7 +349,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Low-level method for writing to ``STDOUT``.
 
 		:param message: Message to write to ``STDOUT``.
-		:param end:     Use newline character. Default: ``\\n``.
+		:param end:     Optional, use newline character. Default: ``\\n``.
 		:returns:       Number of written characters.
 		"""
 		return self._stdout.write(message + end)
@@ -368,7 +368,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		Low-level method for writing to ``STDERR``.
 
 		:param message: Message to write to ``STDERR``.
-		:param end:     Use newline character. Default: ``\\n``.
+		:param end:     Optional, use newline character. Default: ``\\n``.
 		:returns:       Number of written characters.
 		"""
 		return self._stderr.write(message + end)
@@ -377,7 +377,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
 
-		:param returnCode:  Return code for application exit.
+		:param returnCode:  Optional, return code for application exit.
 		"""
 		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
 
@@ -385,7 +385,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Exit the terminal application by uninitializing color support and returning an Exit code.
 
-		:param returnCode: Return code for application exit.
+		:param returnCode: Optional, return code for application exit.
 		"""
 		self.UninitializeColors()
 		exit(returnCode)
@@ -745,7 +745,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		"""
 		Increase a line's indentation level.
 
-		:param indent: Indentation level added to the current indentation level.
+		:param indent: Optional, indentation level added to the current indentation level.
 		:returns:      The new indentation level.
 		"""
 		self._indent = (newIndent := self._indent + indent)
@@ -988,7 +988,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Initializer of a line-based terminal interface.
 
-		:param mode: Defines what output (normal, error, data) to write where. Default: a linear flow all to *STDOUT*.
+		:param mode: Optional, defines what output (normal, error, data) to write where. Default: a linear flow all to
+		             *STDOUT*.
 		"""
 		TerminalBaseApplication.__init__(self)
 		# ILineTerminal.__init__(self, self)
@@ -1014,7 +1015,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Expand a routing mode into a routing table containing one writing method per severity level.
 
-		:param mode:           Routing mode to expand.
+		:param mode:           Optional, routing mode to expand.
 		:raises ExceptionBase: If the routing mode is not supported. |br|
 		                       The note lists the modes that are supported.
 		"""
@@ -1039,7 +1040,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Helper method to print the program headline.
 
-		:param width: Number of characters for horizontal lines.
+		:param width: Optional, number of characters for horizontal lines.
 
 		.. admonition:: Generated output
 
@@ -1060,7 +1061,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Helper function to print the command line parsers help page(s).
 
-		:param command: The subcommand to print the help page(s) for.
+		:param command: Optional, the subcommand to print the help page(s) for.
 		"""
 		if command is None:
 			self.MainParser.print_help()
@@ -1144,7 +1145,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		Every error - an unreachable index, a timeout, an unknown package - is answered with ``None``, because a version
 		check must not fail the application it is printing the version of.
 
-		:param packageName: Name of the package on PyPI.
+		:param packageName: Optional, name of the package on PyPI.
 		:param timeout:     Optional, timeout in seconds for the request. Default: ``1``.
 		:returns:           The latest version as a string, or ``None``, if it couldn't be determined.
 		"""
@@ -1318,7 +1319,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Exit application if error or critical warnings have been printed.
 
-		:param includeErrors: Include critical warning counts.
+		:param includeErrors: Optional, include critical warning counts.
 		"""
 		if includeErrors and (self._errorCount > 0):
 			if self._criticalWarningCount > 0:
@@ -1336,8 +1337,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Exit application if error or (critical) warnings have been printed.
 
-		:param includeCriticalWarnings: Include critical warning counts.
-		:param includeErrors:           Include error counts.
+		:param includeCriticalWarnings: Optional, include critical warning counts.
+		:param includeErrors:           Optional, include error counts.
 		"""
 		if includeErrors and (self._errorCount > 0):
 			if includeCriticalWarnings and (self._criticalWarningCount > 0):

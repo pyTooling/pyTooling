@@ -107,8 +107,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a node.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param root:   Optional, reference to the root node.
+		:param parent: Optional, reference to the parent node.
 		"""
 		self._root = root
 		self._parent = parent
@@ -179,8 +179,8 @@ class Dictionary(Node):
 		"""
 		Initializes a dictionary.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param root:   Optional, reference to the root node.
+		:param parent: Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
 
@@ -203,8 +203,8 @@ class Sequence(Node):
 		"""
 		Initializes a sequence.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param root:   Optional, reference to the root node.
+		:param parent: Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
 
@@ -243,8 +243,8 @@ class Configuration(Node):
 		Initializes a configuration.
 
 		:param configFile: Configuration file.
-		:param root:       Reference to the root node.
-		:param parent:     Reference to the parent node.
+		:param root:       Optional, reference to the root node.
+		:param parent:     Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
 		self._configFile = configFile

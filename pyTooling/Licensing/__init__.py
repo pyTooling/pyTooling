@@ -105,8 +105,8 @@ class License(metaclass=ExtendedType, slots=True):
 
 		:param spdxIdentifier: SPDX identifier of the license.
 		:param name:           Name of the license.
-		:param osiApproved:    ``True``, if the license is approved by the Open Source Initiative.
-		:param fsfApproved:    ``True``, if the license is approved by the Free Software Foundation.
+		:param osiApproved:    Optional, ``True``, if the license is approved by the Open Source Initiative.
+		:param fsfApproved:    Optional, ``True``, if the license is approved by the Free Software Foundation.
 		"""
 		self._spdxIdentifier = spdxIdentifier
 		self._name = name

@@ -63,8 +63,8 @@ class Layer(metaclass=ExtendedType):
 		"""
 		Initialize an empty layer, which appends itself to the layer cake it belongs to.
 
-		:param parent:        Optional layer cake this layer is part of.
-		:param previousLayer: Optional layer below this one, which is linked to this layer in both directions.
+		:param parent:        Optional, layer cake this layer is part of.
+		:param previousLayer: Optional, layer below this one, which is linked to this layer in both directions.
 		"""
 		if parent is not None:
 			parent._layers.append(self)
@@ -164,7 +164,7 @@ class Layer(metaclass=ExtendedType):
 		Write the layer's files as one file list.
 
 		:param path:     Path of the file list to write.
-		:param relative: If ``True``, the paths are written relative to the filesystem root.
+		:param relative: Optional, if ``True``, the paths are written relative to the filesystem root.
 		"""
 		rootDirectory = self._parent._root._path
 
@@ -354,8 +354,8 @@ class LayerCake(metaclass=ExtendedType):
 		Write one file list per layer.
 
 		:param directory:       Directory the file lists are written to.
-		:param fileNamePattern: Pattern of the file names, with ``{layerID}`` replaced by the layer's number.
-		:param relative:        If ``True``, the paths are written relative to the filesystem root.
+		:param fileNamePattern: Optional, pattern of the file names, with ``{layerID}`` replaced by the layer's number.
+		:param relative:        Optional, if ``True``, the paths are written relative to the filesystem root.
 		"""
 		for i, layer in enumerate(self._layers, start=1):
 			layer.WriteLayerFile(directory / fileNamePattern.format(layerID=i), relative)
@@ -365,8 +365,8 @@ class LayerCake(metaclass=ExtendedType):
 		Write the empty directories as one file list, so an image build can recreate them.
 
 		:param directory:       Directory the file list is written to.
-		:param fileNamePattern: Name of the file list to write.
-		:param relative:        If ``True``, the paths are written relative to the filesystem root.
+		:param fileNamePattern: Optional, name of the file list to write.
+		:param relative:        Optional, if ``True``, the paths are written relative to the filesystem root.
 		"""
 		rootDirectory = self._root._path
 

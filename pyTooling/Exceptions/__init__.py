@@ -63,11 +63,11 @@ def addNoteWithItemList(
 	long, remaining items will be continued in addition notes.
 
 	:param ex:        Exception to attach the note to.
-	:param message:   The message of the note.
+	:param message:   Optional, the message of the note.
 	:param items:     An iterable of items to add to the note.
-	:param indent:    The indentation of the additional notes.
-	:param separator: Separator between items.
-	:param maxWidth:  The maximum width of the attached notes.
+	:param indent:    Optional, the indentation of the additional notes.
+	:param separator: Optional, separator between items.
+	:param maxWidth:  Optional, the maximum width of the attached notes.
 	"""
 	note = message
 	sep = ""
@@ -124,7 +124,7 @@ class ExceptionBase(Exception):
 		"""
 		ExceptionBase initializer.
 
-		:param message:   The exception message.
+		:param message:   Optional, the exception message.
 		"""
 		super().__init__()
 		self.message = message

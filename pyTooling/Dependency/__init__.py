@@ -114,7 +114,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 		:param version:           Semantic version of this package.
 		:param package:           Package this version is associated to.
-		:param releasedAt:        Optional release date and time.
+		:param releasedAt:        Optional, release date and time.
 		:raises TypeError:        When parameter 'version' is not of type :class:`SemanticVersion`.
 		:raises TypeError:        When parameter 'package' is not of type :class:`Package`.
 		:raises TypeError:        When parameter 'releasedAt' is not of type :class:`~datetime.datetime`.

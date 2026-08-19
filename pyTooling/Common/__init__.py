@@ -233,7 +233,7 @@ def bind(instance, func, methodName: Nullable[str] = None):
 
 	:param instance:   Object to bind the function to.
 	:param func:       Function to bind. Its first parameter is the instance (``self``).
-	:param methodName: Optional name to bind the function as. If ``None``, the function's own name is used.
+	:param methodName: Optional, name to bind the function as. If ``None``, the function's own name is used.
 	:returns:          The bound method.
 	"""
 	if methodName is None:
@@ -382,7 +382,7 @@ def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] =
 	it returns true, the dictionary element will be present in the resulting dictionary.
 
 	:param dicts:       Tuple of dictionaries to merge as positional parameters.
-	:param filter:      Optional filter function to apply to each dictionary element when merging.
+	:param filter:      Optional, filter function to apply to each dictionary element when merging.
 	:returns:           A new dictionary containing the merge result.
 	:raises ValueError: If 'mergedicts' got called without any dictionaries parameters.
 

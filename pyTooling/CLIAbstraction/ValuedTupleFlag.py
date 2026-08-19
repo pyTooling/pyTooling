@@ -61,7 +61,7 @@ class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"-{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -84,7 +84,7 @@ class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -107,7 +107,7 @@ class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"/{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""

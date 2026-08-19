@@ -389,7 +389,8 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Parse the command line arguments and call the handler method the command selects.
 
-		:param enableAutoComplete: If ``True``, register the parser with ``argcomplete``, if that package is installed.
+		:param enableAutoComplete: Optional, if ``True``, register the parser with ``argcomplete``, if that package is
+		                           installed.
 		"""
 		if enableAutoComplete:
 			self._EnabledAutoComplete()

@@ -528,7 +528,7 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
-		:param copyPoints: If ``True``, the given points are copied instead of referenced.
+		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
 		:raises TypeError: If start/end is not of type :class:`Point3D`.
 		"""
 		if not isinstance(start, Point3D):

@@ -71,10 +71,10 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param name:         Name of the flag, inserted into the patterns.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -124,10 +124,10 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param name:         Name of the flag, inserted into the patterns.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"-with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"-without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -153,10 +153,10 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param name:         Name of the flag, inserted into the patterns.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"--with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"--without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -182,10 +182,10 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param name:         Name of the flag, inserted into the patterns.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"/with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"/without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""

@@ -70,8 +70,8 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -159,8 +159,8 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"-{0}{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -185,8 +185,8 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--{0}{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -211,8 +211,8 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"/{0}:{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""

@@ -101,7 +101,7 @@ class Testcase(TestCase):
 
 			:param obj:  The object to check.
 			:param name: Name of the attribute the object is expected to have.
-			:param msg:  An optional message replacing the generated one.
+			:param msg:  Optional, message replacing the generated one.
 			"""
 			if not hasattr(obj, name):
 				self.fail(msg or f"{type(obj).__name__!r} object has no attribute {name!r}")
@@ -114,7 +114,7 @@ class Testcase(TestCase):
 
 			:param obj:  The object to check.
 			:param name: Name of the attribute the object is expected not to have.
-			:param msg:  An optional message replacing the generated one.
+			:param msg:  Optional, message replacing the generated one.
 			"""
 			if hasattr(obj, name):
 				self.fail(msg or f"{type(obj).__name__!r} object has unexpected attribute {name!r}")
@@ -185,11 +185,11 @@ class ApplicationTestcase(Testcase):
 		This is the path a user takes, so it covers the entry-point wiring as well as the program itself.
 
 		:param arguments:        Command line arguments to pass to the program.
-		:param timeout:          Seconds to wait before the program is killed and :exc:`subprocess.TimeoutExpired` is
-		                         raised. A test should fail rather than hang.
-		:param stdInput:         Text to send to the program's standard input.
-		:param environment:      The environment to run in, or ``None`` to inherit this process's environment.
-		:param workingDirectory: Directory to run in, or ``None`` for the current one.
+		:param timeout:          Optional, seconds to wait before the program is killed and :exc:`subprocess.TimeoutExpired`
+		                         is raised. A test should fail rather than hang.
+		:param stdInput:         Optional, text to send to the program's standard input.
+		:param environment:      Optional, the environment to run in, or ``None`` to inherit this process's environment.
+		:param workingDirectory: Optional, directory to run in, or ``None`` for the current one.
 		:returns:                The completed process, with ``stdout`` and ``stderr`` captured as text.
 		"""
 		return subprocess_run(
@@ -217,10 +217,10 @@ class ApplicationTestcase(Testcase):
 		:meth:`RunEntrypoint` fails, the packaging is at fault, not the code.
 
 		:param arguments:        Command line arguments to pass to the program.
-		:param timeout:          Seconds to wait before the program is killed.
-		:param stdInput:         Text to send to the program's standard input.
-		:param environment:      The environment to run in, or ``None`` to inherit this process's environment.
-		:param workingDirectory: Directory to run in, or ``None`` for the current one.
+		:param timeout:          Optional, seconds to wait before the program is killed.
+		:param stdInput:         Optional, text to send to the program's standard input.
+		:param environment:      Optional, the environment to run in, or ``None`` to inherit this process's environment.
+		:param workingDirectory: Optional, directory to run in, or ``None`` for the current one.
 		:returns:                The completed process, with ``stdout`` and ``stderr`` captured as text.
 		"""
 		return subprocess_run(
@@ -241,7 +241,7 @@ class ApplicationTestcase(Testcase):
 		assertion message rather than into the console.
 
 		:param result:   The completed process to check.
-		:param expected: The expected exit code, zero by default.
+		:param expected: Optional, the expected exit code, zero by default.
 		"""
 		self.assertEqual(
 			expected,

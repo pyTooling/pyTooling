@@ -56,7 +56,7 @@ class Base(metaclass=ExtendedType, mixin=True):
 		"""
 		Initialize the base-mixin-class with a parent reference.
 
-		:param parent: Optional parent reference.
+		:param parent: Optional, parent reference.
 		"""
 		self._parent = parent
 
@@ -82,7 +82,7 @@ class ElementMixIn(Base, mixin=True):
 		"""
 		Initialize the mixin-class for a path element.
 
-		:param parent:      Reference to a parent path element.
+		:param parent:      Optional, reference to a parent path element.
 		:param elementName: Name of the path element.
 		"""
 		super().__init__(parent)

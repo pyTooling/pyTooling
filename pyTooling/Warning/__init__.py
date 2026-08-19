@@ -165,10 +165,10 @@ class WarningCollector:
 		"""
 		Initializes a warning collector.
 
-		:param warnings:   An optional reference to a list of warnings, which can be modified (appended) by this warning
+		:param warnings:   Optional, reference to a list of warnings, which can be modified (appended) by this warning
 		                   collector. If ``None``, an internal list is created and can be referenced by the collector's
 		                   instance.
-		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
+		:param handler:    Optional, handler function, which processes the current warning and decides if a warning should
 		                   be reraised as an exception.
 		:raises TypeError: If optional parameter 'warnings' is not of type :class:`list`.
 		:raises TypeError: If optional parameter 'handler' is not a callable.
@@ -307,7 +307,7 @@ class WarningCollector:
 
 		:param warning:                            Warning to send upwards in the call stack.
 		:param cause:                              Optional, root cause to be added to the warning.
-		:param notes:                              optional, a single note or a list of notes to be added to the warning.
+		:param notes:                              Optional, a single note or a list of notes to be added to the warning.
 		:raises EscalatedWarningException:         If the warning collector asks for the warning to be raised.
 		:raises UnhandledExceptionException:       If no warning collector was found along the call-hierarchy to collect and
 		                                           handle an exception.
@@ -377,17 +377,17 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Initializes a warning collector.
 
-		:param warnings:         An optional reference to a list of warnings, which can be modified (appended) by this
-		                         warning collector. If ``None``, an internal list is created and can be referenced by the
+		:param warnings:         Optional, reference to a list of warnings, which can be modified (appended) by this warning
+		                         collector. If ``None``, an internal list is created and can be referenced by the
 		                         collector's instance.
-		:param handler:          An optional handler function, which processes the current warning and decides if a warning
+		:param handler:          Optional, handler function, which processes the current warning and decides if a warning
 		                         should be reraised as an exception.
-		:param supervisor:       An optional thread supervisor. On leaving the context, the collected warnings and an
+		:param supervisor:       Optional, thread supervisor. On leaving the context, the collected warnings and an
 		                         exception leaving the block are handed to it, so the thread that started this one can
 		                         reraise them. Without a supervisor, an exception leaves the block unchanged.
-		:param exceptionHandler: An optional handler function, called with an exception leaving the block when a supervisor
-		                         is set. Its result decides whether the exception is suppressed.
-		:param finallyHandler:   An optional function called when the context is left, whether or not an exception left it.
+		:param exceptionHandler: Optional, handler function, called with an exception leaving the block when a supervisor is
+		                         set. Its result decides whether the exception is suppressed.
+		:param finallyHandler:   Optional, function called when the context is left, whether or not an exception left it.
 		:raises TypeError:       If optional parameter 'warnings' is not of type :class:`list`.
 		:raises TypeError:       If optional parameter 'handler' is not a callable.
 		"""
@@ -470,8 +470,8 @@ class SupervisedThreadException(ExceptionBase):
 		Initializes the exception with the name of the thread that failed.
 
 		:param message:    The exception's message.
-		:param threadName: Name of the thread that raised the collected exception.
-		:param cause:      The exception collected from that thread.
+		:param threadName: Optional, name of the thread that raised the collected exception.
+		:param cause:      Optional, the exception collected from that thread.
 		"""
 		super().__init__(message)
 		self._threadName = threadName
@@ -594,7 +594,7 @@ class ThreadSupervisor:
 		"""
 		Collect a warning raised in a supervised thread.
 
-		:param threadName: Name of the thread the warning was raised in.
+		:param threadName: Optional, name of the thread the warning was raised in.
 		:param warning:    The warning to collect.
 		"""
 		with self._lock:
@@ -604,8 +604,8 @@ class ThreadSupervisor:
 		"""
 		Collect several warnings raised in a supervised thread.
 
-		:param threadName: Name of the thread the warnings were raised in.
-		:param warnings:   The warnings to collect.
+		:param threadName: Optional, name of the thread the warnings were raised in.
+		:param warnings:   Optional, the warnings to collect.
 		"""
 		with self._lock:
 			self._warnings.extend((threadName, warning) for warning in warnings)
@@ -614,7 +614,7 @@ class ThreadSupervisor:
 		"""
 		Collect an exception that escaped a supervised thread.
 
-		:param threadName: Name of the thread the exception was raised in.
+		:param threadName: Optional, name of the thread the exception was raised in.
 		:param ex:         The exception to collect.
 		"""
 		with self._lock:
@@ -627,7 +627,7 @@ class ThreadSupervisor:
 		A single exception is re-raised as itself - wrapped in a :exc:`SupervisedThreadException` naming its thread,
 		unless ``unwrapped`` is set. Several exceptions are raised as an :exc:`ExceptionGroup`, so none of them is lost.
 
-		:param unwrapped:                  If ``True``, a single exception is raised as it was, without naming its
+		:param unwrapped:                  Optional, if ``True``, a single exception is raised as it was, without naming its
 		                                   thread.
 		:raises SupervisedThreadException: If exactly one thread failed.
 		:raises ExceptionGroup:            If more than one thread failed.

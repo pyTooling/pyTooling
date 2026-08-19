@@ -71,7 +71,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -155,7 +155,7 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"-{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -179,7 +179,7 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -204,7 +204,7 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"/{0}:{1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
