@@ -33,6 +33,7 @@ Unit tests for the class decorators :deco:`~pyTooling.MetaClasses.slotted`,
 :deco:`~pyTooling.MetaClasses.mixin` and :deco:`~pyTooling.MetaClasses.singleton`.
 """
 from pyTooling.MetaClasses import ExtendedType, IncompatibleMetaClassError, mixin, singleton, slotted
+from pyTooling.MetaClasses import abstractclass, AbstractClassError
 from pyTooling.Testing     import Testcase
 
 
@@ -139,3 +140,68 @@ class IncompatibleMetaClass(Testcase):
 			_ = singleton(Data)
 
 		self.assertIn("'@singleton'", str(context.exception))
+
+
+class ClassKeywordArguments(Testcase):
+	"""A class keyword the meta-class doesn't know belongs to :meth:`~object.__init_subclass__`, as with :func:`type`."""
+
+	def test_ForwardedToInitSubclass(self) -> None:
+		class Base(metaclass=ExtendedType):
+			pattern: str
+
+			def __init_subclass__(cls, *args, pattern: str = "", **kwargs) -> None:
+				super().__init_subclass__(*args, **kwargs)
+				cls.pattern = pattern
+
+		class Derived(Base, pattern="-{0}"):
+			pass
+
+		self.assertEqual("-{0}", Derived.pattern)
+
+	def test_ForwardedThroughTwoLevels(self) -> None:
+		class Base(metaclass=ExtendedType):
+			pattern: str
+
+			def __init_subclass__(cls, *args, pattern: str = "", **kwargs) -> None:
+				super().__init_subclass__(*args, **kwargs)
+				cls.pattern = pattern
+
+		class Middle(Base, pattern="-{0}"):
+			pass
+
+		class Leaf(Middle, pattern="--{0}"):
+			pass
+
+		self.assertEqual("-{0}", Middle.pattern)
+		self.assertEqual("--{0}", Leaf.pattern)
+
+	def test_CombinedWithAbstractClass(self) -> None:
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			pattern: str
+
+			def __init_subclass__(cls, *args, pattern: str = "", **kwargs) -> None:
+				super().__init_subclass__(*args, **kwargs)
+				cls.pattern = pattern
+
+		@abstractclass
+		class Middle(Base, pattern="-{0}"):
+			pass
+
+		class Leaf(Middle, pattern="--{0}"):
+			pass
+
+		with self.assertRaises(AbstractClassError):
+			Base()
+
+		with self.assertRaises(AbstractClassError):
+			Middle()
+
+		self.assertEqual("--{0}", Leaf().pattern)
+
+	def test_SlotsIsStillAMetaClassOption(self) -> None:
+		"""``slots``, ``mixin`` and ``singleton`` stay meta-class options, they aren't forwarded."""
+		class Base(metaclass=ExtendedType, slots=True):
+			pass
+
+		self.assertTrue(Base.__slotted__)
