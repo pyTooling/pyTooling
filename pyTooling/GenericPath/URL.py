@@ -36,10 +36,9 @@ This package provides a representation for a Uniform Resource Locator (URL).
    [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 """
 
-from enum     import IntFlag
-from re       import compile as re_compile
-from typing   import ClassVar, Dict, Optional as Nullable, Mapping
-
+from enum                  import IntFlag
+from re                    import compile as re_compile
+from typing                import ClassVar, Optional as Nullable, Mapping
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName
@@ -193,7 +192,7 @@ class URL:
 	_password:  Nullable[str]             #: Password of the URL's authority part.
 	_host:      Nullable[Host]            #: Host name and port of the URL's authority part.
 	_path:      Path                      #: Path part of the URL.
-	_query:     Nullable[Dict[str, str]]  #: Query parameters of the URL, by parameter name.
+	_query:     Nullable[dict[str, str]]  #: Query parameters of the URL, by parameter name.
 	_fragment:  Nullable[str]             #: Fragment (anchor) of the URL.
 
 	def __init__(
@@ -315,7 +314,7 @@ class URL:
 		return self._path
 
 	@readonly
-	def Query(self) -> Nullable[Dict[str, str]]:
+	def Query(self) -> Nullable[dict[str, str]]:
 		"""
 		Read-only property to access the dictionary of key-value pairs representing the query part in the URL.
 

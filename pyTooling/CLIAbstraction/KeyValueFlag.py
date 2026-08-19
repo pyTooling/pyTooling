@@ -41,8 +41,7 @@ Flag arguments represent simple boolean values by being present or absent.
    :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
-from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable
-
+from typing                            import Union, Iterable, cast, Any, Optional as Nullable
 from pyTooling.Decorators              import export
 from pyTooling.MetaClasses             import abstractclass
 from pyTooling.Common                  import getFullyQualifiedName
@@ -79,7 +78,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __init__(self, keyValuePairs: Dict[str, str]) -> None:
+	def __init__(self, keyValuePairs: dict[str, str]) -> None:
 		"""
 		Initialize the argument with a mapping of key-value-pairs, each rendered as its own command line element.
 
@@ -101,7 +100,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 			self._value[key] = value
 
 	@property
-	def Value(self) -> Dict[str, str]:
+	def Value(self) -> dict[str, str]:
 		"""
 		Property to access the internal key-value-pairs (:attr:`_value`).
 
@@ -114,8 +113,8 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		return self._value
 
 	@Value.setter
-	def Value(self, keyValuePairs: Dict[str, str]) -> None:
-		innerDict = cast(Dict[str, str], self._value)
+	def Value(self, keyValuePairs: dict[str, str]) -> None:
+		innerDict = cast(dict[str, str], self._value)
 		innerDict.clear()
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):

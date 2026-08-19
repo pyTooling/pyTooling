@@ -30,8 +30,7 @@
 #
 """An implementation of 2D cartesian shapes for Python."""
 
-from typing import Generic, Tuple
-
+from typing                import Generic
 from pyTooling.Decorators  import export
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
@@ -47,8 +46,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
 	"""
-	points:   Tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
-	segments: Tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
+	points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
+	segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
 		"""

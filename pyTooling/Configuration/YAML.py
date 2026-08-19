@@ -36,8 +36,7 @@ Configuration reader for YAML files.
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
 from pathlib       import Path
-from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
-
+from typing        import Any, Union, Iterator as typing_Iterator, Self
 from pyTooling.Exceptions import MissingDependencyError
 
 try:
@@ -64,7 +63,7 @@ class Node(Abstract_Node):
 	"""
 
 	_yamlNode: Union[CommentedMap, CommentedSeq]  #: Reference to the associated YAML node.
-	_cache:    Dict[str, ValueT]                  #: Cache of already converted sub-nodes and values, by key.
+	_cache:    dict[str, ValueT]                  #: Cache of already converted sub-nodes and values, by key.
 	_key:      KeyT                               #: Key of this node.
 	_length:   int                                #: Number of sub-elements.
 
@@ -119,7 +118,7 @@ class Node(Abstract_Node):
 		return self._GetNodeOrValueByPathExpression(path)
 
 	@staticmethod
-	def _ToPath(query: str) -> List[Union[str, int]]:
+	def _ToPath(query: str) -> list[Union[str, int]]:
 		"""
 		Split a path expression into its elements.
 
@@ -268,7 +267,7 @@ class Node(Abstract_Node):
 
 		return result
 
-	def _GetValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+	def _GetValueByPathExpression(self, path: list[KeyT]) -> ValueT:
 		"""
 		Return the value the given path refers to.
 
@@ -293,7 +292,7 @@ class Node(Abstract_Node):
 
 		return node
 
-	def _GetNodeOrValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+	def _GetNodeOrValueByPathExpression(self, path: list[KeyT]) -> ValueT:
 		"""
 		Return the node or value the given path refers to.
 
@@ -315,7 +314,7 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
-	_keys: List[KeyT]  #: List of keys in this dictionary.
+	_keys: list[KeyT]  #: List of keys in this dictionary.
 
 	def __init__(
 		self,

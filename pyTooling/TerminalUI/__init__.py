@@ -47,8 +47,7 @@ from io                      import TextIOWrapper
 from sys                     import stdin, stdout, stderr
 from textwrap                import dedent
 from types                   import ModuleType
-from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
-
+from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar
 from pyTooling.Exceptions    import MissingDependencyError
 from pyTooling.Versioning    import PythonVersion
 
@@ -81,7 +80,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	try:
 		from colorama import Fore as Foreground
-		Foreground: ClassVar[Dict[str, str]] = {
+		Foreground: ClassVar[dict[str, str]] = {
 			"RED":          Foreground.LIGHTRED_EX,
 			"DARK_RED":		  Foreground.RED,
 			"GREEN":        Foreground.LIGHTGREEN_EX,
@@ -103,7 +102,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			"WARNING":      Foreground.LIGHTYELLOW_EX
 		}                 #: Terminal colors
 	except ImportError:  # pragma: no cover
-		Foreground: ClassVar[Dict[str, str]] = {
+		Foreground: ClassVar[dict[str, str]] = {
 			"RED":         "",
 			"DARK_RED":    "",
 			"GREEN":       "",
@@ -197,7 +196,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		return self._height
 
 	@staticmethod
-	def GetTerminalSize() -> Tuple[int, int]:
+	def GetTerminalSize() -> tuple[int, int]:
 		"""
 		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
 
@@ -219,7 +218,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		return size
 
 	@staticmethod
-	def __GetTerminalSizeOnWindows() -> Nullable[Tuple[int, int]]:
+	def __GetTerminalSizeOnWindows() -> Nullable[tuple[int, int]]:
 		"""
 		Returns the current terminal window's size for Windows.
 
@@ -246,7 +245,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		# return Terminal.__GetTerminalSizeWithTPut()
 
 	# @staticmethod
-	# def __GetTerminalSizeWithTPut() -> Tuple[int, int]:
+	# def __GetTerminalSizeWithTPut() -> tuple[int, int]:
 	# 	"""
 	# 	Returns the current terminal window's size for Windows.
 	#
@@ -264,7 +263,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	# 		pass
 
 	@staticmethod
-	def __GetTerminalSizeOfFileDescriptor(fd: int) -> Nullable[Tuple[int, int]]:
+	def __GetTerminalSizeOfFileDescriptor(fd: int) -> Nullable[tuple[int, int]]:
 		"""
 		Get window size of a file descriptor.
 
@@ -290,7 +289,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			return None
 
 	@staticmethod
-	def __GetTerminalSizeOnLinux() -> Nullable[Tuple[int, int]]:
+	def __GetTerminalSizeOnLinux() -> Nullable[tuple[int, int]]:
 		"""
 		Returns the current terminal window's size for Linux.
 
@@ -669,7 +668,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	Represents a single message line with a severity and indentation level.
 	"""
 
-	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
+	_LOG_MESSAGE_FORMAT__: ClassVar[dict[Severity, str]] = {
 		Severity.Exception:     "EXCEPTION: {message}",
 		Severity.ExceptionNote: "           > {message}",
 		Severity.Fatal:         "FATAL: {message}",
@@ -950,7 +949,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	"""
 	A base-class for implementation of terminal applications emitting line-by-line messages.
 	"""
-	_LOG_MESSAGE_FORMAT__: ClassVar[Dict[Severity, str]] = {
+	_LOG_MESSAGE_FORMAT__: ClassVar[dict[Severity, str]] = {
 		Severity.Exception:            "{RED}[EXCEPTION] {message}{NOCOLOR}",
 		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",
 		Severity.Fatal:           "{DARK_RED}[FATAL]     {message}{NOCOLOR}",
@@ -967,7 +966,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		Severity.Debug:          "{DARK_GRAY}{message}{NOCOLOR}"
 	}                          #: Message formatting rules.
 
-	_LOG_LEVEL_ROUTING__: Dict[Severity, Tuple[Callable[[str, str], int]]]  #: Message routing rules.
+	_LOG_LEVEL_ROUTING__: dict[Severity, tuple[Callable[[str, str], int]]]  #: Message routing rules.
 	_verbose:       bool        #: ``True``, if verbose messages are written.
 	_debug:         bool        #: ``True``, if debug messages are written.
 	_silent:        bool        #: ``True``, if no messages are written at all.
@@ -975,7 +974,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_writeLevel:    Severity    #: Minimal severity a message needs to be written.
 	_writeToStdOut: bool        #: ``True``, if messages are written to ``STDOUT`` instead of ``STDERR``.
 
-	_lines:         List[Line]  #: Every message written so far, in the order it was written.
+	_lines:         list[Line]  #: Every message written so far, in the order it was written.
 	_baseIndent:    int         #: Indentation level added to every message's own indentation.
 
 	_errorCount:           int  #: Number of errors written so far.
@@ -1297,7 +1296,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		return self._errorCount
 
 	@readonly
-	def Lines(self) -> List[Line]:
+	def Lines(self) -> list[Line]:
 		"""
 		Read-only property to access the list of printed lines (messages).
 

@@ -44,9 +44,8 @@ Abstract configuration reader.
    :mod:`pyTooling.GenericPath`
       |rarr| The path expressions a configuration is queried with.
 """
-from pathlib       import Path
-from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
-
+from pathlib               import Path
+from typing                import Union, ClassVar, Iterator, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
 from pyTooling.Exceptions  import ToolingException
@@ -98,8 +97,8 @@ class PathExpressionException(ConfigurationException):
 class Node(metaclass=ExtendedType, slots=True):
 	"""Abstract node in a configuration data structure."""
 
-	DICT_TYPE: ClassVar[Type["Dictionary"]]  #: Type reference used when instantiating new dictionaries
-	SEQ_TYPE:  ClassVar[Type["Sequence"]]    #: Type reference used when instantiating new sequences
+	DICT_TYPE: ClassVar[type["Dictionary"]]  #: Type reference used when instantiating new dictionaries
+	SEQ_TYPE:  ClassVar[type["Sequence"]]    #: Type reference used when instantiating new sequences
 	_root:     "Configuration"               #: Reference to the root node.
 	_parent:   "Dictionary"                  #: Reference to a parent node.
 

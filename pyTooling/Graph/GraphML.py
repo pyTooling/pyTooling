@@ -36,10 +36,9 @@ A data model to write out GraphML XML files.
    `GraphML Primer <http://graphml.graphdrawing.org/primer/graphml-primer.html>`__
       |rarr| The format's own introduction, describing the elements this module writes.
 """
-from enum    import Enum, auto
-from pathlib import Path
-from typing  import Any, ClassVar, List, Dict, Union, Optional as Nullable
-
+from enum                  import Enum, auto
+from pathlib               import Path
+from typing                import Any, ClassVar, Union, Optional as Nullable
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
@@ -181,7 +180,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		raise NotImplementedError()
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 0) -> list[str]:
 		"""
 		Render this element as a list of XML lines.
 
@@ -219,7 +218,7 @@ class BaseWithID(Base):
 @export
 class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
-	_data: List['Data']  #: Data items (key-value-pairs) attached to this GraphML element.
+	_data: list['Data']  #: Data items (key-value-pairs) attached to this GraphML element.
 
 	def __init__(self, identifier: str) -> None:
 		"""
@@ -232,7 +231,7 @@ class BaseWithData(BaseWithID):
 		self._data = []
 
 	@readonly
-	def Data(self) -> List['Data']:
+	def Data(self) -> list['Data']:
 		"""
 		Read-only property to access the data elements attached to this element (:attr:`_data`).
 
@@ -325,7 +324,7 @@ class Key(BaseWithID):
 		"""
 		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
 
-	def ToStringLines(self, indent: int = 2) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
 		Render this key as a list of XML lines.
 
@@ -394,7 +393,7 @@ class Data(Base):
 		data = data.replace("\n", "\\n")
 		return f"""{'  '*indent}<data key="{self._key._id}">{data}</data>\n"""
 
-	def ToStringLines(self, indent: int = 2) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
 		Render this data item as a list of XML lines.
 
@@ -452,7 +451,7 @@ class Node(BaseWithData):
 		"""
 		return f"""{'  ' * indent}</node>\n"""
 
-	def ToStringLines(self, indent: int = 2) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
 		Render this node as a list of XML lines.
 
@@ -543,7 +542,7 @@ class Edge(BaseWithData):
 		"""
 		return f"""{'  ' * indent}</edge>\n"""
 
-	def ToStringLines(self, indent: int = 2) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
 		Render this edge as a list of XML lines.
 
@@ -569,9 +568,9 @@ class BaseGraph(BaseWithData, mixin=True):
 	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
 	direction, the parsing order, and the ID styles for nodes and edges.
 	"""
-	_subgraphs:   Dict[str, 'Subgraph']  #: Subgraphs of this graph, by ID.
-	_nodes:       Dict[str, Node]        #: Nodes of this graph, by ID.
-	_edges:       Dict[str, Edge]        #: Edges of this graph, by ID.
+	_subgraphs:   dict[str, 'Subgraph']  #: Subgraphs of this graph, by ID.
+	_nodes:       dict[str, Node]        #: Nodes of this graph, by ID.
+	_edges:       dict[str, Edge]        #: Edges of this graph, by ID.
 	_edgeDefault: EdgeDefault            #: Direction applied to edges that don't specify one.
 	_parseOrder:  ParsingOrder           #: Order in which nodes and edges may appear in the XML document.
 	_nodeIDStyle: IDStyle                #: Whether node IDs are free-form or canonical.
@@ -596,7 +595,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		self._edgeIDStyle = IDStyle.Free
 
 	@readonly
-	def Subgraphs(self) -> Dict[str, 'Subgraph']:
+	def Subgraphs(self) -> dict[str, 'Subgraph']:
 		"""
 		Read-only property to access the graph's subgraphs (:attr:`_subgraphs`).
 
@@ -605,7 +604,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		return self._subgraphs
 
 	@readonly
-	def Nodes(self) -> Dict[str, Node]:
+	def Nodes(self) -> dict[str, Node]:
 		"""
 		Read-only property to access the graph's nodes (:attr:`_nodes`).
 
@@ -614,7 +613,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		return self._nodes
 
 	@readonly
-	def Edges(self) -> Dict[str, Edge]:
+	def Edges(self) -> dict[str, Edge]:
 		"""
 		Read-only property to access the graph's edges (:attr:`_edges`).
 
@@ -712,7 +711,7 @@ number of nodes and edges, the parsing order and both ID styles.
 		"""
 		return f"{'  '*indent}</graph>\n"
 
-	def ToStringLines(self, indent: int = 1) -> List[str]:
+	def ToStringLines(self, indent: int = 1) -> list[str]:
 		"""
 		Render this graph as a list of XML lines.
 
@@ -739,7 +738,7 @@ class Graph(BaseGraph):
 	It owns the ID space: every node, edge and subgraph registers itself here, so an ID is used only once per document.
 	"""
 	_document: 'GraphMLDocument'                         #: The GraphML document this graph belongs to.
-	_ids:      Dict[str, Union[Node, Edge, 'Subgraph']]  #: Every element of this graph by ID, used to keep IDs unique.
+	_ids:      dict[str, Union[Node, Edge, 'Subgraph']]  #: Every element of this graph by ID, used to keep IDs unique.
 
 	def __init__(self, document: 'GraphMLDocument', identifier: str) -> None:
 		"""
@@ -904,7 +903,7 @@ class Subgraph(Node, BaseGraph):
 		"""
 		return BaseGraph.ClosingTag(self, indent)
 
-	def ToStringLines(self, indent: int = 2) -> List[str]:
+	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
 		Render this subgraph as a list of XML lines.
 
@@ -934,16 +933,16 @@ class GraphMLDocument(Base):
 	A GraphML document: the root graph, the keys it declares, and the XML boilerplate to write it out.
 	"""
 
-	xmlNS: ClassVar[Dict[Nullable[str], str]] = {
+	xmlNS: ClassVar[dict[Nullable[str], str]] = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"
 	}  #: XML namespaces of a GraphML document.
-	xsi: ClassVar[Dict[str, str]] = {
+	xsi: ClassVar[dict[str, str]] = {
 		"schemaLocation": "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
 	}  #: XML schema instance attributes of a GraphML document.
 
 	_graph: Graph           #: The document's root graph.
-	_keys:  Dict[str, Key]  #: Keys declared by this document, by ID.
+	_keys:  dict[str, Key]  #: Keys declared by this document, by ID.
 
 	def __init__(self, identifier: str = "G") -> None:
 		"""
@@ -966,7 +965,7 @@ class GraphMLDocument(Base):
 		return self._graph
 
 	@readonly
-	def Keys(self) -> Dict[str, Key]:
+	def Keys(self) -> dict[str, Key]:
 		"""
 		Read-only property to access the attribute keys declared in this document (:attr:`_keys`).
 
@@ -1158,7 +1157,7 @@ class GraphMLDocument(Base):
 		"""
 		return f"{'  '*indent}</graphml>\n"
 
-	def ToStringLines(self, indent: int = 0) -> List[str]:
+	def ToStringLines(self, indent: int = 0) -> list[str]:
 		"""
 		Render this document as a list of XML lines.
 

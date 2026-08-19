@@ -45,8 +45,7 @@ Implementation of semantic and date versioning version-numbers.
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
 from re              import compile as re_compile, Pattern
-from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator, List
-
+from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 from pyTooling.Exceptions  import ToolingException
@@ -2420,7 +2419,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 	This version set works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
-	_items: List[V]  #: An ordered list of set members.
+	_items: list[V]  #: An ordered list of set members.
 
 	def __init__(self, versions: Union[Version, Iterable[V]]) -> None:
 		"""

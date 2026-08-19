@@ -43,8 +43,7 @@ A common set of missing exceptions in Python.
    :mod:`pyTooling.MetaClasses`
       |rarr| The exceptions raised for a class that violates the meta-class' rules.
 """
-from typing               import Tuple, Iterable, Any, Optional as Nullable
-
+from typing               import Iterable, Any, Optional as Nullable
 from pyTooling.Decorators import export, readonly
 
 
@@ -107,7 +106,7 @@ class OverloadResolutionError(Exception):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -139,7 +138,7 @@ class ExceptionBase(Exception):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -257,7 +256,7 @@ class ToolingException(Exception):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 

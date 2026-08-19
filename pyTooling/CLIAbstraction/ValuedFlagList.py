@@ -44,8 +44,7 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
    :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
       |rarr| For a list of paths.
 """
-from typing import List, Union, Iterable, cast, Any
-
+from typing                            import Union, Iterable, cast, Any
 from pyTooling.Decorators              import export
 from pyTooling.MetaClasses             import abstractclass
 from pyTooling.Common                  import getFullyQualifiedName
@@ -78,7 +77,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	def __init__(self, value: List[ValueT]) -> None:
+	def __init__(self, value: list[ValueT]) -> None:
 		"""
 		Initialize the argument with a list of values, each of which is rendered as its own command line element.
 
@@ -87,7 +86,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		super().__init__(list(value))
 
 	@property
-	def Value(self) -> List[str]:
+	def Value(self) -> list[str]:
 		"""
 		Property to access the internal list of values (:attr:`_value`).
 

@@ -42,8 +42,7 @@ from datetime  import datetime
 from time      import perf_counter_ns
 from threading import local
 from types     import TracebackType
-from typing    import Optional as Nullable, List, Iterator, Type, Self, Iterable, Dict, Any, Tuple
-
+from typing    import Optional as Nullable, Iterator, Self, Iterable, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -72,7 +71,7 @@ class Event(metaclass=ExtendedType, slots=True):
 	_name:      str                 #: Name of the event.
 	_parent:    Nullable["Span"]    #: Reference to the parent span.
 	_time:      Nullable[datetime]  #: Timestamp of the event.
-	_dict:      Dict[str, Any]      #: Dictionary of associated attributes.
+	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable["Span"] = None) -> None:
 		"""
@@ -180,7 +179,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, Any]]:
 		"""
 		Returns an iterator to iterate all associated attributes of this event as :pycode:`(key, value)` tuples.
 
@@ -221,9 +220,9 @@ class Span(metaclass=ExtendedType, slots=True):
 	_stopTime:  Nullable[int]       #: Performance counter in ns when the timespan was stopped.
 	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
 
-	_spans:     List["Span"]        #: Sub-timespans
-	_events:    List[Event]         #: Events happened within this timespan
-	_dict:      Dict[str, Any]      #: Dictionary of associated attributes.
+	_spans:     list["Span"]        #: Sub-timespans
+	_events:    list[Event]         #: Events happened within this timespan
+	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, parent: Nullable["Span"] = None) -> None:
 		"""
@@ -425,7 +424,7 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -488,7 +487,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, Any]]:
 		"""
 		Returns an iterator to iterate all associated attributes of this timespan as :pycode:`(key, value)` tuples.
 
@@ -582,7 +581,7 @@ class Trace(Span):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:

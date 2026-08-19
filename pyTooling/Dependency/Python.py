@@ -40,8 +40,7 @@ from datetime  import datetime
 from enum      import IntEnum
 from functools import wraps, update_wrapper
 from threading import RLock
-from typing    import Optional as Nullable, List, Dict, Union, Iterable, Mapping
-
+from typing    import Optional as Nullable, Union, Iterable, Mapping
 from pyTooling.Exceptions import MissingDependencyError
 
 try:
@@ -282,8 +281,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 	A release knows its distributions (the files that can be downloaded) and its requirements, sorted into the extras
 	they belong to. Both are fetched from the index on first use.
 	"""
-	_files:        List[Distribution]                         #: Distributions (wheels, source archives) of this release.
-	_requirements: Dict[Union[str, None], List[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
+	_files:        list[Distribution]                         #: Distributions (wheels, source archives) of this release.
+	_requirements: dict[Union[str, None], list[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
 
 	_api:          Nullable[URL]      #: URL of the package index's API, used to load the release's details.
 	_session:      Nullable[Session]  #: HTTP session reused for the API requests.
@@ -293,7 +292,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		version:      PythonVersion,
 		timestamp:    datetime,
 		files:        Nullable[Iterable[Distribution]] = None,
-		requirements: Nullable[Mapping[str, List[Requirement]]] = None,
+		requirements: Nullable[Mapping[str, list[Requirement]]] = None,
 		project:      Nullable["Project"] = None,
 		lazy:         LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
@@ -336,7 +335,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 	@lazy(LazyLoaderState.PostProcessed)
 	@PackageVersion.DependsOn.getter
-	def DependsOn(self) -> Dict["Package", Dict[SemanticVersion, "PackageVersion"]]:
+	def DependsOn(self) -> dict["Package", dict[SemanticVersion, "PackageVersion"]]:
 		"""
 		Read-only property to access the packages this release depends on.
 
@@ -355,7 +354,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
-	def Files(self) -> List[Distribution]:
+	def Files(self) -> list[Distribution]:
 		"""
 		Read-only property to access the distributions published for this release (:attr:`_files`).
 
@@ -365,7 +364,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
-	def Requirements(self) -> Dict[str, List[Requirement]]:
+	def Requirements(self) -> dict[str, list[Requirement]]:
 		"""
 		Read-only property to access the release's requirements, grouped by extra (:attr:`_requirements`).
 
@@ -570,7 +569,7 @@ class Project(Package, LazyLoadableMixin):
 
 	@lazy(LazyLoaderState.PartiallyLoaded)
 	@readonly
-	def Releases(self) -> Dict[PythonVersion, Release]:
+	def Releases(self) -> dict[PythonVersion, Release]:
 		"""
 		Read-only property to access all known releases of this project (:attr:`_versions`).
 
@@ -804,7 +803,7 @@ class PythonPackageIndex(PackageStorage):
 		return self._api
 
 	@readonly
-	def Projects(self) -> Dict[str, Project]:
+	def Projects(self) -> dict[str, Project]:
 		"""
 		Read-only property to access all projects known to this package index (:attr:`_packages`).
 

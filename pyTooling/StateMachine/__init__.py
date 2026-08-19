@@ -40,7 +40,7 @@ This packages provides a data structure to describe statemachines.
    :mod:`pyTooling.Graph`
       |rarr| The graph data structure a statemachine is a special case of.
 """
-from typing import List
+
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -75,8 +75,8 @@ class State(Base):
 	"""
 	Represents a state (node/vertex) in a statemachine diagram (directed graph).
 	"""
-	_inboundTransitions:  List[Transition]  #: List of inbound transitions.
-	_outboundTransitions: List[Transition]  #: List of outbound transitions.
+	_inboundTransitions:  list[Transition]  #: List of inbound transitions.
+	_outboundTransitions: list[Transition]  #: List of outbound transitions.
 
 	def __init__(self) -> None:
 		"""
@@ -92,7 +92,7 @@ class StateMachine(Base):
 	"""
 	Represents a statemachine (graph) in a statemachine diagram (directed graph).
 	"""
-	_states:       List[State]  #: List of all states in this statemachine.
+	_states:       list[State]  #: List of all states in this statemachine.
 	_initialState: State        #: The state the statemachine starts in.
 
 	def __init__(self, initialState: State) -> None:
@@ -117,7 +117,7 @@ class StateMachine(Base):
 			raise ValueError(f"State '{state}' was already added to this statemachine.")
 
 	@readonly
-	def States(self) -> List[State]:
+	def States(self) -> list[State]:
 		"""
 		Read-only property to access the list of states.
 

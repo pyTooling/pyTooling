@@ -44,8 +44,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from threading import local, Lock
 from types     import TracebackType
-from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self, Iterable, Tuple, Union
-
+from typing    import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Exceptions import ExceptionBase
@@ -79,7 +78,7 @@ class CriticalWarning(BaseException):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -108,7 +107,7 @@ class Warning(BaseException):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -152,14 +151,14 @@ class WarningCollector:
 	A context manager to collect warnings within the call hierarchy.
 	"""
 	_parent:   Nullable["WarningCollector"]               #: Parent WarningCollector
-	_warnings: List[BaseException]                        #: List of collected warnings (and exceptions).
+	_warnings: list[BaseException]                        #: List of collected warnings (and exceptions).
 	_handler:  Nullable[Callable[[BaseException], bool]]  #: Optional handler function, which is called per collected warning.
 
 	__slots__ = ("_parent", "_warnings", "_handler")
 
 	def __init__(
 		self,
-		warnings: Nullable[List[BaseException]] = None,
+		warnings: Nullable[list[BaseException]] = None,
 		handler:  Nullable[Callable[[BaseException], bool]] = None
 	) -> None:
 		"""
@@ -233,7 +232,7 @@ class WarningCollector:
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -265,7 +264,7 @@ class WarningCollector:
 		self._parent = value
 
 	@readonly
-	def Warnings(self) -> List[Warning | CriticalWarning | Exception]:
+	def Warnings(self) -> list[Warning | CriticalWarning | Exception]:
 		"""
 		Read-only property to access the list of collected warnings.
 
@@ -367,7 +366,7 @@ class SupervisedWarningCollector(WarningCollector):
 
 	def __init__(
 		self,
-		warnings:         Nullable[List[BaseException]] =             None,
+		warnings:         Nullable[list[BaseException]] =             None,
 		handler:          Nullable[Callable[[BaseException], bool]] = None,
 		/,
 		supervisor:       Nullable["ThreadSupervisor"] =              None,
@@ -415,7 +414,7 @@ class SupervisedWarningCollector(WarningCollector):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -527,7 +526,7 @@ class ThreadSupervisor:
 
 	   def RunVivadoPipeline(
 	     self,
-	   ) -> List[AnyWarning]:
+	   ) -> list[AnyWarning]:
 	     stopEvent =        Event()
 	     threadSupervisor = ThreadSupervisor()
 
@@ -547,8 +546,8 @@ class ThreadSupervisor:
 	"""
 
 	_lock:       Lock                             #: Lock serializing the collection from multiple threads.
-	_exceptions: List[Tuple[str, BaseException]]  #: Exceptions of all supervised threads, as (thread name, exception).
-	_warnings:   List[Tuple[str, AnyWarning]]     #: Warnings of all supervised threads, as (thread name, warning).
+	_exceptions: list[tuple[str, BaseException]]  #: Exceptions of all supervised threads, as (thread name, exception).
+	_warnings:   list[tuple[str, AnyWarning]]     #: Warnings of all supervised threads, as (thread name, warning).
 
 	__slots__ = ("_lock", "_exceptions", "_warnings")
 
@@ -581,7 +580,7 @@ class ThreadSupervisor:
 			return len(self._exceptions) > 0
 
 	@readonly
-	def Warnings(self) -> List[AnyWarning]:
+	def Warnings(self) -> list[AnyWarning]:
 		"""
 		Read-only property to return all warnings collected from supervised threads (:attr:`_warnings`).
 
@@ -600,7 +599,7 @@ class ThreadSupervisor:
 		with self._lock:
 			self._warnings.append((threadName, warning))
 
-	def AddWarnings(self, threadName: str, warnings: List[AnyWarning]) -> None:
+	def AddWarnings(self, threadName: str, warnings: list[AnyWarning]) -> None:
 		"""
 		Collect several warnings raised in a supervised thread.
 

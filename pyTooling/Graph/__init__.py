@@ -62,11 +62,10 @@ starting vertex are provided as methods on a vertex.
       |rarr| A statemachine, which is a directed graph of states and transitions.
 """
 import heapq
-from collections import deque
-from itertools   import chain
-from typing      import TypeVar, Generic, List, Tuple, Dict, Set, Deque, Union, Optional as Nullable
-from typing      import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
-
+from collections           import deque
+from itertools             import chain
+from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
+from typing                import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
@@ -274,7 +273,7 @@ class Base(
 	Every vertex, edge, link, component, view, subgraph and graph can carry meta information this way.
 	"""
 
-	_dict: Dict[DictKeyType, DictValueType]  #: A dictionary to store arbitrary key-value-pairs.
+	_dict: dict[DictKeyType, DictValueType]  #: A dictionary to store arbitrary key-value-pairs.
 
 	def __init__(
 		self,
@@ -495,7 +494,7 @@ class BaseWithVertices(
 								'EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,' \
 								'LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType' \
 								']'   #: Field storing a reference to the graph.
-	_vertices: Set['Vertex[GraphDictKeyType, GraphDictValueType,'
+	_vertices: set['Vertex[GraphDictKeyType, GraphDictValueType,'
 								'VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,'
 								'EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,'
 								'LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType'
@@ -552,7 +551,7 @@ class BaseWithVertices(
 		return self._graph
 
 	@readonly
-	def Vertices(self) -> Set['Vertex']:
+	def Vertices(self) -> set['Vertex']:
 		"""
 		Read-only property to access the vertices in this component (:attr:`_vertices`).
 
@@ -587,11 +586,11 @@ class Vertex(
 	_graph:     'BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]'  #: Field storing a reference to the graph.
 	_subgraph:  'Subgraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]'   #: Field storing a reference to the subgraph.
 	_component: 'Component'            #: Field storing a reference to the component this vertex belongs to.
-	_views:     Dict[Hashable, 'View'] #: Field storing the views this vertex is part of, by view name.
-	_inboundEdges:   List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound edges.
-	_outboundEdges:  List['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound edges.
-	_inboundLinks:   List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound links.
-	_outboundLinks:  List['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound links.
+	_views:     dict[Hashable, 'View'] #: Field storing the views this vertex is part of, by view name.
+	_inboundEdges:   list['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound edges.
+	_outboundEdges:  list['Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound edges.
+	_inboundLinks:   list['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of inbound links.
+	_outboundLinks:  list['Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]']  #: Field storing a list of outbound links.
 
 	def __init__(
 		self,
@@ -727,7 +726,7 @@ class Vertex(
 		return self._component
 
 	@readonly
-	def InboundEdges(self) -> Tuple['Edge', ...]:
+	def InboundEdges(self) -> tuple['Edge', ...]:
 		"""
 		Read-only property to get a tuple of inbound edges (:attr:`_inboundEdges`).
 
@@ -736,7 +735,7 @@ class Vertex(
 		return tuple(self._inboundEdges)
 
 	@readonly
-	def OutboundEdges(self) -> Tuple['Edge', ...]:
+	def OutboundEdges(self) -> tuple['Edge', ...]:
 		"""
 		Read-only property to get a tuple of outbound edges (:attr:`_outboundEdges`).
 
@@ -745,7 +744,7 @@ class Vertex(
 		return tuple(self._outboundEdges)
 
 	@readonly
-	def InboundLinks(self) -> Tuple['Link', ...]:
+	def InboundLinks(self) -> tuple['Link', ...]:
 		"""
 		Read-only property to get a tuple of inbound links (:attr:`_inboundLinks`).
 
@@ -754,7 +753,7 @@ class Vertex(
 		return tuple(self._inboundLinks)
 
 	@readonly
-	def OutboundLinks(self) -> Tuple['Link', ...]:
+	def OutboundLinks(self) -> tuple['Link', ...]:
 		"""
 		Read-only property to get a tuple of outbound links (:attr:`_outboundLinks`).
 
@@ -857,7 +856,7 @@ class Vertex(
 		return len(self._outboundEdges) == 0
 
 	@readonly
-	def Predecessors(self) -> Tuple['Vertex', ...]:
+	def Predecessors(self) -> tuple['Vertex', ...]:
 		"""
 		Read-only property to get a tuple of predecessor vertices.
 
@@ -866,7 +865,7 @@ class Vertex(
 		return tuple([edge.Source for edge in self._inboundEdges])
 
 	@readonly
-	def Successors(self) -> Tuple['Vertex', ...]:
+	def Successors(self) -> tuple['Vertex', ...]:
 		"""
 		Read-only property to get a tuple of successor vertices.
 
@@ -1589,7 +1588,7 @@ class Vertex(
 		   :meth:`IterateVerticesDFS`
 		      |rarr| Iterate all reachable vertices **depth-first search** order.
 		"""
-		visited: Set[Vertex] = set()
+		visited: set[Vertex] = set()
 		queue: Deque[Vertex] = deque()
 
 		yield self
@@ -1622,8 +1621,8 @@ class Vertex(
 
 		   Wikipedia - https://en.wikipedia.org/wiki/Depth-first_search
 		"""
-		visited: Set[Vertex] = set()
-		stack: List[typing_Iterator[Edge]] = list()
+		visited: set[Vertex] = set()
+		stack: list[typing_Iterator[Edge]] = list()
 
 		yield self
 		visited.add(self)
@@ -1644,7 +1643,7 @@ class Vertex(
 				if len(stack) == 0:
 					return
 
-	def IterateAllOutboundPathsAsVertexList(self) -> Generator[Tuple['Vertex', ...], None, None]:
+	def IterateAllOutboundPathsAsVertexList(self) -> Generator[tuple['Vertex', ...], None, None]:
 		"""
 		Iterate all paths starting at this vertex, each as a tuple of vertices.
 
@@ -1658,9 +1657,9 @@ class Vertex(
 			yield (self, )
 			return
 
-		visited:       Set[Vertex] =                 set()
-		vertexStack:   List[Vertex] =                list()
-		iteratorStack: List[typing_Iterator[Edge]] = list()
+		visited:       set[Vertex] =                 set()
+		vertexStack:   list[Vertex] =                list()
+		iteratorStack: list[typing_Iterator[Edge]] = list()
 
 		visited.add(self)
 		vertexStack.append(self)
@@ -1738,7 +1737,7 @@ class Vertex(
 
 		# Initially add all reachable vertices to a queue if vertices to be processed.
 		startNode = Node(None, self)
-		visited: Set[Vertex] = set()
+		visited: set[Vertex] = set()
 		queue: Deque[Node] = deque()
 
 		# Add starting vertex and all its children to the processing list.
@@ -1854,7 +1853,7 @@ class Vertex(
 				"""
 				return f"Vertex: {self.ref.ID}"
 
-		visited: Set['Vertex'] = set()
+		visited: set['Vertex'] = set()
 		startNode = Node(None, 0, self)
 		priorityQueue = [startNode]
 
@@ -1936,8 +1935,8 @@ class Vertex(
 		:raises NotATreeError:  If the graph reachable from this vertex is not a tree, because a vertex has more than one
 		                        parent.
 		"""
-		visited: Set[Vertex] = set()
-		stack: List[Tuple[Node, typing_Iterator[Edge]]] = list()
+		visited: set[Vertex] = set()
+		stack: list[tuple[Node, typing_Iterator[Edge]]] = list()
 
 		root = Node(nodeID=self._id, value=self._value)
 		root._dict = self._dict.copy()
@@ -2279,12 +2278,12 @@ class BaseGraph(
 
 	"""
 
-	_verticesWithID:    Dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
-	_verticesWithoutID: List[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
-	_edgesWithID:       Dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
-	_edgesWithoutID:    List[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
-	_linksWithID:       Dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
-	_linksWithoutID:    List[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
+	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
+	_verticesWithoutID: list[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
+	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
+	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
+	_linksWithID:       dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
+	_linksWithoutID:    list[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
 
 	def __init__(
 		self,
@@ -2982,9 +2981,9 @@ class Graph(
 	all nodes. Nodes are instances of :class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
 	made of :class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
-	_subgraphs:         Set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Subgraphs of this graph.
-	_views:             Set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Views defined on this graph.
-	_components:        Set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Connected components of this graph.
+	_subgraphs:         set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Subgraphs of this graph.
+	_views:             set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Views defined on this graph.
+	_components:        set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Connected components of this graph.
 
 	def __init__(
 		self,
@@ -3018,21 +3017,21 @@ class Graph(
 		super().__del__()
 
 	@readonly
-	def Subgraphs(self) -> Set[Subgraph]:
+	def Subgraphs(self) -> set[Subgraph]:
 		"""Read-only property to access the subgraphs in this graph (:attr:`_subgraphs`).
 
 		:returns: The set of subgraphs in this graph."""
 		return self._subgraphs
 
 	@readonly
-	def Views(self) -> Set[View]:
+	def Views(self) -> set[View]:
 		"""Read-only property to access the views in this graph (:attr:`_views`).
 
 		:returns: The set of views in this graph."""
 		return self._views
 
 	@readonly
-	def Components(self) -> Set[Component]:
+	def Components(self) -> set[Component]:
 		"""Read-only property to access the components in this graph (:attr:`_components`).
 
 		:returns: The set of components in this graph."""
