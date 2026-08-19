@@ -180,7 +180,9 @@ def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
 	:param options:                     Meta-class options like ``slots``, ``mixin`` or ``singleton``.
 	:returns:                           The recreated class.
 	:raises IncompatibleMetaClassError: If the class' meta-class is neither :class:`type`, nor derived from
-	                                    :class:`ExtendedType`.
+	                                    :class:`ExtendedType`. |br|
+	                                    A decorated class must use :class:`type` or a meta-class derived from
+	                                    :class:`~pyTooling.MetaClasses.ExtendedType`.
 	"""
 	if cls.__class__ is type:
 		metacls = ExtendedType
@@ -923,7 +925,13 @@ class ExtendedType(type):
 		:param slots:                       True, if the class should setup ``__slots__``.
 		:param mixin:                       True, if the class should behave as a mixin-class.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
-		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved.
+		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved. |br|
+		                                    An assignment without a type annotation creates a class attribute, which
+		                                    hides the slot's descriptor: reading the field works, but assigning it on an
+		                                    instance raises. Annotate it as ``ClassVar[...]`` to declare a class
+		                                    variable, or remove the assignment. A slot contributed by a mixin-class is
+		                                    materialized in this class' ``__slots__``, and Python doesn't allow such a
+		                                    name to be assigned in the class body.
 		:raises BaseClassWithoutSlotsError: If a base-class doesn't use slots. |br|
 		                                    All base-classes of a class using ``__slots__`` must use ``__slots__``
 		                                    themselves.
