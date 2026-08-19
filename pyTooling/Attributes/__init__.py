@@ -39,6 +39,15 @@ class, method or function. By default, this field is called ``__pyattr__``.
 .. hint::
 
    See :ref:`high-level help <ATTR>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Attributes.ArgParse`
+      |rarr| Attributes describing a command line interface.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The meta-class that collects the attributes attached to a class' methods.
+   :mod:`pyTooling.Decorators`
+      |rarr| Decorators that modify an entity instead of marking it.
 """
 from enum   import IntFlag
 from types  import MethodType, FunctionType, ModuleType
@@ -276,6 +285,12 @@ class SimpleAttribute(Attribute):
 	_kwargs: Dict[str, Any]   #: Named parameters the attribute was applied with.
 
 	def __init__(self, *args, **kwargs) -> None:
+		"""
+		Initialize the attribute, preserving whatever parameters it was applied with.
+
+		:param args:   Positional parameters, readable from :attr:`Args`.
+		:param kwargs: Named parameters, readable from :attr:`KwArgs`.
+		"""
 		self._args = args
 		self._kwargs = kwargs
 

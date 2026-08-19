@@ -33,6 +33,11 @@ Helpers to stream items from a producer thread to a consumer through a thread-sa
 
 A queue becomes an iterator, so neither side polls: the producer hands items over and the consumer iterates them until
 the producer signals the end.
+
+.. seealso::
+
+   :mod:`pyTooling.Warning`
+      |rarr| Collecting what a producer thread reports, next to what it produces.
 """
 from collections import deque
 from queue       import Queue as ThreadSafeQueue, Full

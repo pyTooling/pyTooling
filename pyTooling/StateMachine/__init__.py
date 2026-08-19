@@ -34,6 +34,11 @@ This packages provides a data structure to describe statemachines.
 .. hint::
 
    See :ref:`high-level help <STRUCT/StateMachine>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Graph`
+      |rarr| The graph data structure a statemachine is a special case of.
 """
 from typing import List
 

@@ -31,7 +31,7 @@
 #
 """
 List of valued flags are argument lists where each item is a valued flag (See
-:mod:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
+:class:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
 
 Each list item gets translated into a ``***ValuedFlag``, with the same flag name, but differing values.
 
@@ -39,19 +39,21 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
 
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For single valued flags.
-   :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
+   :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
       |rarr| For a list of strings.
-   :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+   :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
       |rarr| For a list of paths.
 """
-from typing import List, Union, Iterable, cast, Any, Self
+from typing import List, Union, Iterable, cast, Any
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.Common                  import getFullyQualifiedName
 from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
 
 
 @export
+@abstractclass
 class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 	"""
 	Class and base-class for all ValuedFlagList classes, which represents a list of valued flags.
@@ -76,22 +78,12 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, value: List[ValueT]) -> None:
+		"""
+		Initialize the argument with a list of values, each of which is rendered as its own command line element.
+
+		:param value: Values of the argument.
+		"""
 		super().__init__(list(value))
 
 	@property
@@ -126,7 +118,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		:raises ValueError: If the argument has no name.
 		"""
 		if self._name is None:
-			raise ValueError(f"")  # XXX: add message
+			raise ValueError("Internal value '_name' is None.")
 
 		return [self._pattern.format(self._name, value) for value in self._value]
 
@@ -148,6 +140,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 
 
 @export
+@abstractclass
 class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a single dash.
@@ -169,23 +162,9 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a double dash.
@@ -207,23 +186,9 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a single slash.
@@ -245,18 +210,3 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

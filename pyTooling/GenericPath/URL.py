@@ -131,6 +131,11 @@ class Host(RootMixIn):
 		return self._port
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this host.
+
+		:returns: Hostname, followed by ``:port`` if a port is specified.
+		"""
 		result = self._hostname
 		if self._port is not None:
 			result += f":{self._port}"

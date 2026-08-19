@@ -29,7 +29,18 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A set of helpers to implement a text user interface (TUI) in a terminal."""
+"""
+A set of helpers to implement a text user interface (TUI) in a terminal.
+
+.. seealso::
+
+   :mod:`pyTooling.Attributes.ArgParse`
+      |rarr| Declaring the commands and options the application accepts.
+   :mod:`pyTooling.CLIAbstraction`
+      |rarr| Calling other programs from such an application.
+   :mod:`pyTooling.Warning`
+      |rarr| Collecting warnings that the application then writes.
+"""
 from datetime                import datetime
 from enum                    import Enum, unique
 from io                      import TextIOWrapper

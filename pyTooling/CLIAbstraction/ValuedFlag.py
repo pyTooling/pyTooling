@@ -40,18 +40,20 @@ The usual delimiter sign between name and value is an equal sign (``=``).
       |rarr| For simple flags.
    :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
       |rarr| For flags with a different pattern based on the boolean value itself.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlagList`
       |rarr| For a list of valued flags.
 """
-from typing import Any, Self
+from typing import Any
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 
 @export
+@abstractclass
 class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 	"""
 	Class and base-class for all ValuedFlag classes, which represents a flag argument with value.
@@ -76,23 +78,9 @@ class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a single dash.
@@ -114,23 +102,9 @@ class ShortValuedFlag(ValuedFlag, pattern="-{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a double dash.
@@ -152,23 +126,9 @@ class LongValuedFlag(ValuedFlag, pattern="--{0}={1}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a single slash.
@@ -190,18 +150,3 @@ class WindowsValuedFlag(ValuedFlag, pattern="/{0}:{1}"):
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

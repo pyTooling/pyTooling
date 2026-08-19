@@ -34,6 +34,11 @@ Auxiliary classes to implement call-by-reference.
 .. hint::
 
    See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Common`
+      |rarr| Helper functions for the data types passed around this way.
 """
 from decimal       import Decimal
 from typing        import Any, Generic, Self, TypeVar, Optional as Nullable

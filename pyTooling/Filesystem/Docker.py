@@ -60,6 +60,12 @@ class Layer(metaclass=ExtendedType):
 	_size:          int                       #: Aggregated size of all contained files for this layer.
 
 	def __init__(self, parent: Nullable["LayerCake"] = None, previousLayer: Nullable["Layer"] = None) -> None:
+		"""
+		Initialize an empty layer, which appends itself to the layer cake it belongs to.
+
+		:param parent:        Optional layer cake this layer is part of.
+		:param previousLayer: Optional layer below this one, which is linked to this layer in both directions.
+		"""
 		if parent is not None:
 			parent._layers.append(self)
 		self._parent =        parent
@@ -201,6 +207,11 @@ class LayerCake(metaclass=ExtendedType):
 	_slicingDuration:  Nullable[float]  #: Duration for sorting files by size and assigning them to Docker image layers.
 
 	def __init__(self, root: Root) -> None:
+		"""
+		Initialize an empty layer cake for the given filesystem tree.
+
+		:param root: Root of the filesystem statistics scope to slice into layers.
+		"""
 		self._root =             root
 		self._layers =           []
 		self._emptyDirectories = []

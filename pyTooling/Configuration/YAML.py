@@ -494,4 +494,11 @@ class Configuration(Dictionary, Abstract_Configuration):
 		return self._GetNodeOrValue(str(key))
 
 	def __setitem__(self, key: str, value: ValueT) -> None:
+		"""
+		Write a value of this configuration by key.
+
+		:param key:                  Key of the value to write.
+		:param value:                The new value.
+		:raises NotImplementedError: Writing a configuration is not supported by this implementation.
+		"""
 		raise NotImplementedError()

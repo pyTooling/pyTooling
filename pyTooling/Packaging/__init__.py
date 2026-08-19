@@ -34,6 +34,15 @@ A set of helper functions to describe a Python package for setuptools.
 .. hint::
 
    See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Versioning`
+      |rarr| The version numbers read from a package's dunder variables.
+   :mod:`pyTooling.Licensing`
+      |rarr| The license names translated for setuptools.
+   :mod:`pyTooling.Testing`
+      |rarr| Testing the console scripts a package installs.
 """
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from collections.abc import Sized
@@ -308,6 +317,11 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return self._version
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this version information.
+
+		:returns: The version number.
+		"""
 		return f"{self._version}"
 
 

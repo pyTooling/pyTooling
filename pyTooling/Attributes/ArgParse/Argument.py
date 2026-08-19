@@ -99,7 +99,7 @@ class PositionalArgument(ValuedArgument):
 
 	TODO
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, type: Type = str, optional: bool = False, help: str = "") -> None:
@@ -125,7 +125,7 @@ class StringArgument(PositionalArgument):
 	"""
 	Represents a simple string argument.
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -141,7 +141,7 @@ class IntegerArgument(PositionalArgument):
 	"""
 	Represents an integer argument.
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -157,7 +157,7 @@ class FloatArgument(PositionalArgument):
 	"""
 	Represents a floating point number argument.
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -174,7 +174,7 @@ class PathArgument(PositionalArgument):
 	"""
 	Represents a single path argument.
 
-	A list of paths is available as :class:`~pyTooling.Attribute.ArgParse.Argument.PathListArgument`.
+	A list of paths is available as :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -188,7 +188,7 @@ class PathArgument(PositionalArgument):
 @export
 class ListArgument(ValuedArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, type: Type = str, optional: bool = False, help: str = "") -> None:
@@ -210,7 +210,7 @@ class ListArgument(ValuedArgument):
 @export
 class StringListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -224,7 +224,7 @@ class StringListArgument(ListArgument):
 @export
 class IntegerListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -238,7 +238,7 @@ class IntegerListArgument(ListArgument):
 @export
 class FloatListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -252,7 +252,7 @@ class FloatListArgument(ListArgument):
 @export
 class PathListArgument(ListArgument):
 	"""
-	Represents a list of path arguments  (:class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`).
+	Represents a list of path arguments  (:class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:

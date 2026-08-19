@@ -28,7 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An object-oriented doubly linked-list data structure for Python."""
+"""
+An object-oriented doubly linked-list data structure for Python.
+
+.. seealso::
+
+   :mod:`pyTooling.Tree`
+      |rarr| A tree data structure.
+   :mod:`pyTooling.Graph`
+      |rarr| A graph data structure.
+"""
 
 from collections.abc import Sized
 from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List, Any
@@ -84,6 +93,8 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises TypeError:   If parameter 'previous' is not of type :class:`Node`.
 		:raises TypeError:   If parameter 'next' is not of type :class:`Node`.
 		:raises ValueError:  If parameter 'value' is None.
+		:raises ValueError:  If ``previous`` and ``next`` belong to different linked lists. |br|
+		                     A node can only be inserted between two neighbours of the same linked list.
 		"""
 		self._previousNode = previousNode
 		self._nextNode = nextNode
@@ -120,10 +131,12 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 					ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
 					raise ex
 
-				if nextNode._linkedList is not None:
-					if self._linkedList is not None:
-						if self._linkedList is not previousNode._linkedList:
-							raise ValueError()
+				# 'self._linkedList' was just taken from 'previousNode', so comparing it against 'previousNode' again
+				# could never differ - the two neighbours are what has to agree.
+				if nextNode._linkedList is not previousNode._linkedList:
+					ex = ValueError("Parameters 'previous' and 'next' belong to different linked lists.")
+					ex.add_note("A node can only be inserted between two neighbours of the same linked list.")
+					raise ex
 
 				previousNode._nextNode = self
 		elif nextNode is not None:
@@ -371,6 +384,11 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			node = nextNode
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this node.
+
+		:returns: The node's value, prefixed by its kind.
+		"""
 		return f"Node: {self._value}"
 
 

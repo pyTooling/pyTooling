@@ -35,6 +35,13 @@ A common set of missing exceptions in Python.
 .. hint::
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Warning`
+      |rarr| Warnings, which are collected instead of raised.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The exceptions raised for a class that violates the meta-class' rules.
 """
 from typing               import Tuple, Iterable, Any, Optional as Nullable
 
@@ -83,10 +90,11 @@ class OverloadResolutionError(Exception):
 	"""
 	The exception is raised, when no matching overloaded method was found.
 
-	.. seealso::
+	.. attention::
 
-	   :deco:`~pyTooling.MetaClasses.overloadable`
-	      |rarr| Mark a method as *overloadable*.
+	   Method overloading is not implemented yet - the ``overloadable`` decorator and the dispatching machinery are
+	   commented out in :mod:`pyTooling.MetaClasses`. Nothing raises this exception today; it is declared so the feature
+	   has its exception when it arrives.
 	"""
 
 	@readonly

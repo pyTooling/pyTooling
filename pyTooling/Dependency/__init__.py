@@ -34,6 +34,15 @@ Implementation of package dependencies.
 .. hint::
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Dependency.Python`
+      |rarr| The implementation for Python packages on a package index.
+   :mod:`pyTooling.Versioning`
+      |rarr| The version numbers a requirement is resolved against.
+   :mod:`pyTooling.Graph`
+      |rarr| The graph data structure a dependency graph is built on.
 """
 from datetime import datetime
 from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self, Iterator
@@ -460,6 +469,11 @@ class Package(metaclass=ExtendedType, slots=True):
 		return len(self._versions)
 
 	def __iter__(self) -> Iterator[PackageVersion]:
+		"""
+		Iterate the versions of this package.
+
+		:returns: An iterator over all versions of this package.
+		"""
 		return iter(self._versions.values())
 
 	def __getitem__(self, version: str | SemanticVersion) -> PackageVersion:
@@ -474,8 +488,9 @@ class Package(metaclass=ExtendedType, slots=True):
 		if isinstance(version, str):
 			version = SemanticVersion.Parse(version)
 		elif not isinstance(version, SemanticVersion):
-			# TODO: raise proper type error
-			raise TypeError()
+			ex = TypeError("Parameter 'version' is neither a 'str' nor of type 'SemanticVersion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
 
 		return self._versions[version]
 
@@ -617,6 +632,11 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		return len(self._packages)
 
 	def __iter__(self) -> Iterator[Package]:
+		"""
+		Iterate the packages in this storage.
+
+		:returns: An iterator over all packages in this storage.
+		"""
 		return iter(self._packages.values())
 
 	def __getitem__(self, name: str) -> Package:
@@ -739,6 +759,11 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		return len(self._storages)
 
 	def __iter__(self) -> Iterator[PackageStorage]:
+		"""
+		Iterate the storages in this dependency graph.
+
+		:returns: An iterator over all storages in this dependency graph.
+		"""
 		return iter(self._storages.values())
 
 	def __getitem__(self, name: str) -> PackageStorage:
