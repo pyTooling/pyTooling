@@ -395,7 +395,8 @@ class Span(metaclass=ExtendedType, slots=True):
 		A span will be started.
 
 		:returns:                 The span itself.
-		:raises TracingException: If no trace is active, so the span has nothing to attach to.
+		:raises TracingException: If no trace is active, so the span has nothing to attach to. |br|
+		                          Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
 		global _threadLocalData
 

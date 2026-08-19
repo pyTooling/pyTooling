@@ -886,7 +886,9 @@ class Vertex(
 		:param keyValuePairs:       An optional mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
-		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
+		                            Use :meth:`LinkToVertex` or :meth:`LinkFromVertex` to connect vertices across
+		                            subgraph boundaries.
 
 		.. seealso::
 
@@ -951,7 +953,9 @@ class Vertex(
 		:param keyValuePairs:       An optional mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
-		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
+		                            Use :meth:`LinkToVertex` or :meth:`LinkFromVertex` to connect vertices across
+		                            subgraph boundaries.
 
 		.. seealso::
 
@@ -1022,7 +1026,9 @@ class Vertex(
 		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
-		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
+		                            Use :meth:`LinkToVertex` or :meth:`LinkFromVertex` to connect vertices across
+		                            subgraph boundaries.
 
 		.. seealso::
 
@@ -1095,7 +1101,9 @@ class Vertex(
 		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
-		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph.
+		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
+		                            Use :meth:`LinkToVertex` or :meth:`LinkFromVertex` to connect vertices across
+		                            subgraph boundaries.
 
 		.. seealso::
 
@@ -1162,7 +1170,10 @@ class Vertex(
 		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
-		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph.
+		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph - a link connects vertices *across*
+		                                 subgraph boundaries. |br|
+		                                 Use :meth:`EdgeToVertex` or :meth:`EdgeFromVertex` to connect vertices within
+		                                 the same subgraph.
 
 		.. seealso::
 
@@ -1229,7 +1240,10 @@ class Vertex(
 		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
-		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph.
+		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph - a link connects vertices *across*
+		                                 subgraph boundaries. |br|
+		                                 Use :meth:`EdgeToVertex` or :meth:`EdgeFromVertex` to connect vertices within
+		                                 the same subgraph.
 
 		.. seealso::
 

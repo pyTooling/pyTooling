@@ -218,8 +218,8 @@ class Node(Abstract_Node):
 		:param value:                   The raw value, possibly containing variables.
 		:returns:                       The value with every variable replaced by what it references.
 		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
-		                                variable reference without its closing ``}``. Use ``$$`` to escape a literal
-		                                dollar sign.
+		                                missing closing ``}`` for a ``${`` at some position. |br|
+		                                Use ``$$`` to escape a literal dollar sign.
 		:raises KeyNotFoundException:   If a referenced key doesn't exist.
 		"""
 		if value == "":
