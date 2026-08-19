@@ -136,6 +136,17 @@ class UnhandledExceptionException(ExceptionBase):
 
 
 @export
+class EscalatedWarningException(ExceptionBase):
+	"""
+	This exception is raised when a :class:`WarningCollector` decides a collected warning should not be collected but
+	raised.
+
+	A collector's handler returning ``True`` asks for the warning to be escalated; the warning itself becomes the
+	exception's cause.
+	"""
+
+
+@export
 class WarningCollector:
 	"""
 	A context manager to collect warnings within the call hierarchy.
@@ -297,7 +308,7 @@ class WarningCollector:
 		:param warning:                            Warning to send upwards in the call stack.
 		:param cause:                              Optional, root cause to be added to the warning.
 		:param notes:                              optional, a single note or a list of notes to be added to the warning.
-		:raises Exception:                         If warning should be converted to an exception.
+		:raises EscalatedWarningException:         If the warning collector asks for the warning to be raised.
 		:raises UnhandledExceptionException:       If no warning collector was found along the call-hierarchy to collect and
 		                                           handle an exception.
 		:raises UnhandledCriticalWarningException:  If no warning collector was found along the call-hierarchy to collect
@@ -320,7 +331,7 @@ class WarningCollector:
 		try:
 			warningCollector = _threadLocalData.warningCollector
 			if warningCollector.AddWarning(warning):
-				raise Exception(f"Warning: {warning}") from warning
+				raise EscalatedWarningException(f"Warning: {warning}") from warning
 		except AttributeError:
 			ex = None
 			if isinstance(warning, Exception):

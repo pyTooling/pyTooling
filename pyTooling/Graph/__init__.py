@@ -300,15 +300,9 @@ class Base(
 
 	def Delete(self) -> None:
 		"""
-		Delete this element's attached attributes.
-
-		.. attention::
-
-		   The dictionary is dropped, not cleared, so every further access to the element's attributes raises a
-		   :exc:`TypeError` - including :meth:`__len__` and ``in``. Anything still holding a reference to the element
-		   sees that, and a reference to the dictionary itself keeps the old content alive.
+		Remove this element's attached attributes from internal dictionary.
 		"""
-		self._dict = None
+		self._dict.clear()
 
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
 		"""
@@ -676,40 +670,43 @@ class Vertex(
 		"""
 		Delete this vertex and every edge and link connected to it.
 
-		The vertex is removed from its graph or subgraph, and from its component and views; the connected edges and
-		links are deleted from both of their vertices.
+		The vertex is removed from its graph or subgraph, and from its views; every connected edge and link is removed
+		from its other vertex and unregistered from the graph or subgraph it was registered on.
 		"""
 		for edge in self._outboundEdges:
 			edge._destination._inboundEdges.remove(edge)
+			edge._Unregister()
 			edge._Delete()
 		for edge in self._inboundEdges:
 			edge._source._outboundEdges.remove(edge)
+			edge._Unregister()
 			edge._Delete()
 		for link in self._outboundLinks:
 			link._destination._inboundLinks.remove(link)
+			link._Unregister()
 			link._Delete()
 		for link in self._inboundLinks:
 			link._source._outboundLinks.remove(link)
+			link._Unregister()
 			link._Delete()
 
+		# Remove from Graph or Subgraph - a vertex is registered on the subgraph it lives in, otherwise on the graph.
+		container = self._graph if self._subgraph is None else self._subgraph
 		if self._id is None:
-			self._graph._verticesWithoutID.remove(self)
+			container._verticesWithoutID.remove(self)
 		else:
-			del self._graph._verticesWithID[self._id]
-
-		# subgraph
+			del container._verticesWithID[self._id]
 
 		# component
 
 		# views
-		self._views =         None
-		self._inboundEdges =  None
-		self._outboundEdges = None
-		self._inboundLinks =  None
-		self._outboundLinks = None
+		self._views.clear()
+		self._inboundEdges.clear()
+		self._outboundEdges.clear()
+		self._inboundLinks.clear()
+		self._outboundLinks.clear()
 
 		super().Delete()
-		assert getrefcount(self) == 1
 
 	@readonly
 	def Graph(self) -> 'Graph':
@@ -2135,17 +2132,21 @@ class Edge(
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
 
-		# Remove from Graph and Subgraph
-		if self._id is None:
-			self._source._graph._edgesWithoutID.remove(self)
-			if self._source._subgraph is not None:
-				self._source._subgraph._edgesWithoutID.remove(self)
-		else:
-			del self._source._graph._edgesWithID[self._id]
-			if self._source._subgraph is not None:
-				del self._source._subgraph._edgesWithID[self]
-
+		self._Unregister()
 		self._Delete()
+
+	def _Unregister(self) -> None:
+		"""
+		Remove this edge from the graph or subgraph it was registered on.
+
+		An edge is registered on the subgraph it lives in, otherwise on the graph. Called by :meth:`Delete` and by
+		:meth:`Vertex.Delete`, which unlinks the vertices itself.
+		"""
+		container = self._source._graph if self._source._subgraph is None else self._source._subgraph
+		if self._id is None:
+			container._edgesWithoutID.remove(self)
+		else:
+			del container._edgesWithID[self._id]
 
 	def _Delete(self) -> None:
 		"""
@@ -2219,18 +2220,31 @@ class Link(
 
 	def Delete(self) -> None:
 		"""
-		Delete this link from both of its vertices and from the graph it belongs to.
+		Delete this link from both of its vertices and from the graph and subgraphs it belongs to.
 		"""
-		self._source._outboundEdges.remove(self)
-		self._destination._inboundEdges.remove(self)
+		self._source._outboundLinks.remove(self)
+		self._destination._inboundLinks.remove(self)
 
-		if self._id is None:
-			self._source._graph._linksWithoutID.remove(self)
-		else:
-			del self._source._graph._linksWithID[self._id]
-
+		self._Unregister()
 		self._Delete()
-		assert getrefcount(self) == 1
+
+	def _Unregister(self) -> None:
+		"""
+		Remove this link from the graph or the subgraphs it was registered on.
+
+		A link crossing a subgraph boundary is registered on both subgraphs, a link between two top-level vertices on
+		the graph. Called by :meth:`Delete` and by :meth:`Vertex.Delete`, which unlinks the vertices itself.
+		"""
+		if self._source._subgraph is None:
+			containers = (self._source._graph, )
+		else:
+			containers = tuple(sg for sg in (self._source._subgraph, self._destination._subgraph) if sg is not None)
+
+		for container in containers:
+			if self._id is None:
+				container._linksWithoutID.remove(self)
+			else:
+				del container._linksWithID[self._id]
 
 	def _Delete(self) -> None:
 		"""
@@ -2240,10 +2254,10 @@ class Link(
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this link."""
-		self._source._outboundEdges.remove(self)
-		self._source._inboundEdges.append(self)
-		self._destination._inboundEdges.remove(self)
-		self._destination._outboundEdges.append(self)
+		self._source._outboundLinks.remove(self)
+		self._source._inboundLinks.append(self)
+		self._destination._inboundLinks.remove(self)
+		self._destination._outboundLinks.append(self)
 
 		super().Reverse()
 
