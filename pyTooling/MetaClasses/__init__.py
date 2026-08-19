@@ -1375,7 +1375,7 @@ class ExtendedType(type):
 						newClass.__new__ = origNew
 				elif newClass.__new__.__isSingleton__:
 					raise ExtendedTypeError(
-						f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet."
+						"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet."
 					)
 			except AttributeError as ex:
 				if ex.name != "__raises_abstract_class_error__":
