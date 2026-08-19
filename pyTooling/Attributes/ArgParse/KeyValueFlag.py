@@ -87,7 +87,7 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument):
 		"""
 		Initialize a key-value argument in its short form.
 
-		:param short: Short form of the option, e.g. ``-v``.
+		:param short: Short form of the option, including its dash, e.g. :pycode:`short="-v"`.
 		:param dest:  Name of the parameter the parsed value is passed to the handler method as.
 		:param help:  Help text of the option, displayed in the help page.
 		"""
@@ -102,7 +102,7 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument):
 		"""
 		Initialize a key-value argument in its long form.
 
-		:param long: Long form of the option, e.g. ``--verbose``.
+		:param long: Long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
 		:param dest: Name of the parameter the parsed value is passed to the handler method as.
 		:param help: Help text of the option, displayed in the help page.
 		"""

@@ -226,10 +226,9 @@ class ReleaseLevel(Enum):
 
 	def __hash__(self) -> int:
 		"""
-		Compute a hash for this release level.
+		Compute a hash for this release level, so it can be used as a key in a dictionary or an element of a set.
 
-		As :meth:`__eq__` is implemented, :meth:`__hash__` needs to be implemented too, otherwise the release level
-		becomes unhashable.
+		The hash is derived from the release level's value, so two release levels compare and hash alike.
 
 		:returns: Hash of the release level's value.
 		"""

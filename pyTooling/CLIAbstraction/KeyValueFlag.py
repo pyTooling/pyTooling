@@ -97,7 +97,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		Initialize the argument with a mapping of key-value-pairs, each rendered as its own command line element.
 
 		:param keyValuePairs: Key-value-pairs of the argument.
-		:raises TypeError:    If a key or a value is not of type :class:`str`.
+		:raises TypeError:    If a key or a value is not a string.
 		"""
 		super().__init__({})
 

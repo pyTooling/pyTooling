@@ -85,7 +85,7 @@ class ShortValuedFlag(ValuedFlag):
 		"""
 		Initialize a switch argument with a value in its short form.
 
-		:param short:    Short form of the option, e.g. ``-v``.
+		:param short:    Short form of the option, including its dash, e.g. :pycode:`short="-v"`.
 		:param dest:     Name of the parameter the parsed value is passed to the handler method as.
 		:param metaName: Name of the value in the help page.
 		:param optional: If ``True``, the option may be omitted.
@@ -102,7 +102,7 @@ class LongValuedFlag(ValuedFlag):
 		"""
 		Initialize a switch argument with a value in its long form.
 
-		:param long:     Long form of the option, e.g. ``--verbose``.
+		:param long:     Long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
 		:param dest:     Name of the parameter the parsed value is passed to the handler method as.
 		:param metaName: Name of the value in the help page.
 		:param optional: If ``True``, the option may be omitted.

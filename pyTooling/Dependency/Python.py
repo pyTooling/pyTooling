@@ -757,7 +757,8 @@ class PythonPackageIndex(PackageStorage):
 		:param url:        URL of the index's website, as a string or a parsed URL.
 		:param api:        URL of the index's JSON API, as a string or a parsed URL.
 		:param graph:      Dependency graph this index belongs to.
-		:raises TypeError: If parameter 'url' or 'api' is not a string or a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises TypeError: If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises TypeError: If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
 		"""
 		super().__init__(name, graph)
 

@@ -110,7 +110,12 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
-			"""Open the Windows libraries and the handle of the current process."""
+			"""
+			Initialize the process information by opening the Windows libraries it queries.
+
+			:attr:`_psapi` and :attr:`_kernel32` are loaded, ``GetCurrentProcess`` is declared, and the handle it returns
+			is kept in :attr:`_processHandle` for the lifetime of this object.
+			"""
 			self._psapi =    WinDLL("psapi", use_last_error=True)
 			self._kernel32 = WinDLL("kernel32", use_last_error=True)
 
@@ -120,7 +125,12 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			self._processHandle = self._kernel32.GetCurrentProcess()
 	else:
 		def __init__(self) -> None:
-			"""Initialize the process information; no handle is needed outside Windows."""
+			"""
+			Initialize the process information.
+
+			There is nothing to open outside Windows: :attr:`_psapi`, :attr:`_kernel32` and :attr:`_processHandle` are
+			declared under the same platform condition as this initializer, so they don't exist here.
+			"""
 			pass
 
 	if CurrentPlatform.IsNativeLinux:
