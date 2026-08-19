@@ -35,7 +35,7 @@ Basic abstraction layer for executables.
 .. seealso::
 
    :mod:`pyTooling.Attributes.ArgParse`
-      |rarr| The other direction: describing the command line this program accepts.
+      |rarr| The other direction: describing the command line a program accepts.
    :mod:`pyTooling.TerminalUI`
       |rarr| Writing the program's own messages to the terminal.
    :mod:`pyTooling.Platform`

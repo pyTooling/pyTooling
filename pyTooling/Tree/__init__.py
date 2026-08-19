@@ -38,7 +38,7 @@ A powerful tree data structure for Python.
    :mod:`pyTooling.Graph.GraphML`
       |rarr| Writing a tree as a GraphML document.
    :mod:`pyTooling.LinkedList`
-      |rarr| A linear data structure.
+      |rarr| An object-oriented doubly linked-list data structure.
 """
 from collections   import deque
 from typing        import TypeVar, Generic, List, Tuple, Dict, Deque, Union, Optional as Nullable
