@@ -38,16 +38,18 @@ Boolean flags are arguments with a name and different pattern for a positive (``
       |rarr| For simple flags.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For flags with a value.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
-from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.CLIAbstraction.Argument import NamedArgument, ValuedArgument
 
 
 @export
+@abstractclass
 class BooleanFlag(NamedArgument, ValuedArgument):
 	"""
 	Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern for an
@@ -85,21 +87,6 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 		cls._falsePattern = falsePattern
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is BooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, value: bool) -> None:
 		"""Initializes a BooleanFlag instance.
 
@@ -122,6 +109,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 
 @export
+@abstractclass
 class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-{0}"):
 	"""Represents a :py:class:`BooleanFlag` with a single dash.
 
@@ -148,23 +136,9 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortBooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without-{0}"):
 	"""Represents a :py:class:`BooleanFlag` with a double dash.
 
@@ -191,23 +165,9 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongBooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/without-{0}"):
 	"""Represents a :py:class:`BooleanFlag` with a slash.
 
@@ -233,18 +193,3 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		kwargs["pattern"] = pattern
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsBooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

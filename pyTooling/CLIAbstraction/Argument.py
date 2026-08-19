@@ -36,9 +36,10 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable, Self
+from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
 
 
@@ -49,7 +50,8 @@ ValueT = TypeVar("ValueT")   #: The type of value in a valued argument.
 
 
 @export
-class CommandLineArgument:
+@abstractclass
+class CommandLineArgument(metaclass=ExtendedType):
 	"""
 	Base-class for all *Argument* classes.
 
@@ -68,7 +70,7 @@ class CommandLineArgument:
 	* names and values |br|
 	  |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`, :mod:`~pyTooling.CLIAbstraction.OptionalValuedFlag`
 	* key-value pairs |br|
-	  |rarr| :mod:`~pyTooling.CLIAbstraction.NamedKeyValuePair`
+	  |rarr| :class:`~pyTooling.CLIAbstraction.KeyValueFlag.NamedKeyValuePairsArgument`
 	"""
 
 	_pattern: ClassVar[str]  #: Format string to render the argument on the command line.
@@ -84,23 +86,6 @@ class CommandLineArgument:
 		"""
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is CommandLineArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-
-		# TODO: not sure why parameters meant for __init__ do reach this level and distract __new__ from it's work
-		return super().__new__(cls)
 
 	# TODO: Add property to read pattern
 
@@ -237,6 +222,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 
 
 @export
+@abstractclass
 class NamedArgument(CommandLineArgument, pattern="{0}"):
 	"""
 	Base-class for all command line arguments with a name.
@@ -257,21 +243,6 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._name = name
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is NamedArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
 
 	@readonly
 	def Name(self) -> str:
@@ -399,6 +370,11 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		ValuedArgument.__init_subclass__(*args, **kwargs)
 
 	def __init__(self, value: ValueT) -> None:
+		"""
+		Initialize the argument with the value rendered into its pattern.
+
+		:param value: Value of the argument.
+		"""
 		ValuedArgument.__init__(self, value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
@@ -425,6 +401,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	__repr__ = __str__
 
 
+@abstractclass
 class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], pattern="{0}"):
 	"""
 	Class and base-class for all TupleFlag classes, which represents an argument with separate value.
@@ -456,22 +433,12 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		super().__init_subclass__(*args, **kwargs)
 		cls._valuePattern = valuePattern
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is NamedTupledArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, value: ValueT) -> None:
+		"""
+		Initialize the argument with the value rendered into its pattern.
+
+		:param value: Value of the argument.
+		"""
 		ValuedArgument.__init__(self, value)
 
 	# TODO: Add property to read value pattern
@@ -479,7 +446,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 	# @property
 	# def ValuePattern(self) -> str:
 	# 	if self._valuePattern is None:
-	# 		raise ValueError(f"")  # XXX: add message
+	# 		raise ValueError("Internal value '_valuePattern' is None.")
 	#
 	# 	return self._valuePattern
 

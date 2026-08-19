@@ -34,6 +34,13 @@ Implementation of semantic and date versioning version-numbers.
 .. hint::
 
    See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Packaging`
+      |rarr| Reading a package's version from its dunder variables.
+   :mod:`pyTooling.Dependency`
+      |rarr| Resolving requirements against these version numbers.
 """
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum
@@ -225,6 +232,13 @@ class ReleaseLevel(Enum):
 		return self.value >= other.value
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this release level, so it can be used as a key in a dictionary or an element of a set.
+
+		The hash is derived from the release level's value, so two release levels compare and hash alike.
+
+		:returns: Hash of the release level's value.
+		"""
 		return hash(self.value)
 
 	def __str__(self) -> str:
@@ -1035,6 +1049,14 @@ class Version(metaclass=ExtendedType, slots=True):
 		return not result if result is not None else equalValue
 
 	def __rshift__(self, other: Union["Version", str, int, None]) -> bool:
+		"""
+		Return the minimum of this version and a second operand.
+
+		:param other:       Second operand, a version, a version string or a major version number.
+		:returns:           ``True``, if this version is the minimum of both operands.
+		:raises ValueError: If the second operand is ``None``.
+		:raises TypeError:  If the second operand is not a version, a string or an integer.
+		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
@@ -1052,6 +1074,14 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._minimum(self, other)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number and cache it.
+
+		All parts of the version are part of the hash, so two versions differing in a postfix or a build number don't
+		collide.
+
+		:returns: Hash of this version number.
+		"""
 		if self.__hash is None:
 			self.__hash = hash((
 				self._prefix,
@@ -1383,12 +1413,35 @@ class SemanticVersion(Version):
 		return super().__ge__(other)
 
 	def __rshift__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+		"""
+		Return the minimum of this semantic version and a second operand.
+
+		:param other:       Second operand, a version, a version string or a major version number.
+		:returns:           ``True``, if this version is the minimum of both operands.
+		:raises ValueError: If the second operand is ``None``.
+		:raises TypeError:  If the second operand is not a version, a string or an integer.
+		"""
 		return super().__rshift__(other)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return a string representation of this version number according to the format specification.
+
+		:param formatSpec:  The format specification, using ``%``-placeholders for the version's parts.
+		:returns:           Formatted version number.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
 		result = self._format(formatSpec)
 
 		if (pos := result.find("%")) != -1 and result[pos + 1] != "%":  # pragma: no cover
@@ -1471,6 +1524,14 @@ class PythonVersion(SemanticVersion):
 		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 	def __str__(self) -> str:
@@ -1765,6 +1826,14 @@ class CalendarVersion(Version):
 		return super().__ge__(other)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 	def __format__(self, formatSpec: str) -> str:
@@ -1869,6 +1938,14 @@ class YearMonthVersion(CalendarVersion):
 		return self._minor
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -1919,6 +1996,14 @@ class YearWeekVersion(CalendarVersion):
 		return self._minor
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -1969,6 +2054,14 @@ class YearReleaseVersion(CalendarVersion):
 		return self._minor
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -2028,6 +2121,14 @@ class YearMonthDayVersion(CalendarVersion):
 		return self._micro
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -2178,14 +2279,20 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		elif other._lowerBound in self:
 			lBound = other._lowerBound
 		else:
-			raise ValueError()
+			ex = ValueError("The intersection of both version ranges is empty.")
+			ex.add_note(f"Got value '{other._lowerBound}' for other's lower bound.")
+			ex.add_note(f"This range's upper bound is '{self._upperBound}'.")
+			raise ex
 
 		if other._upperBound > self._upperBound:
 			uBound = self._upperBound
 		elif other._upperBound in self:
 			uBound = other._upperBound
 		else:
-			raise ValueError()
+			ex = ValueError("The intersection of both version ranges is empty.")
+			ex.add_note(f"Got value '{other._upperBound}' for other's upper bound.")
+			ex.add_note(f"This range's lower bound is '{self._lowerBound}'.")
+			raise ex
 
 		return self.__class__(lBound, uBound)
 

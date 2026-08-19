@@ -36,16 +36,18 @@ Valued tuple-flag arguments represent a name and a value as a 2-tuple.
 
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For flags with a value.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
-from typing import Any, Self
+from typing import Any
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.CLIAbstraction.Argument import NamedTupledArgument
 
 
 @export
+@abstractclass
 class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 	"""
 	Represents a :class:`ValuedTupleArgument` with a single dash in front of the switch name.
@@ -66,23 +68,9 @@ class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortTupleFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 	"""
 	Represents a :class:`ValuedTupleArgument` with a double dash in front of the switch name.
@@ -103,23 +91,9 @@ class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongTupleFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
 	"""
 	Represents a :class:`ValuedTupleArgument` with a single slash in front of the switch name.
@@ -139,18 +113,3 @@ class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsTupleFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

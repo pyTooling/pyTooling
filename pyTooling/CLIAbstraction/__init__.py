@@ -29,7 +29,18 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Basic abstraction layer for executables."""
+"""
+Basic abstraction layer for executables.
+
+.. seealso::
+
+   :mod:`pyTooling.Attributes.ArgParse`
+      |rarr| The other direction: describing the command line a program accepts.
+   :mod:`pyTooling.TerminalUI`
+      |rarr| Writing the program's own messages to the terminal.
+   :mod:`pyTooling.Platform`
+      |rarr| Deciding which executable name and path style the current platform uses.
+"""
 
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
 
@@ -307,6 +318,14 @@ class Program(metaclass=ExtendedType, slots=True):
 		return self.__cliParameters__[key]
 
 	def __setitem__(self, key: Type[CommandLineArgument], value: CommandLineArgument) -> None:
+		"""
+		Set a command line argument of this program by its argument class.
+
+		:param key:        Class of the command line argument to set.
+		:param value:      Value of that argument; ignored for arguments needing no value.
+		:raises TypeError: If the key is not a subclass of :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument`.
+		:raises KeyError:  If the argument isn't allowed on this program, or was set before.
+		"""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
@@ -335,7 +354,9 @@ class Program(metaclass=ExtendedType, slots=True):
 		Convert a program and used CLI options to a list of CLI argument strings in correct order and with escaping.
 
 		:returns:          List of CLI arguments
-		:raises TypeError: If an argument is neither a string nor a sequence of strings.
+		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
+		                   An argument's :meth:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument` has to
+		                   return a :class:`str`, a :class:`tuple` or a :class:`list`.
 		"""
 		result: List[str] = []
 
@@ -357,7 +378,10 @@ class Program(metaclass=ExtendedType, slots=True):
 			elif isinstance(param, (Tuple, List)):
 				result += param
 			else:
-				raise TypeError(f"")  # XXX: needs error message
+				ex = TypeError(f"Argument '{key.__name__}' was rendered to neither a string nor a sequence of strings.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(param)}'.")
+				ex.add_note("'AsArgument()' has to return a 'str', a 'tuple' or a 'list'.")
+				raise ex
 
 		return result
 
@@ -470,7 +494,7 @@ class Executable(Program):  # (ILogable):
 			self._process.stdin.write(line + end)
 			self._process.stdin.flush()
 		except Exception as ex:
-			raise CLIAbstractionException(f"") from ex     # XXX: need error message
+			raise CLIAbstractionException(f"Error while sending data to the child-process '{self._executablePath}'.") from ex
 
 	# This is TCL specific ...
 	# def SendBoundary(self):
@@ -485,13 +509,13 @@ class Executable(Program):  # (ILogable):
 		:raises CLIAbstractionException: When any error occurs while reading outputs from the child-process.
 		"""
 		if self._dryRun:
-			raise DryRunException()  # XXX: needs a message
+			raise DryRunException(f"Can't read from the child-process '{self._executablePath}' in dry-run mode.")
 
 		try:
 			for line in iter(self._process.stdout.readline, ""):     # FIXME: can it be improved?
 				yield line[:-1]
 		except Exception as ex:
-			raise CLIAbstractionException() from ex     # XXX: need error message
+			raise CLIAbstractionException(f"Error while reading from the child-process '{self._executablePath}'.") from ex
 		# finally:
 			# self._process.terminate()
 
@@ -598,6 +622,13 @@ class OutputFilteredExecutable(Executable):
 	_hasFatals:   bool  #: ``True``, if the output filter classified a line as a fatal error.
 
 	def __init__(self, platform: Platform, dryrun: bool, executablePath: Path) -> None: #, environment=None, logger=None) -> None:
+		"""
+		Initialize an executable whose output is filtered, with all filter results cleared.
+
+		:param platform:       Platform the executable is called on.
+		:param dryrun:         If ``True``, the executable is not started, only the command line is assembled.
+		:param executablePath: Path to the executable.
+		"""
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 
 		self._hasOutput =   False

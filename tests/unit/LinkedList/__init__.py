@@ -85,6 +85,19 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError):
 			_ = Node(5, nextNode=6)
 
+	def test_Node_NeighboursFromDifferentLists(self) -> None:
+		"""A node can't be inserted between two nodes that belong to different linked lists."""
+		firstList = LinkedList((Node(1), Node(2)))
+		secondList = LinkedList((Node(3), Node(4)))
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			_ = Node(5, previousNode=firstList.FirstNode, nextNode=secondList.FirstNode)
+
+		self.assertEqual(
+			"Parameters 'previous' and 'next' belong to different linked lists.",
+			str(exceptionCapture.exception)
+		)
+
 	def test_LinkedList(self) -> None:
 		linkedList = LinkedList()
 

@@ -38,17 +38,19 @@ Flag arguments represent simple boolean values by being present or absent.
       |rarr| For flags with a different pattern based on the boolean value itself.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For flags with a value.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
-from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable, Self
+from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.Common                  import getFullyQualifiedName
 from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 
 @export
+@abstractclass
 class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 	"""
 	Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value
@@ -77,22 +79,13 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is NamedKeyValuePairsArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, keyValuePairs: Dict[str, str]) -> None:
+		"""
+		Initialize the argument with a mapping of key-value-pairs, each rendered as its own command line element.
+
+		:param keyValuePairs: Key-value-pairs of the argument.
+		:raises TypeError:    If a key or a value is not a string.
+		"""
 		super().__init__({})
 
 		for key, value in keyValuePairs.items():
@@ -151,6 +144,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 
 @export
+@abstractclass
 class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 	"""
 	Represents a :py:class:`NamedKeyValueFlagArgument` with a single dash in front of the switch name.
@@ -174,23 +168,9 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortKeyValueFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 	"""
 	Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
@@ -214,23 +194,9 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongKeyValueFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 	"""
 	Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
@@ -253,18 +219,3 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongKeyValueFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

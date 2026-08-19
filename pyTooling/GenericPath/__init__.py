@@ -28,7 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A generic path to derive domain specific path libraries."""
+"""
+A generic path to derive domain specific path libraries.
+
+.. seealso::
+
+   :mod:`pyTooling.GenericPath.URL`
+      |rarr| A URL as a domain-specific path.
+   :mod:`pyTooling.Configuration`
+      |rarr| Path expressions addressing a node in a configuration.
+"""
 from typing import ClassVar, List, Optional as Nullable, Type
 
 from pyTooling.Decorators  import export
@@ -81,6 +90,11 @@ class ElementMixIn(Base, mixin=True):
 		self._elementName = elementName
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this path element.
+
+		:returns: The element's name.
+		"""
 		return self._elementName
 
 
@@ -113,6 +127,11 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return len(self._elements)
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this path.
+
+		:returns: The path's elements, joined by the delimiter, prefixed by the root delimiter if the path is absolute.
+		"""
 		result = self.ROOT_DELIMITER if self._isAbsolute else ""
 
 		if len(self._elements) > 0:

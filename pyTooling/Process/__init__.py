@@ -33,11 +33,18 @@ An operating system independent abstraction of the currently running process.
 
 The process' properties are queried through one API, whichever operating system provides them, so a program reading
 its own memory usage needs no platform handling of its own.
+
+.. seealso::
+
+   :mod:`pyTooling.Platform`
+      |rarr| The platform this process runs on.
+   :mod:`pyTooling.Stopwatch`
+      |rarr| Measuring how long a piece of code took, next to how much memory it used.
 """
 from ctypes              import Structure, c_void_p, c_size_t, c_int, c_int32, c_uint64
 from os                  import getpid, strerror
 from pathlib             import Path
-from typing import ClassVar, Any
+from typing              import ClassVar, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -84,6 +91,11 @@ class MemoryInfo(metaclass=ExtendedType, slots=True):
 		return self._VirtualMemory
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this memory snapshot.
+
+		:returns: Resident and virtual memory usage in MiB.
+		"""
 		return f"Physical Memory (VmRSS): {self.ResidentMemory / 2**20:.3f} MiB / Virtual Memory (VmS): {self.VirtualMemory / 2**20:.3f}  MiB"
 
 
@@ -105,6 +117,12 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
+			"""
+			Initialize the process information by opening the Windows libraries it queries.
+
+			:attr:`_psapi` and :attr:`_kernel32` are loaded, ``GetCurrentProcess`` is declared, and the handle it returns
+			is kept in :attr:`_processHandle` for the lifetime of this object.
+			"""
 			self._psapi =    WinDLL("psapi", use_last_error=True)
 			self._kernel32 = WinDLL("kernel32", use_last_error=True)
 
@@ -114,6 +132,12 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			self._processHandle = self._kernel32.GetCurrentProcess()
 	else:
 		def __init__(self) -> None:
+			"""
+			Initialize the process information.
+
+			There is nothing to open outside Windows: :attr:`_psapi`, :attr:`_kernel32` and :attr:`_processHandle` are
+			declared under the same platform condition as this initializer, so they don't exist here.
+			"""
 			pass
 
 	if CurrentPlatform.IsNativeLinux:

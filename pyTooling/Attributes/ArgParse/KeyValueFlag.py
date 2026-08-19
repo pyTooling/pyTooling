@@ -84,6 +84,13 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument):
 	"""Defines a key-value argument in short form like ``-Dkey=value``."""
 
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a key-value argument in its short form.
+
+		:param short: Short form of the option, including its dash, e.g. :pycode:`short="-v"`.
+		:param dest:  Name of the parameter the parsed value is passed to the handler method as.
+		:param help:  Help text of the option, displayed in the help page.
+		"""
 		super().__init__(short=short, dest=dest, help=help)
 
 
@@ -92,4 +99,11 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument):
 	"""Defines a key-value argument in long form like ``--define key=value``."""
 
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a key-value argument in its long form.
+
+		:param long: Long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
+		:param dest: Name of the parameter the parsed value is passed to the handler method as.
+		:param help: Help text of the option, displayed in the help page.
+		"""
 		super().__init__(long=long, dest=dest, help=help)

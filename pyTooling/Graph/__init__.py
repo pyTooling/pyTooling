@@ -51,6 +51,15 @@ starting vertex are provided as methods on a vertex.
 			 I ---> E --> F --> D
 
 			 classDef node fill:#eee,stroke:#777,font-size:smaller;
+
+.. seealso::
+
+   :mod:`pyTooling.Graph.GraphML`
+      |rarr| Writing a graph as a GraphML document.
+   :mod:`pyTooling.Tree`
+      |rarr| A tree, which is a graph without cycles and with a single root.
+   :mod:`pyTooling.StateMachine`
+      |rarr| A statemachine, which is a directed graph of states and transitions.
 """
 import heapq
 from collections import deque
@@ -821,11 +830,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsLeaf`
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
+		   :meth:`BaseGraph.IterateRoots <pyTooling.Graph.BaseGraph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
+		   :meth:`BaseGraph.IterateLeafs <pyTooling.Graph.BaseGraph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._inboundEdges) == 0
@@ -841,11 +850,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsRoot`
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
+		   :meth:`BaseGraph.IterateRoots <pyTooling.Graph.BaseGraph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
+		   :meth:`BaseGraph.IterateLeafs <pyTooling.Graph.BaseGraph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._outboundEdges) == 0
@@ -1711,10 +1720,21 @@ class Vertex(
 			ref:    Vertex  #: The vertex this node represents.
 
 			def __init__(self, parent: 'Node', ref: Vertex) -> None:
+				"""
+				Initialize a search tree node.
+
+				:param parent: Predecessor on the path back to the starting point.
+				:param ref:    The vertex this node represents.
+				"""
 				self.parent = parent
 				self.ref = ref
 
 			def __str__(self):
+				"""
+				Return a string representation of this search tree node.
+
+				:returns: The ID of the vertex this node represents.
+				"""
 				return f"Vertex: {self.ref.ID}"
 
 		# Initially add all reachable vertices to a queue if vertices to be processed.
@@ -1807,14 +1827,32 @@ class Vertex(
 			ref:      Vertex          #: The vertex this node represents.
 
 			def __init__(self, parent: 'Node', distance: EdgeWeightType, ref: Vertex) -> None:
+				"""
+				Initialize a search tree node.
+
+				:param parent:   Predecessor on the path back to the starting point.
+				:param distance: Accumulated edge weight from the starting point to this node.
+				:param ref:      The vertex this node represents.
+				"""
 				self.parent = parent
 				self.distance = distance
 				self.ref = ref
 
 			def __lt__(self, other):
+				"""
+				Compare two search tree nodes by their accumulated distance, so they can be kept in a priority queue.
+
+				:param other: Second operand.
+				:returns:     ``True``, if this node is closer to the starting point than the second operand.
+				"""
 				return self.distance < other.distance
 
 			def __str__(self):
+				"""
+				Return a string representation of this search tree node.
+
+				:returns: The ID of the vertex this node represents.
+				"""
 				return f"Vertex: {self.ref.ID}"
 
 		visited: Set['Vertex'] = set()
@@ -2341,7 +2379,7 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateLeafs`
+		   :meth:`BaseGraph.IterateLeafs <pyTooling.Graph.BaseGraph.IterateLeafs>`
 		      |rarr| Iterate leafs of a graph.
 		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
@@ -2376,7 +2414,7 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateRoots`
+		   :meth:`BaseGraph.IterateRoots <pyTooling.Graph.BaseGraph.IterateRoots>`
 		      |rarr| Iterate roots of a graph.
 		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.

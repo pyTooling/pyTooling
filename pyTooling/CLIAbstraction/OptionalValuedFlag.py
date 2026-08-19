@@ -37,13 +37,15 @@ The argument renders one of two patterns: the one with a value when a value was 
 otherwise - which is why an optional-valued flag carries two format strings instead of one.
 
 """
-from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 
 @export
+@abstractclass
 class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 	"""
 	Class and base-class for all OptionalValuedFlag classes, which represents a flag argument with data.
@@ -71,22 +73,12 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		super().__init_subclass__(*args, **kwargs)
 		cls._patternWithValue = patternWithValue
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is OptionalValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, value: Nullable[str] = None) -> None:
+		"""
+		Initialize the flag, optionally with a value.
+
+		:param value: Value of the flag, or ``None`` to render the flag without a value.
+		"""
 		self._value = value
 
 	@property
@@ -117,12 +109,18 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		return pattern.format(self._name, self._value)
 
 	def __str__(self) -> str:
+		"""
+		Return the argument as a quoted string, ready to be pasted into a shell.
+
+		:returns: The rendered argument, in double quotes.
+		"""
 		return f"\"{self.AsArgument()}\""
 
 	__repr__ = __str__
 
 
 @export
+@abstractclass
 class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithValue="-{0}={1}"):
 	"""
 	Represents a :py:class:`OptionalValuedFlag` with a single dash.
@@ -144,23 +142,9 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortOptionalValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithValue="--{0}={1}"):
 	"""
 	Represents a :py:class:`OptionalValuedFlag` with a double dash.
@@ -182,23 +166,9 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongOptionalValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithValue="/{0}:{1}"):
 	"""
 	Represents a :py:class:`OptionalValuedFlag` with a single slash.
@@ -219,18 +189,3 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 		kwargs["pattern"] = pattern
 		kwargs["patternWithValue"] = patternWithValue
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:returns:          A new instance of the derived class.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsOptionalValuedFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

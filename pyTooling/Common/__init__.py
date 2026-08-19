@@ -34,6 +34,13 @@ Common types, helper functions and classes.
 .. hint::
 
    See :ref:`high-level help <COMMON>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Decorators`
+      |rarr| Decorators used throughout the package.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The meta-class implementing slots, singletons and abstract classes.
 """
 __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
