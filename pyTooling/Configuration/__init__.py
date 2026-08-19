@@ -130,16 +130,20 @@ class Node(metaclass=ExtendedType, slots=True):
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 
-	# Configurations are read-only: no backend implements writing, so the API doesn't offer it either. Uncomment
-	# here and in the backends when writing is implemented - finding T68.
-	# def __setitem__(self, key: KeyT, value: ValueT) -> None:
-	# 	"""
-	# 	Set an element in the node by index or key.
-	#
-	# 	:param key:                  Index or key of the element.
-	# 	:param value:                Value to set
-	# 	"""
-	# 	raise NotImplementedError()
+	def __setitem__(self, key: KeyT, value: ValueT) -> None:
+		"""
+		Set an element in the node by index or key.
+
+		.. attention::
+
+		   A configuration is **read-only** for now: no file format implements writing, so this method exists to say
+		   so with a clear message rather than to be overridden by a backend.
+
+		:param key:                  Index or key of the element.
+		:param value:                The new value of that element.
+		:raises NotImplementedError: Always - a configuration is read-only.
+		"""
+		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
 
 	@abstractmethod
 	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
@@ -219,16 +223,19 @@ class Sequence(Node):
 		"""
 		raise NotImplementedError()
 
-	# Configurations are read-only: no backend implements writing, so the API doesn't offer it either. Uncomment
-	# here and in the backends when writing is implemented - finding T68.
-	# def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
-	# 	"""
-	# 	Write an element of this sequence node by index.
-	#
-	# 	:param index: Index of the element to write.
-	# 	:param value: The new value of that element.
-	# 	"""
-	# 	raise NotImplementedError()
+	def __setitem__(self, index: int, value: ValueT) -> None:
+		"""
+		Write an element of this sequence node by index.
+
+		.. attention::
+
+		   A configuration is **read-only** for now - see :meth:`Node.__setitem__`.
+
+		:param index:                Index of the element to write.
+		:param value:                The new value of that element.
+		:raises NotImplementedError: Always - a configuration is read-only.
+		"""
+		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
 
 
 setattr(Node, "DICT_TYPE", Dictionary)
