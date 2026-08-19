@@ -28,7 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Tools for software execution tracing."""
+"""
+Tools for software execution tracing.
+
+.. seealso::
+
+   :mod:`pyTooling.Stopwatch`
+      |rarr| A single measurement instead of nested timespans.
+   :mod:`pyTooling.Tree`
+      |rarr| The tree data structure spans and their sub-spans form.
+"""
 from datetime  import datetime
 from time      import perf_counter_ns
 from threading import local

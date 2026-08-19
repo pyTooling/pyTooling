@@ -34,6 +34,13 @@ A stopwatch to measure execution times.
 .. hint::
 
    See :ref:`high-level help <COMMON/Stopwatch>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Tracing`
+      |rarr| Nested timespans instead of a single measurement, for tracing an execution.
+   :mod:`pyTooling.Process`
+      |rarr| The process' memory usage, next to its runtime.
 """
 
 from datetime import datetime

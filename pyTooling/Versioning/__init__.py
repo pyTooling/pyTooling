@@ -34,6 +34,13 @@ Implementation of semantic and date versioning version-numbers.
 .. hint::
 
    See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Packaging`
+      |rarr| Reading a package's version from its dunder variables.
+   :mod:`pyTooling.Dependency`
+      |rarr| Resolving requirements against these version numbers.
 """
 from collections.abc import Iterable as abc_Iterable
 from enum            import Flag, Enum

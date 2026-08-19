@@ -35,6 +35,15 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 .. hint::
 
    See :ref:`high-level help <META>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Decorators`
+      |rarr| The decorator form of the same class options.
+   :mod:`pyTooling.Attributes`
+      |rarr| Attributes, which this meta-class collects per class.
+   :mod:`pyTooling.Exceptions`
+      |rarr| The base-exception of everything this meta-class raises.
 """
 from functools  import wraps
 from itertools  import chain

@@ -33,6 +33,13 @@
 .. hint::
 
    See :ref:`high-level help <DECO>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The meta-class offering the same features as class options.
+   :mod:`pyTooling.Attributes`
+      |rarr| Attributes, which mark an entity instead of modifying it.
 """
 import sys
 from enum      import Enum, unique

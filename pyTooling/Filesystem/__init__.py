@@ -34,6 +34,15 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
 .. important::
 
    This isn't a replacement of :mod:`pathlib` introduced with Python 3.4.
+
+.. seealso::
+
+   :mod:`pyTooling.Filesystem.Docker`
+      |rarr| Slicing a scanned filesystem into Docker image layers.
+   :mod:`pyTooling.Tree`
+      |rarr| The tree data structure a filesystem scope is converted to.
+   :mod:`pyTooling.Stopwatch`
+      |rarr| The stopwatch measuring how long a scan took.
 """
 from os                    import scandir, readlink
 

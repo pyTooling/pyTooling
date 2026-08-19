@@ -33,6 +33,13 @@ An operating system independent abstraction of the currently running process.
 
 The process' properties are queried through one API, whichever operating system provides them, so a program reading
 its own memory usage needs no platform handling of its own.
+
+.. seealso::
+
+   :mod:`pyTooling.Platform`
+      |rarr| The platform this process runs on.
+   :mod:`pyTooling.Stopwatch`
+      |rarr| Measuring how long a piece of code took, next to how much memory it used.
 """
 from ctypes              import Structure, c_void_p, c_size_t, c_int, c_int32, c_uint64
 from os                  import getpid, strerror

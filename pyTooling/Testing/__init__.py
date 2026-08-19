@@ -37,7 +37,7 @@ argument parsing or the exit codes.
 
 .. hint::
 
-   See :ref:`high-level help <TESTING>` for explanations and usage examples.
+  See :ref:`high-level help <TESTING>` for explanations and usage examples.
 """
 from pathlib    import Path
 from re         import compile as re_compile

@@ -28,7 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A generic path to derive domain specific path libraries."""
+"""
+A generic path to derive domain specific path libraries.
+
+.. seealso::
+
+   :mod:`pyTooling.GenericPath.URL`
+      |rarr| A URL as a domain-specific path.
+   :mod:`pyTooling.Configuration`
+      |rarr| Path expressions addressing a node in a configuration.
+"""
 from typing import ClassVar, List, Optional as Nullable, Type
 
 from pyTooling.Decorators  import export

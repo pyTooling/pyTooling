@@ -51,6 +51,15 @@ starting vertex are provided as methods on a vertex.
 			 I ---> E --> F --> D
 
 			 classDef node fill:#eee,stroke:#777,font-size:smaller;
+
+.. seealso::
+
+   :mod:`pyTooling.Graph.GraphML`
+      |rarr| Writing a graph as a GraphML document.
+   :mod:`pyTooling.Tree`
+      |rarr| A tree, which is a graph without cycles and with a single root.
+   :mod:`pyTooling.StateMachine`
+      |rarr| A statemachine, which is a directed graph of states and transitions.
 """
 import heapq
 from collections import deque

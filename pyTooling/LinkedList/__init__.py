@@ -28,7 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An object-oriented doubly linked-list data structure for Python."""
+"""
+An object-oriented doubly linked-list data structure for Python.
+
+.. seealso::
+
+   :mod:`pyTooling.Tree`
+      |rarr| A tree data structure.
+   :mod:`pyTooling.Graph`
+      |rarr| A graph data structure.
+"""
 
 from collections.abc import Sized
 from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List, Any

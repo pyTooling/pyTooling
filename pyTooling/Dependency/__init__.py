@@ -34,6 +34,15 @@ Implementation of package dependencies.
 .. hint::
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Dependency.Python`
+      |rarr| The implementation for Python packages on a package index.
+   :mod:`pyTooling.Versioning`
+      |rarr| The version numbers a requirement is resolved against.
+   :mod:`pyTooling.Graph`
+      |rarr| The graph data structure a dependency graph is built on.
 """
 from datetime import datetime
 from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self, Iterator

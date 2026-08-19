@@ -34,6 +34,15 @@ Abstract configuration reader.
 .. hint::
 
    See :ref:`high-level help <CONFIG>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Configuration.JSON`
+      |rarr| A configuration read from a JSON file.
+   :mod:`pyTooling.Configuration.YAML`
+      |rarr| A configuration read from a YAML file.
+   :mod:`pyTooling.GenericPath`
+      |rarr| The path expressions a configuration is queried with.
 """
 from pathlib       import Path
 from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
