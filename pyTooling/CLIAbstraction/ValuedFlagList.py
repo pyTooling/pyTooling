@@ -31,7 +31,7 @@
 #
 """
 List of valued flags are argument lists where each item is a valued flag (See
-:mod:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
+:class:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
 
 Each list item gets translated into a ``***ValuedFlag``, with the same flag name, but differing values.
 
@@ -39,9 +39,9 @@ Each list item gets translated into a ``***ValuedFlag``, with the same flag name
 
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For single valued flags.
-   :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
+   :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
       |rarr| For a list of strings.
-   :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+   :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
       |rarr| For a list of paths.
 """
 from typing import List, Union, Iterable, cast, Any, Self

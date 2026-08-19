@@ -61,7 +61,7 @@ iterable of those."""
 
 @export
 class ExtendedTypeError(ToolingException):
-	"""The exception is raised by the meta-class :class:`~pyTooling.Metaclasses.ExtendedType`."""
+	"""The exception is raised by the meta-class :class:`~pyTooling.MetaClasses.ExtendedType`."""
 
 
 @export
@@ -279,7 +279,7 @@ def abstractclass(cls: C) -> C:
 	Some classes exist only to be derived from - a base-class collecting shared infrastructure, for instance - and
 	have nothing to mark with :deco:`abstractmethod`. This decorator says so directly: it sets ``__abstractClass__``
 	on the class and recomputes ``__isAbstract__``, which replaces ``__new__`` by a method raising an
-	:exc:`~pyTooling.Exceptions.AbstractClassError`.
+	:exc:`~pyTooling.MetaClasses.AbstractClassError`.
 
 	The marker belongs to the decorated class alone. :class:`ExtendedType` clears it on every class it creates, so a
 	derived class is concrete again unless it is decorated itself or inherits an abstract method.
@@ -303,7 +303,7 @@ def abstractclass(cls: C) -> C:
 
 	.. seealso::
 
-	   :exc:`~pyTooling.Exceptions.AbstractClassError`
+	   :exc:`~pyTooling.MetaClasses.AbstractClassError`
 	      |rarr| The exception raised when a still abstract class gets instantiated.
 	   :deco:`~pyTooling.MetaClasses.abstractmethod`
 	      |rarr| Mark a method as *abstract* and raise a :exc:`NotImplementedError` when called.
@@ -335,8 +335,8 @@ def abstractmethod(method: M) -> M:
 
 	.. warning::
 
-	   This decorator should be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
-	   Otherwise, an abstract class itself doesn't throw a :exc:`~pyTooling.Exceptions.AbstractClassError` at
+	   This decorator should be used in combination with meta-class :class:`~pyTooling.MetaClasses.ExtendedType`.
+	   Otherwise, an abstract class itself doesn't throw a :exc:`~pyTooling.MetaClasses.AbstractClassError` at
 	   instantiation.
 
 	.. admonition:: ``example.py``
@@ -353,7 +353,7 @@ def abstractmethod(method: M) -> M:
 
 	.. seealso::
 
-	   :exc:`~pyTooling.Exceptions.AbstractClassError`
+	   :exc:`~pyTooling.MetaClasses.AbstractClassError`
 	      |rarr| The exception raised when a still abstract class gets instantiated.
 	   :deco:`~pyTooling.MetaClasses.abstractclass`
 	      |rarr| Mark a class as *abstract*.
@@ -388,8 +388,8 @@ def mustoverride(method: M) -> M:
 
 	.. warning::
 
-	   This decorator needs to be used in combination with meta-class :class:`~pyTooling.Metaclasses.ExtendedType`.
-	   Otherwise, an abstract class itself doesn't throw a :exc:`~pyTooling.Exceptions.MustOverrideClassError` at
+	   This decorator needs to be used in combination with meta-class :class:`~pyTooling.MetaClasses.ExtendedType`.
+	   Otherwise, an abstract class itself doesn't throw a :exc:`~pyTooling.MetaClasses.MustOverrideClassError` at
 	   instantiation.
 
 	.. admonition:: ``example.py``
@@ -406,7 +406,7 @@ def mustoverride(method: M) -> M:
 
 	.. seealso::
 
-	   :exc:`~pyTooling.Exceptions.MustOverrideClassError`
+	   :exc:`~pyTooling.MetaClasses.MustOverrideClassError`
 	      |rarr| The exception raised when a class gets instantiated still containing *mustoverride* methods.
 	   :deco:`~pyTooling.MetaClasses.abstractclass`
 	      |rarr| Mark a class as *abstract*.

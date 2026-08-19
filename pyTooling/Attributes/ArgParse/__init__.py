@@ -99,15 +99,18 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	There are multiple derived formats supporting:
 
 	* commands |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Command`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.CommandHandler`
 	* simple names (flags) |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Flag`, :mod:`~pyTooling.Attribute.ArgParse.BooleanFlag`
-	* simple values (vlaued flags) |br|
-	  |rarr| :class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`, :class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument`,
+	  :class:`~pyTooling.Attributes.ArgParse.BooleanFlag.BooleanFlag`
+	* simple values (valued flags) |br|
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`,
+	  :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
 	* names and values |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.ValuedFlag`, :mod:`~pyTooling.Attribute.ArgParse.OptionalValuedFlag`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag`,
+	  :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag`
 	* key-value pairs |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.NamedKeyValuePair`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.NamedKeyValuePairsArgument`
 	"""
 
 	# def __init__(self, args: Iterable, kwargs: Mapping) -> None:

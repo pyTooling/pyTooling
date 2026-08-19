@@ -40,7 +40,7 @@ The usual delimiter sign between name and value is an equal sign (``=``).
       |rarr| For simple flags.
    :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
       |rarr| For flags with a different pattern based on the boolean value itself.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlagList`
       |rarr| For a list of valued flags.

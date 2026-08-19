@@ -33,7 +33,7 @@ from datetime  import datetime
 from time      import perf_counter_ns
 from threading import local
 from types     import TracebackType
-from typing import Optional as Nullable, List, Iterator, Type, Self, Iterable, Dict, Any, Tuple
+from typing    import Optional as Nullable, List, Iterator, Type, Self, Iterable, Dict, Any, Tuple
 
 
 from pyTooling.Decorators  import export, readonly
@@ -63,7 +63,7 @@ class Event(metaclass=ExtendedType, slots=True):
 	_name:      str                 #: Name of the event.
 	_parent:    Nullable["Span"]    #: Reference to the parent span.
 	_time:      Nullable[datetime]  #: Timestamp of the event.
-	_dict:      Dict[str, Any]			#: Dictionary of associated attributes.
+	_dict:      Dict[str, Any]      #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable["Span"] = None) -> None:
 		"""

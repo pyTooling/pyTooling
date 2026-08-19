@@ -37,7 +37,7 @@ its own memory usage needs no platform handling of its own.
 from ctypes              import Structure, c_void_p, c_size_t, c_int, c_int32, c_uint64
 from os                  import getpid, strerror
 from pathlib             import Path
-from typing import ClassVar, Any
+from typing              import ClassVar, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType

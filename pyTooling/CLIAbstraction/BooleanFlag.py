@@ -38,7 +38,7 @@ Boolean flags are arguments with a name and different pattern for a positive (``
       |rarr| For simple flags.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For flags with a value.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
 from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self

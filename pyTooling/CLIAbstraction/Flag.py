@@ -38,7 +38,7 @@ Flag arguments represent simple boolean values by being present or absent.
       |rarr| For flags with a different pattern based on the boolean value itself.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For flags with a value.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
 from typing import Any, Self
@@ -74,7 +74,7 @@ class FlagArgument(NamedArgument):
 @export
 class ShortFlag(FlagArgument, pattern="-{0}"):
 	"""
-	Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single dash.
+	Represents a :class:`~pyTooling.CLIAbstraction.Flag.FlagArgument` argument with a single dash.
 
 	**Example:**
 
@@ -112,7 +112,7 @@ class ShortFlag(FlagArgument, pattern="-{0}"):
 @export
 class LongFlag(FlagArgument, pattern="--{0}"):
 	"""
-	Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a double dash.
+	Represents a :class:`~pyTooling.CLIAbstraction.Flag.FlagArgument` argument with a double dash.
 
 	**Example:**
 
@@ -150,7 +150,7 @@ class LongFlag(FlagArgument, pattern="--{0}"):
 @export
 class WindowsFlag(FlagArgument, pattern="/{0}"):
 	"""
-	Represents a :class:`~pyTooling.CLIAbstraction.Flag.Flag` argument with a single slash.
+	Represents a :class:`~pyTooling.CLIAbstraction.Flag.FlagArgument` argument with a single slash.
 
 	**Example:**
 
