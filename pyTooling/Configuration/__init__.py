@@ -129,9 +129,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		:param key:                  Index or key of the element.
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
-	def __setitem__(self, key: KeyT, value: ValueT) -> None:  # type: ignore[empty-body]
+	def __setitem__(self, key: KeyT, value: ValueT) -> None:
 		"""
 		Set an element in the node by index or key.
 
@@ -147,7 +146,6 @@ class Node(metaclass=ExtendedType, slots=True):
 
 		:returns:                    Node iterator.
 		"""
-		raise NotImplementedError()
 
 	@property
 	def Key(self) -> KeyT:
@@ -170,7 +168,6 @@ class Node(metaclass=ExtendedType, slots=True):
 		:param query:                String describing the path to the node or value.
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
 
 @export
