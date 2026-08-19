@@ -90,10 +90,11 @@ class OverloadResolutionError(Exception):
 	"""
 	The exception is raised, when no matching overloaded method was found.
 
-	.. seealso::
+	.. attention::
 
-	   :deco:`~pyTooling.MetaClasses.overloadable`
-	      |rarr| Mark a method as *overloadable*.
+	   Method overloading is not implemented yet - the ``overloadable`` decorator and the dispatching machinery are
+	   commented out in :mod:`pyTooling.MetaClasses`. Nothing raises this exception today; it is declared so the feature
+	   has its exception when it arrives.
 	"""
 
 	@readonly

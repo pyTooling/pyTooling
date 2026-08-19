@@ -68,7 +68,7 @@ class CommandLineArgument:
 	* names and values |br|
 	  |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`, :mod:`~pyTooling.CLIAbstraction.OptionalValuedFlag`
 	* key-value pairs |br|
-	  |rarr| :mod:`~pyTooling.CLIAbstraction.NamedKeyValuePair`
+	  |rarr| :class:`~pyTooling.CLIAbstraction.KeyValueFlag.NamedKeyValuePairsArgument`
 	"""
 
 	_pattern: ClassVar[str]  #: Format string to render the argument on the command line.

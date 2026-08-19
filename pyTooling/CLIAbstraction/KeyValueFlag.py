@@ -38,7 +38,7 @@ Flag arguments represent simple boolean values by being present or absent.
       |rarr| For flags with a different pattern based on the boolean value itself.
    :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
       |rarr| For flags with a value.
-   :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
       |rarr| For flags that have an optional value.
 """
 from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable, Self

@@ -830,11 +830,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsLeaf`
+		   :meth:`Vertex.IsLeaf <pyTooling.Graph.Vertex.IsLeaf>`
 		      |rarr| Check if a vertex is a leaf vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
+		   :meth:`BaseGraph.IterateRoots <pyTooling.Graph.BaseGraph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
+		   :meth:`BaseGraph.IterateLeafs <pyTooling.Graph.BaseGraph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._inboundEdges) == 0
@@ -850,11 +850,11 @@ class Vertex(
 
 		.. seealso::
 
-		   :meth:`IsRoot`
+		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
-		   :meth:`Graph.IterateRoots <pyTooling.Graph.Graph.IterateRoots>`
+		   :meth:`BaseGraph.IterateRoots <pyTooling.Graph.BaseGraph.IterateRoots>`
 		      |rarr| Iterate all roots of a graph.
-		   :meth:`Graph.IterateLeafs <pyTooling.Graph.Graph.IterateLeafs>`
+		   :meth:`BaseGraph.IterateLeafs <pyTooling.Graph.BaseGraph.IterateLeafs>`
 		      |rarr| Iterate all leafs of a graph.
 		"""
 		return len(self._outboundEdges) == 0
@@ -2333,7 +2333,7 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateLeafs`
+		   :meth:`BaseGraph.IterateLeafs <pyTooling.Graph.BaseGraph.IterateLeafs>`
 		      |rarr| Iterate leafs of a graph.
 		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
@@ -2368,7 +2368,7 @@ class BaseGraph(
 
 		.. seealso::
 
-		   :meth:`IterateRoots`
+		   :meth:`BaseGraph.IterateRoots <pyTooling.Graph.BaseGraph.IterateRoots>`
 		      |rarr| Iterate roots of a graph.
 		   :meth:`Vertex.IsRoot <pyTooling.Graph.Vertex.IsRoot>`
 		      |rarr| Check if a vertex is a root vertex in the graph.
