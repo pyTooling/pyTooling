@@ -54,6 +54,12 @@ class Abstract(Testcase):
 		with self.assertRaises(AbstractClassError):
 			_ = Sequence()
 
+	def test_AConfigurationIsReadOnly(self) -> None:
+		"""Writing is not supported by any backend, so the API doesn't offer it - finding T68."""
+		self.assertFalse(hasattr(Node, "__setitem__"))
+		self.assertFalse(hasattr(Dictionary, "__setitem__"))
+		self.assertFalse(hasattr(Sequence, "__setitem__"))
+
 	def test_ABackendImplementsAllOfThem(self) -> None:
 		"""A backend is instantiable, which is what the abstract declaration must not break."""
 		from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration

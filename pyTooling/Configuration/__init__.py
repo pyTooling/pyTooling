@@ -130,14 +130,16 @@ class Node(metaclass=ExtendedType, slots=True):
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 
-	def __setitem__(self, key: KeyT, value: ValueT) -> None:
-		"""
-		Set an element in the node by index or key.
-
-		:param key:                  Index or key of the element.
-		:param value:                Value to set
-		"""
-		raise NotImplementedError()
+	# Configurations are read-only: no backend implements writing, so the API doesn't offer it either. Uncomment
+	# here and in the backends when writing is implemented - finding T68.
+	# def __setitem__(self, key: KeyT, value: ValueT) -> None:
+	# 	"""
+	# 	Set an element in the node by index or key.
+	#
+	# 	:param key:                  Index or key of the element.
+	# 	:param value:                Value to set
+	# 	"""
+	# 	raise NotImplementedError()
 
 	@abstractmethod
 	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
@@ -217,14 +219,16 @@ class Sequence(Node):
 		"""
 		raise NotImplementedError()
 
-	def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
-		"""
-		Write an element of this sequence node by index.
-
-		:param index: Index of the element to write.
-		:param value: The new value of that element.
-		"""
-		raise NotImplementedError()
+	# Configurations are read-only: no backend implements writing, so the API doesn't offer it either. Uncomment
+	# here and in the backends when writing is implemented - finding T68.
+	# def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
+	# 	"""
+	# 	Write an element of this sequence node by index.
+	#
+	# 	:param index: Index of the element to write.
+	# 	:param value: The new value of that element.
+	# 	"""
+	# 	raise NotImplementedError()
 
 
 setattr(Node, "DICT_TYPE", Dictionary)
