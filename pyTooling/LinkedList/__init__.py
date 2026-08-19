@@ -87,9 +87,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		Initialize a linked list node.
 
 		:param value:        Value to store in the node.
-		:param key:          Optional sortable key to store in the node.
-		:param previousNode: Optional reference to the previous node.
-		:param nextNode:     Optional reference to the next node.
+		:param key:          Optional, sortable key to store in the node.
+		:param previousNode: Optional, reference to the previous node.
+		:param nextNode:     Optional, reference to the next node.
 		:raises TypeError:   If parameter 'previous' is not of type :class:`Node`.
 		:raises TypeError:   If parameter 'next' is not of type :class:`Node`.
 		:raises ValueError:  If parameter 'value' is None.
@@ -349,7 +349,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		Optionally, this node can be included into the generated sequence.
 
-		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at previous node.
+		:param includeSelf: Optional, if ``True``, include this node into the sequence, otherwise start at previous node.
 		:returns:           A sequence of nodes towards the list's first node.
 		"""
 		previousNode = self._previousNode
@@ -369,7 +369,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		Optionally, this node can be included into the generated sequence by setting.
 
-		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at next node.
+		:param includeSelf: Optional, if ``True``, include this node into the sequence, otherwise start at next node.
 		:returns:           A sequence of nodes towards the list's last node.
 		"""
 		nextNode = self._nextNode
@@ -407,7 +407,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		Optionally, an iterable can be given to initialize the linked list. The order is preserved.
 
-		:param nodes:                Optional iterable to initialize the linked list.
+		:param nodes:                Optional, iterable to initialize the linked list.
 		:raises TypeError:           If parameter 'nodes' is not an :class:`iterable <typing.Iterable>`.
 		:raises TypeError:           If parameter 'nodes' items are not of type :class:`Node`.
 		:raises LinkedListException: If parameter 'nodes' contains items which are already part of another linked list.
@@ -678,7 +678,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		Search the list for the first node matching a predicate.
 
 		:param predicate:            Filter function accepting a node and returning a boolean.
-		:param reverse:              If ``True``, search from the last node towards the first.
+		:param reverse:              Optional, if ``True``, search from the last node towards the first.
 		:returns:                    The first matching node.
 		:raises LinkedListException: If the list is empty, or no node matches.
 		"""
@@ -729,8 +729,8 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		The sort operation is **stable**.
 
-		:param key:     Optional function to access a user-defined key for sorting.
-		:param reverse: Optional parameter, if ``True`` sort in descending order, otherwise in ascending order.
+		:param key:     Optional, function to access a user-defined key for sorting.
+		:param reverse: Optional, parameter, if ``True`` sort in descending order, otherwise in ascending order.
 
 		.. note::
 
@@ -799,7 +799,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		Optionally, the resulting list can be constructed in reverse order.
 
-		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
+		:param reverse: Optional, parameter, if ``True`` return in reversed order, otherwise in normal order.
 		:returns:       A list (array) of this linked list's values.
 		"""
 		if self._count == 0:
@@ -815,7 +815,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		Optionally, the resulting tuple can be constructed in reverse order.
 
-		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
+		:param reverse: Optional, parameter, if ``True`` return in reversed order, otherwise in normal order.
 		:returns:       A tuple of this linked list's values.
 		"""
 		if self._count == 0:

@@ -493,7 +493,7 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
-		:param copyPoints: If ``True``, the given points are copied instead of referenced.
+		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
 		:raises TypeError: If start/end is not of type :class:`Point2D`.
 		"""
 		if not isinstance(start, Point2D):

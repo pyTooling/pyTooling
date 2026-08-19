@@ -70,7 +70,7 @@ class VersionValidatorException(ToolingException):
 		Initializes the exception with the rejected version.
 
 		:param message: The exception's message.
-		:param version: The version the validator rejected.
+		:param version: Optional, the version the validator rejected.
 		"""
 		super().__init__(message)
 		self._version = version
@@ -286,11 +286,11 @@ def WordSizeValidator(
 	"""
 	A factory function to return a validator for Version instances for a positive integer range based on word-sizes in bits.
 
-	:param bits:      Number of bits to encode any positive version number part.
-	:param majorBits: Number of bits to encode a positive major number in a version.
-	:param minorBits: Number of bits to encode a positive minor number in a version.
-	:param microBits: Number of bits to encode a positive micro number in a version.
-	:param buildBits: Number of bits to encode a positive build number in a version.
+	:param bits:      Optional, number of bits to encode any positive version number part.
+	:param majorBits: Optional, number of bits to encode a positive major number in a version.
+	:param minorBits: Optional, number of bits to encode a positive minor number in a version.
+	:param microBits: Optional, number of bits to encode a positive micro number in a version.
+	:param buildBits: Optional, number of bits to encode a positive build number in a version.
 	:returns:         A validation function for Version instances.
 	"""
 	majorMax = minorMax = microMax = buildMax = -1
@@ -310,7 +310,7 @@ def WordSizeValidator(
 		"""
 		Validator function, which checks each version part against the maximum its word size allows.
 
-		:param version:     The version to validate.
+		:param version:     Optional, the version to validate.
 		:returns:           ``True``, if every part fits into its word size.
 		:raises ValueError: If a part exceeds the maximum value of its word size.
 		"""
@@ -342,11 +342,11 @@ def MaxValueValidator(
 	"""
 	A factory function to return a validator for Version instances checking for a positive integer range [0..max].
 
-	:param max:      The upper bound for any positive version number part.
-	:param majorMax: The upper bound for the positive major number.
-	:param minorMax: The upper bound for the positive minor number.
-	:param microMax: The upper bound for the positive micro number.
-	:param buildMax: The upper bound for the positive build number.
+	:param max:      Optional, the upper bound for any positive version number part.
+	:param majorMax: Optional, the upper bound for the positive major number.
+	:param minorMax: Optional, the upper bound for the positive minor number.
+	:param microMax: Optional, the upper bound for the positive micro number.
+	:param buildMax: Optional, the upper bound for the positive build number.
 	:returns:        A validation function for Version instances.
 	"""
 	if max is not None:
@@ -356,7 +356,7 @@ def MaxValueValidator(
 		"""
 		Validator function, which checks each version part against its maximum value.
 
-		:param version:     The version to validate.
+		:param version:     Optional, the version to validate.
 		:returns:           ``True``, if every part is within its maximum.
 		:raises ValueError: If a part exceeds its maximum value.
 		"""
@@ -417,17 +417,17 @@ class Version(metaclass=ExtendedType, slots=True):
 		Initializes a version number representation.
 
 		:param major:       Major number part of the version number.
-		:param minor:       Minor number part of the version number.
-		:param micro:       Micro (patch) number part of the version number.
-		:param level:       Release level (alpha, beta, release candidate, final, ...) of the version number.
-		:param number:      Release number part (in combination with release level) of the version number.
-		:param post:        Post number part of the version number.
-		:param dev:         Development number part of the version number.
-		:param build:       Build number part of the version number.
-		:param postfix:     The version number's postfix.
-		:param prefix:      The version number's prefix.
-		:param hash:        Postfix string.
-		:param flags:       The version number's flags.
+		:param minor:       Optional, minor number part of the version number.
+		:param micro:       Optional, micro (patch) number part of the version number.
+		:param level:       Optional, release level (alpha, beta, release candidate, final, ...) of the version number.
+		:param number:      Optional, release number part (in combination with release level) of the version number.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param postfix:     Optional, the version number's postfix.
+		:param prefix:      Optional, the version number's prefix.
+		:param hash:        Optional, postfix string.
+		:param flags:       Optional, the version number's flags.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -570,7 +570,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		Parse a version string and return a Version instance.
 
 		:param versionString: The version string to parse.
-		:param validator:     Optional validator rejecting a parsed version, e.g. by word size or maximum value.
+		:param validator:     Optional, validator rejecting a parsed version, e.g. by word size or maximum value.
 		:returns:             The parsed version number.
 		"""
 
@@ -1145,17 +1145,17 @@ class SemanticVersion(Version):
 		Initializes a semantic version number representation.
 
 		:param major:       Major number part of the version number.
-		:param minor:       Minor number part of the version number.
-		:param micro:       Micro (patch) number part of the version number.
-		:param level:       Release level of the version number (alpha, beta, release candidate, final, ...).
-		:param number:      Number within the release level, e.g. ``2`` in ``rc2``.
-		:param post:        Post number part of the version number.
-		:param dev:         Development number part of the version number.
-		:param build:       Build number part of the version number.
-		:param postfix:     The version number's postfix.
-		:param prefix:      The version number's prefix.
-		:param hash:        Hash of the version control system's commit this version was built from.
-		:param flags:       The version number's flags.
+		:param minor:       Optional, minor number part of the version number.
+		:param micro:       Optional, micro (patch) number part of the version number.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param postfix:     Optional, the version number's postfix.
+		:param prefix:      Optional, the version number's prefix.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
+		:param flags:       Optional, the version number's flags.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -1588,12 +1588,12 @@ class CalendarVersion(Version):
 		Initializes a calendar version number representation.
 
 		:param major:       Major number part of the version number.
-		:param minor:       Minor number part of the version number.
-		:param micro:       Micro (patch) number part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
+		:param minor:       Optional, minor number part of the version number.
+		:param micro:       Optional, micro (patch) number part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -1910,11 +1910,11 @@ class YearMonthVersion(CalendarVersion):
 		Initializes a year-month version number representation.
 
 		:param year:        Year part of the version number.
-		:param month:       Month part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
+		:param month:       Optional, month part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -1968,11 +1968,11 @@ class YearWeekVersion(CalendarVersion):
 		Initializes a year-week version number representation.
 
 		:param year:        Year part of the version number.
-		:param week:        Week part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
+		:param week:        Optional, week part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -2026,11 +2026,11 @@ class YearReleaseVersion(CalendarVersion):
 		Initializes a year-release version number representation.
 
 		:param year:        Year part of the version number.
-		:param release:     Release number of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
+		:param release:     Optional, release number of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -2083,12 +2083,12 @@ class YearMonthDayVersion(CalendarVersion):
 		Initializes a year-month-day version number representation.
 
 		:param year:        Year part of the version number.
-		:param month:       Month part of the version number.
-		:param day:         Day part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
+		:param month:       Optional, month part of the version number.
+		:param day:         Optional, day part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
 		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
@@ -2167,7 +2167,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		:param lowerBound:    lowest version (inclusive).
 		:param upperBound:    hightest version (inclusive).
-		:param boundHandling: Strategy deciding whether the bounds are part of the range.
+		:param boundHandling: Optional, strategy deciding whether the bounds are part of the range.
 		:raises TypeError:    If parameter ``lowerBound`` is not of type :class:`Version`.
 		:raises TypeError:    If parameter ``upperBound`` is not of type :class:`Version`.
 		:raises TypeError:    If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
@@ -2394,7 +2394,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Check if the version is in the version range.
 
-		:param version:    Version to check.
+		:param version:    Optional, version to check.
 		:returns:          ``True``, if version is in range.
 		:raises TypeError: If parameter ``version`` is not of type :class:`Version`.
 		"""
@@ -2623,7 +2623,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Checks if the version a member of the set.
 
-		:param version: The version to check.
+		:param version: Optional, the version to check.
 		:returns:       ``True``, if the version is a member of the set.
 		"""
 		return version in self._items

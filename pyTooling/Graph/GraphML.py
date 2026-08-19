@@ -155,7 +155,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Return this element as a self-closing XML tag.
 
-		:param indent:               Indentation level of the XML element.
+		:param indent:               Optional, indentation level of the XML element.
 		:returns:                    The XML tag, indented and terminated by a newline.
 		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
@@ -165,7 +165,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Return the opening XML tag of this element.
 
-		:param indent:               Indentation level of the XML element.
+		:param indent:               Optional, indentation level of the XML element.
 		:returns:                    The opening XML tag, indented and terminated by a newline.
 		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
@@ -175,7 +175,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Return the closing XML tag of this element.
 
-		:param indent:               Indentation level of the XML element.
+		:param indent:               Optional, indentation level of the XML element.
 		:returns:                    The closing XML tag, indented and terminated by a newline.
 		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
@@ -185,7 +185,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Render this element as a list of XML lines.
 
-		:param indent:               Indentation level of the XML element.
+		:param indent:               Optional, indentation level of the XML element.
 		:returns:                    List of XML lines describing this element.
 		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
@@ -201,7 +201,7 @@ class BaseWithID(Base):
 		"""
 		Initialize a GraphML element with its unique ID.
 
-		:param identifier: Unique ID of the element within the GraphML document.
+		:param identifier: Optional, unique ID of the element within the GraphML document.
 		"""
 		super().__init__()
 		self._id = identifier
@@ -225,7 +225,7 @@ class BaseWithData(BaseWithID):
 		"""
 		Initialize a GraphML element with its unique ID and an empty list of data items.
 
-		:param identifier: Unique ID of the element within the GraphML document.
+		:param identifier: Optional, unique ID of the element within the GraphML document.
 		"""
 		super().__init__(identifier)
 
@@ -267,7 +267,7 @@ class Key(BaseWithID):
 		"""
 		Initialize a key declaring an attribute.
 
-		:param identifier: Unique ID of the key within the GraphML document.
+		:param identifier: Optional, unique ID of the key within the GraphML document.
 		:param context:    GraphML element kind this key can be used on.
 		:param name:       Name of the declared attribute.
 		:param type:       Data type of the declared attribute.
@@ -320,7 +320,7 @@ class Key(BaseWithID):
 		"""
 		Return this key as a self-closing XML tag.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
@@ -329,7 +329,7 @@ class Key(BaseWithID):
 		"""
 		Render this key as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this key and everything attached to it.
 		"""
 		return [self.Tag(indent)]
@@ -384,7 +384,7 @@ class Data(Base):
 		"""
 		Return this data item as a self-closing XML tag.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
 		data = str(self._data)
@@ -398,7 +398,7 @@ class Data(Base):
 		"""
 		Render this data item as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this data item and everything attached to it.
 		"""
 		return [self.Tag(indent)]
@@ -412,7 +412,7 @@ class Node(BaseWithData):
 		"""
 		Initialize a node.
 
-		:param identifier: Unique ID of the node within the GraphML document.
+		:param identifier: Optional, unique ID of the node within the GraphML document.
 		"""
 		super().__init__(identifier)
 
@@ -429,7 +429,7 @@ class Node(BaseWithData):
 		"""
 		Return this node as a self-closing XML tag.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  '*indent}<node id="{self._id}" />\n"""
@@ -438,7 +438,7 @@ class Node(BaseWithData):
 		"""
 		Return the opening XML tag of this node.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  '*indent}<node id="{self._id}">\n"""
@@ -447,7 +447,7 @@ class Node(BaseWithData):
 		"""
 		Return the closing XML tag of this node.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The closing XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  ' * indent}</node>\n"""
@@ -456,7 +456,7 @@ class Node(BaseWithData):
 		"""
 		Render this node as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this node and everything attached to it.
 		"""
 		if not self.HasClosingTag:
@@ -480,7 +480,7 @@ class Edge(BaseWithData):
 		"""
 		Initialize an edge between two nodes.
 
-		:param identifier: Unique ID of the edge within the GraphML document.
+		:param identifier: Optional, unique ID of the edge within the GraphML document.
 		:param source:     Node the edge starts at.
 		:param target:     Node the edge ends at.
 		"""
@@ -520,7 +520,7 @@ class Edge(BaseWithData):
 		"""
 		Return this edge as a self-closing XML tag.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />\n"""
@@ -529,7 +529,7 @@ class Edge(BaseWithData):
 		"""
 		Return the opening XML tag of this edge.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  '*indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}">\n"""
@@ -538,7 +538,7 @@ class Edge(BaseWithData):
 		"""
 		Return the closing XML tag of this edge.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The closing XML tag, indented and terminated by a newline.
 		"""
 		return f"""{'  ' * indent}</edge>\n"""
@@ -547,7 +547,7 @@ class Edge(BaseWithData):
 		"""
 		Render this edge as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this edge and everything attached to it.
 		"""
 		if not self.HasClosingTag:
@@ -583,7 +583,7 @@ class BaseGraph(BaseWithData, mixin=True):
 
 		Edges are directed, nodes are written before edges, and both ID styles are free-form until they are changed.
 
-		:param identifier: Unique ID of the graph within the GraphML document.
+		:param identifier: Optional, unique ID of the graph within the GraphML document.
 		"""
 		super().__init__(identifier)
 
@@ -690,7 +690,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		Beside the graph's ID, the tag carries the parsing hints a reader needs: the default edge direction, the
 number of nodes and edges, the parsing order and both ID styles.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
@@ -707,7 +707,7 @@ number of nodes and edges, the parsing order and both ID styles.
 		"""
 		Return the closing XML tag of this graph.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The closing XML tag, indented and terminated by a newline.
 		"""
 		return f"{'  '*indent}</graph>\n"
@@ -716,7 +716,7 @@ number of nodes and edges, the parsing order and both ID styles.
 		"""
 		Render this graph as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this graph and everything it contains.
 		"""
 		lines = [self.OpeningTag(indent)]
@@ -746,7 +746,7 @@ class Graph(BaseGraph):
 		Initialize the root graph of a GraphML document.
 
 		:param document:   The GraphML document this graph belongs to.
-		:param identifier: Unique ID of the graph within the GraphML document.
+		:param identifier: Optional, unique ID of the graph within the GraphML document.
 		"""
 		super().__init__(identifier)
 		self._document = document
@@ -756,7 +756,7 @@ class Graph(BaseGraph):
 		"""
 		Return the element with the given ID, whichever kind it is.
 
-		:param identifier: ID of the node, edge or subgraph.
+		:param identifier: Optional, ID of the node, edge or subgraph.
 		:returns:          The element registered under that ID.
 		:raises KeyError:  If no element has that ID.
 		"""
@@ -875,14 +875,14 @@ class Subgraph(Node, BaseGraph):
 		"""
 		A subgraph always contains a graph, so it is never written as a self-closing tag.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		"""
 
 	def OpeningTag(self, indent: int = 1) -> str:
 		"""
 		Return the opening XML tag of this subgraph.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
@@ -899,7 +899,7 @@ class Subgraph(Node, BaseGraph):
 		"""
 		Return the closing XML tag of this subgraph.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The closing XML tag, indented and terminated by a newline.
 		"""
 		return BaseGraph.ClosingTag(self, indent)
@@ -908,7 +908,7 @@ class Subgraph(Node, BaseGraph):
 		"""
 		Render this subgraph as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this subgraph and everything it contains.
 		"""
 		lines = [super().OpeningTag(indent)]
@@ -949,7 +949,7 @@ class GraphMLDocument(Base):
 		"""
 		Initialize a GraphML document with an empty root graph.
 
-		:param identifier: Unique ID of the root graph.
+		:param identifier: Optional, unique ID of the root graph.
 		"""
 		super().__init__()
 
@@ -1140,7 +1140,7 @@ class GraphMLDocument(Base):
 		"""
 		Return the opening XML tag of this document.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
@@ -1153,7 +1153,7 @@ class GraphMLDocument(Base):
 		"""
 		Return the closing XML tag of this document.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      The closing XML tag, indented and terminated by a newline.
 		"""
 		return f"{'  '*indent}</graphml>\n"
@@ -1162,7 +1162,7 @@ class GraphMLDocument(Base):
 		"""
 		Render this document as a list of XML lines.
 
-		:param indent: Indentation level of the XML element.
+		:param indent: Optional, indentation level of the XML element.
 		:returns:      List of XML lines describing this document and everything it contains.
 		"""
 		lines = [self.OpeningTag(indent)]

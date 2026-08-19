@@ -80,7 +80,7 @@ class CommandLineArgument(metaclass=ExtendedType):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``None``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -195,7 +195,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -235,8 +235,8 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -290,7 +290,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -357,8 +357,8 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -421,10 +421,10 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param name:         Name of the CLI argument.
-		:param pattern:      This pattern is used to format the CLI argument name. |br|
+		:param name:         Optional, name of the CLI argument.
+		:param pattern:      Optional, this pattern is used to format the CLI argument name. |br|
 		                     Default: ``"{0}"``.
-		:param valuePattern: This pattern is used to format the value. |br|
+		:param valuePattern: Optional, this pattern is used to format the value. |br|
 		                     Default: ``"{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -496,7 +496,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""

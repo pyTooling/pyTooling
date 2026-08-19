@@ -177,12 +177,13 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		.. todo:: TREE::Node::init Needs documentation.
 
-		:param nodeID:        The optional unique ID of a node within the whole tree data structure.
-		:param value:         The optional value of the node.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
-		:param parent:        The optional parent node in the tree.
-		:param children:      The optional list of child nodes.
-		:param format:        The optional node formatting function returning a one-line representation for tree-rendering.
+		:param nodeID:        Optional, unique ID of a node within the whole tree data structure.
+		:param value:         Optional, value of the node.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
+		:param parent:        Optional, parent node in the tree.
+		:param children:      Optional, list of child nodes.
+		:param format:        Optional, node formatting function returning a one-line representation for
+		                      tree-rendering.
 
 		:raises TypeError:    If parameter parent is not an instance of Node.
 		:raises ValueError:   If nodeID already exists in the tree.
@@ -283,7 +284,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		If a key doesn't exist yet, a new key-value-pair is created.
 
 		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
+		:param value: Optional, the value to associate to the given key.
 		"""
 		self._dict[key] = value
 
@@ -591,7 +592,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Add multiple children nodes to the current node of the tree.
 
-		:param children:            The list of children nodes to be added to the tree.
+		:param children:            Optional, the list of children nodes to be added to the tree.
 		:raises TypeError:          If parameter ``children`` contains an item, which is not a :class:`Node`.
 		:raises AlreadyInTreeError: If parameter ``children`` contains an item, which is already a node in the tree.
 
@@ -926,7 +927,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Lookup a node by its unique ID.
 
-		:param nodeID:      ID of a node to lookup in the tree.
+		:param nodeID:      Optional, ID of a node to lookup in the tree.
 		:returns:           Node for the given ID.
 		:raises ValueError: If parameter ``nodeID`` is None.
 		:raises KeyError:   If parameter ``nodeID`` is not found in the tree.
@@ -1008,11 +1009,12 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Render the tree as ASCII art.
 
-		:param prefix:         A string printed in front of every line, e.g. for indentation. Default: ``""``.
-		:param lineend:        A string printed at the end of every line. Default: ``"\\n"``.
-		:param nodeMarker:     A string printed before every non-last tree node. Default: ``"├─"``.
-		:param lastNodeMarker: A string printed before every last tree node. Default: ``"└─"``.
-		:param bypassMarker:   A string printed when there are further nodes in the parent level. Default: ``"│ "``.
+		:param prefix:         Optional, a string printed in front of every line, e.g. for indentation. Default: ``""``.
+		:param lineend:        Optional, a string printed at the end of every line. Default: ``"\\n"``.
+		:param nodeMarker:     Optional, a string printed before every non-last tree node. Default: ``"├─"``.
+		:param lastNodeMarker: Optional, a string printed before every last tree node. Default: ``"└─"``.
+		:param bypassMarker:   Optional, a string printed when there are further nodes in the parent level. Default: ``"│
+		                       "``.
 		:returns:              A rendered tree as multiline string.
 		"""
 		emptyMarker = " " * len(bypassMarker)

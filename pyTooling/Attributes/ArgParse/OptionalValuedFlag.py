@@ -87,9 +87,9 @@ class ShortOptionalValuedFlag(OptionalValuedFlag):
 		"""
 		Initialize a switch argument with an optional value in its short form.
 
-		:param short: Short form of the option, including its dash, e.g. :pycode:`short="-v"`.
-		:param dest:  Name of the parameter the parsed value is passed to the handler method as.
-		:param help:  Help text of the option, displayed in the help page.
+		:param short: Optional, short form of the option, including its dash, e.g. :pycode:`short="-v"`.
+		:param dest:  Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param help:  Optional, help text of the option, displayed in the help page.
 		"""
 		super().__init__(short=short, dest=dest, help=help)
 
@@ -102,8 +102,8 @@ class LongOptionalValuedFlag(OptionalValuedFlag):
 		"""
 		Initialize a switch argument with an optional value in its long form.
 
-		:param long: Long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
-		:param dest: Name of the parameter the parsed value is passed to the handler method as.
-		:param help: Help text of the option, displayed in the help page.
+		:param long: Optional, long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
+		:param dest: Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param help: Optional, help text of the option, displayed in the help page.
 		"""
 		super().__init__(long=long, dest=dest, help=help)

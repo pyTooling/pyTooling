@@ -599,11 +599,11 @@ class ExtendedType(type):
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
-		:param slots:           If true, store object attributes in :term:`__slots__ <slots>` instead of ``__dict__``.
-		:param mixin:           If true, make the class a :term:`Mixin-Class`.
-		                        If false, create slots if ``slots`` is true.
-		                        If none, preserve behavior of primary base-class.
-		:param singleton:       If true, make the class a :term:`Singleton`.
+		:param slots:           Optional, if true, store object attributes in :term:`__slots__ <slots>` instead of
+		                        ``__dict__``.
+		:param mixin:           Optional, if true, make the class a :term:`Mixin-Class`. If false, create slots if ``slots``
+		                        is true. If none, preserve behavior of primary base-class.
+		:param singleton:       Optional, if true, make the class a :term:`Singleton`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
 		                        :func:`type` does.
 		:returns:               The new class.
@@ -698,7 +698,8 @@ class ExtendedType(type):
 			"""
 			Return the class' methods that carry at least one matching attribute.
 
-			:param predicate:   An attribute class, an iterable of attribute classes, or ``None`` to accept every attribute.
+			:param predicate:   Optional, an attribute class, an iterable of attribute classes, or ``None`` to accept every
+			                    attribute.
 			:returns:           Dictionary of methods and the matching attributes attached to them.
 			:raises ValueError: If an element of parameter 'predicate' is not a sub-class of :class:`~pyTooling.Attributes.Attribute`.
 			:raises ValueError: If parameter 'predicate' is neither an attribute class nor an iterable of those.
@@ -769,7 +770,7 @@ class ExtendedType(type):
 
 			:param instance:   The object the function is bound to.
 			:param func:       The function to bind.
-			:param methodName: Optional name of the method; by default the function's own name.
+			:param methodName: Optional, name of the method; by default the function's own name.
 			:returns:          The bound method.
 			"""
 			if methodName is None:
@@ -801,7 +802,7 @@ class ExtendedType(type):
 					Nested function attached to the class, returning the attributes of one of its methods.
 
 					:param inst:      The method to read the attributes from.
-					:param predicate: An attribute class, or ``None`` to accept every attribute.
+					:param predicate: Optional, an attribute class, or ``None`` to accept every attribute.
 					:returns:         Tuple of the matching attributes.
 					"""
 					results = []
@@ -946,8 +947,8 @@ class ExtendedType(type):
 		:param className:                   The name of the class to construct.
 		:param baseClasses:                 Tuple of base-classes.
 		:param members:                     Dictionary of class members.
-		:param slots:                       True, if the class should setup ``__slots__``.
-		:param mixin:                       True, if the class should behave as a mixin-class.
+		:param slots:                       Optional, true, if the class should setup ``__slots__``.
+		:param mixin:                       Optional, true, if the class should behave as a mixin-class.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
 		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved. |br|
 		                                    An assignment without a type annotation creates a class attribute, which
@@ -1270,7 +1271,7 @@ class ExtendedType(type):
 		This implementation is threadsafe.
 
 		:param newClass:  The newly constructed class for further modifications.
-		:param singleton: If ``True``, the class allows only a single instance to exist.
+		:param singleton: Optional, if ``True``, the class allows only a single instance to exist.
 		:returns:         ``True``, if the class is a singleton.
 		"""
 		if hasattr(newClass, "__isSingleton__"):

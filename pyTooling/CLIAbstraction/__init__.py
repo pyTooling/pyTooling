@@ -111,11 +111,11 @@ class Environment(metaclass=ExtendedType, slots=True):
 			 2. Remove variables from environment.
 			 3. Add new or update existing variables.
 
-		:param environment:  Optional existing Environment instance to derive a new environment.
-		:param newVariables: Optional dictionary of new environment variables. |br|
+		:param environment:  Optional, existing Environment instance to derive a new environment.
+		:param newVariables: Optional, dictionary of new environment variables. |br|
 		                     If ``None``, read current environment variables from :func:`os.environ`.
-		:param addVariables: Optional dictionary of variables to be added or modified in the environment.
-		:param delVariables: Optional list of variable names to be removed from the environment.
+		:param addVariables: Optional, dictionary of variables to be added or modified in the environment.
+		:param delVariables: Optional, list of variable names to be removed from the environment.
 		"""
 		if environment is not None:
 			newVariables = environment._variables
@@ -216,9 +216,9 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		.. todo:: Document algorithm
 
-		:param executablePath:           Path to the executable.
-		:param binaryDirectoryPath:      Path to the executable's directory.
-		:param dryRun:                   True, when the program should run in dryrun mode.
+		:param executablePath:           Optional, path to the executable.
+		:param binaryDirectoryPath:      Optional, path to the executable's directory.
+		:param dryRun:                   Optional, true, when the program should run in dryrun mode.
 		:raises TypeError:               If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
 		:raises CLIAbstractionException: If the executable doesn't exist at the given path.
 		"""
@@ -431,11 +431,11 @@ class Executable(Program):  # (ILogable):
 		"""
 		Initializes an executable instance.
 
-		:param executablePath:      Path to the executable.
-		:param binaryDirectoryPath: Path to the executable's directory.
-		:param workingDirectory:    Path to the working directory.
-		:param environment:         Optional environment that should be setup when launching the executable.
-		:param dryRun:              True, when the program should run in dryrun mode.
+		:param executablePath:      Optional, path to the executable.
+		:param binaryDirectoryPath: Optional, path to the executable's directory.
+		:param workingDirectory:    Optional, path to the working directory.
+		:param environment:         Optional, environment that should be setup when launching the executable.
+		:param dryRun:              Optional, true, when the program should run in dryrun mode.
 		"""
 		super().__init__(executablePath, binaryDirectoryPath, dryRun)
 
@@ -450,7 +450,7 @@ class Executable(Program):  # (ILogable):
 		"""
 		Start the executable as a child-process.
 
-		:param environment:              Optional environment that should be setup when launching the executable. |br|
+		:param environment:              Optional, environment that should be setup when launching the executable. |br|
 		                                 If ``None``, the :attr:`_environment` is used.
 		:raises CLIAbstractionException: When an :exc:`OSError` occurs while launching the child-process.
 		"""
@@ -487,7 +487,7 @@ class Executable(Program):  # (ILogable):
 		Send a string to STDIN of the running child-process.
 
 		:param line:                     Line to send.
-		:param end:                      Line end character.
+		:param end:                      Optional, line end character.
 		:raises CLIAbstractionException: When any error occurs while sending data to the child-process.
 		"""
 		try:
@@ -527,8 +527,8 @@ class Executable(Program):  # (ILogable):
 
 		:param timeout:                  Optional, timeout in seconds. |br|
 		                                 Default: infinitely wait on the child-process.
-		:param kill:                     If true, terminate (kill) the child-process if it didn't terminate by itself within
-		                                 the timeout period.
+		:param kill:                     Optional, if true, terminate (kill) the child-process if it didn't terminate by
+		                                 itself within the timeout period.
 		:returns:                        ``None`` when the child-process is still running, otherwise the exit code.
 		:raises CLIAbstractionException: When the child-process is not started yet.
 
@@ -627,7 +627,7 @@ class OutputFilteredExecutable(Executable):
 
 		:param platform:       Platform the executable is called on.
 		:param dryrun:         If ``True``, the executable is not started, only the command line is assembled.
-		:param executablePath: Path to the executable.
+		:param executablePath: Optional, path to the executable.
 		"""
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 

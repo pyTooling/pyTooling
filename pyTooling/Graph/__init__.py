@@ -203,7 +203,7 @@ class DuplicateVertexError(GraphException):
 		Initializes the exception with the identifier that is already taken.
 
 		:param message:  The exception's message.
-		:param vertexID: The vertex identifier that already exists.
+		:param vertexID: Optional, the vertex identifier that already exists.
 		"""
 		super().__init__(message)
 		self._vertexID = vertexID
@@ -229,7 +229,7 @@ class DuplicateEdgeError(GraphException):
 		Initializes the exception with the identifier that is already taken.
 
 		:param message: The exception's message.
-		:param edgeID:  The edge identifier that already exists.
+		:param edgeID:  Optional, the edge identifier that already exists.
 		"""
 		super().__init__(message)
 		self._edgeID = edgeID
@@ -283,7 +283,7 @@ class Base(
 		"""
 		.. todo:: GRAPH::Base::init Needs documentation.
 
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
 		"""
 		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
@@ -320,7 +320,7 @@ class Base(
 		If a key doesn't exist yet, a new key-value-pair is created.
 
 		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
+		:param value: Optional, the value to associate to the given key.
 		"""
 		self._dict[key] = value
 
@@ -376,10 +376,10 @@ class BaseWithIDValueAndWeight(
 		"""
 		Initialize a graph element with an optional ID, value and weight.
 
-		:param identifier:    The optional unique ID.
-		:param value:         The optional value.
-		:param weight:        The optional weight.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param identifier:    Optional, unique ID.
+		:param value:         Optional, value.
+		:param weight:        Optional, weight.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
 		"""
 		super().__init__(keyValuePairs)
@@ -443,8 +443,8 @@ class BaseWithName(
 		"""
 		Initialize a named graph element with an optional name and optional key-value-pairs.
 
-		:param name:          The optional name.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param name:          Optional, name.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises ValueError:   If parameter 'graph' is None.
 		:raises TypeError:    If parameter 'graph' is not of type :class:`Graph`.
 		"""
@@ -511,10 +511,10 @@ class BaseWithVertices(
 		"""
 		Initialize a named graph element owning a set of vertices, and register it at its graph.
 
-		:param graph:         The reference to the graph.
-		:param name:          The optional name.
-		:param vertices:      The optional list of vertices.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param graph:         Optional, the reference to the graph.
+		:param name:          Optional, name.
+		:param vertices:      Optional, list of vertices.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises ValueError:   If parameter 'graph' is None.
 		:raises TypeError:    If parameter 'graph' is not of type :class:`Graph`.
 		"""
@@ -605,12 +605,12 @@ class Vertex(
 		"""
 		Initialize a vertex and register it at its graph or subgraph.
 
-		:param vertexID:              The optional ID for the new vertex.
-		:param value:                 The optional value for the new vertex.
-		:param weight:                The optional weight for the new vertex.
-		:param keyValuePairs:         The optional mapping (dictionary) of key-value-pairs.
-		:param graph:                 The optional reference to the graph.
-		:param subgraph:              undocumented
+		:param vertexID:              Optional, ID for the new vertex.
+		:param value:                 Optional, value for the new vertex.
+		:param weight:                Optional, weight for the new vertex.
+		:param keyValuePairs:         Optional, mapping (dictionary) of key-value-pairs.
+		:param graph:                 Optional, reference to the graph.
+		:param subgraph:              Optional, undocumented
 		:raises TypeError:            If parameter 'vertexID' is not of the graph's vertex ID type.
 		:raises DuplicateVertexError: If the given vertex ID already exists in this graph or subgraph.
 		"""
@@ -886,10 +886,10 @@ class Vertex(
 		Create an outbound edge from this vertex to the referenced vertex.
 
 		:param vertex:              The vertex to be linked to.
-		:param edgeID:              The edge's optional ID for the new edge object.
-		:param edgeWeight:          The edge's optional weight for the new edge object.
-		:param edgeValue:           The edge's optional value for the new edge object.
-		:param keyValuePairs:       An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
+		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -953,10 +953,10 @@ class Vertex(
 		Create an inbound edge from the referenced vertex to this vertex.
 
 		:param vertex:              The vertex to be linked from.
-		:param edgeID:              The edge's optional ID for the new edge object.
-		:param edgeWeight:          The edge's optional weight for the new edge object.
-		:param edgeValue:           The edge's optional value for the new edge object.
-		:param keyValuePairs:       An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
+		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1022,14 +1022,14 @@ class Vertex(
 		"""
 		Create a new vertex and link that vertex by an outbound edge from this vertex.
 
-		:param vertexID:            The new vertex' optional ID.
-		:param vertexValue:         The new vertex' optional value.
-		:param vertexWeight:        The new vertex' optional weight.
-		:param vertexKeyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new vertex.
-		:param edgeID:              The edge's optional ID for the new edge object.
-		:param edgeWeight:          The edge's optional weight for the new edge object.
-		:param edgeValue:           The edge's optional value for the new edge object.
-		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:param vertexID:            Optional, the new vertex' optional ID.
+		:param vertexValue:         Optional, the new vertex' optional value.
+		:param vertexWeight:        Optional, the new vertex' optional weight.
+		:param vertexKeyValuePairs: Optional, mapping (dictionary) of key-value-pairs for the new vertex.
+		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
+		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1097,14 +1097,14 @@ class Vertex(
 		"""
 		Create a new vertex and link that vertex by an inbound edge to this vertex.
 
-		:param vertexID:            The new vertex' optional ID.
-		:param vertexValue:         The new vertex' optional value.
-		:param vertexWeight:        The new vertex' optional weight.
-		:param vertexKeyValuePairs: An optional mapping (dictionary) of key-value-pairs for the new vertex.
-		:param edgeID:              The edge's optional ID for the new edge object.
-		:param edgeWeight:          The edge's optional weight for the new edge object.
-		:param edgeValue:           The edge's optional value for the new edge object.
-		:param edgeKeyValuePairs:   An optional mapping (dictionary) of key-value-pairs for the new edge object.
+		:param vertexID:            Optional, the new vertex' optional ID.
+		:param vertexValue:         Optional, the new vertex' optional value.
+		:param vertexWeight:        Optional, the new vertex' optional weight.
+		:param vertexKeyValuePairs: Optional, mapping (dictionary) of key-value-pairs for the new vertex.
+		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
+		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1170,10 +1170,10 @@ class Vertex(
 		Create an outbound link from this vertex to the referenced vertex.
 
 		:param vertex:                   The vertex to be linked to.
-		:param linkID:                   The link's optional ID for the new link object.
-		:param linkWeight:               The link's optional weight for the new link object.
-		:param linkValue:                The link's optional value for the new link object.
-		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
+		:param linkID:                   Optional, the link's optional ID for the new link object.
+		:param linkWeight:               Optional, the link's optional weight for the new link object.
+		:param linkValue:                Optional, the link's optional value for the new link object.
+		:param keyValuePairs:            Optional, mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
 		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph - a link connects vertices *across*
@@ -1240,10 +1240,10 @@ class Vertex(
 		Create an inbound link from the referenced vertex to this vertex.
 
 		:param vertex:                   The vertex to be linked from.
-		:param linkID:                   The link's optional ID for the new link object.
-		:param linkWeight:               The link's optional weight for the new link object.
-		:param linkValue:                The link's optional value for the new link object.
-		:param keyValuePairs:            An optional mapping (dictionary) of key-value-pairs for the new link object.
+		:param linkID:                   Optional, the link's optional ID for the new link object.
+		:param linkWeight:               Optional, the link's optional weight for the new link object.
+		:param linkValue:                Optional, the link's optional value for the new link object.
+		:param keyValuePairs:            Optional, mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
 		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph - a link connects vertices *across*
@@ -1453,10 +1453,12 @@ class Vertex(
 		Optionally, the vertex's attached attributes (key-value-pairs) can be copied and a linkage between both vertices
 		can be established.
 
-		:param graph:                        The graph, the vertex is created in.
-		:param copyDict:                     If ``True``, copy all attached attributes into the new vertex.
-		:param linkingKeyToOriginalVertex:   If not ``None``, add a key-value-pair using this parameter as key from new vertex to the original vertex.
-		:param linkingKeyFromOriginalVertex: If not ``None``, add a key-value-pair using this parameter as key from original vertex to the new vertex.
+		:param graph:                        Optional, the graph, the vertex is created in.
+		:param copyDict:                     Optional, if ``True``, copy all attached attributes into the new vertex.
+		:param linkingKeyToOriginalVertex:   Optional, if not ``None``, add a key-value-pair using this parameter as key
+		                                     from new vertex to the original vertex.
+		:param linkingKeyFromOriginalVertex: Optional, if not ``None``, add a key-value-pair using this parameter as key
+		                                     from original vertex to the new vertex.
 		:returns:                            The newly created vertex.
 		:raises GraphException:              If source graph and destination graph are the same.
 		"""
@@ -1480,7 +1482,7 @@ class Vertex(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip edges in the generator.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		:returns:         A generator to iterate all outbound edges.
 		"""
 		if predicate is None:
@@ -1497,7 +1499,7 @@ class Vertex(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip edges in the generator.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		:returns:         A generator to iterate all inbound edges.
 		"""
 		if predicate is None:
@@ -1514,7 +1516,7 @@ class Vertex(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip links in the generator.
 
-		:param predicate: Filter function accepting any link and returning a boolean.
+		:param predicate: Optional, filter function accepting any link and returning a boolean.
 		:returns:         A generator to iterate all outbound links.
 		"""
 		if predicate is None:
@@ -1531,7 +1533,7 @@ class Vertex(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip links in the generator.
 
-		:param predicate: Filter function accepting any link and returning a boolean.
+		:param predicate: Optional, filter function accepting any link and returning a boolean.
 		:returns:         A generator to iterate all inbound links.
 		"""
 		if predicate is None:
@@ -1548,7 +1550,7 @@ class Vertex(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip successors in the generator.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		:returns:         A generator to iterate all successor vertices.
 		"""
 		if predicate is None:
@@ -1565,7 +1567,7 @@ class Vertex(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip predecessors in the generator.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		:returns:         A generator to iterate all predecessor vertices.
 		"""
 		if predicate is None:
@@ -2025,10 +2027,10 @@ class BaseEdge(
 
 		:param source:        The source of the new edge.
 		:param destination:   The destination of the new edge.
-		:param edgeID:        The optional unique ID for the new edge.
-		:param value:         The optional value for the new edge.
-		:param weight:        The optional weight for the new edge.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param edgeID:        Optional, unique ID for the new edge.
+		:param value:         Optional, value for the new edge.
+		:param weight:        Optional, weight for the new edge.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		"""
 		super().__init__(edgeID, value, weight, keyValuePairs)
 
@@ -2094,10 +2096,10 @@ class Edge(
 
 		:param source:          The source of the new edge.
 		:param destination:     The destination of the new edge.
-		:param edgeID:          The optional unique ID for the new edge.
-		:param value:           The optional value for the new edge.
-		:param weight:          The optional weight for the new edge.
-		:param keyValuePairs:   The optional mapping (dictionary) of key-value-pairs.
+		:param edgeID:          Optional, unique ID for the new edge.
+		:param value:           Optional, value for the new edge.
+		:param weight:          Optional, weight for the new edge.
+		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:      If parameter 'weight' is not of the graph's edge weight type.
 		:raises NotInSameGraph: If source and destination vertex are not in the same graph or subgraph.
 		"""
@@ -2188,10 +2190,10 @@ class Link(
 
 		:param source:          The source of the new link.
 		:param destination:     The destination of the new link.
-		:param linkID:          The optional unique ID for the new link.
-		:param value:           The optional value for the new v.
-		:param weight:          The optional weight for the new link.
-		:param keyValuePairs:   The optional mapping (dictionary) of key-value-pairs.
+		:param linkID:          Optional, unique ID for the new link.
+		:param value:           Optional, value for the new v.
+		:param weight:          Optional, weight for the new link.
+		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:      If parameter 'weight' is not of the graph's link weight type.
 		:raises NotInSameGraph: If source and destination vertex are in the same subgraph, where an edge is to be used.
 		"""
@@ -2293,8 +2295,8 @@ class BaseGraph(
 		"""
 		.. todo:: GRAPH::BaseGraph::init Needs documentation.
 
-		:param name:          The optional name of the graph.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param name:          Optional, name of the graph.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		"""
 		super().__init__(name, keyValuePairs)
 
@@ -2349,7 +2351,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
-		:param predicate: Filter function accepting any vertex and returning a boolean.
+		:param predicate: Optional, filter function accepting any vertex and returning a boolean.
 		:returns:         A generator to iterate all vertices.
 		"""
 		if predicate is None:
@@ -2371,7 +2373,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
-		:param predicate: Filter function accepting any vertex and returning a boolean.
+		:param predicate: Optional, filter function accepting any vertex and returning a boolean.
 		:returns:         A generator to iterate all vertices without inbound edges.
 
 		.. seealso::
@@ -2406,7 +2408,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
-		:param predicate: Filter function accepting any vertex and returning a boolean.
+		:param predicate: Optional, filter function accepting any vertex and returning a boolean.
 		:returns:         A generator to iterate all vertices without outbound edges.
 
 		.. seealso::
@@ -2447,7 +2449,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
-		:param predicate:      Filter function accepting any vertex and returning a boolean.
+		:param predicate:      Optional, filter function accepting any vertex and returning a boolean.
 		:returns:              A generator to iterate all vertices in topological order.
 		:raises CycleError:    If the graph contains a cycle, so no topological order exists.
 		:raises InternalError: If the algorithm's internal state became inconsistent.
@@ -2513,7 +2515,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip edges in the generator.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		:returns:         A generator to iterate all edges.
 		"""
 		if predicate is None:
@@ -2535,7 +2537,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip links in the generator.
 
-		:param predicate: Filter function accepting any link and returning a boolean.
+		:param predicate: Optional, filter function accepting any link and returning a boolean.
 		:returns:         A generator to iterate all links.
 		"""
 		if predicate is None:
@@ -2557,7 +2559,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip edges.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		"""
 		if predicate is None:
 			for edge in self._edgesWithoutID:
@@ -2594,7 +2596,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip links.
 
-		:param predicate: Filter function accepting any link and returning a boolean.
+		:param predicate: Optional, filter function accepting any link and returning a boolean.
 		"""
 		if predicate is None:
 			for link in self._linksWithoutID:
@@ -2631,7 +2633,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip edges.
 
-		:param predicate: Filter function accepting any edge and returning a boolean.
+		:param predicate: Optional, filter function accepting any edge and returning a boolean.
 		"""
 		if predicate is None:
 			for edge in self._edgesWithoutID:
@@ -2674,7 +2676,7 @@ class BaseGraph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip links.
 
-		:param predicate: Filter function accepting any link and returning a boolean.
+		:param predicate: Optional, filter function accepting any link and returning a boolean.
 		"""
 		if predicate is None:
 			for link in self._linksWithoutID:
@@ -2799,9 +2801,9 @@ class Subgraph(
 		"""
 		Initialize a subgraph and register it at its graph.
 
-		:param graph:         The reference to the graph.
-		:param name:          The optional name of the new sub-graph.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param graph:         Optional, the reference to the graph.
+		:param name:          Optional, name of the new sub-graph.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises ValueError:   If parameter 'graph' is None.
 		:raises TypeError:    If parameter 'graph' is not of type :class:`Graph`.
 		"""
@@ -2875,10 +2877,10 @@ class View(
 		"""
 		.. todo:: GRAPH::View::init Needs documentation.
 
-		:param graph:         The reference to the graph.
-		:param name:          The optional name of the new view.
-		:param vertices:      The optional list of vertices in the new view.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param graph:         Optional, the reference to the graph.
+		:param name:          Optional, name of the new view.
+		:param vertices:      Optional, list of vertices in the new view.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		"""
 		super().__init__(graph, name, vertices, keyValuePairs)
 
@@ -2932,10 +2934,10 @@ class Component(
 		"""
 		Initialize a component of a graph and register it at that graph.
 
-		:param graph:         The reference to the graph.
-		:param name:          The optional name of the new component.
-		:param vertices:      The optional list of vertices in the new component.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.
+		:param graph:         Optional, the reference to the graph.
+		:param name:          Optional, name of the new component.
+		:param vertices:      Optional, list of vertices in the new component.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		"""
 		super().__init__(graph, name, vertices, keyValuePairs)
 
@@ -2992,8 +2994,8 @@ class Graph(
 		"""
 		.. todo:: GRAPH::Graph::init Needs documentation.
 
-		:param name:          The optional name of the new graph.
-		:param keyValuePairs: The optional mapping (dictionary) of key-value-pairs.#
+		:param name:          Optional, name of the new graph.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.#
 		"""
 		super().__init__(name, keyValuePairs)
 
@@ -3077,7 +3079,7 @@ class Graph(
 		"""
 		Check if a vertex with the given ID exists in this graph.
 
-		:param vertexID: ID to look for, or ``None`` for a vertex without an ID.
+		:param vertexID: Optional, ID to look for, or ``None`` for a vertex without an ID.
 		:returns:        ``True``, if such a vertex exists.
 		"""
 		if vertexID is None:
@@ -3089,7 +3091,7 @@ class Graph(
 		"""
 		Check if a vertex carrying the given value exists in this graph.
 
-		:param value: Value to look for.
+		:param value: Optional, value to look for.
 		:returns:     ``True``, if such a vertex exists.
 		"""
 		return any(vertex._value == value for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()))
@@ -3100,7 +3102,7 @@ class Graph(
 
 		A vertex created without an ID can be looked up with ``None``, provided it is the only such vertex.
 
-		:param vertexID:  ID of the vertex to return, or ``None`` for the vertex without an ID.
+		:param vertexID:  Optional, ID of the vertex to return, or ``None`` for the vertex without an ID.
 		:returns:         The vertex with that ID.
 		:raises KeyError: If no vertex has that ID, or if more than one vertex matches ``None``.
 		"""
@@ -3118,7 +3120,7 @@ class Graph(
 		"""
 		Return the vertex carrying the given value.
 
-		:param value:     Value of the vertex to return.
+		:param value:     Optional, value of the vertex to return.
 		:returns:         The vertex with that value.
 		:raises KeyError: If no vertex carries that value, or if more than one vertex does.
 		"""
@@ -3146,9 +3148,9 @@ class Graph(
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices.
 
-		:param predicate:      Filter function accepting any vertex and returning a boolean.
-		:param copyGraphDict:  If ``True``, copy all graph attached attributes into the new graph.
-		:param copyVertexDict: If ``True``, copy all vertex attached attributes into the new vertices.
+		:param predicate:      Optional, filter function accepting any vertex and returning a boolean.
+		:param copyGraphDict:  Optional, if ``True``, copy all graph attached attributes into the new graph.
+		:param copyVertexDict: Optional, if ``True``, copy all vertex attached attributes into the new vertices.
 		:returns:              A new graph with copies of the selected vertices.
 		"""
 		graph = Graph(self._name)

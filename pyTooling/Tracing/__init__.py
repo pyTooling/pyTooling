@@ -79,8 +79,8 @@ class Event(metaclass=ExtendedType, slots=True):
 		Initializes a named event.
 
 		:param name:        The name of the event.
-		:param time:        The optional time when the event happened.
-		:param parent:      Reference to the parent span.
+		:param time:        Optional, time when the event happened.
+		:param parent:      Optional, reference to the parent span.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
@@ -230,7 +230,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		Initializes a timespan as part of a software execution trace.
 
 		:param name:        Name of the timespan.
-		:param parent:      Reference to a parent span or trace.
+		:param parent:      Optional, reference to a parent span or trace.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
@@ -508,8 +508,8 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Render this timespan and its sub-spans as indented lines.
 
-		:param indent:     Indentation level of this timespan.
-		:param columnSize: Column the durations are aligned at.
+		:param indent:     Optional, indentation level of this timespan.
+		:param columnSize: Optional, column the durations are aligned at.
 		:returns:          One line per timespan, deepest last.
 		"""
 		result = []
@@ -623,8 +623,8 @@ class Trace(Span):
 		"""
 		Render this trace and its spans as indented lines.
 
-		:param indent:     Indentation level of the trace.
-		:param columnSize: Column the durations are aligned at.
+		:param indent:     Optional, indentation level of the trace.
+		:param columnSize: Optional, column the durations are aligned at.
 		:returns:          A headline, followed by one line per timespan.
 		"""
 		result = []

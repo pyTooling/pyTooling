@@ -97,7 +97,7 @@ class lazy:
 		"""
 		Initialize the decorator with the loading state its member needs.
 
-		:param _requiredState: State the object has to be loaded to before the decorated member is used.
+		:param _requiredState: Optional, state the object has to be loaded to before the decorated member is used.
 		"""
 		self._requiredState = _requiredState
 		self._wrapped = None
@@ -122,7 +122,7 @@ class lazy:
 		Load the object far enough, then hand out the decorated property's value or a bound method.
 
 		:param obj:     The object the decorated member is accessed on, or ``None`` for a class access.
-		:param objtype: The class the decorated member is accessed on.
+		:param objtype: Optional, the class the decorated member is accessed on.
 		:returns:       The property's value, a bound wrapper around the method, or the decorator itself.
 		"""
 		if obj is None:
@@ -170,7 +170,7 @@ class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Initialize the lazy-loading state of an object.
 
-		:param targetLevel: State the object should be loaded to immediately; by default nothing is loaded.
+		:param targetLevel: Optional, state the object should be loaded to immediately; by default nothing is loaded.
 		"""
 		self.__lazy_state__ = LazyLoaderState.Initialized
 		self.__lazy_lock__ = RLock()
@@ -184,7 +184,7 @@ class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Load the object's details up to the given state.
 
-		:param targetLevel: State the object needs to be loaded to.
+		:param targetLevel: Optional, state the object needs to be loaded to.
 		"""
 		pass
 
@@ -305,10 +305,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 		:param version:      Version number of this release.
 		:param timestamp:    Time this version was released.
-		:param files:        Optional distributions of this release.
-		:param requirements: Optional requirements of this release, by extra.
-		:param project:      Optional project this release belongs to.
-		:param lazy:         State the release should be loaded to immediately.
+		:param files:        Optional, distributions of this release.
+		:param requirements: Optional, requirements of this release, by extra.
+		:param project:      Optional, project this release belongs to.
+		:param lazy:         Optional, state the release should be loaded to immediately.
 		"""
 		if project is not None and (storage := project._storage) is not None:
 			self._api =     storage._api
@@ -327,7 +327,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download the release's details and post-process them, as far as the target state demands.
 
-		:param targetLevel: State the release needs to be loaded to.
+		:param targetLevel: Optional, state the release needs to be loaded to.
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
@@ -514,9 +514,9 @@ class Project(Package, LazyLoadableMixin):
 
 		:param name:     Name of the project on the package index.
 		:param url:      URL of the project's page, as a string or a parsed URL.
-		:param releases: Optional releases of this project.
-		:param index:    Optional package index this project is hosted on.
-		:param lazy:     State the project should be loaded to immediately.
+		:param releases: Optional, releases of this project.
+		:param index:    Optional, package index this project is hosted on.
+		:param lazy:     Optional, state the project should be loaded to immediately.
 		"""
 		if index is not None:
 			self._api =     index._api
@@ -542,7 +542,7 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download the project's details and its releases' details, as far as the target state demands.
 
-		:param targetLevel: State the project needs to be loaded to.
+		:param targetLevel: Optional, state the project needs to be loaded to.
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
@@ -835,7 +835,7 @@ class PythonPackageIndex(PackageStorage):
 		Look up a project on this package index.
 
 		:param projectName: Name of the project on the package index.
-		:param lazy:        State the project should be loaded to immediately.
+		:param lazy:        Optional, state the project should be loaded to immediately.
 		:returns:           The project, loaded as far as ``lazy`` demands.
 		"""
 		project = Project(projectName, "", index=self, lazy=lazy)

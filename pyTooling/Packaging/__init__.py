@@ -113,7 +113,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 	  * Markdown (``*.md``)
 	  * ReStructured Text (``*.rst``)
 
-	:param readmeFile:         Path to the `README` file as an instance of :class:`Path`.
+	:param readmeFile:         Optional, path to the `README` file as an instance of :class:`Path`.
 	:returns:                  A tuple containing the file content and the MIME type.
 	:raises TypeError:         If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises ValueError:        If README file has an unsupported format.
@@ -158,9 +158,9 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 	      requirements = list(set(loadRequirementsFile(requirementsFile)))
 
-	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.
-	:param indent:             Indentation level used for the debug output of nested requirements files.
-	:param debug:              If ``True``, print found dependencies and recursion.
+	:param requirementsFile:   Optional, path to the ``requirements.txt`` file as an instance of :class:`Path`.
+	:param indent:             Optional, indentation level used for the debug output of nested requirements files.
+	:param debug:              Optional, if ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
 	:raises TypeError:         If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError: If requirements file does not exist.
@@ -174,8 +174,8 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		"""
 		Recursive variant of :func:`loadRequirementsFile`.
 
-		:param requirementsFile:   Path to the requirements file to read.
-		:param indent:             Indentation level used for the debug output of nested requirements files.
+		:param requirementsFile:   Optional, path to the requirements file to read.
+		:param indent:             Optional, indentation level used for the debug output of nested requirements files.
 		:returns:                  List of requirements read from that file and every file it includes.
 		:raises FileNotFoundError: If the requirements file doesn't exist.
 		"""
@@ -240,10 +240,10 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		:param author:      Author of the Python package.
 		:param email:       The author's email address
 		:param copyright:   The copyright notice of the Package.
-		:param license:     The Python package's license.
+		:param license:     Optional, the Python package's license.
 		:param version:     The Python package's version.
 		:param description: The Python package's short description.
-		:param keywords:    The Python package's list of keywords.
+		:param keywords:    Optional, the Python package's list of keywords.
 		"""
 		self._author =      author
 		self._email =       email
@@ -615,25 +615,37 @@ def DescribePythonPackage(
 
 	:param packageName:                   Name of the Python package.
 	:param description:                   Short description of the package. The long description will be read from README file.
-	:param projectURL:                    URL to the Python project.
+	:param projectURL:                    Optional, URL to the Python project.
 	:param sourceCodeURL:                 URL to the Python source code.
 	:param documentationURL:              URL to the package's documentation.
 	:param issueTrackerCodeURL:           URL to the projects issue tracker (ticket system).
-	:param keywords:                      A list of keywords.
-	:param license:                       The package's license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)
-	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)
-	:param requirementsFile:              The path to the project's requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
-	:param documentationRequirementsFile: The path to the project's requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
-	:param unittestRequirementsFile:      The path to the project's requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
-	:param packagingRequirementsFile:     The path to the project's requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
-	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)
-	:param sourceFileWithVersion:         The path to the project's source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
-	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)
-	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)
-	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)
-	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
-	:param debug:                         Enable extended outputs for debugging.
+	:param keywords:                      Optional, a list of keywords.
+	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
+	                                      :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                    Optional, the path to the README file. (Default: ``README.md``, see
+	                                      :const:`DEFAULT_README`)
+	:param requirementsFile:              Optional, the path to the project's requirements file. (Default:
+	                                      ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile: Optional, the path to the project's requirements file for documentation.
+	                                      (Default: ``doc/requirements.txt``, see
+	                                      :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:      Optional, the path to the project's requirements file for unit tests. (Default:
+	                                      ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:     Optional, the path to the project's requirements file for packaging. (Default:
+	                                      ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:        Optional, a dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:         Optional, the path to the project's source file containing dunder variables like
+	                                      ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                   Optional, a list of package classifiers. (Default: 3 classifiers, see
+	                                      :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:             Optional, development status of the package. (Default: stable, see
+	                                      :const:`STATUS` for supported status values)
+	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
+	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
+	                                      None)
+	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
+	:param debug:                         Optional, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
 	:raises MissingDependencyError:       If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
@@ -891,23 +903,35 @@ def DescribePythonPackageHostedOnGitHub(
 	:param packageName:                   Name of the Python package.
 	:param description:                   Short description of the package. The long description will be read from README file.
 	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).
-	:param gitHubRepository:              Name of the GitHub repository.
-	:param projectURL:                    URL to the Python project.
-	:param keywords:                      A list of keywords.
-	:param license:                       The package's license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)
-	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)
-	:param requirementsFile:              The path to the project's requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
-	:param documentationRequirementsFile: The path to the project's requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
-	:param unittestRequirementsFile:      The path to the project's requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
-	:param packagingRequirementsFile:     The path to the project's requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
-	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)
-	:param sourceFileWithVersion:         The path to the project's source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
-	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)
-	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)
-	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)
-	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
-	:param debug:                         Enable extended outputs for debugging.
+	:param gitHubRepository:              Optional, name of the GitHub repository.
+	:param projectURL:                    Optional, URL to the Python project.
+	:param keywords:                      Optional, a list of keywords.
+	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
+	                                      :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                    Optional, the path to the README file. (Default: ``README.md``, see
+	                                      :const:`DEFAULT_README`)
+	:param requirementsFile:              Optional, the path to the project's requirements file. (Default:
+	                                      ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile: Optional, the path to the project's requirements file for documentation.
+	                                      (Default: ``doc/requirements.txt``, see
+	                                      :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:      Optional, the path to the project's requirements file for unit tests. (Default:
+	                                      ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:     Optional, the path to the project's requirements file for packaging. (Default:
+	                                      ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:        Optional, a dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:         Optional, the path to the project's source file containing dunder variables like
+	                                      ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                   Optional, a list of package classifiers. (Default: 3 classifiers, see
+	                                      :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:             Optional, development status of the package. (Default: stable, see
+	                                      :const:`STATUS` for supported status values)
+	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
+	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
+	                                      None)
+	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
+	:param debug:                         Optional, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
 	:raises MissingDependencyError:       If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.

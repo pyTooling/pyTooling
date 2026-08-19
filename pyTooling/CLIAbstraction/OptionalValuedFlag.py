@@ -63,9 +63,9 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		This method is called when a class is derived.
 
 		:param args:             Any positional arguments.
-		:param pattern:          This pattern is used to format an argument without a value. |br|
+		:param pattern:          Optional, this pattern is used to format an argument without a value. |br|
 		                         Default: ``"{0}"``.
-		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		:param patternWithValue: Optional, this pattern is used to format an argument with a value. |br|
 		                         Default: ``"{0}={1}"``.
 		:param kwargs:           Any keyword argument.
 		"""
@@ -77,7 +77,7 @@ class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
 		"""
 		Initialize the flag, optionally with a value.
 
-		:param value: Value of the flag, or ``None`` to render the flag without a value.
+		:param value: Optional, value of the flag, or ``None`` to render the flag without a value.
 		"""
 		self._value = value
 
@@ -132,9 +132,9 @@ class ShortOptionalValuedFlag(OptionalValuedFlag, pattern="-{0}", patternWithVal
 		This method is called when a class is derived.
 
 		:param args:             Any positional arguments.
-		:param pattern:          This pattern is used to format an argument without a value. |br|
+		:param pattern:          Optional, this pattern is used to format an argument without a value. |br|
 		                         Default: ``"-{0}"``.
-		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		:param patternWithValue: Optional, this pattern is used to format an argument with a value. |br|
 		                         Default: ``"-{0}={1}"``.
 		:param kwargs:           Any keyword argument.
 		"""
@@ -156,9 +156,9 @@ class LongOptionalValuedFlag(OptionalValuedFlag, pattern="--{0}", patternWithVal
 		This method is called when a class is derived.
 
 		:param args:             Any positional arguments.
-		:param pattern:          This pattern is used to format an argument without a value. |br|
+		:param pattern:          Optional, this pattern is used to format an argument without a value. |br|
 		                         Default: ``"--{0}"``.
-		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		:param patternWithValue: Optional, this pattern is used to format an argument with a value. |br|
 		                         Default: ``"--{0}={1}"``.
 		:param kwargs:           Any keyword argument.
 		"""
@@ -180,9 +180,9 @@ class WindowsOptionalValuedFlag(OptionalValuedFlag, pattern="/{0}", patternWithV
 		This method is called when a class is derived.
 
 		:param args:             Any positional arguments.
-		:param pattern:          This pattern is used to format an argument without a value. |br|
+		:param pattern:          Optional, this pattern is used to format an argument without a value. |br|
 		                         Default: ``"/{0}"``.
-		:param patternWithValue: This pattern is used to format an argument with a value. |br|
+		:param patternWithValue: Optional, this pattern is used to format an argument with a value. |br|
 		                         Default: ``"/{0}:{1}"``.
 		:param kwargs:           Any keyword argument.
 		"""

@@ -131,7 +131,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize the base-class with filesystem element size and root reference.
 
-		:param size:       Optional size of the element.
+		:param size:       Optional, size of the element.
 		:param root:       Optional reference to the filesystem root element.
 		:raises TypeError: If parameter 'size' is not of type :class:`int`.
 		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
@@ -222,8 +222,8 @@ class Element(Base, Generic[_ParentType]):
 		Initialize the element base-class with name, size and parent reference.
 
 		:param name:        Name of the element.
-		:param size:        Optional size of the element.
-		:param parent:      Optional parent reference.
+		:param size:        Optional, size of the element.
+		:param parent:      Optional, parent reference.
 		:raises ValueError: If parameter 'name' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Directory`.
 		"""
@@ -355,8 +355,8 @@ class Directory(Element["Directory"]):
 		Initialize the directory with name and parent reference.
 
 		:param name:                  Name of the element.
-		:param collectSubdirectories: If true, collect subdirectory statistics.
-		:param parent:                Optional parent reference.
+		:param collectSubdirectories: Optional, if true, collect subdirectory statistics.
+		:param parent:                Optional, parent reference.
 		"""
 		super().__init__(name, None, parent)
 
@@ -746,7 +746,7 @@ class Directory(Element["Directory"]):
 		   Statistics like aggregated directory size are copied too. |br|
 		   There is no rescan or repeated aggregation needed.
 
-		:param parent: The parent element of the copied directory.
+		:param parent: Optional, the parent element of the copied directory.
 		:returns:      A deep copy of the directory structure.
 		"""
 		dir = Directory(self._name, parent=parent)
@@ -815,7 +815,7 @@ class Directory(Element["Directory"]):
 		``size``
 		  The directory's aggregated size.
 
-		:param format: A user defined formatting function for tree nodes.
+		:param format: Optional, a user defined formatting function for tree nodes.
 		:returns:      A tree node representing this directory.
 		"""
 		if format is None:
@@ -915,8 +915,8 @@ class Filename(Element[Directory]):
 		Initialize the filename with name, file (storage) object and parent reference.
 
 		:param name:       Name of the file.
-		:param file:       Optional file (storage) object.
-		:param parent:     Optional parent reference.
+		:param file:       Optional, file (storage) object.
+		:param parent:     Optional, parent reference.
 		:raises TypeError: If parameter 'file' is not of type :class:`File`.
 		"""
 		super().__init__(name, None, parent)
@@ -1009,7 +1009,7 @@ class Filename(Element[Directory]):
 		The file object behind the filename is copied only once per scope: a filename referring to a file that was
 		already copied - a hardlink - is connected to the existing copy.
 
-		:param parent: The directory in the target scope the copy is registered at.
+		:param parent: Optional, the directory in the target scope the copy is registered at.
 		:returns:      The copied filename.
 		"""
 		fileID = self._file._id
@@ -1124,7 +1124,7 @@ class SymbolicLink(Element[Directory]):
 
 		:param name:        Name of the symbolic link.
 		:param target:      Path the symbolic link points to.
-		:param parent:      Optional parent directory of the symbolic link.
+		:param parent:      Optional, parent directory of the symbolic link.
 		:raises ValueError: If parameter 'target' is None.
 		:raises TypeError:  If parameter 'target' is not of type :class:`~pathlib.Path`.
 		"""
@@ -1210,7 +1210,7 @@ class SymbolicLink(Element[Directory]):
 		"""
 		Copy this symbolic link into another filesystem statistics scope.
 
-		:param parent: The directory in the target scope the copy is registered at.
+		:param parent: Optional, the directory in the target scope the copy is registered at.
 		:returns:      The copied symbolic link, unresolved.
 		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
@@ -1309,7 +1309,7 @@ class Root(Directory):
 		away, so the root is usable as soon as it exists.
 
 		:param rootDirectory:         Directory to collect the statistics for.
-		:param collectSubdirectories: If ``True``, scan the tree and resolve its symbolic links immediately.
+		:param collectSubdirectories: Optional, if ``True``, scan the tree and resolve its symbolic links immediately.
 		:raises ValueError:           If parameter 'rootDirectory' is None.
 		:raises TypeError:            If parameter 'rootDirectory' is not of type :class:`~pathlib.Path`.
 		:raises ToolingException:     If the given path doesn't exist.
@@ -1513,8 +1513,8 @@ class File(Base):
 		Initialize the File storage object with an ID, size and parent reference.
 
 		:param id:          Unique ID of the file object.
-		:param size:        Size of the file object.
-		:param parent:      Optional parent reference.
+		:param size:        Optional, size of the file object.
+		:param parent:      Optional, parent reference.
 		:raises ValueError: If parameter 'id' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.
 		"""

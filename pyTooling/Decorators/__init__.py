@@ -282,12 +282,13 @@ def InheritDocString(
 	        '''What is specific to Class2.'''
 
 	:param baseClass: Base-class to copy the doc-string from to the class or method being decorated.
-	:param merge:     If ``True``, combine both doc-strings instead of replacing the derived one; defaults to ``False``.
-	:param order:     Order in which both doc-strings are arranged when merging; defaults to
+	:param merge:     Optional, if ``True``, combine both doc-strings instead of replacing the derived one; defaults to
+	                  ``False``.
+	:param order:     Optional, order in which both doc-strings are arranged when merging; defaults to
 	                  :attr:`~DocStringMergeOrder.BaseFirst`.
-	:param prefix:    Text inserted in front of the merged doc-string; defaults to an empty string.
-	:param interfix:  Text inserted between both doc-strings; defaults to a blank line (``"\\n\\n"``).
-	:param postfix:   Text appended to the merged doc-string; defaults to an empty string.
+	:param prefix:    Optional, text inserted in front of the merged doc-string; defaults to an empty string.
+	:param interfix:  Optional, text inserted between both doc-strings; defaults to a blank line (``"\\n\\n"``).
+	:param postfix:   Optional, text appended to the merged doc-string; defaults to an empty string.
 	:returns:         Decorator function that copies or merges the doc-string.
 
 	.. seealso::

@@ -64,7 +64,7 @@ def BlockingPut(queue: ThreadSafeQueue[QueueItem], item: QueueItem, stopEvent: E
 	:param queue:        The queue to put the item into.
 	:param item:         The item to hand over to the consumer.
 	:param stopEvent:    Event signaling that the producer should stop waiting.
-	:param retryTimeout: Time in seconds between two attempts to put the item.
+	:param retryTimeout: Optional, time in seconds between two attempts to put the item.
 	:returns:            ``True``, if the item was put into the queue; ``False``, if the stop event was set.
 	"""
 	while not stopEvent.is_set():
@@ -101,7 +101,7 @@ def Delay(stream: Iterator[QueueItem], delay: int = 1) -> Iterator[QueueItem]:
 	Holds each item back for ``delay`` further items before releasing it.
 
 	:param stream: The iterator to read the items from.
-	:param delay:  Number of items an item is held back for.
+	:param delay:  Optional, number of items an item is held back for.
 	:returns:      An iterator yielding the delayed items, followed by the buffered rest when the stream ends.
 	"""
 	buffer: deque[QueueItem] = deque()
