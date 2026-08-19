@@ -204,6 +204,7 @@ jobs:
 
   PublishToGitHubPages:
     uses: pyTooling/Actions/.github/workflows/PublishToGitHubPages.yml@r7
+    if: ${{ !startsWith(github.ref_name, 'claude/') }}
     needs:
       - UnitTestingParams
       - Documentation
