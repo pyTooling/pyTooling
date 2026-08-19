@@ -36,6 +36,7 @@ from typing   import List
 
 from pyTooling.Warning import WarningCollector, Warning, CriticalWarning
 from pyTooling.Warning import UnhandledExceptionException, UnhandledCriticalWarningException
+from pyTooling.Warning import EscalatedWarningException
 from pyTooling.Testing import Testcase
 
 
@@ -162,12 +163,13 @@ class WarningCollection(Testcase):
 			return True
 
 		a = ClassA("abort")
-		with self.assertRaises(Exception) as ex:
+		with self.assertRaises(EscalatedWarningException) as ex:
 			with WarningCollector(handler=func) as warning:
 				a.methA_RaiseException()
 
 		self.assertEqual("Exception from ClassA.methA_RaiseException", message)
 		self.assertEqual("Warning: Exception from ClassA.methA_RaiseException", str(ex.exception))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(ex.exception.__cause__))
 
 
 class CallStack(Testcase):

@@ -44,7 +44,7 @@ from sys             import version_info
 from typing          import List, Iterable, Dict, Sequence, Any, Optional as Nullable, Union, Tuple
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import ToolingException, MissingDependencyError
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
 from pyTooling.Licensing   import License, Apache_2_0_License
@@ -621,7 +621,7 @@ def DescribePythonPackage(
 	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
 	:param debug:                         Enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
-	:raises ToolingException:             If package 'setuptools' is not available.
+	:raises MissingDependencyError:       If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError:            If README file doesn't exist.
 	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
@@ -642,7 +642,7 @@ def DescribePythonPackage(
 	try:
 		from setuptools import find_packages, find_namespace_packages
 	except ImportError as ex:
-		raise Exception(f"Optional dependency 'setuptools' not installed. Either install pyTooling with extra dependencies 'pyTooling[packaging]' or install 'setuptools' directly.") from ex
+		raise MissingDependencyError(dependency="setuptools", extra="packaging") from ex
 
 	print(f"[pyTooling.Packaging] Python: {version_info.major}.{version_info.minor}.{version_info.micro}, pyTooling: {__version__}")
 
@@ -895,7 +895,7 @@ def DescribePythonPackageHostedOnGitHub(
 	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
 	:param debug:                         Enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
-	:raises ToolingException:             If package 'setuptools' is not available.
+	:raises MissingDependencyError:       If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError:            If README file doesn't exist.
 	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.

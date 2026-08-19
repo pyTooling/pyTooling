@@ -36,7 +36,7 @@ A common set of missing exceptions in Python.
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
 """
-from typing               import Tuple, Iterable, Any
+from typing               import Tuple, Iterable, Any, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 
@@ -168,6 +168,71 @@ class PlatformNotSupportedException(ExceptionBase):
 @export
 class NotConfiguredException(ExceptionBase):
 	"""The exception is raise if the requested setting is not configured."""
+
+
+@export
+class MissingDependencyError(ImportError):
+	"""
+	The exception is raised when an optional dependency of pyTooling is not installed.
+
+	Some modules need a package pyTooling doesn't install by default - :mod:`pyTooling.Configuration.YAML` needs
+	*ruamel.yaml*, :mod:`pyTooling.TerminalUI` needs *colorama*. Importing such a module without its dependency raises
+	this exception instead of the bare :exc:`ImportError`, so the message names the extra that installs it.
+
+	The exception derives from :exc:`ImportError`, because that is what a caller guarding an optional import expects to
+	catch, and it carries the missing package and the extra as :attr:`Dependency` and :attr:`Extra`.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      try:
+	        from ruamel.yaml import YAML
+	      except ImportError as ex:
+	        raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+	"""
+
+	_dependency: str            #: Field storing the name of the package that is not installed.
+	_extra:      Nullable[str]  #: Field storing the name of the pyTooling extra installing that package.
+
+	def __init__(self, message: Nullable[str] = None, /, *, dependency: str, extra: Nullable[str] = None) -> None:
+		"""
+		Initialize a new missing-dependency error and attach the installation hint as a note.
+
+		:param message:    Optional, the exception message. |br|
+		                   When omitted, it is derived from ``dependency`` - every raising site says the same thing, so
+		                   there is nothing for the caller to add.
+		:param dependency: Name of the package that is not installed.
+		:param extra:      Optional, name of the pyTooling extra installing that package. |br|
+		                   When given, the note offers ``pyTooling[<extra>]`` next to the package itself.
+		"""
+		super().__init__(message if message is not None else f"Optional dependency '{dependency}' not installed.")
+
+		self._dependency = dependency
+		self._extra = extra
+
+		if extra is None:
+			self.add_note(f"Install '{dependency}'.")
+		else:
+			self.add_note(f"Either install pyTooling with extra 'pyTooling[{extra}]' or install '{dependency}' directly.")
+
+	@readonly
+	def Dependency(self) -> str:
+		"""
+		Read-only property to access the name of the package that is not installed (:attr:`_dependency`).
+
+		:returns: Name of the missing package.
+		"""
+		return self._dependency
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the pyTooling extra installing the package (:attr:`_extra`).
+
+		:returns: Name of the extra, or ``None`` if the package has no extra of its own.
+		"""
+		return self._extra
 
 
 # FIXME: Why not derived from ExceptionBase?

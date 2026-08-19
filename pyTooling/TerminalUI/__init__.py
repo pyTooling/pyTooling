@@ -38,12 +38,13 @@ from textwrap                import dedent
 from types                   import ModuleType
 from typing                  import NoReturn, Tuple, Any, List, Optional as Nullable, Dict, Callable, ClassVar
 
+from pyTooling.Exceptions    import MissingDependencyError
 from pyTooling.Versioning    import PythonVersion
 
 try:
 	from colorama import Fore as Foreground
 except ImportError as ex:  # pragma: no cover
-	raise Exception(f"Optional dependency 'colorama' not installed. Either install pyTooling with extra dependencies 'pyTooling[terminal]' or install 'colorama' directly.") from ex
+	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, mixin
