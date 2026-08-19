@@ -469,6 +469,11 @@ class Package(metaclass=ExtendedType, slots=True):
 		return len(self._versions)
 
 	def __iter__(self) -> Iterator[PackageVersion]:
+		"""
+		Iterate the versions of this package.
+
+		:returns: An iterator over all versions of this package.
+		"""
 		return iter(self._versions.values())
 
 	def __getitem__(self, version: str | SemanticVersion) -> PackageVersion:
@@ -627,6 +632,11 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		return len(self._packages)
 
 	def __iter__(self) -> Iterator[Package]:
+		"""
+		Iterate the packages in this storage.
+
+		:returns: An iterator over all packages in this storage.
+		"""
 		return iter(self._packages.values())
 
 	def __getitem__(self, name: str) -> Package:
@@ -749,6 +759,11 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		return len(self._storages)
 
 	def __iter__(self) -> Iterator[PackageStorage]:
+		"""
+		Iterate the storages in this dependency graph.
+
+		:returns: An iterator over all storages in this dependency graph.
+		"""
 		return iter(self._storages.values())
 
 	def __getitem__(self, name: str) -> PackageStorage:

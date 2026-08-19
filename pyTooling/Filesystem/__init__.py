@@ -82,6 +82,12 @@ class PermissionWarning(Warning):
 	_path: Path  #: Path that couldn't be read.
 
 	def __init__(self, path: Path, *args) -> None:
+		"""
+		Initialize a permission warning for the path that couldn't be read.
+
+		:param path: The path that raised a :exc:`PermissionError`.
+		:param args: Positional parameters forwarded to the base-class.
+		"""
 		super().__init__(*args)
 		self._path = path
 
@@ -693,6 +699,14 @@ class Directory(Element["Directory"]):
 		return self._aggregateDuration
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this filesystem element based on its identity.
+
+		Two elements with the same name in different directories are different elements, so the hash is derived from the
+		object's identity and not from its name.
+
+		:returns: Hash of this filesystem element.
+		"""
 		return hash(id(self))
 
 	def IterateDirectories(self) -> Generator["Directory", None, None]:
@@ -863,9 +877,19 @@ class Directory(Element["Directory"]):
 		return not self.__eq__(other)
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this directory.
+
+		:returns: The directory's full path, prefixed by its kind.
+		"""
 		return f"Directory: {self.Path}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
@@ -968,6 +992,14 @@ class Filename(Element[Directory]):
 		return self._parent.Path / self._name
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this filesystem element based on its identity.
+
+		Two elements with the same name in different directories are different elements, so the hash is derived from the
+		object's identity and not from its name.
+
+		:returns: Hash of this filesystem element.
+		"""
 		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "Filename":
@@ -1049,9 +1081,19 @@ class Filename(Element[Directory]):
 		return self._name != other._name or self.Size != other.Size
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this filename.
+
+		:returns: The file's full path, prefixed by its kind.
+		"""
 		return f"File: {self.Path}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
@@ -1074,6 +1116,18 @@ class SymbolicLink(Element[Directory]):
 		target: Path,
 		parent: Nullable[Directory]
 	) -> None:
+		"""
+		Initialize a symbolic link, which is registered at its parent directory.
+
+		The link is unresolved at first: :meth:`Root.ResolveSymbolicLinks` decides afterwards whether it is connected,
+		broken or out of range.
+
+		:param name:        Name of the symbolic link.
+		:param target:      Path the symbolic link points to.
+		:param parent:      Optional parent directory of the symbolic link.
+		:raises ValueError: If parameter 'target' is None.
+		:raises TypeError:  If parameter 'target' is not of type :class:`~pathlib.Path`.
+		"""
 		super().__init__(name, None, parent)
 
 		if target is None:
@@ -1142,6 +1196,14 @@ class SymbolicLink(Element[Directory]):
 		return self._isOutOfRange
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this filesystem element based on its identity.
+
+		Two elements with the same name in different directories are different elements, so the hash is derived from the
+		object's identity and not from its name.
+
+		:returns: Hash of this filesystem element.
+		"""
 		return hash(id(self))
 
 	def Copy(self, parent: Directory) -> "SymbolicLink":
@@ -1210,9 +1272,19 @@ class SymbolicLink(Element[Directory]):
 		return self._name != other._name or self._target != other._target
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this symbolic link.
+
+		:returns: The link's full path and the path it points to.
+		"""
 		return f"SymLink: {self.Path} -> {self._target}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
@@ -1230,6 +1302,18 @@ class Root(Directory):
 		rootDirectory:         Path,
 		collectSubdirectories: bool = True
 	) -> None:
+		"""
+		Initialize a filesystem statistics scope for the given directory.
+
+		Unless ``collectSubdirectories`` is disabled, the whole tree is scanned and its symbolic links are resolved right
+		away, so the root is usable as soon as it exists.
+
+		:param rootDirectory:         Directory to collect the statistics for.
+		:param collectSubdirectories: If ``True``, scan the tree and resolve its symbolic links immediately.
+		:raises ValueError:           If parameter 'rootDirectory' is None.
+		:raises TypeError:            If parameter 'rootDirectory' is not of type :class:`~pathlib.Path`.
+		:raises ToolingException:     If the given path doesn't exist.
+		"""
 		if rootDirectory is None:
 			raise ValueError(f"Parameter 'rootDirectory' is None.")
 		elif not isinstance(rootDirectory, Path):
@@ -1393,9 +1477,19 @@ class Root(Directory):
 		return root
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this filesystem root.
+
+		:returns: The root's path and the number of directories, regular files and symbolic links below it.
+		"""
 		return f"Root: {self.Path} (dirs: {self.TotalSubdirectoryCount}, files: {self.TotalRegularFileCount}, symlinks: {self.TotalSymbolicLinkCount})"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 

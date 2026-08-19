@@ -216,10 +216,20 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 	"""
 	Marks a handler method as *default* handler. This method is called if no sub-command is given.
 
-	It's an error, if more	than one method is annotated with this attribute.
+	.. attention::
+
+	   It's an error, if more than one method is annotated with this attribute.
 	"""
 
 	def __call__(self, func: Callable) -> Callable:
+		"""
+		Apply this attribute to the handler method.
+
+		The handler method is stored in :attr:`_handler`.
+
+		:param func: The method handling the case that no sub-command was given.
+		:returns:    The same method, now carrying this attribute.
+		"""
 		self._handler = func
 		return super().__call__(func)
 
@@ -249,6 +259,14 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		self._kwargs["help"] = help
 
 	def __call__(self, func: M) -> M:
+		"""
+		Apply this attribute to the handler method.
+
+		The handler method is stored in :attr:`_handler`.
+
+		:param func: The method handling the sub-command.
+		:returns:    The same method, now carrying this attribute.
+		"""
 		self._handler = func
 		return super().__call__(func)
 

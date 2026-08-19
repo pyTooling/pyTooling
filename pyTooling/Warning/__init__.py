@@ -542,6 +542,9 @@ class ThreadSupervisor:
 	__slots__ = ("_lock", "_exceptions", "_warnings")
 
 	def __init__(self) -> None:
+		"""
+		Initialize a thread supervisor with empty lists of exceptions and warnings.
+		"""
 		self._lock =       Lock()
 		self._exceptions = []
 		self._warnings =   []

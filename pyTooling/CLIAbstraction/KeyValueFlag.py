@@ -93,6 +93,12 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		return super().__new__(cls, *args, **kwargs)
 
 	def __init__(self, keyValuePairs: Dict[str, str]) -> None:
+		"""
+		Initialize the argument with a mapping of key-value-pairs, each rendered as its own command line element.
+
+		:param keyValuePairs: Key-value-pairs of the argument.
+		:raises TypeError:    If a key or a value is not a string.
+		"""
 		super().__init__({})
 
 		for key, value in keyValuePairs.items():

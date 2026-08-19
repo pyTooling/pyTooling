@@ -317,6 +317,11 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return self._version
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this version information.
+
+		:returns: The version number.
+		"""
 		return f"{self._version}"
 
 

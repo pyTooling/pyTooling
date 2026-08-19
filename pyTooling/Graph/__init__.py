@@ -1720,10 +1720,21 @@ class Vertex(
 			ref:    Vertex  #: The vertex this node represents.
 
 			def __init__(self, parent: 'Node', ref: Vertex) -> None:
+				"""
+				Initialize a search tree node.
+
+				:param parent: Predecessor on the path back to the starting point.
+				:param ref:    The vertex this node represents.
+				"""
 				self.parent = parent
 				self.ref = ref
 
 			def __str__(self):
+				"""
+				Return a string representation of this search tree node.
+
+				:returns: The ID of the vertex this node represents.
+				"""
 				return f"Vertex: {self.ref.ID}"
 
 		# Initially add all reachable vertices to a queue if vertices to be processed.
@@ -1816,14 +1827,32 @@ class Vertex(
 			ref:      Vertex          #: The vertex this node represents.
 
 			def __init__(self, parent: 'Node', distance: EdgeWeightType, ref: Vertex) -> None:
+				"""
+				Initialize a search tree node.
+
+				:param parent:   Predecessor on the path back to the starting point.
+				:param distance: Accumulated edge weight from the starting point to this node.
+				:param ref:      The vertex this node represents.
+				"""
 				self.parent = parent
 				self.distance = distance
 				self.ref = ref
 
 			def __lt__(self, other):
+				"""
+				Compare two search tree nodes by their accumulated distance, so they can be kept in a priority queue.
+
+				:param other: Second operand.
+				:returns:     ``True``, if this node is closer to the starting point than the second operand.
+				"""
 				return self.distance < other.distance
 
 			def __str__(self):
+				"""
+				Return a string representation of this search tree node.
+
+				:returns: The ID of the vertex this node represents.
+				"""
 				return f"Vertex: {self.ref.ID}"
 
 		visited: Set['Vertex'] = set()

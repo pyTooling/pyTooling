@@ -92,6 +92,11 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		return super().__new__(cls, *args, **kwargs)
 
 	def __init__(self, value: List[ValueT]) -> None:
+		"""
+		Initialize the argument with a list of values, each of which is rendered as its own command line element.
+
+		:param value: Values of the argument.
+		"""
 		super().__init__(list(value))
 
 	@property

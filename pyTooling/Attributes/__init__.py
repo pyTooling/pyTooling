@@ -285,6 +285,12 @@ class SimpleAttribute(Attribute):
 	_kwargs: Dict[str, Any]   #: Named parameters the attribute was applied with.
 
 	def __init__(self, *args, **kwargs) -> None:
+		"""
+		Initialize the attribute, preserving whatever parameters it was applied with.
+
+		:param args:   Positional parameters, readable from :attr:`Args`.
+		:param kwargs: Named parameters, readable from :attr:`KwArgs`.
+		"""
 		self._args = args
 		self._kwargs = kwargs
 
