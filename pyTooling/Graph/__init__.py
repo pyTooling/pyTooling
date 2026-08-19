@@ -293,13 +293,11 @@ class Base(
 		"""
 		Delete this element's attached attributes.
 
-		.. attention::
-
-		   The dictionary is dropped, not cleared, so every further access to the element's attributes raises a
-		   :exc:`TypeError` - including :meth:`__len__` and ``in``. Anything still holding a reference to the element
-		   sees that, and a reference to the dictionary itself keeps the old content alive.
+		The dictionary is emptied, not dropped, so the element stays usable: :meth:`__len__` returns ``0`` and ``in``
+		answers :data:`False`, where dropping the dictionary made both raise a :exc:`TypeError`. A caller still holding
+		the dictionary itself sees it empty too.
 		"""
-		self._dict = None
+		self._dict.clear()
 
 	def __getitem__(self, key: DictKeyType) -> DictValueType:
 		"""
@@ -667,40 +665,33 @@ class Vertex(
 		"""
 		Delete this vertex and every edge and link connected to it.
 
-		The vertex is removed from its graph or subgraph, and from its component and views; the connected edges and
-		links are deleted from both of their vertices.
+		The vertex is removed from its graph or subgraph, and from its views; the connected edges and links delete
+		themselves from both of their vertices and from the graph or subgraph they were registered on.
 		"""
-		for edge in self._outboundEdges:
-			edge._destination._inboundEdges.remove(edge)
-			edge._Delete()
-		for edge in self._inboundEdges:
-			edge._source._outboundEdges.remove(edge)
-			edge._Delete()
-		for link in self._outboundLinks:
-			link._destination._inboundLinks.remove(link)
-			link._Delete()
-		for link in self._inboundLinks:
-			link._source._outboundLinks.remove(link)
-			link._Delete()
+		# Each edge and link deletes itself from both of its vertices, so the lists are copied first. A self-loop is
+		# registered on this vertex as inbound *and* as outbound, hence the deduplication by identity.
+		for edge in tuple({id(e): e for e in (*self._outboundEdges, *self._inboundEdges)}.values()):
+			edge.Delete()
+		for link in tuple({id(l): l for l in (*self._outboundLinks, *self._inboundLinks)}.values()):
+			link.Delete()
 
+		# Remove from Graph or Subgraph - a vertex is registered on the subgraph it lives in, otherwise on the graph.
+		container = self._graph if self._subgraph is None else self._subgraph
 		if self._id is None:
-			self._graph._verticesWithoutID.remove(self)
+			container._verticesWithoutID.remove(self)
 		else:
-			del self._graph._verticesWithID[self._id]
-
-		# subgraph
+			del container._verticesWithID[self._id]
 
 		# component
 
 		# views
-		self._views =         None
-		self._inboundEdges =  None
-		self._outboundEdges = None
-		self._inboundLinks =  None
-		self._outboundLinks = None
+		self._views.clear()
+		self._inboundEdges.clear()
+		self._outboundEdges.clear()
+		self._inboundLinks.clear()
+		self._outboundLinks.clear()
 
 		super().Delete()
-		assert getrefcount(self) == 1
 
 	@readonly
 	def Graph(self) -> 'Graph':
@@ -2097,15 +2088,12 @@ class Edge(
 		self._source._outboundEdges.remove(self)
 		self._destination._inboundEdges.remove(self)
 
-		# Remove from Graph and Subgraph
+		# Remove from Graph or Subgraph - an edge is registered on the subgraph it lives in, otherwise on the graph.
+		container = self._source._graph if self._source._subgraph is None else self._source._subgraph
 		if self._id is None:
-			self._source._graph._edgesWithoutID.remove(self)
-			if self._source._subgraph is not None:
-				self._source._subgraph._edgesWithoutID.remove(self)
+			container._edgesWithoutID.remove(self)
 		else:
-			del self._source._graph._edgesWithID[self._id]
-			if self._source._subgraph is not None:
-				del self._source._subgraph._edgesWithID[self]
+			del container._edgesWithID[self._id]
 
 		self._Delete()
 
@@ -2181,18 +2169,25 @@ class Link(
 
 	def Delete(self) -> None:
 		"""
-		Delete this link from both of its vertices and from the graph it belongs to.
+		Delete this link from both of its vertices and from the graph and subgraphs it belongs to.
 		"""
-		self._source._outboundEdges.remove(self)
-		self._destination._inboundEdges.remove(self)
+		self._source._outboundLinks.remove(self)
+		self._destination._inboundLinks.remove(self)
 
-		if self._id is None:
-			self._source._graph._linksWithoutID.remove(self)
+		# Remove from Graph or Subgraphs - a link crossing a subgraph boundary is registered on both subgraphs,
+		# a link between two top-level vertices on the graph.
+		if self._source._subgraph is None:
+			containers = (self._source._graph, )
 		else:
-			del self._source._graph._linksWithID[self._id]
+			containers = tuple(sg for sg in (self._source._subgraph, self._destination._subgraph) if sg is not None)
+
+		for container in containers:
+			if self._id is None:
+				container._linksWithoutID.remove(self)
+			else:
+				del container._linksWithID[self._id]
 
 		self._Delete()
-		assert getrefcount(self) == 1
 
 	def _Delete(self) -> None:
 		"""
