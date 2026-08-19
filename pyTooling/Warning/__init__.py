@@ -134,7 +134,7 @@ class EscalatedWarningException(ExceptionBase):
 	This exception is raised when a :class:`WarningCollector` decides a collected warning should not be collected but
 	raised.
 
-	A collector's handler returning :data:`True` asks for the warning to be escalated; the warning itself becomes the
+	A collector's handler returning ``True`` asks for the warning to be escalated; the warning itself becomes the
 	exception's cause.
 	"""
 

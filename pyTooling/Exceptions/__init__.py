@@ -175,9 +175,8 @@ class MissingDependencyError(ImportError):
 	"""
 	The exception is raised when an optional dependency of pyTooling is not installed.
 
-	Some modules need a package pyTooling doesn't install by default - :mod:`pyTooling.Configuration.YAML` needs
-	*ruamel.yaml*, :mod:`pyTooling.TerminalUI` needs *colorama*. Importing such a module without its dependency raises
-	this exception instead of the bare :exc:`ImportError`, so the message names the extra that installs it.
+	Some modules need a package pyTooling doesn't install by default. Importing such a module without its dependency
+	raises this exception instead of the bare :exc:`ImportError`, so the message names the extra that installs it.
 
 	The exception derives from :exc:`ImportError`, because that is what a caller guarding an optional import expects to
 	catch, and it carries the missing package and the extra as :attr:`Dependency` and :attr:`Extra`.
