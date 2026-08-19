@@ -92,6 +92,17 @@ class MissingDependency(Testcase):
 		self.assertIsNone(context.exception.Extra)
 		self.assertEqual("Install 'lxml'.", context.exception.__notes__[0])
 
+	def test_InstallCommands_WithExtra(self) -> None:
+		"""The extra comes first: it installs the package and records why it is needed."""
+		ex = MissingDependencyError(dependency="ruamel.yaml", extra="yaml")
+
+		self.assertEqual(("pip install pyTooling[yaml]", "pip install ruamel.yaml"), ex.InstallCommands)
+
+	def test_InstallCommands_WithoutExtra(self) -> None:
+		ex = MissingDependencyError(dependency="lxml")
+
+		self.assertEqual(("pip install lxml", ), ex.InstallCommands)
+
 	def test_WithAnExplicitMessage(self) -> None:
 		with self.assertRaises(MissingDependencyError) as context:
 			raise MissingDependencyError("The YAML reader needs 'ruamel.yaml'.", dependency="ruamel.yaml", extra="yaml")

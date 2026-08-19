@@ -72,6 +72,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	terminal's width.
 	"""
 
+	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          239   #: Return code, if an optional dependency is missing.
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
@@ -442,6 +443,54 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
+
+	def PrintMissingDependencyError(self, ex: MissingDependencyError) -> NoReturn:
+		"""
+		Print a missing optional dependency and the command lines installing it.
+
+		Unlike the other printers, this one does **not** report a bug: there is no traceback, and no invitation to
+		open an issue, because nothing is wrong with the program - a package it can use is not installed. The message
+		names the missing package and every installation option the exception carries
+		(:attr:`~pyTooling.Exceptions.MissingDependencyError.InstallCommands`).
+
+		.. attention::
+
+		   :mod:`pyTooling.TerminalUI` raises this exception **itself** when *colorama* is missing, and that happens
+		   while the module is imported - long before an application object exists, so this method cannot report that
+		   case. An application that wants to survive it catches the exception around its own imports and prints the
+		   commands directly:
+
+		   .. code-block:: python
+
+		      try:
+		        from pyTooling.TerminalUI import TerminalApplication
+		      except MissingDependencyError as ex:
+		        print(f"{ex}\n" + "\n".join(f"  {command}" for command in ex.InstallCommands))
+		        raise SystemExit(239) from ex
+
+		:param ex: The exception to print.
+		:returns:  Never - the method exits the application with :attr:`MISSING_DEPENDENCY_EXIT_CODE`.
+
+		.. seealso::
+
+		   :meth:`PrintException`
+		      |rarr| Print an unhandled exception and its traceback.
+		   :meth:`PrintNotImplementedError`
+		      |rarr| Print a call to an unimplemented function or abstract method.
+		"""
+		message  = f"{{RED}}[MISSING DEPENDENCY] An optional dependency is not installed!{{NOCOLOR}}\n"
+		message += f"{{indent}}{{YELLOW}}Missing package:{{NOCOLOR}}      {{DARK_RED}}{ex.Dependency}{{NOCOLOR}}\n"
+
+		commands = iter(ex.InstallCommands)
+		message += f"{{indent}}{{YELLOW}}Install it with:{{NOCOLOR}}      {{DARK_CYAN}}{next(commands)}{{NOCOLOR}}\n"
+		for command in commands:
+			message += f"{{indent}}                      {{DARK_CYAN}}{command}{{NOCOLOR}}\n"
+
+		if (cause := ex.__cause__) is not None:
+			message += f"{{indent}}{{YELLOW}}Caused by:{{NOCOLOR}}            {{RED}}{cause!s}{{NOCOLOR}}\n"
+
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
+		self.Exit(self.MISSING_DEPENDENCY_EXIT_CODE)
 
 	def PrintNotImplementedError(self, ex: NotImplementedError) -> NoReturn:
 		"""

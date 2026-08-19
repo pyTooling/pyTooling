@@ -240,6 +240,23 @@ class MissingDependencyError(ImportError):
 		"""
 		return self._extra
 
+	@readonly
+	def InstallCommands(self) -> Tuple[str, ...]:
+		"""
+		Read-only property to access the command lines installing the missing package.
+
+		The extra comes first, because it installs the package *and* records why it is needed. Both commands are
+		plain text and need no terminal support: an application that cannot even import :mod:`pyTooling.TerminalUI` -
+		because *colorama* is the missing package - can print them itself, and
+		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` formats them when it can.
+
+		:returns: One command line per installation option, most specific first.
+		"""
+		if self._extra is None:
+			return (f"pip install {self._dependency}", )
+
+		return (f"pip install pyTooling[{self._extra}]", f"pip install {self._dependency}")
+
 
 # FIXME: Why not derived from ExceptionBase?
 @export
