@@ -581,7 +581,8 @@ class ExtendedType(type):
 		members: Dict[str, Any],
 		slots: bool = False,
 		mixin: bool = False,
-		singleton: bool = False
+		singleton: bool = False,
+		**kwargs: Any
 	) -> Self:
 		"""
 		Construct a new class using this :term:`meta-class`.
@@ -594,6 +595,8 @@ class ExtendedType(type):
 		                        If false, create slots if ``slots`` is true.
 		                        If none, preserve behavior of primary base-class.
 		:param singleton:       If true, make the class a :term:`Singleton`.
+		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
+		                        :func:`type` does.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
@@ -612,8 +615,8 @@ class ExtendedType(type):
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
 
-		# Create a new class
-		newClass = type.__new__(self, className, baseClasses, members)
+		# Create a new class - the remaining keyword arguments belong to '__init_subclass__', which 'type' calls
+		newClass = type.__new__(self, className, baseClasses, members, **kwargs)
 
 		# Apply class fields
 		for fieldName, typeAnnotation in classFields.items():
