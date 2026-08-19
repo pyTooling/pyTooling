@@ -1188,6 +1188,11 @@ class ExtendedType(type):
 
 			for base in baseClasses:
 				for memberName, member in base.__dict__.items():
+					# A method the new class defines itself is the implementation; it must not be replaced by the one an
+					# inheritance branch happens to carry (pyTooling #297).
+					if memberName in members:
+						continue
+
 					if (memberName in abstractMethods and isinstance(member, FunctionType) and
 						not (hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"))):
 						def outer(method):
@@ -1208,6 +1213,11 @@ class ExtendedType(type):
 								:returns:      Whatever the wrapped method returns.
 								"""
 								return method(cls, *args, **kwargs)
+
+							# ':func:`~functools.wraps` copies the wrapped function's '__dict__', which carries the
+							# bookkeeping ExtendedType attached to it. The wrapper belongs to the class being
+							# constructed, so the owner is dropped and '_findMethods' assigns the new one.
+							inner.__dict__.pop("__classobj__", None)
 
 							return inner
 
