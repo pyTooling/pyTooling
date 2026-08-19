@@ -47,7 +47,8 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 """
 from functools  import wraps
 from itertools  import chain
-from sys        import version_info
+from re         import compile as re_compile
+from sys        import modules, version_info
 from threading  import Condition
 from types      import BuiltinFunctionType, FunctionType, MethodType
 from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
@@ -857,21 +858,69 @@ class ExtendedType(type):
 			# WORKAROUND: LEGACY SUPPORT Python <= 3.13
 			#   Accessing annotations was changed in Python 3.14.
 			#   The necessary 'annotationlib' is not available for older Python versions.
-			return members["__annotations__"]
+			annotations = members["__annotations__"]
 		elif version_info >= (3, 14) and (annotate := members.get("__annotate_func__", None)) is not None:
 			from annotationlib import Format
-			return annotate(Format.VALUE)
+			try:
+				annotations = annotate(Format.VALUE)
+			except NameError:
+				# A forward reference the class body cannot resolve yet - PEP 649 offers the source text instead.
+				annotations = annotate(Format.STRING)
 		else:
 			return {}
+
+		# 'from __future__ import annotations' (PEP 563) makes every annotation a string, and so does the fallback
+		# above. Resolve what can be resolved, so a 'ClassVar' is still recognized as one.
+		return {
+			name: metacls._resolveAnnotation(typeAnnotation, members)
+			for name, typeAnnotation in annotations.items()
+		}
+
+	#: Matches a textual annotation denoting a :class:`~typing.ClassVar`, with or without a module qualifier.
+	_CLASS_VARIABLE_PATTERN = re_compile(r"^\s*(?:\w+\.)*ClassVar\s*(?:\[|$)")
+
+	@classmethod
+	def _resolveAnnotation(metacls, typeAnnotation: Any, members: Dict[str, Any]) -> Any:
+		"""
+		Evaluate a postponed (string) annotation, so it can be inspected like an ordinary one.
+
+		:pep:`563` - ``from __future__ import annotations`` - turns **every** annotation in a module into a string, and
+		:pep:`649` does the same for an annotation :mod:`annotationlib` cannot evaluate yet. A string tells this
+		meta-class nothing: a ``ClassVar`` reads as ``"ClassVar[int]"`` and would silently become a slot.
+
+		The annotation is evaluated in the defining module's namespace plus the class body itself. A name that cannot be
+		resolved - typically a forward reference to the class being created right now - is **returned unchanged**, which
+		is harmless: the textual fallback in :meth:`_isClassVariable` still classifies it, and nothing else needs the
+		type object.
+
+		:param typeAnnotation: The annotation to resolve; returned unchanged when it is not a string.
+		:param members:        Dictionary of class members, used as the local namespace.
+		:returns:              The evaluated annotation, or the original string when it cannot be evaluated.
+		"""
+		if not isinstance(typeAnnotation, str):
+			return typeAnnotation
+
+		module = modules.get(members.get("__module__", ""), None)
+		try:
+			# The annotation is source code written in the class being created - the same trust level as importing it.
+			return eval(typeAnnotation, getattr(module, "__dict__", {}), members)
+		except Exception:      # noqa: BLE001 - any failure means "keep the string", see above
+			return typeAnnotation
 
 	@classmethod
 	def _isClassVariable(metacls, typeAnnotation: Any) -> bool:
 		"""
 		Check if a type annotation declares a class variable.
 
+		Both forms are recognized: the evaluated :class:`~typing.ClassVar` and its textual form, which is what
+		``from __future__ import annotations`` leaves behind when the annotation cannot be evaluated.
+
 		:param typeAnnotation: The type annotation to check.
 		:returns:              ``True``, if the annotation is a :class:`~typing.ClassVar`.
 		"""
+		if isinstance(typeAnnotation, str):
+			return metacls._CLASS_VARIABLE_PATTERN.match(typeAnnotation) is not None
+
 		return isinstance(typeAnnotation, _GenericAlias) and typeAnnotation.__origin__ is ClassVar
 
 	@classmethod
