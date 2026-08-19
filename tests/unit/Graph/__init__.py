@@ -1676,3 +1676,40 @@ class Deletion(Testcase):
 
 		self.assertEqual(0, len(vertex))
 		self.assertNotIn("key", vertex)
+
+
+class Reversing(Testcase):
+	"""Reversing a single edge or link moves it between the inbound and outbound lists of both vertices."""
+
+	def test_Edge(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		edge = first.EdgeToVertex(second, edgeID="e1")
+
+		edge.Reverse()
+
+		self.assertIs(second, edge.Source)
+		self.assertIs(first, edge.Destination)
+		self.assertEqual(0, len(first.OutboundEdges))
+		self.assertEqual(1, len(first.InboundEdges))
+		self.assertEqual(1, len(second.OutboundEdges))
+		self.assertEqual(0, len(second.InboundEdges))
+
+	def test_Link(self) -> None:
+		graph = Graph()
+		outer = Subgraph(graph=graph, name="outer")
+		inner = Subgraph(graph=graph, name="inner")
+		first = Vertex(vertexID="v1", subgraph=outer)
+		second = Vertex(vertexID="v2", subgraph=inner)
+		link = first.LinkToVertex(second, linkID="l1")
+
+		link.Reverse()
+
+		self.assertIs(second, link.Source)
+		self.assertIs(first, link.Destination)
+		self.assertEqual(0, len(first.OutboundLinks))
+		self.assertEqual(1, len(first.InboundLinks))
+		self.assertEqual(1, len(second.OutboundLinks))
+		self.assertEqual(0, len(second.InboundLinks))
+

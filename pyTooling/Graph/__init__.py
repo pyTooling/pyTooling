@@ -2257,10 +2257,10 @@ class Link(
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this link."""
-		self._source._outboundEdges.remove(self)
-		self._source._inboundEdges.append(self)
-		self._destination._inboundEdges.remove(self)
-		self._destination._outboundEdges.append(self)
+		self._source._outboundLinks.remove(self)
+		self._source._inboundLinks.append(self)
+		self._destination._inboundLinks.remove(self)
+		self._destination._outboundLinks.append(self)
 
 		super().Reverse()
 
