@@ -275,3 +275,26 @@ class Intersection(Testcase):
 
 		self.assertEqual(vA1, intersection.LowerBound)
 		self.assertEqual(vB2, intersection.UpperBound)
+
+	def test_Disjoint(self) -> None:
+		"""Two ranges that don't overlap have an empty intersection, and the exception says which bound is where."""
+		vrA = VersionRange(SemanticVersion(1, 0, 0), SemanticVersion(2, 0, 0))
+		vrB = VersionRange(SemanticVersion(3, 0, 0), SemanticVersion(4, 0, 0))
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			vrA & vrB
+
+		self.assertEqual("The intersection of both version ranges is empty.", str(exceptionCapture.exception))
+		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[0])
+		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[1])
+
+	def test_Disjoint_Reversed(self) -> None:
+		vrA = VersionRange(SemanticVersion(3, 0, 0), SemanticVersion(4, 0, 0))
+		vrB = VersionRange(SemanticVersion(1, 0, 0), SemanticVersion(2, 0, 0))
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			vrA & vrB
+
+		self.assertEqual("The intersection of both version ranges is empty.", str(exceptionCapture.exception))
+		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[0])
+		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[1])

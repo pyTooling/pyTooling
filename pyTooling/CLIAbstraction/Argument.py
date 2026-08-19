@@ -479,7 +479,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 	# @property
 	# def ValuePattern(self) -> str:
 	# 	if self._valuePattern is None:
-	# 		raise ValueError(f"")  # XXX: add message
+	# 		raise ValueError("Internal value '_valuePattern' is None.")
 	#
 	# 	return self._valuePattern
 
