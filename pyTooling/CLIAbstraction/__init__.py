@@ -361,7 +361,7 @@ class Program(metaclass=ExtendedType, slots=True):
 			else:
 				ex = TypeError(f"Argument '{key.__name__}' was rendered to neither a string nor a sequence of strings.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(param)}'.")
-				ex.add_note(f"'AsArgument()' has to return a 'str', a 'tuple' or a 'list'.")
+				ex.add_note("'AsArgument()' has to return a 'str', a 'tuple' or a 'list'.")
 				raise ex
 
 		return result

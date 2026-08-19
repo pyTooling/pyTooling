@@ -126,7 +126,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 				# could never differ - the two neighbours are what has to agree.
 				if nextNode._linkedList is not previousNode._linkedList:
 					ex = ValueError("Parameters 'previous' and 'next' belong to different linked lists.")
-					ex.add_note(f"A node can only be inserted between two neighbours of the same linked list.")
+					ex.add_note("A node can only be inserted between two neighbours of the same linked list.")
 					raise ex
 
 				previousNode._nextNode = self
