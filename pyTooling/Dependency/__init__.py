@@ -474,8 +474,9 @@ class Package(metaclass=ExtendedType, slots=True):
 		if isinstance(version, str):
 			version = SemanticVersion.Parse(version)
 		elif not isinstance(version, SemanticVersion):
-			# TODO: raise proper type error
-			raise TypeError()
+			ex = TypeError("Parameter 'version' is neither a 'str' nor of type 'SemanticVersion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
 
 		return self._versions[version]
 

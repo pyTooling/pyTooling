@@ -2178,14 +2178,20 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		elif other._lowerBound in self:
 			lBound = other._lowerBound
 		else:
-			raise ValueError()
+			ex = ValueError("The intersection of both version ranges is empty.")
+			ex.add_note(f"Got value '{other._lowerBound}' for other's lower bound.")
+			ex.add_note(f"This range's upper bound is '{self._upperBound}'.")
+			raise ex
 
 		if other._upperBound > self._upperBound:
 			uBound = self._upperBound
 		elif other._upperBound in self:
 			uBound = other._upperBound
 		else:
-			raise ValueError()
+			ex = ValueError("The intersection of both version ranges is empty.")
+			ex.add_note(f"Got value '{other._upperBound}' for other's upper bound.")
+			ex.add_note(f"This range's lower bound is '{self._lowerBound}'.")
+			raise ex
 
 		return self.__class__(lBound, uBound)
 

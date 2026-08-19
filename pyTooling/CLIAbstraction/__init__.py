@@ -335,7 +335,9 @@ class Program(metaclass=ExtendedType, slots=True):
 		Convert a program and used CLI options to a list of CLI argument strings in correct order and with escaping.
 
 		:returns:          List of CLI arguments
-		:raises TypeError: If an argument is neither a string nor a sequence of strings.
+		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
+		                   An argument's :meth:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument` has to
+		                   return a :class:`str`, a :class:`tuple` or a :class:`list`.
 		"""
 		result: List[str] = []
 
@@ -357,7 +359,10 @@ class Program(metaclass=ExtendedType, slots=True):
 			elif isinstance(param, (Tuple, List)):
 				result += param
 			else:
-				raise TypeError(f"")  # XXX: needs error message
+				ex = TypeError(f"Argument '{key.__name__}' was rendered to neither a string nor a sequence of strings.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(param)}'.")
+				ex.add_note(f"'AsArgument()' has to return a 'str', a 'tuple' or a 'list'.")
+				raise ex
 
 		return result
 
@@ -470,7 +475,7 @@ class Executable(Program):  # (ILogable):
 			self._process.stdin.write(line + end)
 			self._process.stdin.flush()
 		except Exception as ex:
-			raise CLIAbstractionException(f"") from ex     # XXX: need error message
+			raise CLIAbstractionException(f"Error while sending data to the child-process '{self._executablePath}'.") from ex
 
 	# This is TCL specific ...
 	# def SendBoundary(self):
@@ -485,13 +490,13 @@ class Executable(Program):  # (ILogable):
 		:raises CLIAbstractionException: When any error occurs while reading outputs from the child-process.
 		"""
 		if self._dryRun:
-			raise DryRunException()  # XXX: needs a message
+			raise DryRunException(f"Can't read from the child-process '{self._executablePath}' in dry-run mode.")
 
 		try:
 			for line in iter(self._process.stdout.readline, ""):     # FIXME: can it be improved?
 				yield line[:-1]
 		except Exception as ex:
-			raise CLIAbstractionException() from ex     # XXX: need error message
+			raise CLIAbstractionException(f"Error while reading from the child-process '{self._executablePath}'.") from ex
 		# finally:
 			# self._process.terminate()
 
