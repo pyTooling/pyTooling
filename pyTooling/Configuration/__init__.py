@@ -48,7 +48,7 @@ from pathlib       import Path
 from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, mixin
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
 from pyTooling.Exceptions  import ToolingException
 
 
@@ -113,6 +113,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		self._root = root
 		self._parent = parent
 
+	@abstractmethod
 	def __len__(self) -> int:  # type: ignore[empty-body]
 		"""
 		Returns the number of sub-elements.
@@ -120,6 +121,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		:returns: Number of sub-elements.
 		"""
 
+	@abstractmethod
 	def __getitem__(self, key: KeyT) -> ValueT:  # type: ignore[empty-body]
 		"""
 		Access an element in the node by index or key.
@@ -127,9 +129,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		:param key:                  Index or key of the element.
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
-	def __setitem__(self, key: KeyT, value: ValueT) -> None:  # type: ignore[empty-body]
+	def __setitem__(self, key: KeyT, value: ValueT) -> None:
 		"""
 		Set an element in the node by index or key.
 
@@ -138,13 +139,13 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		raise NotImplementedError()
 
+	@abstractmethod
 	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
 		"""
 		Returns an iterator to iterate a node.
 
 		:returns:                    Node iterator.
 		"""
-		raise NotImplementedError()
 
 	@property
 	def Key(self) -> KeyT:
@@ -159,6 +160,7 @@ class Node(metaclass=ExtendedType, slots=True):
 	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError()
 
+	@abstractmethod
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
 		"""
 		Return a node or value based on a path description to that node or value.
@@ -166,7 +168,6 @@ class Node(metaclass=ExtendedType, slots=True):
 		:param query:                String describing the path to the node or value.
 		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
 
 @export
