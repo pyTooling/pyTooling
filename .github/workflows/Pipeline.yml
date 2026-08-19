@@ -204,6 +204,10 @@ jobs:
 
   PublishToGitHubPages:
     uses: pyTooling/Actions/.github/workflows/PublishToGitHubPages.yml@r7
+    # GitHub Pages shows one preview at a time - the last build wins - so a development branch has nothing to publish.
+    # Its deployment environment admits 'dev', 'main' and tags only, and rejects every other branch before a runner is
+    # assigned: no steps, no log, just a failed job.
+    if: ${{ !startsWith(github.ref_name, 'claude/') }}
     needs:
       - UnitTestingParams
       - Documentation
