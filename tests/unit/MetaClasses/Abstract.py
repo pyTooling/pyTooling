@@ -36,9 +36,11 @@ This test suite tests decorators:
 * :deco:`~pyTooling.MetaClasses.abstractmethod`
 * :deco:`~pyTooling.MetaClasses.mustoverride`
 """
+from typing import Tuple
 
 from pyTooling.Decorators  import notimplemented
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod, mustoverride, AbstractClassError
+from pyTooling.MetaClasses import mixin
 from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -288,3 +290,77 @@ class NotImplemented(Testcase):
 			c.NotYetFinished(4)
 
 		self.assertEqual("It's not working.", str(exceptionCapture.exception))
+
+
+class AbstractMethodInADiamond(Testcase):
+	"""An abstract method reached through a normal base-class *and* through a mixin-class."""
+
+	@staticmethod
+	def _Hierarchy() -> Tuple[type, type, type]:
+		"""
+		Build the inheritance diamond both testcases share.
+
+		:returns: A 3-tuple of the abstract base-class, the implementing class and the mixin-class.
+		"""
+		class Base(metaclass=ExtendedType, slots=True):
+			@abstractmethod
+			def Render(self) -> str:
+				"""Render this element."""
+
+		class Element(Base):
+			def Render(self) -> str:
+				return "element"
+
+		@mixin
+		class Container(Base):
+			pass
+
+		return Base, Element, Container
+
+	def test_ClassOverridesTheMethod(self) -> None:
+		_, Element, Container = self._Hierarchy()
+
+		class Both(Element, Container):
+			def Render(self) -> str:
+				return "both"
+
+		self.assertEqual("both", Both().Render())
+
+	def test_ClassInheritsTheImplementation(self) -> None:
+		_, Element, Container = self._Hierarchy()
+
+		class Both(Element, Container):
+			pass
+
+		self.assertEqual("element", Both().Render())
+
+	def test_TheMixinCarriesTheImplementation(self) -> None:
+		Base, _, _ = self._Hierarchy()
+
+		@mixin
+		class Implementing(Base):
+			def Render(self) -> str:
+				return "mixin"
+
+		class Primary(Base):
+			pass
+
+		class Derived(Primary, Implementing):
+			pass
+
+		self.assertEqual("mixin", Derived().Render())
+
+	def test_NobodyImplementsIt(self) -> None:
+		Base, _, Container = self._Hierarchy()
+
+		class Primary(Base):
+			pass
+
+		class Derived(Primary, Container):
+			pass
+
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
+			Derived()
+
+		self.assertIn("Derived", str(exceptionCapture.exception))
+		self.assertIn("Render", str(exceptionCapture.exception))
