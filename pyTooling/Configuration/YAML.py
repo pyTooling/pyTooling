@@ -38,10 +38,12 @@ Configuration reader for YAML files.
 from pathlib       import Path
 from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
 
+from pyTooling.Exceptions import MissingDependencyError
+
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
-	raise Exception("Optional dependency 'ruamel.yaml' not installed. Either install pyTooling with extra dependencies 'pyTooling[yaml]' or install 'ruamel.yaml' directly.") from ex
+	raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, InheritDocString

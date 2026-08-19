@@ -1352,7 +1352,7 @@ class ExtendedType(type):
 		:param newClass:            The newly constructed class for further modifications.
 		:returns:                   ``True``, if the class is abstract.
 		:raises AbstractClassError: If the class is abstract and can't be instantiated.
-		:raises Exception:          If a singleton wrapper was found around a method raising
+		:raises ExtendedTypeError:  If a singleton wrapper was found around a method raising
 		                            :exc:`AbstractClassError`, which is not handled yet.
 		"""
 		# Replace '__new__' by a variant to throw an error on not overridden methods
@@ -1408,7 +1408,9 @@ class ExtendedType(type):
 					else:
 						newClass.__new__ = origNew
 				elif newClass.__new__.__isSingleton__:
-					raise Exception(f"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet.")
+					raise ExtendedTypeError(
+						"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet."
+					)
 			except AttributeError as ex:
 				if ex.name != "__raises_abstract_class_error__":
 					raise ex

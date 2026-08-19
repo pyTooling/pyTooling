@@ -33,6 +33,7 @@
 Unit tests for :mod:`pyTooling.Exceptions`.
 """
 from pyTooling.Exceptions import EnvironmentException, PlatformNotSupportedException, NotConfiguredException
+from pyTooling.Exceptions import MissingDependencyError
 from pyTooling.Testing    import Testcase
 
 
@@ -69,3 +70,35 @@ class Exceptions(Testcase):
 		with self.assertRaises(NotConfiguredException):
 			raise_NotConfiguredException()
 		# self.assertEqual(context.exception.message, "Option 'WorkingDirectory' is not specified in the configuration file.")
+
+
+class MissingDependency(Testcase):
+	"""An optional dependency that is not installed names itself and the extra installing it."""
+
+	def test_WithExtra(self) -> None:
+		with self.assertRaises(MissingDependencyError) as context:
+			raise MissingDependencyError(dependency="colorama", extra="terminal")
+
+		self.assertEqual("colorama", context.exception.Dependency)
+		self.assertEqual("terminal", context.exception.Extra)
+		self.assertEqual("Optional dependency 'colorama' not installed.", str(context.exception))
+		self.assertIn("pyTooling[terminal]", context.exception.__notes__[0])
+
+	def test_WithoutExtra(self) -> None:
+		with self.assertRaises(MissingDependencyError) as context:
+			raise MissingDependencyError(dependency="lxml")
+
+		self.assertEqual("lxml", context.exception.Dependency)
+		self.assertIsNone(context.exception.Extra)
+		self.assertEqual("Install 'lxml'.", context.exception.__notes__[0])
+
+	def test_WithAnExplicitMessage(self) -> None:
+		with self.assertRaises(MissingDependencyError) as context:
+			raise MissingDependencyError("The YAML reader needs 'ruamel.yaml'.", dependency="ruamel.yaml", extra="yaml")
+
+		self.assertEqual("The YAML reader needs 'ruamel.yaml'.", str(context.exception))
+
+	def test_IsAnImportError(self) -> None:
+		"""A caller guarding an optional import catches :exc:`ImportError`, so the new exception has to be one."""
+		with self.assertRaises(ImportError):
+			raise MissingDependencyError(dependency="lxml")
