@@ -1660,9 +1660,13 @@ class CalendarVersion(Version):
 			ex.add_note(f"Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
 			raise ex
 
-		numbers = [int(match["major"]), 0 if minor is None else int(minor)]
-		if micro is not None:
-			numbers.append(int(micro))
+		# An absent part stays absent: materializing it as 0 would set its 'Parts' flag, and 'CalendarVersion.Parse("2024")'
+		# would render as '2024.0' where 'CalendarVersion(2024)' renders as '2024'.
+		numbers = [int(match["major"])]
+		if minor is not None:
+			numbers.append(int(minor))
+			if micro is not None:
+				numbers.append(int(micro))
 
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
@@ -1926,7 +1930,7 @@ class YearMonthVersion(CalendarVersion):
 		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
-		super().__init__(year, month, 0, build, flags, prefix, postfix)
+		super().__init__(year, month, None, build, flags, prefix, postfix)
 
 	@readonly
 	def Month(self) -> int:
@@ -1984,7 +1988,7 @@ class YearWeekVersion(CalendarVersion):
 		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
-		super().__init__(year, week, 0, build, flags, prefix, postfix)
+		super().__init__(year, week, None, build, flags, prefix, postfix)
 
 	@readonly
 	def Week(self) -> int:
@@ -2042,7 +2046,7 @@ class YearReleaseVersion(CalendarVersion):
 		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
 		"""
-		super().__init__(year, release, 0, build, flags, prefix, postfix)
+		super().__init__(year, release, None, build, flags, prefix, postfix)
 
 	@readonly
 	def Release(self) -> int:

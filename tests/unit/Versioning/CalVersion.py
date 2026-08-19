@@ -650,3 +650,31 @@ class InstantiationOfYearMonthDayVersion(Testcase):
 		self.assertEqual(3, version.Day)
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
+
+
+class RenderingIsConsistent(Testcase):
+	"""Parsing a version and constructing the same version must render the same string - finding T28."""
+
+	def test_ParsedAndConstructedAgree(self) -> None:
+		for text, numbers in (("2024", (2024, )), ("2024.10", (2024, 10)), ("2024.10.15", (2024, 10, 15))):
+			with self.subTest(version=text):
+				self.assertEqual(str(CalendarVersion(*numbers)), str(CalendarVersion.Parse(text)))
+				self.assertEqual(text, str(CalendarVersion.Parse(text)))
+
+	def test_AnAbsentPartIsNotInvented(self) -> None:
+		"""A missing part must not set its 'Parts' flag - that is what rendered '2024' as '2024.0'."""
+		version = CalendarVersion.Parse("2024")
+
+		self.assertEqual(Parts.Major | Parts.Level, version.Parts)
+		self.assertNotIn(Parts.Minor, version.Parts)
+
+	def test_ATwoPartVersionRendersTwoParts(self) -> None:
+		"""The year-month, year-week and year-release classes describe two parts, so a third must not appear."""
+		self.assertEqual("2024.10", str(YearMonthVersion(2024, 10)))
+		self.assertEqual("2024.42", str(YearWeekVersion(2024, 42)))
+		self.assertEqual("2024.3", str(YearReleaseVersion(2024, 3)))
+
+	def test_AThreePartVersionIsUnaffected(self) -> None:
+		self.assertEqual("2024.10.15", str(YearMonthDayVersion(2024, 10, 15)))
+		self.assertEqual("2024.10.15", str(YearMonthDayVersion.Parse("2024.10.15")))
+
