@@ -293,9 +293,6 @@ class Base(
 		"""
 		Delete this element's attached attributes.
 
-		The dictionary is emptied, not dropped, so the element stays usable: :meth:`__len__` returns ``0`` and ``in``
-		answers :data:`False`, where dropping the dictionary made both raise a :exc:`TypeError`. A caller still holding
-		the dictionary itself sees it empty too.
 		"""
 		self._dict.clear()
 
