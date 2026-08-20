@@ -824,7 +824,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return result
 
 	@mustoverride
-	def __eq__(self, other: Union["Version", str, int, None]) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for equality.
 
@@ -857,7 +857,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._equal(self, other)
 
 	@mustoverride
-	def __ne__(self, other: Union["Version", str, int, None]) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for inequality.
 
@@ -890,7 +890,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return not self._equal(self, other)
 
 	@mustoverride
-	def __lt__(self, other: Union["Version", str, int, None]) -> bool:
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
@@ -929,7 +929,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._compare(self, other) is True
 
 	@mustoverride
-	def __le__(self, other: Union["Version", str, int, None]) -> bool:
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
@@ -971,7 +971,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return result if result is not None else equalValue
 
 	@mustoverride
-	def __gt__(self, other: Union["Version", str, int, None]) -> bool:
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
@@ -1010,7 +1010,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._compare(self, other) is False
 
 	@mustoverride
-	def __ge__(self, other: Union["Version", str, int, None]) -> bool:
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 
@@ -1307,7 +1307,7 @@ class SemanticVersion(Version):
 		"""
 		return super()._compare(left, right)
 
-	def __eq__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for equality.
 
@@ -1325,7 +1325,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__eq__(other)
 
-	def __ne__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for inequality.
 
@@ -1343,7 +1343,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__ne__(other)
 
-	def __lt__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
@@ -1361,7 +1361,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__lt__(other)
 
-	def __le__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
@@ -1379,7 +1379,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__le__(other)
 
-	def __gt__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
@@ -1397,7 +1397,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__gt__(other)
 
-	def __ge__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 
@@ -1722,7 +1722,7 @@ class CalendarVersion(Version):
 
 		return None
 
-	def __eq__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for equality.
 
@@ -1740,7 +1740,7 @@ class CalendarVersion(Version):
 		"""
 		return super().__eq__(other)
 
-	def __ne__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for inequality.
 
@@ -1758,7 +1758,7 @@ class CalendarVersion(Version):
 		"""
 		return super().__ne__(other)
 
-	def __lt__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
@@ -1776,7 +1776,7 @@ class CalendarVersion(Version):
 		"""
 		return super().__lt__(other)
 
-	def __le__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
@@ -1794,7 +1794,7 @@ class CalendarVersion(Version):
 		"""
 		return super().__le__(other)
 
-	def __gt__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
@@ -1812,7 +1812,7 @@ class CalendarVersion(Version):
 		"""
 		return super().__gt__(other)
 
-	def __ge__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 

@@ -828,9 +828,9 @@ class Line(metaclass=ExtendedType, slots=True):
 class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
-	_terminal: TerminalBaseApplication  #: The terminal application the messages are written to.
+	_terminal: Nullable["TerminalApplication"]  #: The terminal application the messages are written to.
 
-	def __init__(self, terminal: Nullable[TerminalBaseApplication] = None) -> None:
+	def __init__(self, terminal: Nullable["TerminalApplication"] = None) -> None:
 		"""
 		MixIn initializer.
 
@@ -1210,8 +1210,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		)
 		try:
 			with urlopen(request, timeout=timeout) as response:
-				data = loads(response.read().decode())
-				return data["info"]["version"]
+				data: dict[str, Any] = loads(response.read().decode())
+				return str(data["info"]["version"])
 		except Exception:
 			return None
 
@@ -1433,7 +1433,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param line: Line object to check.
 		:returns:    True, if line would be written.
 		"""
-		return line.Severity >= self._writeLevel
+		return bool(line.Severity >= self._writeLevel)
 
 	def WriteFatal(
 		self,
