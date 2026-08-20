@@ -41,6 +41,7 @@ A generic path to derive domain specific path libraries.
 from __future__            import annotations
 
 from typing                import ClassVar, Optional as Nullable
+
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
 

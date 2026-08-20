@@ -68,6 +68,7 @@ from collections           import deque
 from itertools             import chain
 from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
 from typing                import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException

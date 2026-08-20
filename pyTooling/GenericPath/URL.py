@@ -40,6 +40,7 @@ from __future__            import annotations
 from enum                  import Flag
 from re                    import compile as re_compile
 from typing                import ClassVar, Optional as Nullable, Mapping
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName

@@ -39,6 +39,7 @@ from __future__            import annotations
 
 from pathlib               import Path
 from typing                import Optional as Nullable
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName

@@ -43,6 +43,7 @@ from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from threading            import RLock
 from typing               import Optional as Nullable, Union, Iterable, Mapping
+
 from pyTooling.Exceptions import MissingDependencyException
 
 try:

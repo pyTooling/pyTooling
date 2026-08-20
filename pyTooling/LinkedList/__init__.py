@@ -42,6 +42,7 @@ from __future__            import annotations
 
 from collections.abc       import Sized
 from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any
+
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType

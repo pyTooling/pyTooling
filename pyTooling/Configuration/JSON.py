@@ -40,6 +40,7 @@ from __future__              import annotations
 from json                    import load
 from pathlib                 import Path
 from typing                  import Any, Union, Iterator as typing_Iterator, Self
+
 from pyTooling.Common        import getFullyQualifiedName
 from pyTooling.Decorators    import export, InheritDocString
 from pyTooling.MetaClasses   import ExtendedType

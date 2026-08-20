@@ -38,13 +38,13 @@ Tools for software execution tracing.
    :mod:`pyTooling.Tree`
       |rarr| The tree data structure spans and their sub-spans form.
 """
-from __future__ import annotations
+from __future__            import annotations
 
-from datetime   import datetime
-from time       import perf_counter_ns
-from threading  import local
-from types      import TracebackType
-from typing     import Optional as Nullable, Iterator, Self, Iterable, Any
+from datetime              import datetime
+from time                  import perf_counter_ns
+from threading             import local
+from types                 import TracebackType
+from typing                import Optional as Nullable, Iterator, Self, Iterable, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType

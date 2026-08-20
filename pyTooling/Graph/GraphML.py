@@ -41,6 +41,7 @@ from __future__            import annotations
 from enum                  import Enum, auto
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
+
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph

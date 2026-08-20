@@ -39,6 +39,7 @@ from __future__           import annotations
 
 from pathlib              import Path
 from typing               import Any, Union, Iterator as typing_Iterator, Self
+
 from pyTooling.Exceptions import MissingDependencyException
 
 try:

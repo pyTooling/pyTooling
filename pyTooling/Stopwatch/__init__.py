@@ -48,6 +48,7 @@ from datetime              import datetime
 from time                  import perf_counter_ns
 from types                 import TracebackType
 from typing                import Optional as Nullable, Iterator, Self
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException

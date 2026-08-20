@@ -55,6 +55,7 @@ from threading            import Condition
 from types                import BuiltinFunctionType, FunctionType, MethodType
 from typing               import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
+
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector

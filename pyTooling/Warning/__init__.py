@@ -47,6 +47,7 @@ from __future__           import annotations
 from threading            import local, Lock
 from types                import TracebackType
 from typing               import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
+
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Exceptions import ExceptionBase

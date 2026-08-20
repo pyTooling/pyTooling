@@ -42,6 +42,7 @@ from __future__            import annotations
 
 from math                  import sqrt, acos
 from typing                import TypeVar, Union, Generic, Any, Self
+
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName

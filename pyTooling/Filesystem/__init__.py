@@ -52,6 +52,7 @@ from os                    import scandir, readlink
 from pathlib               import Path
 from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
 from typing                import Iterator, cast
+
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType

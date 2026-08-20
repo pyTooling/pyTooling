@@ -45,6 +45,7 @@ from __future__            import annotations
 from collections           import deque
 from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
 from typing                import Any, Callable, Iterator, Generator, Iterable, Mapping, Hashable
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
