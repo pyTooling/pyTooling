@@ -49,7 +49,8 @@ from os                    import scandir, readlink
 from enum                  import Enum
 from itertools             import chain
 from pathlib               import Path
-from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union, Iterator
+from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
+from typing                import Iterator, cast
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
@@ -395,9 +396,13 @@ class Directory(Element["Directory"]):
 		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
 		the collected statistics are incomplete by exactly that path.
 
+		:raises FilesystemException: If this directory isn't attached to a :class:`Root`, which owns the ID table.
 		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
 		                             symbolic link.
 		"""
+		if (root := self._root) is None:
+			raise FilesystemException(f"Directory '{self._name}' is not attached to a filesystem root.")
+
 		with Stopwatch() as sw1:
 			try:
 				items = scandir(directoryPath := self.Path)
@@ -409,8 +414,8 @@ class Directory(Element["Directory"]):
 					_ = Directory(dirEntry.name, collectSubdirectories=True, parent=self)
 				elif dirEntry.is_file(follow_symlinks=False):
 					id = dirEntry.inode()
-					if id in self._root._ids:
-						file = self._root._ids[id]
+					if id in root._ids:
+						file = root._ids[id]
 
 						_ = Filename(dirEntry.name, file=file, parent=self)
 					else:
@@ -418,7 +423,7 @@ class Directory(Element["Directory"]):
 						filename = Filename(dirEntry.name, parent=self)
 						file = File(id, s.st_size, parent=filename)
 
-						self._root._ids[id] = file
+						root._ids[id] = file
 				elif dirEntry.is_symlink():
 					target = Path(readlink(directoryPath / dirEntry.name))
 					_ = SymbolicLink(dirEntry.name, target, parent=self)
@@ -825,7 +830,8 @@ class Directory(Element["Directory"]):
 				:param node: The tree node to render.
 				:returns:    The node's size in MiB, followed by its name.
 				"""
-				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
+				element = cast(Element[Any], node._value)     # the node was created with this element as its value
+				return f"{node['size'] * 1e-6:7.1f} MiB {element.Name}"
 
 		directoryNode: Node[Any, Any, Any, Any] = Node(
 			value=self,

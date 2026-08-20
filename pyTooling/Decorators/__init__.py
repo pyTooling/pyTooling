@@ -187,6 +187,8 @@ class readonly(property):
 	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 
+	fget: Callable[[Any], Any]   #: The getter-method; a read-only property is always constructed from one.
+
 	def setter(self, fset: Callable[..., Any]) -> NoReturn:
 		"""
 		Reject attaching a setter to a read-only property.
