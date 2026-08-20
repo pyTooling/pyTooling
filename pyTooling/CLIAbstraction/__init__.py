@@ -189,7 +189,7 @@ class Program(metaclass=ExtendedType, slots=True):
 	_executablePath:   Path                                                           #: The path to the executable (binary, script, ...).
 	_dryRun:           bool                                                           #: True, if program shall run in *dry-run mode*.
 	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]                 #: List of all possible CLI options.
-	__cliParameters__: dict[type[CommandLineArgument], Nullable[CommandLineArgument]] #: List of all CLI parameters (used CLI options).
+	__cliParameters__: dict[type[CommandLineArgument], CommandLineArgument]           #: List of all CLI parameters.
 
 	def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
 		"""
@@ -491,8 +491,14 @@ class Executable(Program):  # (ILogable):
 
 		:param line:                     Line to send.
 		:param end:                      Optional, line end character.
+		:raises CLIAbstractionException: If the child-process was not started, or has no standard input.
 		:raises CLIAbstractionException: When any error occurs while sending data to the child-process.
 		"""
+		if self._process is None or self._process.stdin is None:
+			raise CLIAbstractionException(
+				f"The child-process '{self._executablePath}' was not started, or has no standard input."
+			)
+
 		try:
 			self._process.stdin.write(line + end)
 			self._process.stdin.flush()
@@ -513,6 +519,11 @@ class Executable(Program):  # (ILogable):
 		"""
 		if self._dryRun:
 			raise DryRunException(f"Can't read from the child-process '{self._executablePath}' in dry-run mode.")
+
+		if self._process is None or self._process.stdout is None:
+			raise CLIAbstractionException(
+				f"The child-process '{self._executablePath}' was not started, or has no standard output."
+			)
 
 		try:
 			for line in iter(self._process.stdout.readline, ""):     # FIXME: can it be improved?

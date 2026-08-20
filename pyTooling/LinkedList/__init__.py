@@ -232,6 +232,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises ValueError:          If parameter 'node' is ``None``.
 		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		:raises LinkedListException: If this node is not part of a linked list.
 		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
@@ -243,6 +244,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if node._linkedList is not None:
 			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
+
+		if self._linkedList is None:
+			raise LinkedListException(f"Node is not part of a linked list.")
 
 		node._linkedList = self._linkedList
 		node._nextNode = self
@@ -262,6 +266,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises ValueError:          If parameter 'node' is ``None``.
 		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		:raises LinkedListException: If this node is not part of a linked list.
 		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
@@ -273,6 +278,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if node._linkedList is not None:
 			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
+
+		if self._linkedList is None:
+			raise LinkedListException(f"Node is not part of a linked list.")
 
 		node._linkedList = self._linkedList
 		node._previousNode = self
@@ -571,7 +579,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		if self._lastNode is None:
 			self._firstNode = node
 		else:
-			node._previousNode._nextNode = node
+			self._lastNode._nextNode = node
 		self._lastNode = node
 		self._count += 1
 
@@ -635,12 +643,12 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		   The algorithm starts iterating nodes from the shorter end.
 		"""
-		if index == 0:
-			if self._firstNode is None:
-				ex = ValueError("Parameter 'position' is out of range.")
-				ex.add_note(f"Linked list is empty.")
-				raise ex
+		if self._firstNode is None or self._lastNode is None:
+			ex = ValueError("Parameter 'position' is out of range.")
+			ex.add_note(f"Linked list is empty.")
+			raise ex
 
+		if index == 0:
 			return self._firstNode
 		elif index == self._count - 1:
 			return self._lastNode

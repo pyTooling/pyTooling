@@ -394,8 +394,8 @@ class URL:
 			else:
 				result = f"{self._user}@{result}"
 
-		if self._scheme is not None:
-			result = self._scheme.name.lower() + "://" + result
+		if (scheme := self._scheme) is not None:
+			result = str(scheme.name).lower() + "://" + result
 
 		if self._query is not None and len(self._query) > 0:
 			result = result + "?" + "&".join([f"{key}={value}" for key, value in self._query.items()])
