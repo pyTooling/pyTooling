@@ -46,7 +46,7 @@ from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 @export
 @abstractclass
-class OptionalValuedFlag(NamedAndValuedArgument, pattern="{0"):
+class OptionalValuedFlag(NamedAndValuedArgument[str], pattern="{0"):
 	"""
 	Class and base-class for all OptionalValuedFlag classes, which represents a flag argument with data.
 

@@ -50,7 +50,7 @@ from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 @export
 @abstractclass
-class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
+class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2}"):
 	"""
 	Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value
 	(key-value-pairs).

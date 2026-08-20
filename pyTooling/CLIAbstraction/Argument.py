@@ -346,7 +346,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	__repr__ = __str__
 
 
-class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pattern="{0}={1}"):
+class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT], pattern="{0}={1}"):
 	"""
 	Base-class for all command line arguments with a name and a value.
 	"""
@@ -401,7 +401,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 
 
 @abstractclass
-class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], pattern="{0}"):
+class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT], pattern="{0}"):
 	"""
 	Class and base-class for all TupleFlag classes, which represents an argument with separate value.
 
@@ -483,7 +483,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 
 @export
-class StringArgument(ValuedArgument, pattern="{0}"):
+class StringArgument(ValuedArgument[str], pattern="{0}"):
 	"""
 	Represents a simple string argument.
 
@@ -504,7 +504,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 
 
 @export
-class StringListArgument(ValuedArgument):
+class StringListArgument(ValuedArgument[str]):
 	"""
 	Represents a list of string argument (:class:`~pyTooling.CLIAbstraction.Argument.StringArgument`)."""
 

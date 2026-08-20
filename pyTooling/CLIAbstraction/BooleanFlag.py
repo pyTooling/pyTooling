@@ -50,7 +50,7 @@ from pyTooling.CLIAbstraction.Argument import NamedArgument, ValuedArgument
 
 @export
 @abstractclass
-class BooleanFlag(NamedArgument, ValuedArgument):
+class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 	"""
 	Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern for an
 	enabled/positive (``True``) or disabled/negative (``False``) state.

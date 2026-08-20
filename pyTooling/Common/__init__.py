@@ -245,7 +245,7 @@ def bind(instance: Any, func: Callable[..., Any], methodName: Nullable[str] = No
 
 
 @export
-def count(iterator: Iterable) -> int:
+def count(iterator: Iterable[Any]) -> int:
 	"""
 	Returns the number of elements in an iterable.
 
@@ -373,7 +373,10 @@ def firstPair(d: dict[_DictKey1, _DictValue1]) -> tuple[_DictKey1, _DictValue1]:
 
 
 @export
-def mergedicts(*dicts: dict, filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> dict:
+def mergedicts(
+	*dicts: dict[Hashable, Any],
+	filter: Nullable[Callable[[Hashable, Any], bool]] = None
+) -> dict[Hashable, Any]:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
@@ -399,7 +402,7 @@ def mergedicts(*dicts: dict, filter: Nullable[Callable[[Hashable, Any], bool]] =
 
 
 @export
-def zipdicts(*dicts: dict) -> Generator[tuple, None, None]:
+def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, None]:
 	"""
 	Iterate multiple dictionaries simultaneously.
 
@@ -421,7 +424,7 @@ def zipdicts(*dicts: dict) -> Generator[tuple, None, None]:
 	if any(len(d) != len(dicts[0]) for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
-	def gen(ds: tuple[dict, ...]) -> Generator[tuple, None, None]:
+	def gen(ds: tuple[dict[Hashable, Any], ...]) -> Generator[tuple[Any, ...], None, None]:
 		"""
 		Nested generator function, so the length check runs when :func:`zipdicts` is called, not on first iteration.
 

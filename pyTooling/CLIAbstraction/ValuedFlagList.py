@@ -53,7 +53,7 @@ from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
 
 @export
 @abstractclass
-class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
+class ValuedFlagList(NamedAndValuedArgument[str], pattern="{0}={1}"):
 	"""
 	Class and base-class for all ValuedFlagList classes, which represents a list of valued flags.
 
@@ -100,7 +100,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 
 	@Value.setter
 	def Value(self, values: Iterable[str]) -> None:
-		innerList = cast(list, self._value)
+		innerList = cast(list[str], self._value)
 		innerList.clear()
 		for value in values:
 			if not isinstance(value, str):

@@ -54,7 +54,7 @@ from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 @export
 @abstractclass
-class ValuedFlag(NamedAndValuedArgument, pattern="{0}={1}"):
+class ValuedFlag(NamedAndValuedArgument[str], pattern="{0}={1}"):
 	"""
 	Class and base-class for all ValuedFlag classes, which represents a flag argument with value.
 
