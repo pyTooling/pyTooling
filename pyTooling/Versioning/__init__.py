@@ -1660,8 +1660,6 @@ class CalendarVersion(Version):
 			ex.add_note(f"Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
 			raise ex
 
-		# An absent part stays absent: materializing it as 0 would set its 'Parts' flag, and 'CalendarVersion.Parse("2024")'
-		# would render as '2024.0' where 'CalendarVersion(2024)' renders as '2024'.
 		numbers = [int(match["major"])]
 		if minor is not None:
 			numbers.append(int(minor))
