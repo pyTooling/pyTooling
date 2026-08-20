@@ -41,6 +41,8 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
    :mod:`pyTooling.Warning`
       |rarr| Collecting warnings that the application then writes.
 """
+from __future__              import annotations
+
 from datetime                import datetime
 from enum                    import Enum, unique
 from io                      import TextIOWrapper
@@ -828,9 +830,9 @@ class Line(metaclass=ExtendedType, slots=True):
 class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
-	_terminal: TerminalBaseApplication  #: The terminal application the messages are written to.
+	_terminal: Nullable[TerminalApplication]  #: The terminal application the messages are written to.
 
-	def __init__(self, terminal: Nullable[TerminalBaseApplication] = None) -> None:
+	def __init__(self, terminal: Nullable[TerminalApplication] = None) -> None:
 		"""
 		MixIn initializer.
 
@@ -841,7 +843,7 @@ class ILineTerminal:
 		# FIXME: Alter methods if a terminal is present or set dummy methods
 
 	@readonly
-	def Terminal(self) -> TerminalBaseApplication:
+	def Terminal(self) -> Nullable[TerminalApplication]:
 		"""
 		Read-only property to access the local terminal instance (:attr:`_terminal`).
 
@@ -1210,7 +1212,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		)
 		try:
 			with urlopen(request, timeout=timeout) as response:
-				data = loads(response.read().decode())
+				data: dict[str, dict[str, str]] = loads(response.read().decode())
 				return data["info"]["version"]
 		except Exception:
 			return None
@@ -1433,7 +1435,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param line: Line object to check.
 		:returns:    True, if line would be written.
 		"""
-		return line.Severity >= self._writeLevel
+		severity: Severity = line.Severity     # '@readonly' hands out 'Any' until it is typed - see T75
+		return severity >= self._writeLevel
 
 	def WriteFatal(
 		self,
