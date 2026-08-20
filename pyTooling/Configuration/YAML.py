@@ -35,8 +35,8 @@ Configuration reader for YAML files.
 
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
-from pathlib       import Path
-from typing        import Any, Union, Iterator as typing_Iterator, Self
+from pathlib              import Path
+from typing               import Any, Union, Iterator as typing_Iterator, Self
 from pyTooling.Exceptions import MissingDependencyException
 
 try:

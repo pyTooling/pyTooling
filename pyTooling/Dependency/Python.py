@@ -35,12 +35,12 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from asyncio   import run as asyncio_run, gather as asyncio_gather
-from datetime  import datetime
-from enum      import IntEnum
-from functools import wraps, update_wrapper
-from threading import RLock
-from typing    import Optional as Nullable, Union, Iterable, Mapping
+from asyncio              import run as asyncio_run, gather as asyncio_gather
+from datetime             import datetime
+from enum                 import IntEnum
+from functools            import wraps, update_wrapper
+from threading            import RLock
+from typing               import Optional as Nullable, Union, Iterable, Mapping
 from pyTooling.Exceptions import MissingDependencyException
 
 try:

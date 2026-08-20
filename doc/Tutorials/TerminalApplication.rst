@@ -160,11 +160,11 @@ formats the exception, its notes, its cause and its traceback, and then exits wi
      except ExceptionBase as ex:
        program.PrintExceptionBase(ex)                      # exit code 241, a known exception
      except NotImplementedError as ex:
-       program.PrintNotImplementedError(ex)                # exit code 240
+       program.PrintNotImplementedError(ex)                # exit code 240, an unimplemented function was called
      except MissingDependencyException as ex:
        program.PrintMissingDependencyException(ex)         # exit code 242, an installation problem
      except Exception as ex:
-       program.PrintException(ex)                          # exit code 241
+       program.PrintException(ex)                          # exit code 241, an unexpected exception
 
 Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL`, and each of these reports ends by inviting
 the user to file a bug, with the URL - except the missing-dependency report, which names the package and the command

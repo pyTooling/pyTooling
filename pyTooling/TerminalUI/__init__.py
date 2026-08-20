@@ -72,11 +72,11 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	terminal's width.
 	"""
 
-	#: Return code, if an optional dependency is missing. The value lives on the exception, which is importable even
-	#: when this module is not - see 'PrintMissingDependencyException'.
-	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyException.EXIT_CODE
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
+	#: Return code (242), if an optional dependency is missing. The value lives on the exception, which stays
+	#: importable when this module is not - see :meth:`PrintMissingDependencyException`.
+	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyException.EXIT_CODE
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
