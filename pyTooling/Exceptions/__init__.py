@@ -43,7 +43,7 @@ A common set of missing exceptions in Python.
    :mod:`pyTooling.MetaClasses`
       |rarr| The exceptions raised for a class that violates the meta-class' rules.
 """
-from typing               import Iterable, Any, Optional as Nullable
+from typing               import ClassVar, Iterable, Any, Optional as Nullable
 from pyTooling.Decorators import export, readonly
 
 
