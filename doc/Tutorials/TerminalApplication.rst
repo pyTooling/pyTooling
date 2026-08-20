@@ -12,7 +12,7 @@ See also the :ref:`reference documentation of pyTooling.TerminalUI <TERM>`.
 .. hint::
 
    Every code example on this page is a complete, runnable program in :file:`tests/example/TerminalApplication`, and
-   each one is imported and exercised by the unit tests. What is shown here is what runs.
+   each one is imported and exercised by the unit tests.
 
 
 .. _TUTORIAL/TerminalApplication/Step1:

@@ -28,8 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from sys                 import argv
-from typing              import NoReturn
+from sys                  import argv
+from typing               import NoReturn
 
 from pyTooling.TerminalUI import TerminalApplication
 

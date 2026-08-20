@@ -28,8 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from argparse                             import Namespace, RawDescriptionHelpFormatter
-from typing                               import ClassVar, NoReturn
+from argparse                               import Namespace, RawDescriptionHelpFormatter
+from typing                                 import ClassVar, NoReturn
 
 from pyTooling.Attributes.ArgParse          import ArgParseHelperMixin, CommandHandler, DefaultHandler
 from pyTooling.Attributes.ArgParse.Argument import StringArgument

@@ -28,8 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from sys                 import argv
-from typing              import NoReturn
+from sys                  import argv
+from typing               import NoReturn
 
 from pyTooling.TerminalUI import TerminalApplication
 
@@ -41,8 +41,7 @@ class Application(TerminalApplication):
 		self._PrintHeadline()
 		self.WriteNormal("Reading the input file...")
 
-		if self.Verbose:
-			self.WriteVerbose(self._CollectStatistics())    # not computed unless it's printed
+		self.WriteVerbose("Collecting statistics ...")    # not computed unless it's printed
 
 		self.WriteWarning("The input file is empty.")
 
