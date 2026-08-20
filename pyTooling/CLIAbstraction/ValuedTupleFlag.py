@@ -48,7 +48,7 @@ from pyTooling.CLIAbstraction.Argument import NamedTupledArgument
 
 @export
 @abstractclass
-class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
+class ShortTupleFlag(NamedTupledArgument[str], pattern="-{0}"):
 	"""
 	Represents a :class:`ValuedTupleArgument` with a single dash in front of the switch name.
 
@@ -71,7 +71,7 @@ class ShortTupleFlag(NamedTupledArgument, pattern="-{0}"):
 
 @export
 @abstractclass
-class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
+class LongTupleFlag(NamedTupledArgument[str], pattern="--{0}"):
 	"""
 	Represents a :class:`ValuedTupleArgument` with a double dash in front of the switch name.
 
@@ -94,7 +94,7 @@ class LongTupleFlag(NamedTupledArgument, pattern="--{0}"):
 
 @export
 @abstractclass
-class WindowsTupleFlag(NamedTupledArgument, pattern="/{0}"):
+class WindowsTupleFlag(NamedTupledArgument[str], pattern="/{0}"):
 	"""
 	Represents a :class:`ValuedTupleArgument` with a single slash in front of the switch name.
 

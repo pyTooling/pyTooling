@@ -126,7 +126,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 
 @export
-class CallByRefBoolParam(CallByRefParam):
+class CallByRefBoolParam(CallByRefParam[bool]):
 	"""A special *call-by-reference* implementation for boolean reference types."""
 
 	# Binary operators - comparison
@@ -185,7 +185,7 @@ class CallByRefBoolParam(CallByRefParam):
 
 
 @export
-class CallByRefIntParam(CallByRefParam):
+class CallByRefIntParam(CallByRefParam[int]):
 	"""A special *call-by-reference* implementation for integer reference types."""
 
 	# Unary operators

@@ -56,7 +56,7 @@ class Node(Abstract_Node):
 	Node in a JSON configuration data structure.
 	"""
 
-	_jsonNode: Union[dict, list]  #: Reference to the associated JSON node.
+	_jsonNode: Union[dict[str, Any], list[Any]]  #: Reference to the associated JSON node.
 	_cache:    dict[str, ValueT]  #: Cache of already converted sub-nodes and values, by key.
 	_key:      KeyT               #: Key of this node.
 	_length:   int                #: Number of sub-elements.
@@ -66,7 +66,7 @@ class Node(Abstract_Node):
 		root:     "Configuration",
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: Union[dict, list]
+		jsonNode: Union[dict[str, Any], list[Any]]
 	) -> None:
 		"""
 		Initializes a JSON node.

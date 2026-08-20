@@ -418,10 +418,10 @@ class Executable(Program):  # (ILogable):
 
 	_workingDirectory: Nullable[Path]              #: Path to the working directory
 	_environment:      Nullable[Environment]       #: Environment to use when executing.
-	_process:          Nullable[Subprocess_Popen]  #: Reference to the running process.
+	_process:          Nullable[Subprocess_Popen[str]]  #: Reference to the running process.
 	_exitCode:         Nullable[int]               #: The child's process exit code.
 	_killed:           Nullable[bool]              #: True, if the child-process got killed (e.g. by a timeout).
-	_iterator:         Nullable[Iterator]          #: Iterator for reading STDOUT.
+	_iterator:         Nullable[Iterator[str]]     #: Iterator for reading STDOUT.
 
 	def __init__(
 		self,

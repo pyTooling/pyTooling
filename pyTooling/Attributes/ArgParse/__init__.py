@@ -120,8 +120,8 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	#
 	# 	super().__init__(*args, **kwargs)
 
-	_args:   tuple  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
-	_kwargs: dict   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
+	_args:   tuple[Any, ...]  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
+	_kwargs: dict[str, Any]   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
@@ -133,7 +133,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		self._kwargs = kwargs
 
 	@readonly
-	def Args(self) -> tuple:
+	def Args(self) -> tuple[Any, ...]:
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -143,7 +143,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		return self._args
 
 	@readonly
-	def KWArgs(self) -> dict:
+	def KWArgs(self) -> dict[str, Any]:
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -242,8 +242,8 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	_command: str    #: Name of the sub-command this handler is responsible for.
 	_help:    str    #: Help text of the sub-command, displayed in the help page.
 	# FIXME: extract to mixin?
-	_args:    tuple  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
-	_kwargs:  dict   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
+	_args:    tuple[Any, ...]  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
+	_kwargs:  dict[str, Any]   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 
 	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
 		"""The constructor expects a 'command' and an optional list of named parameters
@@ -280,7 +280,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 
 # FIXME: extract to mixin?
 	@readonly
-	def Args(self) -> tuple:
+	def Args(self) -> tuple[Any, ...]:
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -291,7 +291,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 
 	# FIXME: extract to mixin?
 	@readonly
-	def KWArgs(self) -> dict:
+	def KWArgs(self) -> dict[str, Any]:
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
