@@ -513,7 +513,7 @@ class StringListArgument(ValuedArgument):
 		Initializes a StringListArgument instance.
 
 		:param values:     An iterable of str instances.
-		:raises TypeError: If iterable parameter 'values' contains elements not of type :class:`str`.
+		:raises TypeError: If iterable parameter 'values' contains elements not of type string.
 		"""
 		self._values = []
 		for value in values:
@@ -533,7 +533,7 @@ class StringListArgument(ValuedArgument):
 		   of the iterable.
 
 		:returns:          Reference to the internal list of str objects.
-		:raises TypeError: If an assigned iterable contains elements which are not of type :class:`str`.
+		:raises TypeError: If an assigned iterable contains elements which are not of type string.
 		"""
 		return self._values
 

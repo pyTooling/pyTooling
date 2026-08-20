@@ -217,7 +217,7 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		:param executablePath:           Optional, path to the executable.
 		:param binaryDirectoryPath:      Optional, path to the executable's directory.
-		:param dryRun:                   Optional, true, when the program should run in dryrun mode.
+		:param dryRun:                   Optional, ``True``, when the program should run in dryrun mode.
 		:raises TypeError:               If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
 		:raises CLIAbstractionException: If the executable doesn't exist at the given path.
 		"""
@@ -355,7 +355,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		:returns:          List of CLI arguments
 		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
 		                   An argument's :meth:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument` has to
-		                   return a :class:`str`, a :class:`tuple` or a :class:`list`.
+		                   return a string, a tuple or a list.
 		"""
 		result: list[str] = []
 
@@ -434,7 +434,7 @@ class Executable(Program):  # (ILogable):
 		:param binaryDirectoryPath: Optional, path to the executable's directory.
 		:param workingDirectory:    Optional, path to the working directory.
 		:param environment:         Optional, environment that should be setup when launching the executable.
-		:param dryRun:              Optional, true, when the program should run in dryrun mode.
+		:param dryRun:              Optional, ``True``, when the program should run in dryrun mode.
 		"""
 		super().__init__(executablePath, binaryDirectoryPath, dryRun)
 
@@ -526,7 +526,7 @@ class Executable(Program):  # (ILogable):
 
 		:param timeout:                  Optional, timeout in seconds. |br|
 		                                 Default: infinitely wait on the child-process.
-		:param kill:                     Optional, if true, terminate (kill) the child-process if it didn't terminate by
+		:param kill:                     Optional, if ``True``, terminate (kill) the child-process if it didn't terminate by
 		                                 itself within the timeout period.
 		:returns:                        ``None`` when the child-process is still running, otherwise the exit code.
 		:raises CLIAbstractionException: When the child-process is not started yet.

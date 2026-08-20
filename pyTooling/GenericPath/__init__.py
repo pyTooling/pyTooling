@@ -112,7 +112,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		Initialize the mixin-class for a path.
 
 		:param elements:   Reference to a parent path element.
-		:param isAbsolute: Assign to true, if a path is absolute, otherwise false.
+		:param isAbsolute: ``True``, if the path is absolute, otherwise ``False``.
 		"""
 		self._isAbsolute = isAbsolute
 		self._elements =   elements

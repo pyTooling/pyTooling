@@ -62,7 +62,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param x:          X-coordinate.
 		:param y:          Y-coordinate.
-		:raises TypeError: If x/y-coordinate is not of type :class:`int` or :class:`float`.
+		:raises TypeError: If x/y-coordinate is not of type integer or float.
 		"""
 		if not isinstance(x, (int, float)):
 			ex = TypeError(f"Parameter 'x' is not of type integer or float.")
@@ -103,9 +103,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 2D-offset to this 2D-point and creates a new 2D-point.
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          A new 2D-point shifted by the 2D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.__class__(
@@ -126,9 +126,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 2D-offset to this 2D-point (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.x += other.xOffset
@@ -165,9 +165,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 2D-offset to this 2D-point (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.x -= other.xOffset
@@ -239,7 +239,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param xOffset:    x-direction offset.
 		:param yOffset:    y-direction offset.
-		:raises TypeError: If x/y-offset is not of type :class:`int` or :class:`float`.
+		:raises TypeError: If x/y-offset is not of type integer or float.
 		"""
 		if not isinstance(xOffset, (int, float)):
 			ex = TypeError(f"Parameter 'xOffset' is not of type integer or float.")
@@ -282,7 +282,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 2D-offsets are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.xOffset == other.xOffset and self.yOffset == other.yOffset
@@ -299,7 +299,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 2D-offsets are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or tuple.
 		"""
 		return not self.__eq__(other)
 
@@ -318,9 +318,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 2D-offset to this 2D-offset and creates a new 2D-offset.
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          A new 2D-offset extended by the 2D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.__class__(
@@ -341,9 +341,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 2D-offset to this 2D-offset (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.xOffset += other.xOffset
@@ -362,9 +362,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 2D-offset from this 2D-offset and creates a new 2D-offset.
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          A new 2D-offset reduced by the 2D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.__class__(
@@ -385,9 +385,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 2D-offset from this 2D-offset (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.xOffset -= other.xOffset
@@ -432,7 +432,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param width:      width in x-direction.
 		:param height:     height in y-direction.
-		:raises TypeError: If width/height is not of type :class:`int` or :class:`float`.
+		:raises TypeError: If width/height is not of type integer or float.
 		"""
 		if not isinstance(width, (int, float)):
 			ex = TypeError(f"Parameter 'width' is not of type integer or float.")

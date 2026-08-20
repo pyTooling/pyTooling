@@ -136,7 +136,7 @@ class CallByRefBoolParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.
+		:raises TypeError: If parameter ``other`` is not of type boolean or :class:`CallByRefBoolParam`.
 		"""
 		if isinstance(other, bool):
 			return self.Value == other
@@ -154,7 +154,7 @@ class CallByRefBoolParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.
+		:raises TypeError: If parameter ``other`` is not of type boolean or :class:`CallByRefBoolParam`.
 		"""
 		if isinstance(other, bool):
 			return self.Value != other
@@ -218,9 +218,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		And: :pycode:`self & other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Result of the bitwise *and* operation.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value & other
@@ -234,9 +234,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Or: :pycode:`self | other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Result of the bitwise *or* operation.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value | other
@@ -250,9 +250,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Xor: :pycode:`self ^ other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Result of the bitwise *exclusive or* operation.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value ^ other
@@ -267,9 +267,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place and: :pycode:`self &= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value &= other
@@ -284,9 +284,9 @@ class CallByRefIntParam(CallByRefParam):
 		r"""
 		In-place or: :pycode:`self |= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value |= other
@@ -301,9 +301,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place xor: :pycode:`self ^= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value ^= other
@@ -319,9 +319,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Addition: :pycode:`self + other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Sum of both operands.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value + other
@@ -335,9 +335,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Subtraction: :pycode:`self - other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Difference of both operands.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value - other
@@ -351,9 +351,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Division: :pycode:`self / other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Quotient of both operands.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value / other
@@ -367,9 +367,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Floor division: :pycode:`self // other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Floor of the quotient of both operands.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value // other
@@ -383,9 +383,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Multiplication: :pycode:`self * other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Product of both operands.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value * other
@@ -399,9 +399,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Modulo: :pycode:`self % other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          Remainder of the division.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value % other
@@ -415,9 +415,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		Power: :pycode:`self ** other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The value raised to the power of the second operand.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			return self.Value ** other
@@ -432,9 +432,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place addition: :pycode:`self += other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value += other
@@ -449,9 +449,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place subtraction: :pycode:`self -= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value -= other
@@ -466,9 +466,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place division: :pycode:`self /= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value /= other
@@ -483,9 +483,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place floor division: :pycode:`self //= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value //= other
@@ -500,9 +500,9 @@ class CallByRefIntParam(CallByRefParam):
 		r"""
 		In-place multiplication: :pycode:`self *= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value *= other
@@ -517,9 +517,9 @@ class CallByRefIntParam(CallByRefParam):
 		"""
 		In-place modulo: :pycode:`self %= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value %= other
@@ -534,9 +534,9 @@ class CallByRefIntParam(CallByRefParam):
 		r"""
 		In-place power: :pycode:`self **= other`.
 
-		:param other:      Second operand, which has to be of type :class:`int`.
+		:param other:      Second operand, which has to be of type integer.
 		:returns:          The same *call-by-reference* object, with its value updated.
-		:raises TypeError: If the second operand is not of type :class:`int`.
+		:raises TypeError: If the second operand is not of type integer.
 		"""
 		if isinstance(other, int):
 			self.Value **= other
@@ -554,7 +554,8 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value == other
@@ -572,7 +573,8 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value != other
@@ -590,7 +592,8 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is less than the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value < other
@@ -608,7 +611,8 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is less than or equal the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value <= other
@@ -626,7 +630,8 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is greater than the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value > other
@@ -644,7 +649,8 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is greater than or equal the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value >= other
