@@ -187,6 +187,8 @@ class readonly(property):
 	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 
+	fget: Callable[[Any], Any]   #: The getter-method; a read-only property is always constructed from one.
+
 	def setter(self, fset: Callable[..., Any]) -> NoReturn:
 		"""
 		Reject attaching a setter to a read-only property.
@@ -195,8 +197,7 @@ class readonly(property):
 		:raises AttributeError: Always, because a read-only property can't have a setter. |br|
 		                        Use :deco:`property` instead of :deco:`readonly`, if the property should be writable.
 		"""
-		name = getattr(self.fget, "__name__", "<unnamed>")
-		ex = AttributeError(f"Property '{name}' is read-only, so it can't have a setter.")
+		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a setter.")
 		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be writable.")
 		raise ex
 
@@ -208,8 +209,7 @@ class readonly(property):
 		:raises AttributeError: Always, because a read-only property can't have a deleter. |br|
 		                        Use :deco:`property` instead of :deco:`readonly`, if the property should be deletable.
 		"""
-		name = getattr(self.fget, "__name__", "<unnamed>")
-		ex = AttributeError(f"Property '{name}' is read-only, so it can't have a deleter.")
+		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a deleter.")
 		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be deletable.")
 		raise ex
 
