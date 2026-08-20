@@ -33,7 +33,7 @@ from io                   import StringIO
 
 from pyTooling.Exceptions import ExceptionBase
 from pyTooling.TerminalUI import TerminalApplication
-from pyTooling.Exceptions import MissingDependencyError
+from pyTooling.Exceptions import MissingDependencyException
 from pyTooling.Testing    import Testcase
 
 
@@ -122,7 +122,7 @@ class MissingDependency(Testcase):
 	"""A missing optional dependency is a user's installation problem, not a bug - so it is reported without a
 	traceback and without an invitation to open an issue."""
 
-	def _print(self, ex: MissingDependencyError) -> str:
+	def _print(self, ex: MissingDependencyException) -> str:
 		"""
 		Let an application print the exception and return what it wrote to ``STDERR``.
 
@@ -135,20 +135,20 @@ class MissingDependency(Testcase):
 		application = Application()
 		application._stderr = StringIO()
 		with self.assertRaises(SystemExit) as context:
-			application.PrintMissingDependencyError(ex)
+			application.PrintMissingDependencyException(ex)
 
 		self.assertEqual(TerminalApplication.MISSING_DEPENDENCY_EXIT_CODE, context.exception.code)
 		return application._stderr.getvalue()
 
 	def test_BothInstallCommandsArePrinted(self) -> None:
-		output = self._print(MissingDependencyError(dependency="ruamel.yaml", extra="yaml"))
+		output = self._print(MissingDependencyException(dependency="ruamel.yaml", extra="yaml"))
 
 		self.assertIn("ruamel.yaml", output)
 		self.assertIn("pip install pyTooling[yaml]", output)
 		self.assertIn("pip install ruamel.yaml", output)
 
 	def test_WithoutAnExtraOnlyTheDirectCommand(self) -> None:
-		output = self._print(MissingDependencyError(dependency="lxml"))
+		output = self._print(MissingDependencyException(dependency="lxml"))
 
 		self.assertIn("pip install lxml", output)
 		self.assertNotIn("pyTooling[", output)
@@ -156,8 +156,8 @@ class MissingDependency(Testcase):
 	def test_NoTracebackAndNoIssueTracker(self) -> None:
 		"""The application configures an issue tracker, and this printer still must not invite a bug report."""
 		try:
-			raise MissingDependencyError(dependency="colorama", extra="terminal")
-		except MissingDependencyError as ex:
+			raise MissingDependencyException(dependency="colorama", extra="terminal")
+		except MissingDependencyException as ex:
 			output = self._print(ex)
 
 		self.assertNotIn("issues", output)
@@ -168,8 +168,8 @@ class MissingDependency(Testcase):
 			try:
 				raise ImportError("No module named 'colorama'")
 			except ImportError as ex:
-				raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
-		except MissingDependencyError as ex:
+				raise MissingDependencyException(dependency="colorama", extra="terminal") from ex
+		except MissingDependencyException as ex:
 			output = self._print(ex)
 
 		self.assertIn("No module named 'colorama'", output)

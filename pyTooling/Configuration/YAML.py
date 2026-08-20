@@ -37,12 +37,12 @@ Configuration reader for YAML files.
 """
 from pathlib       import Path
 from typing        import Any, Union, Iterator as typing_Iterator, Self
-from pyTooling.Exceptions import MissingDependencyError
+from pyTooling.Exceptions import MissingDependencyException
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+	raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
 
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, InheritDocString
