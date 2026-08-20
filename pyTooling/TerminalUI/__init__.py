@@ -41,6 +41,8 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
    :mod:`pyTooling.Warning`
       |rarr| Collecting warnings that the application then writes.
 """
+from __future__              import annotations
+
 from datetime                import datetime
 from enum                    import Enum, unique
 from io                      import TextIOWrapper
@@ -828,9 +830,9 @@ class Line(metaclass=ExtendedType, slots=True):
 class ILineTerminal:
 	"""A mixin class (interface) to provide class-local terminal writing methods."""
 
-	_terminal: Nullable["TerminalApplication"]  #: The terminal application the messages are written to.
+	_terminal: Nullable[TerminalApplication]  #: The terminal application the messages are written to.
 
-	def __init__(self, terminal: Nullable["TerminalApplication"] = None) -> None:
+	def __init__(self, terminal: Nullable[TerminalApplication] = None) -> None:
 		"""
 		MixIn initializer.
 
@@ -841,7 +843,7 @@ class ILineTerminal:
 		# FIXME: Alter methods if a terminal is present or set dummy methods
 
 	@readonly
-	def Terminal(self) -> TerminalBaseApplication:
+	def Terminal(self) -> Nullable[TerminalApplication]:
 		"""
 		Read-only property to access the local terminal instance (:attr:`_terminal`).
 
