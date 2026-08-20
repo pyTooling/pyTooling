@@ -42,7 +42,7 @@ A powerful tree data structure for Python.
 """
 from collections           import deque
 from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Callable, Iterator, Generator, Iterable, Mapping, Hashable
+from typing                import Any, Callable, Iterator, Generator, Iterable, Mapping, Hashable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
@@ -936,7 +936,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		return self._root._nodesWithID[nodeID]
 
-	def Find(self, predicate: Callable) -> Generator['Node', None, None]:
+	def Find(self, predicate: Callable[['Node'], bool]) -> Generator['Node', None, None]:
 		"""
 		Search the tree for nodes matching a predicate.
 

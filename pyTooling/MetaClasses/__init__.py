@@ -175,7 +175,7 @@ class MustOverrideClassError(AbstractClassError):
 # """
 
 
-M = TypeVar("M", bound=Callable)   #: A type variable for methods.
+M = TypeVar("M", bound=Callable[..., Any])   #: A type variable for methods.
 C = TypeVar("C", bound=type)       #: A type variable for classes.
 
 
@@ -676,7 +676,7 @@ class ExtendedType(type):
 				newClass.__setstate__ = __setstate__
 
 		# Check for inherited class attributes
-		attributes = []
+		attributes: list["Attribute"] = []
 		setattr(newClass, ATTRIBUTES_MEMBER_NAME, attributes)
 		for base in baseClasses:
 			if hasattr(base, ATTRIBUTES_MEMBER_NAME):
@@ -694,7 +694,10 @@ class ExtendedType(type):
 		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
 
 		# Additional methods on a class
-		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> dict[Callable, tuple["Attribute", ...]]:
+		def GetMethodsWithAttributes(
+			self,
+			predicate: Nullable[TAttributeFilter[TAttr]] = None
+		) -> dict[Callable[..., Any], tuple["Attribute", ...]]:
 			"""
 			Return the class' methods that carry at least one matching attribute.
 
@@ -719,7 +722,7 @@ class ExtendedType(type):
 
 			methodAttributePairs = {}
 			for method in newClass.__methodsWithAttributes__:
-				matchingAttributes = []
+				matchingAttributes: list["Attribute"] = []
 				for attribute in method.__pyattr__:
 					if isinstance(attribute, predicate):
 						matchingAttributes.append(attribute)
@@ -1193,7 +1196,11 @@ class ExtendedType(type):
 						break
 
 	@classmethod
-	def _checkForAbstractMethods(metacls, baseClasses: tuple[type], members: dict[str, Any]) -> tuple[dict[str, Callable], dict[str, Any]]:
+	def _checkForAbstractMethods(
+		metacls,
+		baseClasses: tuple[type],
+		members: dict[str, Any]
+	) -> tuple[dict[str, Callable[..., Any]], dict[str, Any]]:
 		"""
 		Check if the current class contains abstract methods and return a tuple of them.
 

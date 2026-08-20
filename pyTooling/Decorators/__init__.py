@@ -46,7 +46,7 @@ from enum      import Enum, unique
 from functools import wraps
 from inspect   import cleandoc
 from types     import FunctionType
-from typing    import Union, TypeVar, Callable, NoReturn, ParamSpec
+from typing    import Any, Union, TypeVar, Callable, NoReturn, ParamSpec
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
@@ -57,7 +57,7 @@ Func = Callable[Param, RetType]                    #: Type specification for a f
 
 
 T = TypeVar("T", bound=Union[type, FunctionType])  #: A type variable for a classes or functions.
-C = TypeVar("C", bound=Callable)                   #: A type variable for functions or methods.
+C = TypeVar("C", bound=Callable[..., Any])                   #: A type variable for functions or methods.
 
 
 def export(entity: T) -> T:
@@ -120,7 +120,7 @@ def export(entity: T) -> T:
 
 
 @export
-def notimplemented(message: str) -> Callable:
+def notimplemented(message: str) -> Callable[..., Any]:
 	"""
 	Mark a method as *not implemented* and replace the implementation with a new method raising a :exc:`NotImplementedError`.
 
@@ -187,7 +187,7 @@ class readonly(property):
 	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 
-	def setter(self, fset: Callable) -> NoReturn:
+	def setter(self, fset: Callable[..., Any]) -> NoReturn:
 		"""
 		Reject attaching a setter to a read-only property.
 
@@ -199,7 +199,7 @@ class readonly(property):
 		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be writable.")
 		raise ex
 
-	def deleter(self, fdel: Callable) -> NoReturn:
+	def deleter(self, fdel: Callable[..., Any]) -> NoReturn:
 		"""
 		Reject attaching a deleter to a read-only property.
 

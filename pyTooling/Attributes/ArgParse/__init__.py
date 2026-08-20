@@ -52,7 +52,7 @@ from pyTooling.Common      import firstElement, firstPair
 from pyTooling.Attributes  import Attribute
 
 
-M = TypeVar("M", bound=Callable)
+M = TypeVar("M", bound=Callable[..., Any])
 
 
 @export
@@ -73,10 +73,10 @@ class _HandlerMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	A mixin-class that offers a class field for a reference to a handler method and a matching property.
 	"""
-	_handler: Callable = None   #: Reference to a method that is called to handle e.g. a sub-command.
+	_handler: Callable[..., Any] = None   #: Reference to a method that is called to handle e.g. a sub-command.
 
 	@readonly
-	def Handler(self) -> Callable:
+	def Handler(self) -> Callable[..., Any]:
 		"""
 		Read-only property to access the handler method (:attr:`_handler`).
 
@@ -220,7 +220,7 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 	   It's an error, if more than one method is annotated with this attribute.
 	"""
 
-	def __call__(self, func: Callable) -> Callable:
+	def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
 		"""
 		Apply this attribute to the handler method.
 
@@ -358,7 +358,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			raise ArgParseException("Marked more then one handler as default handler with 'DefaultAttribute'.")
 
 		# Search for 'CommandHandler' marked methods
-		methods: dict[Callable, tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
+		methods: dict[Callable[..., Any], tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
 		for method, attributes in methods.items():
 			if self._subParser is None:
 				self._subParser = self._mainParser.add_subparsers(help='sub-command help')

@@ -202,7 +202,11 @@ class Program(metaclass=ExtendedType, slots=True):
 		super().__init_subclass__(*args, **kwargs)
 
 		# register all available CLI options (nested classes marked with attribute 'CLIArgument')
-		cls.__cliOptions__ = {option: order for order, option in enumerate(CLIArgument.GetClasses(scope=cls))}
+		options: dict[type["CommandLineArgument"], int] = {
+			option: order
+			for order, option in enumerate(CLIArgument.GetClasses(scope=cls))
+		}
+		cls.__cliOptions__ = options
 
 	def __init__(
 		self,

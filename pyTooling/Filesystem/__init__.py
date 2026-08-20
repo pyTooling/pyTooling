@@ -827,7 +827,7 @@ class Directory(Element["Directory"]):
 				"""
 				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		directoryNode = Node(
+		directoryNode: Node[Any, Any, Any, Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.File,
@@ -1038,7 +1038,7 @@ class Filename(Element[Directory]):
 			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		fileNode = Node(
+		fileNode: Node[Any, Any, Any, Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.File,
@@ -1229,7 +1229,7 @@ class SymbolicLink(Element[Directory]):
 			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		symbolicLinkNode = Node(
+		symbolicLinkNode: Node[Any, Any, Any, Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.SymbolicLink,

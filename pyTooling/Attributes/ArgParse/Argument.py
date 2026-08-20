@@ -107,7 +107,7 @@ class PositionalArgument(ValuedArgument):
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
 		"""
-		args = []
+		args: list[str] = []
 		kwargs = {
 			"dest":    dest,
 			"metavar": metaName,
@@ -196,7 +196,7 @@ class ListArgument(ValuedArgument):
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
 		"""
-		args = []
+		args: list[str] = []
 		kwargs = {
 			"dest":    dest,
 			"metavar": metaName,
