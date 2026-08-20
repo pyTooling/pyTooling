@@ -36,6 +36,8 @@ A data model to write out GraphML XML files.
    `GraphML Primer <http://graphml.graphdrawing.org/primer/graphml-primer.html>`__
       |rarr| The format's own introduction, describing the elements this module writes.
 """
+
+from __future__            import annotations
 from enum                  import Enum, auto
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
@@ -218,7 +220,7 @@ class BaseWithID(Base):
 @export
 class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
-	_data: list['Data']  #: Data items (key-value-pairs) attached to this GraphML element.
+	_data: list[Data]  #: Data items (key-value-pairs) attached to this GraphML element.
 
 	def __init__(self, identifier: str) -> None:
 		"""
@@ -231,7 +233,7 @@ class BaseWithData(BaseWithID):
 		self._data = []
 
 	@readonly
-	def Data(self) -> list['Data']:
+	def Data(self) -> list[Data]:
 		"""
 		Read-only property to access the data elements attached to this element (:attr:`_data`).
 
@@ -568,7 +570,7 @@ class BaseGraph(BaseWithData, mixin=True):
 	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
 	direction, the parsing order, and the ID styles for nodes and edges.
 	"""
-	_subgraphs:   dict[str, 'Subgraph']  #: Subgraphs of this graph, by ID.
+	_subgraphs:   dict[str, Subgraph]    #: Subgraphs of this graph, by ID.
 	_nodes:       dict[str, Node]        #: Nodes of this graph, by ID.
 	_edges:       dict[str, Edge]        #: Edges of this graph, by ID.
 	_edgeDefault: EdgeDefault            #: Direction applied to edges that don't specify one.
@@ -595,7 +597,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		self._edgeIDStyle = IDStyle.Free
 
 	@readonly
-	def Subgraphs(self) -> dict[str, 'Subgraph']:
+	def Subgraphs(self) -> dict[str, Subgraph]:
 		"""
 		Read-only property to access the graph's subgraphs (:attr:`_subgraphs`).
 
@@ -621,7 +623,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		"""
 		return self._edges
 
-	def AddSubgraph(self, subgraph: 'Subgraph') -> 'Subgraph':
+	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
 		"""
 		Add a subgraph to this graph, which is a node of this graph as well.
 
@@ -632,7 +634,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		self._nodes[subgraph._id] = subgraph
 		return subgraph
 
-	def GetSubgraph(self, subgraphName: str) -> 'Subgraph':
+	def GetSubgraph(self, subgraphName: str) -> Subgraph:
 		"""
 		Return the subgraph with the given ID.
 
@@ -737,10 +739,10 @@ class Graph(BaseGraph):
 
 	It owns the ID space: every node, edge and subgraph registers itself here, so an ID is used only once per document.
 	"""
-	_document: 'GraphMLDocument'                         #: The GraphML document this graph belongs to.
-	_ids:      dict[str, Union[Node, Edge, 'Subgraph']]  #: Every element of this graph by ID, used to keep IDs unique.
+	_document: GraphMLDocument                         #: The GraphML document this graph belongs to.
+	_ids:      dict[str, Union[Node, Edge, Subgraph]]  #: Every element of this graph by ID, used to keep IDs unique.
 
-	def __init__(self, document: 'GraphMLDocument', identifier: str) -> None:
+	def __init__(self, document: GraphMLDocument, identifier: str) -> None:
 		"""
 		Initialize the root graph of a GraphML document.
 
@@ -751,7 +753,7 @@ class Graph(BaseGraph):
 		self._document = document
 		self._ids = {}
 
-	def GetByID(self, identifier: str) -> Union[Node, Edge, 'Subgraph']:
+	def GetByID(self, identifier: str) -> Union[Node, Edge, Subgraph]:
 		"""
 		Return the element with the given ID, whichever kind it is.
 
@@ -761,7 +763,7 @@ class Graph(BaseGraph):
 		"""
 		return self._ids[identifier]
 
-	def AddSubgraph(self, subgraph: 'Subgraph') -> 'Subgraph':
+	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
 		"""
 		Add a subgraph to the root graph and register its ID.
 

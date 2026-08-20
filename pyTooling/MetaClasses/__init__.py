@@ -45,6 +45,8 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
    :mod:`pyTooling.Exceptions`
       |rarr| The base-exception of everything this meta-class raises.
 """
+
+from __future__ import annotations
 from functools  import wraps
 from itertools  import chain
 from re         import compile as re_compile
@@ -677,7 +679,7 @@ class ExtendedType(type):
 				newClass.__setstate__ = __setstate__
 
 		# Check for inherited class attributes
-		attributes: list["Attribute"] = []
+		attributes: list[Attribute] = []
 		setattr(newClass, ATTRIBUTES_MEMBER_NAME, attributes)
 		for base in baseClasses:
 			if hasattr(base, ATTRIBUTES_MEMBER_NAME):
@@ -698,7 +700,7 @@ class ExtendedType(type):
 		def GetMethodsWithAttributes(
 			self,
 			predicate: Nullable[TAttributeFilter[TAttr]] = None
-		) -> dict[Callable[..., Any], tuple["Attribute", ...]]:
+		) -> dict[Callable[..., Any], tuple[Attribute, ...]]:
 			"""
 			Return the class' methods that carry at least one matching attribute.
 
@@ -723,7 +725,7 @@ class ExtendedType(type):
 
 			methodAttributePairs = {}
 			for method in newClass.__methodsWithAttributes__:
-				matchingAttributes: list["Attribute"] = []
+				matchingAttributes: list[Attribute] = []
 				for attribute in method.__pyattr__:
 					if isinstance(attribute, predicate):
 						matchingAttributes.append(attribute)
@@ -746,7 +748,7 @@ class ExtendedType(type):
 	@classmethod
 	def _findMethods(
 		self,
-		newClass:    "ExtendedType",
+		newClass:    ExtendedType,
 		baseClasses: tuple[type],
 		members:     dict[str, Any]
 	) -> tuple[list[MethodType], list[MethodType]]:

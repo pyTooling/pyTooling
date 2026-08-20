@@ -49,6 +49,8 @@ class, method or function. By default, this field is called ``__pyattr__``.
    :mod:`pyTooling.Decorators`
       |rarr| Decorators that modify an entity instead of marking it.
 """
+
+from __future__ import annotations
 from enum   import IntFlag
 from types  import MethodType, FunctionType, ModuleType
 from typing import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
@@ -122,7 +124,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return entity
 
 	@staticmethod
-	def _AppendAttribute(entity: Entity, attribute: "Attribute") -> None:
+	def _AppendAttribute(entity: Entity, attribute: Attribute) -> None:
 		"""
 		Append an attribute to a language entity (class, method, function).
 
@@ -252,7 +254,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield m
 
 	@classmethod
-	def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> tuple['Attribute', ...]:
+	def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> tuple[Attribute, ...]:
 		"""
 		Returns attached attributes of this kind for a given method.
 

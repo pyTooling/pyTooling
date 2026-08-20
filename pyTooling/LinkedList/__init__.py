@@ -39,6 +39,8 @@ An object-oriented doubly linked-list data structure for Python.
       |rarr| A graph data structure.
 """
 
+from __future__ import annotations
+
 from collections.abc       import Sized
 from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any
 from pyTooling.Decorators  import readonly, export
@@ -69,18 +71,18 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	field of the **last node** is ``None``. ``None`` represents the end of the linked list when iterating it node-by-node.
 	"""
 
-	_linkedList:   Nullable["LinkedList[_NodeValue]"]      #: Reference to the doubly linked list instance.
-	_previousNode: Nullable["Node[_NodeKey, _NodeValue]"]  #: Reference to the previous node.
-	_nextNode:     Nullable["Node[_NodeKey, _NodeValue]"]  #: Reference to the next node.
-	_key:          Nullable[_NodeKey]                      #: The sortable key of the node.
-	_value:        _NodeValue                              #: The value of the node.
+	_linkedList:   Nullable[LinkedList[_NodeValue]]      #: Reference to the doubly linked list instance.
+	_previousNode: Nullable[Node[_NodeKey, _NodeValue]]  #: Reference to the previous node.
+	_nextNode:     Nullable[Node[_NodeKey, _NodeValue]]  #: Reference to the next node.
+	_key:          Nullable[_NodeKey]                    #: The sortable key of the node.
+	_value:        _NodeValue                            #: The value of the node.
 
 	def __init__(
 		self,
 		value:        _NodeValue,
 		key:          Nullable[_NodeKey] = None,
-		previousNode: Nullable["Node[_NodeKey, _NodeValue]"] = None,
-		nextNode:     Nullable["Node[_NodeKey, _NodeValue]"] = None
+		previousNode: Nullable[Node[_NodeKey, _NodeValue]] = None,
+		nextNode:     Nullable[Node[_NodeKey, _NodeValue]] = None
 	) -> None:
 		"""
 		Initialize a linked list node.
@@ -164,7 +166,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			self._linkedList = None
 
 	@readonly
-	def List(self) -> Nullable["LinkedList[_NodeValue]"]:
+	def List(self) -> Nullable[LinkedList[_NodeValue]]:
 		"""
 		Read-only property to access the linked list, this node belongs to.
 
@@ -173,7 +175,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		return self._linkedList
 
 	@readonly
-	def PreviousNode(self) -> Nullable["Node[_NodeKey, _NodeValue]"]:
+	def PreviousNode(self) -> Nullable[Node[_NodeKey, _NodeValue]]:
 		"""
 		Read-only property to access node's predecessor.
 
@@ -184,7 +186,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		return self._previousNode
 
 	@readonly
-	def NextNode(self) -> Nullable["Node[_NodeKey, _NodeValue]"]:
+	def NextNode(self) -> Nullable[Node[_NodeKey, _NodeValue]]:
 		"""
 		Read-only property to access node's successor.
 
@@ -224,7 +226,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	def Value(self, value: _NodeValue) -> None:
 		self._value = value
 
-	def InsertNodeBefore(self, node: "Node[_NodeKey, _NodeValue]") -> None:
+	def InsertNodeBefore(self, node: Node[_NodeKey, _NodeValue]) -> None:
 		"""
 		Insert a node before this node.
 
@@ -258,7 +260,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		self._previousNode = node
 		self._linkedList._count += 1
 
-	def InsertNodeAfter(self, node: "Node[_NodeKey, _NodeValue]") -> None:
+	def InsertNodeAfter(self, node: Node[_NodeKey, _NodeValue]) -> None:
 		"""
 		Insert a node after this node.
 
@@ -350,7 +352,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		return self._value
 
-	def IterateToFirst(self, includeSelf: bool = False) -> Generator["Node[_NodeKey, _NodeValue]", None, None]:
+	def IterateToFirst(self, includeSelf: bool = False) -> Generator[Node[_NodeKey, _NodeValue], None, None]:
 		"""
 		Return a generator iterating backward from this node to the list's first node.
 
@@ -370,7 +372,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			yield node
 			node = previousNode
 
-	def IterateToLast(self, includeSelf: bool = False) -> Generator["Node[_NodeKey, _NodeValue]", None, None]:
+	def IterateToLast(self, includeSelf: bool = False) -> Generator[Node[_NodeKey, _NodeValue], None, None]:
 		"""
 		Return a generator iterating forward from this node to the list's last node.
 

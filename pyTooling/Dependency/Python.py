@@ -35,6 +35,8 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
+
+from __future__           import annotations
 from asyncio              import run as asyncio_run, gather as asyncio_gather
 from datetime             import datetime
 from enum                 import IntEnum
@@ -293,7 +295,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		timestamp:    datetime,
 		files:        Nullable[Iterable[Distribution]] = None,
 		requirements: Nullable[Mapping[str, list[Requirement]]] = None,
-		project:      Nullable["Project"] = None,
+		project:      Nullable[Project] = None,
 		lazy:         LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
 		"""
@@ -335,7 +337,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 	@lazy(LazyLoaderState.PostProcessed)
 	@PackageVersion.DependsOn.getter
-	def DependsOn(self) -> dict["Package", dict[SemanticVersion, "PackageVersion"]]:
+	def DependsOn(self) -> dict[Package, dict[SemanticVersion, PackageVersion]]:
 		"""
 		Read-only property to access the packages this release depends on.
 
@@ -344,7 +346,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		return super().DependsOn
 
 	@readonly
-	def Project(self) -> "Project":
+	def Project(self) -> Project:
 		"""
 		Read-only property to access the project this release belongs to (:attr:`_package`).
 
@@ -503,7 +505,7 @@ class Project(Package, LazyLoadableMixin):
 		name:     str,
 		url:      Union[str, URL],
 		releases: Nullable[Iterable[Release]] = None,
-		index:    Nullable["PythonPackageIndex"] = None,
+		index:    Nullable[PythonPackageIndex] = None,
 		lazy:     LazyLoaderState = LazyLoaderState.Initialized
 	) -> None:
 		"""
@@ -549,7 +551,7 @@ class Project(Package, LazyLoadableMixin):
 			self.DownloadReleaseDetails()
 
 	@readonly
-	def PackageIndex(self) -> "PythonPackageIndex":
+	def PackageIndex(self) -> PythonPackageIndex:
 		"""
 		Read-only property to access the package index this project was read from (:attr:`_storage`).
 
@@ -750,7 +752,7 @@ class PythonPackageIndex(PackageStorage):
 	_api:     URL      #: URL of the package index's API.
 	_session: Session  #: HTTP session reused for every request to this index.
 
-	def __init__(self, name: str, url: Union[str, URL], api: Union[str, URL], graph: "PackageDependencyGraph") -> None:
+	def __init__(self, name: str, url: Union[str, URL], api: Union[str, URL], graph: PackageDependencyGraph) -> None:
 		"""
 		Initialize a package index and open the HTTP session used for every request to it.
 

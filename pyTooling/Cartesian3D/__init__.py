@@ -39,6 +39,8 @@ An implementation of 3D cartesian data structures for Python.
       |rarr| Volumes built from these points and offsets.
 """
 
+from __future__ import annotations
+
 from math                  import sqrt, acos
 from typing                import Union, Generic, Any, Self
 from pyTooling.Decorators  import readonly, export
@@ -104,7 +106,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.x, self.y, self.z
 
-	def __add__(self, other: Any) -> "Point3D[Coordinate]":
+	def __add__(self, other: Any) -> Point3D[Coordinate]:
 		"""
 		Adds a 3D-offset to this 3D-point and creates a new 3D-point.
 
@@ -152,7 +154,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> Union["Offset3D[Coordinate]", "Point3D[Coordinate]"]:
+	def __sub__(self, other: Any) -> Union[Offset3D[Coordinate], Point3D[Coordinate]]:
 		"""
 		Subtract two 3D-Points from each other and create a new 3D-offset.
 
@@ -322,7 +324,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return not self.__eq__(other)
 
-	def __neg__(self) -> "Offset3D[Coordinate]":
+	def __neg__(self) -> Offset3D[Coordinate]:
 		"""
 		Negate all components of this 3D-offset and create a new 3D-offset.
 
@@ -334,7 +336,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			-self.zOffset
 		)
 
-	def __add__(self, other: Any) -> "Offset3D[Coordinate]":
+	def __add__(self, other: Any) -> Offset3D[Coordinate]:
 		"""
 		Adds a 3D-offset to this 3D-offset and creates a new 3D-offset.
 
@@ -382,7 +384,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> "Offset3D[Coordinate]":
+	def __sub__(self, other: Any) -> Offset3D[Coordinate]:
 		"""
 		Subtracts a 3D-offset from this 3D-offset and creates a new 3D-offset.
 
@@ -556,7 +558,7 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2 + (self.end.z - self.start.z) ** 2)
 
-	def AngleTo(self, other: "LineSegment3D[Coordinate]") -> float:
+	def AngleTo(self, other: LineSegment3D[Coordinate]) -> float:
 		"""
 		Compute the angle between this line segment and another one.
 

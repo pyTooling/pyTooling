@@ -42,6 +42,8 @@ Basic abstraction layer for executables.
       |rarr| Deciding which executable name and path style the current platform uses.
 """
 
+from __future__ import annotations
+
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
 
 from os         import environ as os_environ
@@ -91,7 +93,7 @@ class Environment(metaclass=ExtendedType, slots=True):
 	# TODO: derive environment from existing environment object.
 	def __init__(
 		self, *,
-		environment:  Nullable["Environment"] = None,
+		environment:  Nullable[Environment] = None,
 		newVariables: Nullable[Mapping[str, str]] = None,
 		addVariables: Nullable[Mapping[str, str]] = None,
 		delVariables: Nullable[Iterable[str]] = None
@@ -202,7 +204,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		super().__init_subclass__(*args, **kwargs)
 
 		# register all available CLI options (nested classes marked with attribute 'CLIArgument')
-		options: dict[type["CommandLineArgument"], int] = {
+		options: dict[type[CommandLineArgument], int] = {
 			option: order
 			for order, option in enumerate(CLIArgument.GetClasses(scope=cls))
 		}

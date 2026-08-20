@@ -41,6 +41,8 @@ This packages provides a data structure to describe statemachines.
       |rarr| The graph data structure a statemachine is a special case of.
 """
 
+from __future__ import annotations
+
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -56,10 +58,10 @@ class Transition(Base):
 	"""
 	Represents a transition (edge) in a statemachine diagram (directed graph).
 	"""
-	_source:      "State"  #: Source state.
-	_destination: "State"  #: Destination state.
+	_source:      State  #: Source state.
+	_destination: State  #: Destination state.
 
-	def __init__(self, source: "State", destination: "State") -> None:
+	def __init__(self, source: State, destination: State) -> None:
 		"""
 		Initializes a transition.
 

@@ -44,6 +44,8 @@ Implementation of package dependencies.
    :mod:`pyTooling.Graph`
       |rarr| The graph data structure a dependency graph is built on.
 """
+
+from __future__            import annotations
 from datetime              import datetime
 from typing                import Optional as Nullable, Union, Iterable, Self, Iterator
 from pyTooling.Decorators  import export, readonly
@@ -101,13 +103,13 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:    "Package"                                                #: Reference to the corresponding package
+	_package:    Package                                                  #: Reference to the corresponding package
 	_version:    SemanticVersion                                          #: :class:`SemanticVersion` of this package version.
 	_releasedAt: Nullable[datetime]                                       #: Time when this package version was released.
 
-	_dependsOn: dict["Package", dict[SemanticVersion, "PackageVersion"]]  #: Versioned dependencies to other packages.
+	_dependsOn: dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
-	def __init__(self, version: SemanticVersion, package: "Package", releasedAt: Nullable[datetime] = None) -> None:
+	def __init__(self, version: SemanticVersion, package: Package, releasedAt: Nullable[datetime] = None) -> None:
 		"""
 		Initializes a package version.
 
@@ -146,7 +148,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		self._dependsOn = {}
 
 	@readonly
-	def Package(self) -> "Package":
+	def Package(self) -> Package:
 		"""
 		Read-only property to access the associated package.
 
@@ -173,7 +175,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		return self._releasedAt
 
 	@readonly
-	def DependsOn(self) -> dict["Package", dict[SemanticVersion, "PackageVersion"]]:
+	def DependsOn(self) -> dict[Package, dict[SemanticVersion, PackageVersion]]:
 		"""
 		Read-only property to access the dictionary of dictionaries referencing dependencies.
 
@@ -184,7 +186,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		"""
 		return self._dependsOn
 
-	def AddDependencyToPackageVersion(self, packageVersion: "PackageVersion") -> None:
+	def AddDependencyToPackageVersion(self, packageVersion: PackageVersion) -> None:
 		"""
 		Add a dependency from current package version to another package version.
 
@@ -199,7 +201,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		else:
 			self._dependsOn[package] = {packageVersion._version: packageVersion}
 
-	def AddDependencyToPackageVersions(self, packageVersions: Iterable["PackageVersion"]) -> None:
+	def AddDependencyToPackageVersions(self, packageVersions: Iterable[PackageVersion]) -> None:
 		"""
 		Add multiple dependencies from current package version to a list of other package versions.
 
@@ -219,7 +221,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 	def AddDependencyTo(
 		self,
-		package: "str | Package",
+		package: str | Package,
 		version: str | SemanticVersion | Iterable[str | SemanticVersion]
 	) -> None:
 		"""
@@ -270,7 +272,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			self._dependsOn[package] = {version: versions[version] for version in sorted(versions.keys(), reverse=True)}
 		return self
 
-	def SolveLatest(self) -> Iterable["PackageVersion"]:
+	def SolveLatest(self) -> Iterable[PackageVersion]:
 		"""
 		Solve the dependency problem, while using preferably latest versions.
 
@@ -281,9 +283,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:returns:                 A list of :class:`PackageVersion`s fulfilling the constraints of the dependency problem.
 		:raises ToolingException: When there is no valid solution to the problem.
 		"""
-		solution: dict["Package", "PackageVersion"] = {self._package: self}
+		solution: dict[Package, PackageVersion] = {self._package: self}
 
-		def _recursion(currentSolution: dict["Package", "PackageVersion"]) -> bool:
+		def _recursion(currentSolution: dict[Package, PackageVersion]) -> bool:
 			"""
 			Nested function for recursion.
 
@@ -294,7 +296,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			:returns:               ``True``, if the solution is complete and consistent.
 			"""
 			# 1. Identify all required packages based on current selection
-			requiredPackages: set["Package"] = set()
+			requiredPackages: set[Package] = set()
 			for packageVersion in currentSolution.values():
 				requiredPackages.update(packageVersion.DependsOn.keys())
 
@@ -387,12 +389,12 @@ class Package(metaclass=ExtendedType, slots=True):
 	"""
 	The package, which exists in multiple versions (:class:`PackageVersion`).
 	"""
-	_storage:  "PackageStorage"                       #: Reference to the package's storage.
-	_name:     str                                    #: Name of the package.
+	_storage:  PackageStorage                       #: Reference to the package's storage.
+	_name:     str                                  #: Name of the package.
 
 	_versions: dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
-	def __init__(self, name: str, *, storage: "PackageStorage") -> None:
+	def __init__(self, name: str, *, storage: PackageStorage) -> None:
 		"""
 		Initializes a package.
 
@@ -418,7 +420,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		self._versions = {}
 
 	@readonly
-	def Storage(self) -> "PackageStorage":
+	def Storage(self) -> PackageStorage:
 		"""
 		Read-only property to access the package's storage.
 
@@ -510,11 +512,11 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 	"""
 	A storage for packages.
 	"""
-	_graph:    "PackageDependencyGraph"  #: Reference to the overall dependency graph data structure.
+	_graph:    PackageDependencyGraph    #: Reference to the overall dependency graph data structure.
 	_name:     str                       #: Package dependency graph name
 	_packages: dict[str, Package]        #: Dictionary of known packages.
 
-	def __init__(self, name: str, graph: "PackageDependencyGraph") -> None:
+	def __init__(self, name: str, graph: PackageDependencyGraph) -> None:
 		"""
 		Initializes the package storage.
 
@@ -540,7 +542,7 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		self._packages = {}
 
 	@readonly
-	def Graph(self) -> "PackageDependencyGraph":
+	def Graph(self) -> PackageDependencyGraph:
 		"""
 		Read-only property to access the package dependency graph.
 

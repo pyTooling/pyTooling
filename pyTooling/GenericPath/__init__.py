@@ -38,6 +38,8 @@ A generic path to derive domain specific path libraries.
    :mod:`pyTooling.Configuration`
       |rarr| Path expressions addressing a node in a configuration.
 """
+
+from __future__            import annotations
 from typing                import ClassVar, Optional as Nullable
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
@@ -49,9 +51,9 @@ class Base(metaclass=ExtendedType, mixin=True):
 
 	DELIMITER: ClassVar[str] = "/"            #: Path element delimiter sign.
 
-	_parent: Nullable["Base"]  #: Reference to the parent object.
+	_parent: Nullable[Base]  #: Reference to the parent object.
 
-	def __init__(self, parent: Nullable["Base"] = None) -> None:
+	def __init__(self, parent: Nullable[Base] = None) -> None:
 		"""
 		Initialize the base-mixin-class with a parent reference.
 
@@ -146,9 +148,9 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		cls,
 		path: str,
 		root: RootMixIn,
-		pathCls: type["PathMixIn"],
+		pathCls: type[PathMixIn],
 		elementCls: type[ElementMixIn]
-	) -> "PathMixIn":
+	) -> PathMixIn:
 		"""
 		Parses a string representation of a path and returns a path instance.
 

@@ -41,6 +41,8 @@
    :mod:`pyTooling.Attributes`
       |rarr| Attributes, which mark an entity instead of modifying it.
 """
+
+from __future__ import annotations
 import sys
 from enum      import Enum, unique
 from functools import wraps
@@ -207,7 +209,7 @@ class readonly(property, Generic[_ReturnType]):
 		"""
 		super().__init__(fget, None, None, doc)
 
-	def getter(self, fget: Callable[[Any], _ReturnType], /) -> "readonly[_ReturnType]":
+	def getter(self, fget: Callable[[Any], _ReturnType], /) -> readonly[_ReturnType]:
 		"""
 		Derive a read-only property with another getter-method from this one.
 
@@ -221,14 +223,14 @@ class readonly(property, Generic[_ReturnType]):
 		return type(self)(fget)
 
 	@overload
-	def __get__(self, instance: None, owner: type, /) -> "readonly[_ReturnType]":
+	def __get__(self, instance: None, owner: type, /) -> readonly[_ReturnType]:
 		...     # pragma: no cover - an overload carries no implementation
 
 	@overload
 	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> _ReturnType:
 		...     # pragma: no cover - an overload carries no implementation
 
-	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union["readonly[_ReturnType]", _ReturnType]:
+	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union[readonly[_ReturnType], _ReturnType]:
 		"""
 		Return the value of the property, or the property itself when it is read from the class.
 

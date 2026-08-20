@@ -40,6 +40,8 @@ Auxiliary classes to implement call-by-reference.
    :mod:`pyTooling.Common`
       |rarr| Helper functions for the data types passed around this way.
 """
+
+from __future__    import annotations
 from decimal       import Decimal
 from typing        import Any, Generic, Self, TypeVar, Optional as Nullable
 
@@ -428,7 +430,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			raise ex
 
 	# Binary inplace operators - arithmetic
-	def __iadd__(self, other: Any) -> 'CallByRefIntParam':
+	def __iadd__(self, other: Any) -> CallByRefIntParam:
 		"""
 		In-place addition: :pycode:`self += other`.
 
@@ -445,7 +447,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __isub__(self, other: Any) -> 'CallByRefIntParam':
+	def __isub__(self, other: Any) -> CallByRefIntParam:
 		"""
 		In-place subtraction: :pycode:`self -= other`.
 
@@ -462,7 +464,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __idiv__(self, other: Any) -> 'CallByRefIntParam':
+	def __idiv__(self, other: Any) -> CallByRefIntParam:
 		"""
 		In-place division: :pycode:`self /= other`.
 
@@ -479,7 +481,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ifloordiv__(self, other: Any) -> 'CallByRefIntParam':
+	def __ifloordiv__(self, other: Any) -> CallByRefIntParam:
 		"""
 		In-place floor division: :pycode:`self //= other`.
 
@@ -496,7 +498,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __imul__(self, other: Any) -> 'CallByRefIntParam':
+	def __imul__(self, other: Any) -> CallByRefIntParam:
 		r"""
 		In-place multiplication: :pycode:`self *= other`.
 
@@ -513,7 +515,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __imod__(self, other: Any) -> 'CallByRefIntParam':
+	def __imod__(self, other: Any) -> CallByRefIntParam:
 		"""
 		In-place modulo: :pycode:`self %= other`.
 
@@ -530,7 +532,7 @@ class CallByRefIntParam(CallByRefParam[int]):
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ipow__(self, other: Any) -> 'CallByRefIntParam':
+	def __ipow__(self, other: Any) -> CallByRefIntParam:
 		r"""
 		In-place power: :pycode:`self **= other`.
 

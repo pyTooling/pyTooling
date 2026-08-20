@@ -35,6 +35,8 @@ Configuration reader for JSON files.
 
    See :ref:`high-level help <CONFIG/FileFormat/JSON>` for explanations and usage examples.
 """
+
+from __future__                import annotations
 from json                      import load
 from pathlib                   import Path
 from typing                    import Any, Union, Iterator as typing_Iterator, Self
@@ -63,7 +65,7 @@ class Node(Abstract_Node):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		jsonNode: Union[dict[str, Any], list[Any]]
@@ -312,7 +314,7 @@ class Dictionary(Node, Abstract_Dict):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		jsonNode: dict
@@ -386,7 +388,7 @@ class Sequence(Node, Abstract_Seq):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		jsonNode: list

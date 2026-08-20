@@ -35,6 +35,8 @@ Configuration reader for YAML files.
 
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
+
+from __future__           import annotations
 from pathlib              import Path
 from typing               import Any, Union, Iterator as typing_Iterator, Self
 from pyTooling.Exceptions import MissingDependencyException
@@ -69,7 +71,7 @@ class Node(Abstract_Node):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		yamlNode: Union[CommentedMap, CommentedSeq]
@@ -318,7 +320,7 @@ class Dictionary(Node, Abstract_Dict):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		yamlNode: CommentedMap
@@ -392,7 +394,7 @@ class Sequence(Node, Abstract_Seq):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		yamlNode: CommentedSeq
