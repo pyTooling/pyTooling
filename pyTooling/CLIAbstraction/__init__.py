@@ -41,7 +41,6 @@ Basic abstraction layer for executables.
    :mod:`pyTooling.Platform`
       |rarr| Deciding which executable name and path style the current platform uses.
 """
-
 from __future__ import annotations
 
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
@@ -186,12 +185,12 @@ class Program(metaclass=ExtendedType, slots=True):
 	CLI options are collected in a ``__cliOptions__`` dictionary.
 	"""
 
-	_platform:         str                                                            #: Current platform the executable runs on (Linux, Windows, ...)
-	_executableNames:  ClassVar[dict[str, str]]                                       #: Dictionary of platform specific executable names.
-	_executablePath:   Path                                                           #: The path to the executable (binary, script, ...).
-	_dryRun:           bool                                                           #: True, if program shall run in *dry-run mode*.
-	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]                 #: List of all possible CLI options.
-	__cliParameters__: dict[type[CommandLineArgument], CommandLineArgument]           #: List of all CLI parameters.
+	_platform:         str                                                   #: Current platform the executable runs on (Linux, Windows, ...)
+	_executableNames:  ClassVar[dict[str, str]]                              #: Dictionary of platform specific executable names.
+	_executablePath:   Path                                                  #: The path to the executable (binary, script, ...).
+	_dryRun:           bool                                                  #: True, if program shall run in *dry-run mode*.
+	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]        #: List of all possible CLI options.
+	__cliParameters__: dict[type[CommandLineArgument], CommandLineArgument]  #: List of all CLI parameters.
 
 	def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
 		"""

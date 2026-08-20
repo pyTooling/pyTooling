@@ -44,12 +44,11 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
    :mod:`pyTooling.Stopwatch`
       |rarr| The stopwatch measuring how long a scan took.
 """
-
-from __future__ import annotations
-from os         import scandir, readlink
+from __future__            import annotations
 
 from enum                  import Enum
 from itertools             import chain
+from os                    import scandir, readlink
 from pathlib               import Path
 from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
 from typing                import Iterator, cast
@@ -210,9 +209,9 @@ class Element(Base, Generic[_ParentType]):
 
 	   Symbolic link sources are reverse references describing which symbolic links point to this element.
 	"""
-	_name:        str                   #: Name of the filesystem element.
-	_parent:      _ParentType           #: Reference to the filesystem element's parent (:class:`Directory`)
-	_linkSources: list[SymbolicLink]    #: A list of symbolic links pointing to this filesystem element.
+	_name:        str                 #: Name of the filesystem element.
+	_parent:      _ParentType         #: Reference to the filesystem element's parent (:class:`Directory`)
+	_linkSources: list[SymbolicLink]  #: A list of symbolic links pointing to this filesystem element.
 
 	def __init__(
 		self,
@@ -338,14 +337,14 @@ class Directory(Element["Directory"]):
 	aggregation is provided via :data:`AggregateDuration`.
 	"""
 
-	_path:              Nullable[Path]             #: Cached :class:`~pathlib.Path` object of this directory.
-	_subdirectories:    dict[str, Directory]       #: Dictionary containing name-:class:`Directory` pairs.
-	_files:             dict[str, Filename]        #: Dictionary containing name-:class:`Filename` pairs.
-	_symbolicLinks:     dict[str, SymbolicLink]    #: Dictionary containing name-:class:`SymbolicLink` pairs.
-	_filesSize:         int                        #: Aggregated size of all direct files.
-	_collapsed:         bool                       #: True, if this directory was collapsed. It contains no subelements.
-	_scanDuration:      Nullable[float]            #: Duration for scanning the directory and all its subelements.
-	_aggregateDuration: Nullable[float]            #: Duration for aggregating all subelements.
+	_path:              Nullable[Path]           #: Cached :class:`~pathlib.Path` object of this directory.
+	_subdirectories:    dict[str, Directory]     #: Dictionary containing name-:class:`Directory` pairs.
+	_files:             dict[str, Filename]      #: Dictionary containing name-:class:`Filename` pairs.
+	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
+	_filesSize:         int                      #: Aggregated size of all direct files.
+	_collapsed:         bool                     #: True, if this directory was collapsed. It contains no subelements.
+	_scanDuration:      Nullable[float]          #: Duration for scanning the directory and all its subelements.
+	_aggregateDuration: Nullable[float]          #: Duration for aggregating all subelements.
 
 	def __init__(
 		self,
@@ -1300,7 +1299,7 @@ class Root(Directory):
 	"""
 	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 	"""
-	_ids:                      dict[int, File]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_ids:                      dict[int, File]     #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
 	_brokenSymbolicLinks:      list[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
 	_unconnectedSymbolicLinks: list[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
 

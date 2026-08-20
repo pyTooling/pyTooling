@@ -41,15 +41,16 @@
    :mod:`pyTooling.Attributes`
       |rarr| Attributes, which mark an entity instead of modifying it.
 """
-
 from __future__ import annotations
-import sys
-from enum      import Enum, unique
-from functools import wraps
-from inspect   import cleandoc
-from types     import FunctionType
-from typing    import Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
-from typing    import Optional as Nullable
+
+from enum       import Enum, unique
+from functools  import wraps
+from inspect    import cleandoc
+from sys        import modules
+from types      import FunctionType
+from typing     import Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
+from typing     import Optional as Nullable
+
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
@@ -109,7 +110,7 @@ def export(entity: T) -> T:
 		raise TypeError(f"Entity must be a named top-level function or class, not {entity.__class__}")
 
 	try:
-		module = sys.modules[entity.__module__]
+		module = modules[entity.__module__]
 	except KeyError:
 		raise ValueError(f"Module {entity.__module__} is not present in sys.modules. Please ensure it is in the import path before calling export().")
 

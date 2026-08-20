@@ -44,8 +44,8 @@ Implementation of package dependencies.
    :mod:`pyTooling.Graph`
       |rarr| The graph data structure a dependency graph is built on.
 """
-
 from __future__            import annotations
+
 from datetime              import datetime
 from typing                import Optional as Nullable, Union, Iterable, Self, Iterator
 from pyTooling.Decorators  import export, readonly
@@ -103,9 +103,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:    Package                                                  #: Reference to the corresponding package
-	_version:    SemanticVersion                                          #: :class:`SemanticVersion` of this package version.
-	_releasedAt: Nullable[datetime]                                       #: Time when this package version was released.
+	_package:    Package                                              #: Reference to the corresponding package
+	_version:    SemanticVersion                                      #: :class:`SemanticVersion` of this package version.
+	_releasedAt: Nullable[datetime]                                   #: Time when this package version was released.
 
 	_dependsOn: dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
@@ -389,8 +389,8 @@ class Package(metaclass=ExtendedType, slots=True):
 	"""
 	The package, which exists in multiple versions (:class:`PackageVersion`).
 	"""
-	_storage:  PackageStorage                       #: Reference to the package's storage.
-	_name:     str                                  #: Name of the package.
+	_storage:  PackageStorage                         #: Reference to the package's storage.
+	_name:     str                                    #: Name of the package.
 
 	_versions: dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
@@ -512,9 +512,9 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 	"""
 	A storage for packages.
 	"""
-	_graph:    PackageDependencyGraph    #: Reference to the overall dependency graph data structure.
-	_name:     str                       #: Package dependency graph name
-	_packages: dict[str, Package]        #: Dictionary of known packages.
+	_graph:    PackageDependencyGraph  #: Reference to the overall dependency graph data structure.
+	_name:     str                     #: Package dependency graph name
+	_packages: dict[str, Package]      #: Dictionary of known packages.
 
 	def __init__(self, name: str, graph: PackageDependencyGraph) -> None:
 		"""

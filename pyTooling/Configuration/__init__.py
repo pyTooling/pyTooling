@@ -44,8 +44,8 @@ Abstract configuration reader.
    :mod:`pyTooling.GenericPath`
       |rarr| The path expressions a configuration is queried with.
 """
-
 from __future__            import annotations
+
 from pathlib               import Path
 from typing                import Union, ClassVar, Iterator, Optional as Nullable
 from pyTooling.Decorators  import export, readonly

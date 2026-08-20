@@ -40,9 +40,7 @@ This packages provides a data structure to describe statemachines.
    :mod:`pyTooling.Graph`
       |rarr| The graph data structure a statemachine is a special case of.
 """
-
-from __future__ import annotations
-
+from __future__            import annotations
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType

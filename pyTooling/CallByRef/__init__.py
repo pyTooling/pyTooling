@@ -40,10 +40,10 @@ Auxiliary classes to implement call-by-reference.
    :mod:`pyTooling.Common`
       |rarr| Helper functions for the data types passed around this way.
 """
+from __future__ import annotations
 
-from __future__    import annotations
-from decimal       import Decimal
-from typing        import Any, Generic, Self, TypeVar, Optional as Nullable
+from decimal    import Decimal
+from typing     import Any, Generic, Self, TypeVar, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export

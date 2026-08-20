@@ -38,8 +38,8 @@ A generic path to derive domain specific path libraries.
    :mod:`pyTooling.Configuration`
       |rarr| Path expressions addressing a node in a configuration.
 """
-
 from __future__            import annotations
+
 from typing                import ClassVar, Optional as Nullable
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
@@ -49,9 +49,9 @@ from pyTooling.MetaClasses import ExtendedType
 class Base(metaclass=ExtendedType, mixin=True):
 	"""Base-mixin-class for all :mod:`pyTooling.GenericPath` path elements."""
 
-	DELIMITER: ClassVar[str] = "/"            #: Path element delimiter sign.
+	DELIMITER: ClassVar[str] = "/"  #: Path element delimiter sign.
 
-	_parent: Nullable[Base]  #: Reference to the parent object.
+	_parent: Nullable[Base]         #: Reference to the parent object.
 
 	def __init__(self, parent: Nullable[Base] = None) -> None:
 		"""
@@ -103,11 +103,11 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"          #: Path element delimiter sign.
-	ROOT_DELIMITER:    ClassVar[str] = "/"          #: Root element delimiter sign.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Root element delimiter sign.
 
-	_isAbsolute: bool                #: True, if the path is absolute.
-	_elements:   list[ElementMixIn]  #: List of path elements.
+	_isAbsolute: bool                       #: True, if the path is absolute.
+	_elements:   list[ElementMixIn]         #: List of path elements.
 
 	def __init__(self, elements: list[ElementMixIn], isAbsolute: bool) -> None:
 		"""

@@ -35,8 +35,7 @@ This package provides a representation for a Uniform Resource Locator (URL).
 
    [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 """
-
-from __future__ import annotations
+from __future__            import annotations
 
 from enum                  import Flag
 from re                    import compile as re_compile
@@ -175,8 +174,8 @@ class Element(ElementMixIn):
 class Path(PathMixIn):
 	"""Represents a path in a URL."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"   #: Delimiter symbol in URLs between path elements.
-	ROOT_DELIMITER:    ClassVar[str] = "/"   #: Delimiter symbol in URLs between root element and first path element.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Delimiter symbol in URLs between path elements.
+	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Delimiter symbol in URLs between root element and first path element.
 
 	@classmethod
 	def Parse(cls, path: str, root: Nullable[Host] = None) -> Path:

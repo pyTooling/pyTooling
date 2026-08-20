@@ -40,8 +40,8 @@ A powerful tree data structure for Python.
    :mod:`pyTooling.LinkedList`
       |rarr| An object-oriented doubly linked-list data structure.
 """
-
 from __future__            import annotations
+
 from collections           import deque
 from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
 from typing                import Any, Callable, Iterator, Generator, Iterable, Mapping, Hashable
@@ -160,9 +160,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	_children: list[Node]                       #: List of all children
 #	_links: list['Node']
 
-	_level: int                                   #: Level of the node (distance to the root).
-	_value: Nullable[ValueType]                   #: Field to store the node's value.
-	_dict: dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
+	_level: int                                 #: Level of the node (distance to the root).
+	_value: Nullable[ValueType]                 #: Field to store the node's value.
+	_dict: dict[DictKeyType, DictValueType]     #: Dictionary to store key-value-pairs attached to the node.
 
 	_format: Nullable[Callable[[Node], str]]    #: A node formatting function returning a one-line representation for tree-rendering.
 

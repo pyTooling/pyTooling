@@ -35,8 +35,8 @@ Configuration reader for YAML files.
 
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
-
 from __future__           import annotations
+
 from pathlib              import Path
 from typing               import Any, Union, Iterator as typing_Iterator, Self
 from pyTooling.Exceptions import MissingDependencyException
@@ -316,7 +316,7 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
-	_keys: list[KeyT]  #: List of keys in this dictionary.
+	_keys: list[KeyT]                   #: List of keys in this dictionary.
 
 	def __init__(
 		self,

@@ -36,8 +36,8 @@ A data model to write out GraphML XML files.
    `GraphML Primer <http://graphml.graphdrawing.org/primer/graphml-primer.html>`__
       |rarr| The format's own introduction, describing the elements this module writes.
 """
-
 from __future__            import annotations
+
 from enum                  import Enum, auto
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
@@ -570,13 +570,13 @@ class BaseGraph(BaseWithData, mixin=True):
 	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
 	direction, the parsing order, and the ID styles for nodes and edges.
 	"""
-	_subgraphs:   dict[str, Subgraph]    #: Subgraphs of this graph, by ID.
-	_nodes:       dict[str, Node]        #: Nodes of this graph, by ID.
-	_edges:       dict[str, Edge]        #: Edges of this graph, by ID.
-	_edgeDefault: EdgeDefault            #: Direction applied to edges that don't specify one.
-	_parseOrder:  ParsingOrder           #: Order in which nodes and edges may appear in the XML document.
-	_nodeIDStyle: IDStyle                #: Whether node IDs are free-form or canonical.
-	_edgeIDStyle: IDStyle                #: Whether edge IDs are free-form or canonical.
+	_subgraphs:   dict[str, Subgraph]  #: Subgraphs of this graph, by ID.
+	_nodes:       dict[str, Node]      #: Nodes of this graph, by ID.
+	_edges:       dict[str, Edge]      #: Edges of this graph, by ID.
+	_edgeDefault: EdgeDefault          #: Direction applied to edges that don't specify one.
+	_parseOrder:  ParsingOrder         #: Order in which nodes and edges may appear in the XML document.
+	_nodeIDStyle: IDStyle              #: Whether node IDs are free-form or canonical.
+	_edgeIDStyle: IDStyle              #: Whether edge IDs are free-form or canonical.
 
 	def __init__(self, identifier: Nullable[str] = None) -> None:
 		"""

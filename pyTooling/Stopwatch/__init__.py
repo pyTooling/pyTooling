@@ -42,13 +42,12 @@ A stopwatch to measure execution times.
    :mod:`pyTooling.Process`
       |rarr| The process' memory usage, next to its runtime.
 """
+from __future__            import annotations
 
-from __future__ import annotations
-
-from datetime import datetime
-from time     import perf_counter_ns
-from types    import TracebackType
-from typing   import Optional as Nullable, Iterator, Self
+from datetime              import datetime
+from time                  import perf_counter_ns
+from types                 import TracebackType
+from typing                import Optional as Nullable, Iterator, Self
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException

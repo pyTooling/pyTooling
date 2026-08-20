@@ -35,8 +35,8 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-
 from __future__           import annotations
+
 from asyncio              import run as asyncio_run, gather as asyncio_gather
 from datetime             import datetime
 from enum                 import IntEnum
@@ -286,8 +286,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 	_files:        list[Distribution]                         #: Distributions (wheels, source archives) of this release.
 	_requirements: dict[Union[str, None], list[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
 
-	_api:          Nullable[URL]      #: URL of the package index's API, used to load the release's details.
-	_session:      Nullable[Session]  #: HTTP session reused for the API requests.
+	_api:          Nullable[URL]                              #: URL of the package index's API, used to load the release's details.
+	_session:      Nullable[Session]                          #: HTTP session reused for the API requests.
 
 	def __init__(
 		self,

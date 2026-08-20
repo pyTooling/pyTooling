@@ -42,12 +42,12 @@ Implementation of semantic and date versioning version-numbers.
    :mod:`pyTooling.Dependency`
       |rarr| Resolving requirements against these version numbers.
 """
+from __future__            import annotations
 
-from __future__      import annotations
-from collections.abc import Iterable as abc_Iterable
-from enum            import Flag, Enum
-from re              import compile as re_compile, Pattern
-from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
+from collections.abc       import Iterable as abc_Iterable
+from enum                  import Flag, Enum
+from re                    import compile as re_compile, Pattern
+from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 from pyTooling.Exceptions  import ToolingException

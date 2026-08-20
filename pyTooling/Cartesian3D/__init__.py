@@ -38,8 +38,7 @@ An implementation of 3D cartesian data structures for Python.
    :mod:`pyTooling.Cartesian3D.Volumes`
       |rarr| Volumes built from these points and offsets.
 """
-
-from __future__ import annotations
+from __future__            import annotations
 
 from math                  import sqrt, acos
 from typing                import Union, Generic, Any, Self

@@ -38,8 +38,7 @@ An implementation of 2D cartesian data structures for Python.
    :mod:`pyTooling.Cartesian2D.Shapes`
       |rarr| Shapes built from these points and offsets.
 """
-
-from __future__ import annotations
+from __future__            import annotations
 
 from math                  import sqrt, acos
 from typing                import TypeVar, Union, Generic, Any, Self

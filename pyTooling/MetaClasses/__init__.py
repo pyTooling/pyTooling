@@ -45,16 +45,16 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
    :mod:`pyTooling.Exceptions`
       |rarr| The base-exception of everything this meta-class raises.
 """
+from __future__           import annotations
 
-from __future__ import annotations
-from functools  import wraps
-from itertools  import chain
-from re         import compile as re_compile
-from sys        import modules, version_info
-from threading  import Condition
-from types      import BuiltinFunctionType, FunctionType, MethodType
-from typing     import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
-from typing     import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
+from functools            import wraps
+from itertools            import chain
+from re                   import compile as re_compile
+from sys                  import modules, version_info
+from threading            import Condition
+from types                import BuiltinFunctionType, FunctionType, MethodType
+from typing               import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
+from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector

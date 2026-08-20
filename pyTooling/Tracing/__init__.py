@@ -38,13 +38,13 @@ Tools for software execution tracing.
    :mod:`pyTooling.Tree`
       |rarr| The tree data structure spans and their sub-spans form.
 """
-
 from __future__ import annotations
-from datetime  import datetime
-from time      import perf_counter_ns
-from threading import local
-from types     import TracebackType
-from typing    import Optional as Nullable, Iterator, Self, Iterable, Any
+
+from datetime   import datetime
+from time       import perf_counter_ns
+from threading  import local
+from types      import TracebackType
+from typing     import Optional as Nullable, Iterator, Self, Iterable, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -213,8 +213,8 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
-	_name:      str               #: Name of the timespan
-	_parent:    Nullable[Span]    #: Reference to the parent span (or trace).
+	_name:      str                 #: Name of the timespan
+	_parent:    Nullable[Span]      #: Reference to the parent span (or trace).
 
 	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
 	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.

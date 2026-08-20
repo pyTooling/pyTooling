@@ -49,12 +49,12 @@ class, method or function. By default, this field is called ``__pyattr__``.
    :mod:`pyTooling.Decorators`
       |rarr| Decorators that modify an entity instead of marking it.
 """
+from __future__           import annotations
 
-from __future__ import annotations
-from enum   import IntFlag
-from types  import MethodType, FunctionType, ModuleType
-from typing import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
-from typing import Optional as Nullable
+from enum                 import IntFlag
+from types                import MethodType, FunctionType, ModuleType
+from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
+from typing               import Optional as Nullable
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
 

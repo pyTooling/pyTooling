@@ -38,8 +38,7 @@ An object-oriented doubly linked-list data structure for Python.
    :mod:`pyTooling.Graph`
       |rarr| A graph data structure.
 """
-
-from __future__ import annotations
+from __future__            import annotations
 
 from collections.abc       import Sized
 from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any

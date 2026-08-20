@@ -35,8 +35,8 @@ A :class:`~pyTooling.Filesystem.Docker.LayerCake` distributes the files of a
 :class:`~pyTooling.Filesystem.Root` over layers - largest file first, each layer filled up to a target size that
 shrinks from layer to layer - and writes one file list per layer, ready to be turned into image layers.
 """
-
 from __future__            import annotations
+
 from pathlib               import Path
 from typing                import Optional as Nullable
 from pyTooling.Decorators  import export, readonly
@@ -53,9 +53,9 @@ class Layer(metaclass=ExtendedType):
 
 	A layer knows its aggregated size, so the slicing algorithm can stop filling it when the target size is reached.
 	"""
-	_parent:        Nullable[LayerCake]     #: Reference to the parent layer cake.
-	_previousLayer: Nullable[Layer]         #: Reference to the previous layer.
-	_nextLayer:     Nullable[Layer]         #: Reference to the next layer
+	_parent:        Nullable[LayerCake]       #: Reference to the parent layer cake.
+	_previousLayer: Nullable[Layer]           #: Reference to the previous layer.
+	_nextLayer:     Nullable[Layer]           #: Reference to the next layer
 
 	_files:         list[Element[Directory]]  #: List of files in this layer.
 	_size:          int                       #: Aggregated size of all contained files for this layer.
