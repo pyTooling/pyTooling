@@ -34,6 +34,8 @@ Unit tests for the abstract base-classes of :mod:`pyTooling.Configuration`.
 The four stubs on :class:`~pyTooling.Configuration.Node` are declared abstract, so a backend that forgets one is
 rejected at class-creation time instead of raising :exc:`NotImplementedError` at runtime.
 """
+from pathlib import Path
+
 from pyTooling.Configuration import Node, Dictionary, Sequence
 from pyTooling.MetaClasses   import AbstractClassError
 from pyTooling.Testing       import Testcase
@@ -53,6 +55,23 @@ class Abstract(Testcase):
 	def test_SequenceIsAbstract(self) -> None:
 		with self.assertRaises(AbstractClassError):
 			_ = Sequence()
+
+	def test_AConfigurationIsReadOnly(self) -> None:
+		"""Writing is not supported by any backend, and saying so is the method's only job - finding T68."""
+		from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
+
+		configuration = YAMLConfiguration(Path("tests/unit/Configuration/config.yml"))
+		message = "Currently, the configuration is read-only. Writing isn't implemented."
+
+		# the root, a dictionary node and a sequence node all answer the same way
+		for node in (configuration, configuration["node_1"], configuration["node_2"]):
+			with self.assertRaises(NotImplementedError) as context:
+				node["key"] = "value"
+
+			self.assertEqual(message, str(context.exception))
+
+		# a backend inherits the message instead of repeating it
+		self.assertIs(Node.__setitem__, YAMLConfiguration.__setitem__)
 
 	def test_ABackendImplementsAllOfThem(self) -> None:
 		"""A backend is instantiable, which is what the abstract declaration must not break."""

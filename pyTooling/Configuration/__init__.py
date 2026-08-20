@@ -134,10 +134,15 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Set an element in the node by index or key.
 
+		.. attention::
+
+		   A configuration is **read-only**: the file format doesn't implements writing.
+
 		:param key:                  Index or key of the element.
-		:param value:                Value to set
+		:param value:                The new value of that element.
+		:raises NotImplementedError: Always - a configuration is read-only.
 		"""
-		raise NotImplementedError()
+		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
 
 	@abstractmethod
 	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
@@ -217,14 +222,19 @@ class Sequence(Node):
 		"""
 		raise NotImplementedError()
 
-	def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
+	def __setitem__(self, index: int, value: ValueT) -> None:
 		"""
 		Write an element of this sequence node by index.
 
-		:param index: Index of the element to write.
-		:param value: The new value of that element.
+		.. attention::
+
+		   A configuration is **read-only** - see :meth:`Node.__setitem__`.
+
+		:param index:                Index of the element to write.
+		:param value:                The new value of that element.
+		:raises NotImplementedError: Always - a configuration is read-only.
 		"""
-		raise NotImplementedError()
+		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
 
 
 setattr(Node, "DICT_TYPE", Dictionary)
