@@ -43,7 +43,7 @@ A common set of missing exceptions in Python.
    :mod:`pyTooling.MetaClasses`
       |rarr| The exceptions raised for a class that violates the meta-class' rules.
 """
-from typing               import Iterable, Any, Optional as Nullable
+from typing               import ClassVar, Iterable, Any, Optional as Nullable
 from pyTooling.Decorators import export, readonly
 
 
@@ -178,7 +178,7 @@ class NotConfiguredException(ExceptionBase):
 
 
 @export
-class MissingDependencyError(ImportError):
+class MissingDependencyException(ImportError):
 	"""
 	The exception is raised when an optional dependency of pyTooling is not installed.
 
@@ -195,8 +195,10 @@ class MissingDependencyError(ImportError):
 	      try:
 	        from ruamel.yaml import YAML
 	      except ImportError as ex:
-	        raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+	        raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
 	"""
+
+	EXIT_CODE:   ClassVar[int] = 242  #: Exit code an application should use when an optional dependency is missing.
 
 	_dependency: str            #: Field storing the name of the package that is not installed.
 	_extra:      Nullable[str]  #: Field storing the name of the pyTooling extra installing that package.
@@ -239,6 +241,26 @@ class MissingDependencyError(ImportError):
 		:returns: Name of the extra, or ``None`` if the package has no extra of its own.
 		"""
 		return self._extra
+
+	@readonly
+	def InstallCommands(self) -> tuple[str, ...]:
+		"""
+		Read-only property to access the command lines installing the missing package.
+
+		The extra comes first, because it installs the package *and* records why it is needed. Both commands are
+		plain text and need no terminal support: an application that cannot even import :mod:`pyTooling.TerminalUI` -
+		because *colorama* is the missing package - can print them itself, and
+		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyException` formats them when it can.
+
+		:returns: One command line per installation option, most specific first.
+		"""
+		if self._extra is None:
+			return (f"pip install {self._dependency}", )
+
+		return (
+			f"pip install pyTooling[{self._extra}]",
+			f"pip install {self._dependency}"
+		)
 
 
 # FIXME: Why not derived from ExceptionBase?

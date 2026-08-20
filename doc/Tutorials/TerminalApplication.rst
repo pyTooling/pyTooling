@@ -160,13 +160,16 @@ formats the exception, its notes, its cause and its traceback, and then exits wi
      except ExceptionBase as ex:
        program.PrintExceptionBase(ex)                      # exit code 241, a known exception
      except NotImplementedError as ex:
-       program.PrintNotImplementedError(ex)                # exit code 240
+       program.PrintNotImplementedError(ex)                # exit code 240, an unimplemented function was called
+     except MissingDependencyException as ex:
+       program.PrintMissingDependencyException(ex)         # exit code 242, an installation problem
      except Exception as ex:
-       program.PrintException(ex)                          # exit code 241
+       program.PrintException(ex)                          # exit code 241, an unexpected exception
 
 Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL`, and each of these reports ends by inviting
-the user to file a bug, with the URL. The application connects the class variable to its own dunder variable, because
-only the application knows which of its modules carries it:
+the user to file a bug, with the URL - except the missing-dependency report, which names the package and the command
+installing it instead: nothing is wrong with the program. The application connects the class variable to its own dunder
+variable, because only the application knows which of its modules carries it:
 
 .. code-block:: Python
 

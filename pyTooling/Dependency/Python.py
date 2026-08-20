@@ -35,28 +35,28 @@ Implementation of package dependencies.
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from asyncio   import run as asyncio_run, gather as asyncio_gather
-from datetime  import datetime
-from enum      import IntEnum
-from functools import wraps, update_wrapper
-from threading import RLock
-from typing    import Optional as Nullable, Union, Iterable, Mapping
-from pyTooling.Exceptions import MissingDependencyError
+from asyncio              import run as asyncio_run, gather as asyncio_gather
+from datetime             import datetime
+from enum                 import IntEnum
+from functools            import wraps, update_wrapper
+from threading            import RLock
+from typing               import Optional as Nullable, Union, Iterable, Mapping
+from pyTooling.Exceptions import MissingDependencyException
 
 try:
 	from aiohttp import ClientSession
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
+	raise MissingDependencyException(dependency="aiohttp", extra="pypi") from ex
 
 try:
 	from packaging.requirements import Requirement
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
+	raise MissingDependencyException(dependency="packaging", extra="pypi") from ex
 
 try:
 	from requests import Session, HTTPError
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="requests", extra="pypi") from ex
+	raise MissingDependencyException(dependency="requests", extra="pypi") from ex
 
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod

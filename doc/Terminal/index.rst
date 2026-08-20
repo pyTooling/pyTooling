@@ -158,6 +158,8 @@ exit codes are class variables, so an application can override them:
 +-------------------------------------------+-----------+-------------------------------------------------------------+
 | ``UNHANDLED_EXCEPTION_EXIT_CODE``         | 241       | An exception reached the topmost exception handler.         |
 +-------------------------------------------+-----------+-------------------------------------------------------------+
+| ``MISSING_DEPENDENCY_EXIT_CODE``          | 242       | An optional dependency of the application is not installed. |
++-------------------------------------------+-----------+-------------------------------------------------------------+
 | ``FATAL_EXIT_CODE``                       | 255       | A fatal message was written, or ``FatalExit()`` was called. |
 +-------------------------------------------+-----------+-------------------------------------------------------------+
 
