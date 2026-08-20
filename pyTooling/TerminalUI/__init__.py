@@ -1210,8 +1210,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		)
 		try:
 			with urlopen(request, timeout=timeout) as response:
-				data: dict[str, Any] = loads(response.read().decode())
-				return str(data["info"]["version"])
+				data: dict[str, dict[str, str]] = loads(response.read().decode())
+				return data["info"]["version"]
 		except Exception:
 			return None
 
@@ -1433,7 +1433,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:param line: Line object to check.
 		:returns:    True, if line would be written.
 		"""
-		return bool(line.Severity >= self._writeLevel)
+		severity: Severity = line.Severity     # '@readonly' hands out 'Any' until it is typed - see T75
+		return severity >= self._writeLevel
 
 	def WriteFatal(
 		self,
