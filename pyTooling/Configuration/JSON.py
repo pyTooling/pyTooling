@@ -35,10 +35,9 @@ Configuration reader for JSON files.
 
    See :ref:`high-level help <CONFIG/FileFormat/JSON>` for explanations and usage examples.
 """
-from json          import load
-from pathlib       import Path
-from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
-
+from json                      import load
+from pathlib                   import Path
+from typing                    import Any, Union, Iterator as typing_Iterator, Self
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, InheritDocString
 from pyTooling.MetaClasses     import ExtendedType
@@ -57,8 +56,8 @@ class Node(Abstract_Node):
 	Node in a JSON configuration data structure.
 	"""
 
-	_jsonNode: Union[Dict, List]  #: Reference to the associated JSON node.
-	_cache:    Dict[str, ValueT]  #: Cache of already converted sub-nodes and values, by key.
+	_jsonNode: Union[dict, list]  #: Reference to the associated JSON node.
+	_cache:    dict[str, ValueT]  #: Cache of already converted sub-nodes and values, by key.
 	_key:      KeyT               #: Key of this node.
 	_length:   int                #: Number of sub-elements.
 
@@ -67,7 +66,7 @@ class Node(Abstract_Node):
 		root:     "Configuration",
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: Union[Dict, List]
+		jsonNode: Union[dict, list]
 	) -> None:
 		"""
 		Initializes a JSON node.
@@ -113,7 +112,7 @@ class Node(Abstract_Node):
 		return self._GetNodeOrValueByPathExpression(path)
 
 	@staticmethod
-	def _ToPath(query: str) -> List[Union[str, int]]:
+	def _ToPath(query: str) -> list[Union[str, int]]:
 		"""
 		Split a path expression into its elements.
 
@@ -262,7 +261,7 @@ class Node(Abstract_Node):
 
 		return result
 
-	def _GetValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+	def _GetValueByPathExpression(self, path: list[KeyT]) -> ValueT:
 		"""
 		Return the value the given path refers to.
 
@@ -287,7 +286,7 @@ class Node(Abstract_Node):
 
 		return node
 
-	def _GetNodeOrValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+	def _GetNodeOrValueByPathExpression(self, path: list[KeyT]) -> ValueT:
 		"""
 		Return the node or value the given path refers to.
 
@@ -309,14 +308,14 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a JSON data file."""
 
-	_keys: List[KeyT]  #: List of keys in this dictionary.
+	_keys: list[KeyT]  #: List of keys in this dictionary.
 
 	def __init__(
 		self,
 		root:     "Configuration",
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: Dict
+		jsonNode: dict
 	) -> None:
 		"""
 		Initializes a JSON dictionary.
@@ -390,7 +389,7 @@ class Sequence(Node, Abstract_Seq):
 		root:     "Configuration",
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: List
+		jsonNode: list
 	) -> None:
 		"""
 		Initializes a JSON sequence (list).
@@ -459,7 +458,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 class Configuration(Dictionary, Abstract_Configuration):
 	"""A configuration read from a JSON file."""
 
-	_jsonConfig: Dict  #: The parsed JSON document this configuration is based on.
+	_jsonConfig: dict  #: The parsed JSON document this configuration is based on.
 
 	def __init__(self, configFile: Path) -> None:
 		"""

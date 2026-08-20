@@ -36,8 +36,7 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
-
+from typing  import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
@@ -526,7 +525,7 @@ class StringListArgument(ValuedArgument):
 			self._values.append(value)
 
 	@property
-	def Value(self) -> List[str]:
+	def Value(self) -> list[str]:
 		"""
 		Property to access the internal list of str objects (:attr:`_values`).
 
@@ -643,7 +642,7 @@ class PathListArgument(CommandLineArgument):
 	Represents a list of path arguments  (:class:`~pyTooling.CLIAbstraction.Argument.PathArgument`).
 	"""
 	# The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.
-	_paths: List[Path]  #: Paths this argument represents.
+	_paths: list[Path]  #: Paths this argument represents.
 
 	def __init__(self, paths: Iterable[Path]) -> None:
 		"""
@@ -662,7 +661,7 @@ class PathListArgument(CommandLineArgument):
 			self._paths.append(path)
 
 	@property
-	def Value(self) -> List[Path]:
+	def Value(self) -> list[Path]:
 		"""
 		Property to access the internal list of path objects (:attr:`_paths`).
 

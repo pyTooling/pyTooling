@@ -46,7 +46,7 @@ attribute declares before the handler method is called:
   :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`)
 """
 from pathlib import Path
-from typing import Type
+
 
 from pyTooling.Decorators          import export
 from pyTooling.Attributes.ArgParse import CommandLineArgument
@@ -102,7 +102,7 @@ class PositionalArgument(ValuedArgument):
 	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
-	def __init__(self, dest: str, metaName: str, type: Type = str, optional: bool = False, help: str = "") -> None:
+	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
@@ -191,7 +191,7 @@ class ListArgument(ValuedArgument):
 	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
-	def __init__(self, dest: str, metaName: str, type: Type = str, optional: bool = False, help: str = "") -> None:
+	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.

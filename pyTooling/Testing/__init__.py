@@ -45,8 +45,7 @@ from shutil     import which
 from subprocess import CompletedProcess, run as subprocess_run
 from unittest   import TestCase
 from sys        import executable as PythonExecutable, version_info
-from typing     import Any, ClassVar, Dict, Optional as Nullable
-
+from typing     import Any, ClassVar, Optional as Nullable
 from pyTooling.Decorators import export
 from pyTooling.Exceptions import ToolingException
 
@@ -176,7 +175,7 @@ class ApplicationTestcase(Testcase):
 		*arguments:       str,
 		timeout:          float = 10.0,
 		stdInput:         Nullable[str] = None,
-		environment:      Nullable[Dict[str, str]] = None,
+		environment:      Nullable[dict[str, str]] = None,
 		workingDirectory: Nullable[Path] = None
 	) -> CompletedProcess:
 		"""
@@ -207,7 +206,7 @@ class ApplicationTestcase(Testcase):
 		*arguments:       str,
 		timeout:          float = 10.0,
 		stdInput:         Nullable[str] = None,
-		environment:      Nullable[Dict[str, str]] = None,
+		environment:      Nullable[dict[str, str]] = None,
 		workingDirectory: Nullable[Path] = None
 	) -> CompletedProcess:
 		"""

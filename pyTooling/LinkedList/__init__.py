@@ -39,9 +39,8 @@ An object-oriented doubly linked-list data structure for Python.
       |rarr| A graph data structure.
 """
 
-from collections.abc import Sized
-from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List, Any
-
+from collections.abc       import Sized
+from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
@@ -793,7 +792,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			yield node
 			node = previousNode
 
-	def ToList(self, reverse: bool = False) -> List[Node[_NodeKey, _NodeValue]]:
+	def ToList(self, reverse: bool = False) -> list[Node[_NodeKey, _NodeValue]]:
 		"""
 		Convert the linked list to a :class:`list`.
 
@@ -809,7 +808,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		else:
 			return [n._value for n in self.IterateFromFirst()]
 
-	def ToTuple(self, reverse: bool = False) -> Tuple[Node[_NodeKey, _NodeValue], ...]:
+	def ToTuple(self, reverse: bool = False) -> tuple[Node[_NodeKey, _NodeValue], ...]:
 		"""
 		Convert the linked list to a :class:`tuple`.
 

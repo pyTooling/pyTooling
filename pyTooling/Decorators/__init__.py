@@ -46,8 +46,7 @@ from enum      import Enum, unique
 from functools import wraps
 from inspect   import cleandoc
 from types     import FunctionType
-from typing    import Union, Type, TypeVar, Callable, NoReturn, ParamSpec
-
+from typing    import Union, TypeVar, Callable, NoReturn, ParamSpec
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
@@ -57,7 +56,7 @@ RetType = TypeVar("RetType")                       #: Type variable for a return
 Func = Callable[Param, RetType]                    #: Type specification for a function
 
 
-T = TypeVar("T", bound=Union[Type, FunctionType])  #: A type variable for a classes or functions.
+T = TypeVar("T", bound=Union[type, FunctionType])  #: A type variable for a classes or functions.
 C = TypeVar("C", bound=Callable)                   #: A type variable for functions or methods.
 
 

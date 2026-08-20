@@ -64,9 +64,8 @@ from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
 from types               import ModuleType, TracebackType
-from typing              import Type, TypeVar, Callable, Generator, Hashable, List
-from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
-
+from typing              import TypeVar, Callable, Generator, Hashable
+from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
 
 from pyTooling.Decorators  import export
 
@@ -131,7 +130,7 @@ def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
 
 
 @export
-def isnestedclass(cls: Type, scope: Type) -> bool:
+def isnestedclass(cls: type, scope: type) -> bool:
 	"""
 	Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
 
@@ -142,7 +141,7 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 	for mroClass in scope.mro():
 		for memberName in mroClass.__dict__:
 			member = getattr(mroClass, memberName)
-			if isinstance(member, Type):
+			if isinstance(member, type):
 				if cls is member:
 					return True
 
@@ -195,7 +194,7 @@ def getsizeof(obj: Any) -> int:
 		if isinstance(obj, (str, bytes, bytearray, range, Number)):
 			pass
 		# Handle iterables
-		elif isinstance(obj, (tuple, list, Set, deque)):      # TODO: What about builtin "set", "frozenset" and "dict"?
+		elif isinstance(obj, (tuple, list, set, deque)):      # TODO: What about builtin "set", "frozenset" and "dict"?
 			for item in obj:
 				size += recurse(item)
 		# Handle mappings
@@ -262,7 +261,7 @@ _Element = TypeVar("Element")
 
 
 @export
-def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+def firstElement(indexable: Union[list[_Element], tuple[_Element, ...]]) -> _Element:
 	"""
 	Returns the first element from an indexable.
 
@@ -273,7 +272,7 @@ def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Ele
 
 
 @export
-def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+def lastElement(indexable: Union[list[_Element], tuple[_Element, ...]]) -> _Element:
 	"""
 	Returns the last element from an indexable.
 
@@ -329,7 +328,7 @@ _DictValue3 = TypeVar("_DictValue3")
 
 
 @export
-def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
+def firstKey(d: dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	"""
 	Retrieves the first key from a dictionary's keys.
 
@@ -344,7 +343,7 @@ def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
 
 
 @export
-def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
+def firstValue(d: dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	"""
 	Retrieves the first value from a dictionary's values.
 
@@ -359,7 +358,7 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 
 
 @export
-def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
+def firstPair(d: dict[_DictKey1, _DictValue1]) -> tuple[_DictKey1, _DictValue1]:
 	"""
 	Retrieves the first key-value-pair from a dictionary.
 
@@ -374,7 +373,7 @@ def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 
 
 @export
-def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
+def mergedicts(*dicts: dict, filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> dict:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
@@ -400,7 +399,7 @@ def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] =
 
 
 @export
-def zipdicts(*dicts: Dict) -> Generator[Tuple, None, None]:
+def zipdicts(*dicts: dict) -> Generator[tuple, None, None]:
 	"""
 	Iterate multiple dictionaries simultaneously.
 
@@ -422,7 +421,7 @@ def zipdicts(*dicts: Dict) -> Generator[Tuple, None, None]:
 	if any(len(d) != len(dicts[0]) for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
-	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+	def gen(ds: tuple[dict, ...]) -> Generator[tuple, None, None]:
 		"""
 		Nested generator function, so the length check runs when :func:`zipdicts` is called, not on first iteration.
 
@@ -467,7 +466,7 @@ class ChangeDirectory:
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:

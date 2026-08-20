@@ -39,9 +39,8 @@ An implementation of 2D cartesian data structures for Python.
       |rarr| Shapes built from these points and offsets.
 """
 
-from math   import sqrt, acos
-from typing import TypeVar, Union, Generic, Any, Tuple, Self
-
+from math                  import sqrt, acos
+from typing                import TypeVar, Union, Generic, Any, Self
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
@@ -92,7 +91,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.x, self.y)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-Point to a simple 2-element tuple.
 
@@ -269,7 +268,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.xOffset, self.yOffset)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-offset to a simple 2-element tuple.
 
@@ -455,7 +454,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.width, self.height)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-size to a simple 2-element tuple.
 
@@ -543,7 +542,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.end - self.start
 
-	def ToTuple(self) -> Tuple[Tuple[Coordinate, Coordinate], Tuple[Coordinate, Coordinate]]:
+	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], tuple[Coordinate, Coordinate]]:
 		"""
 		Convert this 2D line segment to a simple 2-element tuple of 2D-point tuples.
 

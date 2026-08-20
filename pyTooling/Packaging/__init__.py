@@ -50,8 +50,7 @@ from os              import scandir as os_scandir
 from pathlib         import Path
 from re              import split as re_split
 from sys             import version_info
-from typing          import List, Iterable, Dict, Sequence, Any, Optional as Nullable, Union, Tuple
-
+from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException, MissingDependencyError
 from pyTooling.MetaClasses import ExtendedType
@@ -144,7 +143,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 
 
 @export
-def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = False) -> List[str]:
+def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = False) -> list[str]:
 	"""
 	Reads a `requirements.txt` file (recursively) and extracts all specified dependencies into an array.
 
@@ -170,7 +169,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
 		raise ex
 
-	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> List[str]:
+	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> list[str]:
 		"""
 		Recursive variant of :func:`loadRequirementsFile`.
 
@@ -219,7 +218,7 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 	_author: str          #: Author name(s).
 	_copyright: str       #: Copyright information.
 	_email: str           #: Author's email address.
-	_keywords: List[str]  #: Keywords.
+	_keywords: list[str]  #: Keywords.
 	_license: str         #: License name.
 	_description: str     #: Description of the package.
 	_version: str         #: Version number.
@@ -290,7 +289,7 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return self._email
 
 	@readonly
-	def Keywords(self) -> List[str]:
+	def Keywords(self) -> list[str]:
 		"""
 		Read-only property to access the package's keywords (:attr:`_keywords`).
 
@@ -416,7 +415,7 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	return VersionInformation(_author, _email, _copyright, _license, _version, _description, _keywords)
 
 
-STATUS: Dict[str, str] = {
+STATUS: dict[str, str] = {
 	"planning":  "1 - Planning",
 	"pre-alpha": "2 - Pre-Alpha",
 	"alpha":     "3 - Alpha",
@@ -521,15 +520,15 @@ def DescribePythonPackage(
 	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
 	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
 	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
-	additionalRequirements: Dict[str, List[str]] = None,
+	additionalRequirements: dict[str, list[str]] = None,
 	sourceFileWithVersion: Nullable[Path] = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None,
-	dataFiles: Dict[str, List[str]] = None,
+	consoleScripts: dict[str, str] = None,
+	dataFiles: dict[str, list[str]] = None,
 	debug: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
 	"""
 	Helper function to describe a Python package.
 
@@ -692,7 +691,7 @@ def DescribePythonPackage(
 	else:
 		requirements = list(set(loadRequirementsFile(requirementsFile, debug=debug)))
 
-	extraRequirements: Dict[str, List[str]] = {}
+	extraRequirements: dict[str, list[str]] = {}
 	if documentationRequirementsFile is not None:
 		if not isinstance(documentationRequirementsFile, Path):
 			ex = TypeError(f"Parameter 'documentationRequirementsFile' is not of type 'Path'.")
@@ -786,7 +785,7 @@ def DescribePythonPackage(
 		raise ex
 	classifiers.append(license.PythonClassifier)
 
-	def _naturalSorting(array: Iterable[str]) -> List[str]:
+	def _naturalSorting(array: Iterable[str]) -> list[str]:
 		"""
 		A simple natural sorting implementation.
 
@@ -803,7 +802,7 @@ def DescribePythonPackage(
 			"""
 			return int(text) if text.isdigit() else text
 
-		def _createKey(text: str) -> Tuple[Union[str, float], ...]:
+		def _createKey(text: str) -> tuple[Union[str, float], ...]:
 			"""
 			Split the text into a tuple of multiple :class:`str` and :class:`int` fields, so embedded numbers can be sorted by
 			their value.
@@ -885,15 +884,15 @@ def DescribePythonPackageHostedOnGitHub(
 	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
 	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
 	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
-	additionalRequirements: Dict[str, List[str]] = None,
+	additionalRequirements: dict[str, list[str]] = None,
 	sourceFileWithVersion: Path = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None,
-	dataFiles: Dict[str, List[str]] = None,
+	consoleScripts: dict[str, str] = None,
+	dataFiles: dict[str, list[str]] = None,
 	debug: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
 	"""
 	Helper function to describe a Python package when the source code is hosted on GitHub.
 

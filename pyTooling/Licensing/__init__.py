@@ -44,9 +44,8 @@ The Licensing module implements mapping tables for various license names and ide
 
    See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
-from dataclasses  import dataclass
-from typing       import Any, Dict
-
+from dataclasses           import dataclass
+from typing                import Any
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -82,7 +81,7 @@ class PythonLicenseName:
 
 
 #: Mapping of SPDX identifiers to Python license names
-PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseName] = {
+PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"Apache-2.0":       PythonLicenseName("Apache 2.0",       "Apache Software License"),
 	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
 	"MIT":              PythonLicenseName("MIT",              "MIT License"),
@@ -258,7 +257,7 @@ MIT_License =          License("MIT", "MIT License", True, True)
 
 
 #: Mapping of predefined licenses
-SPDX_INDEX: Dict[str, License] = {
+SPDX_INDEX: dict[str, License] = {
 	"Apache-2.0":       Apache_2_0_License,
 	"BSD-3-Clause":     BSD_3_Clause_License,
 	"GPL-2.0-or-later": GPL_2_0_or_later,

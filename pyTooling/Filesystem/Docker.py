@@ -36,8 +36,7 @@ A :class:`~pyTooling.Filesystem.Docker.LayerCake` distributes the files of a
 shrinks from layer to layer - and writes one file list per layer, ready to be turned into image layers.
 """
 from pathlib               import Path
-from typing                import Optional as Nullable, List, Set
-
+from typing                import Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
@@ -56,7 +55,7 @@ class Layer(metaclass=ExtendedType):
 	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
 	_nextLayer:     Nullable["Layer"]         #: Reference to the next layer
 
-	_files:         List[Element[Directory]]  #: List of files in this layer.
+	_files:         list[Element[Directory]]  #: List of files in this layer.
 	_size:          int                       #: Aggregated size of all contained files for this layer.
 
 	def __init__(self, parent: Nullable["LayerCake"] = None, previousLayer: Nullable["Layer"] = None) -> None:
@@ -105,7 +104,7 @@ class Layer(metaclass=ExtendedType):
 		return self._nextLayer
 
 	@readonly
-	def Files(self) -> List[Element[Directory]]:
+	def Files(self) -> list[Element[Directory]]:
 		"""
 		Read-only property to access the files contributed by this layer (:attr:`_files`).
 
@@ -131,7 +130,7 @@ class Layer(metaclass=ExtendedType):
 		"""
 		return self._size
 
-	def AddFile(self, element: Element) -> Set[Filename]:
+	def AddFile(self, element: Element) -> set[Filename]:
 		"""
 		Add a filename or symbolic link to this layer.
 
@@ -202,8 +201,8 @@ class LayerCake(metaclass=ExtendedType):
 	directories no layer covers.
 	"""
 	_root:             Nullable[Root]   #: Reference to the filesystem root.
-	_layers:           List[Layer]      #: List of Docker image layers.
-	_emptyDirectories: List[Directory]  #: List of empty directories (not covered by layers).
+	_layers:           list[Layer]      #: List of Docker image layers.
+	_emptyDirectories: list[Directory]  #: List of empty directories (not covered by layers).
 	_slicingDuration:  Nullable[float]  #: Duration for sorting files by size and assigning them to Docker image layers.
 
 	def __init__(self, root: Root) -> None:
@@ -226,7 +225,7 @@ class LayerCake(metaclass=ExtendedType):
 		return self._root
 
 	@readonly
-	def Layers(self) -> List[Layer]:
+	def Layers(self) -> list[Layer]:
 		"""
 		Read-only property to access all layers, bottom-most first (:attr:`_layers`).
 
@@ -253,7 +252,7 @@ class LayerCake(metaclass=ExtendedType):
 		return sum(layer.FileCount for layer in self._layers)
 
 	@readonly
-	def EmptyDirectories(self) -> List[Directory]:
+	def EmptyDirectories(self) -> list[Directory]:
 		"""
 		Read-only property to access the directories that contain no files (:attr:`_emptyDirectories`).
 

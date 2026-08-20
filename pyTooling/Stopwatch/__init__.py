@@ -46,8 +46,7 @@ A stopwatch to measure execution times.
 from datetime import datetime
 from time     import perf_counter_ns
 from types    import TracebackType
-from typing   import List, Optional as Nullable, Iterator, Tuple, Type, Self
-
+from typing   import Optional as Nullable, Iterator, Self
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException
@@ -88,7 +87,7 @@ class ExcludeContextManager:
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -129,7 +128,7 @@ class Stopwatch(SlottedObject):
 	_pauseTime:    Nullable[int]             #: Performance counter in ns of the latest pause operation.
 	_stopTime:     Nullable[int]             #: Performance counter in ns when the stopwatch was stopped.
 	_totalTime:    Nullable[int]             #: Duration in ns from starting to stopping, activity and inactivity.
-	_splits:       List[Tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
+	_splits:       list[tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
@@ -494,7 +493,7 @@ class Stopwatch(SlottedObject):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -540,7 +539,7 @@ class Stopwatch(SlottedObject):
 		"""
 		return len(self._splits)
 
-	def __getitem__(self, index: int) -> Tuple[float, bool]:
+	def __getitem__(self, index: int) -> tuple[float, bool]:
 		"""
 		Implementation of ``split = object[i]`` to return the i-th split time.
 
@@ -552,7 +551,7 @@ class Stopwatch(SlottedObject):
 		"""
 		return self._splits[index]
 
-	def __iter__(self) -> Iterator[Tuple[float, bool]]:
+	def __iter__(self) -> Iterator[tuple[float, bool]]:
 		"""
 		Return an iterator of tuples to iterate all split times.
 

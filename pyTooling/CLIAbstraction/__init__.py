@@ -49,8 +49,7 @@ from pathlib    import Path
 from platform   import system
 from shutil     import which as shutil_which
 from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut, TimeoutExpired
-from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any, Mapping, Iterable
-
+from typing     import Optional as Nullable, ClassVar, Iterator, Generator, Any, Mapping, Iterable
 
 from pyTooling.Decorators                import export, readonly
 from pyTooling.MetaClasses               import ExtendedType
@@ -87,7 +86,7 @@ class Environment(metaclass=ExtendedType, slots=True):
 
 	   * Environment variables
 	"""
-	_variables: Dict[str, str]  #: Dictionary of active environment variables.
+	_variables: dict[str, str]  #: Dictionary of active environment variables.
 
 	# TODO: derive environment from existing environment object.
 	def __init__(
@@ -186,11 +185,11 @@ class Program(metaclass=ExtendedType, slots=True):
 	"""
 
 	_platform:         str                                                            #: Current platform the executable runs on (Linux, Windows, ...)
-	_executableNames:  ClassVar[Dict[str, str]]                                       #: Dictionary of platform specific executable names.
+	_executableNames:  ClassVar[dict[str, str]]                                       #: Dictionary of platform specific executable names.
 	_executablePath:   Path                                                           #: The path to the executable (binary, script, ...).
 	_dryRun:           bool                                                           #: True, if program shall run in *dry-run mode*.
-	__cliOptions__:    ClassVar[Dict[Type[CommandLineArgument], int]]                 #: List of all possible CLI options.
-	__cliParameters__: Dict[Type[CommandLineArgument], Nullable[CommandLineArgument]] #: List of all CLI parameters (used CLI options).
+	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]                 #: List of all possible CLI options.
+	__cliParameters__: dict[type[CommandLineArgument], Nullable[CommandLineArgument]] #: List of all CLI parameters (used CLI options).
 
 	def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
 		"""
@@ -301,7 +300,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		"""
 		return issubclass(key, (ValuedFlag, ValuedArgument, NamedAndValuedArgument, NamedTupledArgument, PathArgument, PathListArgument))
 
-	def __getitem__(self, key: Type[CommandLineArgument]) -> CommandLineArgument:
+	def __getitem__(self, key: type[CommandLineArgument]) -> CommandLineArgument:
 		"""
 		Access to a CLI parameter by CLI option, which is already used.
 
@@ -317,7 +316,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		# TODO: is nested check
 		return self.__cliParameters__[key]
 
-	def __setitem__(self, key: Type[CommandLineArgument], value: CommandLineArgument) -> None:
+	def __setitem__(self, key: type[CommandLineArgument], value: CommandLineArgument) -> None:
 		"""
 		Set a command line argument of this program by its argument class.
 
@@ -349,7 +348,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		"""
 		return self._executablePath
 
-	def ToArgumentList(self) -> List[str]:
+	def ToArgumentList(self) -> list[str]:
 		"""
 		Convert a program and used CLI options to a list of CLI argument strings in correct order and with escaping.
 
@@ -358,11 +357,11 @@ class Program(metaclass=ExtendedType, slots=True):
 		                   An argument's :meth:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument` has to
 		                   return a :class:`str`, a :class:`tuple` or a :class:`list`.
 		"""
-		result: List[str] = []
+		result: list[str] = []
 
 		result.append(str(self._executablePath))
 
-		def predicate(item: Tuple[Type[CommandLineArgument], int]) -> int:
+		def predicate(item: tuple[type[CommandLineArgument], int]) -> int:
 			"""
 			Nested function used as sort key.
 
@@ -375,7 +374,7 @@ class Program(metaclass=ExtendedType, slots=True):
 			param = value.AsArgument()
 			if isinstance(param, str):
 				result.append(param)
-			elif isinstance(param, (Tuple, List)):
+			elif isinstance(param, (tuple, list)):
 				result += param
 			else:
 				ex = TypeError(f"Argument '{key.__name__}' was rendered to neither a string nor a sequence of strings.")

@@ -39,9 +39,8 @@ An implementation of 3D cartesian data structures for Python.
       |rarr| Volumes built from these points and offsets.
 """
 
-from math   import sqrt, acos
-from typing import Union, Generic, Any, Tuple, Self
-
+from math                  import sqrt, acos
+from typing                import Union, Generic, Any, Self
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
@@ -97,7 +96,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.x, self.y, self.z)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
 		"""
 		Convert this 3D-Point to a simple 3-element tuple.
 
@@ -288,7 +287,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.xOffset, self.yOffset, self.zOffset)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
 		"""
 		Convert this 3D-offset to a simple 3-element tuple.
 
@@ -490,7 +489,7 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.width, self.height, self.depth)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
 		"""
 		Convert this 3D-size to a simple 3-element tuple.
 
@@ -578,7 +577,7 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.end - self.start
 
-	def ToTuple(self) -> Tuple[Tuple[Coordinate, Coordinate, Coordinate], Tuple[Coordinate, Coordinate, Coordinate]]:
+	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate, Coordinate], tuple[Coordinate, Coordinate, Coordinate]]:
 		"""
 		Convert this 3D line segment to a simple 2-element tuple of 3D-point tuples.
 

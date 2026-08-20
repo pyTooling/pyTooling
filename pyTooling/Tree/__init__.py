@@ -40,10 +40,9 @@ A powerful tree data structure for Python.
    :mod:`pyTooling.LinkedList`
       |rarr| An object-oriented doubly linked-list data structure.
 """
-from collections   import deque
-from typing        import TypeVar, Generic, List, Tuple, Dict, Deque, Union, Optional as Nullable
-from typing        import Callable, Iterator, Generator, Iterable, Mapping, Hashable
-
+from collections           import deque
+from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
+from typing                import Callable, Iterator, Generator, Iterable, Mapping, Hashable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
@@ -152,16 +151,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	"""
 
 	_id: Nullable[IDType]                         #: Unique identifier of a node. ``None`` if not used.
-	_nodesWithID: Nullable[Dict[IDType, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
-	_nodesWithoutID: Nullable[List['Node']]       #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
+	_nodesWithID: Nullable[dict[IDType, 'Node']]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
+	_nodesWithoutID: Nullable[list['Node']]       #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
 	_root: 'Node'                                 #: Reference to the root of a tree. ``self`` if it's the root node.
 	_parent: Nullable['Node']                     #: Reference to the parent node. ``None`` if it's the root node.
-	_children: List['Node']                       #: List of all children
-#	_links: List['Node']
+	_children: list['Node']                       #: List of all children
+#	_links: list['Node']
 
 	_level: int                                   #: Level of the node (distance to the root).
 	_value: Nullable[ValueType]                   #: Field to store the node's value.
-	_dict: Dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
+	_dict: dict[DictKeyType, DictValueType]       #: Dictionary to store key-value-pairs attached to the node.
 
 	_format: Nullable[Callable[["Node"], str]]    #: A node formatting function returning a one-line representation for tree-rendering.
 
@@ -388,7 +387,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			parent._children.append(self)
 
 	@readonly
-	def Siblings(self) -> Tuple['Node', ...]:
+	def Siblings(self) -> tuple['Node', ...]:
 		"""
 		A read-only property to return a tuple of all siblings from the current node.
 
@@ -405,7 +404,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return tuple([node for node in self._parent if node is not self])
 
 	@readonly
-	def LeftSiblings(self) -> Tuple['Node', ...]:
+	def LeftSiblings(self) -> tuple['Node', ...]:
 		"""
 		A read-only property to return a tuple of all siblings left from the current node.
 
@@ -433,7 +432,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return tuple(result)
 
 	@readonly
-	def RightSiblings(self) -> Tuple['Node', ...]:
+	def RightSiblings(self) -> tuple['Node', ...]:
 		"""
 		A read-only property to return a tuple of all siblings right from the current node.
 
@@ -479,7 +478,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		return path
 
 	@readonly
-	def Path(self) -> Tuple['Node']:
+	def Path(self) -> tuple['Node']:
 		"""
 		Read-only property to return the path from root node to the node as a tuple of nodes.
 
@@ -534,7 +533,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return len(self._children) > 0
 
-	def _SetNewRoot(self, nodesWithIDs: Dict['Node', 'Node'], nodesWithoutIDs: List['Node']) -> None:
+	def _SetNewRoot(self, nodesWithIDs: dict['Node', 'Node'], nodesWithoutIDs: list['Node']) -> None:
 		"""
 		Move the given nodes into this node's tree.
 

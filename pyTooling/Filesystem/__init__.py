@@ -49,8 +49,7 @@ from os                    import scandir, readlink
 from enum                  import Enum
 from itertools             import chain
 from pathlib               import Path
-from typing import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union, Iterator, Set
-
+from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union, Iterator
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
@@ -210,7 +209,7 @@ class Element(Base, Generic[_ParentType]):
 	"""
 	_name:        str                   #: Name of the filesystem element.
 	_parent:      _ParentType           #: Reference to the filesystem element's parent (:class:`Directory`)
-	_linkSources: List["SymbolicLink"]  #: A list of symbolic links pointing to this filesystem element.
+	_linkSources: list["SymbolicLink"]  #: A list of symbolic links pointing to this filesystem element.
 
 	def __init__(
 		self,
@@ -294,7 +293,7 @@ class Element(Base, Generic[_ParentType]):
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 
 	@readonly
-	def LinkSources(self) -> List["SymbolicLink"]:
+	def LinkSources(self) -> list["SymbolicLink"]:
 		"""
 		Read-only property to access the symbolic links pointing to this element (:attr:`_linkSources`).
 
@@ -337,9 +336,9 @@ class Directory(Element["Directory"]):
 	"""
 
 	_path:              Nullable[Path]             #: Cached :class:`~pathlib.Path` object of this directory.
-	_subdirectories:    Dict[str, "Directory"]     #: Dictionary containing name-:class:`Directory` pairs.
-	_files:             Dict[str, "Filename"]      #: Dictionary containing name-:class:`Filename` pairs.
-	_symbolicLinks:     Dict[str, "SymbolicLink"]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
+	_subdirectories:    dict[str, "Directory"]     #: Dictionary containing name-:class:`Directory` pairs.
+	_files:             dict[str, "Filename"]      #: Dictionary containing name-:class:`Filename` pairs.
+	_symbolicLinks:     dict[str, "SymbolicLink"]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
 	_filesSize:         int                        #: Aggregated size of all direct files.
 	_collapsed:         bool                       #: True, if this directory was collapsed. It contains no subelements.
 	_scanDuration:      Nullable[float]            #: Duration for scanning the directory and all its subelements.
@@ -475,7 +474,7 @@ class Directory(Element["Directory"]):
 				else:
 					target.AddLinkSources(link)
 
-	def AggregateSizes(self) -> Set["File"]:
+	def AggregateSizes(self) -> set["File"]:
 		"""
 		Compute the aggregated size of this directory and of every directory below it.
 
@@ -1293,9 +1292,9 @@ class Root(Directory):
 	"""
 	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 	"""
-	_ids:                      Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
-	_brokenSymbolicLinks:      List[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
-	_unconnectedSymbolicLinks: List[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
+	_ids:                      dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_brokenSymbolicLinks:      list[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
+	_unconnectedSymbolicLinks: list[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
 
 	def __init__(
 		self,
@@ -1343,7 +1342,7 @@ class Root(Directory):
 		return self._path
 
 	@readonly
-	def BrokenSymbolicLinks(self) -> List[SymbolicLink]:
+	def BrokenSymbolicLinks(self) -> list[SymbolicLink]:
 		"""
 		Read-only property to access all symbolic links with a non-existing target (:attr:`_brokenSymbolicLinks`).
 
@@ -1352,7 +1351,7 @@ class Root(Directory):
 		return self._brokenSymbolicLinks
 
 	@readonly
-	def UnconnectedSymbolicLinks(self) -> List[SymbolicLink]:
+	def UnconnectedSymbolicLinks(self) -> list[SymbolicLink]:
 		"""
 		Read-only property to access all symbolic links that couldn't be resolved within the scanned filesystem (:attr:`_unconnectedSymbolicLinks`).
 
@@ -1501,7 +1500,7 @@ class File(Base):
 	Each file has an internal id, which is associated to a unique ID within the host's filesystem.
 	"""
 	_id:      int             #: Unique (host internal) file object ID)
-	_parents: List[Filename]  #: List of reverse references to :class:`Filename` objects.
+	_parents: list[Filename]  #: List of reverse references to :class:`Filename` objects.
 
 	def __init__(
 		self,
@@ -1549,7 +1548,7 @@ class File(Base):
 		return self._id
 
 	@readonly
-	def Parents(self) -> List[Filename]:
+	def Parents(self) -> list[Filename]:
 		"""
 		Read-only property to access the list of filenames using the same file storage object.
 

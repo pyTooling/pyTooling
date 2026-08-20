@@ -50,9 +50,8 @@ from itertools  import chain
 from sys        import version_info
 from threading  import Condition
 from types      import BuiltinFunctionType, FunctionType, MethodType
-from typing     import Any, Tuple, List, Dict, Callable, Generator, Set, Iterator, Iterable, Union, NoReturn, Self
-from typing     import Type, TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
-
+from typing     import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
+from typing     import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector
@@ -438,7 +437,7 @@ def mustoverride(method: M) -> M:
 # class DispatchableMethod:
 # 	"""Represents a single multimethod."""
 #
-# 	_methods: Dict[Tuple, Callable]
+# 	_methods: dict[Tuple, Callable]
 # 	__name__: str
 # 	__slots__ = ("_methods", "__name__")
 #
@@ -467,7 +466,7 @@ def mustoverride(method: M) -> M:
 #
 # 		# Build a signature from the method's type annotations
 # 		sig = signature(method)
-# 		types: List[Type] = []
+# 		types: list[Type] = []
 #
 # 		for name, parameter in sig.parameters.items():
 # 			if name == "self":
@@ -586,8 +585,8 @@ class ExtendedType(type):
 	def __new__(
 		self,
 		className: str,
-		baseClasses: Tuple[type],
-		members: Dict[str, Any],
+		baseClasses: tuple[type],
+		members: dict[str, Any],
 		slots: bool = False,
 		mixin: bool = False,
 		singleton: bool = False,
@@ -641,7 +640,7 @@ class ExtendedType(type):
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
 			if "__getstate__" not in members:
-				def __getstate__(self) -> Dict[str, Any]:
+				def __getstate__(self) -> dict[str, Any]:
 					"""
 					Return the object's state for pickling, collecting every slot of the class hierarchy.
 
@@ -656,7 +655,7 @@ class ExtendedType(type):
 				newClass.__getstate__ = __getstate__
 
 			if "__setstate__" not in members:
-				def __setstate__(self, state: Dict[str, Any]) -> None:
+				def __setstate__(self, state: dict[str, Any]) -> None:
 					"""
 					Restore the object's state from unpickling, requiring exactly the slots of the class hierarchy.
 
@@ -694,7 +693,7 @@ class ExtendedType(type):
 		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
 
 		# Additional methods on a class
-		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> Dict[Callable, Tuple["Attribute", ...]]:
+		def GetMethodsWithAttributes(self, predicate: Nullable[TAttributeFilter[TAttr]] = None) -> dict[Callable, tuple["Attribute", ...]]:
 			"""
 			Return the class' methods that carry at least one matching attribute.
 
@@ -743,9 +742,9 @@ class ExtendedType(type):
 	def _findMethods(
 		self,
 		newClass:    "ExtendedType",
-		baseClasses: Tuple[type],
-		members:     Dict[str, Any]
-	) -> Tuple[List[MethodType], List[MethodType]]:
+		baseClasses: tuple[type],
+		members:     dict[str, Any]
+	) -> tuple[list[MethodType], list[MethodType]]:
 		"""
 		Find methods and methods with :mod:`pyTooling.Attributes`.
 
@@ -797,7 +796,7 @@ class ExtendedType(type):
 				else:
 					setattr(method, "__classobj__", newClass)
 
-				def GetAttributes(inst: Any, predicate: Nullable[Type[Attribute]] = None) -> Tuple[Attribute, ...]:
+				def GetAttributes(inst: Any, predicate: Nullable[type[Attribute]] = None) -> tuple[Attribute, ...]:
 					"""
 					Nested function attached to the class, returning the attributes of one of its methods.
 
@@ -820,7 +819,7 @@ class ExtendedType(type):
 				# print(f"  convert function: '{memberName}' to method")
 				# print(f"    {member}")
 				if "__pyattr__" in member.__dict__:
-					attributes = member.__pyattr__           # type: List[Attribute]
+					attributes = member.__pyattr__           # type: list[Attribute]
 					if isinstance(attributes, list) and len(attributes) > 0:
 						methodsWithAttributes.append(member)
 						for attribute in attributes:
@@ -839,7 +838,7 @@ class ExtendedType(type):
 		return methods, methodsWithAttributes
 
 	@classmethod
-	def _getAnnotations(metacls, members: Dict[str, Any]) -> Dict[str, Any]:
+	def _getAnnotations(metacls, members: dict[str, Any]) -> dict[str, Any]:
 		"""
 		Return the type annotations declared in a class body.
 
@@ -892,7 +891,7 @@ class ExtendedType(type):
 		return not (hasattr(member, "__get__") or hasattr(member, "__set__"))
 
 	@classmethod
-	def _checkForUnannotatedFields(metacls, className: str, members: Dict[str, Any], annotations: Dict[str, Any]) -> None:
+	def _checkForUnannotatedFields(metacls, className: str, members: dict[str, Any], annotations: dict[str, Any]) -> None:
 		"""
 		Report fields that were assigned in the class body without a type annotation.
 
@@ -932,11 +931,11 @@ class ExtendedType(type):
 	def _computeSlots(
 		self,
 		className:   str,
-		baseClasses: Tuple[type],
-		members:     Dict[str, Any],
+		baseClasses: tuple[type],
+		members:     dict[str, Any],
 		slots:       bool,
 		mixin:       bool
-	) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+	) -> tuple[dict[str, Any], dict[str, Any]]:
 		"""
 		Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 
@@ -965,7 +964,7 @@ class ExtendedType(type):
 		slottedFields = []
 		classFields =   {}
 		objectFields =  {}
-		annotations: Dict[str, Any] = self._getAnnotations(members)
+		annotations: dict[str, Any] = self._getAnnotations(members)
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -1069,7 +1068,7 @@ class ExtendedType(type):
 		return classFields, objectFields
 
 	@classmethod
-	def _aggregateMixinSlots(self, className: str, baseClasses: Tuple[type]) -> List[str]:
+	def _aggregateMixinSlots(self, className: str, baseClasses: tuple[type]) -> list[str]:
 		"""
 		Aggregate slot names requested by mixin-base-classes.
 
@@ -1088,7 +1087,7 @@ class ExtendedType(type):
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
 			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
 			inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
-			primaryInharitancePath: Set[type] = set(inheritancePaths[0])
+			primaryInharitancePath: set[type] = set(inheritancePaths[0])
 			for typePath in inheritancePaths[1:]:
 				for t in typePath:
 					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
@@ -1115,7 +1114,7 @@ class ExtendedType(type):
 		return mixinSlots
 
 	@classmethod
-	def _iterateBaseClasses(metacls, baseClasses: Tuple[type]) -> Generator[type, None, None]:
+	def _iterateBaseClasses(metacls, baseClasses: tuple[type]) -> Generator[type, None, None]:
 		"""
 		Return a generator to iterate (visit) all base-classes ...
 
@@ -1129,8 +1128,8 @@ class ExtendedType(type):
 		if len(baseClasses) == 0:
 			return
 
-		visited:       Set[type] =            set()
-		iteratorStack: List[Iterator[type]] = list()
+		visited:       set[type] =            set()
+		iteratorStack: list[Iterator[type]] = list()
 
 		for baseClass in baseClasses:
 			yield baseClass
@@ -1154,7 +1153,7 @@ class ExtendedType(type):
 						break
 
 	@classmethod
-	def _iterateBaseClassPaths(metacls, baseClasses: Tuple[type]) -> Generator[Tuple[type, ...], None, None]:
+	def _iterateBaseClassPaths(metacls, baseClasses: tuple[type]) -> Generator[tuple[type, ...], None, None]:
 		"""
 		Return a generator to iterate all possible inheritance paths for a given list of base-classes.
 
@@ -1168,8 +1167,8 @@ class ExtendedType(type):
 		if len(baseClasses) == 0:
 			return
 
-		typeStack:     List[type] =           list()
-		iteratorStack: List[Iterator[type]] = list()
+		typeStack:     list[type] =           list()
+		iteratorStack: list[Iterator[type]] = list()
 
 		for baseClass in baseClasses:
 			typeStack.append(baseClass)
@@ -1193,7 +1192,7 @@ class ExtendedType(type):
 						break
 
 	@classmethod
-	def _checkForAbstractMethods(metacls, baseClasses: Tuple[type], members: Dict[str, Any]) -> Tuple[Dict[str, Callable], Dict[str, Any]]:
+	def _checkForAbstractMethods(metacls, baseClasses: tuple[type], members: dict[str, Any]) -> tuple[dict[str, Callable], dict[str, Any]]:
 		"""
 		Check if the current class contains abstract methods and return a tuple of them.
 
