@@ -42,9 +42,12 @@ A solution to send warnings like exceptions to a handler in the upper part of th
    :mod:`pyTooling.TerminalUI`
       |rarr| Writing the collected warnings to the terminal.
 """
-from threading import local, Lock
-from types     import TracebackType
-from typing    import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
+from __future__           import annotations
+
+from threading            import local, Lock
+from types                import TracebackType
+from typing               import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
+
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Exceptions import ExceptionBase
@@ -150,7 +153,7 @@ class WarningCollector:
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
-	_parent:   Nullable["WarningCollector"]               #: Parent WarningCollector
+	_parent:   Nullable[WarningCollector]                 #: Parent WarningCollector
 	_warnings: list[BaseException]                        #: List of collected warnings (and exceptions).
 	_handler:  Nullable[Callable[[BaseException], bool]]  #: Optional handler function, which is called per collected warning.
 
@@ -358,7 +361,7 @@ class SupervisedWarningCollector(WarningCollector):
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
-	_supervisor:       Nullable["ThreadSupervisor"]               #: Supervisor collecting warnings and exceptions of all threads.
+	_supervisor:       Nullable[ThreadSupervisor]                 #: Supervisor collecting warnings and exceptions of all threads.
 	_exceptionHandler: Nullable[Callable[[BaseException], bool]]  #: Handler called for an exception escaping the thread.
 	_finallyHandler:   Nullable[Callable[[], None]]               #: Handler called when the thread ends, in either case.
 
@@ -369,7 +372,7 @@ class SupervisedWarningCollector(WarningCollector):
 		warnings:         Nullable[list[BaseException]] =             None,
 		handler:          Nullable[Callable[[BaseException], bool]] = None,
 		/,
-		supervisor:       Nullable["ThreadSupervisor"] =              None,
+		supervisor:       Nullable[ThreadSupervisor] =              None,
 		exceptionHandler: Nullable[Callable[[BaseException], bool]] = None,
 		finallyHandler:   Nullable[Callable[[], None]] =              None
 	) -> None:

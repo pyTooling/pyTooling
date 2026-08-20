@@ -35,19 +35,22 @@ Configuration reader for JSON files.
 
    See :ref:`high-level help <CONFIG/FileFormat/JSON>` for explanations and usage examples.
 """
-from json                      import load
-from pathlib                   import Path
-from typing                    import Any, Union, Iterator as typing_Iterator, Self
-from pyTooling.Common          import getFullyQualifiedName
-from pyTooling.Decorators      import export, InheritDocString
-from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
-from pyTooling.Configuration   import InterpolationException, KeyNotFoundException, PathExpressionException
-from pyTooling.Configuration   import UnsupportedValueTypeException
-from pyTooling.Configuration   import Node as Abstract_Node
-from pyTooling.Configuration   import Dictionary as Abstract_Dict
-from pyTooling.Configuration   import Sequence as Abstract_Seq
-from pyTooling.Configuration   import Configuration as Abstract_Configuration
+from __future__              import annotations
+
+from json                    import load
+from pathlib                 import Path
+from typing                  import Any, Union, Iterator as typing_Iterator, Self
+
+from pyTooling.Common        import getFullyQualifiedName
+from pyTooling.Decorators    import export, InheritDocString
+from pyTooling.MetaClasses   import ExtendedType
+from pyTooling.Configuration import ConfigurationException, KeyT, NodeT, ValueT
+from pyTooling.Configuration import InterpolationException, KeyNotFoundException, PathExpressionException
+from pyTooling.Configuration import UnsupportedValueTypeException
+from pyTooling.Configuration import Node as Abstract_Node
+from pyTooling.Configuration import Dictionary as Abstract_Dict
+from pyTooling.Configuration import Sequence as Abstract_Seq
+from pyTooling.Configuration import Configuration as Abstract_Configuration
 
 
 @export
@@ -57,13 +60,13 @@ class Node(Abstract_Node):
 	"""
 
 	_jsonNode: Union[dict[str, Any], list[Any]]  #: Reference to the associated JSON node.
-	_cache:    dict[str, ValueT]  #: Cache of already converted sub-nodes and values, by key.
-	_key:      KeyT               #: Key of this node.
-	_length:   int                #: Number of sub-elements.
+	_cache:    dict[str, ValueT]                 #: Cache of already converted sub-nodes and values, by key.
+	_key:      KeyT                              #: Key of this node.
+	_length:   int                               #: Number of sub-elements.
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		jsonNode: Union[dict[str, Any], list[Any]]
@@ -308,11 +311,11 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a JSON data file."""
 
-	_keys: list[KeyT]  #: List of keys in this dictionary.
+	_keys: list[KeyT]           #: List of keys in this dictionary.
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		jsonNode: dict
@@ -386,7 +389,7 @@ class Sequence(Node, Abstract_Seq):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
 		jsonNode: list

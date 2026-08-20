@@ -42,11 +42,13 @@ A stopwatch to measure execution times.
    :mod:`pyTooling.Process`
       |rarr| The process' memory usage, next to its runtime.
 """
+from __future__            import annotations
 
-from datetime import datetime
-from time     import perf_counter_ns
-from types    import TracebackType
-from typing   import Optional as Nullable, Iterator, Self
+from datetime              import datetime
+from time                  import perf_counter_ns
+from types                 import TracebackType
+from typing                import Optional as Nullable, Iterator, Self
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException
@@ -65,9 +67,9 @@ class ExcludeContextManager:
 	While a normal stopwatch's embedded context manager (re)starts the stopwatch on every *enter* event and pauses the
 	stopwatch on every *exit* event, this context manager pauses on *enter* events and restarts on every *exit* event.
 	"""
-	_stopwatch: "Stopwatch"  #: Reference to the stopwatch.
+	_stopwatch: Stopwatch  #: Reference to the stopwatch.
 
-	def __init__(self, stopwatch: "Stopwatch") -> None:
+	def __init__(self, stopwatch: Stopwatch) -> None:
 		"""
 		Initializes an excluding context manager.
 

@@ -38,9 +38,11 @@ An implementation of 2D cartesian data structures for Python.
    :mod:`pyTooling.Cartesian2D.Shapes`
       |rarr| Shapes built from these points and offsets.
 """
+from __future__            import annotations
 
 from math                  import sqrt, acos
 from typing                import TypeVar, Union, Generic, Any, Self
+
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
@@ -99,7 +101,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.x, self.y
 
-	def __add__(self, other: Any) -> "Point2D[Coordinate]":
+	def __add__(self, other: Any) -> Point2D[Coordinate]:
 		"""
 		Adds a 2D-offset to this 2D-point and creates a new 2D-point.
 
@@ -143,7 +145,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> Union["Offset2D[Coordinate]", "Point2D[Coordinate]"]:
+	def __sub__(self, other: Any) -> Union[Offset2D[Coordinate], Point2D[Coordinate]]:
 		"""
 		Subtract two 2D-Points from each other and create a new 2D-offset.
 
@@ -303,7 +305,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return not self.__eq__(other)
 
-	def __neg__(self) -> "Offset2D[Coordinate]":
+	def __neg__(self) -> Offset2D[Coordinate]:
 		"""
 		Negate all components of this 2D-offset and create a new 2D-offset.
 
@@ -314,7 +316,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			-self.yOffset
 		)
 
-	def __add__(self, other: Any) -> "Offset2D[Coordinate]":
+	def __add__(self, other: Any) -> Offset2D[Coordinate]:
 		"""
 		Adds a 2D-offset to this 2D-offset and creates a new 2D-offset.
 
@@ -358,7 +360,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> "Offset2D[Coordinate]":
+	def __sub__(self, other: Any) -> Offset2D[Coordinate]:
 		"""
 		Subtracts a 2D-offset from this 2D-offset and creates a new 2D-offset.
 
@@ -521,7 +523,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)
 
-	def AngleTo(self, other: "LineSegment2D[Coordinate]") -> float:
+	def AngleTo(self, other: LineSegment2D[Coordinate]) -> float:
 		"""
 		Compute the angle between this line segment and another one.
 

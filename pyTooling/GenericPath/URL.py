@@ -35,10 +35,12 @@ This package provides a representation for a Uniform Resource Locator (URL).
 
    [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 """
+from __future__            import annotations
 
 from enum                  import Flag
 from re                    import compile as re_compile
 from typing                import ClassVar, Optional as Nullable, Mapping
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName
@@ -152,7 +154,7 @@ class Host(RootMixIn):
 
 		return result
 
-	def Copy(self) -> "Host":
+	def Copy(self) -> Host:
 		"""
 		Create a copy of this object.
 
@@ -173,11 +175,11 @@ class Element(ElementMixIn):
 class Path(PathMixIn):
 	"""Represents a path in a URL."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"   #: Delimiter symbol in URLs between path elements.
-	ROOT_DELIMITER:    ClassVar[str] = "/"   #: Delimiter symbol in URLs between root element and first path element.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Delimiter symbol in URLs between path elements.
+	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Delimiter symbol in URLs between root element and first path element.
 
 	@classmethod
-	def Parse(cls, path: str, root: Nullable[Host] = None) -> "Path":
+	def Parse(cls, path: str, root: Nullable[Host] = None) -> Path:
 		"""
 		Parse a string into a URL path.
 
@@ -344,7 +346,7 @@ class URL:
 
 	# http://semaphore.plc2.de:5000/api/v1/semaphore?name=Riviera&foo=bar#page2
 	@classmethod
-	def Parse(cls, url: str) -> "URL":
+	def Parse(cls, url: str) -> URL:
 		"""
 		Parse a URL string and returns the URL object.
 
@@ -418,7 +420,7 @@ class URL:
 
 		return result
 
-	def WithoutCredentials(self) -> "URL":
+	def WithoutCredentials(self) -> URL:
 		"""
 		Returns a URL object without credentials (username and password).
 

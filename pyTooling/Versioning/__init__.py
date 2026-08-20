@@ -42,10 +42,13 @@ Implementation of semantic and date versioning version-numbers.
    :mod:`pyTooling.Dependency`
       |rarr| Resolving requirements against these version numbers.
 """
-from collections.abc import Iterable as abc_Iterable
-from enum            import Flag, Enum
-from re              import compile as re_compile, Pattern
-from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
+from __future__            import annotations
+
+from collections.abc       import Iterable as abc_Iterable
+from enum                  import Flag, Enum
+from re                    import compile as re_compile, Pattern
+from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 from pyTooling.Exceptions  import ToolingException
@@ -62,9 +65,9 @@ class VersionValidatorException(ToolingException):
 	:attr:`Version`, so a caller can report what was wrong with it.
 	"""
 
-	_version: Nullable["Version"]  #: The version rejected by a validator.
+	_version: Nullable[Version]  #: The version rejected by a validator.
 
-	def __init__(self, message: str, /, *, version: Nullable["Version"] = None) -> None:
+	def __init__(self, message: str, /, *, version: Nullable[Version] = None) -> None:
 		"""
 		Initializes the exception with the rejected version.
 
@@ -75,7 +78,7 @@ class VersionValidatorException(ToolingException):
 		self._version = version
 
 	@readonly
-	def Version(self) -> Nullable["Version"]:
+	def Version(self) -> Nullable[Version]:
 		"""
 		Read-only property to access the version the validator rejected (:attr:`_version`).
 
@@ -564,7 +567,7 @@ class Version(metaclass=ExtendedType, slots=True):
 
 	@classmethod
 	@abstractmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "Version":
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> Version:
 		"""
 		Parse a version string and return a Version instance.
 
@@ -690,7 +693,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		return self._flags
 
-	def _equal(self, left: "Version", right: "Version") -> Nullable[bool]:
+	def _equal(self, left: Version, right: Version) -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`Version` instances.
 
@@ -710,7 +713,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			(left._postfix == right._postfix)
 		)
 
-	def _compare(self, left: "Version", right: "Version") -> Nullable[bool]:
+	def _compare(self, left: Version, right: Version) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`Version` instances.
 
@@ -762,7 +765,7 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return None
 
-	def _minimum(self, actual: "Version", expected: "Version") -> Nullable[bool]:
+	def _minimum(self, actual: Version, expected: Version) -> Nullable[bool]:
 		"""
 		Check if a version fulfills a minimum requirement.
 
@@ -1051,7 +1054,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		result = self._compare(self, other)
 		return not result if result is not None else equalValue
 
-	def __rshift__(self, other: Union["Version", str, int, None]) -> bool:
+	def __rshift__(self, other: Union[Version, str, int, None]) -> bool:
 		"""
 		Return the minimum of this version and a second operand.
 
@@ -1177,7 +1180,7 @@ class SemanticVersion(Version):
 		super().__init__(major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "SemanticVersion":
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> SemanticVersion:
 		"""
 		Parse a version string and return a :class:`SemanticVersion` instance.
 
@@ -1285,7 +1288,7 @@ class SemanticVersion(Version):
 		"""
 		return self._micro
 
-	def _equal(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
+	def _equal(self, left: SemanticVersion, right: SemanticVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`SemanticVersion` instances.
 
@@ -1295,7 +1298,7 @@ class SemanticVersion(Version):
 		"""
 		return super()._equal(left, right)
 
-	def _compare(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
+	def _compare(self, left: SemanticVersion, right: SemanticVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`SemanticVersion` instances.
 
@@ -1415,7 +1418,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__ge__(other)
 
-	def __rshift__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __rshift__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
 		"""
 		Return the minimum of this semantic version and a second operand.
 
@@ -1500,7 +1503,7 @@ class PythonVersion(SemanticVersion):
 	"""
 
 	@classmethod
-	def FromSysVersionInfo(cls) -> "PythonVersion":
+	def FromSysVersionInfo(cls) -> PythonVersion:
 		"""
 		Create a Python version from :data:`sys.version_info`.
 
@@ -1611,7 +1614,7 @@ class CalendarVersion(Version):
 		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["CalendarVersion"], bool]] = None) -> "CalendarVersion":
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[CalendarVersion], bool]] = None) -> CalendarVersion:
 		"""
 		Parse a version string and return a :class:`CalendarVersion` instance.
 
@@ -1685,7 +1688,7 @@ class CalendarVersion(Version):
 		"""
 		return self._major
 
-	def _equal(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
+	def _equal(self, left: CalendarVersion, right: CalendarVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`CalendarVersion` instances.
 
@@ -1695,7 +1698,7 @@ class CalendarVersion(Version):
 		"""
 		return (left._major == right._major) and (left._minor == right._minor) and (left._micro == right._micro)
 
-	def _compare(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
+	def _compare(self, left: CalendarVersion, right: CalendarVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`CalendarVersion` instances.
 
@@ -2259,7 +2262,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._boundHandling = value
 
-	def __and__(self, other: Any) -> "VersionRange[T]":
+	def __and__(self, other: Any) -> VersionRange[T]:
 		"""
 		Compute the intersection of two version ranges.
 
@@ -2462,7 +2465,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		else:
 			raise TypeError(f"Parameter 'versions' is not an Iterable.")
 
-	def __and__(self, other: "VersionSet[V]") -> "VersionSet[T]":
+	def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
 		"""
 		Compute intersection of two version sets.
 
@@ -2492,7 +2495,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		return VersionSet(result)
 
-	def __or__(self, other: "VersionSet[V]") -> "VersionSet[T]":
+	def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
 		"""
 		Compute union of two version sets.
 

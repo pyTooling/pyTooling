@@ -44,13 +44,15 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
    :mod:`pyTooling.Stopwatch`
       |rarr| The stopwatch measuring how long a scan took.
 """
-from os                    import scandir, readlink
+from __future__            import annotations
 
 from enum                  import Enum
 from itertools             import chain
+from os                    import scandir, readlink
 from pathlib               import Path
 from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
 from typing                import Iterator, cast
+
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType
@@ -120,13 +122,13 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	It implements a size and a reference to the root element of the filesystem.
 	"""
-	_root:   Nullable["Root"]  #: Reference to the root of the filesystem statistics scope.
-	_size:   Nullable[int]     #: Actual or aggregated size of the filesystem element.
+	_root:   Nullable[Root]  #: Reference to the root of the filesystem statistics scope.
+	_size:   Nullable[int]   #: Actual or aggregated size of the filesystem element.
 
 	def __init__(
 		self,
 		size: Nullable[int],
-		root: Nullable["Root"]
+		root: Nullable[Root]
 	) -> None:
 		"""
 		Initialize the base-class with filesystem element size and root reference.
@@ -150,7 +152,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._root = root
 
 	@property
-	def Root(self) -> Nullable["Root"]:
+	def Root(self) -> Nullable[Root]:
 		"""
 		Property to access the root of the filesystem statistics scope.
 
@@ -161,7 +163,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		return self._root
 
 	@Root.setter
-	def Root(self, value: "Root") -> None:
+	def Root(self, value: Root) -> None:
 		if value is None:
 			raise ValueError(f"Parameter 'value' is None.")
 		elif not isinstance(value, Root):
@@ -208,9 +210,9 @@ class Element(Base, Generic[_ParentType]):
 
 	   Symbolic link sources are reverse references describing which symbolic links point to this element.
 	"""
-	_name:        str                   #: Name of the filesystem element.
-	_parent:      _ParentType           #: Reference to the filesystem element's parent (:class:`Directory`)
-	_linkSources: list["SymbolicLink"]  #: A list of symbolic links pointing to this filesystem element.
+	_name:        str                 #: Name of the filesystem element.
+	_parent:      _ParentType         #: Reference to the filesystem element's parent (:class:`Directory`)
+	_linkSources: list[SymbolicLink]  #: A list of symbolic links pointing to this filesystem element.
 
 	def __init__(
 		self,
@@ -294,7 +296,7 @@ class Element(Base, Generic[_ParentType]):
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 
 	@readonly
-	def LinkSources(self) -> list["SymbolicLink"]:
+	def LinkSources(self) -> list[SymbolicLink]:
 		"""
 		Read-only property to access the symbolic links pointing to this element (:attr:`_linkSources`).
 
@@ -302,7 +304,7 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		return self._linkSources
 
-	def AddLinkSources(self, source: "SymbolicLink") -> None:
+	def AddLinkSources(self, source: SymbolicLink) -> None:
 		"""
 		Add a link source of a symbolic link to the named element (reverse reference).
 
@@ -336,20 +338,20 @@ class Directory(Element["Directory"]):
 	aggregation is provided via :data:`AggregateDuration`.
 	"""
 
-	_path:              Nullable[Path]             #: Cached :class:`~pathlib.Path` object of this directory.
-	_subdirectories:    dict[str, "Directory"]     #: Dictionary containing name-:class:`Directory` pairs.
-	_files:             dict[str, "Filename"]      #: Dictionary containing name-:class:`Filename` pairs.
-	_symbolicLinks:     dict[str, "SymbolicLink"]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
-	_filesSize:         int                        #: Aggregated size of all direct files.
-	_collapsed:         bool                       #: True, if this directory was collapsed. It contains no subelements.
-	_scanDuration:      Nullable[float]            #: Duration for scanning the directory and all its subelements.
-	_aggregateDuration: Nullable[float]            #: Duration for aggregating all subelements.
+	_path:              Nullable[Path]           #: Cached :class:`~pathlib.Path` object of this directory.
+	_subdirectories:    dict[str, Directory]     #: Dictionary containing name-:class:`Directory` pairs.
+	_files:             dict[str, Filename]      #: Dictionary containing name-:class:`Filename` pairs.
+	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
+	_filesSize:         int                      #: Aggregated size of all direct files.
+	_collapsed:         bool                     #: True, if this directory was collapsed. It contains no subelements.
+	_scanDuration:      Nullable[float]          #: Duration for scanning the directory and all its subelements.
+	_aggregateDuration: Nullable[float]          #: Duration for aggregating all subelements.
 
 	def __init__(
 		self,
 		name:                  str,
 		collectSubdirectories: bool = False,
-		parent:                Nullable["Directory"] = None
+		parent:                Nullable[Directory] = None
 	) -> None:
 		"""
 		Initialize the directory with name and parent reference.
@@ -479,7 +481,7 @@ class Directory(Element["Directory"]):
 				else:
 					target.AddLinkSources(link)
 
-	def AggregateSizes(self) -> set["File"]:
+	def AggregateSizes(self) -> set[File]:
 		"""
 		Compute the aggregated size of this directory and of every directory below it.
 
@@ -509,7 +511,7 @@ class Directory(Element["Directory"]):
 		return aggregatedFiles
 
 	@Element.Root.setter
-	def Root(self, value: "Root") -> None:
+	def Root(self, value: Root) -> None:
 		Element.Root.fset(self, value)
 
 		for subdir in self._subdirectories.values():
@@ -620,7 +622,7 @@ class Directory(Element["Directory"]):
 		return len(self._subdirectories) + sum(d.TotalSubdirectoryCount for d in self._subdirectories.values())
 
 	@readonly
-	def Subdirectories(self) -> Generator["Directory", None, None]:
+	def Subdirectories(self) -> Generator[Directory, None, None]:
 		"""
 		Iterate all direct subdirectories of the directory.
 
@@ -629,7 +631,7 @@ class Directory(Element["Directory"]):
 		return (d for d in self._subdirectories.values())
 
 	@readonly
-	def Files(self) -> Generator["Filename | SymbolicLink", None, None]:
+	def Files(self) -> Generator[Filename | SymbolicLink, None, None]:
 		"""
 		Iterate all direct files of the directory.
 
@@ -642,7 +644,7 @@ class Directory(Element["Directory"]):
 		return (f for f in chain(self._files.values(), self._symbolicLinks.values()))
 
 	@readonly
-	def RegularFiles(self) -> Generator["Filename", None, None]:
+	def RegularFiles(self) -> Generator[Filename, None, None]:
 		"""
 		Iterate all direct regular files of the directory.
 
@@ -651,7 +653,7 @@ class Directory(Element["Directory"]):
 		return (f for f in self._files.values())
 
 	@readonly
-	def SymbolicLinks(self) -> Generator["SymbolicLink", None, None]:
+	def SymbolicLinks(self) -> Generator[SymbolicLink, None, None]:
 		"""
 		Iterate all direct symbolic links of the directory.
 
@@ -713,7 +715,7 @@ class Directory(Element["Directory"]):
 		"""
 		return hash(id(self))
 
-	def IterateDirectories(self) -> Generator["Directory", None, None]:
+	def IterateDirectories(self) -> Generator[Directory, None, None]:
 		"""
 		A generator to iterate all subdirectories below this directory in pre-order.
 
@@ -741,7 +743,7 @@ class Directory(Element["Directory"]):
 		yield from self._files.values()
 		yield from self._symbolicLinks.values()
 
-	def Copy(self, parent: Nullable["Directory"] = None) -> "Directory":
+	def Copy(self, parent: Nullable[Directory] = None) -> Directory:
 		"""
 		Copy the directory structure including all subelements and link it to the given parent.
 
@@ -767,7 +769,7 @@ class Directory(Element["Directory"]):
 
 		return dir
 
-	def Collapse(self, func: Callable[["Directory"], bool]) -> bool:
+	def Collapse(self, func: Callable[[Directory], bool]) -> bool:
 		"""
 		Collapse this directory's subtree where the given predicate accepts it.
 
@@ -908,12 +910,12 @@ class Filename(Element[Directory]):
 	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
 	   object.
 	"""
-	_file: Nullable["File"]  #: The file this filename refers to; ``None`` until the filename is linked.
+	_file: Nullable[File]  #: The file this filename refers to; ``None`` until the filename is linked.
 
 	def __init__(
 		self,
 		name:   str,
-		file:   Nullable["File"] = None,
+		file:   Nullable[File] = None,
 		parent: Nullable[Directory] = None
 	) -> None:
 		"""
@@ -944,7 +946,7 @@ class Filename(Element[Directory]):
 				self._root = parent._root
 
 	@Element.Root.setter
-	def Root(self, value: "Root") -> None:
+	def Root(self, value: Root) -> None:
 		Element.Root.fset(self, value)
 
 		if self._file is not None:
@@ -960,7 +962,7 @@ class Filename(Element[Directory]):
 			self.Root = value
 
 	@readonly
-	def File(self) -> Nullable["File"]:
+	def File(self) -> Nullable[File]:
 		"""
 		Read-only property to access the file this filename is linked to (:attr:`_file`).
 
@@ -1007,7 +1009,7 @@ class Filename(Element[Directory]):
 		"""
 		return hash(id(self))
 
-	def Copy(self, parent: Directory) -> "Filename":
+	def Copy(self, parent: Directory) -> Filename:
 		"""
 		Copy this filename into another filesystem statistics scope.
 
@@ -1211,7 +1213,7 @@ class SymbolicLink(Element[Directory]):
 		"""
 		return hash(id(self))
 
-	def Copy(self, parent: Directory) -> "SymbolicLink":
+	def Copy(self, parent: Directory) -> SymbolicLink:
 		"""
 		Copy this symbolic link into another filesystem statistics scope.
 
@@ -1298,7 +1300,7 @@ class Root(Directory):
 	"""
 	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 	"""
-	_ids:                      dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_ids:                      dict[int, File]     #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
 	_brokenSymbolicLinks:      list[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
 	_unconnectedSymbolicLinks: list[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
 
@@ -1450,7 +1452,7 @@ class Root(Directory):
 		symLink._isOutOfRange = True
 		self._unconnectedSymbolicLinks.append(symLink)
 
-	def Copy(self) -> "Root":
+	def Copy(self) -> Root:
 		"""
 		Copy the directory structure including all subelements and link it to the given parent.
 

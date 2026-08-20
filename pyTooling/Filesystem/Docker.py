@@ -35,8 +35,11 @@ A :class:`~pyTooling.Filesystem.Docker.LayerCake` distributes the files of a
 :class:`~pyTooling.Filesystem.Root` over layers - largest file first, each layer filled up to a target size that
 shrinks from layer to layer - and writes one file list per layer, ready to be turned into image layers.
 """
+from __future__            import annotations
+
 from pathlib               import Path
 from typing                import Optional as Nullable
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
@@ -51,14 +54,14 @@ class Layer(metaclass=ExtendedType):
 
 	A layer knows its aggregated size, so the slicing algorithm can stop filling it when the target size is reached.
 	"""
-	_parent:        Nullable["LayerCake"]     #: Reference to the parent layer cake.
-	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
-	_nextLayer:     Nullable["Layer"]         #: Reference to the next layer
+	_parent:        Nullable[LayerCake]       #: Reference to the parent layer cake.
+	_previousLayer: Nullable[Layer]           #: Reference to the previous layer.
+	_nextLayer:     Nullable[Layer]           #: Reference to the next layer
 
 	_files:         list[Element[Directory]]  #: List of files in this layer.
 	_size:          int                       #: Aggregated size of all contained files for this layer.
 
-	def __init__(self, parent: Nullable["LayerCake"] = None, previousLayer: Nullable["Layer"] = None) -> None:
+	def __init__(self, parent: Nullable[LayerCake] = None, previousLayer: Nullable[Layer] = None) -> None:
 		"""
 		Initialize an empty layer, which appends itself to the layer cake it belongs to.
 
@@ -77,7 +80,7 @@ class Layer(metaclass=ExtendedType):
 		self._size =  0
 
 	@readonly
-	def Parent(self) -> Nullable["LayerCake"]:
+	def Parent(self) -> Nullable[LayerCake]:
 		"""
 		Read-only property to access the layer cake this layer belongs to (:attr:`_parent`).
 
@@ -86,7 +89,7 @@ class Layer(metaclass=ExtendedType):
 		return self._parent
 
 	@readonly
-	def PreviousLayer(self) -> Nullable["Layer"]:
+	def PreviousLayer(self) -> Nullable[Layer]:
 		"""
 		Read-only property to access the layer below this one (:attr:`_previousLayer`).
 
@@ -95,7 +98,7 @@ class Layer(metaclass=ExtendedType):
 		return self._previousLayer
 
 	@readonly
-	def NextLayer(self) -> Nullable["Layer"]:
+	def NextLayer(self) -> Nullable[Layer]:
 		"""
 		Read-only property to access the layer above this one (:attr:`_nextLayer`).
 

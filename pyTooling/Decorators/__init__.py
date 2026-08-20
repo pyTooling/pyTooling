@@ -41,13 +41,16 @@
    :mod:`pyTooling.Attributes`
       |rarr| Attributes, which mark an entity instead of modifying it.
 """
-import sys
-from enum      import Enum, unique
-from functools import wraps
-from inspect   import cleandoc
-from types     import FunctionType
-from typing    import Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
-from typing    import Optional as Nullable
+from __future__ import annotations
+
+from enum       import Enum, unique
+from functools  import wraps
+from inspect    import cleandoc
+from sys        import modules
+from types      import FunctionType
+from typing     import Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
+from typing     import Optional as Nullable
+
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
@@ -107,7 +110,7 @@ def export(entity: T) -> T:
 		raise TypeError(f"Entity must be a named top-level function or class, not {entity.__class__}")
 
 	try:
-		module = sys.modules[entity.__module__]
+		module = modules[entity.__module__]
 	except KeyError:
 		raise ValueError(f"Module {entity.__module__} is not present in sys.modules. Please ensure it is in the import path before calling export().")
 
@@ -207,7 +210,7 @@ class readonly(property, Generic[_ReturnType]):
 		"""
 		super().__init__(fget, None, None, doc)
 
-	def getter(self, fget: Callable[[Any], _ReturnType], /) -> "readonly[_ReturnType]":
+	def getter(self, fget: Callable[[Any], _ReturnType], /) -> readonly[_ReturnType]:
 		"""
 		Derive a read-only property with another getter-method from this one.
 
@@ -221,14 +224,14 @@ class readonly(property, Generic[_ReturnType]):
 		return type(self)(fget)
 
 	@overload
-	def __get__(self, instance: None, owner: type, /) -> "readonly[_ReturnType]":
+	def __get__(self, instance: None, owner: type, /) -> readonly[_ReturnType]:
 		...     # pragma: no cover - an overload carries no implementation
 
 	@overload
 	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> _ReturnType:
 		...     # pragma: no cover - an overload carries no implementation
 
-	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union["readonly[_ReturnType]", _ReturnType]:
+	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union[readonly[_ReturnType], _ReturnType]:
 		"""
 		Return the value of the property, or the property itself when it is read from the class.
 
