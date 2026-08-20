@@ -228,7 +228,7 @@ class Sequence(Node):
 
 		.. attention::
 
-		   A configuration is **read-only** for now - see :meth:`Node.__setitem__`.
+		   A configuration is **read-only** - see :meth:`Node.__setitem__`.
 
 		:param index:                Index of the element to write.
 		:param value:                The new value of that element.
