@@ -59,7 +59,7 @@ from pyTooling.Common     import getFullyQualifiedName
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
 
-Entity = TypeVar("Entity", bound=Union[type, Callable])
+Entity = TypeVar("Entity", bound=Union[type, Callable[..., Any]])
 """A type variable for functions, methods or classes."""
 
 TAttr = TypeVar("TAttr", bound='Attribute')
