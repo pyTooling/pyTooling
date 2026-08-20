@@ -35,7 +35,7 @@ from pathlib import Path
 
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Common     import count
-from pyTooling.Filesystem import Root, Directory, Filename, File
+from pyTooling.Filesystem import Root, Directory, Filename, File, FilesystemException
 from pyTooling.Testing    import Testcase
 
 
@@ -256,3 +256,25 @@ class Instantiation(Testcase):
 		self.assertListEqual(file.Parents, [filename])
 		self.assertEqual(2, file.ID)
 		self.assertEqual(2048, file.Size)
+
+
+class Scanning(Testcase):
+	"""Scanning a real directory tree - the path that reads the filesystem and fills the inode table."""
+
+	def test_ScanRealDirectory(self) -> None:
+		"""A scan walks the directory and counts what it found."""
+		root = Root(Path("tests/data"), collectSubdirectories=True)
+
+		self.assertGreater(root.TotalFileCount, 0)
+		self.assertGreater(root.TotalSubdirectoryCount, 0)
+		self.assertEqual(root.TotalFileCount, root.TotalRegularFileCount + root.TotalSymbolicLinkCount)
+
+	def test_ScanNeedsARoot(self) -> None:
+		"""A directory that is not attached to a root has no inode table to fill."""
+		directory = Directory("detached")
+
+		with self.assertRaises(FilesystemException) as context:
+			directory.ScanSubdirectories()
+
+		self.assertIn("not attached to a filesystem root", str(context.exception))
+

@@ -396,9 +396,13 @@ class Directory(Element["Directory"]):
 		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
 		the collected statistics are incomplete by exactly that path.
 
+		:raises FilesystemException: If this directory isn't attached to a :class:`Root`, which owns the ID table.
 		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
 		                             symbolic link.
 		"""
+		if (root := self._root) is None:
+			raise FilesystemException(f"Directory '{self._name}' is not attached to a filesystem root.")
+
 		with Stopwatch() as sw1:
 			try:
 				items = scandir(directoryPath := self.Path)
