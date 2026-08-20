@@ -177,6 +177,47 @@ class ReadOnly(Testcase):
 		self.assertEqual("Doc-string of the getter.", Data.length.__doc__)
 
 
+
+	def test_Getter(self) -> None:
+		"""A derived class can replace the getter, and the result is still a read-only property."""
+		class Data:
+			_data: int
+
+			def __init__(self, data: int) -> None:
+				self._data = data
+
+			@readonly
+			def length(self) -> int:
+				"""Doc-string of the base getter."""
+				return 2 ** self._data
+
+		class DerivedData(Data):
+			@Data.length.getter
+			def length(self) -> int:
+				"""Doc-string of the derived getter."""
+				return 3 ** self._data
+
+		self.assertIsInstance(DerivedData.length, readonly)
+		self.assertEqual("Doc-string of the derived getter.", DerivedData.length.__doc__)
+		self.assertEqual(9, DerivedData(2).length)
+		self.assertEqual(4, Data(2).length)
+
+	def test_GetterKeepsRejectingASetter(self) -> None:
+		"""The property derived by 'getter' is read-only as well."""
+		class Data:
+			_data: int
+
+			@readonly
+			def length(self) -> int:
+				return 2 ** self._data
+
+		derived = Data.length.getter(lambda self: 0)
+
+		with self.assertRaises(AttributeError):
+			derived.setter(lambda self, value: None)
+		with self.assertRaises(AttributeError):
+			derived.deleter(lambda self: None)
+
 class InheritDocStrings(Testcase):
 	def test_Class_Copy(self) -> None:
 		class Class1:
