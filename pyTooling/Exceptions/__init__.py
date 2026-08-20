@@ -245,7 +245,7 @@ class MissingDependencyException(ImportError):
 	@readonly
 	def InstallCommands(self) -> tuple[str, ...]:
 		"""
-		Read-only property to access the command lines installing the missing package.
+		Read-only property to return the command lines installing the missing package.
 
 		The extra comes first, because it installs the package *and* records why it is needed. Both commands are
 		plain text and need no terminal support: an application that cannot even import :mod:`pyTooling.TerminalUI` -

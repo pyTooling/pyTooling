@@ -187,7 +187,7 @@ class URL:
 	   [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 	"""
 
-	_scheme:    Protocols                 #: Protocol (scheme) of the URL.
+	_scheme:    Nullable[Protocols]       #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
 	_user:      Nullable[str]             #: User name of the URL's authority part.
 	_password:  Nullable[str]             #: Password of the URL's authority part.
 	_host:      Nullable[Host]            #: Host name and port of the URL's authority part.
@@ -197,7 +197,7 @@ class URL:
 
 	def __init__(
 		self,
-		scheme:   Protocols,
+		scheme:   Nullable[Protocols],
 		path:     Path,
 		host:     Nullable[Host] = None,
 		user:     Nullable[str] = None,
@@ -208,7 +208,7 @@ class URL:
 		"""
 		Initializes a Uniform Resource Locator (URL).
 
-		:param scheme:     Transport scheme to be used for a specified resource.
+		:param scheme:     Optional, transport scheme to be used for a specified resource.
 		:param path:       Path to the resource.
 		:param host:       Optional, hostname where the resource is located.
 		:param user:       Optional, username for basic authentication.
@@ -269,11 +269,11 @@ class URL:
 		self._fragment = fragment
 
 	@readonly
-	def Scheme(self) -> Protocols:
+	def Scheme(self) -> Nullable[Protocols]:
 		"""
 		Read-only property to access the URL scheme.
 
-		:returns: URL scheme of the URL.
+		:returns: URL scheme of the URL, ``None`` if it carries none.
 		"""
 		return self._scheme
 
@@ -394,8 +394,10 @@ class URL:
 			else:
 				result = f"{self._user}@{result}"
 
-		if (scheme := self._scheme) is not None:
-			result = str(scheme.name).lower() + "://" + result
+		# 'Protocols' is an 'IntFlag', so a single member and a combination both have a name; only 'Protocols(0)'
+		# has none - and a scheme without any flag is no scheme, so it renders nothing either way.
+		if self._scheme is not None and (scheme := self._scheme.name) is not None:
+			result = scheme.lower() + "://" + result
 
 		if self._query is not None and len(self._query) > 0:
 			result = result + "?" + "&".join([f"{key}={value}" for key, value in self._query.items()])
