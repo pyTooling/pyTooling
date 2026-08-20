@@ -883,7 +883,7 @@ class ExtendedType(type):
 	_CLASS_VARIABLE_PATTERN = re_compile(r"^\s*(?:\w+\.)*ClassVar\s*(?:\[|$)")
 
 	@classmethod
-	def _resolveAnnotation(metacls, typeAnnotation: Any, members: Dict[str, Any]) -> Any:
+	def _resolveAnnotation(metacls, typeAnnotation: Any, members: dict[str, Any]) -> Any:
 		"""
 		Evaluate a postponed (string) annotation, so it can be inspected like an ordinary one.
 
