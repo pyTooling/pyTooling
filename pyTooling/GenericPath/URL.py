@@ -36,7 +36,7 @@ This package provides a representation for a Uniform Resource Locator (URL).
    [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
 """
 
-from enum                  import IntFlag
+from enum                  import Flag
 from re                    import compile as re_compile
 from typing                import ClassVar, Optional as Nullable, Mapping
 from pyTooling.Decorators  import export, readonly
@@ -59,15 +59,26 @@ URL_REGEXP = re_compile("^" + URL_PATTERN + "$")  #: Precompiled regular express
 
 
 @export
-class Protocols(IntFlag):
-	"""Enumeration of supported URL schemes."""
+class Protocols(Flag):
+	"""
+	Enumeration of supported URL schemes.
 
-	TLS =   1   #: Transport Layer Security
-	HTTP =  2   #: Hyper Text Transfer Protocol
-	HTTPS = 4   #: SSL/TLS secured HTTP
-	FTP =   8   #: File Transfer Protocol
-	FTPS =  16  #: SSL/TLS secured FTP
-	FILE =  32  #: Local files
+	The members are flags, so a TLS secured scheme is the combination of :attr:`TLS` and the plain protocol. Thus, a
+	scheme can be checked for encryption without enumerating every secured variant:
+
+	.. code-block:: Python
+
+	   if Protocols.TLS in url.Scheme:
+	     print(f"'{url}' is encrypted.")
+	"""
+
+	TLS =   1  #: Transport Layer Security
+	FILE =  2  #: Local files
+	HTTP =  4  #: Hyper Text Transfer Protocol
+	FTP =   8  #: File Transfer Protocol
+
+	HTTPS = TLS | HTTP  #: SSL/TLS secured HTTP: combination of :attr:`TLS` and :attr:`HTTP`.
+	FTPS =  TLS | FTP   #: SSL/TLS secured FTP: combination of :attr:`TLS` and :attr:`FTP`.
 
 
 @export
@@ -394,8 +405,8 @@ class URL:
 			else:
 				result = f"{self._user}@{result}"
 
-		# 'Protocols' is an 'IntFlag', so a single member and a combination both have a name; only 'Protocols(0)'
-		# has none - and a scheme without any flag is no scheme, so it renders nothing either way.
+		# 'Protocols' is a 'Flag', so a single member and a combination both have a name; only 'Protocols(0)' has
+		# none - and a scheme without any flag is no scheme, so it renders nothing either way.
 		if self._scheme is not None and (scheme := self._scheme.name) is not None:
 			result = scheme.lower() + "://" + result
 
