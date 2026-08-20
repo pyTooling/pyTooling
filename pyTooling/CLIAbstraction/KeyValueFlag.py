@@ -108,7 +108,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		   pairs.
 
 		:returns:          Internal dictionary of key-value-pairs.
-		:raises TypeError: If an assigned pair has a key or a value which is not of type :class:`str`.
+		:raises TypeError: If an assigned pair has a key or a value which is not of type string.
 		"""
 		return self._value
 

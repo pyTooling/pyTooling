@@ -90,7 +90,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 	def __init__(self, value: bool) -> None:
 		"""Initializes a BooleanFlag instance.
 
-		:param value: Initial value set for this argument instance.
+		:param value: ``True`` adds the flag, ``False`` its negation.
 		"""
 		ValuedArgument.__init__(self, value)
 

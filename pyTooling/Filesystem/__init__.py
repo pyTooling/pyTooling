@@ -132,7 +132,7 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		:param size:       Optional, size of the element.
 		:param root:       Optional reference to the filesystem root element.
-		:raises TypeError: If parameter 'size' is not of type :class:`int`.
+		:raises TypeError: If parameter 'size' is not of type integer.
 		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
 		if size is not None and not isinstance(size, int):
@@ -354,7 +354,7 @@ class Directory(Element["Directory"]):
 		Initialize the directory with name and parent reference.
 
 		:param name:                  Name of the element.
-		:param collectSubdirectories: Optional, if true, collect subdirectory statistics.
+		:param collectSubdirectories: Optional, if ``True``, collect subdirectory statistics.
 		:param parent:                Optional, parent reference.
 		"""
 		super().__init__(name, None, parent)

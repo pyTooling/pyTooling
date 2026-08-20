@@ -283,7 +283,7 @@ class Base(
 		.. todo:: GRAPH::Base::init Needs documentation.
 
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
-		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
+		:raises TypeError:    If parameter 'name' is not of type string.
 		"""
 		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
 
@@ -379,7 +379,7 @@ class BaseWithIDValueAndWeight(
 		:param value:         Optional, value.
 		:param weight:        Optional, weight.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
-		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
+		:raises TypeError:    If parameter 'name' is not of type string.
 		"""
 		super().__init__(keyValuePairs)
 
@@ -462,7 +462,7 @@ class BaseWithName(
 		Property to access the name (:attr:`_name`).
 
 		:returns:          The object's name, or ``None`` if it has none.
-		:raises TypeError: If an assigned value is not of type :class:`str`.
+		:raises TypeError: If an assigned value is not of type string.
 		"""
 		return self._name
 

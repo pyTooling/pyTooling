@@ -188,7 +188,7 @@ class License(metaclass=ExtendedType, slots=True):
 		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are identical.
-		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
+		:raises TypeError: If second operand is not of type :class:`License` or string.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
@@ -203,7 +203,7 @@ class License(metaclass=ExtendedType, slots=True):
 		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are not identical.
-		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
+		:raises TypeError: If second operand is not of type :class:`License` or string.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier

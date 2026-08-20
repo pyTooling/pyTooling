@@ -94,7 +94,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		   of the iterable.
 
 		:returns:          Internal list of values.
-		:raises TypeError: If an assigned iterable contains elements which are not of type :class:`str`.
+		:raises TypeError: If an assigned iterable contains elements which are not of type string.
 		"""
 		return self._value
 

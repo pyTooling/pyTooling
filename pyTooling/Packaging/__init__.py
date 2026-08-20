@@ -644,7 +644,7 @@ def DescribePythonPackage(
 	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
 	                                      None)
 	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
-	:param debug:                         Optional, enable extended outputs for debugging.
+	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
 	:raises MissingDependencyError:       If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
@@ -930,7 +930,7 @@ def DescribePythonPackageHostedOnGitHub(
 	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
 	                                      None)
 	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
-	:param debug:                         Optional, enable extended outputs for debugging.
+	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
 	:raises MissingDependencyError:       If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.

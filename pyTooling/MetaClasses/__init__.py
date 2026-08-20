@@ -598,11 +598,12 @@ class ExtendedType(type):
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:param members:         The dictionary of members for the constructed class.
-		:param slots:           Optional, if true, store object attributes in :term:`__slots__ <slots>` instead of
+		:param slots:           Optional, if ``True``, store object attributes in :term:`__slots__ <slots>` instead of
 		                        ``__dict__``.
-		:param mixin:           Optional, if true, make the class a :term:`Mixin-Class`. If false, create slots if ``slots``
-		                        is true. If none, preserve behavior of primary base-class.
-		:param singleton:       Optional, if true, make the class a :term:`Singleton`.
+		:param mixin:          Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
+		                       ``slots``
+		                        is true. If ``None``, preserve behavior of primary base-class.
+		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
 		                        :func:`type` does.
 		:returns:               The new class.
@@ -946,8 +947,8 @@ class ExtendedType(type):
 		:param className:                   The name of the class to construct.
 		:param baseClasses:                 Tuple of base-classes.
 		:param members:                     Dictionary of class members.
-		:param slots:                       Optional, true, if the class should setup ``__slots__``.
-		:param mixin:                       Optional, true, if the class should behave as a mixin-class.
+		:param slots:                       Optional, ``True``, if the class should setup ``__slots__``.
+		:param mixin:                       Optional, ``True``, if the class should behave as a mixin-class.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
 		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved. |br|
 		                                    An assignment without a type annotation creates a class attribute, which

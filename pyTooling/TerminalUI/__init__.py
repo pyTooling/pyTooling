@@ -705,7 +705,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		:param message:         Message to display.
 		:param severity:        Optional, severity level of the message.
 		:param indent:          Optional, indentation level of the message.
-		:param appendLinebreak: Optional, append a line break at the end of the message.
+		:param appendLinebreak: Optional, if ``True``, append a line break at the end of the message.
 		"""
 		self._timestamp =       datetime.now()
 		self._severity =        severity
@@ -798,10 +798,10 @@ class ILineTerminal:
 
 	def WriteLine(self, line: Line, condition: bool = True) -> bool:
 		"""
-		Write a line to the local terminal if ``condition`` is true.
+		Write a line to the local terminal if ``condition`` is ``True``.
 
 		:param line:      Line object to write.
-		:param condition: Optional, write the line only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the line only if this condition is ``True``. Default: ``True``.
 		:returns:         True, if the line was actually written.
 		"""
 		if (self._terminal is not None) and condition:
@@ -815,10 +815,10 @@ class ILineTerminal:
 
 	def WriteFatal(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a fatal message to the local terminal if ``condition`` is true.
+		Write a fatal message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -828,10 +828,10 @@ class ILineTerminal:
 
 	def WriteError(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write an error message to the local terminal if ``condition`` is true.
+		Write an error message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -841,10 +841,10 @@ class ILineTerminal:
 
 	def WriteCritical(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a critical warning message to the local terminal if ``condition`` is true.
+		Write a critical warning message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -854,10 +854,10 @@ class ILineTerminal:
 
 	def WriteWarning(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a warning message to the local terminal if ``condition`` is true.
+		Write a warning message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -867,10 +867,10 @@ class ILineTerminal:
 
 	def WriteInfo(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write an info message to the local terminal if ``condition`` is true.
+		Write an info message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -880,10 +880,10 @@ class ILineTerminal:
 
 	def WriteQuiet(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write an always visible message, even in quiet mode, to the local terminal if ``condition`` is true.
+		Write an always visible message, even in quiet mode, to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -893,10 +893,10 @@ class ILineTerminal:
 
 	def WriteNormal(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a *normal* message to the local terminal if ``condition`` is true.
+		Write a *normal* message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -906,10 +906,10 @@ class ILineTerminal:
 
 	def WriteVerbose(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a verbose message to the local terminal if ``condition`` is true.
+		Write a verbose message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -919,10 +919,10 @@ class ILineTerminal:
 
 	def WriteDebug(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a debug message to the local terminal if ``condition`` is true.
+		Write a debug message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -932,10 +932,10 @@ class ILineTerminal:
 
 	def WriteDryRun(self, *args: Any, condition: bool = True, **kwargs: Any) -> bool:
 		"""
-		Write a dry-run message to the local terminal if ``condition`` is true.
+		Write a dry-run message to the local terminal if ``condition`` is ``True``.
 
 		:param args:      Positional parameters forwarded to the terminal's writing method.
-		:param condition: Optional, write the message only if this condition is true. Default: ``True``.
+		:param condition: Optional, write the message only if this condition is ``True``. Default: ``True``.
 		:param kwargs:    Keyword parameters forwarded to the terminal's writing method.
 		:returns:         True, if the message was actually written.
 		"""
@@ -1318,7 +1318,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Exit application if error or critical warnings have been printed.
 
-		:param includeErrors: Optional, include critical warning counts.
+		:param includeErrors: Optional, if ``True``, count previous errors as well as critical warnings.
 		"""
 		if includeErrors and (self._errorCount > 0):
 			if self._criticalWarningCount > 0:
@@ -1336,8 +1336,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Exit application if error or (critical) warnings have been printed.
 
-		:param includeCriticalWarnings: Optional, include critical warning counts.
-		:param includeErrors:           Optional, include error counts.
+		:param includeCriticalWarnings: Optional, if ``True``, count previous critical warnings as well as warnings.
+		:param includeErrors:           Optional, if ``True``, count previous errors as well.
 		"""
 		if includeErrors and (self._errorCount > 0):
 			if includeCriticalWarnings and (self._criticalWarningCount > 0):

@@ -122,7 +122,7 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is equal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -141,7 +141,7 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is unequal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -160,7 +160,7 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is less than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -179,7 +179,7 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is less than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -198,7 +198,7 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is greater than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -217,7 +217,7 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is greater than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -427,16 +427,16 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param prefix:      Optional, the version number's prefix.
 		:param hash:        Optional, postfix string.
 		:param flags:       Optional, the version number's flags.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		self.__hash = None
 
@@ -838,7 +838,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -871,7 +871,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -905,7 +905,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -943,7 +944,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
@@ -984,7 +986,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -1022,7 +1025,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
@@ -1155,20 +1159,20 @@ class SemanticVersion(Version):
 		:param prefix:      Optional, the version number's prefix.
 		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:param flags:       Optional, the version number's flags.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'post' is not of type integer.
 		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
 		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
 
@@ -1317,7 +1321,7 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__eq__(other)
 
@@ -1335,7 +1339,7 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__ne__(other)
 
@@ -1353,7 +1357,7 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__lt__(other)
 
@@ -1371,7 +1375,7 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__le__(other)
 
@@ -1389,7 +1393,7 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__gt__(other)
 
@@ -1407,7 +1411,7 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__ge__(other)
 
@@ -1593,16 +1597,16 @@ class CalendarVersion(Version):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
 
@@ -1732,7 +1736,7 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__eq__(other)
 
@@ -1750,7 +1754,7 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__ne__(other)
 
@@ -1768,7 +1772,7 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__lt__(other)
 
@@ -1786,7 +1790,7 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__le__(other)
 
@@ -1804,7 +1808,7 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__gt__(other)
 
@@ -1822,7 +1826,7 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__ge__(other)
 
@@ -1916,16 +1920,16 @@ class YearMonthVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(year, month, None, build, flags, prefix, postfix)
 
@@ -1974,16 +1978,16 @@ class YearWeekVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(year, week, None, build, flags, prefix, postfix)
 
@@ -2032,16 +2036,16 @@ class YearReleaseVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(year, release, None, build, flags, prefix, postfix)
 
@@ -2090,16 +2094,16 @@ class YearMonthDayVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type :class:`int`.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'postfix' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(year, month, day, build, flags, prefix, postfix)
 
