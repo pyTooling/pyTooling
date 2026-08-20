@@ -136,8 +136,7 @@ class Node(metaclass=ExtendedType, slots=True):
 
 		.. attention::
 
-		   A configuration is **read-only** for now: no file format implements writing, so this method exists to say
-		   so with a clear message rather than to be overridden by a backend.
+		   A configuration is **read-only**: the file format doesn't implements writing.
 
 		:param key:                  Index or key of the element.
 		:param value:                The new value of that element.
