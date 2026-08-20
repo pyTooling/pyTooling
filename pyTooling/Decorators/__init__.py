@@ -192,7 +192,29 @@ class readonly(property, Generic[_ReturnType]):
 	     A decorator to convert getter, setter and deleter methods into a property applying the descriptor protocol.
 	"""
 
-	fget: Callable[[Any], Any]   #: The getter-method; a read-only property is always constructed from one.
+	fget: Callable[[Any], _ReturnType]   #: The getter-method; a read-only property is always constructed from one.
+
+	def __init__(
+		self,
+		fget: Callable[[Any], _ReturnType],
+		fset: None = None,
+		fdel: None = None,
+		doc:  Nullable[str] = None
+	) -> None:
+		"""
+		Create a read-only property from a getter-method.
+
+		Declaring the constructor is what binds the type variable to the getter's return type, so that reading the
+		property hands out that type instead of :data:`~typing.Any`. The setter and deleter :class:`property` accepts
+		here are typed as ``None``, because a read-only property has neither - :meth:`setter` and :meth:`deleter`
+		raise. They exist as parameters because :meth:`property.getter` reconstructs the property through them.
+
+		:param fget: The getter-method the property is constructed from.
+		:param fset: The setter-method; always ``None`` for a read-only property.
+		:param fdel: The deleter-method; always ``None`` for a read-only property.
+		:param doc:  Optional, doc-string of the property. If ``None``, the getter-method's doc-string is used.
+		"""
+		super().__init__(fget, fset, fdel, doc)
 
 	@overload
 	def __get__(self, instance: None, owner: type, /) -> "readonly[_ReturnType]":
