@@ -243,7 +243,7 @@ class MissingDependencyException(ImportError):
 		return self._extra
 
 	@readonly
-	def InstallCommands(self) -> Tuple[str, ...]:
+	def InstallCommands(self) -> tuple[str, ...]:
 		"""
 		Read-only property to access the command lines installing the missing package.
 
